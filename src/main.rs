@@ -15,7 +15,7 @@ fn main() {
         }
     };
 
-    let mut file = File::open(&filename).expect("Unable to open file");
+    let mut file = File::open(filename).expect("Unable to open file");
 
     let mut src = String::new();
     file.read_to_string(&mut src).expect("Unable to read file");

@@ -52,10 +52,7 @@ fn graft_fn_arg(rust_fn_arg: &syn::FnArg) -> ast::FnArg {
                 other => panic!("unsupported: {other:?}"),
             };
 
-            ast::FnArg {
-                name,
-                data_type: data_type,
-            }
+            ast::FnArg { name, data_type }
         }
         other => panic!("unsupported: {other:?}"),
     }
@@ -70,7 +67,7 @@ fn graft_return_type(rust_return_type: &syn::ReturnType) -> Vec<ast::DataType> {
                 let elements = tuple_type
                     .elems
                     .iter()
-                    .map(|x| rust_type_to_data_type(x))
+                    .map(rust_type_to_data_type)
                     .collect_vec();
 
                 elements
