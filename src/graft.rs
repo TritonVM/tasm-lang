@@ -206,6 +206,24 @@ mod tests {
     use super::*;
 
     #[test]
+    fn mmr_left_child() {
+        let tokens: syn::Item = parse_quote! {
+                fn left_child(node_index: u64, height: u64) -> u64 {
+                    return node_index - (1u64 << height);
+            }
+        };
+
+        match &tokens {
+            syn::Item::Fn(item_fn) => {
+                println!("{item_fn:#?}");
+                let ret = graft(item_fn);
+                println!("{ret:#?}");
+            }
+            _ => panic!("unsupported"),
+        }
+    }
+
+    #[test]
     fn method_call_no_args() {
         let tokens: syn::Item = parse_quote! {
             fn method_call() -> () {
