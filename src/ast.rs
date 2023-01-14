@@ -4,18 +4,21 @@ use twenty_first::shared_math::b_field_element::BFieldElement;
 use twenty_first::shared_math::rescue_prime_digest::Digest;
 use twenty_first::shared_math::x_field_element::XFieldElement;
 
+#[derive(Debug, Clone)]
 pub struct Fn {
-    name: String,
-    args: Vec<FnArg>,
-    body: Vec<Stmt>,
-    output: Vec<DataType>,
+    pub name: String,
+    pub args: Vec<FnArg>,
+    pub body: Vec<Stmt>,
+    pub output: Vec<DataType>,
 }
 
+#[derive(Debug, Clone)]
 pub struct FnArg {
-    name: String,
-    data_type: DataType,
+    pub name: String,
+    pub data_type: DataType,
 }
 
+#[derive(Debug, Clone)]
 pub enum Stmt {
     Let(LetStmt),
     Return(Expr),
@@ -24,6 +27,7 @@ pub enum Stmt {
     // TODO: Control-flow operators: if-else, while, etc.
 }
 
+#[derive(Debug, Clone)]
 pub enum ExprLit {
     CBool(bool),
     CU32(u32),
@@ -33,6 +37,7 @@ pub enum ExprLit {
     Digest(Digest),
 }
 
+#[derive(Debug, Clone)]
 pub enum Expr {
     Lit(ExprLit),
     Var(String),
@@ -44,6 +49,7 @@ pub enum Expr {
 
 pub struct SymTable(HashMap<String, (u8, DataType)>);
 
+#[derive(Debug, Clone)]
 pub enum DataType {
     Bool,
     U32,
@@ -53,12 +59,28 @@ pub enum DataType {
     Digest,
 }
 
+impl From<String> for DataType {
+    fn from(str: String) -> Self {
+        match str.as_str() {
+            "bool" => DataType::Bool,
+            "Digest" => DataType::Digest,
+            "u32" => DataType::U32,
+            "u64" => DataType::U64,
+            "BFieldElement" => DataType::BFE,
+            "XFieldElement" => DataType::XFE,
+            str => panic!("Unsupported type: {}", str),
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
 pub struct LetStmt {
     pub var_name: String,
     pub data_type: DataType,
     pub expr: Expr,
 }
 
+#[derive(Debug, Clone)]
 pub struct FnCall {
     pub name: String,
     pub args: Vec<Expr>, // FIXME: type-check that this is flat
