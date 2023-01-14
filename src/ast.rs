@@ -40,11 +40,27 @@ pub enum ExprLit {
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub enum BinOperator {
+    Add,
+    // TODO: Add more
+}
+
+impl From<syn::BinOp> for BinOperator {
+    fn from(rust_binop: syn::BinOp) -> Self {
+        match rust_binop {
+            syn::BinOp::Add(_) => BinOperator::Add,
+            other => panic!("unsupported: {other:?}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum Expr {
     Lit(ExprLit),
     Var(String),
-    FlatList(Box<Expr>),
+    FlatList(Vec<Expr>),
     FnCall(FnCall),
+    Binop(Box<Expr>, BinOperator, Box<Expr>),
     // TODO: Overloaded arithmetic operators
     // TODO: VM-specific intrinsics (hash, absorb, squeeze, etc.)
 }
