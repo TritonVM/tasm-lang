@@ -178,6 +178,32 @@ mod tests {
     use super::*;
 
     #[test]
+    fn u32_algebra() {
+        let tokens: syn::Item = parse_quote! {
+            fn u32_algebra(lhs: u32, rhs: u32) -> (u32, u32, u32, u32) {
+                let a: u32 = lhs + rhs;
+                let b: u32 = lhs - rhs;
+                let c: u32 = lhs * rhs;
+                let d: u32 = lhs / rhs;
+                let e: u32 = 1u32 << 17u32;
+                let f: u32 = 1u32 << lhs;
+                let g: u32 = 1u32 >> rhs;
+
+                return (d, e, f, g);
+            }
+        };
+
+        match &tokens {
+            syn::Item::Fn(item_fn) => {
+                println!("{item_fn:#?}");
+                let ret = graft(item_fn);
+                println!("{ret:#?}");
+            }
+            _ => panic!("unsupported"),
+        }
+    }
+
+    #[test]
     fn boolean_algebra() {
         let tokens: syn::Item = parse_quote! {
             fn boolean_algebra(lhs: bool, rhs: bool) -> (bool, bool, bool, bool, bool, bool) {
