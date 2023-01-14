@@ -4,7 +4,7 @@ use twenty_first::shared_math::b_field_element::BFieldElement;
 use twenty_first::shared_math::rescue_prime_digest::Digest;
 use twenty_first::shared_math::x_field_element::XFieldElement;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct Fn {
     pub name: String,
     pub args: Vec<FnArg>,
@@ -12,13 +12,13 @@ pub struct Fn {
     pub output: Vec<DataType>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct FnArg {
     pub name: String,
     pub data_type: DataType,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum Stmt {
     Let(LetStmt),
     Return(Expr),
@@ -27,7 +27,7 @@ pub enum Stmt {
     // TODO: Control-flow operators: if-else, while, etc.
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum ExprLit {
     CBool(bool),
     CU32(u32),
@@ -37,7 +37,7 @@ pub enum ExprLit {
     Digest(Digest),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum Expr {
     Lit(ExprLit),
     Var(String),
@@ -49,7 +49,7 @@ pub enum Expr {
 
 pub struct SymTable(HashMap<String, (u8, DataType)>);
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum DataType {
     Bool,
     U32,
@@ -73,14 +73,14 @@ impl From<String> for DataType {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct LetStmt {
     pub var_name: String,
     pub data_type: DataType,
     pub expr: Expr,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct FnCall {
     pub name: String,
     pub args: Vec<Expr>, // FIXME: type-check that this is flat
