@@ -1,5 +1,6 @@
 use crate::ast;
 use itertools::Itertools;
+use syn::ExprCall;
 
 fn rust_type_path_to_data_type(rust_type_path: &syn::TypePath) -> ast::DataType {
     assert_eq!(
@@ -65,7 +66,6 @@ fn graft_return_type(rust_return_type: &syn::ReturnType) -> Vec<ast::DataType> {
             syn::Type::Path(type_path) => vec![rust_type_path_to_data_type(type_path)],
             syn::Type::Tuple(tuple_type) => {
                 let tuple_type = tuple_type;
-                println!("{tuple_type:#?}");
                 let elements = tuple_type
                     .elems
                     .iter()
@@ -80,6 +80,20 @@ fn graft_return_type(rust_return_type: &syn::ReturnType) -> Vec<ast::DataType> {
     };
 
     ret_type
+}
+
+// TODO: Consider moving this to the `ast` file and implement it as a conversion function
+fn graft_call_exp(expr_call: &ExprCall) -> ast::FnCall {
+    let fun_name: String = match expr_call.func.as_ref() {
+        syn::Expr::Path(path) => path_to_ident(&path.path),
+        other => panic!("unsupported: {other:?}"),
+    };
+    let args: Vec<ast::Expr> = expr_call.args.iter().map(|x| graft_expr(x)).collect_vec();
+
+    ast::FnCall {
+        name: fun_name,
+        args,
+    }
 }
 
 pub fn graft_expr(rust_exp: &syn::Expr) -> ast::Expr {
@@ -103,6 +117,13 @@ pub fn graft_expr(rust_exp: &syn::Expr) -> ast::Expr {
         syn::Expr::Lit(litexp) => {
             let lit = &litexp.lit;
             ast::Expr::Lit(lit.into())
+        }
+        syn::Expr::Call(call_exp) => ast::Expr::FnCall(graft_call_exp(call_exp)),
+        syn::Expr::Paren(paren_exp) => {
+            // I *think* this is sufficient to handle parentheses correctly
+            let a = graft_expr(&paren_exp.expr);
+
+            a
         }
         other => panic!("unsupported: {other:?}"),
     }
@@ -138,14 +159,21 @@ pub fn graft_stmt(rust_stmt: &syn::Stmt) -> ast::Stmt {
         }
         syn::Stmt::Item(_) => todo!(),
         syn::Stmt::Expr(_) => todo!(),
-        syn::Stmt::Semi(retu, _b) => match retu {
+        syn::Stmt::Semi(semi, _b) => match semi {
             syn::Expr::Return(ret) => {
+                // Handle a return statement
                 let a = ret.expr.as_ref().unwrap();
                 let b = graft_expr(a);
 
                 ast::Stmt::Return(b)
             }
-            _ => todo!(),
+            syn::Expr::Call(call_exp) => {
+                // Handle a function call that's not an assignment or a return expression
+                let ast_fn_call = graft_call_exp(call_exp);
+
+                ast::Stmt::FnCall(ast_fn_call)
+            }
+            other => panic!("unsupported: {other:?}"),
         },
     }
 }
@@ -178,6 +206,73 @@ mod tests {
     use super::*;
 
     #[test]
+    fn method_call_no_args() {
+        let tokens: syn::Item = parse_quote! {
+            fn method_call() -> () {
+                pop();
+                push();
+            }
+        };
+
+        match &tokens {
+            syn::Item::Fn(item_fn) => {
+                println!("{item_fn:#?}");
+                let ret = graft(item_fn);
+                println!("{ret:#?}");
+            }
+            _ => panic!("unsupported"),
+        }
+    }
+
+    #[test]
+    fn method_call_with_args() {
+        let tokens: syn::Item = parse_quote! {
+            fn method_call(lhs: u32, pointer: BFieldElement) -> () {
+                pop(lhs);
+                push(pointer, lhs);
+                let foo: u32 = barbarian(7u32);
+
+                return (pointer, foo, greek(barbarian(barbarian(greek(199u64)))));
+            }
+        };
+
+        match &tokens {
+            syn::Item::Fn(item_fn) => {
+                println!("{item_fn:#?}");
+                let ret = graft(item_fn);
+                println!("{ret:#?}");
+            }
+            _ => panic!("unsupported"),
+        }
+    }
+
+    #[test]
+    fn u64_algebra() {
+        let tokens: syn::Item = parse_quote! {
+            fn u64_algebra(lhs: u64, rhs: u64) -> (u64, u64, u64, u64, u64, u64, u64) {
+                let a: u64 = lhs + rhs;
+                let b: u64 = lhs - rhs;
+                let c: u64 = lhs * rhs;
+                let d: u64 = lhs / rhs;
+                let e: u64 = 1u64 << 17u64;
+                let f: u64 = 1u64 << lhs;
+                let g: u64 = 1u64 >> rhs;
+
+                return (a, b, c, d, e, f, g);
+            }
+        };
+
+        match &tokens {
+            syn::Item::Fn(item_fn) => {
+                println!("{item_fn:#?}");
+                let ret = graft(item_fn);
+                println!("{ret:#?}");
+            }
+            _ => panic!("unsupported"),
+        }
+    }
+
+    #[test]
     fn u32_algebra() {
         let tokens: syn::Item = parse_quote! {
             fn u32_algebra(lhs: u32, rhs: u32) -> (u32, u32, u32, u32) {
@@ -188,6 +283,11 @@ mod tests {
                 let e: u32 = 1u32 << 17u32;
                 let f: u32 = 1u32 << lhs;
                 let g: u32 = 1u32 >> rhs;
+                let h: u32 = lhs % 2u32;
+                let i: bool = (lhs % 2u32) == 0u32;
+
+                // Verify correct precedence handling
+                let j: bool = (lhs + 14u32) * 117u32 - ((1u32 - (2u32 - rhs)) - (lhs - rhs));
 
                 return (d, e, f, g);
             }
