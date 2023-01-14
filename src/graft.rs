@@ -100,6 +100,10 @@ pub fn graft_expr(rust_exp: &syn::Expr) -> ast::Expr {
             let exprs = tuple_expr.elems.iter().map(|x| graft_expr(x)).collect_vec();
             ast::Expr::FlatList(exprs)
         }
+        syn::Expr::Lit(litexp) => {
+            let lit = &litexp.lit;
+            ast::Expr::Lit(lit.into())
+        }
         other => panic!("unsupported: {other:?}"),
     }
 }
@@ -113,6 +117,11 @@ pub fn graft_stmt(rust_stmt: &syn::Stmt) -> ast::Stmt {
                     let ident: String = pat_to_name(&pat_type.pat);
 
                     (ident, dt)
+                }
+                syn::Pat::Ident(d) => {
+                    // This would indicate that the explicit type is missing
+                    let ident = d.ident.to_string();
+                    panic!("Missing type parameter in declaration of {ident}");
                 }
                 other => panic!("unsupported: {other:?}"),
             };
@@ -167,6 +176,31 @@ mod tests {
     use syn::parse_quote;
 
     use super::*;
+
+    #[test]
+    fn boolean_algebra() {
+        let tokens: syn::Item = parse_quote! {
+            fn boolean_algebra(lhs: bool, rhs: bool) -> (bool, bool, bool, bool, bool, bool) {
+                let a: bool = lhs && rhs;
+                let b: bool = lhs ^ rhs;
+                let c: bool = lhs || rhs;
+                let d: bool = true;
+                let e: bool = false;
+                let f: bool = true && false || false ^ false;
+
+                return (a, b, c, d, e);
+            }
+        };
+
+        match &tokens {
+            syn::Item::Fn(item_fn) => {
+                println!("{item_fn:#?}");
+                let ret = graft(item_fn);
+                println!("{ret:#?}");
+            }
+            _ => panic!("unsupported"),
+        }
+    }
 
     #[test]
     fn and_and_xor_u32() {

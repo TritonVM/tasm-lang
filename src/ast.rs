@@ -39,20 +39,43 @@ pub enum ExprLit {
     Digest(Digest),
 }
 
+impl From<&syn::Lit> for ExprLit {
+    fn from(rust_val: &syn::Lit) -> Self {
+        match rust_val {
+            syn::Lit::Bool(b) => Self::CBool(b.value),
+            // syn::Lit::Int(_) => todo!(),
+            other => panic!("unsupported: {other:?}"),
+        }
+    }
+}
+
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum BinOperator {
     Add,
+    And,
     BitAnd,
     BitXor,
-    // TODO: Add more
+    Div,
+    Eq,
+    Lt,
+    Mul,
+    Or,
+    Sub,
 }
 
 impl From<syn::BinOp> for BinOperator {
     fn from(rust_binop: syn::BinOp) -> Self {
         match rust_binop {
             syn::BinOp::Add(_) => BinOperator::Add,
+            syn::BinOp::And(_) => BinOperator::And,
             syn::BinOp::BitAnd(_) => BinOperator::BitAnd,
             syn::BinOp::BitXor(_) => BinOperator::BitXor,
+            syn::BinOp::Div(_) => BinOperator::Div,
+            syn::BinOp::Eq(_) => BinOperator::Eq,
+            syn::BinOp::Lt(_) => BinOperator::Lt,
+            syn::BinOp::Mul(_) => BinOperator::Mul,
+            syn::BinOp::Or(_) => BinOperator::Or,
+            syn::BinOp::Sub(_) => BinOperator::Sub,
             other => panic!("unsupported: {other:?}"),
         }
     }
