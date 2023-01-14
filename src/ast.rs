@@ -120,8 +120,16 @@ pub enum Expr {
     FlatList(Vec<Expr>),
     FnCall(FnCall),
     Binop(Box<Expr>, BinOperator, Box<Expr>),
+    If(ExprIf),
     // TODO: Overloaded arithmetic operators
     // TODO: VM-specific intrinsics (hash, absorb, squeeze, etc.)
+}
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub struct ExprIf {
+    pub condition: Box<Expr>,
+    pub then_branch: Box<Expr>,
+    pub else_branch: Box<Expr>,
 }
 
 pub struct SymTable(HashMap<String, (u8, DataType)>);

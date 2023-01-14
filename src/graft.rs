@@ -126,6 +126,34 @@ pub fn graft_expr(rust_exp: &syn::Expr) -> ast::Expr {
 
             a
         }
+        syn::Expr::If(expr_if) => {
+            let condition = graft_expr(&expr_if.cond);
+            let if_branch = &expr_if.then_branch.stmts;
+            assert_eq!(1, if_branch.len(), "Max one line in if/else expressions");
+            let then_branch = match &if_branch[0] {
+                syn::Stmt::Expr(expr) => graft_expr(&expr),
+                other => panic!("unsupported: {other:?}"),
+            };
+            let else_branch = &expr_if.else_branch.as_ref().unwrap().1;
+            let else_branch = match else_branch.as_ref() {
+                syn::Expr::Block(block) => {
+                    let else_branch = &block.block.stmts;
+                    assert_eq!(1, else_branch.len(), "Max one line in if/else expressions");
+                    let else_branch = match &else_branch[0] {
+                        syn::Stmt::Expr(expr) => graft_expr(&expr),
+                        other => panic!("unsupported: {other:?}"),
+                    };
+                    else_branch
+                }
+                other => panic!("unsupported: {other:?}"),
+            };
+
+            ast::Expr::If(ast::ExprIf {
+                condition: Box::new(condition),
+                then_branch: Box::new(then_branch),
+                else_branch: Box::new(else_branch),
+            })
+        }
         other => panic!("unsupported: {other:?}"),
     }
 }
@@ -205,6 +233,35 @@ mod tests {
     use syn::parse_quote;
 
     use super::*;
+
+    #[test]
+    fn right_lineage_length() {
+        let tokens: syn::Item = parse_quote! {
+            fn right_lineage_length(node_index: u64) -> u64 {
+                let bit_width: u64 = u64::BITS - u64::leading_zeros(node_index);
+                let npo2: u64 = 1u64 << bit_width;
+
+                let dist: u64 = npo2 - node_index;
+
+                let ret: u64 = if (bit_width) < dist {
+                    right_lineage_length(node_index - (npo2 >> 1u64) + 1u64)
+                } else {
+                    (dist - 1u64)
+                };
+
+                return ret;
+            }
+        };
+
+        match &tokens {
+            syn::Item::Fn(item_fn) => {
+                println!("{item_fn:#?}");
+                let ret = graft(item_fn);
+                println!("{ret:#?}");
+            }
+            _ => panic!("unsupported"),
+        }
+    }
 
     #[test]
     fn mmr_leftmost_ancestor() {
