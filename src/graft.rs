@@ -24,7 +24,7 @@ fn rust_type_to_data_type(x: &syn::Type) -> ast::DataType {
 fn pat_type_to_data_type(rust_type_path: &syn::PatType) -> ast::DataType {
     match rust_type_path.ty.as_ref() {
         syn::Type::Path(path) => rust_type_path_to_data_type(path),
-        other_type => panic!("{other_type:#?}"),
+        other_type => panic!("Unsupported {other_type:#?}"),
     }
 }
 
@@ -167,6 +167,26 @@ mod tests {
     use syn::parse_quote;
 
     use super::*;
+
+    #[test]
+    fn and_and_xor_u32() {
+        let tokens: syn::Item = parse_quote! {
+            fn and_and_xor_u32(lhs: u32, rhs: u32) -> (u32, u32) {
+                let a: u32 = lhs & rhs;
+                let b: u32 = lhs ^ rhs;
+                return (a, b);
+            }
+        };
+
+        match &tokens {
+            syn::Item::Fn(item_fn) => {
+                println!("{item_fn:#?}");
+                let ret = graft(item_fn);
+                println!("{ret:#?}");
+            }
+            _ => panic!("unsupported"),
+        }
+    }
 
     #[test]
     fn bfe_add_return_expr() {

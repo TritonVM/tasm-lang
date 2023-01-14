@@ -42,6 +42,8 @@ pub enum ExprLit {
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum BinOperator {
     Add,
+    BitAnd,
+    BitXor,
     // TODO: Add more
 }
 
@@ -49,6 +51,8 @@ impl From<syn::BinOp> for BinOperator {
     fn from(rust_binop: syn::BinOp) -> Self {
         match rust_binop {
             syn::BinOp::Add(_) => BinOperator::Add,
+            syn::BinOp::BitAnd(_) => BinOperator::BitAnd,
+            syn::BinOp::BitXor(_) => BinOperator::BitXor,
             other => panic!("unsupported: {other:?}"),
         }
     }
