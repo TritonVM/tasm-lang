@@ -7,13 +7,17 @@ fn rust_type_path_to_data_type(rust_type_path: &syn::TypePath) -> ast::DataType 
         rust_type_path.path.segments.len(),
         "Length other than one not supported"
     );
-    rust_type_path.path.segments[0].ident.to_string().into()
+    rust_type_path.path.segments[0]
+        .ident
+        .to_string()
+        .parse::<ast::DataType>()
+        .expect("a valid DataType")
 }
 
 fn rust_type_to_data_type(x: &syn::Type) -> ast::DataType {
     match x {
-        syn::Type::Path(data_type) => rust_type_path_to_data_type(&data_type),
-        other_type => panic!("{other_type:#?}"),
+        syn::Type::Path(data_type) => rust_type_path_to_data_type(data_type),
+        ty => panic!("Unsupported type {ty:#?}"),
     }
 }
 

@@ -1,5 +1,7 @@
 use std::collections::HashMap;
+use std::str::FromStr;
 
+use anyhow::bail;
 use twenty_first::shared_math::b_field_element::BFieldElement;
 use twenty_first::shared_math::rescue_prime_digest::Digest;
 use twenty_first::shared_math::x_field_element::XFieldElement;
@@ -59,16 +61,18 @@ pub enum DataType {
     Digest,
 }
 
-impl From<String> for DataType {
-    fn from(str: String) -> Self {
-        match str.as_str() {
-            "bool" => DataType::Bool,
-            "Digest" => DataType::Digest,
-            "u32" => DataType::U32,
-            "u64" => DataType::U64,
-            "BFieldElement" => DataType::BFE,
-            "XFieldElement" => DataType::XFE,
-            str => panic!("Unsupported type: {}", str),
+impl FromStr for DataType {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "bool" => Ok(DataType::Bool),
+            "u32" => Ok(DataType::U32),
+            "u64" => Ok(DataType::U64),
+            "BFieldElement" => Ok(DataType::BFE),
+            "XFieldElement" => Ok(DataType::XFE),
+            "Digest" => Ok(DataType::Digest),
+            ty => bail!("Unsupported type {}", ty),
         }
     }
 }
