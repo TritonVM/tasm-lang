@@ -38,8 +38,9 @@ fn pat_to_name(pat: &syn::Pat) -> String {
 }
 
 fn path_to_ident(path: &syn::Path) -> String {
-    assert_eq!(1, path.segments.len(), "must have length = 1");
-    path.segments[0].ident.to_string()
+    // We just join identifiers with `::` to get the full function name / identifier name
+    let identifiers: Vec<String> = path.segments.iter().map(|x| x.ident.to_string()).collect();
+    identifiers.join("::")
 }
 
 fn graft_fn_arg(rust_fn_arg: &syn::FnArg) -> ast::FnArg {
@@ -204,6 +205,28 @@ mod tests {
     use syn::parse_quote;
 
     use super::*;
+
+    #[test]
+    fn mmr_leftmost_ancestor() {
+        let tokens: syn::Item = parse_quote! {
+            fn leftmost_ancestor(node_index: u64) -> (u64, u32) {
+                // let h = u128::BITS - node_index.leading_zeros() - 1;
+                let h: u32 = u64::BITS - u64::leading_zeros(node_index) - 1u32;
+                let ret: u64 = (1u64 << (h + 1u64)) - 1u64;
+
+                return (ret, h);
+            }
+        };
+
+        match &tokens {
+            syn::Item::Fn(item_fn) => {
+                println!("{item_fn:#?}");
+                let ret = graft(item_fn);
+                println!("{ret:#?}");
+            }
+            _ => panic!("unsupported"),
+        }
+    }
 
     #[test]
     fn mmr_left_child() {
