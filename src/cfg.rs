@@ -1,6 +1,6 @@
 use crate::ast::{DataType, ExprLit};
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct ControlFlowGraph {
     pub entrypoint: usize,
     pub edges: Vec<Edge>,
@@ -8,17 +8,18 @@ pub struct ControlFlowGraph {
     pub exitpoint: usize,
 }
 
-#[derive(Debug, Hash, PartialEq, Eq)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct Edge {
     pub source: usize,
     pub destination: usize,
 }
 
-#[derive(Debug, Hash, PartialEq, Eq)]
+#[derive(Debug, Hash, PartialEq, Eq, Clone)]
 pub struct BasicBlock {
     pub index: usize,
-    pub stmts: Vec<LetStmt>,
     pub param: Option<Variable>,
+    pub stmts: Vec<LetStmt>,
+    pub last: Expr,
 }
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone)]
@@ -30,11 +31,11 @@ pub struct Variable {
 #[derive(Debug, Hash, PartialEq, Eq, Clone)]
 pub struct LetStmt {
     pub var: Variable,
-    pub expr: Option<Expr>, // empty only for first statement
+    pub expr: Expr,
 }
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone)]
 pub enum Expr {
-    Var(String),
+    Var(Variable),
     Lit(ExprLit),
 }

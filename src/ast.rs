@@ -134,7 +134,7 @@ pub struct ExprIf {
 
 pub struct SymTable(HashMap<String, (u8, DataType)>);
 
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
 pub enum DataType {
     Bool,
     U32,
