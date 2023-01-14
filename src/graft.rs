@@ -134,7 +134,7 @@ pub fn graft_stmt(rust_stmt: &syn::Stmt) -> ast::Stmt {
                 let a = ret.expr.as_ref().unwrap();
                 let b = graft_expr(a);
 
-                ast::Stmt::Return(ast::Expr::FlatList(vec![b]))
+                ast::Stmt::Return(b)
             }
             _ => todo!(),
         },
@@ -167,6 +167,43 @@ mod tests {
     use syn::parse_quote;
 
     use super::*;
+
+    #[test]
+    fn bfe_add_return_expr() {
+        let tokens: syn::Item = parse_quote! {
+            fn add_bfe(lhs: BFieldElement, rhs: BFieldElement) -> BFieldElement {
+                return lhs + rhs;
+            }
+        };
+
+        match &tokens {
+            syn::Item::Fn(item_fn) => {
+                println!("{item_fn:#?}");
+                let ret = graft(item_fn);
+                println!("{ret:#?}");
+            }
+            _ => panic!("unsupported"),
+        }
+    }
+
+    #[test]
+    fn bfe_add_return_var() {
+        let tokens: syn::Item = parse_quote! {
+            fn add_bfe(lhs: BFieldElement, rhs: BFieldElement) -> BFieldElement {
+                let sum: BFieldElement = lhs + rhs;
+                return sum;
+            }
+        };
+
+        match &tokens {
+            syn::Item::Fn(item_fn) => {
+                println!("{item_fn:#?}");
+                let ret = graft(item_fn);
+                println!("{ret:#?}");
+            }
+            _ => panic!("unsupported"),
+        }
+    }
 
     #[test]
     fn u32_add() {
