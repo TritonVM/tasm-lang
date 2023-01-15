@@ -9,9 +9,11 @@ pub fn convert(cfg: &mut ControlFlowGraph) {
 
 /// Modifies a ControlFlowGraph such that:
 ///  - basic blocks get an explicit parameter list `params` which
-///    corresponds to the free variables used in that basic block.
+///    corresponds to the free variables used in that basic block,
+///    or expected by subsequent ones
 ///  - edges get an annotation listing the free variables that their
-///    originating basic blocks must supply.
+///    originating basic blocks must supply, either by defining them
+///    in let statements or by expecting them as parameters
 fn add_annotations(cfg: &mut ControlFlowGraph) {
     let mut visited: HashSet<usize> = HashSet::new();
     let mut active_set: Vec<usize> = vec![cfg.exitpoint];
@@ -23,16 +25,34 @@ fn add_annotations(cfg: &mut ControlFlowGraph) {
         for member_index in active_set {
             let mut member = &mut cfg.nodes[member_index];
             let free_variables = member.free_variables();
+            let defined_variables = member.defined_variables();
+
+            // find outgoing edges
+            // iterate over all of them
+            // collect variables used downstream
+            let mut downstream_variables = vec![];
+            for outgoing_edge in cfg.edges.iter_mut().filter(|e| e.source == member_index) {
+                for variable in outgoing_edge.annotations.iter() {
+                    if !downstream_variables.contains(variable)
+                        && !defined_variables.contains(variable)
+                    {
+                        downstream_variables.push(variable.clone());
+                    }
+                }
+            }
 
             // find incoming edges for `member`
             // iterate over all of them
-            // and add annotation
+            // and add annotations
             for incoming_edge in cfg
                 .edges
                 .iter_mut()
                 .filter(|e| e.destination == member_index)
             {
                 incoming_edge.annotations = free_variables.clone();
+                incoming_edge
+                    .annotations
+                    .append(&mut downstream_variables.clone());
             }
 
             // make implicit parameter explicit
@@ -239,33 +259,40 @@ mod tests {
         // block_1:
         //   baz = foo
         //   foo = 3
+        //   foo = foz
         // ```
         //
         // should be annotated to:
         //
         // ```
-        // block_0(bar):
+        // block_0(bar, foz):
         //   foo = bar
         //   call block_1(foo)
         //
-        // block_1(foo):
+        // block_1(foo, foz):
         //   baz = foo
         //   foo = 3
+        //   foo = foz
         // ```
         //
         // and renamed to:
         //
         // ```
-        // block_0(bar):
+        // block_0(bar, foz):
         //   foo = bar
         //   call block_1(foo)
         //
-        // block_1(foo_0):
+        // block_1(foo_0, foz):
         //   baz = foo_0
         //   foo_1 = 3
+        //   foo_2 = foz
         // ```
         let foo_var = Variable {
             name: "foo".to_string(),
+            data_type: DataType::U32,
+        };
+        let foz_var = Variable {
+            name: "foz".to_string(),
             data_type: DataType::U32,
         };
 
@@ -303,6 +330,10 @@ mod tests {
                 Statement::Re(Assignment {
                     var: foo_var.clone(),
                     expr: Expr::Lit(ExprLit::CU32(3)),
+                }),
+                Statement::Re(Assignment {
+                    var: foo_var.clone(),
+                    expr: Expr::Var(foz_var.clone()),
                 }),
             ],
         });
