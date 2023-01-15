@@ -1,6 +1,6 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
-use crate::cfg::{self, Assignment, ControlFlowGraph, Expr, Statement, Variable};
+use crate::cfg::{self, Assignment, BasicBlock, ControlFlowGraph, Expr, Statement, Variable};
 
 pub fn convert(cfg: &mut ControlFlowGraph) {
     add_annotations(cfg);
@@ -18,6 +18,7 @@ fn add_annotations(cfg: &mut ControlFlowGraph) {
     let mut visited: HashSet<usize> = HashSet::new();
     let mut active_set: Vec<usize> = vec![cfg.exitpoint];
 
+    // visit all nodes in opposite direction of edges
     while !active_set.is_empty() {
         let mut predecessors = vec![];
 
@@ -49,10 +50,13 @@ fn add_annotations(cfg: &mut ControlFlowGraph) {
                 .iter_mut()
                 .filter(|e| e.destination == member_index)
             {
-                incoming_edge.annotations = free_variables.clone();
-                incoming_edge
-                    .annotations
-                    .append(&mut downstream_variables.clone());
+                incoming_edge.annotations = vec![];
+                for dv in downstream_variables.iter() {
+                    incoming_edge.annotations.push(dv.clone());
+                }
+                for fv in free_variables.iter() {
+                    incoming_edge.annotations.push(fv.clone());
+                }
             }
 
             // make implicit parameter explicit
@@ -87,6 +91,7 @@ fn rename_variables(cfg: &mut ControlFlowGraph) {
     let mut visited: HashSet<usize> = HashSet::new();
     let mut active_set: Vec<usize> = vec![cfg.entrypoint];
     let mut names_already_used: Vec<String> = vec![];
+    let mut name_map = HashMap::<String, String>::new();
 
     let mut counter: usize = 0;
     let mut name_gen = |s: &str| {
@@ -95,8 +100,7 @@ fn rename_variables(cfg: &mut ControlFlowGraph) {
         tmp
     };
 
-    // iterate over all nodes in the graph, in direction determined
-    // by edges
+    // visit all nodes in the graph, in direction of edges
     while !active_set.is_empty() {
         let mut successors = vec![];
 
@@ -105,6 +109,9 @@ fn rename_variables(cfg: &mut ControlFlowGraph) {
         for member_index in active_set {
             let member = &mut cfg.nodes[member_index];
 
+            // apply existing rename substitutions
+            substitute_names_in_basic_block(member, &name_map);
+
             // if the basic block has parameters, iterate over them
             for param in member.params.iter_mut() {
                 let data_type = param.data_type.to_owned();
@@ -112,25 +119,21 @@ fn rename_variables(cfg: &mut ControlFlowGraph) {
                 // this name was already used; we need to get a new one
                 if names_already_used.contains(&param.name) {
                     let new_name = name_gen(&param.name);
-                    // apply name change
+                    let old_name = param.name.clone();
+                    name_map.insert(param.name.clone(), new_name.clone());
+                    // apply name change to parameter
                     *param = cfg::Variable {
                         name: new_name.clone(),
                         data_type,
                     };
-                    // percolate name change
+                    // percolate name change to statements
                     for statement in member.statements.iter_mut() {
                         let expression = match statement {
                             cfg::Statement::Let(assignment) => &mut assignment.expr,
                             cfg::Statement::Re(assignment) => &mut assignment.expr,
                             cfg::Statement::Cond(expr) => expr,
                         };
-                        rename_expression(expression, param.name.clone(), new_name.clone());
-                        if let Statement::Let(assignment) = statement {
-                            if assignment.var.name == *param.name {
-                                // expressions following this assignment use the new value
-                                break;
-                            }
-                        }
+                        rename_expression(expression, old_name.clone(), new_name.clone());
                     }
                     // keep track of this new name
                     names_already_used.push(new_name);
@@ -162,6 +165,7 @@ fn rename_variables(cfg: &mut ControlFlowGraph) {
                 // this name was already used, get a new one
                 if names_already_used.contains(&var_name) {
                     let new_name = name_gen(&var_name);
+                    name_map.insert(var_name.clone(), new_name.clone());
 
                     // map let-statement -> let-statement with new variable name
                     // and reassignment -> let-statement with new variable name
@@ -241,6 +245,43 @@ fn rename_expression(expression: &mut Expr, old_name: String, new_name: String) 
     };
 }
 
+/// Applies all the old_name -> new_name substitutions listed in the
+/// dictionary whereever possible.
+fn substitute_names_in_expression(expression: &mut Expr, name_map: &HashMap<String, String>) {
+    match expression {
+        Expr::Var(variable) => {
+            if name_map.contains_key(&variable.name) {
+                variable.name = name_map.get(&variable.name).unwrap().clone();
+            }
+        }
+        Expr::Lit(_) => {}
+    };
+}
+
+/// Applies all the old_name -> new_name substitutions listed in the
+/// dictionary whereever possible.
+fn substitute_names_in_basic_block(member: &mut BasicBlock, name_map: &HashMap<String, String>) {
+    for param in member.params.iter_mut() {
+        if name_map.contains_key(&param.name) {
+            param.name = name_map.get(&param.name).unwrap().clone();
+        }
+    }
+
+    for statement in member.statements.iter_mut() {
+        match statement {
+            Statement::Let(assignment) | Statement::Re(assignment) => {
+                if name_map.contains_key(&assignment.var.name) {
+                    assignment.var.name = name_map.get(&assignment.var.name).unwrap().clone();
+                }
+                substitute_names_in_expression(&mut assignment.expr, name_map);
+            }
+            Statement::Cond(expression) => {
+                substitute_names_in_expression(expression, name_map);
+            }
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::{
@@ -259,6 +300,9 @@ mod tests {
         // block_1:
         //   baz = foo
         //   foo = 3
+        //   call block_2
+        //
+        // block_2:
         //   foo = foz
         // ```
         //
@@ -272,6 +316,9 @@ mod tests {
         // block_1(foo, foz):
         //   baz = foo
         //   foo = 3
+        //   call block_2(foz)
+        //
+        // block_2(foz):
         //   foo = foz
         // ```
         //
@@ -285,6 +332,9 @@ mod tests {
         // block_1(foo_0, foz):
         //   baz = foo_0
         //   foo_1 = 3
+        //   call block_2(foz)
+        //
+        // block_2(foz):
         //   foo_2 = foz
         // ```
         let foo_var = Variable {
@@ -331,11 +381,17 @@ mod tests {
                     var: foo_var.clone(),
                     expr: Expr::Lit(ExprLit::CU32(3)),
                 }),
-                Statement::Re(Assignment {
-                    var: foo_var.clone(),
-                    expr: Expr::Var(foz_var.clone()),
-                }),
             ],
+        });
+
+        // block_2
+        cfg.nodes.push(BasicBlock {
+            index: 1,
+            params: vec![],
+            statements: vec![Statement::Re(Assignment {
+                var: foo_var.clone(),
+                expr: Expr::Var(foz_var.clone()),
+            })],
         });
 
         // edges
@@ -344,8 +400,14 @@ mod tests {
             destination: 1,
             annotations: vec![],
         });
+        cfg.edges.push(Edge {
+            source: 1,
+            destination: 2,
+            annotations: vec![],
+        });
 
-        cfg.exitpoint = 1;
+        cfg.entrypoint = 0;
+        cfg.exitpoint = 2;
 
         cfg
     }
@@ -354,10 +416,31 @@ mod tests {
     fn assert_annotated(cfg: &ControlFlowGraph) {
         for node_index in 0..cfg.nodes.len() {
             let basic_block = &cfg.nodes[node_index];
+            let outgoing_edges: Vec<&Edge> = cfg
+                .edges
+                .iter()
+                .filter(|e| e.source == node_index)
+                .collect();
             for incoming_edge in cfg.edges.iter().filter(|e| e.destination == node_index) {
-                for annotation in incoming_edge.annotations.iter() {
-                    assert!(basic_block.params.contains(annotation));
+                // annotations of incoming edges should either coincide with parameters ...
+                let mut annotations_marker = HashSet::<String>::new();
+                for a in basic_block.params.iter() {
+                    annotations_marker.insert(a.name.clone());
                 }
+                // ... or should be passed on downstream ...
+                for a in outgoing_edges
+                    .iter()
+                    .flat_map(|edge| edge.annotations.clone())
+                {
+                    annotations_marker.insert(a.name);
+                }
+                // so by now all annotations should be marked in the marker.
+                assert!(incoming_edge
+                    .annotations
+                    .iter()
+                    .all(|a| annotations_marker.contains(&a.name)));
+
+                // conversely, all parameters should be in the annotations
                 for parameter in basic_block.params.iter() {
                     assert!(incoming_edge.annotations.contains(parameter));
                 }
