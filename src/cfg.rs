@@ -12,14 +12,14 @@ pub struct ControlFlowGraph {
 pub struct Edge {
     pub source: usize,
     pub destination: usize,
+    pub annotations: Vec<Variable>,
 }
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone)]
 pub struct BasicBlock {
     pub index: usize,
-    pub param: Option<Variable>,
+    pub params: Vec<Variable>,
     pub stmts: Vec<LetStmt>,
-    pub last: Expr,
 }
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone)]
