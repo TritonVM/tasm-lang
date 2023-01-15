@@ -184,7 +184,50 @@ pub fn graft_stmt(rust_stmt: &syn::Stmt) -> ast::Stmt {
             ast::Stmt::Let(let_stmt)
         }
         syn::Stmt::Item(_) => todo!(),
-        syn::Stmt::Expr(_) => todo!(),
+        syn::Stmt::Expr(expr) => match expr {
+            syn::Expr::While(while_stmt) => {
+                let expr_while = while_stmt;
+                let while_condition = graft_expr(&expr_while.cond);
+                let while_stmts: Vec<ast::Stmt> = while_stmt
+                    .body
+                    .stmts
+                    .iter()
+                    .map(|x| graft_stmt(x))
+                    .collect_vec();
+
+                let while_stmt = ast::WhileStmt {
+                    condition: while_condition,
+                    stmts: while_stmts,
+                };
+                ast::Stmt::While(while_stmt)
+            }
+            syn::Expr::If(if_expr) => {
+                let if_condition = graft_expr(&if_expr.cond);
+                let if_stmts: Vec<ast::Stmt> = if_expr
+                    .then_branch
+                    .stmts
+                    .iter()
+                    .map(|x| graft_stmt(x))
+                    .collect_vec();
+                let else_stmts: Vec<ast::Stmt> = match if_expr.else_branch.as_ref() {
+                    Some(else_stmts) => match else_stmts.1.as_ref() {
+                        syn::Expr::Block(block) => {
+                            block.block.stmts.iter().map(|x| graft_stmt(x)).collect()
+                        }
+                        other => panic!("unsupported: {other:?}"),
+                    },
+                    None => vec![],
+                };
+
+                let if_stmt = ast::IfStmt {
+                    condition: if_condition,
+                    if_branch: if_stmts,
+                    else_branch: else_stmts,
+                };
+                ast::Stmt::If(if_stmt)
+            }
+            other => panic!("unsupported: {other:?}"),
+        },
         syn::Stmt::Semi(semi, _b) => match semi {
             syn::Expr::Return(ret) => {
                 // Handle a return statement
@@ -198,6 +241,20 @@ pub fn graft_stmt(rust_stmt: &syn::Stmt) -> ast::Stmt {
                 let ast_fn_call = graft_call_exp(call_exp);
 
                 ast::Stmt::FnCall(ast_fn_call)
+            }
+            syn::Expr::Assign(assign) => {
+                let identifier = assign.left.as_ref();
+                let identifier = match identifier {
+                    syn::Expr::Path(path) => path_to_ident(&path.path),
+                    other => panic!("unsupported: {other:?}"),
+                };
+                let assign_expr: ast::Expr = graft_expr(assign.right.as_ref());
+                let assign_stmt: ast::AssignStmt = ast::AssignStmt {
+                    var_name: identifier,
+                    expr: assign_expr,
+                };
+
+                ast::Stmt::Assign(assign_stmt)
             }
             other => panic!("unsupported: {other:?}"),
         },
@@ -230,6 +287,43 @@ mod tests {
     use syn::parse_quote;
 
     use super::*;
+
+    #[test]
+    fn leaf_count_to_node_count() {
+        let tokens: syn::Item = parse_quote! {
+                fn leaf_count_to_node_count(leaf_count: u64) -> u64 {
+                    if leaf_count == 0u64 {
+                        return 0u64;
+                    }
+
+                    let rightmost_leaf_leaf_index: u64 = leaf_count - 1u64;
+                    let non_leaf_nodes_left: u64 = non_leaf_nodes_left(rightmost_leaf_leaf_index);
+                    let node_index_of_rightmost_leaf: u64 = leaf_index_to_node_index(rightmost_leaf_leaf_index);
+
+                    let mut non_leaf_nodes_after: u64 = 0u64;
+                    let mut node_index: u64 = node_index_of_rightmost_leaf;
+                    let mut right_count: u64 = right_lineage_length(node_index);
+                    while right_count != 0u64 {
+                        non_leaf_nodes_after = non_leaf_nodes_after + 1u64;
+                        // go to parent (parent of right child has node index plus 1)
+                        node_index = node_index + 1u64;
+                        right_count = right_count - 1u64;
+                    }
+
+                    // Number of nodes is: non-leafs after, non-leafs before, and leaf count
+                    return non_leaf_nodes_after + non_leaf_nodes_left + leaf_count;
+            }
+        };
+
+        match &tokens {
+            syn::Item::Fn(item_fn) => {
+                println!("{item_fn:#?}");
+                let ret = graft(item_fn);
+                println!("{ret:#?}");
+            }
+            _ => panic!("unsupported"),
+        }
+    }
 
     #[test]
     fn right_lineage_length() {

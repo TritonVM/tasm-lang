@@ -23,10 +23,25 @@ pub struct FnArg {
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum Stmt {
     Let(LetStmt),
+    Assign(AssignStmt),
     Return(Expr),
     // FIXME: Type-check that functions not bound to variables don't return anything
     FnCall(FnCall),
-    // TODO: Control-flow operators: if-else, while, etc.
+    While(WhileStmt), // TODO: Control-flow operators: if-else, while, etc.
+    If(IfStmt),
+}
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub struct WhileStmt {
+    pub condition: Expr,
+    pub stmts: Vec<Stmt>,
+}
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub struct IfStmt {
+    pub condition: Expr,
+    pub if_branch: Vec<Stmt>,
+    pub else_branch: Vec<Stmt>,
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
@@ -85,6 +100,7 @@ pub enum BinOperator {
     Eq,
     Lt,
     Mul,
+    Ne,
     Or,
     Rem,
     Shl,
@@ -103,6 +119,7 @@ impl From<syn::BinOp> for BinOperator {
             syn::BinOp::Eq(_) => BinOperator::Eq,
             syn::BinOp::Lt(_) => BinOperator::Lt,
             syn::BinOp::Mul(_) => BinOperator::Mul,
+            syn::BinOp::Ne(_) => BinOperator::Ne,
             syn::BinOp::Or(_) => BinOperator::Or,
             syn::BinOp::Rem(_) => BinOperator::Rem,
             syn::BinOp::Shl(_) => BinOperator::Shl,
@@ -158,6 +175,12 @@ impl FromStr for DataType {
             ty => bail!("Unsupported type {}", ty),
         }
     }
+}
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub struct AssignStmt {
+    pub var_name: String,
+    pub expr: Expr,
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
