@@ -305,7 +305,7 @@ mod tests {
                     var: baz_var.clone(),
                     expr: Expr::Var(foo_var.clone()),
                 }),
-                Statement::Let(Assignment {
+                Statement::Re(Assignment {
                     var: foo_var.clone(),
                     expr: Expr::Lit(ExprLit::CU32(3)),
                 }),
@@ -364,6 +364,16 @@ mod tests {
         }
     }
 
+    #[inline]
+    fn assert_no_reassignments(cfg: &ControlFlowGraph) {
+        for node_index in 0..cfg.nodes.len() {
+            let basic_block = &cfg.nodes[node_index];
+            for statement in basic_block.statements.iter() {
+                assert!(!matches!(statement, Statement::Re(_)));
+            }
+        }
+    }
+
     #[test]
     fn simple_ssa_test() {
         let mut cfg = gen_cfg();
@@ -374,6 +384,7 @@ mod tests {
 
         rename_variables(&mut cfg);
         assert_unique_variable_names(&cfg);
+        assert_no_reassignments(&cfg);
 
         println!("{:#?}", cfg);
     }
