@@ -22,6 +22,64 @@ pub struct BasicBlock {
     pub statements: Vec<LetStmt>,
 }
 
+impl BasicBlock {
+    /// Free variables are variables that are used in this basic
+    /// block but not defined here, or used prior to being defined.
+    pub fn free_variables(&self) -> Vec<Variable> {
+        let mut free_variables = vec![];
+        let mut free_variable_names = vec![];
+        let mut defined_variable_names = vec![];
+        for statement in self.statements.iter() {
+            match &statement.expr {
+                Expr::Var(var) => {
+                    if !free_variable_names.contains(&var.name)
+                        && !defined_variable_names.contains(&var.name)
+                    {
+                        free_variables.push(var.clone());
+                        free_variable_names.push(var.name.clone());
+                    }
+                }
+                Expr::Lit(_) => {}
+            }
+            defined_variable_names.push(statement.var.name.clone());
+        }
+        return free_variables;
+    }
+
+    /// Used variables are variables referenced in expressions in
+    /// this basic block.
+    pub fn used_variables(&self) -> Vec<Variable> {
+        let mut used_variables = vec![];
+        let mut used_variable_names = vec![];
+        for statement in self.statements.iter() {
+            match &statement.expr {
+                Expr::Var(var) => {
+                    if !used_variable_names.contains(&var.name) {
+                        used_variables.push(var.clone());
+                        used_variable_names.push(var.name.clone());
+                    }
+                }
+                Expr::Lit(_) => {}
+            }
+        }
+        return used_variables;
+    }
+
+    /// Defined variables are variables that are cast into existence
+    /// by a let-statement in this basic block.
+    pub fn defined_variables(&self) -> Vec<Variable> {
+        let mut defined_variables = vec![];
+        let mut defined_variable_names = vec![];
+        for statement in self.statements.iter() {
+            if !defined_variable_names.contains(&statement.var.name) {
+                defined_variables.push(statement.var.clone());
+                defined_variable_names.push(statement.var.name.clone());
+            }
+        }
+        return defined_variables;
+    }
+}
+
 #[derive(Debug, Hash, PartialEq, Eq, Clone)]
 pub struct Variable {
     pub name: String,

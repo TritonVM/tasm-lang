@@ -75,7 +75,8 @@ fn add_annotations(cfg: &mut ControlFlowGraph) {
     }
 }
 
-/// Rename variables so that all are unique
+/// Modifies a control flow graph by renaming the variables such that
+/// they are all unique
 fn rename_variables(cfg: &mut ControlFlowGraph) {
     let mut visited: HashSet<usize> = HashSet::new();
     let mut active_set: Vec<usize> = vec![cfg.entrypoint];
@@ -202,23 +203,6 @@ fn rename_variables(cfg: &mut ControlFlowGraph) {
     }
 }
 
-// fn rename_variable(var: &mut cfg::Variable, renaming_dictionary: &HashMap<String, String>) {
-//     if let Some(new_name) = renaming_dictionary.get(&var.name) {
-//         let data_type = var.data_type.to_owned();
-//         *var = cfg::Variable {
-//             name: new_name.clone(),
-//             data_type,
-//         };
-//     }
-// }
-
-// fn rename_expr(expr: &mut cfg::Expr, renaming_dictionary: &HashMap<String, String>) {
-//     match expr {
-//         cfg::Expr::Var(var) => rename_variable(var, renaming_dictionary),
-//         cfg::Expr::Lit(_) => (),
-//     }
-// }
-
 #[cfg(test)]
 mod tests {
     use crate::{
@@ -317,16 +301,47 @@ mod tests {
         cfg
     }
 
+    #[inline]
+    fn assert_annotated(cfg: &ControlFlowGraph) {
+        for node_index in 0..cfg.nodes.len() {
+            let basic_block = &cfg.nodes[node_index];
+            for incoming_edge in cfg.edges.iter().filter(|e| e.destination == node_index) {
+                for annotation in incoming_edge.annotations.iter() {
+                    assert!(basic_block.params.contains(annotation));
+                }
+                for parameter in basic_block.params.iter() {
+                    assert!(incoming_edge.annotations.contains(parameter));
+                }
+            }
+        }
+    }
+
+    #[inline]
+    fn assert_unique_variable_names(cfg: &ControlFlowGraph) {
+        let mut variable_names = vec![];
+        for node_index in 0..cfg.nodes.len() {
+            let basic_block = &cfg.nodes[node_index];
+            for param in basic_block.params.iter() {
+                assert!(!variable_names.contains(&param.name));
+                variable_names.push(param.name.clone());
+            }
+            for let_statement in basic_block.statements.iter() {
+                assert!(!variable_names.contains(&let_statement.var.name));
+                variable_names.push(let_statement.var.name.clone());
+            }
+        }
+    }
+
     #[test]
     fn simple_ssa_test() {
         let mut cfg = gen_cfg();
         add_annotations(&mut cfg);
+        assert_annotated(&cfg);
 
-        // todo: assert that annotations happened
-
-        // println!("{:#?}", acfg);
+        // println!("{:#?}", cfg);
 
         rename_variables(&mut cfg);
+        assert_unique_variable_names(&cfg);
 
         println!("{:#?}", cfg);
     }
