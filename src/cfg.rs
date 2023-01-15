@@ -19,7 +19,7 @@ pub struct Edge {
 pub struct BasicBlock {
     pub index: usize,
     pub params: Vec<Variable>,
-    pub statements: Vec<LetStmt>,
+    pub statements: Vec<Statement>,
 }
 
 impl BasicBlock {
@@ -30,7 +30,12 @@ impl BasicBlock {
         let mut free_variable_names = vec![];
         let mut defined_variable_names = vec![];
         for statement in self.statements.iter() {
-            match &statement.expr {
+            let expression = match &statement {
+                Statement::Let(assignment) => &assignment.expr,
+                Statement::Re(assignment) => &assignment.expr,
+                Statement::Cond(expr) => expr,
+            };
+            match expression {
                 Expr::Var(var) => {
                     if !free_variable_names.contains(&var.name)
                         && !defined_variable_names.contains(&var.name)
@@ -41,7 +46,10 @@ impl BasicBlock {
                 }
                 Expr::Lit(_) => {}
             }
-            defined_variable_names.push(statement.var.name.clone());
+
+            if let Statement::Let(assignment) = statement {
+                defined_variable_names.push(assignment.var.name.clone());
+            }
         }
         return free_variables;
     }
@@ -52,7 +60,12 @@ impl BasicBlock {
         let mut used_variables = vec![];
         let mut used_variable_names = vec![];
         for statement in self.statements.iter() {
-            match &statement.expr {
+            let expression = match statement {
+                Statement::Let(assignment) => &assignment.expr,
+                Statement::Re(assignment) => &assignment.expr,
+                Statement::Cond(expr) => expr,
+            };
+            match expression {
                 Expr::Var(var) => {
                     if !used_variable_names.contains(&var.name) {
                         used_variables.push(var.clone());
@@ -71,9 +84,11 @@ impl BasicBlock {
         let mut defined_variables = vec![];
         let mut defined_variable_names = vec![];
         for statement in self.statements.iter() {
-            if !defined_variable_names.contains(&statement.var.name) {
-                defined_variables.push(statement.var.clone());
-                defined_variable_names.push(statement.var.name.clone());
+            if let Statement::Let(assignment) = statement {
+                if !defined_variable_names.contains(&assignment.var.name) {
+                    defined_variables.push(assignment.var.clone());
+                    defined_variable_names.push(assignment.var.name.clone());
+                }
             }
         }
         return defined_variables;
@@ -87,7 +102,14 @@ pub struct Variable {
 }
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone)]
-pub struct LetStmt {
+pub enum Statement {
+    Let(Assignment),
+    Re(Assignment),
+    Cond(Expr),
+}
+
+#[derive(Debug, Hash, PartialEq, Eq, Clone)]
+pub struct Assignment {
     pub var: Variable,
     pub expr: Expr,
 }

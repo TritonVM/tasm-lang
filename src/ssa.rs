@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use crate::cfg::{self, ControlFlowGraph, Variable};
+use crate::cfg::{self, Assignment, ControlFlowGraph, Expr, Statement, Variable};
 
 pub fn convert(cfg: &mut ControlFlowGraph) {
     add_annotations(cfg);
@@ -22,21 +22,7 @@ fn add_annotations(cfg: &mut ControlFlowGraph) {
         // visit members of active set
         for member_index in active_set {
             let mut member = &mut cfg.nodes[member_index];
-
-            // find free variables
-            let mut free_variables: Vec<Variable> = vec![];
-            let mut defined_variables = vec![];
-            for statement in member.statements.iter() {
-                match &statement.expr {
-                    cfg::Expr::Var(v) => {
-                        if !free_variables.contains(&v) && !defined_variables.contains(&v) {
-                            free_variables.push(v.to_owned());
-                        }
-                    }
-                    cfg::Expr::Lit(_) => {}
-                };
-                defined_variables.push(&statement.var);
-            }
+            let free_variables = member.free_variables();
 
             // find incoming edges for `member`
             // iterate over all of them
@@ -112,17 +98,23 @@ fn rename_variables(cfg: &mut ControlFlowGraph) {
                         data_type,
                     };
                     // percolate name change
-                    for let_statement in member.statements.iter_mut() {
-                        match &mut let_statement.expr {
+                    for statement in member.statements.iter_mut() {
+                        let expression = match statement {
+                            cfg::Statement::Let(assignment) => &mut assignment.expr,
+                            cfg::Statement::Re(assignment) => &mut assignment.expr,
+                            cfg::Statement::Cond(expr) => expr,
+                        };
+                        match expression {
                             cfg::Expr::Var(var) => {
                                 var.name = new_name.clone();
                             }
                             cfg::Expr::Lit(_) => {}
                         }
-                        if let_statement.var.name == *new_name {
-                            // expressions following this let-
-                            // statement use the new value
-                            break;
+                        if let Statement::Let(assignment) = statement {
+                            if assignment.var.name == *param.name {
+                                // expressions following this assignment use the new value
+                                break;
+                            }
                         }
                     }
                     // keep track of this new name
@@ -134,41 +126,59 @@ fn rename_variables(cfg: &mut ControlFlowGraph) {
                 }
             }
 
-            // iterate over all let-statements
+            // iterate over all statements
             for statement_index in 0..member.statements.len() {
-                let var_name = member.statements[statement_index].var.name.clone();
+                let statement = &mut member.statements[statement_index];
+                if let Statement::Cond(_) = statement {
+                    break;
+                }
+                let variable = match &statement {
+                    Statement::Let(assignment) => &assignment.var,
+                    Statement::Re(assignment) => &assignment.var,
+                    Statement::Cond(_) => panic!("Cannot get here."),
+                };
+                let expression = match &statement {
+                    Statement::Let(assignment) => &assignment.expr,
+                    Statement::Re(assignment) => &assignment.expr,
+                    Statement::Cond(_) => panic!("Cannot get here."),
+                };
+                let var_name = variable.name.clone();
 
                 // this name was already used, get a new one
                 if names_already_used.contains(&var_name) {
                     let new_name = name_gen(&var_name);
 
+                    // map let-statement -> let-statement with new variable name
+                    // and reassignment -> let-statement with new variable name
+                    *statement = Statement::Let(Assignment {
+                        var: Variable {
+                            name: new_name.clone(),
+                            data_type: variable.data_type.clone(),
+                        },
+                        expr: expression.clone(),
+                    });
+
                     // apply and percolate name change
-                    for (idx, let_statement_mut) in member
-                        .statements
-                        .iter_mut()
-                        .skip(statement_index)
-                        .enumerate()
+                    for let_statement_mut in member.statements.iter_mut().skip(statement_index + 1)
                     {
-                        if let_statement_mut.var.name == *var_name {
-                            if idx == 0 {
-                                // rename assignee
-                                let_statement_mut.var.name = new_name.clone();
-                            } else {
-                                // expressions following the outer
-                                // let-statement that shadow the
-                                // variable use the new value
-                                break;
-                            }
-                        }
-                        // rename variables in expression
-                        match &mut let_statement_mut.expr {
-                            cfg::Expr::Var(var) => {
-                                if var.name == var_name {
-                                    var.name = new_name.clone();
+                        match let_statement_mut {
+                            Statement::Let(assignment) | Statement::Re(assignment) => {
+                                if assignment.var.name == *var_name {
+                                    // expressions following the outer
+                                    // let-statement that shadow the
+                                    // variable use the new value
+                                    break;
                                 }
+                                rename_expression(
+                                    &mut assignment.expr,
+                                    var_name.clone(),
+                                    new_name.clone(),
+                                );
                             }
-                            cfg::Expr::Lit(_) => {}
-                        }
+                            Statement::Cond(expression) => {
+                                rename_expression(expression, var_name.clone(), new_name.clone())
+                            }
+                        };
                     }
 
                     // keep track of new name
@@ -203,11 +213,24 @@ fn rename_variables(cfg: &mut ControlFlowGraph) {
     }
 }
 
+/// Applies the substitution old_name -> new_name to every occurrence
+/// of old_name in the expression.
+fn rename_expression(expression: &mut Expr, old_name: String, new_name: String) {
+    match expression {
+        Expr::Var(var) => {
+            if var.name == *old_name {
+                var.name = new_name.clone();
+            }
+        }
+        Expr::Lit(_) => {}
+    };
+}
+
 #[cfg(test)]
 mod tests {
     use crate::{
         ast::{DataType, ExprLit},
-        cfg::{BasicBlock, Edge, Expr, LetStmt},
+        cfg::{BasicBlock, Edge, Expr},
     };
 
     use super::*;
@@ -267,10 +290,10 @@ mod tests {
         cfg.nodes.push(BasicBlock {
             index: 0,
             params: vec![],
-            statements: vec![LetStmt {
+            statements: vec![Statement::Let(Assignment {
                 var: foo_var.clone(),
                 expr: Expr::Var(bar_var),
-            }],
+            })],
         });
 
         // block_1
@@ -278,14 +301,14 @@ mod tests {
             index: 1,
             params: vec![foo_var.clone()],
             statements: vec![
-                LetStmt {
+                Statement::Let(Assignment {
                     var: baz_var.clone(),
                     expr: Expr::Var(foo_var.clone()),
-                },
-                LetStmt {
+                }),
+                Statement::Let(Assignment {
                     var: foo_var.clone(),
                     expr: Expr::Lit(ExprLit::CU32(3)),
-                },
+                }),
             ],
         });
 
@@ -325,9 +348,18 @@ mod tests {
                 assert!(!variable_names.contains(&param.name));
                 variable_names.push(param.name.clone());
             }
-            for let_statement in basic_block.statements.iter() {
-                assert!(!variable_names.contains(&let_statement.var.name));
-                variable_names.push(let_statement.var.name.clone());
+            for statement in basic_block.statements.iter() {
+                match statement {
+                    Statement::Let(assignment) => {
+                        assert!(!variable_names.contains(&assignment.var.name));
+                        variable_names.push(assignment.var.name.clone());
+                    }
+                    Statement::Re(assignment) => {
+                        assert!(!variable_names.contains(&assignment.var.name));
+                        variable_names.push(assignment.var.name.clone());
+                    }
+                    Statement::Cond(_expression) => {}
+                }
             }
         }
     }
