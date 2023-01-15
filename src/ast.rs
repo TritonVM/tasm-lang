@@ -133,13 +133,36 @@ impl From<syn::BinOp> for BinOperator {
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum Expr {
     Lit(ExprLit),
-    Var(String),
+    Var(VarIdentifier),
+    Index(Box<Expr>, Box<Expr>),
     FlatList(Vec<Expr>),
     FnCall(FnCall),
     Binop(Box<Expr>, BinOperator, Box<Expr>),
     If(ExprIf),
     // TODO: Overloaded arithmetic operators
     // TODO: VM-specific intrinsics (hash, absorb, squeeze, etc.)
+}
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub struct VarIdentifier {
+    pub name: String,
+    pub flat_list_index: Option<usize>,
+}
+
+impl VarIdentifier {
+    pub fn atomic_type(name: String) -> Self {
+        Self {
+            name,
+            flat_list_index: None,
+        }
+    }
+
+    pub fn flat_list_type(name: String, index: usize) -> Self {
+        Self {
+            name,
+            flat_list_index: Some(index),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
@@ -160,6 +183,7 @@ pub enum DataType {
     XFE,
     Digest,
     List(Box<DataType>),
+    FlatList(Vec<DataType>),
 }
 
 impl FromStr for DataType {
@@ -181,7 +205,38 @@ impl FromStr for DataType {
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct AssignStmt {
     pub var_name: String,
+    pub flat_list_index: Option<usize>,
     pub expr: Expr,
+    pub list_index: Option<Expr>,
+}
+
+impl AssignStmt {
+    pub fn atomic_type(name: String, expr: Expr) -> Self {
+        Self {
+            var_name: name,
+            flat_list_index: None,
+            expr,
+            list_index: None,
+        }
+    }
+
+    pub fn flat_type_type(name: String, expr: Expr, index: usize) -> Self {
+        Self {
+            var_name: name,
+            flat_list_index: Some(index),
+            expr,
+            list_index: None,
+        }
+    }
+
+    pub fn list_assign(name: String, expr: Expr, list_index: Expr) -> Self {
+        Self {
+            var_name: name,
+            flat_list_index: None,
+            expr,
+            list_index: Some(list_index),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]

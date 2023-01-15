@@ -52,6 +52,15 @@ fn rust_type_to_data_type(x: &syn::Type) -> ast::DataType {
 fn pat_type_to_data_type(rust_type_path: &syn::PatType) -> ast::DataType {
     match rust_type_path.ty.as_ref() {
         syn::Type::Path(path) => rust_type_path_to_data_type(path),
+        syn::Type::Tuple(tuple) => {
+            let types = tuple
+                .elems
+                .iter()
+                .map(|x| rust_type_to_data_type(x))
+                .collect_vec();
+
+            ast::DataType::FlatList(types)
+        }
         other_type => panic!("Unsupported {other_type:#?}"),
     }
 }
@@ -121,6 +130,14 @@ fn graft_call_exp(expr_call: &ExprCall) -> ast::FnCall {
     }
 }
 
+/// Return identifier if expression is a Path/identifier
+fn expr_to_maybe_ident(rust_exp: &syn::Expr) -> Option<String> {
+    match rust_exp {
+        syn::Expr::Path(path_expr) => Some(path_to_ident(&path_expr.path)),
+        _ => None,
+    }
+}
+
 pub fn graft_expr(rust_exp: &syn::Expr) -> ast::Expr {
     match rust_exp {
         syn::Expr::Binary(bin_expr) => {
@@ -133,7 +150,7 @@ pub fn graft_expr(rust_exp: &syn::Expr) -> ast::Expr {
         syn::Expr::Path(path) => {
             let path = &path.path;
             let ident: String = path_to_ident(path);
-            ast::Expr::Var(ident)
+            ast::Expr::Var(ast::VarIdentifier::atomic_type(ident))
         }
         syn::Expr::Tuple(tuple_expr) => {
             let exprs = tuple_expr.elems.iter().map(|x| graft_expr(x)).collect_vec();
@@ -177,6 +194,47 @@ pub fn graft_expr(rust_exp: &syn::Expr) -> ast::Expr {
                 then_branch: Box::new(then_branch),
                 else_branch: Box::new(else_branch),
             })
+        }
+        syn::Expr::MethodCall(method_call_expr) => {
+            // TODO: Add support for method calls on tuple members here
+            let identifier = match method_call_expr.receiver.as_ref() {
+                syn::Expr::Path(path) => path_to_ident(&path.path),
+                other => panic!("unsupported: {other:?}"),
+            };
+            let fun_name = method_call_expr.method.to_string();
+            let self_arg: ast::Expr = ast::Expr::Var(ast::VarIdentifier::atomic_type(identifier));
+            let method_args: Vec<ast::Expr> = method_call_expr
+                .args
+                .iter()
+                .map(|x| graft_expr(x))
+                .collect_vec();
+            let fn_call = ast::FnCall {
+                name: fun_name,
+                args: vec![vec![self_arg], method_args].concat(),
+            };
+            ast::Expr::FnCall(fn_call)
+        }
+        syn::Expr::Field(field_expr) => {
+            let path = field_expr.base.as_ref();
+            let ident = match expr_to_maybe_ident(path) {
+                Some(ident) => ident,
+                None => panic!("unsupported: {field_expr:?}"),
+            };
+            let tuple_index = match &field_expr.member {
+                syn::Member::Named(_) => panic!("unsupported: {field_expr:?}"),
+                syn::Member::Unnamed(tuple_index) => tuple_index,
+            };
+
+            ast::Expr::Var(ast::VarIdentifier::flat_list_type(
+                ident,
+                tuple_index.index as usize,
+            ))
+        }
+        syn::Expr::Index(index_expr) => {
+            let expr = graft_expr(&index_expr.expr);
+            let index = graft_expr(&&index_expr.index);
+
+            ast::Expr::Index(Box::new(expr), Box::new(index))
         }
         other => panic!("unsupported: {other:?}"),
     }
@@ -271,14 +329,37 @@ pub fn graft_stmt(rust_stmt: &syn::Stmt) -> ast::Stmt {
             }
             syn::Expr::Assign(assign) => {
                 let identifier = assign.left.as_ref();
-                let identifier = match identifier {
-                    syn::Expr::Path(path) => path_to_ident(&path.path),
-                    other => panic!("unsupported: {other:?}"),
-                };
                 let assign_expr: ast::Expr = graft_expr(assign.right.as_ref());
-                let assign_stmt: ast::AssignStmt = ast::AssignStmt {
-                    var_name: identifier,
-                    expr: assign_expr,
+                let assign_stmt = match identifier {
+                    syn::Expr::Path(path) => {
+                        ast::AssignStmt::atomic_type(path_to_ident(&path.path), assign_expr)
+                    }
+                    syn::Expr::Field(field_expr) => {
+                        let path = field_expr.base.as_ref();
+                        let ident = match expr_to_maybe_ident(path) {
+                            Some(ident) => ident,
+                            None => panic!("unsupported: {field_expr:?}"),
+                        };
+                        let tuple_index = match &field_expr.member {
+                            syn::Member::Named(_) => panic!("unsupported: {field_expr:?}"),
+                            syn::Member::Unnamed(tuple_index) => tuple_index,
+                        };
+
+                        ast::AssignStmt::flat_type_type(
+                            ident,
+                            assign_expr,
+                            tuple_index.index as usize,
+                        )
+                    }
+                    syn::Expr::Index(index_expr) => {
+                        let ident = match expr_to_maybe_ident(&index_expr.expr) {
+                            Some(ident) => ident,
+                            None => panic!("unsupported: {index_expr:?}"),
+                        };
+                        let index_expr = graft_expr(index_expr.index.as_ref());
+                        ast::AssignStmt::list_assign(ident, assign_expr, index_expr)
+                    }
+                    other => panic!("unsupported: {other:?}"),
                 };
 
                 ast::Stmt::Assign(assign_stmt)
@@ -289,7 +370,9 @@ pub fn graft_stmt(rust_stmt: &syn::Stmt) -> ast::Stmt {
                     other => panic!("unsupported: {other:?}"),
                 };
                 let fun_name = method_call_expr.method.to_string();
-                let self_arg: ast::Expr = ast::Expr::Var(identifier);
+                // TODO: Add support for method calls on tuple members here
+                let self_arg: ast::Expr =
+                    ast::Expr::Var(ast::VarIdentifier::atomic_type(identifier));
                 let method_args: Vec<ast::Expr> = method_call_expr
                     .args
                     .iter()
@@ -332,6 +415,51 @@ mod tests {
     use syn::parse_quote;
 
     use super::*;
+
+    #[test]
+    fn big_mmr_function() {
+        let tokens: syn::Item = parse_quote! {
+            fn calculate_new_peaks_from_leaf_mutation(
+                old_peaks: Vec<Digest>,
+                new_leaf: Digest,
+                leaf_count: u64,
+                auth_path: Vec<Digest>,
+                leaf_index: u64,
+            ) -> Vec<Digest> {
+                // let (mut acc_mt_index, peak_index) =
+                let acc_mt_index_and_peak_index: (u64, u32) = leaf_index_to_mt_index_and_peak_index(leaf_index, leaf_count);
+                let mut acc_hash: Digest = new_leaf;
+                let mut i: u32 = 0u32;
+                while acc_mt_index_and_peak_index.0 != 1u64 {
+                    let ap_element: Digest = auth_path[i];
+                    if acc_mt_index_and_peak_index.0 % 2u64 == 1u64 {
+                        // Node with `acc_hash` is a right child
+                        acc_hash = H::hash_pair(ap_element, acc_hash);
+                    } else {
+                        // Node with `acc_hash` is a left child
+                        acc_hash = H::hash_pair(acc_hash, ap_element);
+                    }
+
+                    acc_mt_index_and_peak_index.0 = acc_mt_index_and_peak_index.0 / 2u64;
+                    i = i + 1u32;
+                }
+
+                let mut calculated_peaks: Vec<Digest> = old_peaks.to_vec();
+                calculated_peaks[acc_mt_index_and_peak_index.1] = acc_hash;
+
+                return calculated_peaks;
+        }
+        };
+
+        match &tokens {
+            syn::Item::Fn(item_fn) => {
+                println!("{item_fn:#?}");
+                let ret = graft(item_fn);
+                println!("{ret:#?}");
+            }
+            _ => panic!("unsupported"),
+        }
+    }
 
     #[test]
     fn make_a_list() {
