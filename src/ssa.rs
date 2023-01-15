@@ -14,10 +14,10 @@ pub fn convert(cfg: &mut ControlFlowGraph) {
 ///    originating basic blocks must supply.
 fn add_annotations(cfg: &mut ControlFlowGraph) {
     let mut visited: HashSet<usize> = HashSet::new();
-    let mut active_set: Vec<usize> = vec![cfg.entrypoint];
+    let mut active_set: Vec<usize> = vec![cfg.exitpoint];
 
     while !active_set.is_empty() {
-        let mut successors = vec![];
+        let mut predecessors = vec![];
 
         // visit members of active set
         for member_index in active_set {
@@ -42,19 +42,19 @@ fn add_annotations(cfg: &mut ControlFlowGraph) {
             visited.insert(member_index);
 
             // collect successors
-            for successor in cfg
+            for predecessor in cfg
                 .edges
                 .iter()
-                .filter(|e| e.source == member_index)
-                .map(|e| e.destination)
+                .filter(|e| e.destination == member_index)
+                .map(|e| e.source)
             {
-                successors.push(successor);
+                predecessors.push(predecessor);
             }
         }
 
         // prepare for next iteration:
         // prune successor set and assign to active set
-        active_set = successors
+        active_set = predecessors
             .into_iter()
             .filter(|s| !visited.contains(s))
             .collect();
@@ -104,12 +104,7 @@ fn rename_variables(cfg: &mut ControlFlowGraph) {
                             cfg::Statement::Re(assignment) => &mut assignment.expr,
                             cfg::Statement::Cond(expr) => expr,
                         };
-                        match expression {
-                            cfg::Expr::Var(var) => {
-                                var.name = new_name.clone();
-                            }
-                            cfg::Expr::Lit(_) => {}
-                        }
+                        rename_expression(expression, param.name.clone(), new_name.clone());
                         if let Statement::Let(assignment) = statement {
                             if assignment.var.name == *param.name {
                                 // expressions following this assignment use the new value
