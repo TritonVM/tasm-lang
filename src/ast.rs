@@ -11,7 +11,7 @@ pub struct Fn {
     pub name: String,
     pub args: Vec<FnArg>,
     pub body: Vec<Stmt>,
-    pub output: Vec<DataType>,
+    pub output: DataType,
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
@@ -133,7 +133,7 @@ impl From<syn::BinOp> for BinOperator {
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum Expr {
     Lit(ExprLit),
-    Var(VarIdentifier),
+    Var(Identifier),
     Index(Box<Expr>, Box<Expr>),
     FlatList(Vec<Expr>),
     FnCall(FnCall),
@@ -141,28 +141,6 @@ pub enum Expr {
     If(ExprIf),
     // TODO: Overloaded arithmetic operators
     // TODO: VM-specific intrinsics (hash, absorb, squeeze, etc.)
-}
-
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub struct VarIdentifier {
-    pub name: String,
-    pub flat_list_index: Option<usize>,
-}
-
-impl VarIdentifier {
-    pub fn atomic_type(name: String) -> Self {
-        Self {
-            name,
-            flat_list_index: None,
-        }
-    }
-
-    pub fn flat_list_type(name: String, index: usize) -> Self {
-        Self {
-            name,
-            flat_list_index: Some(index),
-        }
-    }
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
@@ -203,40 +181,16 @@ impl FromStr for DataType {
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub struct AssignStmt {
-    pub var_name: String,
-    pub flat_list_index: Option<usize>,
-    pub expr: Expr,
-    pub list_index: Option<Expr>,
+pub enum Identifier {
+    String(String),
+    Tuple(Box<Identifier>, usize),
+    ListIndex(Box<Identifier>, Box<Expr>),
 }
 
-impl AssignStmt {
-    pub fn atomic_type(name: String, expr: Expr) -> Self {
-        Self {
-            var_name: name,
-            flat_list_index: None,
-            expr,
-            list_index: None,
-        }
-    }
-
-    pub fn flat_type_type(name: String, expr: Expr, index: usize) -> Self {
-        Self {
-            var_name: name,
-            flat_list_index: Some(index),
-            expr,
-            list_index: None,
-        }
-    }
-
-    pub fn list_assign(name: String, expr: Expr, list_index: Expr) -> Self {
-        Self {
-            var_name: name,
-            flat_list_index: None,
-            expr,
-            list_index: Some(list_index),
-        }
-    }
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub struct AssignStmt {
+    pub identifier: Identifier,
+    pub expr: Expr,
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]

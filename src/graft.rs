@@ -1,6 +1,5 @@
 use crate::ast;
 use itertools::Itertools;
-use syn::ExprCall;
 
 fn rust_type_path_to_data_type(rust_type_path: &syn::TypePath) -> ast::DataType {
     assert_eq!(
@@ -94,19 +93,19 @@ fn graft_fn_arg(rust_fn_arg: &syn::FnArg) -> ast::FnArg {
     }
 }
 
-fn graft_return_type(rust_return_type: &syn::ReturnType) -> Vec<ast::DataType> {
+fn graft_return_type(rust_return_type: &syn::ReturnType) -> ast::DataType {
     let ret_type = match rust_return_type {
         syn::ReturnType::Type(_, path) => match path.as_ref() {
-            syn::Type::Path(type_path) => vec![rust_type_path_to_data_type(type_path)],
+            syn::Type::Path(type_path) => rust_type_path_to_data_type(type_path),
             syn::Type::Tuple(tuple_type) => {
                 let tuple_type = tuple_type;
-                let elements = tuple_type
+                let output_elements = tuple_type
                     .elems
                     .iter()
                     .map(rust_type_to_data_type)
                     .collect_vec();
 
-                elements
+                ast::DataType::FlatList(output_elements)
             }
             _ => panic!("unsupported: {path:?}"),
         },
@@ -117,7 +116,7 @@ fn graft_return_type(rust_return_type: &syn::ReturnType) -> Vec<ast::DataType> {
 }
 
 // TODO: Consider moving this to the `ast` file and implement it as a conversion function
-fn graft_call_exp(expr_call: &ExprCall) -> ast::FnCall {
+fn graft_call_exp(expr_call: &syn::ExprCall) -> ast::FnCall {
     let fun_name: String = match expr_call.func.as_ref() {
         syn::Expr::Path(path) => path_to_ident(&path.path),
         other => panic!("unsupported: {other:?}"),
@@ -138,6 +137,28 @@ fn expr_to_maybe_ident(rust_exp: &syn::Expr) -> Option<String> {
     }
 }
 
+fn graft_method_call(rust_method_call: &syn::ExprMethodCall) -> ast::FnCall {
+    // TODO: This code only supports method calls on variable names and not on
+    // list elements or on tuple elements. We definitely want to support this
+    // on tuple elements, though. Expand!
+    let identifier = match rust_method_call.receiver.as_ref() {
+        syn::Expr::Path(path) => path_to_ident(&path.path),
+        other => panic!("unsupported: {other:?}"),
+    };
+    let fun_name = rust_method_call.method.to_string();
+    let self_identifier: ast::Identifier = ast::Identifier::String(identifier);
+    let self_expr: ast::Expr = ast::Expr::Var(self_identifier);
+    let method_args: Vec<ast::Expr> = rust_method_call
+        .args
+        .iter()
+        .map(|x| graft_expr(x))
+        .collect_vec();
+    ast::FnCall {
+        name: fun_name,
+        args: vec![vec![self_expr], method_args].concat(),
+    }
+}
+
 pub fn graft_expr(rust_exp: &syn::Expr) -> ast::Expr {
     match rust_exp {
         syn::Expr::Binary(bin_expr) => {
@@ -150,7 +171,7 @@ pub fn graft_expr(rust_exp: &syn::Expr) -> ast::Expr {
         syn::Expr::Path(path) => {
             let path = &path.path;
             let ident: String = path_to_ident(path);
-            ast::Expr::Var(ast::VarIdentifier::atomic_type(ident))
+            ast::Expr::Var(ast::Identifier::String(ident))
         }
         syn::Expr::Tuple(tuple_expr) => {
             let exprs = tuple_expr.elems.iter().map(|x| graft_expr(x)).collect_vec();
@@ -196,25 +217,11 @@ pub fn graft_expr(rust_exp: &syn::Expr) -> ast::Expr {
             })
         }
         syn::Expr::MethodCall(method_call_expr) => {
-            // TODO: Add support for method calls on tuple members here
-            let identifier = match method_call_expr.receiver.as_ref() {
-                syn::Expr::Path(path) => path_to_ident(&path.path),
-                other => panic!("unsupported: {other:?}"),
-            };
-            let fun_name = method_call_expr.method.to_string();
-            let self_arg: ast::Expr = ast::Expr::Var(ast::VarIdentifier::atomic_type(identifier));
-            let method_args: Vec<ast::Expr> = method_call_expr
-                .args
-                .iter()
-                .map(|x| graft_expr(x))
-                .collect_vec();
-            let fn_call = ast::FnCall {
-                name: fun_name,
-                args: vec![vec![self_arg], method_args].concat(),
-            };
-            ast::Expr::FnCall(fn_call)
+            ast::Expr::FnCall(graft_method_call(method_call_expr))
         }
         syn::Expr::Field(field_expr) => {
+            // This branch is for tuple support.
+            // Nested tuples are not supported, and that's probably preferable
             let path = field_expr.base.as_ref();
             let ident = match expr_to_maybe_ident(path) {
                 Some(ident) => ident,
@@ -225,8 +232,8 @@ pub fn graft_expr(rust_exp: &syn::Expr) -> ast::Expr {
                 syn::Member::Unnamed(tuple_index) => tuple_index,
             };
 
-            ast::Expr::Var(ast::VarIdentifier::flat_list_type(
-                ident,
+            ast::Expr::Var(ast::Identifier::Tuple(
+                Box::new(ast::Identifier::String(ident)),
                 tuple_index.index as usize,
             ))
         }
@@ -331,10 +338,12 @@ pub fn graft_stmt(rust_stmt: &syn::Stmt) -> ast::Stmt {
                 let identifier = assign.left.as_ref();
                 let assign_expr: ast::Expr = graft_expr(assign.right.as_ref());
                 let assign_stmt = match identifier {
-                    syn::Expr::Path(path) => {
-                        ast::AssignStmt::atomic_type(path_to_ident(&path.path), assign_expr)
-                    }
+                    syn::Expr::Path(path) => ast::AssignStmt {
+                        identifier: ast::Identifier::String(path_to_ident(&path.path)),
+                        expr: assign_expr,
+                    },
                     syn::Expr::Field(field_expr) => {
+                        // This is for tuple support. E.g.: `a.2 = 14u32;`
                         let path = field_expr.base.as_ref();
                         let ident = match expr_to_maybe_ident(path) {
                             Some(ident) => ident,
@@ -345,11 +354,13 @@ pub fn graft_stmt(rust_stmt: &syn::Stmt) -> ast::Stmt {
                             syn::Member::Unnamed(tuple_index) => tuple_index,
                         };
 
-                        ast::AssignStmt::flat_type_type(
-                            ident,
-                            assign_expr,
-                            tuple_index.index as usize,
-                        )
+                        ast::AssignStmt {
+                            identifier: ast::Identifier::Tuple(
+                                Box::new(ast::Identifier::String(ident)),
+                                tuple_index.index as usize,
+                            ),
+                            expr: assign_expr,
+                        }
                     }
                     syn::Expr::Index(index_expr) => {
                         let ident = match expr_to_maybe_ident(&index_expr.expr) {
@@ -357,7 +368,13 @@ pub fn graft_stmt(rust_stmt: &syn::Stmt) -> ast::Stmt {
                             None => panic!("unsupported: {index_expr:?}"),
                         };
                         let index_expr = graft_expr(index_expr.index.as_ref());
-                        ast::AssignStmt::list_assign(ident, assign_expr, index_expr)
+                        ast::AssignStmt {
+                            identifier: ast::Identifier::ListIndex(
+                                Box::new(ast::Identifier::String(ident)),
+                                Box::new(index_expr),
+                            ),
+                            expr: assign_expr,
+                        }
                     }
                     other => panic!("unsupported: {other:?}"),
                 };
@@ -365,24 +382,7 @@ pub fn graft_stmt(rust_stmt: &syn::Stmt) -> ast::Stmt {
                 ast::Stmt::Assign(assign_stmt)
             }
             syn::Expr::MethodCall(method_call_expr) => {
-                let identifier = match method_call_expr.receiver.as_ref() {
-                    syn::Expr::Path(path) => path_to_ident(&path.path),
-                    other => panic!("unsupported: {other:?}"),
-                };
-                let fun_name = method_call_expr.method.to_string();
-                // TODO: Add support for method calls on tuple members here
-                let self_arg: ast::Expr =
-                    ast::Expr::Var(ast::VarIdentifier::atomic_type(identifier));
-                let method_args: Vec<ast::Expr> = method_call_expr
-                    .args
-                    .iter()
-                    .map(|x| graft_expr(x))
-                    .collect_vec();
-                let fn_call = ast::FnCall {
-                    name: fun_name,
-                    args: vec![vec![self_arg], method_args].concat(),
-                };
-                ast::Stmt::FnCall(fn_call)
+                ast::Stmt::FnCall(graft_method_call(method_call_expr))
             }
             other => panic!("unsupported: {other:?}"),
         },
