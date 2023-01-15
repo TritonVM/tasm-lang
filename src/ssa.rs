@@ -108,7 +108,7 @@ fn rename_variables(cfg: &mut AnnotatedControlFlowGraph) {
 
             // fi the basic block has a parameter
             if let Some(param) = &member.param {
-                let data_type = param.data_type;
+                let data_type = param.data_type.to_owned();
                 // a substitution exists for this name; apply it
                 if let Some(new_name) = renaming_dictionary.get(&param.name) {
                     member.param = Some(cfg::Variable {
@@ -182,7 +182,7 @@ fn rename_variables(cfg: &mut AnnotatedControlFlowGraph) {
 
 fn rename_variable(var: &mut cfg::Variable, renaming_dictionary: &HashMap<String, String>) {
     if let Some(new_name) = renaming_dictionary.get(&var.name) {
-        let data_type = var.data_type;
+        let data_type = var.data_type.to_owned();
         *var = cfg::Variable {
             name: new_name.clone(),
             data_type,

@@ -8,11 +8,38 @@ fn rust_type_path_to_data_type(rust_type_path: &syn::TypePath) -> ast::DataType 
         rust_type_path.path.segments.len(),
         "Length other than one not supported"
     );
-    rust_type_path.path.segments[0]
-        .ident
-        .to_string()
-        .parse::<ast::DataType>()
-        .expect("a valid DataType")
+    let rust_type_as_string = rust_type_path.path.segments[0].ident.to_string();
+    let primitive_type_parse_result = rust_type_as_string.parse::<ast::DataType>();
+    match primitive_type_parse_result {
+        Ok(ret) => ret,
+        Err(_err) => {
+            // Type is not primitive. So it must be a vector:
+            match rust_type_as_string.as_str() {
+                "Vec" => {
+                    let arguments = &rust_type_path.path.segments[0].arguments;
+                    match arguments {
+                        syn::PathArguments::AngleBracketed(ab) => {
+                            assert_eq!(1, ab.args.len(), "Only one arg to Vec type is supported");
+                            let args = &ab.args[0];
+                            match args {
+                                syn::GenericArgument::Type(type_arg) => match type_arg {
+                                    syn::Type::Path(path) => {
+                                        return ast::DataType::List(Box::new(
+                                            rust_type_path_to_data_type(path),
+                                        ))
+                                    }
+                                    other => panic!("Unsupported type {other:#?}"),
+                                },
+                                other => panic!("Unsupported type {other:#?}"),
+                            };
+                        }
+                        other => panic!("Unsupported type {other:#?}"),
+                    }
+                }
+                other => panic!("Unsupported type {other:#?}"),
+            }
+        }
+    }
 }
 
 fn rust_type_to_data_type(x: &syn::Type) -> ast::DataType {
@@ -256,6 +283,24 @@ pub fn graft_stmt(rust_stmt: &syn::Stmt) -> ast::Stmt {
 
                 ast::Stmt::Assign(assign_stmt)
             }
+            syn::Expr::MethodCall(method_call_expr) => {
+                let identifier = match method_call_expr.receiver.as_ref() {
+                    syn::Expr::Path(path) => path_to_ident(&path.path),
+                    other => panic!("unsupported: {other:?}"),
+                };
+                let fun_name = method_call_expr.method.to_string();
+                let self_arg: ast::Expr = ast::Expr::Var(identifier);
+                let method_args: Vec<ast::Expr> = method_call_expr
+                    .args
+                    .iter()
+                    .map(|x| graft_expr(x))
+                    .collect_vec();
+                let fn_call = ast::FnCall {
+                    name: fun_name,
+                    args: vec![vec![self_arg], method_args].concat(),
+                };
+                ast::Stmt::FnCall(fn_call)
+            }
             other => panic!("unsupported: {other:?}"),
         },
     }
@@ -287,6 +332,29 @@ mod tests {
     use syn::parse_quote;
 
     use super::*;
+
+    #[test]
+    fn make_a_list() {
+        let mut a: Vec<u64> = Vec::default();
+        Vec::push(&mut a, 43u64);
+        let tokens: syn::Item = parse_quote! {
+            fn make_and_return_a_list() -> Vec<u64> {
+                let mut a: Vec<u64> = Vec::default();
+                a.push(43u64);
+                a.push(10u64);
+                return a;
+            }
+        };
+
+        match &tokens {
+            syn::Item::Fn(item_fn) => {
+                println!("{item_fn:#?}");
+                let ret = graft(item_fn);
+                println!("{ret:#?}");
+            }
+            _ => panic!("unsupported"),
+        }
+    }
 
     #[test]
     fn leaf_count_to_node_count() {
