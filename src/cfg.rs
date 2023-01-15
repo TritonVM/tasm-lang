@@ -19,7 +19,7 @@ pub struct Edge {
 pub struct BasicBlock {
     pub index: usize,
     pub params: Vec<Variable>,
-    pub stmts: Vec<LetStmt>,
+    pub statements: Vec<LetStmt>,
 }
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone)]

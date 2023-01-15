@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 
 use crate::cfg::{self, ControlFlowGraph, Variable};
 
@@ -26,7 +26,7 @@ fn add_annotations(cfg: &mut ControlFlowGraph) {
             // find free variables
             let mut free_variables: Vec<Variable> = vec![];
             let mut defined_variables = vec![];
-            for statement in member.stmts.iter() {
+            for statement in member.statements.iter() {
                 match &statement.expr {
                     cfg::Expr::Var(v) => {
                         if !free_variables.contains(&v) && !defined_variables.contains(&v) {
@@ -75,10 +75,10 @@ fn add_annotations(cfg: &mut ControlFlowGraph) {
     }
 }
 
+/// Rename variables so that all are unique
 fn rename_variables(cfg: &mut ControlFlowGraph) {
     let mut visited: HashSet<usize> = HashSet::new();
     let mut active_set: Vec<usize> = vec![cfg.entrypoint];
-    let mut renaming_dictionary = HashMap::<String, String>::new();
     let mut names_already_used: Vec<String> = vec![];
 
     let mut counter: usize = 0;
@@ -88,6 +88,8 @@ fn rename_variables(cfg: &mut ControlFlowGraph) {
         tmp
     };
 
+    // iterate over all nodes in the graph, in direction determined
+    // by edges
     while !active_set.is_empty() {
         let mut successors = vec![];
 
@@ -96,21 +98,20 @@ fn rename_variables(cfg: &mut ControlFlowGraph) {
         for member_index in active_set {
             let member = &mut cfg.nodes[member_index];
 
-            // if the basic block has parameters
+            // if the basic block has parameters, iterate over them
             for param in member.params.iter_mut() {
                 let data_type = param.data_type.to_owned();
 
                 // this name was already used; we need to get a new one
                 if names_already_used.contains(&param.name) {
                     let new_name = name_gen(&param.name);
-                    renaming_dictionary.insert(param.name.clone(), new_name.clone());
                     // apply name change
                     *param = cfg::Variable {
                         name: new_name.clone(),
                         data_type,
                     };
                     // percolate name change
-                    for let_statement in member.stmts.iter_mut() {
+                    for let_statement in member.statements.iter_mut() {
                         match &mut let_statement.expr {
                             cfg::Expr::Var(var) => {
                                 var.name = new_name.clone();
@@ -133,27 +134,39 @@ fn rename_variables(cfg: &mut ControlFlowGraph) {
             }
 
             // iterate over all let-statements
-            for statement_index in 0..member.stmts.len() {
-                let let_stmt_copy = member.stmts[statement_index].clone();
-                let var_name = let_stmt_copy.var.name.clone();
+            for statement_index in 0..member.statements.len() {
+                let var_name = member.statements[statement_index].var.name.clone();
 
                 // this name was already used, get a new one
                 if names_already_used.contains(&var_name) {
                     let new_name = name_gen(&var_name);
-                    renaming_dictionary.insert(let_stmt_copy.var.name.clone(), new_name.clone());
 
                     // apply and percolate name change
-                    for let_statement in member.stmts.iter_mut().skip(statement_index) {
-                        match &mut let_statement.expr {
+                    for (idx, let_statement_mut) in member
+                        .statements
+                        .iter_mut()
+                        .skip(statement_index)
+                        .enumerate()
+                    {
+                        if let_statement_mut.var.name == *var_name {
+                            if idx == 0 {
+                                // rename assignee
+                                let_statement_mut.var.name = new_name.clone();
+                            } else {
+                                // expressions following the outer
+                                // let-statement that shadow the
+                                // variable use the new value
+                                break;
+                            }
+                        }
+                        // rename variables in expression
+                        match &mut let_statement_mut.expr {
                             cfg::Expr::Var(var) => {
-                                var.name = new_name.clone();
+                                if var.name == var_name {
+                                    var.name = new_name.clone();
+                                }
                             }
                             cfg::Expr::Lit(_) => {}
-                        }
-                        if let_statement.var.name == *new_name {
-                            // expressions following this let-
-                            // statement use the new value
-                            break;
                         }
                     }
 
@@ -226,7 +239,7 @@ mod tests {
         //   foo = 3
         // ```
         //
-        // should be mapped to:
+        // should be annotated to:
         //
         // ```
         // block_0(bar):
@@ -235,7 +248,19 @@ mod tests {
         //
         // block_1(foo):
         //   baz = foo
-        //   foo_0 = 3
+        //   foo = 3
+        // ```
+        //
+        // and renamed to:
+        //
+        // ```
+        // block_0(bar):
+        //   foo = bar
+        //   call block_1(foo)
+        //
+        // block_1(foo_0):
+        //   baz = foo_0
+        //   foo_1 = 3
         // ```
         let foo_var = Variable {
             name: "foo".to_string(),
@@ -248,7 +273,7 @@ mod tests {
         };
 
         let baz_var = Variable {
-            name: "bar".to_string(),
+            name: "baz".to_string(),
             data_type: DataType::U32,
         };
 
@@ -258,7 +283,7 @@ mod tests {
         cfg.nodes.push(BasicBlock {
             index: 0,
             params: vec![],
-            stmts: vec![LetStmt {
+            statements: vec![LetStmt {
                 var: foo_var.clone(),
                 expr: Expr::Var(bar_var),
             }],
@@ -268,7 +293,7 @@ mod tests {
         cfg.nodes.push(BasicBlock {
             index: 1,
             params: vec![foo_var.clone()],
-            stmts: vec![
+            statements: vec![
                 LetStmt {
                     var: baz_var.clone(),
                     expr: Expr::Var(foo_var.clone()),
