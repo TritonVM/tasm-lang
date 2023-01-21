@@ -1,7 +1,9 @@
 use std::collections::HashMap;
+use std::fmt::Display;
 use std::str::FromStr;
 
 use anyhow::bail;
+use itertools::Itertools;
 use twenty_first::shared_math::b_field_element::BFieldElement;
 use twenty_first::shared_math::rescue_prime_digest::Digest;
 use twenty_first::shared_math::x_field_element::XFieldElement;
@@ -18,6 +20,12 @@ pub struct Fn {
 pub struct FnArg {
     pub name: String,
     pub data_type: DataType,
+}
+
+impl Display for FnArg {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}: {}", self.name, self.data_type)
+    }
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
@@ -177,6 +185,26 @@ impl FromStr for DataType {
             "Digest" => Ok(DataType::Digest),
             ty => bail!("Unsupported type {}", ty),
         }
+    }
+}
+
+impl Display for DataType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        use DataType::*;
+        write!(
+            f,
+            "{}",
+            match self {
+                Bool => "bool".to_string(),
+                U32 => "u32".to_string(),
+                U64 => "u64".to_string(),
+                BFE => "BField".to_string(),
+                XFE => "XField".to_string(),
+                Digest => "Digest".to_string(),
+                List(ty) => format!("List({})", ty),
+                FlatList(tys) => tys.iter().map(|ty| format!("{}", ty)).join(" "),
+            }
+        )
     }
 }
 
