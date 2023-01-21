@@ -9,10 +9,10 @@ use twenty_first::shared_math::rescue_prime_digest::Digest;
 use twenty_first::shared_math::x_field_element::XFieldElement;
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub struct Fn {
+pub struct Fn<T> {
     pub name: String,
     pub args: Vec<FnArg>,
-    pub body: Vec<Stmt>,
+    pub body: Vec<Stmt<T>>,
     pub output: DataType,
 }
 
@@ -29,27 +29,27 @@ impl Display for FnArg {
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub enum Stmt {
-    Let(LetStmt),
-    Assign(AssignStmt),
-    Return(Expr),
+pub enum Stmt<T> {
+    Let(LetStmt<T>),
+    Assign(AssignStmt<T>),
+    Return(Expr<T>),
     // FIXME: Type-check that functions not bound to variables don't return anything
-    FnCall(FnCall),
-    While(WhileStmt), // TODO: Control-flow operators: if-else, while, etc.
-    If(IfStmt),
+    FnCall(FnCall<T>),
+    While(WhileStmt<T>), // TODO: Control-flow operators: if-else, while, etc.
+    If(IfStmt<T>),
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub struct WhileStmt {
-    pub condition: Expr,
-    pub stmts: Vec<Stmt>,
+pub struct WhileStmt<T> {
+    pub condition: Expr<T>,
+    pub stmts: Vec<Stmt<T>>,
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub struct IfStmt {
-    pub condition: Expr,
-    pub if_branch: Vec<Stmt>,
-    pub else_branch: Vec<Stmt>,
+pub struct IfStmt<T> {
+    pub condition: Expr<T>,
+    pub if_branch: Vec<Stmt<T>>,
+    pub else_branch: Vec<Stmt<T>>,
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
@@ -81,23 +81,23 @@ pub enum BinOp {
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub enum Expr {
-    Lit(ExprLit),
-    Var(Identifier),
-    Index(Box<Expr>, Box<Expr>),
-    FlatList(Vec<Expr>),
-    FnCall(FnCall),
-    Binop(Box<Expr>, BinOp, Box<Expr>),
-    If(ExprIf),
+pub enum Expr<T> {
+    Lit(ExprLit, T),
+    Var(Identifier<T>),
+    Index(Box<Expr<T>>, Box<Expr<T>>),
+    FlatList(Vec<Expr<T>>),
+    FnCall(FnCall<T>),
+    Binop(Box<Expr<T>>, BinOp, Box<Expr<T>>),
+    If(ExprIf<T>),
     // TODO: Overloaded arithmetic operators
     // TODO: VM-specific intrinsics (hash, absorb, squeeze, etc.)
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub struct ExprIf {
-    pub condition: Box<Expr>,
-    pub then_branch: Box<Expr>,
-    pub else_branch: Box<Expr>,
+pub struct ExprIf<T> {
+    pub condition: Box<Expr<T>>,
+    pub then_branch: Box<Expr<T>>,
+    pub else_branch: Box<Expr<T>>,
 }
 
 pub struct SymTable(HashMap<String, (u8, DataType)>);
@@ -151,27 +151,39 @@ impl Display for DataType {
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub enum Identifier {
-    String(String),
-    Tuple(Box<Identifier>, usize),
-    ListIndex(Box<Identifier>, Box<Expr>),
+pub enum Identifier<T> {
+    String(String, T),
+    Tuple(Box<Identifier<T>>, usize),
+    ListIndex(Box<Identifier<T>>, Box<Expr<T>>),
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub struct AssignStmt {
-    pub identifier: Identifier,
-    pub expr: Expr,
+pub struct AssignStmt<T> {
+    pub identifier: Identifier<T>,
+    pub expr: Expr<T>,
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub struct LetStmt {
+pub struct LetStmt<T> {
     pub var_name: String,
     pub data_type: DataType,
-    pub expr: Expr,
+    pub expr: Expr<T>,
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub struct FnCall {
+pub struct FnCall<T> {
     pub name: String,
-    pub args: Vec<Expr>, // FIXME: type-check that this is flat
+    pub args: Vec<Expr<T>>, // FIXME: type-check that this is flat
+}
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub enum Typing {
+    UnknownType,
+    KnownType(DataType),
+}
+
+impl Default for Typing {
+    fn default() -> Self {
+        Typing::UnknownType
+    }
 }

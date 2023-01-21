@@ -1,6 +1,8 @@
 use crate::ast;
 use itertools::Itertools;
 
+type Annotation = ast::Typing;
+
 fn rust_type_path_to_data_type(rust_type_path: &syn::TypePath) -> ast::DataType {
     assert_eq!(
         1,
@@ -116,12 +118,13 @@ fn graft_return_type(rust_return_type: &syn::ReturnType) -> ast::DataType {
 }
 
 // TODO: Consider moving this to the `ast` file and implement it as a conversion function
-fn graft_call_exp(expr_call: &syn::ExprCall) -> ast::FnCall {
+fn graft_call_exp(expr_call: &syn::ExprCall) -> ast::FnCall<Annotation> {
     let fun_name: String = match expr_call.func.as_ref() {
         syn::Expr::Path(path) => path_to_ident(&path.path),
         other => panic!("unsupported: {other:?}"),
     };
-    let args: Vec<ast::Expr> = expr_call.args.iter().map(|x| graft_expr(x)).collect_vec();
+    let args: Vec<ast::Expr<Annotation>> =
+        expr_call.args.iter().map(|x| graft_expr(x)).collect_vec();
 
     ast::FnCall {
         name: fun_name,
@@ -137,7 +140,7 @@ fn expr_to_maybe_ident(rust_exp: &syn::Expr) -> Option<String> {
     }
 }
 
-fn graft_method_call(rust_method_call: &syn::ExprMethodCall) -> ast::FnCall {
+fn graft_method_call(rust_method_call: &syn::ExprMethodCall) -> ast::FnCall<Annotation> {
     // TODO: This code only supports method calls on variable names and not on
     // list elements or on tuple elements. We definitely want to support this
     // on tuple elements, though. Expand!
@@ -146,9 +149,9 @@ fn graft_method_call(rust_method_call: &syn::ExprMethodCall) -> ast::FnCall {
         other => panic!("unsupported: {other:?}"),
     };
     let fun_name = rust_method_call.method.to_string();
-    let self_identifier: ast::Identifier = ast::Identifier::String(identifier);
-    let self_expr: ast::Expr = ast::Expr::Var(self_identifier);
-    let method_args: Vec<ast::Expr> = rust_method_call
+    let self_identifier = ast::Identifier::String(identifier, Default::default());
+    let self_expr = ast::Expr::Var(self_identifier);
+    let method_args = rust_method_call
         .args
         .iter()
         .map(|x| graft_expr(x))
@@ -159,7 +162,7 @@ fn graft_method_call(rust_method_call: &syn::ExprMethodCall) -> ast::FnCall {
     }
 }
 
-pub fn graft_expr(rust_exp: &syn::Expr) -> ast::Expr {
+pub fn graft_expr(rust_exp: &syn::Expr) -> ast::Expr<Annotation> {
     match rust_exp {
         syn::Expr::Binary(bin_expr) => {
             let left = graft_expr(&bin_expr.left);
@@ -171,7 +174,7 @@ pub fn graft_expr(rust_exp: &syn::Expr) -> ast::Expr {
         syn::Expr::Path(path) => {
             let path = &path.path;
             let ident: String = path_to_ident(path);
-            ast::Expr::Var(ast::Identifier::String(ident))
+            ast::Expr::Var(ast::Identifier::String(ident, Default::default()))
         }
         syn::Expr::Tuple(tuple_expr) => {
             let exprs = tuple_expr.elems.iter().map(|x| graft_expr(x)).collect_vec();
@@ -179,7 +182,7 @@ pub fn graft_expr(rust_exp: &syn::Expr) -> ast::Expr {
         }
         syn::Expr::Lit(litexp) => {
             let lit = &litexp.lit;
-            ast::Expr::Lit(graft_lit(lit))
+            ast::Expr::Lit(graft_lit(lit), Default::default())
         }
         syn::Expr::Call(call_exp) => ast::Expr::FnCall(graft_call_exp(call_exp)),
         syn::Expr::Paren(paren_exp) => {
@@ -233,7 +236,7 @@ pub fn graft_expr(rust_exp: &syn::Expr) -> ast::Expr {
             };
 
             ast::Expr::Var(ast::Identifier::Tuple(
-                Box::new(ast::Identifier::String(ident)),
+                Box::new(ast::Identifier::String(ident, Default::default())),
                 tuple_index.index as usize,
             ))
         }
@@ -303,7 +306,7 @@ fn graft_binop(rust_binop: syn::BinOp) -> ast::BinOp {
     }
 }
 
-pub fn graft_stmt(rust_stmt: &syn::Stmt) -> ast::Stmt {
+pub fn graft_stmt(rust_stmt: &syn::Stmt) -> ast::Stmt<Annotation> {
     match rust_stmt {
         syn::Stmt::Local(local) => {
             let (ident, data_type): (String, ast::DataType) = match &local.pat {
@@ -336,7 +339,7 @@ pub fn graft_stmt(rust_stmt: &syn::Stmt) -> ast::Stmt {
             syn::Expr::While(while_stmt) => {
                 let expr_while = while_stmt;
                 let while_condition = graft_expr(&expr_while.cond);
-                let while_stmts: Vec<ast::Stmt> = while_stmt
+                let while_stmts: Vec<ast::Stmt<Annotation>> = while_stmt
                     .body
                     .stmts
                     .iter()
@@ -351,13 +354,13 @@ pub fn graft_stmt(rust_stmt: &syn::Stmt) -> ast::Stmt {
             }
             syn::Expr::If(if_expr) => {
                 let if_condition = graft_expr(&if_expr.cond);
-                let if_stmts: Vec<ast::Stmt> = if_expr
+                let if_stmts: Vec<ast::Stmt<Annotation>> = if_expr
                     .then_branch
                     .stmts
                     .iter()
                     .map(|x| graft_stmt(x))
                     .collect_vec();
-                let else_stmts: Vec<ast::Stmt> = match if_expr.else_branch.as_ref() {
+                let else_stmts: Vec<ast::Stmt<Annotation>> = match if_expr.else_branch.as_ref() {
                     Some(else_stmts) => match else_stmts.1.as_ref() {
                         syn::Expr::Block(block) => {
                             block.block.stmts.iter().map(|x| graft_stmt(x)).collect()
@@ -392,10 +395,13 @@ pub fn graft_stmt(rust_stmt: &syn::Stmt) -> ast::Stmt {
             }
             syn::Expr::Assign(assign) => {
                 let identifier = assign.left.as_ref();
-                let assign_expr: ast::Expr = graft_expr(assign.right.as_ref());
+                let assign_expr = graft_expr(assign.right.as_ref());
                 let assign_stmt = match identifier {
                     syn::Expr::Path(path) => ast::AssignStmt {
-                        identifier: ast::Identifier::String(path_to_ident(&path.path)),
+                        identifier: ast::Identifier::String(
+                            path_to_ident(&path.path),
+                            Default::default(),
+                        ),
                         expr: assign_expr,
                     },
                     syn::Expr::Field(field_expr) => {
@@ -412,7 +418,7 @@ pub fn graft_stmt(rust_stmt: &syn::Stmt) -> ast::Stmt {
 
                         ast::AssignStmt {
                             identifier: ast::Identifier::Tuple(
-                                Box::new(ast::Identifier::String(ident)),
+                                Box::new(ast::Identifier::String(ident, Default::default())),
                                 tuple_index.index as usize,
                             ),
                             expr: assign_expr,
@@ -426,7 +432,7 @@ pub fn graft_stmt(rust_stmt: &syn::Stmt) -> ast::Stmt {
                         let index_expr = graft_expr(index_expr.index.as_ref());
                         ast::AssignStmt {
                             identifier: ast::Identifier::ListIndex(
-                                Box::new(ast::Identifier::String(ident)),
+                                Box::new(ast::Identifier::String(ident, Default::default())),
                                 Box::new(index_expr),
                             ),
                             expr: assign_expr,
@@ -445,7 +451,7 @@ pub fn graft_stmt(rust_stmt: &syn::Stmt) -> ast::Stmt {
     }
 }
 
-pub fn graft(input: &syn::ItemFn) -> ast::Fn {
+pub fn graft(input: &syn::ItemFn) -> ast::Fn<Annotation> {
     let function_name = input.sig.ident.to_string();
     let fn_arguments = input.sig.inputs.iter().map(graft_fn_arg).collect_vec();
     let output_values = graft_return_type(&input.sig.output);
