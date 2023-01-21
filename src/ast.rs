@@ -63,7 +63,7 @@ pub enum ExprLit {
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub enum BinOperator {
+pub enum BinOp {
     Add,
     And,
     BitAnd,
@@ -80,28 +80,6 @@ pub enum BinOperator {
     Sub,
 }
 
-impl From<syn::BinOp> for BinOperator {
-    fn from(rust_binop: syn::BinOp) -> Self {
-        match rust_binop {
-            syn::BinOp::Add(_) => BinOperator::Add,
-            syn::BinOp::And(_) => BinOperator::And,
-            syn::BinOp::BitAnd(_) => BinOperator::BitAnd,
-            syn::BinOp::BitXor(_) => BinOperator::BitXor,
-            syn::BinOp::Div(_) => BinOperator::Div,
-            syn::BinOp::Eq(_) => BinOperator::Eq,
-            syn::BinOp::Lt(_) => BinOperator::Lt,
-            syn::BinOp::Mul(_) => BinOperator::Mul,
-            syn::BinOp::Ne(_) => BinOperator::Ne,
-            syn::BinOp::Or(_) => BinOperator::Or,
-            syn::BinOp::Rem(_) => BinOperator::Rem,
-            syn::BinOp::Shl(_) => BinOperator::Shl,
-            syn::BinOp::Shr(_) => BinOperator::Shr,
-            syn::BinOp::Sub(_) => BinOperator::Sub,
-            other => panic!("unsupported: {other:?}"),
-        }
-    }
-}
-
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum Expr {
     Lit(ExprLit),
@@ -109,7 +87,7 @@ pub enum Expr {
     Index(Box<Expr>, Box<Expr>),
     FlatList(Vec<Expr>),
     FnCall(FnCall),
-    Binop(Box<Expr>, BinOperator, Box<Expr>),
+    Binop(Box<Expr>, BinOp, Box<Expr>),
     If(ExprIf),
     // TODO: Overloaded arithmetic operators
     // TODO: VM-specific intrinsics (hash, absorb, squeeze, etc.)

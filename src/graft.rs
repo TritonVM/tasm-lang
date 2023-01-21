@@ -163,7 +163,7 @@ pub fn graft_expr(rust_exp: &syn::Expr) -> ast::Expr {
     match rust_exp {
         syn::Expr::Binary(bin_expr) => {
             let left = graft_expr(&bin_expr.left);
-            let ast_binop: ast::BinOperator = bin_expr.op.into();
+            let ast_binop: ast::BinOp = graft_binop(bin_expr.op);
             let right = graft_expr(&bin_expr.right);
 
             ast::Expr::Binop(Box::new(left), ast_binop, Box::new(right))
@@ -279,6 +279,26 @@ fn graft_lit(rust_val: &syn::Lit) -> ast::ExprLit {
 
             int_val
         }
+        other => panic!("unsupported: {other:?}"),
+    }
+}
+
+fn graft_binop(rust_binop: syn::BinOp) -> ast::BinOp {
+    match rust_binop {
+        syn::BinOp::Add(_) => ast::BinOp::Add,
+        syn::BinOp::And(_) => ast::BinOp::And,
+        syn::BinOp::BitAnd(_) => ast::BinOp::BitAnd,
+        syn::BinOp::BitXor(_) => ast::BinOp::BitXor,
+        syn::BinOp::Div(_) => ast::BinOp::Div,
+        syn::BinOp::Eq(_) => ast::BinOp::Eq,
+        syn::BinOp::Lt(_) => ast::BinOp::Lt,
+        syn::BinOp::Mul(_) => ast::BinOp::Mul,
+        syn::BinOp::Ne(_) => ast::BinOp::Ne,
+        syn::BinOp::Or(_) => ast::BinOp::Or,
+        syn::BinOp::Rem(_) => ast::BinOp::Rem,
+        syn::BinOp::Shl(_) => ast::BinOp::Shl,
+        syn::BinOp::Shr(_) => ast::BinOp::Shr,
+        syn::BinOp::Sub(_) => ast::BinOp::Sub,
         other => panic!("unsupported: {other:?}"),
     }
 }
