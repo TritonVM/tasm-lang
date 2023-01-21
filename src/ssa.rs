@@ -379,7 +379,7 @@ mod tests {
                 }),
                 Statement::Re(Assignment {
                     var: foo_var.clone(),
-                    expr: Expr::Lit(ExprLit::CU32(3)),
+                    expr: Expr::Lit(ExprLit::U32(3)),
                 }),
             ],
         });

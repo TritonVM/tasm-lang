@@ -252,7 +252,7 @@ fn graft_lit(rust_val: &syn::Lit) -> ast::ExprLit {
 
     const MIN_INT_LITERAL_LENGTH: usize = 4;
     match rust_val {
-        syn::Lit::Bool(b) => CBool(b.value),
+        syn::Lit::Bool(b) => Bool(b.value),
         syn::Lit::Int(int_lit) => {
             // integer literals are expected to be read as e.g. `4u32` or `332u64`.
             // So the type aanotation is required.
@@ -268,11 +268,11 @@ fn graft_lit(rust_val: &syn::Lit) -> ast::ExprLit {
             let int_val: ast::ExprLit = match type_annotation {
                 "u32" => {
                     let my_int = int_lit_value.parse::<u32>().unwrap();
-                    CU32(my_int)
+                    U32(my_int)
                 }
                 "u64" => {
                     let my_int = int_lit_value.parse::<u64>().unwrap();
-                    CU64(my_int)
+                    U64(my_int)
                 }
                 other => panic!("unsupported int type annotation: {other:?}"),
             };

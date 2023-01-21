@@ -54,9 +54,9 @@ pub struct IfStmt {
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum ExprLit {
-    CBool(bool),
-    CU32(u32),
-    CU64(u64),
+    Bool(bool),
+    U32(u32),
+    U64(u64),
     BFE(BFieldElement),
     XFE(XFieldElement),
     Digest(Digest),
