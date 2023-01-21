@@ -179,7 +179,7 @@ pub fn graft_expr(rust_exp: &syn::Expr) -> ast::Expr {
         }
         syn::Expr::Lit(litexp) => {
             let lit = &litexp.lit;
-            ast::Expr::Lit(lit.into())
+            ast::Expr::Lit(graft_lit(lit))
         }
         syn::Expr::Call(call_exp) => ast::Expr::FnCall(graft_call_exp(call_exp)),
         syn::Expr::Paren(paren_exp) => {
@@ -242,6 +242,42 @@ pub fn graft_expr(rust_exp: &syn::Expr) -> ast::Expr {
             let index = graft_expr(&&index_expr.index);
 
             ast::Expr::Index(Box::new(expr), Box::new(index))
+        }
+        other => panic!("unsupported: {other:?}"),
+    }
+}
+
+fn graft_lit(rust_val: &syn::Lit) -> ast::ExprLit {
+    use ast::ExprLit::*;
+
+    const MIN_INT_LITERAL_LENGTH: usize = 4;
+    match rust_val {
+        syn::Lit::Bool(b) => CBool(b.value),
+        syn::Lit::Int(int_lit) => {
+            // integer literals are expected to be read as e.g. `4u32` or `332u64`.
+            // So the type aanotation is required.
+            let int_lit: String = int_lit.token().to_string();
+            let str_len = int_lit.len();
+            if str_len < MIN_INT_LITERAL_LENGTH {
+                panic!(
+                        "Error in declaration of int literal. Did you forget a type annotation? Got: \"{int_lit}\""
+                    );
+            }
+            let int_lit_value = &int_lit.as_str()[0..str_len - 3];
+            let type_annotation = &int_lit[str_len - 3..];
+            let int_val: ast::ExprLit = match type_annotation {
+                "u32" => {
+                    let my_int = int_lit_value.parse::<u32>().unwrap();
+                    CU32(my_int)
+                }
+                "u64" => {
+                    let my_int = int_lit_value.parse::<u64>().unwrap();
+                    CU64(my_int)
+                }
+                other => panic!("unsupported int type annotation: {other:?}"),
+            };
+
+            int_val
         }
         other => panic!("unsupported: {other:?}"),
     }

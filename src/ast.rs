@@ -62,42 +62,6 @@ pub enum ExprLit {
     Digest(Digest),
 }
 
-impl From<&syn::Lit> for ExprLit {
-    fn from(rust_val: &syn::Lit) -> Self {
-        const MIN_INT_LITERAL_LENGTH: usize = 4;
-        match rust_val {
-            syn::Lit::Bool(b) => Self::CBool(b.value),
-            syn::Lit::Int(int_lit) => {
-                // integer literals are expected to be read as e.g. `4u32` or `332u64`.
-                // So the type aanotation is required.
-                let int_lit: String = int_lit.token().to_string();
-                let str_len = int_lit.len();
-                if str_len < MIN_INT_LITERAL_LENGTH {
-                    panic!(
-                        "Error in declaration of int literal. Did you forget a type annotation? Got: \"{int_lit}\""
-                    );
-                }
-                let int_lit_value = &int_lit.as_str()[0..str_len - 3];
-                let type_annotation = &int_lit[str_len - 3..];
-                let int_val: ExprLit = match type_annotation {
-                    "u32" => {
-                        let my_int = int_lit_value.parse::<u32>().unwrap();
-                        ExprLit::CU32(my_int)
-                    }
-                    "u64" => {
-                        let my_int = int_lit_value.parse::<u64>().unwrap();
-                        ExprLit::CU64(my_int)
-                    }
-                    other => panic!("unsupported int type annotation: {other:?}"),
-                };
-
-                int_val
-            }
-            other => panic!("unsupported: {other:?}"),
-        }
-    }
-}
-
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum BinOperator {
     Add,
