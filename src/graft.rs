@@ -3,6 +3,25 @@ use itertools::Itertools;
 
 type Annotation = ast::Typing;
 
+pub fn graft(input: &syn::ItemFn) -> ast::Fn<Annotation> {
+    let name = input.sig.ident.to_string();
+    let args = input.sig.inputs.iter().map(graft_fn_arg).collect_vec();
+    let output = graft_return_type(&input.sig.output);
+    let body = input
+        .block
+        .stmts
+        .iter()
+        .map(|stmt| graft_stmt(stmt))
+        .collect_vec();
+
+    ast::Fn {
+        name,
+        args,
+        body,
+        output,
+    }
+}
+
 fn rust_type_path_to_data_type(rust_type_path: &syn::TypePath) -> ast::DataType {
     assert_eq!(
         1,
@@ -449,27 +468,6 @@ pub fn graft_stmt(rust_stmt: &syn::Stmt) -> ast::Stmt<Annotation> {
             other => panic!("unsupported: {other:?}"),
         },
     }
-}
-
-pub fn graft(input: &syn::ItemFn) -> ast::Fn<Annotation> {
-    let function_name = input.sig.ident.to_string();
-    let fn_arguments = input.sig.inputs.iter().map(graft_fn_arg).collect_vec();
-    let output_values = graft_return_type(&input.sig.output);
-
-    let body = input
-        .block
-        .stmts
-        .iter()
-        .map(|stmt| graft_stmt(stmt))
-        .collect_vec();
-    let ret = ast::Fn {
-        name: function_name,
-        args: fn_arguments,
-        body, // TODO: Implement!
-        output: output_values,
-    };
-
-    ret
 }
 
 #[cfg(test)]
