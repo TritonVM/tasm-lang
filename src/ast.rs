@@ -83,11 +83,11 @@ pub enum BinOp {
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum Expr<T> {
     Lit(ExprLit, T),
-    Var(Identifier<T>),
-    Index(Box<Expr<T>>, Box<Expr<T>>),
+    Var(Identifier<T>), // x[i]
+    // Index(Box<Expr<T>>, Box<Expr<T>>), // a_expr[i_expr]    (a + 5)[3]
     FlatList(Vec<Expr<T>>),
     FnCall(FnCall<T>),
-    Binop(Box<Expr<T>>, BinOp, Box<Expr<T>>),
+    Binop(Box<Expr<T>>, BinOp, Box<Expr<T>>, T),
     If(ExprIf<T>),
     // TODO: Overloaded arithmetic operators
     // TODO: VM-specific intrinsics (hash, absorb, squeeze, etc.)
@@ -152,9 +152,9 @@ impl Display for DataType {
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum Identifier<T> {
-    String(String, T),
-    Tuple(Box<Identifier<T>>, usize),
-    ListIndex(Box<Identifier<T>>, Box<Expr<T>>),
+    String(String, T),                           // x
+    TupleIndex(Box<Identifier<T>>, usize),       // x.0
+    ListIndex(Box<Identifier<T>>, Box<Expr<T>>), // x[0]
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]

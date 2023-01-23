@@ -188,7 +188,12 @@ pub fn graft_expr(rust_exp: &syn::Expr) -> ast::Expr<Annotation> {
             let ast_binop: ast::BinOp = graft_binop(bin_expr.op);
             let right = graft_expr(&bin_expr.right);
 
-            ast::Expr::Binop(Box::new(left), ast_binop, Box::new(right))
+            ast::Expr::Binop(
+                Box::new(left),
+                ast_binop,
+                Box::new(right),
+                Default::default(),
+            )
         }
         syn::Expr::Path(path) => {
             let path = &path.path;
@@ -254,7 +259,7 @@ pub fn graft_expr(rust_exp: &syn::Expr) -> ast::Expr<Annotation> {
                 syn::Member::Unnamed(tuple_index) => tuple_index,
             };
 
-            ast::Expr::Var(ast::Identifier::Tuple(
+            ast::Expr::Var(ast::Identifier::TupleIndex(
                 Box::new(ast::Identifier::String(ident, Default::default())),
                 tuple_index.index as usize,
             ))
@@ -263,7 +268,14 @@ pub fn graft_expr(rust_exp: &syn::Expr) -> ast::Expr<Annotation> {
             let expr = graft_expr(&index_expr.expr);
             let index = graft_expr(&&index_expr.index);
 
-            ast::Expr::Index(Box::new(expr), Box::new(index))
+            if let ast::Expr::Var(identifier) = expr {
+                ast::Expr::Var(ast::Identifier::ListIndex(
+                    Box::new(identifier),
+                    Box::new(index),
+                ))
+            } else {
+                panic!("unsupported index expression: {index_expr:#?}");
+            }
         }
         other => panic!("unsupported: {other:?}"),
     }
@@ -436,7 +448,7 @@ pub fn graft_stmt(rust_stmt: &syn::Stmt) -> ast::Stmt<Annotation> {
                         };
 
                         ast::AssignStmt {
-                            identifier: ast::Identifier::Tuple(
+                            identifier: ast::Identifier::TupleIndex(
                                 Box::new(ast::Identifier::String(ident, Default::default())),
                                 tuple_index.index as usize,
                             ),
@@ -651,7 +663,7 @@ mod tests {
     }
 
     #[test]
-    fn method_call_no_args() {
+    fn function_call_no_args() {
         let tokens: syn::Item = parse_quote! {
             fn method_call() -> () {
                 pop();
@@ -670,7 +682,7 @@ mod tests {
     }
 
     #[test]
-    fn method_call_with_args() {
+    fn function_call_with_args() {
         let tokens: syn::Item = parse_quote! {
             fn method_call(lhs: u32, pointer: BFieldElement) -> () {
                 pop(lhs);
