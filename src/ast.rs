@@ -72,7 +72,7 @@ pub enum BinOp {
     Eq,
     Lt,
     Mul,
-    Ne,
+    Neq,
     Or,
     Rem,
     Shl,
@@ -174,6 +174,7 @@ pub struct LetStmt<T> {
 pub struct FnCall<T> {
     pub name: String,
     pub args: Vec<Expr<T>>, // FIXME: type-check that this is flat
+    pub annot: T,
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]

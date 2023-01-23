@@ -327,7 +327,7 @@ fn graft_binop(rust_binop: syn::BinOp) -> ast::BinOp {
         syn::BinOp::Eq(_) => ast::BinOp::Eq,
         syn::BinOp::Lt(_) => ast::BinOp::Lt,
         syn::BinOp::Mul(_) => ast::BinOp::Mul,
-        syn::BinOp::Ne(_) => ast::BinOp::Ne,
+        syn::BinOp::Ne(_) => ast::BinOp::Neq,
         syn::BinOp::Or(_) => ast::BinOp::Or,
         syn::BinOp::Rem(_) => ast::BinOp::Rem,
         syn::BinOp::Shl(_) => ast::BinOp::Shl,
