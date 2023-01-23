@@ -238,7 +238,7 @@ fn rename_expression(expression: &mut Expr, old_name: String, new_name: String) 
     match expression {
         Expr::Var(var) => {
             if var.name == *old_name {
-                var.name = new_name.clone();
+                var.name = new_name;
             }
         }
         Expr::Lit(_) => {}
@@ -374,7 +374,7 @@ mod tests {
             params: vec![foo_var.clone()],
             statements: vec![
                 Statement::Let(Assignment {
-                    var: baz_var.clone(),
+                    var: baz_var,
                     expr: Expr::Var(foo_var.clone()),
                 }),
                 Statement::Re(Assignment {
@@ -389,8 +389,8 @@ mod tests {
             index: 1,
             params: vec![],
             statements: vec![Statement::Re(Assignment {
-                var: foo_var.clone(),
-                expr: Expr::Var(foz_var.clone()),
+                var: foo_var,
+                expr: Expr::Var(foz_var),
             })],
         });
 

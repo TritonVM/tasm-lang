@@ -51,7 +51,7 @@ impl BasicBlock {
                 defined_variable_names.push(assignment.var.name.clone());
             }
         }
-        return free_variables;
+        free_variables
     }
 
     /// Used variables are variables referenced in expressions in
@@ -75,7 +75,7 @@ impl BasicBlock {
                 Expr::Lit(_) => {}
             }
         }
-        return used_variables;
+        used_variables
     }
 
     /// Defined variables are variables that are cast into existence
@@ -91,7 +91,7 @@ impl BasicBlock {
                 }
             }
         }
-        return defined_variables;
+        defined_variables
     }
 }
 

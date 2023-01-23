@@ -7,12 +7,7 @@ pub fn graft(input: &syn::ItemFn) -> ast::Fn<Annotation> {
     let name = input.sig.ident.to_string();
     let args = input.sig.inputs.iter().map(graft_fn_arg).collect_vec();
     let output = graft_return_type(&input.sig.output);
-    let body = input
-        .block
-        .stmts
-        .iter()
-        .map(|stmt| graft_stmt(stmt))
-        .collect_vec();
+    let body = input.block.stmts.iter().map(graft_stmt).collect_vec();
 
     ast::Fn {
         name,
@@ -30,35 +25,31 @@ fn rust_type_path_to_data_type(rust_type_path: &syn::TypePath) -> ast::DataType 
     );
     let rust_type_as_string = rust_type_path.path.segments[0].ident.to_string();
     let primitive_type_parse_result = rust_type_as_string.parse::<ast::DataType>();
-    match primitive_type_parse_result {
-        Ok(ret) => ret,
-        Err(_err) => {
-            // Type is not primitive. So it must be a vector:
-            match rust_type_as_string.as_str() {
-                "Vec" => {
-                    let arguments = &rust_type_path.path.segments[0].arguments;
-                    match arguments {
-                        syn::PathArguments::AngleBracketed(ab) => {
-                            assert_eq!(1, ab.args.len(), "Only one arg to Vec type is supported");
-                            let args = &ab.args[0];
-                            match args {
-                                syn::GenericArgument::Type(type_arg) => match type_arg {
-                                    syn::Type::Path(path) => {
-                                        return ast::DataType::List(Box::new(
-                                            rust_type_path_to_data_type(path),
-                                        ))
-                                    }
-                                    other => panic!("Unsupported type {other:#?}"),
-                                },
-                                other => panic!("Unsupported type {other:#?}"),
-                            };
-                        }
-                        other => panic!("Unsupported type {other:#?}"),
-                    }
+
+    if let Ok(data_type) = primitive_type_parse_result {
+        return data_type;
+    }
+
+    // Type is not primitive. Is it a vector?
+    if rust_type_as_string == "Vec" {
+        return rust_vec_to_data_type(&rust_type_path.path.segments[0].arguments);
+    }
+
+    panic!("Unsupported type {rust_type_as_string:#?}");
+}
+
+fn rust_vec_to_data_type(path_args: &syn::PathArguments) -> ast::DataType {
+    match path_args {
+        syn::PathArguments::AngleBracketed(ab) => {
+            assert_eq!(1, ab.args.len(), "Must be Vec<T> for *one* generic T.");
+            match &ab.args[0] {
+                syn::GenericArgument::Type(syn::Type::Path(path)) => {
+                    ast::DataType::List(Box::new(rust_type_path_to_data_type(path)))
                 }
                 other => panic!("Unsupported type {other:#?}"),
             }
         }
+        other => panic!("Unsupported type {other:#?}"),
     }
 }
 
@@ -73,11 +64,7 @@ fn pat_type_to_data_type(rust_type_path: &syn::PatType) -> ast::DataType {
     match rust_type_path.ty.as_ref() {
         syn::Type::Path(path) => rust_type_path_to_data_type(path),
         syn::Type::Tuple(tuple) => {
-            let types = tuple
-                .elems
-                .iter()
-                .map(|x| rust_type_to_data_type(x))
-                .collect_vec();
+            let types = tuple.elems.iter().map(rust_type_to_data_type).collect_vec();
 
             ast::DataType::FlatList(types)
         }
@@ -136,19 +123,15 @@ fn graft_return_type(rust_return_type: &syn::ReturnType) -> ast::DataType {
     ret_type
 }
 
-// TODO: Consider moving this to the `ast` file and implement it as a conversion function
 fn graft_call_exp(expr_call: &syn::ExprCall) -> ast::FnCall<Annotation> {
-    let fun_name: String = match expr_call.func.as_ref() {
+    let name: String = match expr_call.func.as_ref() {
         syn::Expr::Path(path) => path_to_ident(&path.path),
         other => panic!("unsupported: {other:?}"),
     };
-    let args: Vec<ast::Expr<Annotation>> =
-        expr_call.args.iter().map(|x| graft_expr(x)).collect_vec();
+    let args = expr_call.args.iter().map(graft_expr).collect_vec();
+    let annot = Default::default();
 
-    ast::FnCall {
-        name: fun_name,
-        args,
-    }
+    ast::FnCall { name, args, annot }
 }
 
 /// Return identifier if expression is a Path/identifier
@@ -167,17 +150,15 @@ fn graft_method_call(rust_method_call: &syn::ExprMethodCall) -> ast::FnCall<Anno
         syn::Expr::Path(path) => path_to_ident(&path.path),
         other => panic!("unsupported: {other:?}"),
     };
-    let fun_name = rust_method_call.method.to_string();
+    let name = rust_method_call.method.to_string();
     let self_identifier = ast::Identifier::String(identifier, Default::default());
     let self_expr = ast::Expr::Var(self_identifier);
-    let method_args = rust_method_call
-        .args
-        .iter()
-        .map(|x| graft_expr(x))
-        .collect_vec();
+    let method_args = rust_method_call.args.iter().map(graft_expr).collect_vec();
+    let annot = Default::default();
     ast::FnCall {
-        name: fun_name,
+        name,
         args: vec![vec![self_expr], method_args].concat(),
+        annot,
     }
 }
 
@@ -201,7 +182,7 @@ pub fn graft_expr(rust_exp: &syn::Expr) -> ast::Expr<Annotation> {
             ast::Expr::Var(ast::Identifier::String(ident, Default::default()))
         }
         syn::Expr::Tuple(tuple_expr) => {
-            let exprs = tuple_expr.elems.iter().map(|x| graft_expr(x)).collect_vec();
+            let exprs = tuple_expr.elems.iter().map(graft_expr).collect_vec();
             ast::Expr::FlatList(exprs)
         }
         syn::Expr::Lit(litexp) => {
@@ -209,18 +190,13 @@ pub fn graft_expr(rust_exp: &syn::Expr) -> ast::Expr<Annotation> {
             ast::Expr::Lit(graft_lit(lit), Default::default())
         }
         syn::Expr::Call(call_exp) => ast::Expr::FnCall(graft_call_exp(call_exp)),
-        syn::Expr::Paren(paren_exp) => {
-            // I *think* this is sufficient to handle parentheses correctly
-            let a = graft_expr(&paren_exp.expr);
-
-            a
-        }
+        syn::Expr::Paren(paren_exp) => graft_expr(&paren_exp.expr),
         syn::Expr::If(expr_if) => {
             let condition = graft_expr(&expr_if.cond);
             let if_branch = &expr_if.then_branch.stmts;
             assert_eq!(1, if_branch.len(), "Max one line in if/else expressions");
             let then_branch = match &if_branch[0] {
-                syn::Stmt::Expr(expr) => graft_expr(&expr),
+                syn::Stmt::Expr(expr) => graft_expr(expr),
                 other => panic!("unsupported: {other:?}"),
             };
             let else_branch = &expr_if.else_branch.as_ref().unwrap().1;
@@ -229,7 +205,7 @@ pub fn graft_expr(rust_exp: &syn::Expr) -> ast::Expr<Annotation> {
                     let else_branch = &block.block.stmts;
                     assert_eq!(1, else_branch.len(), "Max one line in if/else expressions");
                     let else_branch = match &else_branch[0] {
-                        syn::Stmt::Expr(expr) => graft_expr(&expr),
+                        syn::Stmt::Expr(expr) => graft_expr(expr),
                         other => panic!("unsupported: {other:?}"),
                     };
                     else_branch
@@ -266,7 +242,7 @@ pub fn graft_expr(rust_exp: &syn::Expr) -> ast::Expr<Annotation> {
         }
         syn::Expr::Index(index_expr) => {
             let expr = graft_expr(&index_expr.expr);
-            let index = graft_expr(&&index_expr.index);
+            let index = graft_expr(&index_expr.index);
 
             if let ast::Expr::Var(identifier) = expr {
                 ast::Expr::Var(ast::Identifier::ListIndex(
@@ -370,12 +346,8 @@ pub fn graft_stmt(rust_stmt: &syn::Stmt) -> ast::Stmt<Annotation> {
             syn::Expr::While(while_stmt) => {
                 let expr_while = while_stmt;
                 let while_condition = graft_expr(&expr_while.cond);
-                let while_stmts: Vec<ast::Stmt<Annotation>> = while_stmt
-                    .body
-                    .stmts
-                    .iter()
-                    .map(|x| graft_stmt(x))
-                    .collect_vec();
+                let while_stmts: Vec<ast::Stmt<Annotation>> =
+                    while_stmt.body.stmts.iter().map(graft_stmt).collect_vec();
 
                 let while_stmt = ast::WhileStmt {
                     condition: while_condition,
@@ -389,12 +361,12 @@ pub fn graft_stmt(rust_stmt: &syn::Stmt) -> ast::Stmt<Annotation> {
                     .then_branch
                     .stmts
                     .iter()
-                    .map(|x| graft_stmt(x))
+                    .map(graft_stmt)
                     .collect_vec();
                 let else_stmts: Vec<ast::Stmt<Annotation>> = match if_expr.else_branch.as_ref() {
                     Some(else_stmts) => match else_stmts.1.as_ref() {
                         syn::Expr::Block(block) => {
-                            block.block.stmts.iter().map(|x| graft_stmt(x)).collect()
+                            block.block.stmts.iter().map(graft_stmt).collect()
                         }
                         other => panic!("unsupported: {other:?}"),
                     },
