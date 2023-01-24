@@ -1,7 +1,3 @@
-use twenty_first::{
-    shared_math::b_field_element::BFieldElement, util_types::algebraic_hasher::Hashable,
-};
-
 #[derive(Debug, Clone)]
 pub struct Stack<T> {
     pub inner: Vec<T>,
