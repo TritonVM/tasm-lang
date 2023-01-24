@@ -19,6 +19,16 @@ fn add_u32_rast() -> syn::ItemFn {
     })
 }
 
+fn add_u32_overwrite_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn add_u32_overwrite(lhs: u32, rhs: u32) -> u32 {
+            let mut c: u32 = lhs + rhs;
+            c = c + rhs;
+            return c;
+        }
+    })
+}
+
 fn right_child_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn right_child(node_index: u64) -> u64 {
@@ -67,6 +77,11 @@ mod tests {
     #[test]
     fn add_u32_test() {
         graft_check_compile_prop(&add_u32_rast());
+    }
+
+    #[test]
+    fn add_u32_overwrite_rast_test() {
+        graft_check_compile_prop(&add_u32_overwrite_rast());
     }
 
     #[test]
