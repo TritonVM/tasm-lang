@@ -37,6 +37,8 @@ fn left_child_rast() -> syn::ItemFn {
 
 #[cfg(test)]
 mod tests {
+    use itertools::Itertools;
+
     use crate::tasm::compile;
     use crate::types::annotate_fn;
 
@@ -53,7 +55,8 @@ mod tests {
 
         // compile
         let tasm = compile(&function);
-        println!("{}", tasm);
+        let tasm_string: String = tasm.iter().map(|instr| instr.to_string()).join("\n");
+        println!("{}", tasm_string);
     }
 
     #[test]

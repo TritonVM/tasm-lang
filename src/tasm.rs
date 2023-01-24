@@ -1,7 +1,9 @@
 use std::collections::HashMap;
 
 use itertools::Itertools;
+use triton_opcodes::instruction::{AnInstruction, LabelledInstruction};
 use twenty_first::amount::u32s::U32s;
+use twenty_first::shared_math::b_field_element::BFieldElement;
 use twenty_first::util_types::algebraic_hasher::Hashable;
 
 use crate::ast;
@@ -53,10 +55,10 @@ impl CompilerState {
     }
 }
 
-pub fn compile(function: &ast::Fn<ast::Typing>) -> String {
+pub fn compile(function: &ast::Fn<ast::Typing>) -> Vec<LabelledInstruction<'static>> {
     let fn_name = &function.name;
-    let fn_stack_input_sig = function.args.iter().map(|arg| format!("({arg})")).join(" ");
-    let fn_stack_output_sig = function
+    let _fn_stack_input_sig = function.args.iter().map(|arg| format!("({arg})")).join(" ");
+    let _fn_stack_output_sig = function
         .output
         .as_ref()
         .map(|data_type| format!("{}", data_type))
@@ -74,24 +76,20 @@ pub fn compile(function: &ast::Fn<ast::Typing>) -> String {
         .body
         .iter()
         .map(|stmt| compile_stmt(stmt, function, &mut state))
-        .join("\n");
+        .concat();
 
-    format!(
-        "
-        // before: _ {fn_stack_input_sig}
-        // after: _ {fn_stack_output_sig}
-        {fn_name}:
-            {fn_body_code}
-            return
-        "
-    )
+    vec![
+        vec![LabelledInstruction::Label(fn_name.to_owned(), "")],
+        fn_body_code,
+    ]
+    .concat()
 }
 
 fn compile_stmt(
     stmt: &ast::Stmt<ast::Typing>,
     function: &ast::Fn<ast::Typing>,
     state: &mut CompilerState,
-) -> String {
+) -> Vec<LabelledInstruction<'static>> {
     match stmt {
         ast::Stmt::Let(ast::LetStmt {
             var_name,
@@ -108,12 +106,14 @@ fn compile_stmt(
         // 'return;': Clean stack
         ast::Stmt::Return(None) => {
             let mut code = vec![];
-            while let Some((addr, data_type)) = state.vstack.pop() {
-                code.push(format!("// pop {} ({}):\n", addr, data_type));
-                code.push(vec!["pop"; size_of(&data_type)].join(" "));
+            while let Some((_addr, data_type)) = state.vstack.pop() {
+                code.push(vec![
+                    LabelledInstruction::Instruction(AnInstruction::Pop, "",);
+                    size_of(&data_type)
+                ]);
             }
 
-            code.join("\n")
+            code.concat()
         }
 
         // 'return <expr>;': Reorder and clean stack.
@@ -136,24 +136,42 @@ fn compile_expr(
     _context: &str,
     _data_type: &ast::DataType,
     state: &mut CompilerState,
-) -> (Address, String) {
+) -> (Address, Vec<LabelledInstruction<'static>>) {
     match expr {
         ast::Expr::Lit(expr_lit, known_type) => {
             let data_type = known_type.unwrap();
             match expr_lit {
                 ast::ExprLit::Bool(value) => {
                     let addr = state.new_address("_bool_lit", &data_type);
-                    (addr, format!("push {}", *value as usize))
+                    (
+                        addr,
+                        vec![LabelledInstruction::Instruction(
+                            AnInstruction::Push(BFieldElement::new(*value as u64)),
+                            "",
+                        )],
+                    )
                 }
 
                 ast::ExprLit::U32(value) => {
                     let addr = state.new_address("_u32_lit", &data_type);
-                    (addr, format!("push {}", *value))
+                    (
+                        addr,
+                        vec![LabelledInstruction::Instruction(
+                            AnInstruction::Push(BFieldElement::new(*value as u64)),
+                            "",
+                        )],
+                    )
                 }
 
                 ast::ExprLit::BFE(value) => {
                     let addr = state.new_address("_bfe_lit", &data_type);
-                    (addr, format!("push {}", *value))
+                    (
+                        addr,
+                        vec![LabelledInstruction::Instruction(
+                            AnInstruction::Push(*value),
+                            "",
+                        )],
+                    )
                 }
 
                 ast::ExprLit::U64(value) => {
@@ -163,8 +181,8 @@ fn compile_expr(
 
                     let code = stack_serialized
                         .iter()
-                        .map(|bfe| format!("push {}", bfe))
-                        .join(" ");
+                        .map(|bfe| LabelledInstruction::Instruction(AnInstruction::Push(**bfe), ""))
+                        .collect_vec();
 
                     (addr, code)
                 }
@@ -195,7 +213,6 @@ fn compile_expr(
         ast::Expr::FnCall(_) => todo!(),
         ast::Expr::Binop(lhs_expr, binop, rhs_expr, known_type) => {
             let data_type = known_type.unwrap();
-            // let lhs_expr_addr = state.new_address("_lhs_expr", data_type)
 
             // FIXME: '&data_type' below is wrong; it is the operand's type, not the binop's.
             let (_lhs_expr_addr, lhs_expr_code) =
@@ -207,7 +224,12 @@ fn compile_expr(
             match binop {
                 ast::BinOp::Add => {
                     // FIXME: Don't assume u32/bfe.
-                    let add_code = format!("{}\n{}\nadd\n", lhs_expr_code, rhs_expr_code);
+                    let add_code = vec![
+                        lhs_expr_code,
+                        rhs_expr_code,
+                        vec![LabelledInstruction::Instruction(AnInstruction::Add, "")],
+                    ]
+                    .concat();
                     state.vstack.pop();
                     state.vstack.pop();
                     let add_addr = state.new_address("_add_result", &data_type);
@@ -247,11 +269,17 @@ pub fn size_of(data_type: &ast::DataType) -> usize {
     }
 }
 
-fn dup_value_from_stack_code(position: usize, data_type: &ast::DataType) -> String {
+fn dup_value_from_stack_code(
+    position: usize,
+    data_type: &ast::DataType,
+) -> Vec<LabelledInstruction<'static>> {
     let elem_size = size_of(data_type);
 
     // the position of the deepest element of the value.
     let n = position + elem_size - 1;
 
-    vec![format!("dup{}", n); elem_size].join(" ")
+    vec![LabelledInstruction::Instruction(
+        AnInstruction::Dup(n.try_into().unwrap()),
+        "",
+    )]
 }
