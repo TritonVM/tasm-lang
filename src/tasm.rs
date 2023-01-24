@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use itertools::Itertools;
-use triton_opcodes::instruction::{AnInstruction, LabelledInstruction};
+use triton_opcodes::instruction::{AnInstruction::*, LabelledInstruction::*};
 use twenty_first::amount::u32s::U32s;
 use twenty_first::shared_math::b_field_element::BFieldElement;
 use twenty_first::util_types::algebraic_hasher::Hashable;
@@ -20,6 +20,9 @@ pub struct CompilerState {
 pub struct Address {
     name: String,
 }
+
+use triton_opcodes::instruction::LabelledInstruction;
+type Labeled = LabelledInstruction<'static>;
 
 impl std::fmt::Display for Address {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -55,7 +58,7 @@ impl CompilerState {
     }
 }
 
-pub fn compile(function: &ast::Fn<ast::Typing>) -> Vec<LabelledInstruction<'static>> {
+pub fn compile(function: &ast::Fn<ast::Typing>) -> Vec<Labeled> {
     let fn_name = &function.name;
     let _fn_stack_input_sig = function.args.iter().map(|arg| format!("({arg})")).join(" ");
     let _fn_stack_output_sig = function
@@ -78,18 +81,14 @@ pub fn compile(function: &ast::Fn<ast::Typing>) -> Vec<LabelledInstruction<'stat
         .map(|stmt| compile_stmt(stmt, function, &mut state))
         .concat();
 
-    vec![
-        vec![LabelledInstruction::Label(fn_name.to_owned(), "")],
-        fn_body_code,
-    ]
-    .concat()
+    vec![vec![Label(fn_name.to_owned(), "")], fn_body_code].concat()
 }
 
 fn compile_stmt(
     stmt: &ast::Stmt<ast::Typing>,
     function: &ast::Fn<ast::Typing>,
     state: &mut CompilerState,
-) -> Vec<LabelledInstruction<'static>> {
+) -> Vec<Labeled> {
     match stmt {
         ast::Stmt::Let(ast::LetStmt {
             var_name,
@@ -107,10 +106,7 @@ fn compile_stmt(
         ast::Stmt::Return(None) => {
             let mut code = vec![];
             while let Some((_addr, data_type)) = state.vstack.pop() {
-                code.push(vec![
-                    LabelledInstruction::Instruction(AnInstruction::Pop, "",);
-                    size_of(&data_type)
-                ]);
+                code.push(vec![Instruction(Pop, "",); size_of(&data_type)]);
             }
 
             code.concat()
@@ -136,7 +132,7 @@ fn compile_expr(
     _context: &str,
     _data_type: &ast::DataType,
     state: &mut CompilerState,
-) -> (Address, Vec<LabelledInstruction<'static>>) {
+) -> (Address, Vec<Labeled>) {
     match expr {
         ast::Expr::Lit(expr_lit, known_type) => {
             let data_type = known_type.unwrap();
@@ -145,10 +141,7 @@ fn compile_expr(
                     let addr = state.new_address("_bool_lit", &data_type);
                     (
                         addr,
-                        vec![LabelledInstruction::Instruction(
-                            AnInstruction::Push(BFieldElement::new(*value as u64)),
-                            "",
-                        )],
+                        vec![Instruction(Push(BFieldElement::new(*value as u64)), "")],
                     )
                 }
 
@@ -156,22 +149,13 @@ fn compile_expr(
                     let addr = state.new_address("_u32_lit", &data_type);
                     (
                         addr,
-                        vec![LabelledInstruction::Instruction(
-                            AnInstruction::Push(BFieldElement::new(*value as u64)),
-                            "",
-                        )],
+                        vec![Instruction(Push(BFieldElement::new(*value as u64)), "")],
                     )
                 }
 
                 ast::ExprLit::BFE(value) => {
                     let addr = state.new_address("_bfe_lit", &data_type);
-                    (
-                        addr,
-                        vec![LabelledInstruction::Instruction(
-                            AnInstruction::Push(*value),
-                            "",
-                        )],
-                    )
+                    (addr, vec![Instruction(Push(*value), "")])
                 }
 
                 ast::ExprLit::U64(value) => {
@@ -181,7 +165,7 @@ fn compile_expr(
 
                     let code = stack_serialized
                         .iter()
-                        .map(|bfe| LabelledInstruction::Instruction(AnInstruction::Push(**bfe), ""))
+                        .map(|bfe| Instruction(Push(**bfe), ""))
                         .collect_vec();
 
                     (addr, code)
@@ -224,12 +208,8 @@ fn compile_expr(
             match binop {
                 ast::BinOp::Add => {
                     // FIXME: Don't assume u32/bfe.
-                    let add_code = vec![
-                        lhs_expr_code,
-                        rhs_expr_code,
-                        vec![LabelledInstruction::Instruction(AnInstruction::Add, "")],
-                    ]
-                    .concat();
+                    let add_code =
+                        vec![lhs_expr_code, rhs_expr_code, vec![Instruction(Add, "")]].concat();
                     state.vstack.pop();
                     state.vstack.pop();
                     let add_addr = state.new_address("_add_result", &data_type);
@@ -269,17 +249,11 @@ pub fn size_of(data_type: &ast::DataType) -> usize {
     }
 }
 
-fn dup_value_from_stack_code(
-    position: usize,
-    data_type: &ast::DataType,
-) -> Vec<LabelledInstruction<'static>> {
+fn dup_value_from_stack_code(position: usize, data_type: &ast::DataType) -> Vec<Labeled> {
     let elem_size = size_of(data_type);
 
     // the position of the deepest element of the value.
     let n = position + elem_size - 1;
 
-    vec![LabelledInstruction::Instruction(
-        AnInstruction::Dup(n.try_into().unwrap()),
-        "",
-    )]
+    vec![Instruction(Dup(n.try_into().unwrap()), "")]
 }
