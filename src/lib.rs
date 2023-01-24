@@ -4,3 +4,6 @@ pub mod graft;
 pub mod ssa;
 pub mod tasm;
 pub mod types;
+
+#[cfg(test)]
+mod programs;

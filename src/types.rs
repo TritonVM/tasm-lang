@@ -33,19 +33,19 @@ fn annotate_stmt(
             }
 
             let derived_type = derive_annotate_expr_type(expr, vtable);
-            assert_type_equals(&derived_type, data_type);
+            assert_type_equals(&derived_type, data_type, "let-statement");
             vtable.insert(var_name.clone(), data_type.clone());
         }
 
         ast::Stmt::Assign(ast::AssignStmt { identifier, expr }) => {
             let identifier_type = annotate_identifier_type(identifier, vtable);
             let expr_type = derive_annotate_expr_type(expr, vtable);
-            assert_type_equals(&identifier_type, &expr_type);
+            assert_type_equals(&identifier_type, &expr_type, "assign-statement");
         }
 
         ast::Stmt::Return(expr) => {
             let expr_type = derive_annotate_expr_type(expr, vtable);
-            assert_type_equals(return_type, &expr_type);
+            assert_type_equals(return_type, &expr_type, "return-statement");
         }
 
         ast::Stmt::FnCall(ast::FnCall {
@@ -63,7 +63,7 @@ fn annotate_stmt(
 
         ast::Stmt::While(ast::WhileStmt { condition, stmts }) => {
             let condition_type = derive_annotate_expr_type(condition, vtable);
-            assert_type_equals(&condition_type, &ast::DataType::Bool);
+            assert_type_equals(&condition_type, &ast::DataType::Bool, "while-condition");
 
             stmts
                 .iter_mut()
@@ -76,7 +76,7 @@ fn annotate_stmt(
             else_branch,
         }) => {
             let condition_type = derive_annotate_expr_type(condition, vtable);
-            assert_type_equals(&condition_type, &ast::DataType::Bool);
+            assert_type_equals(&condition_type, &ast::DataType::Bool, "if-condition");
 
             // TODO: By sharing 'vtable' between branches, you cannot have the same 'let'
             // statement in each branch, since type-checking the 'let' in the else-branch
@@ -93,11 +93,11 @@ fn annotate_stmt(
     }
 }
 
-fn assert_type_equals(derived_type: &ast::DataType, data_type: &ast::DataType) {
+fn assert_type_equals(derived_type: &ast::DataType, data_type: &ast::DataType, context: &str) {
     if derived_type != data_type {
         panic!(
-            "Type mismatch between annotated type '{}' and derived type '{}'",
-            data_type, derived_type
+            "Type mismatch between type '{}' and derived type '{}' for {}",
+            data_type, derived_type, context
         );
     }
 }
@@ -204,7 +204,7 @@ fn derive_annotate_expr_type(
             match binop {
                 // Overloaded for all arithmetic types.
                 Add => {
-                    assert_type_equals(&lhs_type, &rhs_type);
+                    assert_type_equals(&lhs_type, &rhs_type, "add-expr");
                     assert!(
                         is_arithmetic_type(&lhs_type),
                         "Cannot add non-arithmetic type '{}'",
@@ -216,15 +216,15 @@ fn derive_annotate_expr_type(
 
                 // Restricted to bool only.
                 And => {
-                    assert_type_equals(&lhs_type, &bool_type);
-                    assert_type_equals(&rhs_type, &bool_type);
+                    assert_type_equals(&lhs_type, &bool_type, "and-expr lhs");
+                    assert_type_equals(&rhs_type, &bool_type, "and-expr rhs");
                     *binop_type = ast::Typing::KnownType(bool_type.clone());
                     bool_type
                 }
 
                 // Restricted to U32-based types. (Triton VM limitation)
                 BitAnd => {
-                    assert_type_equals(&lhs_type, &rhs_type);
+                    assert_type_equals(&lhs_type, &rhs_type, "bitwise-and-expr");
                     assert!(
                         is_u32_based_type(&lhs_type),
                         "Cannot bitwise-and type '{}' (not u32-based)",
@@ -236,7 +236,7 @@ fn derive_annotate_expr_type(
 
                 // Restricted to U32-based types. (Triton VM limitation)
                 BitXor => {
-                    assert_type_equals(&lhs_type, &rhs_type);
+                    assert_type_equals(&lhs_type, &rhs_type, "bitwise-xor-expr");
                     assert!(
                         is_u32_based_type(&lhs_type),
                         "Cannot bitwise-xor type '{}' (not u32-based)",
@@ -248,7 +248,7 @@ fn derive_annotate_expr_type(
 
                 // Overloaded for all arithmetic types.
                 Div => {
-                    assert_type_equals(&lhs_type, &rhs_type);
+                    assert_type_equals(&lhs_type, &rhs_type, "div-expr");
                     assert!(
                         is_arithmetic_type(&lhs_type),
                         "Cannot divide non-arithmetic type '{}'",
@@ -260,7 +260,7 @@ fn derive_annotate_expr_type(
 
                 // Overloaded for all primitive types.
                 Eq => {
-                    assert_type_equals(&lhs_type, &rhs_type);
+                    assert_type_equals(&lhs_type, &rhs_type, "eq-expr");
                     assert!(
                         is_primitive_type(&lhs_type),
                         "Cannot compare non-primitive type '{}' for equality",
@@ -272,7 +272,7 @@ fn derive_annotate_expr_type(
 
                 // Restricted to U32-based types. (Triton VM limitation)
                 Lt => {
-                    assert_type_equals(&lhs_type, &rhs_type);
+                    assert_type_equals(&lhs_type, &rhs_type, "lt-expr");
                     assert!(
                         is_u32_based_type(&lhs_type),
                         "Cannot compare type '{}' with less-than (not u32-based)",
@@ -284,7 +284,7 @@ fn derive_annotate_expr_type(
 
                 // Overloaded for all primitive types.
                 Mul => {
-                    assert_type_equals(&lhs_type, &rhs_type);
+                    assert_type_equals(&lhs_type, &rhs_type, "mul-expr");
                     assert!(
                         is_arithmetic_type(&lhs_type),
                         "Cannot multiply non-arithmetic type '{}'",
@@ -296,7 +296,7 @@ fn derive_annotate_expr_type(
 
                 // Overloaded for all primitive types.
                 Neq => {
-                    assert_type_equals(&lhs_type, &rhs_type);
+                    assert_type_equals(&lhs_type, &rhs_type, "neq-expr");
                     assert!(
                         is_primitive_type(&lhs_type),
                         "Cannot compare type '{}' with not-equal (not primitive)",
@@ -308,15 +308,15 @@ fn derive_annotate_expr_type(
 
                 // Restricted to bool only.
                 Or => {
-                    assert_type_equals(&lhs_type, &bool_type);
-                    assert_type_equals(&rhs_type, &bool_type);
+                    assert_type_equals(&lhs_type, &bool_type, "or-expr lhs");
+                    assert_type_equals(&rhs_type, &bool_type, "or-expr rhs");
                     *binop_type = ast::Typing::KnownType(bool_type.clone());
                     bool_type
                 }
 
                 // Restricted to U32-based types. (Triton VM limitation)
                 Rem => {
-                    assert_type_equals(&lhs_type, &rhs_type);
+                    assert_type_equals(&lhs_type, &rhs_type, "rem-expr");
                     assert!(
                         is_u32_based_type(&lhs_type),
                         "Cannot find remainder for type '{}' (not u32-based)",
@@ -329,12 +329,12 @@ fn derive_annotate_expr_type(
 
                 // Restricted to U32-based types. (Triton VM limitation)
                 Shl => {
-                    assert_type_equals(&lhs_type, &rhs_type);
                     assert!(
                         is_u32_based_type(&lhs_type),
                         "Cannot shift-left for type '{}' (not u32-based)",
                         lhs_type
                     );
+                    assert_type_equals(&rhs_type, &ast::DataType::U32, "shl-rhs-expr");
                     *binop_type = ast::Typing::KnownType(lhs_type.clone());
 
                     lhs_type
@@ -342,12 +342,12 @@ fn derive_annotate_expr_type(
 
                 // Restricted to U32-based types. (Triton VM limitation)
                 Shr => {
-                    assert_type_equals(&lhs_type, &rhs_type);
                     assert!(
                         is_u32_based_type(&lhs_type),
                         "Cannot shift-right for type '{}' (not u32-based)",
                         lhs_type
                     );
+                    assert_type_equals(&rhs_type, &ast::DataType::U32, "shr-rhs-expr");
                     *binop_type = ast::Typing::KnownType(lhs_type.clone());
 
                     lhs_type
@@ -355,7 +355,7 @@ fn derive_annotate_expr_type(
 
                 // Overloaded for all arithmetic types.
                 Sub => {
-                    assert_type_equals(&lhs_type, &rhs_type);
+                    assert_type_equals(&lhs_type, &rhs_type, "sub-expr");
                     assert!(
                         is_arithmetic_type(&lhs_type),
                         "Cannot subtract non-arithmetic type '{}'",
@@ -373,11 +373,11 @@ fn derive_annotate_expr_type(
             else_branch,
         }) => {
             let condition_type = derive_annotate_expr_type(condition, vtable);
-            assert_type_equals(&condition_type, &bool_type);
+            assert_type_equals(&condition_type, &bool_type, "if-condition-expr");
 
             let then_type = derive_annotate_expr_type(then_branch, vtable);
             let else_type = derive_annotate_expr_type(else_branch, vtable);
-            assert_type_equals(&then_type, &else_type);
+            assert_type_equals(&then_type, &else_type, "if-then-else-expr");
 
             then_type
         }

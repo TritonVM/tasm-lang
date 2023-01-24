@@ -380,7 +380,7 @@ pub fn graft_stmt(rust_stmt: &syn::Stmt) -> ast::Stmt<Annotation> {
                 };
                 ast::Stmt::If(if_stmt)
             }
-            other => panic!("unsupported: {other:?}"),
+            other => panic!("unsupported expression. make sure to end statements by semi-colon and to explicitly 'return': {other:?}"),
         },
         syn::Stmt::Semi(semi, _b) => match semi {
             syn::Expr::Return(ret) => {
@@ -451,6 +451,13 @@ pub fn graft_stmt(rust_stmt: &syn::Stmt) -> ast::Stmt<Annotation> {
             }
             other => panic!("unsupported: {other:?}"),
         },
+    }
+}
+
+pub fn item_fn(item: syn::Item) -> syn::ItemFn {
+    match item {
+        syn::Item::Fn(item_fn) => item_fn,
+        other => panic!("item_fn: expected fn, found: {:#?}", other),
     }
 }
 
@@ -804,24 +811,6 @@ mod tests {
             }
         };
 
-        match &tokens {
-            syn::Item::Fn(item_fn) => {
-                println!("{item_fn:#?}");
-                let ret = graft(item_fn);
-                println!("{ret:#?}");
-            }
-            _ => panic!("unsupported"),
-        }
-    }
-
-    #[test]
-    fn u32_add() {
-        let tokens: syn::Item = parse_quote! {
-            fn add_u32(lhs: u32, rhs: u32) -> u32 {
-                let c: u32 = lhs + rhs;
-                return c;
-            }
-        };
         match &tokens {
             syn::Item::Fn(item_fn) => {
                 println!("{item_fn:#?}");
