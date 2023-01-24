@@ -167,7 +167,12 @@ pub fn compile(function: &ast::Fn<ast::Typing>) -> Vec<Labeled> {
         .map(|stmt| compile_stmt(stmt, function, &mut state))
         .concat();
 
-    vec![vec![Label(fn_name.to_owned(), "")], fn_body_code].concat()
+    vec![
+        vec![Label(fn_name.to_owned(), "")],
+        fn_body_code,
+        vec![Instruction(Return, "")],
+    ]
+    .concat()
 }
 
 fn compile_stmt(
