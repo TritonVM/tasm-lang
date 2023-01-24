@@ -37,6 +37,7 @@ fn left_child_rast() -> syn::ItemFn {
 
 #[cfg(test)]
 mod tests {
+    use crate::tasm::compile;
     use crate::types::annotate_fn;
 
     use super::*;
@@ -45,14 +46,14 @@ mod tests {
         // parse test
         let mut function = graft(item_fn);
 
-        println!("{:#?}", function);
-
-        // type-check
+        // type-check and annotate
         annotate_fn(&mut function);
 
+        println!("{:#?}", function);
+
         // compile
-        // let tasm = compile(&function);
-        // println!("{}", tasm);
+        let tasm = compile(&function);
+        println!("{}", tasm);
     }
 
     #[test]

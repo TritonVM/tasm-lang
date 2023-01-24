@@ -424,7 +424,7 @@ pub fn expr_lit_type(expr_lit: &ast::ExprLit) -> ast::DataType {
     }
 }
 
-fn is_string_identifier<T>(identifier: &ast::Identifier<T>) -> bool {
+pub fn is_string_identifier<T>(identifier: &ast::Identifier<T>) -> bool {
     matches!(identifier, ast::Identifier::String(_, _))
 }
 
@@ -432,7 +432,7 @@ fn is_string_identifier<T>(identifier: &ast::Identifier<T>) -> bool {
 ///
 /// Since memory addresses are essentially `BFieldElement`s, only types
 /// that are subsets of `BFE`s can be used. The only such type is `U32`.
-fn is_index_type(data_type: &ast::DataType) -> bool {
+pub fn is_index_type(data_type: &ast::DataType) -> bool {
     use ast::DataType::*;
     matches!(data_type, U32 | BFE)
 }
@@ -442,7 +442,7 @@ fn is_index_type(data_type: &ast::DataType) -> bool {
 /// Note that not all operators work for all arithmetic types.
 ///
 /// E.g. the bitwise operators only work for `is_u32_based_type()`.
-fn is_arithmetic_type(data_type: &ast::DataType) -> bool {
+pub fn is_arithmetic_type(data_type: &ast::DataType) -> bool {
     use ast::DataType::*;
     matches!(data_type, U32 | U64 | BFE | XFE)
 }
@@ -450,13 +450,13 @@ fn is_arithmetic_type(data_type: &ast::DataType) -> bool {
 /// A type that is implemented in terms of `U32` values.
 ///
 /// E.g. `U32` and `U64`.
-fn is_u32_based_type(data_type: &ast::DataType) -> bool {
+pub fn is_u32_based_type(data_type: &ast::DataType) -> bool {
     use ast::DataType::*;
     matches!(data_type, U32 | U64)
 }
 
 /// A non-composite fixed-length type.
-fn is_primitive_type(data_type: &ast::DataType) -> bool {
+pub fn is_primitive_type(data_type: &ast::DataType) -> bool {
     use ast::DataType::*;
     matches!(data_type, Bool | U32 | U64 | BFE | XFE | Digest)
 }

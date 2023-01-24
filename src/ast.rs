@@ -187,3 +187,12 @@ impl Default for Typing {
         Typing::UnknownType
     }
 }
+
+impl Typing {
+    pub fn unwrap(&self) -> DataType {
+        match self {
+            Typing::UnknownType => panic!("Cannot unpack type before complete type annotation."),
+            Typing::KnownType(data_type) => data_type.clone(),
+        }
+    }
+}

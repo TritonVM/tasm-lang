@@ -6,8 +6,9 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+twenty-first = "*"
+# tasm-lib = { version = "*", git = "https://github.com/TritonVM/tasm-lib.git", branch = "master" }
 itertools = "0.10"
 quote = "1.0"
 syn = { version = "1.0", features = ["full", "extra-traits"] }
-twenty-first = "*"
 anyhow = "*"
