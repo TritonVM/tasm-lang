@@ -37,7 +37,7 @@ fn left_child_rast() -> syn::ItemFn {
 
 #[cfg(test)]
 mod tests {
-    use crate::{tasm::compile, types::annotate_fn};
+    use crate::types::annotate_fn;
 
     use super::*;
 

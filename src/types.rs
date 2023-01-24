@@ -2,24 +2,37 @@ use std::collections::HashMap;
 
 use crate::ast;
 
+#[derive(Debug, Default)]
+pub struct CheckState {
+    pub vtable: HashMap<String, ast::DataType>,
+}
+
 pub fn annotate_fn(function: &mut ast::Fn<ast::Typing>) {
+    // Initialize `CheckState`
+    let vtable: HashMap<String, ast::DataType> = HashMap::with_capacity(function.args.len());
+    let mut state = CheckState { vtable };
+
     // Populate vtable with function arguments
-    let mut vtable: HashMap<String, ast::DataType> = function
-        .args
-        .iter()
-        .map(|arg| (arg.name.clone(), arg.data_type.clone()))
-        .collect();
+    for arg in function.args.iter() {
+        let duplicate_fn_arg = state
+            .vtable
+            .insert(arg.name.clone(), arg.data_type.clone())
+            .is_some();
+        if duplicate_fn_arg {
+            panic!("Duplicate function argument {}", arg.name);
+        }
+    }
 
     // Type-annotate each statement in-place
     function
         .body
         .iter_mut()
-        .for_each(|stmt| annotate_stmt(stmt, &mut vtable, &function.name, &function.output));
+        .for_each(|stmt| annotate_stmt(stmt, &mut state, &function.name, &function.output));
 }
 
 fn annotate_stmt(
     stmt: &mut ast::Stmt<ast::Typing>,
-    vtable: &mut HashMap<String, ast::DataType>,
+    state: &mut CheckState,
     fn_name: &str,
     fn_output: &Option<ast::DataType>,
 ) {
@@ -29,18 +42,18 @@ fn annotate_stmt(
             data_type,
             expr,
         }) => {
-            if vtable.contains_key(var_name) {
+            if state.vtable.contains_key(var_name) {
                 panic!("let-assign cannot shadow existing variable '{}'!", var_name);
             }
 
-            let derived_type = derive_annotate_expr_type(expr, vtable);
+            let derived_type = derive_annotate_expr_type(expr, state);
             assert_type_equals(&derived_type, data_type, "let-statement");
-            vtable.insert(var_name.clone(), data_type.clone());
+            state.vtable.insert(var_name.clone(), data_type.clone());
         }
 
         ast::Stmt::Assign(ast::AssignStmt { identifier, expr }) => {
-            let identifier_type = annotate_identifier_type(identifier, vtable);
-            let expr_type = derive_annotate_expr_type(expr, vtable);
+            let identifier_type = annotate_identifier_type(identifier, state);
+            let expr_type = derive_annotate_expr_type(expr, state);
             assert_type_equals(&identifier_type, &expr_type, "assign-statement");
         }
 
@@ -51,14 +64,14 @@ fn annotate_stmt(
                 fn_name, return_type
             ),
             (Some(ret_expr), None) => {
-                let expr_ret_type = derive_annotate_expr_type(ret_expr, vtable);
+                let expr_ret_type = derive_annotate_expr_type(ret_expr, state);
                 panic!(
                     "Return with value; expect function {} to return nothing, but returns {}",
                     fn_name, expr_ret_type
                 )
             }
             (Some(ret_expr), Some(fn_ret_type)) => {
-                let expr_ret_type = derive_annotate_expr_type(ret_expr, vtable);
+                let expr_ret_type = derive_annotate_expr_type(ret_expr, state);
                 assert_type_equals(fn_ret_type, &expr_ret_type, "return stmt");
             }
         },
@@ -70,7 +83,7 @@ fn annotate_stmt(
         }) => {
             let _arg_types: Vec<ast::DataType> = args
                 .iter_mut()
-                .map(|arg_expr| derive_annotate_expr_type(arg_expr, vtable))
+                .map(|arg_expr| derive_annotate_expr_type(arg_expr, state))
                 .collect();
 
             // TODO: Check that function exists and that its input types match with args provided.
@@ -78,12 +91,12 @@ fn annotate_stmt(
         }
 
         ast::Stmt::While(ast::WhileStmt { condition, stmts }) => {
-            let condition_type = derive_annotate_expr_type(condition, vtable);
+            let condition_type = derive_annotate_expr_type(condition, state);
             assert_type_equals(&condition_type, &ast::DataType::Bool, "while-condition");
 
             stmts
                 .iter_mut()
-                .for_each(|stmt| annotate_stmt(stmt, vtable, fn_name, fn_output));
+                .for_each(|stmt| annotate_stmt(stmt, state, fn_name, fn_output));
         }
 
         ast::Stmt::If(ast::IfStmt {
@@ -91,7 +104,7 @@ fn annotate_stmt(
             if_branch,
             else_branch,
         }) => {
-            let condition_type = derive_annotate_expr_type(condition, vtable);
+            let condition_type = derive_annotate_expr_type(condition, state);
             assert_type_equals(&condition_type, &ast::DataType::Bool, "if-condition");
 
             // TODO: By sharing 'vtable' between branches, you cannot have the same 'let'
@@ -100,11 +113,11 @@ fn annotate_stmt(
 
             if_branch
                 .iter_mut()
-                .for_each(|stmt| annotate_stmt(stmt, vtable, fn_name, fn_output));
+                .for_each(|stmt| annotate_stmt(stmt, state, fn_name, fn_output));
 
             else_branch
                 .iter_mut()
-                .for_each(|stmt| annotate_stmt(stmt, vtable, fn_name, fn_output));
+                .for_each(|stmt| annotate_stmt(stmt, state, fn_name, fn_output));
         }
     }
 }
@@ -120,12 +133,12 @@ fn assert_type_equals(derived_type: &ast::DataType, data_type: &ast::DataType, c
 
 fn annotate_identifier_type(
     identifier: &mut ast::Identifier<ast::Typing>,
-    vtable: &mut HashMap<String, ast::DataType>,
+    state: &mut CheckState,
 ) -> ast::DataType {
     match identifier {
         // x
         ast::Identifier::String(var_name, var_type) => {
-            let found_type = vtable.get(var_name).expect("variable must exist");
+            let found_type = state.vtable.get(var_name).expect("variable must exist");
             *var_type = ast::Typing::KnownType(found_type.clone());
             found_type.clone()
         }
@@ -135,7 +148,7 @@ fn annotate_identifier_type(
             // For syntax like 'x.0.1', find the type of 'x.0'; we don't currently
             // generate ASTs with nested tuple indexing, but it's easier to solve
             // the type inference generally here.
-            let tuple_type = annotate_identifier_type(tuple_identifier, vtable);
+            let tuple_type = annotate_identifier_type(tuple_identifier, state);
 
             if let ast::DataType::FlatList(elem_types) = tuple_type {
                 if elem_types.len() < *index {
@@ -154,7 +167,7 @@ fn annotate_identifier_type(
 
         // x[e]
         ast::Identifier::ListIndex(list_identifier, index_expr) => {
-            let index_type = derive_annotate_expr_type(index_expr, vtable);
+            let index_type = derive_annotate_expr_type(index_expr, state);
             if !is_index_type(&index_type) {
                 panic!("Cannot index list with type '{}'", index_type);
             }
@@ -164,7 +177,7 @@ fn annotate_identifier_type(
                 panic!("Cannot index anything but variables: {:?}", list_identifier);
             }
 
-            let list_type = annotate_identifier_type(list_identifier, vtable);
+            let list_type = annotate_identifier_type(list_identifier, state);
             if !is_primitive_type(&list_type) {
                 panic!("Cannot index list of type '{}", list_type);
             }
@@ -176,7 +189,7 @@ fn annotate_identifier_type(
 
 fn derive_annotate_expr_type(
     expr: &mut ast::Expr<ast::Typing>,
-    vtable: &mut HashMap<String, ast::DataType>,
+    state: &mut CheckState,
 ) -> ast::DataType {
     let bool_type = ast::DataType::U32;
 
@@ -187,12 +200,12 @@ fn derive_annotate_expr_type(
             found_type
         }
 
-        ast::Expr::Var(identifier) => annotate_identifier_type(identifier, vtable),
+        ast::Expr::Var(identifier) => annotate_identifier_type(identifier, state),
 
         ast::Expr::FlatList(tuple_exprs) => {
             let tuple_types: Vec<ast::DataType> = tuple_exprs
                 .iter_mut()
-                .map(|expr| derive_annotate_expr_type(expr, vtable))
+                .map(|expr| derive_annotate_expr_type(expr, state))
                 .collect();
             ast::DataType::FlatList(tuple_types)
         }
@@ -206,15 +219,15 @@ fn derive_annotate_expr_type(
             // TODO: Cannot annotate return type when there's no function table.
             let _arg_types: Vec<ast::DataType> = args
                 .iter_mut()
-                .map(|arg_expr| derive_annotate_expr_type(arg_expr, vtable))
+                .map(|arg_expr| derive_annotate_expr_type(arg_expr, state))
                 .collect();
 
             panic!("TODO: Don't know what type of value '{}' returns!", name)
         }
 
         ast::Expr::Binop(lhs_expr, binop, rhs_expr, binop_type) => {
-            let lhs_type = derive_annotate_expr_type(lhs_expr, vtable);
-            let rhs_type = derive_annotate_expr_type(rhs_expr, vtable);
+            let lhs_type = derive_annotate_expr_type(lhs_expr, state);
+            let rhs_type = derive_annotate_expr_type(rhs_expr, state);
 
             use ast::BinOp::*;
             match binop {
@@ -388,11 +401,11 @@ fn derive_annotate_expr_type(
             then_branch,
             else_branch,
         }) => {
-            let condition_type = derive_annotate_expr_type(condition, vtable);
+            let condition_type = derive_annotate_expr_type(condition, state);
             assert_type_equals(&condition_type, &bool_type, "if-condition-expr");
 
-            let then_type = derive_annotate_expr_type(then_branch, vtable);
-            let else_type = derive_annotate_expr_type(else_branch, vtable);
+            let then_type = derive_annotate_expr_type(then_branch, state);
+            let else_type = derive_annotate_expr_type(else_branch, state);
             assert_type_equals(&then_type, &else_type, "if-then-else-expr");
 
             then_type
