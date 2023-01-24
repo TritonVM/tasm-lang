@@ -51,7 +51,9 @@ impl CompilerState {
         address
     }
 
-    fn remove_all_but_top_stack_element(&mut self) -> Vec<Labeled> {
+    /// Return code that clears the stack but leaves the value that's on the top of the stack
+    /// when this function is called.
+    fn remove_all_but_top_stack_value(&mut self) -> Vec<Labeled> {
         let top_element = self
             .vstack
             .pop()
@@ -217,49 +219,42 @@ fn compile_stmt(
         ast::Stmt::Return(Some(ret_expr)) => {
             let ret_type = function.output.as_ref().expect("a return type");
             // special-case on returning variable, without unnecessary dup-instructions
-            let expr_code = match ret_expr {
-                ast::Expr::Var(identifier) => {
-                    match identifier {
-                        ast::Identifier::String(var_name, known_type) => {
-                            let data_type = known_type.unwrap();
-                            let var_addr = state.var_addr.get(var_name).expect("variable exists");
-                            let (position, old_data_type) = state.find_stack_value(var_addr);
-                            let mut stack_height = state.get_stack_height();
+            let expr_code =
+                if let ast::Expr::Var(ast::Identifier::String(var_name, known_type)) = ret_expr {
+                    let data_type = known_type.unwrap();
+                    let var_addr = state.var_addr.get(var_name).expect("variable exists");
+                    let (position, old_data_type) = state.find_stack_value(var_addr);
+                    let mut stack_height = state.get_stack_height();
 
-                            // sanity check
-                            assert_eq!(old_data_type, data_type, "type must match expected type");
+                    // sanity check
+                    assert_eq!(old_data_type, data_type, "type must match expected type");
 
-                            // Pop everything prior to sought value
-                            let first_pop_code = vec![Instruction(Pop, ""); position.into()];
-                            stack_height -= Into::<usize>::into(position);
+                    // Pop everything prior to sought value
+                    let first_pop_code = vec![Instruction(Pop, ""); position.into()];
+                    stack_height -= Into::<usize>::into(position);
 
-                            // Swap returned value to bottom of stack
-                            let data_type_size = size_of(&data_type);
-                            let swap_instr = Instruction(
-                                Swap((stack_height - data_type_size).try_into().unwrap()),
-                                "",
-                            );
-                            let swap_code =
-                                vec![vec![swap_instr, Instruction(Pop, "")]; data_type_size]
-                                    .concat();
-                            stack_height -= data_type_size;
+                    // Swap returned value to bottom of stack
+                    let data_type_size = size_of(&data_type);
+                    let swap_instr = Instruction(
+                        Swap((stack_height - data_type_size).try_into().unwrap()),
+                        "",
+                    );
+                    let swap_code =
+                        vec![vec![swap_instr, Instruction(Pop, "")]; data_type_size].concat();
+                    stack_height -= data_type_size;
 
-                            let last_pop_code =
-                                vec![Instruction(Pop, ""); stack_height - data_type_size];
+                    let last_pop_code = vec![Instruction(Pop, ""); stack_height - data_type_size];
 
-                            return vec![first_pop_code, swap_code, last_pop_code].concat();
-                        }
-                        ast::Identifier::TupleIndex(_, _) => todo!(),
-                        ast::Identifier::ListIndex(_, _) => todo!(),
-                    }
-                }
-                _ => compile_expr(ret_expr, "ret_expr", ret_type, state).1,
-            };
+                    vec![first_pop_code, swap_code, last_pop_code].concat()
+                } else {
+                    let expr_code = compile_expr(ret_expr, "ret_expr", ret_type, state).1;
 
-            // Remove all but top value from stack
-            let remove_elements_code = state.remove_all_but_top_stack_element();
+                    // Remove all but top value from stack
+                    let remove_elements_code = state.remove_all_but_top_stack_value();
+                    vec![expr_code, remove_elements_code].concat()
+                };
 
-            vec![expr_code, remove_elements_code].concat()
+            expr_code
         }
 
         ast::Stmt::FnCall(_) => todo!(),
