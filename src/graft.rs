@@ -101,10 +101,10 @@ fn graft_fn_arg(rust_fn_arg: &syn::FnArg) -> ast::FnArg {
     }
 }
 
-fn graft_return_type(rust_return_type: &syn::ReturnType) -> ast::DataType {
-    let ret_type = match rust_return_type {
+fn graft_return_type(rust_return_type: &syn::ReturnType) -> Option<ast::DataType> {
+    match rust_return_type {
         syn::ReturnType::Type(_, path) => match path.as_ref() {
-            syn::Type::Path(type_path) => rust_type_path_to_data_type(type_path),
+            syn::Type::Path(type_path) => Some(rust_type_path_to_data_type(type_path)),
             syn::Type::Tuple(tuple_type) => {
                 let tuple_type = tuple_type;
                 let output_elements = tuple_type
@@ -113,14 +113,12 @@ fn graft_return_type(rust_return_type: &syn::ReturnType) -> ast::DataType {
                     .map(rust_type_to_data_type)
                     .collect_vec();
 
-                ast::DataType::FlatList(output_elements)
+                Some(ast::DataType::FlatList(output_elements))
             }
             _ => panic!("unsupported: {path:?}"),
         },
-        other => panic!("unsupported: {other:?}"),
-    };
-
-    ret_type
+        syn::ReturnType::Default => None,
+    }
 }
 
 fn graft_call_exp(expr_call: &syn::ExprCall) -> ast::FnCall<Annotation> {
@@ -383,12 +381,9 @@ pub fn graft_stmt(rust_stmt: &syn::Stmt) -> ast::Stmt<Annotation> {
             other => panic!("unsupported expression. make sure to end statements by semi-colon and to explicitly 'return': {other:?}"),
         },
         syn::Stmt::Semi(semi, _b) => match semi {
-            syn::Expr::Return(ret) => {
-                // Handle a return statement
-                let a = ret.expr.as_ref().unwrap();
-                let b = graft_expr(a);
-
-                ast::Stmt::Return(b)
+            syn::Expr::Return(ret_expr) => {
+                let optional_ret_expr = ret_expr.expr.as_ref().map(|ret_expr| graft_expr(ret_expr));
+                ast::Stmt::Return(optional_ret_expr)
             }
             syn::Expr::Call(call_exp) => {
                 // Handle a function call that's not an assignment or a return expression

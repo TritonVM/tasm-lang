@@ -13,7 +13,7 @@ pub struct Fn<T> {
     pub name: String,
     pub args: Vec<FnArg>,
     pub body: Vec<Stmt<T>>,
-    pub output: DataType,
+    pub output: Option<DataType>,
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
@@ -32,8 +32,7 @@ impl Display for FnArg {
 pub enum Stmt<T> {
     Let(LetStmt<T>),
     Assign(AssignStmt<T>),
-    Return(Expr<T>),
-    // FIXME: Type-check that functions not bound to variables don't return anything
+    Return(Option<Expr<T>>),
     FnCall(FnCall<T>),
     While(WhileStmt<T>), // TODO: Control-flow operators: if-else, while, etc.
     If(IfStmt<T>),

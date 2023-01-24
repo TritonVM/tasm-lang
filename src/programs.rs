@@ -2,6 +2,14 @@ use syn::parse_quote;
 
 use crate::graft::{graft, item_fn};
 
+fn nop_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn nop() {
+            return;
+        }
+    })
+}
+
 fn add_u32_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn add_u32(lhs: u32, rhs: u32) -> u32 {
@@ -29,7 +37,7 @@ fn left_child_rast() -> syn::ItemFn {
 
 #[cfg(test)]
 mod tests {
-    use crate::types::annotate_fn;
+    use crate::{tasm::compile, types::annotate_fn};
 
     use super::*;
 
@@ -41,6 +49,15 @@ mod tests {
 
         // type-check
         annotate_fn(&mut function);
+
+        // compile
+        // let tasm = compile(&function);
+        // println!("{}", tasm);
+    }
+
+    #[test]
+    fn nop_test() {
+        graft_check_compile_prop(&nop_rast());
     }
 
     #[test]

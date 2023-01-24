@@ -14,13 +14,14 @@ pub fn annotate_fn(function: &mut ast::Fn<ast::Typing>) {
     function
         .body
         .iter_mut()
-        .for_each(|stmt| annotate_stmt(stmt, &mut vtable, &function.output));
+        .for_each(|stmt| annotate_stmt(stmt, &mut vtable, &function.name, &function.output));
 }
 
 fn annotate_stmt(
     stmt: &mut ast::Stmt<ast::Typing>,
     vtable: &mut HashMap<String, ast::DataType>,
-    return_type: &ast::DataType,
+    fn_name: &str,
+    fn_output: &Option<ast::DataType>,
 ) {
     match stmt {
         ast::Stmt::Let(ast::LetStmt {
@@ -43,10 +44,24 @@ fn annotate_stmt(
             assert_type_equals(&identifier_type, &expr_type, "assign-statement");
         }
 
-        ast::Stmt::Return(expr) => {
-            let expr_type = derive_annotate_expr_type(expr, vtable);
-            assert_type_equals(return_type, &expr_type, "return-statement");
-        }
+        ast::Stmt::Return(opt_expr) => match (opt_expr, fn_output) {
+            (None, None) => (),
+            (None, Some(return_type)) => panic!(
+                "Return without value; expect function {} to return {}",
+                fn_name, return_type
+            ),
+            (Some(ret_expr), None) => {
+                let expr_ret_type = derive_annotate_expr_type(ret_expr, vtable);
+                panic!(
+                    "Return with value; expect function {} to return nothing, but returns {}",
+                    fn_name, expr_ret_type
+                )
+            }
+            (Some(ret_expr), Some(fn_ret_type)) => {
+                let expr_ret_type = derive_annotate_expr_type(ret_expr, vtable);
+                assert_type_equals(fn_ret_type, &expr_ret_type, "return stmt");
+            }
+        },
 
         ast::Stmt::FnCall(ast::FnCall {
             name: _name,
@@ -59,6 +74,7 @@ fn annotate_stmt(
                 .collect();
 
             // TODO: Check that function exists and that its input types match with args provided.
+            // TODO: Type-check that functions not bound to variables don't return anything
         }
 
         ast::Stmt::While(ast::WhileStmt { condition, stmts }) => {
@@ -67,7 +83,7 @@ fn annotate_stmt(
 
             stmts
                 .iter_mut()
-                .for_each(|stmt| annotate_stmt(stmt, vtable, return_type));
+                .for_each(|stmt| annotate_stmt(stmt, vtable, fn_name, fn_output));
         }
 
         ast::Stmt::If(ast::IfStmt {
@@ -84,11 +100,11 @@ fn annotate_stmt(
 
             if_branch
                 .iter_mut()
-                .for_each(|stmt| annotate_stmt(stmt, vtable, return_type));
+                .for_each(|stmt| annotate_stmt(stmt, vtable, fn_name, fn_output));
 
             else_branch
                 .iter_mut()
-                .for_each(|stmt| annotate_stmt(stmt, vtable, return_type));
+                .for_each(|stmt| annotate_stmt(stmt, vtable, fn_name, fn_output));
         }
     }
 }
