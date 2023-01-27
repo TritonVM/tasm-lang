@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use itertools::Itertools;
+use tasm_lib::arithmetic;
 use tasm_lib::library::Library;
 use tasm_lib::snippet::Snippet;
 use triton_opcodes::instruction::{AnInstruction::*, LabelledInstruction::*};
@@ -56,8 +57,8 @@ impl CompilerState {
         address
     }
 
-    fn import_snippet<S: Snippet>(&mut self) -> Vec<LabelledInstruction<'static>> {
-        S::get_function_body(&mut self.library)
+    fn import_snippet<S: Snippet>(&mut self) -> &'static str {
+        self.library.import::<S>()
     }
 
     /// Return code that clears the stack but leaves the value that's on the top of the stack
@@ -176,10 +177,18 @@ pub fn compile(function: &ast::Fn<ast::Typing>) -> Vec<Labeled> {
         .map(|stmt| compile_stmt(stmt, function, &mut state))
         .concat();
 
+    // TODO: I wanted to use the result from `all_imports_as_instruction_lists`
+    // here but I got a borrow-checker error. Probably bc of the &'static str
+    // it returns.
+    let dependencies = state.library.all_imports();
+    let dependencies = triton_opcodes::instruction::parse(&dependencies)
+        .expect("Must be able to parse dependencies code");
+
     vec![
         vec![Label(fn_name.to_owned(), "")],
         fn_body_code,
         vec![Instruction(Return, "")],
+        dependencies,
     ]
     .concat()
 }
@@ -357,9 +366,24 @@ fn compile_expr(
 
             match binop {
                 ast::BinOp::Add => {
-                    // FIXME: Don't assume u32/bfe.
-                    let add_code =
-                        vec![lhs_expr_code, rhs_expr_code, vec![Instruction(Add, "")]].concat();
+                    let add_code = match data_type {
+                        ast::DataType::U32 => {
+                            // We use the safe, overflow-checking, add code as default
+                            let fn_name =
+                                state.import_snippet::<arithmetic::u32::safe_add::SafeAdd>();
+                            Instruction(Call(fn_name.to_string()), "")
+                        }
+                        ast::DataType::U64 => {
+                            let fn_name =
+                                state.import_snippet::<arithmetic::u64::add_u64::AddU64>();
+                            Instruction(Call(fn_name.to_string()), "")
+                        }
+                        ast::DataType::BFE => Instruction(Add, ""),
+                        ast::DataType::XFE => Instruction(XxAdd, ""),
+                        _ => panic!("Operator add is not supported for type {data_type}"),
+                    };
+
+                    let add_code = vec![lhs_expr_code, rhs_expr_code, vec![add_code]].concat();
                     state.vstack.pop();
                     state.vstack.pop();
                     let add_addr = state.new_value_identifier("_add_result", &data_type);
@@ -399,11 +423,12 @@ pub fn size_of(data_type: &ast::DataType) -> usize {
     }
 }
 
+/// Copy a value at a position on the stack to the top
 fn dup_value_from_stack_code(position: Ord16, data_type: &ast::DataType) -> Vec<Labeled> {
     let elem_size = size_of(data_type);
 
     // the position of the deepest element of the value.
     let n: usize = Into::<usize>::into(position) + elem_size - 1;
 
-    vec![Instruction(Dup(n.try_into().unwrap()), "")]
+    vec![Instruction(Dup(n.try_into().unwrap()), ""); elem_size]
 }

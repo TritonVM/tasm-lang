@@ -29,6 +29,24 @@ fn add_u32_overwrite_rast() -> syn::ItemFn {
     })
 }
 
+fn add_bfe_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn add_bfe(lhs: BFieldElement, rhs: BFieldElement) -> BFieldElement {
+            let c: BFieldElement = lhs + rhs;
+            return c;
+        }
+    })
+}
+
+fn add_xfe_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn add_xfe(lhs: XFieldElement, rhs: XFieldElement) -> XFieldElement {
+            let c: XFieldElement = lhs + rhs;
+            return c;
+        }
+    })
+}
+
 fn right_child_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn right_child(node_index: u64) -> u64 {
@@ -82,6 +100,16 @@ mod tests {
     #[test]
     fn add_u32_overwrite_rast_test() {
         graft_check_compile_prop(&add_u32_overwrite_rast());
+    }
+
+    #[test]
+    fn add_bfe_test() {
+        graft_check_compile_prop(&add_bfe_rast());
+    }
+
+    #[test]
+    fn add_xfe_test() {
+        graft_check_compile_prop(&add_xfe_rast());
     }
 
     #[test]

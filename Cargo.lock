@@ -1799,7 +1799,7 @@ dependencies = [
 [[package]]
 name = "tasm-lib"
 version = "0.1.0"
-source = "git+https://github.com/TritonVM/tasm-lib#90da245f09efee39f5ede9711d2ac0c639817564"
+source = "git+https://github.com/TritonVM/tasm-lib#f0db0aee2f2590bffc6e26836ed8955b83cd37eb"
 dependencies = [
  "itertools",
  "num",
