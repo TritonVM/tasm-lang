@@ -191,8 +191,6 @@ fn derive_annotate_expr_type(
     expr: &mut ast::Expr<ast::Typing>,
     state: &mut CheckState,
 ) -> ast::DataType {
-    let bool_type = ast::DataType::U32;
-
     match expr {
         ast::Expr::Lit(expr_lit, var_type) => {
             let found_type = expr_lit_type(expr_lit);
@@ -245,10 +243,10 @@ fn derive_annotate_expr_type(
 
                 // Restricted to bool only.
                 And => {
-                    assert_type_equals(&lhs_type, &bool_type, "and-expr lhs");
-                    assert_type_equals(&rhs_type, &bool_type, "and-expr rhs");
-                    *binop_type = ast::Typing::KnownType(bool_type.clone());
-                    bool_type
+                    assert_type_equals(&lhs_type, &ast::DataType::Bool, "and-expr lhs");
+                    assert_type_equals(&rhs_type, &ast::DataType::Bool, "and-expr rhs");
+                    *binop_type = ast::Typing::KnownType(ast::DataType::Bool);
+                    ast::DataType::Bool
                 }
 
                 // Restricted to U32-based types. (Triton VM limitation)
@@ -295,8 +293,8 @@ fn derive_annotate_expr_type(
                         "Cannot compare non-primitive type '{}' for equality",
                         lhs_type
                     );
-                    *binop_type = ast::Typing::KnownType(bool_type.clone());
-                    bool_type
+                    *binop_type = ast::Typing::KnownType(ast::DataType::Bool);
+                    ast::DataType::Bool
                 }
 
                 // Restricted to U32-based types. (Triton VM limitation)
@@ -307,8 +305,8 @@ fn derive_annotate_expr_type(
                         "Cannot compare type '{}' with less-than (not u32-based)",
                         lhs_type
                     );
-                    *binop_type = ast::Typing::KnownType(bool_type.clone());
-                    bool_type
+                    *binop_type = ast::Typing::KnownType(ast::DataType::Bool);
+                    ast::DataType::Bool
                 }
 
                 // Overloaded for all primitive types.
@@ -331,16 +329,16 @@ fn derive_annotate_expr_type(
                         "Cannot compare type '{}' with not-equal (not primitive)",
                         lhs_type
                     );
-                    *binop_type = ast::Typing::KnownType(bool_type.clone());
-                    bool_type
+                    *binop_type = ast::Typing::KnownType(ast::DataType::Bool);
+                    ast::DataType::Bool
                 }
 
                 // Restricted to bool only.
                 Or => {
-                    assert_type_equals(&lhs_type, &bool_type, "or-expr lhs");
-                    assert_type_equals(&rhs_type, &bool_type, "or-expr rhs");
-                    *binop_type = ast::Typing::KnownType(bool_type.clone());
-                    bool_type
+                    assert_type_equals(&lhs_type, &ast::DataType::Bool, "or-expr lhs");
+                    assert_type_equals(&rhs_type, &ast::DataType::Bool, "or-expr rhs");
+                    *binop_type = ast::Typing::KnownType(ast::DataType::Bool);
+                    ast::DataType::Bool
                 }
 
                 // Restricted to U32-based types. (Triton VM limitation)
@@ -402,7 +400,7 @@ fn derive_annotate_expr_type(
             else_branch,
         }) => {
             let condition_type = derive_annotate_expr_type(condition, state);
-            assert_type_equals(&condition_type, &bool_type, "if-condition-expr");
+            assert_type_equals(&condition_type, &ast::DataType::Bool, "if-condition-expr");
 
             let then_type = derive_annotate_expr_type(then_branch, state);
             let else_type = derive_annotate_expr_type(else_branch, state);

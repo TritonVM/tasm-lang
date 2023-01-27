@@ -195,6 +195,7 @@ pub fn compile(function: &ast::Fn<ast::Typing>) -> Vec<Labeled> {
     // Check that no label-duplicates are present. This could happen if a dependency
     // and the compiled function shared name. We do this by assembling the code and
     // then parsing it again. A duplicated label should be caught by the parser.
+    // I wanted to add a test for this, but I couldn't find a good way of doing that.
     let assembler = ret.iter().map(|x| x.to_string()).join("\n");
     triton_opcodes::instruction::parse(&assembler).expect("Produced code must parse")
 }
@@ -396,7 +397,25 @@ fn compile_expr(
 
                     (add_addr, add_code)
                 }
-                ast::BinOp::And => todo!(),
+                ast::BinOp::And => {
+                    let and_code = match data_type {
+                        ast::DataType::Bool => {
+                            vec![
+                                Instruction(Add, ""),
+                                Instruction(Push(2u64.into()), ""),
+                                Instruction(Eq, ""),
+                            ]
+                        }
+                        _ => panic!("Logical AND operator is not supported for {data_type}"),
+                    };
+
+                    let and_code = vec![lhs_expr_code, rhs_expr_code, and_code].concat();
+                    state.vstack.pop();
+                    state.vstack.pop();
+                    let and_addr = state.new_value_identifier("_and_result", &data_type);
+
+                    (and_addr, and_code)
+                }
                 ast::BinOp::BitAnd => todo!(),
                 ast::BinOp::BitXor => todo!(),
                 ast::BinOp::Div => todo!(),

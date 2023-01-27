@@ -49,8 +49,19 @@ fn add_xfe_rast() -> syn::ItemFn {
 
 fn add_u64_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
+        // using `add_u64` as function name here would create a name-clash
+        // between a dependency and the function we are compiling.
         fn add_u64_test(lhs: u64, rhs: u64) -> u64 {
             let c: u64 = lhs + rhs;
+            return c;
+        }
+    })
+}
+
+fn and_bool_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn boolean_and_bool(lhs: bool, rhs: bool) -> bool {
+            let c: bool = lhs && rhs;
             return c;
         }
     })
@@ -124,6 +135,11 @@ mod tests {
     #[test]
     fn add_u64_test() {
         graft_check_compile_prop(&add_u64_rast());
+    }
+
+    #[test]
+    fn and_bool_test() {
+        graft_check_compile_prop(&and_bool_rast());
     }
 
     #[test]
