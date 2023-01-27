@@ -92,11 +92,35 @@ pub enum Expr<T> {
     // TODO: VM-specific intrinsics (hash, absorb, squeeze, etc.)
 }
 
+impl Expr<Typing> {
+    pub fn get_type(&self) -> DataType {
+        match self {
+            Expr::Lit(_, t) => t.unwrap(),
+            Expr::Var(id) => id.get_type(),
+            Expr::FlatList(t_list) => {
+                let types = t_list.iter().map(|elem| elem.get_type()).collect_vec();
+                DataType::FlatList(types)
+            }
+            Expr::FnCall(fnc) => fnc.get_type(),
+            Expr::Binop(_, _, _, t) => t.unwrap(),
+            Expr::If(if_expr) => if_expr.get_type(),
+        }
+    }
+}
+
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct ExprIf<T> {
     pub condition: Box<Expr<T>>,
     pub then_branch: Box<Expr<T>>,
     pub else_branch: Box<Expr<T>>,
+}
+
+impl ExprIf<Typing> {
+    pub fn get_type(&self) -> DataType {
+        // The type check should have verified that the then branch and else branch
+        // returns the same type. So we can just pick one of them.
+        self.then_branch.get_type()
+    }
 }
 
 pub struct SymTable(HashMap<String, (u8, DataType)>);
@@ -156,6 +180,31 @@ pub enum Identifier<T> {
     ListIndex(Box<Identifier<T>>, Box<Expr<T>>), // x[0]
 }
 
+impl Identifier<Typing> {
+    /// Return the type for an identifier. Must be run after completed type annotation.
+    pub fn get_type(&self) -> DataType {
+        let t = match self {
+            Identifier::String(_, t) => t.to_owned(),
+            Identifier::TupleIndex(id, idx) => {
+                let rec = id.get_type();
+                match rec {
+                    DataType::FlatList(list) => Typing::KnownType(list[*idx].clone()),
+                    dt => panic!("Internal type error. Expected FlatList got: {dt:?}"),
+                }
+            }
+            Identifier::ListIndex(id, _) => {
+                let rec = id.get_type();
+                match rec {
+                    DataType::List(element_type) => Typing::KnownType(*element_type.to_owned()),
+                    dt => panic!("Internal type error. Expected List got: {dt:?}"),
+                }
+            }
+        };
+
+        t.unwrap()
+    }
+}
+
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct AssignStmt<T> {
     pub identifier: Identifier<T>,
@@ -174,6 +223,12 @@ pub struct FnCall<T> {
     pub name: String,
     pub args: Vec<Expr<T>>, // FIXME: type-check that this is flat
     pub annot: T,
+}
+
+impl FnCall<Typing> {
+    pub fn get_type(&self) -> DataType {
+        self.annot.unwrap()
+    }
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
