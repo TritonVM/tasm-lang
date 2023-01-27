@@ -1,6 +1,8 @@
 use std::collections::HashMap;
 
 use itertools::Itertools;
+use tasm_lib::library::Library;
+use tasm_lib::snippet::Snippet;
 use triton_opcodes::instruction::{AnInstruction::*, LabelledInstruction::*};
 use triton_opcodes::ord_n::Ord16;
 use twenty_first::amount::u32s::U32s;
@@ -19,6 +21,9 @@ pub struct CompilerState {
 
     // Mapping from variable name to its internal identifier
     pub var_addr: HashMap<String, ValueIdentifier>,
+
+    // A library struct to keep check of which snippets are already in the namespace
+    pub library: Library,
 }
 
 // TODO: Use this value from Triton-VM
@@ -49,6 +54,10 @@ impl CompilerState {
         self.vstack.push((address.clone(), data_type.clone()));
         self.counter += 1;
         address
+    }
+
+    fn import_snippet<S: Snippet>(&mut self) -> Vec<LabelledInstruction<'static>> {
+        S::get_function_body(&mut self.library)
     }
 
     /// Return code that clears the stack but leaves the value that's on the top of the stack
