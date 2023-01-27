@@ -184,13 +184,19 @@ pub fn compile(function: &ast::Fn<ast::Typing>) -> Vec<Labeled> {
     let dependencies = triton_opcodes::instruction::parse(&dependencies)
         .expect("Must be able to parse dependencies code");
 
-    vec![
+    let ret = vec![
         vec![Label(fn_name.to_owned(), "")],
         fn_body_code,
         vec![Instruction(Return, "")],
         dependencies,
     ]
-    .concat()
+    .concat();
+
+    // Check that no label-duplicates are present. This could happen if a dependency
+    // and the compiled function shared name. We do this by assembling the code and
+    // then parsing it again. A duplicated label should be caught by the parser.
+    let assembler = ret.iter().map(|x| x.to_string()).join("\n");
+    triton_opcodes::instruction::parse(&assembler).expect("Produced code must parse")
 }
 
 fn compile_stmt(

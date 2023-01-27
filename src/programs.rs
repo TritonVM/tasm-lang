@@ -47,6 +47,15 @@ fn add_xfe_rast() -> syn::ItemFn {
     })
 }
 
+fn add_u64_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn add_u64_test(lhs: u64, rhs: u64) -> u64 {
+            let c: u64 = lhs + rhs;
+            return c;
+        }
+    })
+}
+
 fn right_child_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn right_child(node_index: u64) -> u64 {
@@ -110,6 +119,11 @@ mod tests {
     #[test]
     fn add_xfe_test() {
         graft_check_compile_prop(&add_xfe_rast());
+    }
+
+    #[test]
+    fn add_u64_test() {
+        graft_check_compile_prop(&add_u64_rast());
     }
 
     #[test]
