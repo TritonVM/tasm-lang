@@ -340,12 +340,11 @@ fn compile_expr(
         ast::Expr::Binop(lhs_expr, binop, rhs_expr, known_type) => {
             let data_type = known_type.unwrap();
 
-            // FIXME: '&data_type' below is wrong; it is the operand's type, not the binop's.
             let (_lhs_expr_addr, lhs_expr_code) =
-                compile_expr(lhs_expr, "_binop_lhs", &data_type, state);
+                compile_expr(lhs_expr, "_binop_lhs", &lhs_expr.get_type(), state);
 
             let (_rhs_expr_addr, rhs_expr_code) =
-                compile_expr(rhs_expr, "_binop_rhs", &data_type, state);
+                compile_expr(rhs_expr, "_binop_rhs", &rhs_expr.get_type(), state);
 
             match binop {
                 ast::BinOp::Add => {
