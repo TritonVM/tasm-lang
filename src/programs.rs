@@ -67,6 +67,24 @@ fn and_bool_rast() -> syn::ItemFn {
     })
 }
 
+fn bitwise_and_u32_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn bitwise_and_u32(lhs: u32, rhs: u32) -> u32 {
+            let c: u32 = lhs & rhs;
+            return c;
+        }
+    })
+}
+
+fn bitwise_and_u64_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn bitwise_and_u64(lhs: u64, rhs: u64) -> u64 {
+            let c: u64 = lhs & rhs;
+            return c;
+        }
+    })
+}
+
 fn right_child_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn right_child(node_index: u64) -> u64 {
@@ -140,6 +158,16 @@ mod tests {
     #[test]
     fn and_bool_test() {
         graft_check_compile_prop(&and_bool_rast());
+    }
+
+    #[test]
+    fn bitwise_and_u32_test() {
+        graft_check_compile_prop(&bitwise_and_u32_rast());
+    }
+
+    #[test]
+    fn bitwise_and_u64_test() {
+        graft_check_compile_prop(&bitwise_and_u64_rast());
     }
 
     #[test]

@@ -416,7 +416,25 @@ fn compile_expr(
 
                     (and_addr, and_code)
                 }
-                ast::BinOp::BitAnd => todo!(),
+                ast::BinOp::BitAnd => {
+                    let bitwise_and_code = match data_type {
+                        ast::DataType::U32 => vec![Instruction(And, "")],
+                        ast::DataType::U64 => {
+                            let fn_name =
+                                state.import_snippet::<arithmetic::u64::and_u64::AndU64>();
+                            vec![Instruction(Call(fn_name.to_string()), "")]
+                        }
+                        _ => panic!("Logical AND operator is not supported for {data_type}"),
+                    };
+
+                    let bitwise_and_code =
+                        vec![lhs_expr_code, rhs_expr_code, bitwise_and_code].concat();
+                    state.vstack.pop();
+                    state.vstack.pop();
+                    let bitwise_and_addr = state.new_value_identifier("_and_result", &data_type);
+
+                    (bitwise_and_addr, bitwise_and_code)
+                }
                 ast::BinOp::BitXor => todo!(),
                 ast::BinOp::Div => todo!(),
                 ast::BinOp::Eq => todo!(),
