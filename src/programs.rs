@@ -106,7 +106,7 @@ mod tests {
     use std::collections::HashMap;
 
     use itertools::Itertools;
-    use rand::Rng;
+    use rand::{thread_rng, Rng, RngCore};
     use tasm_lib::get_init_tvm_stack;
     use twenty_first::shared_math::b_field_element::BFieldElement;
 
@@ -285,6 +285,14 @@ mod tests {
             &right_child_rast(),
             vec![ast::ExprLit::U64(120)],
             vec![ast::ExprLit::U64(119)],
+        );
+        let mut rng = thread_rng();
+        let rand = rng.next_u64();
+        compile_execute_and_compare_prop(
+            "right_child",
+            &right_child_rast(),
+            vec![ast::ExprLit::U64(rand)],
+            vec![ast::ExprLit::U64(rand - 1)],
         );
     }
 
