@@ -383,7 +383,7 @@ fn compile_expr(
             let (_lhs_expr_addr, lhs_expr_code) =
                 compile_expr(lhs_expr, "_binop_lhs", &lhs_expr.get_type(), state);
 
-            match binop {
+            let code = match binop {
                 ast::BinOp::Add => {
                     let add_code = match data_type {
                         ast::DataType::U32 => {
@@ -413,12 +413,7 @@ fn compile_expr(
                         _ => panic!("Operator add is not supported for type {data_type}"),
                     };
 
-                    let add_code = vec![rhs_expr_code, lhs_expr_code, add_code].concat();
-                    state.vstack.pop();
-                    state.vstack.pop();
-                    let add_addr = state.new_value_identifier("_add_result", &data_type);
-
-                    (add_addr, add_code)
+                    add_code
                 }
                 ast::BinOp::And => {
                     let and_code = match data_type {
@@ -432,12 +427,7 @@ fn compile_expr(
                         _ => panic!("Logical AND operator is not supported for {data_type}"),
                     };
 
-                    let and_code = vec![rhs_expr_code, lhs_expr_code, and_code].concat();
-                    state.vstack.pop();
-                    state.vstack.pop();
-                    let and_addr = state.new_value_identifier("_and_result", &data_type);
-
-                    (and_addr, and_code)
+                    and_code
                 }
                 ast::BinOp::BitAnd => {
                     let bitwise_and_code = match data_type {
@@ -450,14 +440,7 @@ fn compile_expr(
                         _ => panic!("Logical AND operator is not supported for {data_type}"),
                     };
 
-                    let bitwise_and_code =
-                        vec![rhs_expr_code, lhs_expr_code, bitwise_and_code].concat();
-                    state.vstack.pop();
-                    state.vstack.pop();
-                    let bitwise_and_addr =
-                        state.new_value_identifier("_bit_and_result", &data_type);
-
-                    (bitwise_and_addr, bitwise_and_code)
+                    bitwise_and_code
                 }
                 ast::BinOp::BitXor => todo!(),
                 ast::BinOp::Div => todo!(),
@@ -517,14 +500,16 @@ fn compile_expr(
                         _ => panic!("subtraction operator is not supported for {data_type}"),
                     };
 
-                    let sub_code = vec![rhs_expr_code, lhs_expr_code, sub_code].concat();
-                    state.vstack.pop();
-                    state.vstack.pop();
-                    let sub_code_addr = state.new_value_identifier("_sub_result", &data_type);
-
-                    (sub_code_addr, sub_code)
+                    sub_code
                 }
-            }
+            };
+
+            let code = vec![rhs_expr_code, lhs_expr_code, code].concat();
+            state.vstack.pop();
+            state.vstack.pop();
+            let addr = state.new_value_identifier("_binop", &data_type);
+
+            (addr, code)
         }
         ast::Expr::If(_) => todo!(),
     }
