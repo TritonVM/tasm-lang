@@ -507,7 +507,7 @@ fn compile_expr(
             let code = vec![rhs_expr_code, lhs_expr_code, code].concat();
             state.vstack.pop();
             state.vstack.pop();
-            let addr = state.new_value_identifier("_binop", &data_type);
+            let addr = state.new_value_identifier(&format!("_binop_{binop:?}"), &data_type);
 
             (addr, code)
         }
