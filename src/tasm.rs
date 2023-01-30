@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use itertools::Itertools;
+use num::One;
 use tasm_lib::arithmetic;
 use tasm_lib::library::Library;
 use tasm_lib::snippet::Snippet;
@@ -64,27 +65,37 @@ impl CompilerState {
     /// Return code that clears the stack but leaves the value that's on the top of the stack
     /// when this function is called.
     fn remove_all_but_top_stack_value(&mut self) -> Vec<Labeled> {
+        let stack_height = self.get_stack_height();
         let top_element = self
             .vstack
             .pop()
             .expect("Cannot remove all but top element from an empty stack");
         let top_value_size = size_of(&top_element.1);
-        let stack_height = self.get_stack_height();
         assert!(
             stack_height < STACK_SIZE,
             "For now, we only support functions with max {} elements on the stack",
             STACK_SIZE
         );
 
+        // Generate code to move value to the bottom of the stack
         let words_to_remove = stack_height - top_value_size;
-        let swap_instruction = Instruction(Swap(words_to_remove.try_into().unwrap()), "");
-        let code = vec![vec![swap_instruction, Instruction(Pop, "")]; top_value_size].concat();
+        let code = if words_to_remove != 0 {
+            let swap_instruction = Instruction(Swap(words_to_remove.try_into().unwrap()), "");
+            vec![vec![swap_instruction, Instruction(Pop, "")]; top_value_size].concat()
+        } else {
+            vec![]
+        };
 
         // Clean up vstack
         while let Some(_elem) = self.vstack.pop() {}
         self.vstack.push(top_element);
 
-        vec![code, vec![Instruction(Pop, ""); words_to_remove]].concat()
+        // Generate code to remove any remaining values from the stack
+        vec![
+            code,
+            vec![Instruction(Pop, ""); words_to_remove - top_value_size],
+        ]
+        .concat()
     }
 
     /// Return the code to overwrite a stack value with the value that's on top of the stack
@@ -181,8 +192,9 @@ pub fn compile(function: &ast::Fn<ast::Typing>) -> Vec<Labeled> {
     // here but I got a borrow-checker error. Probably bc of the &'static str
     // it returns.
     let dependencies = state.library.all_imports();
-    let dependencies = triton_opcodes::instruction::parse(&dependencies)
-        .expect("Must be able to parse dependencies code");
+    let dependencies = triton_opcodes::instruction::parse(&dependencies).expect(&format!(
+        "Must be able to parse dependencies code:\n{dependencies}"
+    ));
 
     let ret = vec![
         vec![Label(fn_name.to_owned(), "")],
@@ -365,11 +377,11 @@ fn compile_expr(
         ast::Expr::Binop(lhs_expr, binop, rhs_expr, known_type) => {
             let data_type = known_type.unwrap();
 
-            let (_lhs_expr_addr, lhs_expr_code) =
-                compile_expr(lhs_expr, "_binop_lhs", &lhs_expr.get_type(), state);
-
+            // LHS is expected to be on the top of the stack, so we get RHS first
             let (_rhs_expr_addr, rhs_expr_code) =
                 compile_expr(rhs_expr, "_binop_rhs", &rhs_expr.get_type(), state);
+            let (_lhs_expr_addr, lhs_expr_code) =
+                compile_expr(lhs_expr, "_binop_lhs", &lhs_expr.get_type(), state);
 
             match binop {
                 ast::BinOp::Add => {
@@ -378,19 +390,30 @@ fn compile_expr(
                             // We use the safe, overflow-checking, add code as default
                             let fn_name =
                                 state.import_snippet::<arithmetic::u32::safe_add::SafeAdd>();
-                            Instruction(Call(fn_name.to_string()), "")
+                            vec![Instruction(Call(fn_name.to_string()), "")]
                         }
                         ast::DataType::U64 => {
+                            // We use the safe, overflow-checking, add code as default
                             let fn_name =
                                 state.import_snippet::<arithmetic::u64::add_u64::AddU64>();
-                            Instruction(Call(fn_name.to_string()), "")
+                            vec![Instruction(Call(fn_name.to_string()), "")]
                         }
-                        ast::DataType::BFE => Instruction(Add, ""),
-                        ast::DataType::XFE => Instruction(XxAdd, ""),
+                        ast::DataType::BFE => vec![Instruction(Add, "")],
+                        ast::DataType::XFE => {
+                            vec![
+                                Instruction(XxAdd, ""),
+                                Instruction(Swap(3u32.try_into().unwrap()), ""),
+                                Instruction(Pop, ""),
+                                Instruction(Swap(3u32.try_into().unwrap()), ""),
+                                Instruction(Pop, ""),
+                                Instruction(Swap(3u32.try_into().unwrap()), ""),
+                                Instruction(Pop, ""),
+                            ]
+                        }
                         _ => panic!("Operator add is not supported for type {data_type}"),
                     };
 
-                    let add_code = vec![lhs_expr_code, rhs_expr_code, vec![add_code]].concat();
+                    let add_code = vec![rhs_expr_code, lhs_expr_code, add_code].concat();
                     state.vstack.pop();
                     state.vstack.pop();
                     let add_addr = state.new_value_identifier("_add_result", &data_type);
@@ -409,7 +432,7 @@ fn compile_expr(
                         _ => panic!("Logical AND operator is not supported for {data_type}"),
                     };
 
-                    let and_code = vec![lhs_expr_code, rhs_expr_code, and_code].concat();
+                    let and_code = vec![rhs_expr_code, lhs_expr_code, and_code].concat();
                     state.vstack.pop();
                     state.vstack.pop();
                     let and_addr = state.new_value_identifier("_and_result", &data_type);
@@ -428,10 +451,11 @@ fn compile_expr(
                     };
 
                     let bitwise_and_code =
-                        vec![lhs_expr_code, rhs_expr_code, bitwise_and_code].concat();
+                        vec![rhs_expr_code, lhs_expr_code, bitwise_and_code].concat();
                     state.vstack.pop();
                     state.vstack.pop();
-                    let bitwise_and_addr = state.new_value_identifier("_and_result", &data_type);
+                    let bitwise_and_addr =
+                        state.new_value_identifier("_bit_and_result", &data_type);
 
                     (bitwise_and_addr, bitwise_and_code)
                 }
@@ -445,7 +469,61 @@ fn compile_expr(
                 ast::BinOp::Rem => todo!(),
                 ast::BinOp::Shl => todo!(),
                 ast::BinOp::Shr => todo!(),
-                ast::BinOp::Sub => todo!(),
+                ast::BinOp::Sub => {
+                    let sub_code: Vec<LabelledInstruction> = match data_type {
+                        ast::DataType::U32 => {
+                            // As standard, we use safe arithmetic that crashes on overflow
+                            let fn_name =
+                                state.import_snippet::<arithmetic::u32::safe_sub::SafeSub>();
+                            vec![Instruction(Call(fn_name.to_string()), "")]
+                        }
+                        ast::DataType::U64 => {
+                            // As standard, we use safe arithmetic that crashes on overflow
+                            let fn_name =
+                                state.import_snippet::<arithmetic::u64::sub_u64::SubU64>();
+                            vec![Instruction(Call(fn_name.to_string()), "")]
+                        }
+                        ast::DataType::BFE => {
+                            vec![
+                                Instruction(Swap(1u32.try_into().unwrap()), ""),
+                                Instruction(Push(-BFieldElement::one()), ""),
+                                Instruction(Mul, ""),
+                                Instruction(Add, ""),
+                            ]
+                        }
+                        ast::DataType::XFE => {
+                            vec![
+                                // flip the x operands
+                                Instruction(Swap(3u32.try_into().unwrap()), ""),
+                                Instruction(Swap(1u32.try_into().unwrap()), ""),
+                                Instruction(Swap(4u32.try_into().unwrap()), ""),
+                                Instruction(Swap(1u32.try_into().unwrap()), ""),
+                                Instruction(Swap(3u32.try_into().unwrap()), ""),
+                                Instruction(Swap(5u32.try_into().unwrap()), ""),
+                                // multiply top element with -1
+                                Instruction(Push(-BFieldElement::one()), ""),
+                                Instruction(XbMul, ""),
+                                // Perform (lhs - rhs)
+                                Instruction(XxAdd, ""),
+                                // Get rid of the rhs, only leaving the result
+                                Instruction(Swap(3u32.try_into().unwrap()), ""),
+                                Instruction(Pop, ""),
+                                Instruction(Swap(3u32.try_into().unwrap()), ""),
+                                Instruction(Pop, ""),
+                                Instruction(Swap(3u32.try_into().unwrap()), ""),
+                                Instruction(Pop, ""),
+                            ]
+                        }
+                        _ => panic!("subtraction operator is not supported for {data_type}"),
+                    };
+
+                    let sub_code = vec![rhs_expr_code, lhs_expr_code, sub_code].concat();
+                    state.vstack.pop();
+                    state.vstack.pop();
+                    let sub_code_addr = state.new_value_identifier("_sub_result", &data_type);
+
+                    (sub_code_addr, sub_code)
+                }
             }
         }
         ast::Expr::If(_) => todo!(),

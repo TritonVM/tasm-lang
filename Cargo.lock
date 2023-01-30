@@ -207,9 +207,9 @@ checksum = "37b2a672a2cb129a2e41c10b1224bb368f9f37a2b16b612598138befd7b37eb5"
 
 [[package]]
 name = "cc"
-version = "1.0.78"
+version = "1.0.79"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a20104e2335ce8a659d6dd92a51a767a0c062599c73b343fd152cb401e828c3d"
+checksum = "50d30906286121d95be3d479533b458f87493b30a4b5f79a607db8f5d11aa91f"
 
 [[package]]
 name = "cfg-if"
@@ -1789,6 +1789,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "itertools",
+ "num",
  "quote",
  "rand 0.8.5",
  "syn",
@@ -1800,7 +1801,7 @@ dependencies = [
 [[package]]
 name = "tasm-lib"
 version = "0.1.0"
-source = "git+https://github.com/TritonVM/tasm-lib#f0db0aee2f2590bffc6e26836ed8955b83cd37eb"
+source = "git+https://github.com/TritonVM/tasm-lib#04e8d08dd981bf24bca3d4909e34bb94155edf68"
 dependencies = [
  "itertools",
  "num",

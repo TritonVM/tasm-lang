@@ -279,6 +279,16 @@ mod tests {
     }
 
     #[test]
+    fn right_child_run_test() {
+        compile_execute_and_compare_prop(
+            "right_child",
+            &right_child_rast(),
+            vec![ast::ExprLit::U64(120)],
+            vec![ast::ExprLit::U64(119)],
+        );
+    }
+
+    #[test]
     fn right_child_test() {
         graft_check_compile_prop(&right_child_rast());
     }
