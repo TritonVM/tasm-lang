@@ -11,5 +11,6 @@ twenty-first = "0.14"
 triton-opcodes = "0.14"
 itertools = "0.10"
 quote = "1.0"
+rand = "*"
 syn = { version = "1.0", features = ["full", "extra-traits"] }
 anyhow = "*"

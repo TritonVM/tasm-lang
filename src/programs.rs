@@ -103,14 +103,20 @@ fn left_child_rast() -> syn::ItemFn {
 
 #[cfg(test)]
 mod tests {
-    use itertools::Itertools;
+    use std::collections::HashMap;
 
+    use itertools::Itertools;
+    use rand::Rng;
+    use tasm_lib::get_init_tvm_stack;
+    use twenty_first::shared_math::b_field_element::BFieldElement;
+
+    use crate::ast::{self};
     use crate::tasm::compile;
     use crate::types::annotate_fn;
 
     use super::*;
 
-    fn graft_check_compile_prop(item_fn: &syn::ItemFn) {
+    fn graft_check_compile_prop(item_fn: &syn::ItemFn) -> String {
         // parse test
         let mut function = graft(item_fn);
 
@@ -123,6 +129,85 @@ mod tests {
         let tasm = compile(&function);
         let tasm_string: String = tasm.iter().map(|instr| instr.to_string()).join("\n");
         println!("{}", tasm_string);
+        tasm_string
+    }
+
+    fn compile_execute_and_compare_prop(
+        function_name: &str,
+        item_fn: &syn::ItemFn,
+        input_args: Vec<ast::ExprLit>,
+        expected_outputs: Vec<ast::ExprLit>,
+    ) {
+        let code = graft_check_compile_prop(item_fn);
+        let code = format!(
+            "
+            call {function_name}
+            halt
+
+            {code}"
+        );
+
+        let mut stack = get_init_tvm_stack();
+        for input_arg in input_args {
+            // TODO: Rewrite this using `to_sequence()` from the Hashable trait
+            let mut bfe_sequence: Vec<BFieldElement> = match input_arg {
+                ast::ExprLit::Bool(b) => vec![BFieldElement::new(b as u64)],
+                ast::ExprLit::U32(v) => vec![BFieldElement::new(v as u64)],
+                ast::ExprLit::U64(v) => vec![
+                    BFieldElement::new(v >> 32),
+                    BFieldElement::new(v & u32::MAX as u64),
+                ],
+                ast::ExprLit::BFE(bfe) => vec![bfe],
+                ast::ExprLit::XFE(xfe) => xfe.coefficients.to_vec(),
+                ast::ExprLit::Digest(digest) => digest.values().to_vec(),
+            };
+            stack.append(&mut bfe_sequence);
+        }
+
+        let mut expected_final_stack = get_init_tvm_stack();
+        for output in expected_outputs {
+            // TODO: Rewrite this using `to_sequence()` from the Hashable trait
+            let mut bfe_sequence: Vec<BFieldElement> = match output {
+                ast::ExprLit::Bool(b) => vec![BFieldElement::new(b as u64)],
+                ast::ExprLit::U32(v) => vec![BFieldElement::new(v as u64)],
+                ast::ExprLit::U64(v) => vec![
+                    BFieldElement::new(v >> 32),
+                    BFieldElement::new(v & u32::MAX as u64),
+                ],
+                ast::ExprLit::BFE(bfe) => vec![bfe],
+                ast::ExprLit::XFE(xfe) => xfe.coefficients.to_vec(),
+                ast::ExprLit::Digest(digest) => digest.values().to_vec(),
+            };
+            expected_final_stack.append(&mut bfe_sequence);
+        }
+
+        let init_stack_length = stack.len();
+        let exec_result = tasm_lib::execute(
+            &code,
+            &mut stack,
+            expected_final_stack.len() as isize - init_stack_length as isize,
+            vec![],
+            vec![],
+            &mut HashMap::default(),
+        );
+
+        assert_eq!(
+            expected_final_stack,
+            exec_result.final_stack,
+            "Code execution must produce expected stack `{}`. \n\nTVM:\n{}\nExpected:\n{}",
+            function_name,
+            exec_result
+                .final_stack
+                .iter()
+                .map(|x| x.to_string())
+                .collect_vec()
+                .join(","),
+            expected_final_stack
+                .iter()
+                .map(|x| x.to_string())
+                .collect_vec()
+                .join(","),
+        );
     }
 
     #[test]
@@ -153,6 +238,29 @@ mod tests {
     #[test]
     fn add_u64_test() {
         graft_check_compile_prop(&add_u64_rast());
+    }
+
+    #[test]
+    fn add_u64_run_test() {
+        compile_execute_and_compare_prop(
+            "add_u64_test",
+            &add_u64_rast(),
+            vec![
+                ast::ExprLit::U64((1 << 33) + (1 << 16)),
+                ast::ExprLit::U64((1 << 33) + (1 << 16)),
+            ],
+            vec![ast::ExprLit::U64((1 << 34) + (1 << 17))],
+        );
+        for _ in 0..10 {
+            let lhs = rand::thread_rng().gen_range(0..u64::MAX / 2);
+            let rhs = rand::thread_rng().gen_range(0..u64::MAX / 2);
+            compile_execute_and_compare_prop(
+                "add_u64_test",
+                &add_u64_rast(),
+                vec![ast::ExprLit::U64(lhs), ast::ExprLit::U64(rhs)],
+                vec![ast::ExprLit::U64(lhs + rhs)],
+            )
+        }
     }
 
     #[test]
