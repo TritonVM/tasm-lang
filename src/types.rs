@@ -43,7 +43,7 @@ fn annotate_stmt(
             expr,
         }) => {
             if state.vtable.contains_key(var_name) {
-                panic!("let-assign cannot shadow existing variable '{}'!", var_name);
+                panic!("let-assign cannot shadow existing variable '{var_name}'!");
             }
 
             let derived_type = derive_annotate_expr_type(expr, state);
@@ -59,15 +59,13 @@ fn annotate_stmt(
 
         ast::Stmt::Return(opt_expr) => match (opt_expr, fn_output) {
             (None, None) => (),
-            (None, Some(return_type)) => panic!(
-                "Return without value; expect function {} to return {}",
-                fn_name, return_type
-            ),
+            (None, Some(return_type)) => {
+                panic!("Return without value; expect function {fn_name} to return {return_type}")
+            }
             (Some(ret_expr), None) => {
                 let expr_ret_type = derive_annotate_expr_type(ret_expr, state);
                 panic!(
-                    "Return with value; expect function {} to return nothing, but returns {}",
-                    fn_name, expr_ret_type
+                    "Return with value; expect function {fn_name} to return nothing, but returns {expr_ret_type}",
                 )
             }
             (Some(ret_expr), Some(fn_ret_type)) => {
@@ -125,8 +123,7 @@ fn annotate_stmt(
 fn assert_type_equals(derived_type: &ast::DataType, data_type: &ast::DataType, context: &str) {
     if derived_type != data_type {
         panic!(
-            "Type mismatch between type '{}' and derived type '{}' for {}",
-            data_type, derived_type, context
+            "Type mismatch between type '{data_type}' and derived type '{derived_type}' for {context}",
         );
     }
 }
@@ -161,7 +158,7 @@ fn annotate_identifier_type(
 
                 elem_types[*index].clone()
             } else {
-                panic!("Cannot index non-tuple with tuple index {}", index);
+                panic!("Cannot index non-tuple with tuple index {index}");
             }
         }
 
@@ -169,17 +166,17 @@ fn annotate_identifier_type(
         ast::Identifier::ListIndex(list_identifier, index_expr) => {
             let index_type = derive_annotate_expr_type(index_expr, state);
             if !is_index_type(&index_type) {
-                panic!("Cannot index list with type '{}'", index_type);
+                panic!("Cannot index list with type '{index_type}'");
             }
 
             // TODO: It could make sense to support var.1[i] if there were better support for tuples.
             if !is_string_identifier(list_identifier) {
-                panic!("Cannot index anything but variables: {:?}", list_identifier);
+                panic!("Cannot index anything but variables: {list_identifier:?}");
             }
 
             let list_type = annotate_identifier_type(list_identifier, state);
             if !is_primitive_type(&list_type) {
-                panic!("Cannot index list of type '{}", list_type);
+                panic!("Cannot index list of type '{list_type}");
             }
 
             list_type
@@ -220,7 +217,7 @@ fn derive_annotate_expr_type(
                 .map(|arg_expr| derive_annotate_expr_type(arg_expr, state))
                 .collect();
 
-            panic!("TODO: Don't know what type of value '{}' returns!", name)
+            panic!("TODO: Don't know what type of value '{name}' returns!")
         }
 
         ast::Expr::Binop(lhs_expr, binop, rhs_expr, binop_type) => {
@@ -234,8 +231,7 @@ fn derive_annotate_expr_type(
                     assert_type_equals(&lhs_type, &rhs_type, "add-expr");
                     assert!(
                         is_arithmetic_type(&lhs_type),
-                        "Cannot add non-arithmetic type '{}'",
-                        lhs_type
+                        "Cannot add non-arithmetic type '{lhs_type}'",
                     );
                     *binop_type = ast::Typing::KnownType(lhs_type.clone());
                     lhs_type
@@ -254,8 +250,7 @@ fn derive_annotate_expr_type(
                     assert_type_equals(&lhs_type, &rhs_type, "bitwise-and-expr");
                     assert!(
                         is_u32_based_type(&lhs_type),
-                        "Cannot bitwise-and type '{}' (not u32-based)",
-                        lhs_type
+                        "Cannot bitwise-and type '{lhs_type}' (not u32-based)",
                     );
                     *binop_type = ast::Typing::KnownType(lhs_type.clone());
                     lhs_type
@@ -266,8 +261,7 @@ fn derive_annotate_expr_type(
                     assert_type_equals(&lhs_type, &rhs_type, "bitwise-xor-expr");
                     assert!(
                         is_u32_based_type(&lhs_type),
-                        "Cannot bitwise-xor type '{}' (not u32-based)",
-                        lhs_type
+                        "Cannot bitwise-xor type '{lhs_type}' (not u32-based)"
                     );
                     *binop_type = ast::Typing::KnownType(lhs_type.clone());
                     lhs_type
@@ -278,8 +272,7 @@ fn derive_annotate_expr_type(
                     assert_type_equals(&lhs_type, &rhs_type, "div-expr");
                     assert!(
                         is_arithmetic_type(&lhs_type),
-                        "Cannot divide non-arithmetic type '{}'",
-                        lhs_type
+                        "Cannot divide non-arithmetic type '{lhs_type}'"
                     );
                     *binop_type = ast::Typing::KnownType(lhs_type.clone());
                     lhs_type
@@ -290,8 +283,7 @@ fn derive_annotate_expr_type(
                     assert_type_equals(&lhs_type, &rhs_type, "eq-expr");
                     assert!(
                         is_primitive_type(&lhs_type),
-                        "Cannot compare non-primitive type '{}' for equality",
-                        lhs_type
+                        "Cannot compare non-primitive type '{lhs_type}' for equality"
                     );
                     *binop_type = ast::Typing::KnownType(ast::DataType::Bool);
                     ast::DataType::Bool
@@ -302,8 +294,7 @@ fn derive_annotate_expr_type(
                     assert_type_equals(&lhs_type, &rhs_type, "lt-expr");
                     assert!(
                         is_u32_based_type(&lhs_type),
-                        "Cannot compare type '{}' with less-than (not u32-based)",
-                        lhs_type
+                        "Cannot compare type '{lhs_type}' with less-than (not u32-based)"
                     );
                     *binop_type = ast::Typing::KnownType(ast::DataType::Bool);
                     ast::DataType::Bool
@@ -314,8 +305,7 @@ fn derive_annotate_expr_type(
                     assert_type_equals(&lhs_type, &rhs_type, "mul-expr");
                     assert!(
                         is_arithmetic_type(&lhs_type),
-                        "Cannot multiply non-arithmetic type '{}'",
-                        lhs_type
+                        "Cannot multiply non-arithmetic type '{lhs_type}'"
                     );
                     *binop_type = ast::Typing::KnownType(lhs_type.clone());
                     lhs_type
@@ -326,8 +316,7 @@ fn derive_annotate_expr_type(
                     assert_type_equals(&lhs_type, &rhs_type, "neq-expr");
                     assert!(
                         is_primitive_type(&lhs_type),
-                        "Cannot compare type '{}' with not-equal (not primitive)",
-                        lhs_type
+                        "Cannot compare type '{lhs_type}' with not-equal (not primitive)"
                     );
                     *binop_type = ast::Typing::KnownType(ast::DataType::Bool);
                     ast::DataType::Bool
@@ -346,8 +335,7 @@ fn derive_annotate_expr_type(
                     assert_type_equals(&lhs_type, &rhs_type, "rem-expr");
                     assert!(
                         is_u32_based_type(&lhs_type),
-                        "Cannot find remainder for type '{}' (not u32-based)",
-                        lhs_type
+                        "Cannot find remainder for type '{lhs_type}' (not u32-based)"
                     );
                     *binop_type = ast::Typing::KnownType(lhs_type.clone());
 
@@ -358,8 +346,7 @@ fn derive_annotate_expr_type(
                 Shl => {
                     assert!(
                         is_u32_based_type(&lhs_type),
-                        "Cannot shift-left for type '{}' (not u32-based)",
-                        lhs_type
+                        "Cannot shift-left for type '{lhs_type}' (not u32-based)"
                     );
                     assert_type_equals(&rhs_type, &ast::DataType::U32, "shl-rhs-expr");
                     *binop_type = ast::Typing::KnownType(lhs_type.clone());
@@ -371,8 +358,7 @@ fn derive_annotate_expr_type(
                 Shr => {
                     assert!(
                         is_u32_based_type(&lhs_type),
-                        "Cannot shift-right for type '{}' (not u32-based)",
-                        lhs_type
+                        "Cannot shift-right for type '{lhs_type}' (not u32-based)"
                     );
                     assert_type_equals(&rhs_type, &ast::DataType::U32, "shr-rhs-expr");
                     *binop_type = ast::Typing::KnownType(lhs_type.clone());
@@ -385,8 +371,7 @@ fn derive_annotate_expr_type(
                     assert_type_equals(&lhs_type, &rhs_type, "sub-expr");
                     assert!(
                         is_arithmetic_type(&lhs_type),
-                        "Cannot subtract non-arithmetic type '{}'",
-                        lhs_type
+                        "Cannot subtract non-arithmetic type '{lhs_type}'"
                     );
                     *binop_type = ast::Typing::KnownType(lhs_type.clone());
                     lhs_type
