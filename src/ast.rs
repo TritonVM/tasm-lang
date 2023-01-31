@@ -9,11 +9,16 @@ use twenty_first::shared_math::rescue_prime_digest::Digest;
 use twenty_first::shared_math::x_field_element::XFieldElement;
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub struct Fn<T> {
+pub struct FnSignature {
     pub name: String,
     pub args: Vec<FnArg>,
-    pub body: Vec<Stmt<T>>,
     pub output: Option<DataType>,
+}
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub struct Fn<T> {
+    pub fn_signature: FnSignature,
+    pub body: Vec<Stmt<T>>,
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]

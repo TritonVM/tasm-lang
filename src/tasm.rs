@@ -169,9 +169,15 @@ impl CompilerState {
 }
 
 pub fn compile(function: &ast::Fn<ast::Typing>) -> Vec<LabelledInstruction> {
-    let fn_name = &function.name;
-    let _fn_stack_input_sig = function.args.iter().map(|arg| format!("({arg})")).join(" ");
+    let fn_name = &function.fn_signature.name;
+    let _fn_stack_input_sig = function
+        .fn_signature
+        .args
+        .iter()
+        .map(|arg| format!("({arg})"))
+        .join(" ");
     let _fn_stack_output_sig = function
+        .fn_signature
         .output
         .as_ref()
         .map(|data_type| format!("{data_type}"))
@@ -180,7 +186,7 @@ pub fn compile(function: &ast::Fn<ast::Typing>) -> Vec<LabelledInstruction> {
     let mut state = CompilerState::default();
 
     // TODO: Initialize vstack to reflect that the arguments are present on it.
-    for arg in function.args.iter() {
+    for arg in function.fn_signature.args.iter() {
         let fn_arg_addr = state.new_value_identifier("_fn_arg", &arg.data_type);
         state.var_addr.insert(arg.name.clone(), fn_arg_addr);
     }
@@ -278,7 +284,11 @@ fn compile_stmt(
         }
 
         ast::Stmt::Return(Some(ret_expr)) => {
-            let ret_type = function.output.as_ref().expect("a return type");
+            let ret_type = function
+                .fn_signature
+                .output
+                .as_ref()
+                .expect("a return type");
             // special-case on returning variable, without unnecessary dup-instructions
             let expr_code = if let ast::Expr::Var(ast::Identifier::String(var_name, known_type)) =
                 ret_expr

@@ -9,11 +9,12 @@ pub struct CheckState {
 
 pub fn annotate_fn(function: &mut ast::Fn<ast::Typing>) {
     // Initialize `CheckState`
-    let vtable: HashMap<String, ast::DataType> = HashMap::with_capacity(function.args.len());
+    let vtable: HashMap<String, ast::DataType> =
+        HashMap::with_capacity(function.fn_signature.args.len());
     let mut state = CheckState { vtable };
 
     // Populate vtable with function arguments
-    for arg in function.args.iter() {
+    for arg in function.fn_signature.args.iter() {
         let duplicate_fn_arg = state
             .vtable
             .insert(arg.name.clone(), arg.data_type.clone())
@@ -24,10 +25,14 @@ pub fn annotate_fn(function: &mut ast::Fn<ast::Typing>) {
     }
 
     // Type-annotate each statement in-place
-    function
-        .body
-        .iter_mut()
-        .for_each(|stmt| annotate_stmt(stmt, &mut state, &function.name, &function.output));
+    function.body.iter_mut().for_each(|stmt| {
+        annotate_stmt(
+            stmt,
+            &mut state,
+            &function.fn_signature.name,
+            &function.fn_signature.output,
+        )
+    });
 }
 
 fn annotate_stmt(

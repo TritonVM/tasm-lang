@@ -1,4 +1,4 @@
-use crate::ast;
+use crate::ast::{self};
 use itertools::Itertools;
 
 type Annotation = ast::Typing;
@@ -10,10 +10,8 @@ pub fn graft(input: &syn::ItemFn) -> ast::Fn<Annotation> {
     let body = input.block.stmts.iter().map(graft_stmt).collect_vec();
 
     ast::Fn {
-        name,
-        args,
         body,
-        output,
+        fn_signature: ast::FnSignature { name, args, output },
     }
 }
 
