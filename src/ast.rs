@@ -34,7 +34,7 @@ pub enum Stmt<T> {
     Assign(AssignStmt<T>),
     Return(Option<Expr<T>>),
     FnCall(FnCall<T>),
-    While(WhileStmt<T>), // TODO: Control-flow operators: if-else, while, etc.
+    While(WhileStmt<T>),
     If(IfStmt<T>),
 }
 

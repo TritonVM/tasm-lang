@@ -29,6 +29,24 @@ fn add_u32_overwrite_rast() -> syn::ItemFn {
     })
 }
 
+fn sub_u32_rast_1() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn sub_u32(lhs: u32, rhs: u32) -> u32 {
+            let c: u32 = lhs - rhs;
+            return c;
+        }
+    })
+}
+
+fn sub_u32_rast_2() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn sub_u32(rhs: u32, lhs: u32) -> u32 {
+            let c: u32 = lhs - rhs;
+            return c;
+        }
+    })
+}
+
 fn add_bfe_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn add_bfe(lhs: BFieldElement, rhs: BFieldElement) -> BFieldElement {
@@ -123,6 +141,16 @@ mod compile_and_typecheck_tests {
     }
 
     #[test]
+    fn sub_u32_rast_1_test() {
+        graft_check_compile_prop(&sub_u32_rast_1());
+    }
+
+    #[test]
+    fn sub_u32_rast_2_test() {
+        graft_check_compile_prop(&sub_u32_rast_2());
+    }
+
+    #[test]
     fn add_bfe_test() {
         graft_check_compile_prop(&add_bfe_rast());
     }
@@ -191,6 +219,27 @@ mod compile_and_run_tests {
                 vec![ast::ExprLit::U64(lhs + rhs)],
             )
         }
+    }
+
+    #[test]
+    fn sub_u32_run_test() {
+        let input_args_1 = vec![ast::ExprLit::U32(200), ast::ExprLit::U32(95)];
+        let expected_outputs_1 = vec![ast::ExprLit::U32(105)];
+        compile_execute_and_compare_prop(
+            "sub_u32",
+            &sub_u32_rast_1(),
+            input_args_1,
+            expected_outputs_1,
+        );
+
+        let input_args_2 = vec![ast::ExprLit::U32(95), ast::ExprLit::U32(200)];
+        let expected_outputs_2 = vec![ast::ExprLit::U32(105)];
+        compile_execute_and_compare_prop(
+            "sub_u32",
+            &sub_u32_rast_2(),
+            input_args_2,
+            expected_outputs_2,
+        );
     }
 
     #[test]
