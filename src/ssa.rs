@@ -95,7 +95,7 @@ fn rename_variables(cfg: &mut ControlFlowGraph) {
 
     let mut counter: usize = 0;
     let mut name_gen = |s: &str| {
-        let tmp = format!("{}_{}", s, counter);
+        let tmp = format!("{s}_{counter}");
         counter += 1;
         tmp
     };
@@ -495,6 +495,6 @@ mod tests {
         assert_unique_variable_names(&cfg);
         assert_no_reassignments(&cfg);
 
-        println!("{:#?}", cfg);
+        println!("{cfg:#?}");
     }
 }

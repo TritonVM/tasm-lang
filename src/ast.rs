@@ -166,8 +166,8 @@ impl Display for DataType {
                 BFE => "BField".to_string(),
                 XFE => "XField".to_string(),
                 Digest => "Digest".to_string(),
-                List(ty) => format!("List({})", ty),
-                FlatList(tys) => tys.iter().map(|ty| format!("{}", ty)).join(" "),
+                List(ty) => format!("List({ty})"),
+                FlatList(tys) => tys.iter().map(|ty| format!("{ty}")).join(" "),
             }
         )
     }
@@ -195,7 +195,7 @@ impl Identifier<Typing> {
             Identifier::ListIndex(id, _) => {
                 let rec = id.get_type();
                 match rec {
-                    DataType::List(element_type) => Typing::KnownType(*element_type.to_owned()),
+                    DataType::List(element_type) => Typing::KnownType(*element_type),
                     dt => panic!("Internal type error. Expected List got: {dt:?}"),
                 }
             }

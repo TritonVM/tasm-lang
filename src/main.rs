@@ -23,5 +23,5 @@ fn main() {
     let syntax = syn::parse_file(&src).expect("Unable to parse file");
 
     // Debug impl is available if Syn is built with "extra-traits" feature.
-    println!("{:#?}", syntax);
+    println!("{syntax:#?}");
 }

@@ -452,7 +452,7 @@ pub fn graft_stmt(rust_stmt: &syn::Stmt) -> ast::Stmt<Annotation> {
 pub fn item_fn(item: syn::Item) -> syn::ItemFn {
     match item {
         syn::Item::Fn(item_fn) => item_fn,
-        other => panic!("item_fn: expected fn, found: {:#?}", other),
+        other => panic!("item_fn: expected fn, found: {other:#?}"),
     }
 }
 

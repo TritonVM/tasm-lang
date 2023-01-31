@@ -73,8 +73,7 @@ impl CompilerState {
         let top_value_size = size_of(&top_element.1);
         assert!(
             stack_height < STACK_SIZE,
-            "For now, we only support functions with max {} elements on the stack",
-            STACK_SIZE
+            "For now, we only support functions with max {STACK_SIZE} elements on the stack"
         );
 
         // Generate code to move value to the bottom of the stack
@@ -158,10 +157,10 @@ impl CompilerState {
 
             // By asserting after `+= size_of(data_type)`, we check that the deepest part
             // of the sought value is addressable, not just the top part of the value.
-            assert!(position < STACK_SIZE, "Addressing beyond the {}'th stack element requires spilling and register-allocation.", STACK_SIZE);
+            assert!(position < STACK_SIZE, "Addressing beyond the {STACK_SIZE}'th stack element requires spilling and register-allocation.");
         }
 
-        panic!("Cannot find {} on vstack", seek_addr)
+        panic!("Cannot find {seek_addr} on vstack")
     }
 }
 
@@ -171,7 +170,7 @@ pub fn compile(function: &ast::Fn<ast::Typing>) -> Vec<Labeled> {
     let _fn_stack_output_sig = function
         .output
         .as_ref()
-        .map(|data_type| format!("{}", data_type))
+        .map(|data_type| format!("{data_type}"))
         .unwrap_or_default();
 
     let mut state = CompilerState::default();
@@ -192,9 +191,8 @@ pub fn compile(function: &ast::Fn<ast::Typing>) -> Vec<Labeled> {
     // here but I got a borrow-checker error. Probably bc of the &'static str
     // it returns.
     let dependencies = state.library.all_imports();
-    let dependencies = triton_opcodes::instruction::parse(&dependencies).expect(&format!(
-        "Must be able to parse dependencies code:\n{dependencies}"
-    ));
+    let dependencies = triton_opcodes::instruction::parse(&dependencies)
+        .unwrap_or_else(|_| panic!("Must be able to parse dependencies code:\n{dependencies}"));
 
     let ret = vec![
         vec![Label(fn_name.to_owned(), "")],
