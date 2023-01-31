@@ -8,3 +8,4 @@ pub mod types;
 
 #[cfg(test)]
 mod programs;
+pub mod shared_test;
