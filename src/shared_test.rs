@@ -22,12 +22,12 @@ pub fn graft_check_compile_prop(item_fn: &syn::ItemFn) -> String {
 }
 
 pub fn compile_execute_and_compare_prop(
-    function_name: &str,
     item_fn: &syn::ItemFn,
     input_args: Vec<ast::ExprLit>,
     expected_outputs: Vec<ast::ExprLit>,
 ) {
     let code = graft_check_compile_prop(item_fn);
+    let function_name = item_fn.sig.ident.to_string();
     let code = format!(
         "
         call {function_name}
@@ -35,6 +35,8 @@ pub fn compile_execute_and_compare_prop(
 
         {code}"
     );
+
+    println!("{code}");
 
     let mut stack = get_init_tvm_stack();
     for input_arg in input_args {

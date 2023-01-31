@@ -47,6 +47,24 @@ fn sub_u32_rast_2() -> syn::ItemFn {
     })
 }
 
+fn sub_u64_rast_1() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn sub_u64_test(lhs: u64, rhs: u64) -> u64 {
+            let c: u64 = lhs - rhs;
+            return c;
+        }
+    })
+}
+
+fn sub_u64_rast_2() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn sub_u64_test(rhs: u64, lhs: u64) -> u64 {
+            let c: u64 = lhs - rhs;
+            return c;
+        }
+    })
+}
+
 fn add_bfe_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn add_bfe(lhs: BFieldElement, rhs: BFieldElement) -> BFieldElement {
@@ -114,7 +132,11 @@ fn right_child_rast() -> syn::ItemFn {
 fn left_child_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn left_child(node_index: u64, height: u32) -> u64 {
+            // return node_index - pow2(height);
+            // return node_index - 2u64.pow(height);
             return node_index - (1u64 << height);
+            // return node_index - 2u32.pow(height);
+
         }
     })
 }
@@ -150,6 +172,15 @@ mod compile_and_typecheck_tests {
         graft_check_compile_prop(&sub_u32_rast_2());
     }
 
+    #[test]
+    fn sub_u64_rast_1_test() {
+        graft_check_compile_prop(&sub_u64_rast_1());
+    }
+
+    #[test]
+    fn sub_u64_rast_2_test() {
+        graft_check_compile_prop(&sub_u64_rast_2());
+    }
     #[test]
     fn add_bfe_test() {
         graft_check_compile_prop(&add_bfe_rast());
@@ -201,7 +232,6 @@ mod compile_and_run_tests {
     #[test]
     fn add_u64_run_test() {
         compile_execute_and_compare_prop(
-            "add_u64_test",
             &add_u64_rast(),
             vec![
                 ast::ExprLit::U64((1 << 33) + (1 << 16)),
@@ -213,7 +243,6 @@ mod compile_and_run_tests {
             let lhs = thread_rng().gen_range(0..u64::MAX / 2);
             let rhs = thread_rng().gen_range(0..u64::MAX / 2);
             compile_execute_and_compare_prop(
-                "add_u64_test",
                 &add_u64_rast(),
                 vec![ast::ExprLit::U64(lhs), ast::ExprLit::U64(rhs)],
                 vec![ast::ExprLit::U64(lhs + rhs)],
@@ -225,27 +254,37 @@ mod compile_and_run_tests {
     fn sub_u32_run_test() {
         let input_args_1 = vec![ast::ExprLit::U32(200), ast::ExprLit::U32(95)];
         let expected_outputs_1 = vec![ast::ExprLit::U32(105)];
-        compile_execute_and_compare_prop(
-            "sub_u32",
-            &sub_u32_rast_1(),
-            input_args_1,
-            expected_outputs_1,
-        );
+        compile_execute_and_compare_prop(&sub_u32_rast_1(), input_args_1, expected_outputs_1);
 
         let input_args_2 = vec![ast::ExprLit::U32(95), ast::ExprLit::U32(200)];
         let expected_outputs_2 = vec![ast::ExprLit::U32(105)];
-        compile_execute_and_compare_prop(
-            "sub_u32",
-            &sub_u32_rast_2(),
-            input_args_2,
-            expected_outputs_2,
-        );
+        compile_execute_and_compare_prop(&sub_u32_rast_2(), input_args_2, expected_outputs_2);
+    }
+
+    #[test]
+    fn sub_u64_run_test() {
+        let input_args_1 = vec![ast::ExprLit::U64(200), ast::ExprLit::U64(95)];
+        let expected_outputs_1 = vec![ast::ExprLit::U64(105)];
+        compile_execute_and_compare_prop(&sub_u64_rast_1(), input_args_1, expected_outputs_1);
+
+        let input_args_2 = vec![ast::ExprLit::U64(95), ast::ExprLit::U64(200)];
+        let expected_outputs_2 = vec![ast::ExprLit::U64(105)];
+        compile_execute_and_compare_prop(&sub_u64_rast_2(), input_args_2, expected_outputs_2);
+
+        let input_args_3 = vec![ast::ExprLit::U64(1), ast::ExprLit::U64(1 << 32)];
+        let expected_outputs_3 = vec![ast::ExprLit::U64(u32::MAX as u64)];
+        compile_execute_and_compare_prop(&sub_u64_rast_2(), input_args_3, expected_outputs_3);
+
+        let lhs = thread_rng().gen_range(0..u64::MAX);
+        let rhs = thread_rng().gen_range(0..=lhs);
+        let input_args_4 = vec![ast::ExprLit::U64(rhs), ast::ExprLit::U64(lhs)];
+        let expected_outputs_4 = vec![ast::ExprLit::U64(lhs - rhs)];
+        compile_execute_and_compare_prop(&sub_u64_rast_2(), input_args_4, expected_outputs_4);
     }
 
     #[test]
     fn right_child_run_test() {
         compile_execute_and_compare_prop(
-            "right_child",
             &right_child_rast(),
             vec![ast::ExprLit::U64(120)],
             vec![ast::ExprLit::U64(119)],
@@ -253,10 +292,20 @@ mod compile_and_run_tests {
         let mut rng = thread_rng();
         let rand = rng.next_u64();
         compile_execute_and_compare_prop(
-            "right_child",
             &right_child_rast(),
             vec![ast::ExprLit::U64(rand)],
             vec![ast::ExprLit::U64(rand - 1)],
         );
+    }
+
+    #[test]
+    fn left_child_run_test() {
+        let inputs0 = vec![ast::ExprLit::U64(120), ast::ExprLit::U32(2)];
+        let outputs0 = vec![ast::ExprLit::U64(116)];
+        compile_execute_and_compare_prop(&left_child_rast(), inputs0, outputs0);
+
+        let inputs1 = vec![ast::ExprLit::U64(31), ast::ExprLit::U32(4)];
+        let outputs1 = vec![ast::ExprLit::U64(15)];
+        compile_execute_and_compare_prop(&left_child_rast(), inputs1, outputs1);
     }
 }

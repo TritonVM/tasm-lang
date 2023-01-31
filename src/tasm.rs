@@ -381,7 +381,7 @@ fn compile_expr(
             let (_lhs_expr_addr, lhs_expr_code) =
                 compile_expr(lhs_expr, "_binop_lhs", &lhs_expr.get_type(), state);
 
-            let code = match binop {
+            let (addr, code) = match binop {
                 ast::BinOp::Add => {
                     let add_code = match data_type {
                         ast::DataType::U32 => {
@@ -411,7 +411,11 @@ fn compile_expr(
                         _ => panic!("Operator add is not supported for type {data_type}"),
                     };
 
-                    add_code
+                    let code = vec![rhs_expr_code, lhs_expr_code, add_code].concat();
+                    state.vstack.pop();
+                    state.vstack.pop();
+                    let addr = state.new_value_identifier("_binop_add", &data_type);
+                    (addr, code)
                 }
                 ast::BinOp::And => {
                     let and_code = match data_type {
@@ -425,7 +429,11 @@ fn compile_expr(
                         _ => panic!("Logical AND operator is not supported for {data_type}"),
                     };
 
-                    and_code
+                    let code = vec![rhs_expr_code, lhs_expr_code, and_code].concat();
+                    state.vstack.pop();
+                    state.vstack.pop();
+                    let addr = state.new_value_identifier("_binop_add", &data_type);
+                    (addr, code)
                 }
                 ast::BinOp::BitAnd => {
                     let bitwise_and_code = match data_type {
@@ -438,7 +446,11 @@ fn compile_expr(
                         _ => panic!("Logical AND operator is not supported for {data_type}"),
                     };
 
-                    bitwise_and_code
+                    let code = vec![rhs_expr_code, lhs_expr_code, bitwise_and_code].concat();
+                    state.vstack.pop();
+                    state.vstack.pop();
+                    let addr = state.new_value_identifier("_binop_add", &data_type);
+                    (addr, code)
                 }
                 ast::BinOp::BitXor => todo!(),
                 ast::BinOp::Div => todo!(),
@@ -448,7 +460,25 @@ fn compile_expr(
                 ast::BinOp::Neq => todo!(),
                 ast::BinOp::Or => todo!(),
                 ast::BinOp::Rem => todo!(),
-                ast::BinOp::Shl => todo!(),
+
+                ast::BinOp::Shl => {
+                    let lhs_expr_owned: ast::Expr<ast::Typing> = *(*lhs_expr).to_owned();
+
+                    if !matches!(lhs_expr_owned, ast::Expr::Lit(ast::ExprLit::U64(1), _)) {
+                        panic!("Unsupported shift left: {lhs_expr_owned:#?}")
+                    }
+
+                    let pow2_fn = state.import_snippet::<arithmetic::u64::pow2_u64::Pow2U64>();
+                    let code = vec![Instruction(Call(pow2_fn.to_string()), "")];
+                    let code = vec![rhs_expr_code, code].concat();
+
+                    state.vstack.pop();
+                    state.vstack.pop();
+                    let addr = state.new_value_identifier("_binop_shl", &data_type);
+
+                    (addr, code)
+                }
+
                 ast::BinOp::Shr => todo!(),
                 ast::BinOp::Sub => {
                     let sub_code: Vec<LabelledInstruction> = match data_type {
@@ -498,14 +528,18 @@ fn compile_expr(
                         _ => panic!("subtraction operator is not supported for {data_type}"),
                     };
 
-                    sub_code
+                    let code = vec![rhs_expr_code, lhs_expr_code, sub_code].concat();
+                    state.vstack.pop();
+                    state.vstack.pop();
+                    let addr = state.new_value_identifier("_binop_sub", &data_type);
+                    (addr, code)
                 }
             };
 
-            let code = vec![rhs_expr_code, lhs_expr_code, code].concat();
-            state.vstack.pop();
-            state.vstack.pop();
-            let addr = state.new_value_identifier(&format!("_binop_{binop:?}"), &data_type);
+            // let code = vec![rhs_expr_code, lhs_expr_code, code].concat();
+            // state.vstack.pop();
+            // state.vstack.pop();
+            // let addr = state.new_value_identifier(&format!("_binop_{binop:?}"), &data_type);
 
             (addr, code)
         }
