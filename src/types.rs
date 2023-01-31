@@ -190,7 +190,7 @@ fn derive_annotate_expr_type(
 ) -> ast::DataType {
     match expr {
         ast::Expr::Lit(expr_lit, var_type) => {
-            let found_type = expr_lit_type(expr_lit);
+            let found_type = expr_lit.get_type();
             *var_type = ast::Typing::KnownType(found_type.clone());
             found_type
         }
@@ -393,17 +393,16 @@ fn derive_annotate_expr_type(
 
             then_type
         }
-    }
-}
+        ast::Expr::Cast(expr, as_type) => {
+            let expr_type = derive_annotate_expr_type(expr, state);
+            assert!(
+                is_u32_based_type(&expr_type),
+                "Can only cast from u32 and u64"
+            );
+            assert!(is_u32_based_type(as_type), "Can only cast to u32 and u64");
 
-pub fn expr_lit_type(expr_lit: &ast::ExprLit) -> ast::DataType {
-    match expr_lit {
-        ast::ExprLit::Bool(_) => ast::DataType::Bool,
-        ast::ExprLit::U32(_) => ast::DataType::U32,
-        ast::ExprLit::U64(_) => ast::DataType::U64,
-        ast::ExprLit::BFE(_) => ast::DataType::BFE,
-        ast::ExprLit::XFE(_) => ast::DataType::XFE,
-        ast::ExprLit::Digest(_) => ast::DataType::Digest,
+            as_type.to_owned()
+        }
     }
 }
 

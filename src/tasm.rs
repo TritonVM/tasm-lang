@@ -454,7 +454,18 @@ fn compile_expr(
                 }
                 ast::BinOp::BitXor => todo!(),
                 ast::BinOp::Div => todo!(),
+
                 ast::BinOp::Eq => todo!(),
+                // ast::BinOp::Eq => match data_type {
+                //     ast::DataType::Bool => vec![Instruction(Eq, "")],
+                //     ast::DataType::U32 => todo!(),
+                //     ast::DataType::U64 => todo!(),
+                //     ast::DataType::BFE => todo!(),
+                //     ast::DataType::XFE => todo!(),
+                //     ast::DataType::Digest => todo!(),
+                //     ast::DataType::List(_) => todo!(),
+                //     ast::DataType::FlatList(_) => todo!(),
+                // },
                 ast::BinOp::Lt => todo!(),
                 ast::BinOp::Mul => todo!(),
                 ast::BinOp::Neq => todo!(),
@@ -544,6 +555,23 @@ fn compile_expr(
             (addr, code)
         }
         ast::Expr::If(_) => todo!(),
+
+        ast::Expr::Cast(expr, as_type) => {
+            let expr_type = expr.get_type();
+            let (_expr_addr, expr_code) = compile_expr(expr, "as", &expr_type, state);
+
+            match (expr_type, as_type) {
+                (ast::DataType::U64, ast::DataType::U32) => {
+                    // No value check is performed here
+                    state.vstack.pop();
+                    let addr = state.new_value_identifier("_as_u32", as_type);
+                    let cast_code = vec![Instruction(Swap(Ord16::ST1), ""), Instruction(Pop, "")];
+
+                    (addr, vec![expr_code, cast_code].concat())
+                }
+                _ => todo!(),
+            }
+        }
     }
 }
 

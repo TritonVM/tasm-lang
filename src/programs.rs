@@ -141,6 +141,25 @@ fn left_child_rast() -> syn::ItemFn {
     })
 }
 
+fn right_lineage_length_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn right_lineage_length(node_index: u64) -> u32 {
+            let bit_width: u32 = tasm::log_2_floor_u64(node_index) + 1u32;
+            let npo2: u64 = 1u64 << bit_width;
+            let dist: u64 = npo2 - node_index;
+
+            let bit_width: u64 = bit_width.into();
+            let ret: u32 = if bit_width < dist {
+                right_lineage_length(node_index - (npo2 / 2u64) + 1u64)
+            } else {
+                (dist - 1u64) as u32
+            };
+
+            return ret;
+        }
+    })
+}
+
 #[cfg(test)]
 mod compile_and_typecheck_tests {
     use crate::shared_test::graft_check_compile_prop;
@@ -219,6 +238,11 @@ mod compile_and_typecheck_tests {
     #[test]
     fn left_child_test() {
         graft_check_compile_prop(&left_child_rast());
+    }
+
+    #[test]
+    fn right_lineage_length_rast_test() {
+        graft_check_compile_prop(&right_lineage_length_rast());
     }
 }
 

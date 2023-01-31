@@ -251,6 +251,17 @@ pub fn graft_expr(rust_exp: &syn::Expr) -> ast::Expr<Annotation> {
                 panic!("unsupported index expression: {index_expr:#?}");
             }
         }
+        syn::Expr::Cast(syn::ExprCast {
+            attrs: _attrs,
+            expr,
+            as_token: _as_token,
+            ty,
+        }) => {
+            let unboxed_ty: syn::Type = *(*ty).to_owned();
+            let as_type = rust_type_to_data_type(&unboxed_ty);
+            let ast_expr = graft_expr(&(*expr).to_owned());
+            ast::Expr::Cast(Box::new(ast_expr), as_type)
+        }
         other => panic!("unsupported: {other:?}"),
     }
 }

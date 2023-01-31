@@ -61,6 +61,19 @@ pub enum ExprLit {
     Digest(Digest),
 }
 
+impl ExprLit {
+    pub fn get_type(&self) -> DataType {
+        match self {
+            ExprLit::Bool(_) => DataType::Bool,
+            ExprLit::U32(_) => DataType::U32,
+            ExprLit::U64(_) => DataType::U64,
+            ExprLit::BFE(_) => DataType::BFE,
+            ExprLit::XFE(_) => DataType::XFE,
+            ExprLit::Digest(_) => DataType::Digest,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum BinOp {
     Add,
@@ -88,6 +101,7 @@ pub enum Expr<T> {
     FnCall(FnCall<T>),
     Binop(Box<Expr<T>>, BinOp, Box<Expr<T>>, T),
     If(ExprIf<T>),
+    Cast(Box<Expr<T>>, DataType),
     // TODO: Overloaded arithmetic operators
     // TODO: VM-specific intrinsics (hash, absorb, squeeze, etc.)
 }
@@ -104,6 +118,7 @@ impl Expr<Typing> {
             Expr::FnCall(fnc) => fnc.get_type(),
             Expr::Binop(_, _, _, t) => t.unwrap(),
             Expr::If(if_expr) => if_expr.get_type(),
+            Expr::Cast(_expr, t) => t.to_owned(),
         }
     }
 }
