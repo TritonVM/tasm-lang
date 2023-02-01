@@ -316,10 +316,48 @@ fn compile_stmt(
             expr_code
         }
 
-        ast::Stmt::FnCall(_) => todo!(),
+        ast::Stmt::FnCall(fn_call) => compile_fn_call(fn_call, state),
         ast::Stmt::While(_) => todo!(),
         ast::Stmt::If(_) => todo!(),
     }
+}
+
+fn compile_fn_call(
+    fn_call: &ast::FnCall<ast::Typing>,
+    state: &mut CompilerState,
+) -> Vec<LabelledInstruction> {
+    let ast::FnCall {
+        name,
+        args,
+        annot: _return_type, // void
+    } = fn_call;
+
+    // Compile arguments left-to-right
+    let (_args_idents, args_code): (Vec<ValueIdentifier>, Vec<Vec<LabelledInstruction>>) = args
+        .iter()
+        .enumerate()
+        .map(|(arg_pos, arg_expr)| {
+            let context = format!("_{name}_arg_{arg_pos}");
+            compile_expr(arg_expr, &context, &arg_expr.get_type(), state)
+        })
+        .unzip();
+
+    // If function is from tasm-lib, import it
+    if let Some(snippet_name) = get_tasm_lib_fn(name) {
+        import_tasm_snippet(snippet_name, None, state);
+    }
+
+    for _ in 0..args.len() {
+        state.vstack.pop();
+    }
+
+    let mut fn_call_code = args_code;
+    fn_call_code.push(vec![
+        //
+        call(name.to_string()),
+    ]);
+
+    fn_call_code.concat()
 }
 
 fn compile_expr(
@@ -390,38 +428,15 @@ fn compile_expr(
         },
 
         ast::Expr::FlatList(_) => todo!(),
-        ast::Expr::FnCall(ast::FnCall { name, args, annot }) => {
-            // Compile arguments left-to-right
-            let (_args_idents, args_code): (Vec<ValueIdentifier>, Vec<Vec<LabelledInstruction>>) =
-                args.iter()
-                    .enumerate()
-                    .map(|(arg_pos, arg_expr)| {
-                        let context = format!("_{name}_arg_{arg_pos}");
-                        compile_expr(arg_expr, &context, &arg_expr.get_type(), state)
-                    })
-                    .unzip();
-
-            // If function is from tasm-lib, import it
-            if let Some(snippet_name) = get_tasm_lib_fn(name) {
-                import_tasm_snippet(snippet_name, None, state);
-            }
-
-            for _ in 0..args.len() {
-                state.vstack.pop();
-            }
-
-            let fn_call_ident_prefix = format!("_fn_call_{name}");
+        ast::Expr::FnCall(fn_call) => {
+            let fn_call_code = compile_fn_call(fn_call, state);
+            let fn_call_ident_prefix = format!("_fn_call_{}", fn_call.name);
             let fn_call_ident =
-                state.new_value_identifier(&fn_call_ident_prefix, &annot.get_type());
+                state.new_value_identifier(&fn_call_ident_prefix, &fn_call.annot.get_type());
 
-            let mut fn_call_code = args_code;
-            fn_call_code.push(vec![
-                //
-                call(name.to_string()),
-            ]);
-
-            (fn_call_ident, fn_call_code.concat())
+            (fn_call_ident, fn_call_code)
         }
+
         ast::Expr::Binop(lhs_expr, binop, rhs_expr, known_type) => {
             let data_type = known_type.get_type();
             let lhs_type = lhs_expr.get_type();
