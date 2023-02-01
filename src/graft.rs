@@ -99,10 +99,10 @@ fn graft_fn_arg(rust_fn_arg: &syn::FnArg) -> ast::FnArg {
     }
 }
 
-fn graft_return_type(rust_return_type: &syn::ReturnType) -> Option<ast::DataType> {
+fn graft_return_type(rust_return_type: &syn::ReturnType) -> ast::DataType {
     match rust_return_type {
         syn::ReturnType::Type(_, path) => match path.as_ref() {
-            syn::Type::Path(type_path) => Some(rust_type_path_to_data_type(type_path)),
+            syn::Type::Path(type_path) => rust_type_path_to_data_type(type_path),
             syn::Type::Tuple(tuple_type) => {
                 let tuple_type = tuple_type;
                 let output_elements = tuple_type
@@ -111,11 +111,11 @@ fn graft_return_type(rust_return_type: &syn::ReturnType) -> Option<ast::DataType
                     .map(rust_type_to_data_type)
                     .collect_vec();
 
-                Some(ast::DataType::FlatList(output_elements))
+                ast::DataType::FlatList(output_elements)
             }
             _ => panic!("unsupported: {path:?}"),
         },
-        syn::ReturnType::Default => None,
+        syn::ReturnType::Default => ast::DataType::FlatList(vec![]),
     }
 }
 

@@ -4,7 +4,7 @@ use crate::graft::item_fn;
 
 fn nop_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
-        fn nop() {
+        fn nop_nop() {
             return;
         }
     })

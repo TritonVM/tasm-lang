@@ -176,12 +176,7 @@ pub fn compile(function: &ast::Fn<ast::Typing>) -> Vec<LabelledInstruction> {
         .iter()
         .map(|arg| format!("({arg})"))
         .join(" ");
-    let _fn_stack_output_sig = function
-        .fn_signature
-        .output
-        .as_ref()
-        .map(|data_type| format!("{data_type}"))
-        .unwrap_or_default();
+    let _fn_stack_output_sig = format!("{}", function.fn_signature.output);
 
     let mut state = CompilerState::default();
 
@@ -284,11 +279,6 @@ fn compile_stmt(
         }
 
         ast::Stmt::Return(Some(ret_expr)) => {
-            let ret_type = function
-                .fn_signature
-                .output
-                .as_ref()
-                .expect("a return type");
             // special-case on returning variable, without unnecessary dup-instructions
             let expr_code = if let ast::Expr::Var(ast::Identifier::String(var_name, known_type)) =
                 ret_expr
@@ -316,7 +306,8 @@ fn compile_stmt(
 
                 vec![first_pop_code, swap_code, last_pop_code].concat()
             } else {
-                let expr_code = compile_expr(ret_expr, "ret_expr", ret_type, state).1;
+                let expr_code =
+                    compile_expr(ret_expr, "ret_expr", &function.fn_signature.output, state).1;
 
                 // Remove all but top value from stack
                 let remove_elements_code = state.remove_all_but_top_stack_value();

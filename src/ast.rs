@@ -12,7 +12,7 @@ use twenty_first::shared_math::x_field_element::XFieldElement;
 pub struct FnSignature {
     pub name: String,
     pub args: Vec<FnArg>,
-    pub output: Option<DataType>,
+    pub output: DataType,
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
@@ -282,7 +282,7 @@ pub struct LetStmt<T> {
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct FnCall<T> {
     pub name: String,
-    pub args: Vec<Expr<T>>, // FIXME: type-check that this is flat
+    pub args: Vec<Expr<T>>,
     pub annot: T,
 }
 

@@ -28,9 +28,9 @@ pub fn function_name_to_signature(
     }
 
     let output = match output_types.len() {
-        1 => Some(output_types[0].clone()),
-        0 => None,
-        _ => Some(ast::DataType::FlatList(output_types)),
+        1 => output_types[0].clone(),
+        0 => ast::DataType::FlatList(vec![]),
+        _ => ast::DataType::FlatList(output_types),
     };
 
     FnSignature { name, args, output }

@@ -1,17 +1,27 @@
 use std::collections::HashMap;
 
-use crate::{ast, tasm_function_signatures::function_name_to_signature};
+use itertools::Itertools;
+
+use crate::ast;
+use crate::tasm_function_signatures::function_name_to_signature;
 
 #[derive(Debug, Default)]
 pub struct CheckState {
     pub vtable: HashMap<String, ast::DataType>,
+    pub ftable: HashMap<String, ast::FnSignature>,
 }
 
 pub fn annotate_fn(function: &mut ast::Fn<ast::Typing>) {
     // Initialize `CheckState`
     let vtable: HashMap<String, ast::DataType> =
         HashMap::with_capacity(function.fn_signature.args.len());
-    let mut state = CheckState { vtable };
+    let mut ftable: HashMap<String, ast::FnSignature> = HashMap::new();
+    // Insert self into ftable; TODO: Handle multiple functions
+    ftable.insert(
+        function.fn_signature.name.clone(),
+        function.fn_signature.clone(),
+    );
+    let mut state = CheckState { vtable, ftable };
 
     // Populate vtable with function arguments
     for arg in function.fn_signature.args.iter() {
@@ -39,7 +49,7 @@ fn annotate_stmt(
     stmt: &mut ast::Stmt<ast::Typing>,
     state: &mut CheckState,
     fn_name: &str,
-    fn_output: &Option<ast::DataType>,
+    fn_output: &ast::DataType,
 ) {
     match stmt {
         ast::Stmt::Let(ast::LetStmt {
@@ -63,34 +73,30 @@ fn annotate_stmt(
         }
 
         ast::Stmt::Return(opt_expr) => match (opt_expr, fn_output) {
-            (None, None) => (),
-            (None, Some(return_type)) => {
-                panic!("Return without value; expect function {fn_name} to return {return_type}")
+            (None, ast::DataType::FlatList(tys)) => assert_eq!(
+                0,
+                tys.len(),
+                "Return without value; expect {fn_name} to return nothing."
+            ),
+            (None, _) => {
+                panic!("Return without value; expect function {fn_name} to return {fn_output}")
             }
-            (Some(ret_expr), None) => {
+            (Some(ret_expr), _) => {
                 let expr_ret_type = derive_annotate_expr_type(ret_expr, state);
-                panic!(
-                    "Return with value; expect function {fn_name} to return nothing, but returns {expr_ret_type}",
-                )
-            }
-            (Some(ret_expr), Some(fn_ret_type)) => {
-                let expr_ret_type = derive_annotate_expr_type(ret_expr, state);
-                assert_type_equals(fn_ret_type, &expr_ret_type, "return stmt");
+                assert_type_equals(fn_output, &expr_ret_type, "return stmt");
             }
         },
 
-        ast::Stmt::FnCall(ast::FnCall {
-            name: _name,
-            args,
-            annot: _call_return_type,
-        }) => {
-            let _arg_types: Vec<ast::DataType> = args
-                .iter_mut()
-                .map(|arg_expr| derive_annotate_expr_type(arg_expr, state))
-                .collect();
+        ast::Stmt::FnCall(ast::FnCall { name, args, annot }) => {
+            let fn_signature = get_fn_signature(name, state);
+            assert!(
+                is_void_type(&fn_signature.output),
+                "Function call '{name}' at statement-level must return the unit type."
+            );
 
-            // TODO: Check that function exists and that its input types match with args provided.
-            // TODO: Type-check that functions not bound to variables don't return anything
+            derive_annotate_fn_call_args(&fn_signature, args, state);
+
+            *annot = ast::Typing::KnownType(fn_signature.output);
         }
 
         ast::Stmt::While(ast::WhileStmt { condition, stmts }) => {
@@ -189,6 +195,57 @@ fn annotate_identifier_type(
     }
 }
 
+fn get_fn_signature(name: &str, state: &CheckState) -> ast::FnSignature {
+    // all functions from `tasm-lib` are in scope
+    let tasm_lib_indicator = "tasm::";
+    if name.starts_with(tasm_lib_indicator) {
+        let stripped_name = &name[tasm_lib_indicator.len()..name.len()];
+        return function_name_to_signature(stripped_name, None);
+    }
+
+    state
+        .ftable
+        .get(name)
+        .unwrap_or_else(|| panic!("Don't know what type of value '{name}' returns!"))
+        .clone()
+}
+
+fn derive_annotate_fn_call_args(
+    fn_signature: &ast::FnSignature,
+    args: &mut [ast::Expr<ast::Typing>],
+    state: &mut CheckState,
+) {
+    let fn_name = &fn_signature.name;
+    let arg_types: Vec<ast::DataType> = args
+        .iter_mut()
+        .map(|arg_expr| derive_annotate_expr_type(arg_expr, state))
+        .collect();
+    assert_eq!(
+        fn_signature.args.len(),
+        arg_types.len(),
+        "Wrong number of arguments in function call to '{}'; expected {} arguments, got {}.",
+        fn_name,
+        fn_signature.args.len(),
+        arg_types.len(),
+    );
+    for (arg_pos, (fn_arg, expr_type)) in fn_signature
+        .args
+        .iter()
+        .zip_eq(arg_types.iter())
+        .enumerate()
+    {
+        let arg_pos = arg_pos + 1;
+        let ast::FnArg {
+            name: arg_name,
+            data_type: arg_type,
+        } = fn_arg;
+        assert_eq!(
+        arg_type, expr_type,
+        "Wrong type of function argument {arg_pos} '{arg_name}' in '{fn_name}'; expected {arg_type}, got {expr_type}.",
+    )
+    }
+}
+
 fn derive_annotate_expr_type(
     expr: &mut ast::Expr<ast::Typing>,
     state: &mut CheckState,
@@ -210,29 +267,18 @@ fn derive_annotate_expr_type(
             ast::DataType::FlatList(tuple_types)
         }
 
-        ast::Expr::FnCall(ast::FnCall {
-            name,
-            args,
-            annot: _call_return_type,
-        }) => {
-            // TODO: Check that function exists and that its input types match with args provided.
-            // TODO: Cannot annotate return type when there's no function table.
-            let _arg_types: Vec<ast::DataType> = args
-                .iter_mut()
-                .map(|arg_expr| derive_annotate_expr_type(arg_expr, state))
-                .collect();
+        ast::Expr::FnCall(ast::FnCall { name, args, annot }) => {
+            let fn_signature = get_fn_signature(name, state);
+            assert!(
+                !is_void_type(&fn_signature.output),
+                "Function calls in expressions cannot return the unit type"
+            );
 
-            // all functions from `tasm-lib` are in scope
-            let tasm_lib_indicator = "tasm::";
-            let fn_signature = if !name.starts_with(tasm_lib_indicator) {
-                panic!("TODO: Don't know what type of value '{name}' returns!")
-            } else {
-                let stripped_name = &name[tasm_lib_indicator.len()..name.len()];
-                function_name_to_signature(stripped_name, None)
-            };
+            derive_annotate_fn_call_args(&fn_signature, args, state);
 
-            // println!("fn_signature = {fn_signature:#?}");
-            fn_signature.output.unwrap()
+            *annot = ast::Typing::KnownType(fn_signature.output.clone());
+
+            fn_signature.output
         }
 
         ast::Expr::Binop(lhs_expr, binop, rhs_expr, binop_type) => {
@@ -456,4 +502,12 @@ pub fn is_u32_based_type(data_type: &ast::DataType) -> bool {
 pub fn is_primitive_type(data_type: &ast::DataType) -> bool {
     use ast::DataType::*;
     matches!(data_type, Bool | U32 | U64 | BFE | XFE | Digest)
+}
+
+pub fn is_void_type(data_type: &ast::DataType) -> bool {
+    if let ast::DataType::FlatList(tys) = data_type {
+        tys.is_empty()
+    } else {
+        false
+    }
 }
