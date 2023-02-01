@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use itertools::Itertools;
 
 use crate::ast;
-use crate::tasm_function_signatures::function_name_to_signature;
+use crate::tasm_function_signatures::{function_name_to_signature, get_tasm_lib_fn};
 
 #[derive(Debug, Default)]
 pub struct CheckState {
@@ -197,10 +197,8 @@ fn annotate_identifier_type(
 
 fn get_fn_signature(name: &str, state: &CheckState) -> ast::FnSignature {
     // all functions from `tasm-lib` are in scope
-    let tasm_lib_indicator = "tasm::";
-    if name.starts_with(tasm_lib_indicator) {
-        let stripped_name = &name[tasm_lib_indicator.len()..name.len()];
-        return function_name_to_signature(stripped_name, None);
+    if let Some(snippet_name) = get_tasm_lib_fn(name) {
+        return function_name_to_signature(snippet_name, None);
     }
 
     state

@@ -6,7 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-tasm-lib = { git = "https://github.com/TritonVM/tasm-lib", branch = "type-annotate-all-snippets" }
+tasm-lib = { git = "https://github.com/TritonVM/tasm-lib" }
 twenty-first = "0.14"
 triton-opcodes = { version = "0.14", git = "https://github.com/TritonVM/triton-vm.git", branch = "master" }
 itertools = "0.10"

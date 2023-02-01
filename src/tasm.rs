@@ -15,6 +15,7 @@ use twenty_first::util_types::algebraic_hasher::Hashable;
 
 use crate::ast;
 use crate::stack::Stack;
+use crate::tasm_function_signatures::{get_tasm_lib_fn, import_tasm_snippet};
 
 #[derive(Debug, Default)]
 pub struct CompilerState {
@@ -62,8 +63,8 @@ impl CompilerState {
         address
     }
 
-    fn import_snippet<S: Snippet>(&mut self, snippet: S) -> &'static str {
-        self.library.import::<S>(snippet)
+    pub fn import_snippet(&mut self, snippet: Box<dyn Snippet>) -> &'static str {
+        self.library.import(snippet)
     }
 
     /// Return code that clears the stack but leaves the value that's on the top of the stack
@@ -180,7 +181,6 @@ pub fn compile(function: &ast::Fn<ast::Typing>) -> Vec<LabelledInstruction> {
 
     let mut state = CompilerState::default();
 
-    // TODO: Initialize vstack to reflect that the arguments are present on it.
     for arg in function.fn_signature.args.iter() {
         let fn_arg_addr = state.new_value_identifier("_fn_arg", &arg.data_type);
         state.var_addr.insert(arg.name.clone(), fn_arg_addr);
@@ -192,9 +192,8 @@ pub fn compile(function: &ast::Fn<ast::Typing>) -> Vec<LabelledInstruction> {
         .map(|stmt| compile_stmt(stmt, function, &mut state))
         .concat();
 
-    // TODO: I wanted to use the result from `all_imports_as_instruction_lists`
-    // here but I got a borrow-checker error. Probably bc of the &'static str
-    // it returns.
+    // TODO: Use this function once triton-opcodes reaches 0.15.0
+    // let dependencies = state.library.all_imports_as_instruction_lists();
     let dependencies = state.library.all_imports();
     let dependencies = parse(&dependencies)
         .map(|instructions| to_labelled(&instructions))
@@ -250,7 +249,7 @@ fn compile_stmt(
 
         ast::Stmt::Assign(ast::AssignStmt { identifier, expr }) => match identifier {
             ast::Identifier::String(var_name, known_type) => {
-                let data_type = known_type.unwrap();
+                let data_type = known_type.get_type();
                 let (expr_addr, expr_code) = compile_expr(expr, "assign", &data_type, state);
                 let old_value_identifier = state
                     .var_addr
@@ -283,7 +282,7 @@ fn compile_stmt(
             let expr_code = if let ast::Expr::Var(ast::Identifier::String(var_name, known_type)) =
                 ret_expr
             {
-                let data_type = known_type.unwrap();
+                let data_type = known_type.get_type();
                 let var_addr = state.var_addr.get(var_name).expect("variable exists");
                 let (position, old_data_type) = state.find_stack_value(var_addr);
                 let mut stack_height = state.get_stack_height();
@@ -331,7 +330,7 @@ fn compile_expr(
 ) -> (ValueIdentifier, Vec<LabelledInstruction>) {
     match expr {
         ast::Expr::Lit(expr_lit, known_type) => {
-            let data_type = known_type.unwrap();
+            let data_type = known_type.get_type();
             match expr_lit {
                 ast::ExprLit::Bool(value) => {
                     let addr = state.new_value_identifier("_bool_lit", &data_type);
@@ -374,7 +373,7 @@ fn compile_expr(
 
         ast::Expr::Var(identifier) => match identifier {
             ast::Identifier::String(var_name, known_type) => {
-                let data_type = known_type.unwrap();
+                let data_type = known_type.get_type();
                 let var_addr = state.var_addr.get(var_name).expect("variable exists");
                 let (position, old_data_type) = state.find_stack_value(var_addr);
 
@@ -391,7 +390,38 @@ fn compile_expr(
         },
 
         ast::Expr::FlatList(_) => todo!(),
-        ast::Expr::FnCall(_) => todo!(),
+        ast::Expr::FnCall(ast::FnCall { name, args, annot }) => {
+            // Compile arguments left-to-right
+            let (_args_idents, args_code): (Vec<ValueIdentifier>, Vec<Vec<LabelledInstruction>>) =
+                args.iter()
+                    .enumerate()
+                    .map(|(arg_pos, arg_expr)| {
+                        let context = format!("_{name}_arg_{arg_pos}");
+                        compile_expr(arg_expr, &context, &arg_expr.get_type(), state)
+                    })
+                    .unzip();
+
+            // If function is from tasm-lib, import it
+            if let Some(snippet_name) = get_tasm_lib_fn(name) {
+                import_tasm_snippet(snippet_name, None, state);
+            }
+
+            for _ in 0..args.len() {
+                state.vstack.pop();
+            }
+
+            let fn_call_ident_prefix = format!("_fn_call_{name}");
+            let fn_call_ident =
+                state.new_value_identifier(&fn_call_ident_prefix, &annot.get_type());
+
+            let mut fn_call_code = args_code;
+            fn_call_code.push(vec![
+                //
+                call(name.to_string()),
+            ]);
+
+            (fn_call_ident, fn_call_code.concat())
+        }
         ast::Expr::Binop(lhs_expr, binop, rhs_expr, known_type) => {
             let data_type = known_type.get_type();
             let lhs_type = lhs_expr.get_type();
@@ -410,17 +440,14 @@ fn compile_expr(
                     let add_code = match data_type {
                         ast::DataType::U32 => {
                             // We use the safe, overflow-checking, add code as default
-                            let fn_name = state
-                                .import_snippet::<arithmetic::u32::safe_add::SafeAdd>(
-                                    arithmetic::u32::safe_add::SafeAdd,
-                                );
+                            let fn_name =
+                                state.import_snippet(Box::new(arithmetic::u32::safe_add::SafeAdd));
                             vec![Instruction(Call(fn_name.to_string()))]
                         }
                         ast::DataType::U64 => {
                             // We use the safe, overflow-checking, add code as default
-                            let fn_name = state.import_snippet::<arithmetic::u64::add_u64::AddU64>(
-                                arithmetic::u64::add_u64::AddU64,
-                            );
+                            let fn_name =
+                                state.import_snippet(Box::new(arithmetic::u64::add_u64::AddU64));
                             vec![Instruction(Call(fn_name.to_string()))]
                         }
                         ast::DataType::BFE => vec![Instruction(Add)],
@@ -467,9 +494,8 @@ fn compile_expr(
                     let bitwise_and_code = match data_type {
                         ast::DataType::U32 => vec![Instruction(And)],
                         ast::DataType::U64 => {
-                            let fn_name = state.import_snippet::<arithmetic::u64::and_u64::AndU64>(
-                                arithmetic::u64::and_u64::AndU64,
-                            );
+                            let fn_name =
+                                state.import_snippet(Box::new(arithmetic::u64::and_u64::AndU64));
                             vec![Instruction(Call(fn_name.to_string()))]
                         }
                         _ => panic!("Logical AND operator is not supported for {data_type}"),
@@ -564,9 +590,8 @@ fn compile_expr(
                         panic!("Unsupported shift left: {lhs_expr_owned:#?}")
                     }
 
-                    let pow2_fn = state.import_snippet::<arithmetic::u64::pow2_u64::Pow2U64>(
-                        arithmetic::u64::pow2_u64::Pow2U64,
-                    );
+                    let pow2_fn =
+                        state.import_snippet(Box::new(arithmetic::u64::pow2_u64::Pow2U64));
                     let code = vec![Instruction(Call(pow2_fn.to_string()))];
                     let code = vec![rhs_expr_code, code].concat();
 
@@ -582,17 +607,14 @@ fn compile_expr(
                     let sub_code: Vec<LabelledInstruction> = match data_type {
                         ast::DataType::U32 => {
                             // As standard, we use safe arithmetic that crashes on overflow
-                            let fn_name = state
-                                .import_snippet::<arithmetic::u32::safe_sub::SafeSub>(
-                                    arithmetic::u32::safe_sub::SafeSub,
-                                );
+                            let fn_name =
+                                state.import_snippet(Box::new(arithmetic::u32::safe_sub::SafeSub));
                             vec![Instruction(Call(fn_name.to_string()))]
                         }
                         ast::DataType::U64 => {
                             // As standard, we use safe arithmetic that crashes on overflow
-                            let fn_name = state.import_snippet::<arithmetic::u64::sub_u64::SubU64>(
-                                arithmetic::u64::sub_u64::SubU64,
-                            );
+                            let fn_name =
+                                state.import_snippet(Box::new(arithmetic::u64::sub_u64::SubU64));
                             vec![Instruction(Call(fn_name.to_string()))]
                         }
                         ast::DataType::BFE => {
@@ -709,7 +731,14 @@ fn compile_expr(
                     // No value check is performed here
                     state.vstack.pop();
                     let addr = state.new_value_identifier("_as_u32", as_type);
-                    let cast_code = vec![Instruction(Swap(Ord16::ST1)), Instruction(Pop)];
+                    let cast_code = vec![swap1(), pop()];
+
+                    (addr, vec![expr_code, cast_code].concat())
+                }
+                (ast::DataType::U32, ast::DataType::U64) => {
+                    state.vstack.pop();
+                    let addr = state.new_value_identifier("_as_u64", as_type);
+                    let cast_code = vec![push(0), swap1()];
 
                     (addr, vec![expr_code, cast_code].concat())
                 }

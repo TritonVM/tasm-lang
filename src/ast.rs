@@ -114,14 +114,14 @@ pub enum Expr<T> {
 impl Expr<Typing> {
     pub fn get_type(&self) -> DataType {
         match self {
-            Expr::Lit(_, t) => t.unwrap(),
+            Expr::Lit(_, t) => t.get_type(),
             Expr::Var(id) => id.get_type(),
             Expr::FlatList(t_list) => {
                 let types = t_list.iter().map(|elem| elem.get_type()).collect_vec();
                 DataType::FlatList(types)
             }
             Expr::FnCall(fnc) => fnc.get_type(),
-            Expr::Binop(_, _, _, t) => t.unwrap(),
+            Expr::Binop(_, _, _, t) => t.get_type(),
             Expr::If(if_expr) => if_expr.get_type(),
             Expr::Cast(_expr, t) => t.to_owned(),
         }
@@ -169,7 +169,7 @@ impl TryFrom<DataType> for tasm_lib::snippet::DataType {
             DataType::XFE => Ok(tasm_lib::snippet::DataType::XFE),
             DataType::Digest => Ok(tasm_lib::snippet::DataType::Digest),
             DataType::List(elem_type) => {
-                let element_type = (*elem_type.to_owned()).try_into();
+                let element_type = (*elem_type).try_into();
                 let element_type = match element_type {
                     Ok(e) => e,
                     Err(err) => return Err(format!("Failed to convert element type of list: {err}")),
@@ -191,7 +191,7 @@ impl From<tasm_lib::snippet::DataType> for DataType {
             tasm_lib::snippet::DataType::XFE => DataType::XFE,
             tasm_lib::snippet::DataType::Digest => DataType::Digest,
             tasm_lib::snippet::DataType::List(elem_type_snip) => {
-                let element_type: DataType = (*elem_type_snip.to_owned()).into();
+                let element_type: DataType = (*elem_type_snip).into();
                 DataType::List(Box::new(element_type))
             }
         }
@@ -262,7 +262,7 @@ impl Identifier<Typing> {
             }
         };
 
-        t.unwrap()
+        t.get_type()
     }
 }
 
@@ -288,7 +288,7 @@ pub struct FnCall<T> {
 
 impl FnCall<Typing> {
     pub fn get_type(&self) -> DataType {
-        self.annot.unwrap()
+        self.annot.get_type()
     }
 }
 
@@ -305,7 +305,7 @@ impl Default for Typing {
 }
 
 impl Typing {
-    pub fn unwrap(&self) -> DataType {
+    pub fn get_type(&self) -> DataType {
         match self {
             Typing::UnknownType => panic!("Cannot unpack type before complete type annotation."),
             Typing::KnownType(data_type) => data_type.clone(),
