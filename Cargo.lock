@@ -1794,14 +1794,14 @@ dependencies = [
  "rand 0.8.5",
  "syn",
  "tasm-lib",
- "triton-opcodes",
+ "triton-opcodes 0.14.0 (git+https://github.com/TritonVM/triton-vm.git?branch=master)",
  "twenty-first 0.14.1",
 ]
 
 [[package]]
 name = "tasm-lib"
 version = "0.1.0"
-source = "git+https://github.com/TritonVM/tasm-lib#04e8d08dd981bf24bca3d4909e34bb94155edf68"
+source = "git+https://github.com/TritonVM/tasm-lib#51bf7c95f8c39e39ea517cbcae8debdb4a675e0f"
 dependencies = [
  "itertools",
  "num",
@@ -1810,7 +1810,7 @@ dependencies = [
  "rayon",
  "serde",
  "serde_json",
- "triton-opcodes",
+ "triton-opcodes 0.14.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "triton-vm",
  "twenty-first 0.14.1",
 ]
@@ -1911,6 +1911,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "triton-opcodes"
+version = "0.14.0"
+source = "git+https://github.com/TritonVM/triton-vm.git?branch=master#99717e8f41a1eae1eab8ed735ceb9a9d2f35c867"
+dependencies = [
+ "anyhow",
+ "itertools",
+ "nom",
+ "num-traits",
+ "rand 0.8.5",
+ "regex",
+ "strum",
+ "strum_macros",
+ "twenty-first 0.14.1",
+]
+
+[[package]]
 name = "triton-profiler"
 version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1991,7 +2007,7 @@ dependencies = [
  "structopt",
  "strum",
  "strum_macros",
- "triton-opcodes",
+ "triton-opcodes 0.14.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "triton-profiler",
  "twenty-first 0.14.1",
 ]
@@ -2098,9 +2114,9 @@ checksum = "84a22b9f218b40614adcb3f4ff08b703773ad44fa9423e4e0d346d5db86e4ebc"
 
 [[package]]
 name = "unicode-segmentation"
-version = "1.10.0"
+version = "1.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0fdbf052a0783de01e944a6ce7a8cb939e295b1e7be835a1112c3b9a7f047a5a"
+checksum = "1dd624098567895118886609431a7c3b8f516e41d30e0643f03d94592a147e36"
 
 [[package]]
 name = "unicode-width"

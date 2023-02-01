@@ -7,6 +7,8 @@ use tasm_lib::library::Library;
 use tasm_lib::snippet::Snippet;
 use triton_opcodes::instruction::{AnInstruction::*, LabelledInstruction::*};
 use triton_opcodes::ord_n::Ord16;
+use triton_opcodes::parser::{parse, to_labelled};
+use triton_opcodes::shortcuts::*;
 use twenty_first::amount::u32s::U32s;
 use twenty_first::shared_math::b_field_element::BFieldElement;
 use twenty_first::util_types::algebraic_hasher::Hashable;
@@ -37,7 +39,6 @@ pub struct ValueIdentifier {
 }
 
 use triton_opcodes::instruction::LabelledInstruction;
-type Labeled = LabelledInstruction<'static>;
 
 impl std::fmt::Display for ValueIdentifier {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -64,7 +65,7 @@ impl CompilerState {
 
     /// Return code that clears the stack but leaves the value that's on the top of the stack
     /// when this function is called.
-    fn remove_all_but_top_stack_value(&mut self) -> Vec<Labeled> {
+    fn remove_all_but_top_stack_value(&mut self) -> Vec<LabelledInstruction> {
         let stack_height = self.get_stack_height();
         let top_element = self
             .vstack
@@ -79,8 +80,8 @@ impl CompilerState {
         // Generate code to move value to the bottom of the stack
         let words_to_remove = stack_height - top_value_size;
         let code = if words_to_remove != 0 {
-            let swap_instruction = Instruction(Swap(words_to_remove.try_into().unwrap()), "");
-            vec![vec![swap_instruction, Instruction(Pop, "")]; top_value_size].concat()
+            let swap_instruction = Instruction(Swap(words_to_remove.try_into().unwrap()));
+            vec![vec![swap_instruction, Instruction(Pop)]; top_value_size].concat()
         } else {
             vec![]
         };
@@ -92,7 +93,7 @@ impl CompilerState {
         // Generate code to remove any remaining values from the stack
         vec![
             code,
-            vec![Instruction(Pop, ""); words_to_remove - top_value_size],
+            vec![Instruction(Pop); words_to_remove - top_value_size],
         ]
         .concat()
     }
@@ -103,7 +104,7 @@ impl CompilerState {
     fn overwrite_stack_value_with_same_data_type(
         &mut self,
         value_identifier_to_remove: &ValueIdentifier,
-    ) -> Vec<Labeled> {
+    ) -> Vec<LabelledInstruction> {
         let (_top_element_id, top_element_type) =
             self.vstack.pop().expect("vstack cannot be empty");
         let (stack_position_of_value_to_remove, type_to_remove) =
@@ -117,10 +118,10 @@ impl CompilerState {
         let value_size = size_of(&type_to_remove);
 
         // Remove the overwritten value from stack
-        let code: Vec<Labeled> = vec![
+        let code: Vec<LabelledInstruction> = vec![
             vec![
-                Instruction(Swap(stack_position_of_value_to_remove), ""),
-                Instruction(Pop, "")
+                Instruction(Swap(stack_position_of_value_to_remove)),
+                Instruction(Pop)
             ];
             value_size
         ]
@@ -164,7 +165,7 @@ impl CompilerState {
     }
 }
 
-pub fn compile(function: &ast::Fn<ast::Typing>) -> Vec<Labeled> {
+pub fn compile(function: &ast::Fn<ast::Typing>) -> Vec<LabelledInstruction> {
     let fn_name = &function.name;
     let _fn_stack_input_sig = function.args.iter().map(|arg| format!("({arg})")).join(" ");
     let _fn_stack_output_sig = function
@@ -191,13 +192,14 @@ pub fn compile(function: &ast::Fn<ast::Typing>) -> Vec<Labeled> {
     // here but I got a borrow-checker error. Probably bc of the &'static str
     // it returns.
     let dependencies = state.library.all_imports();
-    let dependencies = triton_opcodes::instruction::parse(&dependencies)
+    let dependencies = parse(&dependencies)
+        .map(|instructions| to_labelled(&instructions))
         .unwrap_or_else(|_| panic!("Must be able to parse dependencies code:\n{dependencies}"));
 
     let ret = vec![
-        vec![Label(fn_name.to_owned(), "")],
+        vec![Label(fn_name.to_owned())],
         fn_body_code,
-        vec![Instruction(Return, "")],
+        vec![Instruction(Return)],
         dependencies,
     ]
     .concat();
@@ -207,14 +209,16 @@ pub fn compile(function: &ast::Fn<ast::Typing>) -> Vec<Labeled> {
     // then parsing it again. A duplicated label should be caught by the parser.
     // I wanted to add a test for this, but I couldn't find a good way of doing that.
     let assembler = ret.iter().map(|x| x.to_string()).join("\n");
-    triton_opcodes::instruction::parse(&assembler).expect("Produced code must parse")
+    parse(&assembler)
+        .map(|instructions| to_labelled(&instructions))
+        .expect("Produced code must parse")
 }
 
 fn compile_stmt(
     stmt: &ast::Stmt<ast::Typing>,
     function: &ast::Fn<ast::Typing>,
     state: &mut CompilerState,
-) -> Vec<Labeled> {
+) -> Vec<LabelledInstruction> {
     match stmt {
         ast::Stmt::Let(ast::LetStmt {
             var_name,
@@ -250,7 +254,7 @@ fn compile_stmt(
         ast::Stmt::Return(None) => {
             let mut code = vec![];
             while let Some((_addr, data_type)) = state.vstack.pop() {
-                code.push(vec![Instruction(Pop, "",); size_of(&data_type)]);
+                code.push(vec![Instruction(Pop); size_of(&data_type)]);
             }
 
             code.concat()
@@ -259,40 +263,38 @@ fn compile_stmt(
         ast::Stmt::Return(Some(ret_expr)) => {
             let ret_type = function.output.as_ref().expect("a return type");
             // special-case on returning variable, without unnecessary dup-instructions
-            let expr_code =
-                if let ast::Expr::Var(ast::Identifier::String(var_name, known_type)) = ret_expr {
-                    let data_type = known_type.unwrap();
-                    let var_addr = state.var_addr.get(var_name).expect("variable exists");
-                    let (position, old_data_type) = state.find_stack_value(var_addr);
-                    let mut stack_height = state.get_stack_height();
+            let expr_code = if let ast::Expr::Var(ast::Identifier::String(var_name, known_type)) =
+                ret_expr
+            {
+                let data_type = known_type.unwrap();
+                let var_addr = state.var_addr.get(var_name).expect("variable exists");
+                let (position, old_data_type) = state.find_stack_value(var_addr);
+                let mut stack_height = state.get_stack_height();
 
-                    // sanity check
-                    assert_eq!(old_data_type, data_type, "type must match expected type");
+                // sanity check
+                assert_eq!(old_data_type, data_type, "type must match expected type");
 
-                    // Pop everything prior to sought value
-                    let first_pop_code = vec![Instruction(Pop, ""); position.into()];
-                    stack_height -= Into::<usize>::into(position);
+                // Pop everything prior to sought value
+                let first_pop_code = vec![Instruction(Pop); position.into()];
+                stack_height -= Into::<usize>::into(position);
 
-                    // Swap returned value to bottom of stack
-                    let data_type_size = size_of(&data_type);
-                    let swap_instr = Instruction(
-                        Swap((stack_height - data_type_size).try_into().unwrap()),
-                        "",
-                    );
-                    let swap_code =
-                        vec![vec![swap_instr, Instruction(Pop, "")]; data_type_size].concat();
-                    stack_height -= data_type_size;
+                // Swap returned value to bottom of stack
+                let data_type_size = size_of(&data_type);
+                let swap_instr =
+                    Instruction(Swap((stack_height - data_type_size).try_into().unwrap()));
+                let swap_code = vec![vec![swap_instr, Instruction(Pop)]; data_type_size].concat();
+                stack_height -= data_type_size;
 
-                    let last_pop_code = vec![Instruction(Pop, ""); stack_height - data_type_size];
+                let last_pop_code = vec![Instruction(Pop); stack_height - data_type_size];
 
-                    vec![first_pop_code, swap_code, last_pop_code].concat()
-                } else {
-                    let expr_code = compile_expr(ret_expr, "ret_expr", ret_type, state).1;
+                vec![first_pop_code, swap_code, last_pop_code].concat()
+            } else {
+                let expr_code = compile_expr(ret_expr, "ret_expr", ret_type, state).1;
 
-                    // Remove all but top value from stack
-                    let remove_elements_code = state.remove_all_but_top_stack_value();
-                    vec![expr_code, remove_elements_code].concat()
-                };
+                // Remove all but top value from stack
+                let remove_elements_code = state.remove_all_but_top_stack_value();
+                vec![expr_code, remove_elements_code].concat()
+            };
 
             expr_code
         }
@@ -308,7 +310,7 @@ fn compile_expr(
     _context: &str,
     _data_type: &ast::DataType,
     state: &mut CompilerState,
-) -> (ValueIdentifier, Vec<Labeled>) {
+) -> (ValueIdentifier, Vec<LabelledInstruction>) {
     match expr {
         ast::Expr::Lit(expr_lit, known_type) => {
             let data_type = known_type.unwrap();
@@ -317,7 +319,7 @@ fn compile_expr(
                     let addr = state.new_value_identifier("_bool_lit", &data_type);
                     (
                         addr,
-                        vec![Instruction(Push(BFieldElement::new(*value as u64)), "")],
+                        vec![Instruction(Push(BFieldElement::new(*value as u64)))],
                     )
                 }
 
@@ -325,13 +327,13 @@ fn compile_expr(
                     let addr = state.new_value_identifier("_u32_lit", &data_type);
                     (
                         addr,
-                        vec![Instruction(Push(BFieldElement::new(*value as u64)), "")],
+                        vec![Instruction(Push(BFieldElement::new(*value as u64)))],
                     )
                 }
 
                 ast::ExprLit::BFE(value) => {
                     let addr = state.new_value_identifier("_bfe_lit", &data_type);
-                    (addr, vec![Instruction(Push(*value), "")])
+                    (addr, vec![Instruction(Push(*value))])
                 }
 
                 ast::ExprLit::U64(value) => {
@@ -341,7 +343,7 @@ fn compile_expr(
 
                     let code = stack_serialized
                         .iter()
-                        .map(|bfe| Instruction(Push(**bfe), ""))
+                        .map(|bfe| Instruction(Push(**bfe)))
                         .collect_vec();
 
                     (addr, code)
@@ -388,24 +390,24 @@ fn compile_expr(
                             // We use the safe, overflow-checking, add code as default
                             let fn_name =
                                 state.import_snippet::<arithmetic::u32::safe_add::SafeAdd>();
-                            vec![Instruction(Call(fn_name.to_string()), "")]
+                            vec![Instruction(Call(fn_name.to_string()))]
                         }
                         ast::DataType::U64 => {
                             // We use the safe, overflow-checking, add code as default
                             let fn_name =
                                 state.import_snippet::<arithmetic::u64::add_u64::AddU64>();
-                            vec![Instruction(Call(fn_name.to_string()), "")]
+                            vec![Instruction(Call(fn_name.to_string()))]
                         }
-                        ast::DataType::BFE => vec![Instruction(Add, "")],
+                        ast::DataType::BFE => vec![Instruction(Add)],
                         ast::DataType::XFE => {
                             vec![
-                                Instruction(XxAdd, ""),
-                                Instruction(Swap(3u32.try_into().unwrap()), ""),
-                                Instruction(Pop, ""),
-                                Instruction(Swap(3u32.try_into().unwrap()), ""),
-                                Instruction(Pop, ""),
-                                Instruction(Swap(3u32.try_into().unwrap()), ""),
-                                Instruction(Pop, ""),
+                                Instruction(XxAdd),
+                                Instruction(Swap(3u32.try_into().unwrap())),
+                                Instruction(Pop),
+                                Instruction(Swap(3u32.try_into().unwrap())),
+                                Instruction(Pop),
+                                Instruction(Swap(3u32.try_into().unwrap())),
+                                Instruction(Pop),
                             ]
                         }
                         _ => panic!("Operator add is not supported for type {data_type}"),
@@ -421,9 +423,9 @@ fn compile_expr(
                     let and_code = match data_type {
                         ast::DataType::Bool => {
                             vec![
-                                Instruction(Add, ""),
-                                Instruction(Push(2u64.into()), ""),
-                                Instruction(Eq, ""),
+                                Instruction(Add),
+                                Instruction(Push(2u64.into())),
+                                Instruction(Eq),
                             ]
                         }
                         _ => panic!("Logical AND operator is not supported for {data_type}"),
@@ -437,11 +439,11 @@ fn compile_expr(
                 }
                 ast::BinOp::BitAnd => {
                     let bitwise_and_code = match data_type {
-                        ast::DataType::U32 => vec![Instruction(And, "")],
+                        ast::DataType::U32 => vec![Instruction(And)],
                         ast::DataType::U64 => {
                             let fn_name =
                                 state.import_snippet::<arithmetic::u64::and_u64::AndU64>();
-                            vec![Instruction(Call(fn_name.to_string()), "")]
+                            vec![Instruction(Call(fn_name.to_string()))]
                         }
                         _ => panic!("Logical AND operator is not supported for {data_type}"),
                     };
@@ -455,17 +457,28 @@ fn compile_expr(
                 ast::BinOp::BitXor => todo!(),
                 ast::BinOp::Div => todo!(),
 
-                ast::BinOp::Eq => todo!(),
-                // ast::BinOp::Eq => match data_type {
-                //     ast::DataType::Bool => vec![Instruction(Eq, "")],
-                //     ast::DataType::U32 => todo!(),
-                //     ast::DataType::U64 => todo!(),
-                //     ast::DataType::BFE => todo!(),
-                //     ast::DataType::XFE => todo!(),
-                //     ast::DataType::Digest => todo!(),
-                //     ast::DataType::List(_) => todo!(),
-                //     ast::DataType::FlatList(_) => todo!(),
-                // },
+                ast::BinOp::Eq => {
+                    use ast::DataType::*;
+                    let _code = match data_type {
+                        Bool | U32 | BFE => vec![eq()],
+                        U64 => vec![
+                            // _ a_hi a_lo b_hi b_lo
+                            swap3(), // _ b_lo a_lo b_hi a_hi
+                            eq(),    // _ b_lo a_lo (b_hi == a_hi)
+                            swap2(), // _ (b_hi == a_hi) a_lo b_lo
+                            eq(),    // _ (b_hi == a_hi) (a_lo == b_lo)
+                            mul(),   // _ (b_hi == a_hi && a_lo == b_lo)
+                        ],
+
+                        XFE => todo!(),
+                        Digest => todo!(),
+                        List(_) => todo!(),
+                        FlatList(_) => todo!(),
+                    };
+
+                    todo!()
+                }
+
                 ast::BinOp::Lt => todo!(),
                 ast::BinOp::Mul => todo!(),
                 ast::BinOp::Neq => todo!(),
@@ -480,7 +493,7 @@ fn compile_expr(
                     }
 
                     let pow2_fn = state.import_snippet::<arithmetic::u64::pow2_u64::Pow2U64>();
-                    let code = vec![Instruction(Call(pow2_fn.to_string()), "")];
+                    let code = vec![Instruction(Call(pow2_fn.to_string()))];
                     let code = vec![rhs_expr_code, code].concat();
 
                     state.vstack.pop();
@@ -497,43 +510,43 @@ fn compile_expr(
                             // As standard, we use safe arithmetic that crashes on overflow
                             let fn_name =
                                 state.import_snippet::<arithmetic::u32::safe_sub::SafeSub>();
-                            vec![Instruction(Call(fn_name.to_string()), "")]
+                            vec![Instruction(Call(fn_name.to_string()))]
                         }
                         ast::DataType::U64 => {
                             // As standard, we use safe arithmetic that crashes on overflow
                             let fn_name =
                                 state.import_snippet::<arithmetic::u64::sub_u64::SubU64>();
-                            vec![Instruction(Call(fn_name.to_string()), "")]
+                            vec![Instruction(Call(fn_name.to_string()))]
                         }
                         ast::DataType::BFE => {
                             vec![
-                                Instruction(Swap(1u32.try_into().unwrap()), ""),
-                                Instruction(Push(-BFieldElement::one()), ""),
-                                Instruction(Mul, ""),
-                                Instruction(Add, ""),
+                                Instruction(Swap(1u32.try_into().unwrap())),
+                                Instruction(Push(-BFieldElement::one())),
+                                Instruction(Mul),
+                                Instruction(Add),
                             ]
                         }
                         ast::DataType::XFE => {
                             vec![
                                 // flip the x operands
-                                Instruction(Swap(3u32.try_into().unwrap()), ""),
-                                Instruction(Swap(1u32.try_into().unwrap()), ""),
-                                Instruction(Swap(4u32.try_into().unwrap()), ""),
-                                Instruction(Swap(1u32.try_into().unwrap()), ""),
-                                Instruction(Swap(3u32.try_into().unwrap()), ""),
-                                Instruction(Swap(5u32.try_into().unwrap()), ""),
+                                Instruction(Swap(3u32.try_into().unwrap())),
+                                Instruction(Swap(1u32.try_into().unwrap())),
+                                Instruction(Swap(4u32.try_into().unwrap())),
+                                Instruction(Swap(1u32.try_into().unwrap())),
+                                Instruction(Swap(3u32.try_into().unwrap())),
+                                Instruction(Swap(5u32.try_into().unwrap())),
                                 // multiply top element with -1
-                                Instruction(Push(-BFieldElement::one()), ""),
-                                Instruction(XbMul, ""),
+                                Instruction(Push(-BFieldElement::one())),
+                                Instruction(XbMul),
                                 // Perform (lhs - rhs)
-                                Instruction(XxAdd, ""),
+                                Instruction(XxAdd),
                                 // Get rid of the rhs, only leaving the result
-                                Instruction(Swap(3u32.try_into().unwrap()), ""),
-                                Instruction(Pop, ""),
-                                Instruction(Swap(3u32.try_into().unwrap()), ""),
-                                Instruction(Pop, ""),
-                                Instruction(Swap(3u32.try_into().unwrap()), ""),
-                                Instruction(Pop, ""),
+                                Instruction(Swap(3u32.try_into().unwrap())),
+                                Instruction(Pop),
+                                Instruction(Swap(3u32.try_into().unwrap())),
+                                Instruction(Pop),
+                                Instruction(Swap(3u32.try_into().unwrap())),
+                                Instruction(Pop),
                             ]
                         }
                         _ => panic!("subtraction operator is not supported for {data_type}"),
@@ -565,7 +578,7 @@ fn compile_expr(
                     // No value check is performed here
                     state.vstack.pop();
                     let addr = state.new_value_identifier("_as_u32", as_type);
-                    let cast_code = vec![Instruction(Swap(Ord16::ST1), ""), Instruction(Pop, "")];
+                    let cast_code = vec![Instruction(Swap(Ord16::ST1)), Instruction(Pop)];
 
                     (addr, vec![expr_code, cast_code].concat())
                 }
@@ -590,11 +603,14 @@ pub fn size_of(data_type: &ast::DataType) -> usize {
 }
 
 /// Copy a value at a position on the stack to the top
-fn dup_value_from_stack_code(position: Ord16, data_type: &ast::DataType) -> Vec<Labeled> {
+fn dup_value_from_stack_code(
+    position: Ord16,
+    data_type: &ast::DataType,
+) -> Vec<LabelledInstruction> {
     let elem_size = size_of(data_type);
 
     // the position of the deepest element of the value.
     let n: usize = Into::<usize>::into(position) + elem_size - 1;
 
-    vec![Instruction(Dup(n.try_into().unwrap()), ""); elem_size]
+    vec![Instruction(Dup(n.try_into().unwrap())); elem_size]
 }

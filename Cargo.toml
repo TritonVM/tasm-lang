@@ -8,7 +8,7 @@ edition = "2021"
 [dependencies]
 tasm-lib = { git = "https://github.com/TritonVM/tasm-lib" }
 twenty-first = "0.14"
-triton-opcodes = "0.14"
+triton-opcodes = { version = "0.14", git = "https://github.com/TritonVM/triton-vm.git", branch = "master" }
 itertools = "0.10"
 num = "0.4"
 quote = "1.0"
