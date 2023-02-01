@@ -28,6 +28,9 @@ pub struct CompilerState {
 
     // A library struct to keep check of which snippets are already in the namespace
     pub library: Library,
+
+    // A list of call sites for ad-hoc branching
+    pub subroutines: Vec<Vec<LabelledInstruction>>,
 }
 
 // TODO: Use this value from Triton-VM
@@ -35,7 +38,7 @@ const STACK_SIZE: usize = 16;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ValueIdentifier {
-    name: String,
+    pub name: String,
 }
 
 use triton_opcodes::instruction::LabelledInstruction;
@@ -196,11 +199,25 @@ pub fn compile(function: &ast::Fn<ast::Typing>) -> Vec<LabelledInstruction> {
         .map(|instructions| to_labelled(&instructions))
         .unwrap_or_else(|_| panic!("Must be able to parse dependencies code:\n{dependencies}"));
 
+    // TODO: Assert that all subroutines return.
+
+    assert!(
+        state.subroutines.iter().all(|subroutine| {
+            let begins_with_label = matches!(*subroutine.first().unwrap(), Label(_));
+            let ends_with_return = *subroutine.last().unwrap() == return_();
+            begins_with_label && ends_with_return
+        }),
+        "Each subroutine begins with a label and ends with a return"
+    );
+
+    println!("foo: {:?}", state.subroutines);
+
     let ret = vec![
         vec![Label(fn_name.to_owned())],
         fn_body_code,
         vec![Instruction(Return)],
         dependencies,
+        state.subroutines.concat(),
     ]
     .concat();
 
@@ -375,13 +392,17 @@ fn compile_expr(
         ast::Expr::FlatList(_) => todo!(),
         ast::Expr::FnCall(_) => todo!(),
         ast::Expr::Binop(lhs_expr, binop, rhs_expr, known_type) => {
-            let data_type = known_type.unwrap();
+            let data_type = known_type.get_type();
+            let lhs_type = lhs_expr.get_type();
+            let rhs_type = rhs_expr.get_type();
 
             // LHS is expected to be on the top of the stack, so we get RHS first
             let (_rhs_expr_addr, rhs_expr_code) =
-                compile_expr(rhs_expr, "_binop_rhs", &rhs_expr.get_type(), state);
+                compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
             let (_lhs_expr_addr, lhs_expr_code) =
-                compile_expr(lhs_expr, "_binop_lhs", &lhs_expr.get_type(), state);
+                compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
+            let lhs_expr_owned: ast::Expr<ast::Typing> = *(*lhs_expr).to_owned();
+            let rhs_expr_owned: ast::Expr<ast::Typing> = *(*rhs_expr).to_owned();
 
             let (addr, code) = match binop {
                 ast::BinOp::Add => {
@@ -437,6 +458,7 @@ fn compile_expr(
                     let addr = state.new_value_identifier("_binop_add", &data_type);
                     (addr, code)
                 }
+
                 ast::BinOp::BitAnd => {
                     let bitwise_and_code = match data_type {
                         ast::DataType::U32 => vec![Instruction(And)],
@@ -454,8 +476,36 @@ fn compile_expr(
                     let addr = state.new_value_identifier("_binop_add", &data_type);
                     (addr, code)
                 }
+
                 ast::BinOp::BitXor => todo!(),
-                ast::BinOp::Div => todo!(),
+
+                ast::BinOp::Div => {
+                    use ast::DataType::*;
+                    let code = match data_type {
+                        U32 => vec![div(), pop()],
+                        U64 => {
+                            if !matches!(rhs_expr_owned, ast::Expr::Lit(ast::ExprLit::U64(2), _)) {
+                                panic!("Unsupported division with denominator: {rhs_expr_owned:#?}")
+                            }
+
+                            let div2_fn_name =
+                                state.import_snippet(Box::new(arithmetic::u64::div2_u64::Div2U64));
+
+                            vec![rhs_expr_code, vec![call(div2_fn_name.to_string())]].concat()
+                        }
+                        BFE => {
+                            todo!()
+                        }
+                        XFE => todo!(),
+                        _ => panic!("Unsupported div for type {data_type}"),
+                    };
+
+                    state.vstack.pop();
+                    state.vstack.pop();
+                    let addr = state.new_value_identifier("_binop_div", &data_type);
+
+                    (addr, code)
+                }
 
                 ast::BinOp::Eq => {
                     use ast::DataType::*;
@@ -479,15 +529,32 @@ fn compile_expr(
                     todo!()
                 }
 
-                ast::BinOp::Lt => todo!(),
+                ast::BinOp::Lt => {
+                    use ast::DataType::*;
+                    let code = match lhs_type {
+                        U32 => vec![lt()],
+
+                        U64 => {
+                            let lt_u64 = state
+                                .import_snippet(Box::new(arithmetic::u64::lt_u64::LtStandardU64));
+
+                            vec![call(lt_u64.to_string())]
+                        }
+                        _ => panic!("Unsupported < for type {lhs_type}"),
+                    };
+
+                    state.vstack.pop();
+                    state.vstack.pop();
+                    let addr = state.new_value_identifier("_binop_lt", &data_type);
+
+                    (addr, code)
+                }
                 ast::BinOp::Mul => todo!(),
                 ast::BinOp::Neq => todo!(),
                 ast::BinOp::Or => todo!(),
                 ast::BinOp::Rem => todo!(),
 
                 ast::BinOp::Shl => {
-                    let lhs_expr_owned: ast::Expr<ast::Typing> = *(*lhs_expr).to_owned();
-
                     if !matches!(lhs_expr_owned, ast::Expr::Lit(ast::ExprLit::U64(1), _)) {
                         panic!("Unsupported shift left: {lhs_expr_owned:#?}")
                     }
@@ -567,7 +634,61 @@ fn compile_expr(
 
             (addr, code)
         }
-        ast::Expr::If(_) => todo!(),
+        ast::Expr::If(ast::ExprIf {
+            condition,
+            then_branch,
+            else_branch,
+        }) => {
+            let (_cond_addr, cond_code) =
+                compile_expr(condition, "if_cond", &condition.get_type(), state);
+
+            // Condition is handled immediately.
+            state.vstack.pop();
+
+            let branch_start_vstack = state.vstack.clone();
+            let (then_addr, then_body_code) =
+                compile_expr(then_branch, "then", &then_branch.get_type(), state);
+
+            // Pop all vstack elements produced by `then_body`
+            state.vstack = branch_start_vstack.clone();
+
+            let (else_addr, else_body_code) =
+                compile_expr(else_branch, "else", &else_branch.get_type(), state);
+
+            // Pop all vstack elements produced by `else_body`
+            state.vstack = branch_start_vstack;
+
+            let mut if_code = cond_code;
+            if_code.append(&mut vec![
+                push(1),                      // _ cond 1
+                swap1(),                      // _ 1 cond
+                skiz(),                       // _ 1
+                call(then_addr.name.clone()), // _ [then_branch_value] 0|1
+                skiz(),                       // _ [then_branch_value]
+                call(else_addr.name.clone()), // _ then_branch_value|else_branch_value
+            ]);
+
+            let then_code = vec![
+                vec![Label(then_addr.name), pop()],
+                then_body_code,
+                vec![push(0), return_()],
+            ]
+            .concat();
+
+            let else_code =
+                vec![vec![Label(else_addr.name)], else_body_code, vec![return_()]].concat();
+
+            state.subroutines.push(then_code);
+            state.subroutines.push(else_code);
+
+            let if_res_addr = state.new_value_identifier("if_then_else", &then_branch.get_type());
+
+            // TODO: Clear `var_addr` if then/else branches did assignment; this is not currently possible in if-expr,
+            // but it is possible in if-stmt. Either solve this when compiling if-stmt, or extend if-expr to allow for
+            // multi-statement blocks.
+
+            (if_res_addr, if_code)
+        }
 
         ast::Expr::Cast(expr, as_type) => {
             let expr_type = expr.get_type();
