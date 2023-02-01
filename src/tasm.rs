@@ -95,11 +95,12 @@ impl CompilerState {
         self.vstack.push(top_element);
 
         // Generate code to remove any remaining values from the stack
-        vec![
-            code,
-            vec![Instruction(Pop); words_to_remove - top_value_size],
-        ]
-        .concat()
+        let remaining_pops = if words_to_remove > top_value_size {
+            words_to_remove - top_value_size
+        } else {
+            0
+        };
+        vec![code, vec![Instruction(Pop); remaining_pops]].concat()
     }
 
     /// Return the code to overwrite a stack value with the value that's on top of the stack
@@ -208,8 +209,6 @@ pub fn compile(function: &ast::Fn<ast::Typing>) -> Vec<LabelledInstruction> {
         }),
         "Each subroutine must begin with a label and ends with a return"
     );
-
-    println!("foo: {:?}", state.subroutines);
 
     let ret = vec![
         vec![Label(fn_name.to_owned())],
@@ -528,7 +527,7 @@ fn compile_expr(
                 ast::BinOp::Div => {
                     use ast::DataType::*;
                     let code = match data_type {
-                        U32 => vec![div(), pop()],
+                        U32 => vec![rhs_expr_code, lhs_expr_code, vec![div(), pop()]].concat(),
                         U64 => {
                             if !matches!(rhs_expr_owned, ast::Expr::Lit(ast::ExprLit::U64(2), _)) {
                                 panic!("Unsupported division with denominator: {rhs_expr_owned:#?}")
@@ -537,7 +536,7 @@ fn compile_expr(
                             let div2_fn_name =
                                 state.import_snippet(Box::new(arithmetic::u64::div2_u64::Div2U64));
 
-                            vec![rhs_expr_code, vec![call(div2_fn_name.to_string())]].concat()
+                            vec![lhs_expr_code, vec![call(div2_fn_name.to_string())]].concat()
                         }
                         BFE => {
                             todo!()
@@ -578,13 +577,14 @@ fn compile_expr(
                 ast::BinOp::Lt => {
                     use ast::DataType::*;
                     let code = match lhs_type {
-                        U32 => vec![lt()],
+                        U32 => vec![rhs_expr_code, lhs_expr_code, vec![lt()]].concat(),
 
                         U64 => {
                             let lt_u64 = state
                                 .import_snippet(Box::new(arithmetic::u64::lt_u64::LtStandardU64));
 
-                            vec![call(lt_u64.to_string())]
+                            vec![rhs_expr_code, lhs_expr_code, vec![call(lt_u64.to_string())]]
+                                .concat()
                         }
                         _ => panic!("Unsupported < for type {lhs_type}"),
                     };
@@ -595,7 +595,29 @@ fn compile_expr(
 
                     (addr, code)
                 }
-                ast::BinOp::Mul => todo!(),
+                ast::BinOp::Mul => {
+                    use ast::DataType::*;
+                    let code = match lhs_type {
+                        U32 => {
+                            let fn_name =
+                                state.import_snippet(Box::new(arithmetic::u32::safe_mul::SafeMul));
+
+                            vec![
+                                rhs_expr_code,
+                                lhs_expr_code,
+                                vec![call(fn_name.to_string())],
+                            ]
+                            .concat()
+                        }
+                        _ => panic!("Unsupported MUL for type {lhs_type}"),
+                    };
+
+                    state.vstack.pop();
+                    state.vstack.pop();
+                    let addr = state.new_value_identifier("_binop_lt", &data_type);
+
+                    (addr, code)
+                }
                 ast::BinOp::Neq => todo!(),
                 ast::BinOp::Or => todo!(),
                 ast::BinOp::Rem => todo!(),

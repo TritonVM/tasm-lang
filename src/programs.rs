@@ -161,6 +161,22 @@ fn right_lineage_length_rast() -> syn::ItemFn {
     })
 }
 
+fn operator_evaluation_ordering_with_div() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn complicated_expression() -> u32 {
+            return 100u32 - 14u32 / 2u32 + 1u32;
+        }
+    })
+}
+
+fn operator_evaluation_ordering_with_mul() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn complicated_expression() -> u32 {
+            return 380u32 - 14u32 * 2u32 * 10u32 + 1u32 - 41u32 * 1u32;
+        }
+    })
+}
+
 #[cfg(test)]
 mod compile_and_typecheck_tests {
     use crate::shared_test::graft_check_compile_prop;
@@ -253,6 +269,20 @@ mod compile_and_run_tests {
 
     use super::*;
     use crate::{ast, shared_test::compile_execute_and_compare_prop};
+
+    #[test]
+    fn operator_evaluation_ordering_test() {
+        compile_execute_and_compare_prop(
+            &operator_evaluation_ordering_with_div(),
+            vec![],
+            vec![ast::ExprLit::U32(94)],
+        );
+        compile_execute_and_compare_prop(
+            &operator_evaluation_ordering_with_mul(),
+            vec![],
+            vec![ast::ExprLit::U32(60)],
+        );
+    }
 
     #[test]
     fn add_u64_run_test() {
