@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::ast;
+use crate::{ast, tasm_function_signatures::function_name_to_signature};
 
 #[derive(Debug, Default)]
 pub struct CheckState {
@@ -222,7 +222,17 @@ fn derive_annotate_expr_type(
                 .map(|arg_expr| derive_annotate_expr_type(arg_expr, state))
                 .collect();
 
-            panic!("TODO: Don't know what type of value '{name}' returns!")
+            // all functions from `tasm-lib` are in scope
+            let tasm_lib_indicator = "tasm::";
+            let fn_signature = if !name.starts_with(tasm_lib_indicator) {
+                panic!("TODO: Don't know what type of value '{name}' returns!")
+            } else {
+                let stripped_name = &name[tasm_lib_indicator.len()..name.len()];
+                function_name_to_signature(stripped_name, None)
+            };
+
+            // println!("fn_signature = {fn_signature:#?}");
+            fn_signature.output.unwrap()
         }
 
         ast::Expr::Binop(lhs_expr, binop, rhs_expr, binop_type) => {

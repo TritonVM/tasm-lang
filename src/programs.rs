@@ -148,8 +148,8 @@ fn right_lineage_length_rast() -> syn::ItemFn {
             let npo2: u64 = 1u64 << bit_width;
             let dist: u64 = npo2 - node_index;
 
-            let bit_width: u64 = bit_width.into();
-            let ret: u32 = if bit_width < dist {
+            let bit_width_u64: u64 = bit_width.into();
+            let ret: u32 = if bit_width_u64 < dist {
                 right_lineage_length(node_index - (npo2 / 2u64) + 1u64)
             } else {
                 (dist - 1u64) as u32

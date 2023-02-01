@@ -62,8 +62,8 @@ impl CompilerState {
         address
     }
 
-    fn import_snippet<S: Snippet>(&mut self) -> &'static str {
-        self.library.import::<S>()
+    fn import_snippet<S: Snippet>(&mut self, snippet: S) -> &'static str {
+        self.library.import::<S>(snippet)
     }
 
     /// Return code that clears the stack but leaves the value that's on the top of the stack
@@ -419,14 +419,17 @@ fn compile_expr(
                     let add_code = match data_type {
                         ast::DataType::U32 => {
                             // We use the safe, overflow-checking, add code as default
-                            let fn_name =
-                                state.import_snippet::<arithmetic::u32::safe_add::SafeAdd>();
+                            let fn_name = state
+                                .import_snippet::<arithmetic::u32::safe_add::SafeAdd>(
+                                    arithmetic::u32::safe_add::SafeAdd,
+                                );
                             vec![Instruction(Call(fn_name.to_string()))]
                         }
                         ast::DataType::U64 => {
                             // We use the safe, overflow-checking, add code as default
-                            let fn_name =
-                                state.import_snippet::<arithmetic::u64::add_u64::AddU64>();
+                            let fn_name = state.import_snippet::<arithmetic::u64::add_u64::AddU64>(
+                                arithmetic::u64::add_u64::AddU64,
+                            );
                             vec![Instruction(Call(fn_name.to_string()))]
                         }
                         ast::DataType::BFE => vec![Instruction(Add)],
@@ -473,8 +476,9 @@ fn compile_expr(
                     let bitwise_and_code = match data_type {
                         ast::DataType::U32 => vec![Instruction(And)],
                         ast::DataType::U64 => {
-                            let fn_name =
-                                state.import_snippet::<arithmetic::u64::and_u64::AndU64>();
+                            let fn_name = state.import_snippet::<arithmetic::u64::and_u64::AndU64>(
+                                arithmetic::u64::and_u64::AndU64,
+                            );
                             vec![Instruction(Call(fn_name.to_string()))]
                         }
                         _ => panic!("Logical AND operator is not supported for {data_type}"),
@@ -569,7 +573,9 @@ fn compile_expr(
                         panic!("Unsupported shift left: {lhs_expr_owned:#?}")
                     }
 
-                    let pow2_fn = state.import_snippet::<arithmetic::u64::pow2_u64::Pow2U64>();
+                    let pow2_fn = state.import_snippet::<arithmetic::u64::pow2_u64::Pow2U64>(
+                        arithmetic::u64::pow2_u64::Pow2U64,
+                    );
                     let code = vec![Instruction(Call(pow2_fn.to_string()))];
                     let code = vec![rhs_expr_code, code].concat();
 
@@ -585,14 +591,17 @@ fn compile_expr(
                     let sub_code: Vec<LabelledInstruction> = match data_type {
                         ast::DataType::U32 => {
                             // As standard, we use safe arithmetic that crashes on overflow
-                            let fn_name =
-                                state.import_snippet::<arithmetic::u32::safe_sub::SafeSub>();
+                            let fn_name = state
+                                .import_snippet::<arithmetic::u32::safe_sub::SafeSub>(
+                                    arithmetic::u32::safe_sub::SafeSub,
+                                );
                             vec![Instruction(Call(fn_name.to_string()))]
                         }
                         ast::DataType::U64 => {
                             // As standard, we use safe arithmetic that crashes on overflow
-                            let fn_name =
-                                state.import_snippet::<arithmetic::u64::sub_u64::SubU64>();
+                            let fn_name = state.import_snippet::<arithmetic::u64::sub_u64::SubU64>(
+                                arithmetic::u64::sub_u64::SubU64,
+                            );
                             vec![Instruction(Call(fn_name.to_string()))]
                         }
                         ast::DataType::BFE => {

@@ -9,3 +9,4 @@ pub mod types;
 #[cfg(test)]
 mod programs;
 pub mod shared_test;
+pub mod tasm_function_signatures;

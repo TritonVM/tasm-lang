@@ -157,6 +157,47 @@ pub enum DataType {
     FlatList(Vec<DataType>),
 }
 
+impl TryFrom<DataType> for tasm_lib::snippet::DataType {
+    type Error = String;
+
+    fn try_from(value: DataType) -> Result<Self, Self::Error> {
+        match value {
+            DataType::Bool => Ok(tasm_lib::snippet::DataType::Bool),
+            DataType::U32 => Ok(tasm_lib::snippet::DataType::U32),
+            DataType::U64 => Ok(tasm_lib::snippet::DataType::U64),
+            DataType::BFE => Ok(tasm_lib::snippet::DataType::BFE),
+            DataType::XFE => Ok(tasm_lib::snippet::DataType::XFE),
+            DataType::Digest => Ok(tasm_lib::snippet::DataType::Digest),
+            DataType::List(elem_type) => {
+                let element_type = (*elem_type.to_owned()).try_into();
+                let element_type = match element_type {
+                    Ok(e) => e,
+                    Err(err) => return Err("Failed to convert element type of list".to_string()),
+                };
+                Ok(tasm_lib::snippet::DataType::List(Box::new(element_type)))
+            },
+            DataType::FlatList(_) => Err("FlatList cannot be converted to a tasm_lib type. Try converting its individual elements".to_string()),
+        }
+    }
+}
+
+impl From<tasm_lib::snippet::DataType> for DataType {
+    fn from(value: tasm_lib::snippet::DataType) -> Self {
+        match value {
+            tasm_lib::snippet::DataType::Bool => DataType::Bool,
+            tasm_lib::snippet::DataType::U32 => DataType::U32,
+            tasm_lib::snippet::DataType::U64 => DataType::U64,
+            tasm_lib::snippet::DataType::BFE => DataType::BFE,
+            tasm_lib::snippet::DataType::XFE => DataType::XFE,
+            tasm_lib::snippet::DataType::Digest => DataType::Digest,
+            tasm_lib::snippet::DataType::List(elem_type_snip) => {
+                let element_type: DataType = (*elem_type_snip.to_owned()).into();
+                DataType::List(Box::new(element_type))
+            }
+        }
+    }
+}
+
 impl FromStr for DataType {
     type Err = anyhow::Error;
 
