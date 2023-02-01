@@ -199,15 +199,14 @@ pub fn compile(function: &ast::Fn<ast::Typing>) -> Vec<LabelledInstruction> {
         .map(|instructions| to_labelled(&instructions))
         .unwrap_or_else(|_| panic!("Must be able to parse dependencies code:\n{dependencies}"));
 
-    // TODO: Assert that all subroutines return.
-
+    // Assert that all subroutines start with a label and end with a return
     assert!(
         state.subroutines.iter().all(|subroutine| {
             let begins_with_label = matches!(*subroutine.first().unwrap(), Label(_));
             let ends_with_return = *subroutine.last().unwrap() == return_();
             begins_with_label && ends_with_return
         }),
-        "Each subroutine begins with a label and ends with a return"
+        "Each subroutine must begin with a label and ends with a return"
     );
 
     println!("foo: {:?}", state.subroutines);
@@ -327,10 +326,10 @@ fn compile_fn_call(
     state: &mut CompilerState,
 ) -> Vec<LabelledInstruction> {
     let ast::FnCall {
-        name,
+        mut name,
         args,
         annot: _return_type, // void
-    } = fn_call;
+    } = fn_call.clone();
 
     // Compile arguments left-to-right
     let (_args_idents, args_code): (Vec<ValueIdentifier>, Vec<Vec<LabelledInstruction>>) = args
@@ -343,8 +342,9 @@ fn compile_fn_call(
         .unzip();
 
     // If function is from tasm-lib, import it
-    if let Some(snippet_name) = get_tasm_lib_fn(name) {
+    if let Some(snippet_name) = get_tasm_lib_fn(&name) {
         import_tasm_snippet(snippet_name, None, state);
+        name = snippet_name.to_string();
     }
 
     for _ in 0..args.len() {
