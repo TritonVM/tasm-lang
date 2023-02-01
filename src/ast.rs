@@ -172,7 +172,7 @@ impl TryFrom<DataType> for tasm_lib::snippet::DataType {
                 let element_type = (*elem_type.to_owned()).try_into();
                 let element_type = match element_type {
                     Ok(e) => e,
-                    Err(err) => return Err("Failed to convert element type of list".to_string()),
+                    Err(err) => return Err(format!("Failed to convert element type of list: {err}")),
                 };
                 Ok(tasm_lib::snippet::DataType::List(Box::new(element_type)))
             },

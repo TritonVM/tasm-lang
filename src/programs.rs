@@ -148,7 +148,8 @@ fn right_lineage_length_rast() -> syn::ItemFn {
             let npo2: u64 = 1u64 << bit_width;
             let dist: u64 = npo2 - node_index;
 
-            let bit_width_u64: u64 = bit_width.into();
+            // let bit_width_u64: u64 = bit_width.into();
+            let bit_width_u64: u64 = bit_width as u64;
             let ret: u32 = if bit_width_u64 < dist {
                 right_lineage_length(node_index - (npo2 / 2u64) + 1u64)
             } else {
@@ -241,7 +242,7 @@ mod compile_and_typecheck_tests {
     }
 
     #[test]
-    fn right_lineage_length_rast_test() {
+    fn right_lineage_length_test() {
         graft_check_compile_prop(&right_lineage_length_rast());
     }
 }
