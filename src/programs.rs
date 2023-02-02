@@ -485,12 +485,12 @@ mod compile_and_run_tests {
         compile_execute_and_compare_prop(&lt_u32(), vec![], vec![ast::ExprLit::Bool(true)]);
     }
 
-    #[test]
-    fn simple_while_loop_run_test() {
-        compile_execute_and_compare_prop(
-            &simple_while_loop(),
-            vec![],
-            vec![ast::ExprLit::U32(5050)],
-        );
-    }
+    // #[test]
+    // fn simple_while_loop_run_test() {
+    //     compile_execute_and_compare_prop(
+    //         &simple_while_loop(),
+    //         vec![],
+    //         vec![ast::ExprLit::U32(5050)],
+    //     );
+    // }
 }

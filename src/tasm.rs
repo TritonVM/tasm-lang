@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{binary_heap, HashMap};
 
 use itertools::Itertools;
 use tasm_lib::library::Library;
@@ -12,19 +12,119 @@ use twenty_first::amount::u32s::U32s;
 use twenty_first::shared_math::b_field_element::BFieldElement;
 use twenty_first::util_types::algebraic_hasher::Hashable;
 
-use crate::ast;
+use crate::ast::{self, DataType, Identifier};
 use crate::stack::Stack;
 use crate::tasm_function_signatures::{get_tasm_lib_fn, import_tasm_snippet};
+
+type VStack = Stack<(ValueIdentifier, ast::DataType)>;
+type VarAddr = HashMap<String, ValueIdentifier>;
+
+impl VStack {
+    /// Returns (stack_position, data_type, vstack_position). Top of stack has index 0.
+    pub fn find_stack_value(&self, seek_addr: &ValueIdentifier) -> (Ord16, ast::DataType, usize) {
+        let mut position: usize = 0;
+        for (i, (found_addr, data_type)) in self.inner.iter().rev().enumerate() {
+            if seek_addr == found_addr {
+                return (
+                    position
+                        .try_into()
+                        .expect("Found stack position must match a stack element"),
+                    data_type.to_owned(),
+                    i,
+                );
+            }
+
+            position += size_of(data_type);
+
+            // By asserting after `+= size_of(data_type)`, we check that the deepest part
+            // of the sought value is addressable, not just the top part of the value.
+            assert!(position < STACK_SIZE, "Addressing beyond the {STACK_SIZE}'th stack element requires spilling and register-allocation.");
+        }
+
+        panic!("Cannot find {seek_addr} on vstack")
+    }
+
+    /// Return the code to overwrite a stack value with the value that's on top of the stack
+    /// Note that the top value and the value to be removed *must* be of the same type.
+    /// Updates the `vstack` but not the `var_addr` as this is assumed to be handled by the caller.
+    fn overwrite_stack_value_with_same_data_type(
+        &mut self,
+        value_identifier_to_remove: &ValueIdentifier,
+    ) -> Vec<LabelledInstruction> {
+        let (_top_element_id, top_element_type) = self.pop().expect("vstack cannot be empty");
+        let (stack_position_of_value_to_remove, type_to_remove, _) =
+            self.find_stack_value(value_identifier_to_remove);
+
+        assert_eq!(
+            top_element_type, type_to_remove,
+            "Top stack value and value to remove must match"
+        );
+
+        let value_size = size_of(&type_to_remove);
+
+        // Remove the overwritten value from stack
+        let code: Vec<LabelledInstruction> =
+            vec![vec![Instruction(Swap(stack_position_of_value_to_remove)), pop()]; value_size]
+                .concat();
+
+        // Remove the overwritten value from vstack
+        self.remove_value(&(value_identifier_to_remove.to_owned(), type_to_remove));
+
+        code
+    }
+
+    /// Return code that clears the stack but leaves the value that's on the top of the stack
+    /// when this function is called.
+    fn remove_all_but_top_stack_value(&mut self) -> Vec<LabelledInstruction> {
+        let stack_height = self.get_stack_height();
+        let top_element = self
+            .pop()
+            .expect("Cannot remove all but top element from an empty stack");
+        let top_value_size = size_of(&top_element.1);
+        assert!(
+            stack_height < STACK_SIZE,
+            "For now, we only support functions with max {STACK_SIZE} elements on the stack"
+        );
+
+        // Generate code to move value to the bottom of the stack
+        let words_to_remove = stack_height - top_value_size;
+        let code = if words_to_remove != 0 {
+            let swap_instruction = Instruction(Swap(words_to_remove.try_into().unwrap()));
+            vec![vec![swap_instruction, pop()]; top_value_size].concat()
+        } else {
+            vec![]
+        };
+
+        // Clean up vstack
+        while let Some(_elem) = self.pop() {}
+        self.push(top_element);
+
+        // Generate code to remove any remaining values from the stack
+        let remaining_pops = if words_to_remove > top_value_size {
+            words_to_remove - top_value_size
+        } else {
+            0
+        };
+        vec![code, vec![pop(); remaining_pops]].concat()
+    }
+
+    fn get_stack_height(&self) -> usize {
+        self.inner
+            .iter()
+            .map(|(_, data_type)| size_of(data_type))
+            .sum()
+    }
+}
 
 #[derive(Debug, Default)]
 pub struct CompilerState {
     pub counter: usize,
 
     // Where on stack is the variable placed?
-    pub vstack: Stack<(ValueIdentifier, ast::DataType)>,
+    pub vstack: VStack,
 
     // Mapping from variable name to its internal identifier
-    pub var_addr: HashMap<String, ValueIdentifier>,
+    pub var_addr: VarAddr,
 
     // A library struct to keep check of which snippets are already in the namespace
     pub library: Library,
@@ -64,103 +164,6 @@ impl CompilerState {
 
     pub fn import_snippet(&mut self, snippet: Box<dyn Snippet>) -> &'static str {
         self.library.import(snippet)
-    }
-
-    /// Return code that clears the stack but leaves the value that's on the top of the stack
-    /// when this function is called.
-    fn remove_all_but_top_stack_value(&mut self) -> Vec<LabelledInstruction> {
-        let stack_height = self.get_stack_height();
-        let top_element = self
-            .vstack
-            .pop()
-            .expect("Cannot remove all but top element from an empty stack");
-        let top_value_size = size_of(&top_element.1);
-        assert!(
-            stack_height < STACK_SIZE,
-            "For now, we only support functions with max {STACK_SIZE} elements on the stack"
-        );
-
-        // Generate code to move value to the bottom of the stack
-        let words_to_remove = stack_height - top_value_size;
-        let code = if words_to_remove != 0 {
-            let swap_instruction = Instruction(Swap(words_to_remove.try_into().unwrap()));
-            vec![vec![swap_instruction, pop()]; top_value_size].concat()
-        } else {
-            vec![]
-        };
-
-        // Clean up vstack
-        while let Some(_elem) = self.vstack.pop() {}
-        self.vstack.push(top_element);
-
-        // Generate code to remove any remaining values from the stack
-        let remaining_pops = if words_to_remove > top_value_size {
-            words_to_remove - top_value_size
-        } else {
-            0
-        };
-        vec![code, vec![pop(); remaining_pops]].concat()
-    }
-
-    /// Return the code to overwrite a stack value with the value that's on top of the stack
-    /// Note that the top value and the value to be removed *must* be of the same type.
-    /// Updates the `vstack` but not the `var_addr` as this is assumed to be handled by the caller.
-    fn overwrite_stack_value_with_same_data_type(
-        &mut self,
-        value_identifier_to_remove: &ValueIdentifier,
-    ) -> Vec<LabelledInstruction> {
-        let (_top_element_id, top_element_type) =
-            self.vstack.pop().expect("vstack cannot be empty");
-        let (stack_position_of_value_to_remove, type_to_remove) =
-            self.find_stack_value(value_identifier_to_remove);
-
-        assert_eq!(
-            top_element_type, type_to_remove,
-            "Top stack value and value to remove must match"
-        );
-
-        let value_size = size_of(&type_to_remove);
-
-        // Remove the overwritten value from stack
-        let code: Vec<LabelledInstruction> =
-            vec![vec![Instruction(Swap(stack_position_of_value_to_remove)), pop()]; value_size]
-                .concat();
-
-        // Remove the overwritten value from vstack
-        self.vstack
-            .remove_value(&(value_identifier_to_remove.to_owned(), type_to_remove));
-
-        code
-    }
-
-    fn get_stack_height(&self) -> usize {
-        self.vstack
-            .inner
-            .iter()
-            .map(|(_, data_type)| size_of(data_type))
-            .sum()
-    }
-
-    fn find_stack_value(&self, seek_addr: &ValueIdentifier) -> (Ord16, ast::DataType) {
-        let mut position: usize = 0;
-        for (found_addr, data_type) in self.vstack.inner.iter().rev() {
-            if seek_addr == found_addr {
-                return (
-                    position
-                        .try_into()
-                        .expect("Found stack position must match a stack element"),
-                    data_type.to_owned(),
-                );
-            }
-
-            position += size_of(data_type);
-
-            // By asserting after `+= size_of(data_type)`, we check that the deepest part
-            // of the sought value is addressable, not just the top part of the value.
-            assert!(position < STACK_SIZE, "Addressing beyond the {STACK_SIZE}'th stack element requires spilling and register-allocation.");
-        }
-
-        panic!("Cannot find {seek_addr} on vstack")
     }
 
     /// Helper function for debugging
@@ -270,8 +273,9 @@ fn compile_stmt(
 
                 // Get code to overwrite old value, and update the compiler's vstack
                 state.vstack.push((expr_addr, data_type));
-                let overwrite_code =
-                    state.overwrite_stack_value_with_same_data_type(&old_value_identifier);
+                let overwrite_code = state
+                    .vstack
+                    .overwrite_stack_value_with_same_data_type(&old_value_identifier);
 
                 vec![expr_code, overwrite_code].concat()
             }
@@ -295,15 +299,16 @@ fn compile_stmt(
                 if let ast::Expr::Var(ast::Identifier::String(var_name, known_type)) = ret_expr {
                     let data_type = known_type.get_type();
                     let var_addr = state.var_addr.get(var_name).expect("variable exists");
-                    let (position, old_data_type) = state.find_stack_value(var_addr);
-                    let mut stack_height = state.get_stack_height();
+                    let (stack_depth, old_data_type, _v_stack_depth) =
+                        state.vstack.find_stack_value(var_addr);
+                    let mut stack_height = state.vstack.get_stack_height();
 
                     // sanity check
                     assert_eq!(old_data_type, data_type, "type must match expected type");
 
                     // Pop everything prior to sought value
-                    let first_pop_code = vec![pop(); position.into()];
-                    stack_height -= Into::<usize>::into(position);
+                    let first_pop_code = vec![pop(); stack_depth.into()];
+                    stack_height -= Into::<usize>::into(stack_depth);
 
                     // Swap returned value to bottom of stack
                     let data_type_size = size_of(&data_type);
@@ -331,7 +336,7 @@ fn compile_stmt(
                         compile_expr(ret_expr, "ret_expr", &function.fn_signature.output, state).1;
 
                     // Remove all but top value from stack
-                    let remove_elements_code = state.remove_all_but_top_stack_value();
+                    let remove_elements_code = state.vstack.remove_all_but_top_stack_value();
                     vec![expr_code, remove_elements_code].concat()
                 };
 
@@ -344,14 +349,14 @@ fn compile_stmt(
             // and then just a call to this subroutine.
             println!(
                 "Before condition code generation: vstack height = {}",
-                state.get_stack_height()
+                state.vstack.get_stack_height()
             );
             state.show_vstack_values();
             let (cond_addr, cond_code) =
                 compile_expr(condition, "while_condition", &condition.get_type(), state);
             println!(
                 "After condition code generation: vstack height = {}",
-                state.get_stack_height()
+                state.vstack.get_stack_height()
             );
             state.show_vstack_values();
 
@@ -361,10 +366,10 @@ fn compile_stmt(
             state.vstack.pop();
             println!(
                 "Before loop body generation: vstack height = {}",
-                state.get_stack_height()
+                state.vstack.get_stack_height()
             );
             state.show_vstack_values();
-            let vstack_init_length = state.get_stack_height();
+            let vstack_init_length = state.vstack.get_stack_height();
             let mut loop_body_code = stmts
                 .iter()
                 .map(|stmt| compile_stmt(stmt, function, state))
@@ -374,12 +379,12 @@ fn compile_stmt(
             // Code for cleaning up both stack and vstack after each loop-iteration
             println!(
                 "After loop body generation: vstack height = {}",
-                state.get_stack_height()
+                state.vstack.get_stack_height()
             );
             state.show_vstack_values();
             let mut vstack_diff = vec![];
             let mut cleanup_code = vec![];
-            while state.get_stack_height() != vstack_init_length {
+            while state.vstack.get_stack_height() != vstack_init_length {
                 vstack_diff.push(state.vstack.pop().unwrap());
             }
 
@@ -391,7 +396,7 @@ fn compile_stmt(
 
             println!(
                 "After loop body cleanup: vstack height = {}",
-                state.get_stack_height()
+                state.vstack.get_stack_height()
             );
             state.show_vstack_values();
 
@@ -508,7 +513,7 @@ fn compile_expr(
             ast::Identifier::String(var_name, known_type) => {
                 let data_type = known_type.get_type();
                 let var_addr = state.var_addr.get(var_name).expect("variable exists");
-                let (position, old_data_type) = state.find_stack_value(var_addr);
+                let (position, old_data_type, _) = state.vstack.find_stack_value(var_addr);
 
                 // sanity check
                 assert_eq!(old_data_type, data_type, "type must match expected type");
