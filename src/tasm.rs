@@ -566,7 +566,7 @@ fn compile_expr(
 
                 ast::BinOp::Eq => {
                     use ast::DataType::*;
-                    let code = match data_type {
+                    let code = match lhs_type {
                         Bool | U32 | BFE => vec![eq()],
                         U64 => vec![
                             // _ a_hi a_lo b_hi b_lo
