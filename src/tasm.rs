@@ -585,38 +585,7 @@ fn compile_expr(
                 }
 
                 ast::BinOp::Eq => {
-                    use ast::DataType::*;
-                    let eq_code = match lhs_type {
-                        Bool | U32 | BFE => vec![eq()],
-                        U64 => vec![
-                            // _ a_hi a_lo b_hi b_lo
-                            swap3(), // _ b_lo a_lo b_hi a_hi
-                            eq(),    // _ b_lo a_lo (b_hi == a_hi)
-                            swap2(), // _ (b_hi == a_hi) a_lo b_lo
-                            eq(),    // _ (b_hi == a_hi) (a_lo == b_lo)
-                            mul(),   // _ (b_hi == a_hi && a_lo == b_lo)
-                        ],
-
-                        XFE => vec![
-                            // _ a_2 a_1 a_0 b_2 b_1 b_0
-                            swap4(), // _ a_2 b_0 a_0 b_2 b_1 a_1
-                            eq(),    // _ a_2 b_0 a_0 b_2 (b_1 == a_1)
-                            swap4(), // _ (b_1 == a_1) b_0 a_0 b_2 a_2
-                            eq(),    // _ (b_1 == a_1) b_0 a_0 (b_2 == a_2)
-                            swap2(), // _ (b_1 == a_1) (b_2 == a_2) a_0 b_0
-                            eq(),    // _ (b_1 == a_1) (b_2 == a_2) (a_0 == b_0)
-                            mul(),   // _ (b_1 == a_1) (b_2 == a_2)·(a_0 == b_0)
-                            mul(),   // _ (b_1 == a_1)·(b_2 == a_2)·(a_0 == b_0)
-                        ],
-                        Digest => {
-                            let eq_digest = state
-                                .import_snippet(Box::new(hashing::eq_digest::EqDigest))
-                                .to_string();
-                            vec![call(eq_digest)]
-                        }
-                        List(_) => todo!(),
-                        FlatList(_) => todo!(),
-                    };
+                    let eq_code = compile_eq_code(&lhs_type, state);
 
                     state.vstack.pop();
                     state.vstack.pop();
@@ -669,7 +638,17 @@ fn compile_expr(
 
                     (addr, code)
                 }
-                ast::BinOp::Neq => todo!(),
+                ast::BinOp::Neq => {
+                    let mut neq_code = compile_eq_code(&lhs_type, state);
+                    neq_code.append(&mut vec![push(0), eq()]);
+
+                    state.vstack.pop();
+                    state.vstack.pop();
+                    let addr = state.new_value_identifier("_binop_neq", &lhs_type);
+
+                    (addr, vec![lhs_expr_code, rhs_expr_code, neq_code].concat())
+                }
+
                 ast::BinOp::Or => todo!(),
                 ast::BinOp::Rem => todo!(),
 
@@ -850,6 +829,44 @@ fn compile_expr(
                 _ => todo!(),
             }
         }
+    }
+}
+
+fn compile_eq_code(
+    lhs_type: &ast::DataType,
+    state: &mut CompilerState,
+) -> Vec<LabelledInstruction> {
+    use ast::DataType::*;
+    match lhs_type {
+        Bool | U32 | BFE => vec![eq()],
+        U64 => vec![
+            // _ a_hi a_lo b_hi b_lo
+            swap3(), // _ b_lo a_lo b_hi a_hi
+            eq(),    // _ b_lo a_lo (b_hi == a_hi)
+            swap2(), // _ (b_hi == a_hi) a_lo b_lo
+            eq(),    // _ (b_hi == a_hi) (a_lo == b_lo)
+            mul(),   // _ (b_hi == a_hi && a_lo == b_lo)
+        ],
+
+        XFE => vec![
+            // _ a_2 a_1 a_0 b_2 b_1 b_0
+            swap4(), // _ a_2 b_0 a_0 b_2 b_1 a_1
+            eq(),    // _ a_2 b_0 a_0 b_2 (b_1 == a_1)
+            swap4(), // _ (b_1 == a_1) b_0 a_0 b_2 a_2
+            eq(),    // _ (b_1 == a_1) b_0 a_0 (b_2 == a_2)
+            swap2(), // _ (b_1 == a_1) (b_2 == a_2) a_0 b_0
+            eq(),    // _ (b_1 == a_1) (b_2 == a_2) (a_0 == b_0)
+            mul(),   // _ (b_1 == a_1) (b_2 == a_2)·(a_0 == b_0)
+            mul(),   // _ (b_1 == a_1)·(b_2 == a_2)·(a_0 == b_0)
+        ],
+        Digest => {
+            let eq_digest = state
+                .import_snippet(Box::new(hashing::eq_digest::EqDigest))
+                .to_string();
+            vec![call(eq_digest)]
+        }
+        List(_) => todo!(),
+        FlatList(_) => todo!(),
     }
 }
 
