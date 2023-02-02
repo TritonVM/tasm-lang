@@ -161,17 +161,33 @@ fn right_lineage_length_rast() -> syn::ItemFn {
     })
 }
 
-fn operator_evaluation_ordering_with_div() -> syn::ItemFn {
+fn simple_sub() -> syn::ItemFn {
     item_fn(parse_quote! {
-        fn complicated_expression() -> u32 {
+        fn simple_sub(a: u32, b: u32) -> u32 {
+            return a - b;
+        }
+    })
+}
+
+fn operator_evaluation_ordering_with_div_u32() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn complicated_expression_with_div() -> u32 {
             return 100u32 - 14u32 / 2u32 + 1u32;
+        }
+    })
+}
+
+fn operator_evaluation_ordering_with_div_u64() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn complicated_expression_with_div() -> u64 {
+            return 100u64 - 14u64 / 2u64 + 1u64;
         }
     })
 }
 
 fn operator_evaluation_ordering_with_mul() -> syn::ItemFn {
     item_fn(parse_quote! {
-        fn complicated_expression() -> u32 {
+        fn complicated_expression_with_mul() -> u32 {
             return 380u32 - 14u32 * 2u32 * 10u32 + 1u32 - 41u32 * 1u32;
         }
     })
@@ -271,12 +287,28 @@ mod compile_and_run_tests {
     use crate::{ast, shared_test::compile_execute_and_compare_prop};
 
     #[test]
+    fn simple_sub_test() {
+        compile_execute_and_compare_prop(
+            &simple_sub(),
+            vec![ast::ExprLit::U32(100), ast::ExprLit::U32(51)],
+            vec![ast::ExprLit::U32(49)],
+        );
+    }
+
+    #[test]
     fn operator_evaluation_ordering_test() {
         compile_execute_and_compare_prop(
-            &operator_evaluation_ordering_with_div(),
+            &operator_evaluation_ordering_with_div_u32(),
             vec![],
             vec![ast::ExprLit::U32(94)],
         );
+
+        compile_execute_and_compare_prop(
+            &operator_evaluation_ordering_with_div_u64(),
+            vec![],
+            vec![ast::ExprLit::U64(94)],
+        );
+
         compile_execute_and_compare_prop(
             &operator_evaluation_ordering_with_mul(),
             vec![],

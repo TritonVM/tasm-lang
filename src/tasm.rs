@@ -85,7 +85,7 @@ impl CompilerState {
         let words_to_remove = stack_height - top_value_size;
         let code = if words_to_remove != 0 {
             let swap_instruction = Instruction(Swap(words_to_remove.try_into().unwrap()));
-            vec![vec![swap_instruction, Instruction(Pop)]; top_value_size].concat()
+            vec![vec![swap_instruction, pop()]; top_value_size].concat()
         } else {
             vec![]
         };
@@ -100,7 +100,7 @@ impl CompilerState {
         } else {
             0
         };
-        vec![code, vec![Instruction(Pop); remaining_pops]].concat()
+        vec![code, vec![pop(); remaining_pops]].concat()
     }
 
     /// Return the code to overwrite a stack value with the value that's on top of the stack
@@ -123,14 +123,9 @@ impl CompilerState {
         let value_size = size_of(&type_to_remove);
 
         // Remove the overwritten value from stack
-        let code: Vec<LabelledInstruction> = vec![
-            vec![
-                Instruction(Swap(stack_position_of_value_to_remove)),
-                Instruction(Pop)
-            ];
-            value_size
-        ]
-        .concat();
+        let code: Vec<LabelledInstruction> =
+            vec![vec![Instruction(Swap(stack_position_of_value_to_remove)), pop()]; value_size]
+                .concat();
 
         // Remove the overwritten value from vstack
         self.vstack
@@ -269,7 +264,7 @@ fn compile_stmt(
         ast::Stmt::Return(None) => {
             let mut code = vec![];
             while let Some((_addr, data_type)) = state.vstack.pop() {
-                code.push(vec![Instruction(Pop); size_of(&data_type)]);
+                code.push(vec![pop(); size_of(&data_type)]);
             }
 
             code.concat()
@@ -277,39 +272,38 @@ fn compile_stmt(
 
         ast::Stmt::Return(Some(ret_expr)) => {
             // special-case on returning variable, without unnecessary dup-instructions
-            let expr_code = if let ast::Expr::Var(ast::Identifier::String(var_name, known_type)) =
-                ret_expr
-            {
-                let data_type = known_type.get_type();
-                let var_addr = state.var_addr.get(var_name).expect("variable exists");
-                let (position, old_data_type) = state.find_stack_value(var_addr);
-                let mut stack_height = state.get_stack_height();
+            let expr_code =
+                if let ast::Expr::Var(ast::Identifier::String(var_name, known_type)) = ret_expr {
+                    let data_type = known_type.get_type();
+                    let var_addr = state.var_addr.get(var_name).expect("variable exists");
+                    let (position, old_data_type) = state.find_stack_value(var_addr);
+                    let mut stack_height = state.get_stack_height();
 
-                // sanity check
-                assert_eq!(old_data_type, data_type, "type must match expected type");
+                    // sanity check
+                    assert_eq!(old_data_type, data_type, "type must match expected type");
 
-                // Pop everything prior to sought value
-                let first_pop_code = vec![Instruction(Pop); position.into()];
-                stack_height -= Into::<usize>::into(position);
+                    // Pop everything prior to sought value
+                    let first_pop_code = vec![pop(); position.into()];
+                    stack_height -= Into::<usize>::into(position);
 
-                // Swap returned value to bottom of stack
-                let data_type_size = size_of(&data_type);
-                let swap_instr =
-                    Instruction(Swap((stack_height - data_type_size).try_into().unwrap()));
-                let swap_code = vec![vec![swap_instr, Instruction(Pop)]; data_type_size].concat();
-                stack_height -= data_type_size;
+                    // Swap returned value to bottom of stack
+                    let data_type_size = size_of(&data_type);
+                    let swap_instr =
+                        Instruction(Swap((stack_height - data_type_size).try_into().unwrap()));
+                    let swap_code = vec![vec![swap_instr, pop()]; data_type_size].concat();
+                    stack_height -= data_type_size;
 
-                let last_pop_code = vec![Instruction(Pop); stack_height - data_type_size];
+                    let last_pop_code = vec![pop(); stack_height - data_type_size];
 
-                vec![first_pop_code, swap_code, last_pop_code].concat()
-            } else {
-                let expr_code =
-                    compile_expr(ret_expr, "ret_expr", &function.fn_signature.output, state).1;
+                    vec![first_pop_code, swap_code, last_pop_code].concat()
+                } else {
+                    let expr_code =
+                        compile_expr(ret_expr, "ret_expr", &function.fn_signature.output, state).1;
 
-                // Remove all but top value from stack
-                let remove_elements_code = state.remove_all_but_top_stack_value();
-                vec![expr_code, remove_elements_code].concat()
-            };
+                    // Remove all but top value from stack
+                    let remove_elements_code = state.remove_all_but_top_stack_value();
+                    vec![expr_code, remove_elements_code].concat()
+                };
 
             expr_code
         }
@@ -367,10 +361,11 @@ fn compile_expr(
 ) -> (ValueIdentifier, Vec<LabelledInstruction>) {
     match expr {
         ast::Expr::Lit(expr_lit, known_type) => {
-            let data_type = known_type.get_type();
+            let res_type = known_type.get_type();
+
             match expr_lit {
                 ast::ExprLit::Bool(value) => {
-                    let addr = state.new_value_identifier("_bool_lit", &data_type);
+                    let addr = state.new_value_identifier("_bool_lit", &res_type);
                     (
                         addr,
                         vec![Instruction(Push(BFieldElement::new(*value as u64)))],
@@ -378,7 +373,7 @@ fn compile_expr(
                 }
 
                 ast::ExprLit::U32(value) => {
-                    let addr = state.new_value_identifier("_u32_lit", &data_type);
+                    let addr = state.new_value_identifier("_u32_lit", &res_type);
                     (
                         addr,
                         vec![Instruction(Push(BFieldElement::new(*value as u64)))],
@@ -386,12 +381,12 @@ fn compile_expr(
                 }
 
                 ast::ExprLit::BFE(value) => {
-                    let addr = state.new_value_identifier("_bfe_lit", &data_type);
+                    let addr = state.new_value_identifier("_bfe_lit", &res_type);
                     (addr, vec![Instruction(Push(*value))])
                 }
 
                 ast::ExprLit::U64(value) => {
-                    let addr = state.new_value_identifier("_u64_lit", &data_type);
+                    let addr = state.new_value_identifier("_u64_lit", &res_type);
                     let as_u32s = U32s::<2>::try_from(*value).unwrap().to_sequence();
                     let stack_serialized: Vec<_> = as_u32s.iter().rev().collect();
 
@@ -437,95 +432,108 @@ fn compile_expr(
         }
 
         ast::Expr::Binop(lhs_expr, binop, rhs_expr, known_type) => {
-            let data_type = known_type.get_type();
+            let res_type = known_type.get_type();
             let lhs_type = lhs_expr.get_type();
             let rhs_type = rhs_expr.get_type();
 
-            // LHS is expected to be on the top of the stack, so we get RHS first
-            let (_rhs_expr_addr, rhs_expr_code) =
-                compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
-            let (_lhs_expr_addr, lhs_expr_code) =
-                compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
-            let lhs_expr_owned: ast::Expr<ast::Typing> = *(*lhs_expr).to_owned();
-            let rhs_expr_owned: ast::Expr<ast::Typing> = *(*rhs_expr).to_owned();
+            // // LHS is expected to be on the top of the stack, so we get RHS first
+            // let (_rhs_expr_addr, rhs_expr_code) =
+            //     compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
+            // let (_lhs_expr_addr, lhs_expr_code) =
+            //     compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
+            // let lhs_expr_owned: ast::Expr<ast::Typing> = *(*lhs_expr).to_owned();
+            // let rhs_expr_owned: ast::Expr<ast::Typing> = *(*rhs_expr).to_owned();
 
             let (addr, code) = match binop {
                 ast::BinOp::Add => {
-                    let add_code = match data_type {
+                    let (_lhs_expr_addr, lhs_expr_code) =
+                        compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
+
+                    let (_rhs_expr_addr, rhs_expr_code) =
+                        compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
+
+                    let add_code = match res_type {
                         ast::DataType::U32 => {
                             // We use the safe, overflow-checking, add code as default
-                            let fn_name =
-                                state.import_snippet(Box::new(arithmetic::u32::safe_add::SafeAdd));
-                            vec![Instruction(Call(fn_name.to_string()))]
+                            let safe_add_u32 = state
+                                .import_snippet(Box::new(arithmetic::u32::safe_add::SafeAdd))
+                                .to_string();
+                            vec![call(safe_add_u32)]
                         }
                         ast::DataType::U64 => {
                             // We use the safe, overflow-checking, add code as default
-                            let fn_name =
-                                state.import_snippet(Box::new(arithmetic::u64::add_u64::AddU64));
-                            vec![Instruction(Call(fn_name.to_string()))]
+                            let add_u64 = state
+                                .import_snippet(Box::new(arithmetic::u64::add_u64::AddU64))
+                                .to_string();
+                            vec![call(add_u64)]
                         }
-                        ast::DataType::BFE => vec![Instruction(Add)],
+                        ast::DataType::BFE => vec![add()],
                         ast::DataType::XFE => {
-                            vec![
-                                Instruction(XxAdd),
-                                Instruction(Swap(3u32.try_into().unwrap())),
-                                Instruction(Pop),
-                                Instruction(Swap(3u32.try_into().unwrap())),
-                                Instruction(Pop),
-                                Instruction(Swap(3u32.try_into().unwrap())),
-                                Instruction(Pop),
-                            ]
+                            vec![xxadd(), swap3(), pop(), swap3(), pop(), swap3(), pop()]
                         }
-                        _ => panic!("Operator add is not supported for type {data_type}"),
+                        _ => panic!("Operator add is not supported for type {res_type}"),
                     };
 
-                    let code = vec![rhs_expr_code, lhs_expr_code, add_code].concat();
+                    let code = vec![lhs_expr_code, rhs_expr_code, add_code].concat();
                     state.vstack.pop();
                     state.vstack.pop();
-                    let addr = state.new_value_identifier("_binop_add", &data_type);
+                    let addr = state.new_value_identifier("_binop_add", &res_type);
                     (addr, code)
                 }
                 ast::BinOp::And => {
-                    let and_code = match data_type {
-                        ast::DataType::Bool => {
-                            vec![
-                                Instruction(Add),
-                                Instruction(Push(2u64.into())),
-                                Instruction(Eq),
-                            ]
-                        }
-                        _ => panic!("Logical AND operator is not supported for {data_type}"),
+                    let (_lhs_expr_addr, lhs_expr_code) =
+                        compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
+
+                    let (_rhs_expr_addr, rhs_expr_code) =
+                        compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
+
+                    let and_code = match res_type {
+                        ast::DataType::Bool => vec![add(), push(2), eq()],
+                        _ => panic!("Logical AND operator is not supported for {res_type}"),
                     };
 
-                    let code = vec![rhs_expr_code, lhs_expr_code, and_code].concat();
+                    let code = vec![lhs_expr_code, rhs_expr_code, and_code].concat();
                     state.vstack.pop();
                     state.vstack.pop();
-                    let addr = state.new_value_identifier("_binop_add", &data_type);
+                    let addr = state.new_value_identifier("_binop_add", &res_type);
                     (addr, code)
                 }
 
                 ast::BinOp::BitAnd => {
-                    let bitwise_and_code = match data_type {
-                        ast::DataType::U32 => vec![Instruction(And)],
+                    let (_lhs_expr_addr, lhs_expr_code) =
+                        compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
+
+                    let (_rhs_expr_addr, rhs_expr_code) =
+                        compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
+
+                    let bitwise_and_code = match res_type {
+                        ast::DataType::U32 => vec![and()],
                         ast::DataType::U64 => {
-                            let fn_name =
-                                state.import_snippet(Box::new(arithmetic::u64::and_u64::AndU64));
-                            vec![Instruction(Call(fn_name.to_string()))]
+                            let and_u64 = state
+                                .import_snippet(Box::new(arithmetic::u64::and_u64::AndU64))
+                                .to_string();
+                            vec![call(and_u64)]
                         }
-                        _ => panic!("Logical AND operator is not supported for {data_type}"),
+                        _ => panic!("Logical AND operator is not supported for {res_type}"),
                     };
 
-                    let code = vec![rhs_expr_code, lhs_expr_code, bitwise_and_code].concat();
+                    let code = vec![lhs_expr_code, rhs_expr_code, bitwise_and_code].concat();
                     state.vstack.pop();
                     state.vstack.pop();
-                    let addr = state.new_value_identifier("_binop_add", &data_type);
+                    let addr = state.new_value_identifier("_binop_add", &res_type);
 
                     (addr, code)
                 }
 
                 ast::BinOp::BitXor => {
+                    let (_lhs_expr_addr, lhs_expr_code) =
+                        compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
+
+                    let (_rhs_expr_addr, rhs_expr_code) =
+                        compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
+
                     use ast::DataType::*;
-                    let xor_code = match data_type {
+                    let xor_code = match res_type {
                         U32 => vec![xor()],
                         U64 => vec![
                             // a_hi a_lo b_hi b_lo
@@ -534,43 +542,63 @@ fn compile_expr(
                             swap2(), // (b_hi ⊻ a_hi) b_lo a_lo
                             xor(),   // (b_hi ⊻ a_hi) (b_lo ⊻ a_lo)
                         ],
-                        _ => panic!("xor on {data_type} is not supported"),
+                        _ => panic!("xor on {res_type} is not supported"),
                     };
 
                     state.vstack.pop();
                     state.vstack.pop();
-                    let addr = state.new_value_identifier("_binop_xor", &data_type);
+                    let addr = state.new_value_identifier("_binop_xor", &res_type);
 
                     (addr, vec![lhs_expr_code, rhs_expr_code, xor_code].concat())
                 }
 
                 ast::BinOp::Div => {
                     use ast::DataType::*;
-                    let code = match data_type {
-                        U32 => vec![rhs_expr_code, lhs_expr_code, vec![div(), pop()]].concat(),
+                    match res_type {
+                        U32 => {
+                            // TODO: Consider evaluating in oppossite order to save a clock-cycle by removing `swap1`
+                            // below. This would change the "left-to-right" convention though.
+                            let (_lhs_expr_addr, lhs_expr_code) =
+                                compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
+                            let (_rhs_expr_addr, rhs_expr_code) =
+                                compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
+
+                            // Pop numerator and denominator
+                            state.vstack.pop();
+                            state.vstack.pop();
+                            let addr = state.new_value_identifier("_binop_div", &res_type);
+
+                            (
+                                addr,
+                                vec![lhs_expr_code, rhs_expr_code, vec![swap1(), div(), pop()]]
+                                    .concat(),
+                            )
+                        }
                         U64 => {
+                            // For now we can only divide u64s by 2.
+                            let rhs_expr_owned = *rhs_expr.to_owned();
                             if !matches!(rhs_expr_owned, ast::Expr::Lit(ast::ExprLit::U64(2), _)) {
                                 panic!("Unsupported division with denominator: {rhs_expr_owned:#?}")
                             }
 
-                            let div2_fn_name =
-                                state.import_snippet(Box::new(arithmetic::u64::div2_u64::Div2U64));
-
-                            // Since we're throwing away the RHS expr (as we know its value), we need to recalculate
-                            // the LHS, as it was previously calculated with the wrong vstack.
-                            // TODO: Better solution: calculate all `rhs_expr_code` values locally. *Don't* factor
-                            // this out.
-                            let val0 = state.vstack.pop().unwrap();
-                            let val1 = state.vstack.pop().unwrap();
                             let (_lhs_expr_addr, lhs_expr_code) =
                                 compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
-                            state.vstack.pop().unwrap();
-                            state.vstack.push(val0);
-                            state.vstack.push(val1);
+                            let div2 = state
+                                .import_snippet(Box::new(arithmetic::u64::div2_u64::Div2U64))
+                                .to_string();
 
-                            vec![lhs_expr_code, vec![call(div2_fn_name.to_string())]].concat()
+                            // Pop the numerator that was divided by two
+                            state.vstack.pop();
+                            let addr = state.new_value_identifier("_binop_div", &res_type);
+
+                            (addr, vec![lhs_expr_code, vec![call(div2)]].concat())
                         }
                         BFE => {
+                            let (_lhs_expr_addr, lhs_expr_code) =
+                                compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
+                            let (_rhs_expr_addr, rhs_expr_code) =
+                                compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
+
                             // div num
                             let bfe_div_code = vec![
                                 swap1(),  // _ num div
@@ -578,9 +606,22 @@ fn compile_expr(
                                 mul(),    // _ num·(1/div), or (num/div)
                             ];
 
-                            vec![lhs_expr_code, rhs_expr_code, bfe_div_code].concat()
+                            // Pop numerator and denominator
+                            state.vstack.pop();
+                            state.vstack.pop();
+                            let addr = state.new_value_identifier("_binop_div", &res_type);
+
+                            (
+                                addr,
+                                vec![lhs_expr_code, rhs_expr_code, bfe_div_code].concat(),
+                            )
                         }
                         XFE => {
+                            let (_lhs_expr_addr, lhs_expr_code) =
+                                compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
+                            let (_rhs_expr_addr, rhs_expr_code) =
+                                compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
+
                             // div_2 div_1 div_0 num_2 num_1 num_0
                             let xfe_div_code = vec![
                                 swap5(),   // num_0 div_1 div_0 num_2 num_1 div_2
@@ -600,50 +641,82 @@ fn compile_expr(
                                 pop(),     // (num/div)_2 (num/div)_1 (num/div)_0
                             ];
 
-                            vec![lhs_expr_code, rhs_expr_code, xfe_div_code].concat()
+                            // Pop numerator and denominator
+                            state.vstack.pop();
+                            state.vstack.pop();
+                            let addr = state.new_value_identifier("_binop_div", &res_type);
+
+                            (
+                                addr,
+                                vec![lhs_expr_code, rhs_expr_code, xfe_div_code].concat(),
+                            )
                         }
-                        _ => panic!("Unsupported div for type {data_type}"),
-                    };
-
-                    state.vstack.pop();
-                    state.vstack.pop();
-                    let addr = state.new_value_identifier("_binop_div", &data_type);
-
-                    (addr, code)
+                        _ => panic!("Unsupported div for type {res_type}"),
+                    }
                 }
 
                 ast::BinOp::Eq => {
+                    let (_lhs_expr_addr, lhs_expr_code) =
+                        compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
+
+                    let (_rhs_expr_addr, rhs_expr_code) =
+                        compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
+
                     let eq_code = compile_eq_code(&lhs_type, state);
 
                     state.vstack.pop();
                     state.vstack.pop();
-                    let addr = state.new_value_identifier("_binop_eq", &data_type);
+                    let addr = state.new_value_identifier("_binop_eq", &res_type);
 
                     (addr, vec![lhs_expr_code, rhs_expr_code, eq_code].concat())
                 }
 
                 ast::BinOp::Lt => {
+                    let (_lhs_expr_addr, lhs_expr_code) =
+                        compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
+
+                    let (_rhs_expr_addr, rhs_expr_code) =
+                        compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
+
                     use ast::DataType::*;
                     let code = match lhs_type {
-                        U32 => vec![rhs_expr_code, lhs_expr_code, vec![lt()]].concat(),
+                        U32 => vec![lhs_expr_code, rhs_expr_code, vec![swap1(), lt()]].concat(),
 
                         U64 => {
                             let lt_u64 = state
-                                .import_snippet(Box::new(arithmetic::u64::lt_u64::LtStandardU64));
+                                .import_snippet(Box::new(arithmetic::u64::lt_u64::LtStandardU64))
+                                .to_string();
 
-                            vec![rhs_expr_code, lhs_expr_code, vec![call(lt_u64.to_string())]]
-                                .concat()
+                            vec![
+                                lhs_expr_code,
+                                rhs_expr_code,
+                                vec![
+                                    // _ lhs_hi lhs_lo rhs_hi rhs_lo
+                                    swap3(),      // _ rhs_lo lhs_lo rhs_hi lhs_hi
+                                    swap1(),      // _ rhs_lo lhs_lo lhs_hi rhs_hi
+                                    swap3(),      // _ rhs_hi lhs_lo lhs_hi rhs_lo
+                                    swap2(),      // _ rhs_hi rhs_lo lhs_hi lhs_lo
+                                    call(lt_u64), // _ (lhs < rhs)
+                                ],
+                            ]
+                            .concat()
                         }
                         _ => panic!("Unsupported < for type {lhs_type}"),
                     };
 
                     state.vstack.pop();
                     state.vstack.pop();
-                    let addr = state.new_value_identifier("_binop_lt", &data_type);
+                    let addr = state.new_value_identifier("_binop_lt", &res_type);
 
                     (addr, code)
                 }
                 ast::BinOp::Mul => {
+                    let (_lhs_expr_addr, lhs_expr_code) =
+                        compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
+
+                    let (_rhs_expr_addr, rhs_expr_code) =
+                        compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
+
                     use ast::DataType::*;
                     let code = match lhs_type {
                         U32 => {
@@ -662,22 +735,34 @@ fn compile_expr(
 
                     state.vstack.pop();
                     state.vstack.pop();
-                    let addr = state.new_value_identifier("_binop_lt", &data_type);
+                    let addr = state.new_value_identifier("_binop_lt", &res_type);
 
                     (addr, code)
                 }
                 ast::BinOp::Neq => {
+                    let (_lhs_expr_addr, lhs_expr_code) =
+                        compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
+
+                    let (_rhs_expr_addr, rhs_expr_code) =
+                        compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
+
                     let mut neq_code = compile_eq_code(&lhs_type, state);
                     neq_code.append(&mut vec![push(0), eq()]);
 
                     state.vstack.pop();
                     state.vstack.pop();
-                    let addr = state.new_value_identifier("_binop_neq", &data_type);
+                    let addr = state.new_value_identifier("_binop_neq", &res_type);
 
                     (addr, vec![lhs_expr_code, rhs_expr_code, neq_code].concat())
                 }
 
                 ast::BinOp::Or => {
+                    let (_lhs_expr_addr, lhs_expr_code) =
+                        compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
+
+                    let (_rhs_expr_addr, rhs_expr_code) =
+                        compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
+
                     let or_code = vec![
                         add(),   // _ (a + b)
                         push(0), // _ (a + b) 0
@@ -688,7 +773,7 @@ fn compile_expr(
 
                     state.vstack.pop();
                     state.vstack.pop();
-                    let addr = state.new_value_identifier("_binop_or", &data_type);
+                    let addr = state.new_value_identifier("_binop_or", &res_type);
 
                     (addr, vec![lhs_expr_code, rhs_expr_code, or_code].concat())
                 }
@@ -696,18 +781,22 @@ fn compile_expr(
                 ast::BinOp::Rem => todo!(),
 
                 ast::BinOp::Shl => {
+                    // For now we can only `1 << n` for some n
+                    let lhs_expr_owned = *lhs_expr.to_owned();
                     if !matches!(lhs_expr_owned, ast::Expr::Lit(ast::ExprLit::U64(1), _)) {
                         panic!("Unsupported shift left: {lhs_expr_owned:#?}")
                     }
 
-                    let pow2_fn =
-                        state.import_snippet(Box::new(arithmetic::u64::pow2_u64::Pow2U64));
-                    let code = vec![Instruction(Call(pow2_fn.to_string()))];
-                    let code = vec![rhs_expr_code, code].concat();
+                    let (_rhs_expr_addr, rhs_expr_code) =
+                        compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
+
+                    let pow2_fn = state
+                        .import_snippet(Box::new(arithmetic::u64::pow2_u64::Pow2U64))
+                        .to_string();
+                    let code = vec![rhs_expr_code, vec![call(pow2_fn)]].concat();
 
                     state.vstack.pop();
-                    state.vstack.pop();
-                    let addr = state.new_value_identifier("_binop_shl", &data_type);
+                    let addr = state.new_value_identifier("_binop_shl", &res_type);
 
                     (addr, code)
                 }
@@ -715,65 +804,73 @@ fn compile_expr(
                 ast::BinOp::Shr => todo!(),
 
                 ast::BinOp::Sub => {
-                    let sub_code: Vec<LabelledInstruction> = match data_type {
+                    let (_lhs_expr_addr, lhs_expr_code) =
+                        compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
+
+                    let (_rhs_expr_addr, rhs_expr_code) =
+                        compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
+
+                    let neg_1 = BFieldElement::P - 1;
+
+                    let sub_code: Vec<LabelledInstruction> = match res_type {
                         ast::DataType::U32 => {
                             // As standard, we use safe arithmetic that crashes on overflow
-                            let fn_name =
-                                state.import_snippet(Box::new(arithmetic::u32::safe_sub::SafeSub));
-                            vec![Instruction(Call(fn_name.to_string()))]
+                            let safe_sub_u32 = state
+                                .import_snippet(Box::new(arithmetic::u32::safe_sub::SafeSub))
+                                .to_string();
+                            vec![swap1(), call(safe_sub_u32)]
                         }
                         ast::DataType::U64 => {
                             // As standard, we use safe arithmetic that crashes on overflow
-                            let fn_name =
-                                state.import_snippet(Box::new(arithmetic::u64::sub_u64::SubU64));
-                            vec![Instruction(Call(fn_name.to_string()))]
+                            let sub_u64 = state
+                                .import_snippet(Box::new(arithmetic::u64::sub_u64::SubU64))
+                                .to_string();
+                            vec![
+                                // _ lhs_hi lhs_lo rhs_hi rhs_lo
+                                swap3(),       // _ rhs_lo lhs_lo rhs_hi lhs_hi
+                                swap1(),       // _ rhs_lo lhs_lo lhs_hi rhs_hi
+                                swap3(),       // _ rhs_hi lhs_lo lhs_hi rhs_lo
+                                swap2(),       // _ rhs_hi rhs_lo lhs_hi lhs_lo
+                                call(sub_u64), // _ (lhs - rhs)_hi (lhs - rhs)_lo
+                            ]
                         }
                         ast::DataType::BFE => {
-                            vec![
-                                Instruction(Swap(1u32.try_into().unwrap())),
-                                Instruction(Push(-BFieldElement::one())),
-                                Instruction(Mul),
-                                Instruction(Add),
-                            ]
+                            vec![swap1(), push(neg_1), mul(), add()]
                         }
                         ast::DataType::XFE => {
                             vec![
                                 // flip the x operands
-                                Instruction(Swap(3u32.try_into().unwrap())),
-                                Instruction(Swap(1u32.try_into().unwrap())),
-                                Instruction(Swap(4u32.try_into().unwrap())),
-                                Instruction(Swap(1u32.try_into().unwrap())),
-                                Instruction(Swap(3u32.try_into().unwrap())),
-                                Instruction(Swap(5u32.try_into().unwrap())),
+                                swap3(),
+                                swap1(),
+                                swap4(),
+                                swap1(),
+                                swap3(),
+                                swap5(),
                                 // multiply top element with -1
-                                Instruction(Push(-BFieldElement::one())),
-                                Instruction(XbMul),
+                                push(neg_1),
+                                xbmul(),
                                 // Perform (lhs - rhs)
-                                Instruction(XxAdd),
+                                xxadd(),
                                 // Get rid of the rhs, only leaving the result
-                                Instruction(Swap(3u32.try_into().unwrap())),
-                                Instruction(Pop),
-                                Instruction(Swap(3u32.try_into().unwrap())),
-                                Instruction(Pop),
-                                Instruction(Swap(3u32.try_into().unwrap())),
-                                Instruction(Pop),
+                                swap3(),
+                                pop(),
+                                swap3(),
+                                pop(),
+                                swap3(),
+                                pop(),
                             ]
                         }
-                        _ => panic!("subtraction operator is not supported for {data_type}"),
+                        _ => panic!("subtraction operator is not supported for {res_type}"),
                     };
 
-                    let code = vec![rhs_expr_code, lhs_expr_code, sub_code].concat();
+                    let code = vec![lhs_expr_code, rhs_expr_code, sub_code].concat();
                     state.vstack.pop();
                     state.vstack.pop();
-                    let addr = state.new_value_identifier("_binop_sub", &data_type);
+                    let addr = state.new_value_identifier("_binop_sub", &res_type);
+
                     (addr, code)
                 }
             };
-
-            // let code = vec![rhs_expr_code, lhs_expr_code, code].concat();
-            // state.vstack.pop();
-            // state.vstack.pop();
-            // let addr = state.new_value_identifier(&format!("_binop_{binop:?}"), &data_type);
 
             (addr, code)
         }
