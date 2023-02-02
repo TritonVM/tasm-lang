@@ -571,9 +571,37 @@ fn compile_expr(
                             vec![lhs_expr_code, vec![call(div2_fn_name.to_string())]].concat()
                         }
                         BFE => {
-                            todo!()
+                            // div num
+                            let bfe_div_code = vec![
+                                swap1(),  // _ num div
+                                invert(), // _ num (1/div)
+                                mul(),    // _ num·(1/div), or (num/div)
+                            ];
+
+                            vec![lhs_expr_code, rhs_expr_code, bfe_div_code].concat()
                         }
-                        XFE => todo!(),
+                        XFE => {
+                            // div_2 div_1 div_0 num_2 num_1 num_0
+                            let xfe_div_code = vec![
+                                swap5(),   // num_0 div_1 div_0 num_2 num_1 div_2
+                                swap2(),   // num_0 div_1 div_0 div_2 num_1 num_2
+                                swap5(),   // num_2 div_1 div_0 div_2 num_1 num_0
+                                swap4(),   // num_2 num_0 div_0 div_2 num_1 div_1
+                                swap1(),   // num_2 num_0 div_0 div_2 div_1 num_1
+                                swap4(),   // num_2 num_1 div_0 div_2 div_1 num_0
+                                swap3(),   // num_2 num_1 num_0 div_2 div_1 div_0
+                                xinvert(), // num_2 num_1 num_0 (1/div)_2 (1/div)_1 (1/div)_0
+                                xxmul(),   // num_2 num_1 num_0 (num/div)_2 (num/div)_1 (num/div)_0
+                                swap3(),   // num_2 num_1 (num/div)_0 (num/div)_2 (num/div)_1 num_0
+                                pop(),     // num_2 num_1 (num/div)_0 (num/div)_2 (num/div)_1
+                                swap3(),   // num_2 (num/div)_1 (num/div)_0 (num/div)_2 num_1
+                                pop(),     // num_2 (num/div)_1 (num/div)_0 (num/div)_2
+                                swap3(),   // (num/div)_2 (num/div)_1 (num/div)_0 num_2
+                                pop(),     // (num/div)_2 (num/div)_1 (num/div)_0
+                            ];
+
+                            vec![lhs_expr_code, rhs_expr_code, xfe_div_code].concat()
+                        }
                         _ => panic!("Unsupported div for type {data_type}"),
                     };
 
@@ -685,6 +713,7 @@ fn compile_expr(
                 }
 
                 ast::BinOp::Shr => todo!(),
+
                 ast::BinOp::Sub => {
                     let sub_code: Vec<LabelledInstruction> = match data_type {
                         ast::DataType::U32 => {
