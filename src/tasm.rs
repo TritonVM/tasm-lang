@@ -172,7 +172,82 @@ impl CompilerState {
         self.library.import(snippet)
     }
 
+    /// Restore the vstack to a previous state, representing the state the stack had
+    /// at the beginning of a codeblock.
+    fn restore_stack_code(
+        &self,
+        previous_stack: &VStack,
+        previous_var_addr: &VarAddr,
+    ) -> Vec<LabelledInstruction> {
+        // Get the variable names of all bindings at the start of the codeblock
+
+        // make a list of tuples (binding name, vstack position, stack position, data_type) as the stack looked at the beginning of the loop
+        let bindings_start: HashMap<String, (usize, Ord16, ast::DataType)> = previous_var_addr
+            .iter()
+            .map(|(k, v)| {
+                let binding_name = k.to_string();
+                let (previous_stack_depth, data_type, previous_vstack_depth) =
+                    previous_stack.find_stack_value(v);
+                (
+                    binding_name,
+                    (previous_vstack_depth, previous_stack_depth, data_type),
+                )
+            })
+            .collect();
+
+        // make a list of tuples (variable names, vstack position, stack position, data_type) as the stack looks now
+        let bindings_end: HashMap<String, (usize, Ord16, ast::DataType)> = self
+            .var_addr
+            .iter()
+            .map(|(k, v)| {
+                let binding_name = k.to_string();
+                let (previous_stack_depth, data_type, previous_vstack_depth) =
+                    self.vstack.find_stack_value(v);
+                (
+                    binding_name,
+                    (previous_vstack_depth, previous_stack_depth, data_type),
+                )
+            })
+            .collect();
+
+        // Sanity check that all bindings at the start of the code block still exists.
+        // I think that should be the case.
+        for (var_name_start, _) in bindings_start.iter() {
+            assert!(
+                bindings_end.contains_key(var_name_start),
+                "Bindings at end of block must contain all at start of block"
+            );
+        }
+
+        // TODO:
+        // Sanity check that all data types of matching bindings are of the same data_type?
+
+        // Generate a flip/flop list of tuple values (var_name, old_position, new_position)
+        let mut flip_flop_list = vec![];
+        for (start_binding, (_start_vstack_pos, start_stack_pos, _start_data_type)) in
+            bindings_start.iter()
+        {
+            let (_end_vstack_pow, end_stack_pos, _end_data_type) =
+                bindings_end[start_binding].clone();
+            if end_stack_pos != *start_stack_pos {
+                flip_flop_list.push((start_binding, end_stack_pos, start_stack_pos));
+            }
+        }
+
+        if !flip_flop_list.is_empty() {
+            panic!("non-empty flip-flop list is not yet supported!\n\n\nflip-flop list: {flip_flop_list:#?}");
+        }
+
+        // TODO:
+        // For each value that is in a new position, generate the code to swap it back.
+        // For each binding that wasn't there at start, remove it from both own vstack and from the stack by returning the code
+        // to do that.
+
+        vec![]
+    }
+
     /// Helper function for debugging
+    #[allow(dead_code)]
     fn show_vstack_values(&self) {
         print!("vstack: ");
         for (addr, data_type) in self.vstack.inner.iter() {
@@ -353,58 +428,24 @@ fn compile_stmt(
         ast::Stmt::While(ast::WhileStmt { condition, stmts }) => {
             // The code generated here is a subroutine that contains the while loop code
             // and then just a call to this subroutine.
-            println!(
-                "Before condition code generation: vstack height = {}",
-                state.vstack.get_stack_height()
-            );
-            state.show_vstack_values();
             let (cond_addr, cond_code) =
                 compile_expr(condition, "while_condition", &condition.get_type(), state);
-            println!(
-                "After condition code generation: vstack height = {}",
-                state.vstack.get_stack_height()
-            );
-            state.show_vstack_values();
 
             let while_loop_subroutine_name = format!("{cond_addr}_while_loop");
 
             // condition evaluation is not visible to loop body, so pop this from vstack
             state.vstack.pop();
-            println!(
-                "Before loop body generation: vstack height = {}",
-                state.vstack.get_stack_height()
-            );
-            state.show_vstack_values();
-            let vstack_init_length = state.vstack.get_stack_height();
+            let vstack_init = state.vstack.clone();
+            let var_addr_init = state.var_addr.clone();
             let mut loop_body_code = stmts
                 .iter()
                 .map(|stmt| compile_stmt(stmt, function, state))
                 .collect_vec()
                 .concat();
 
-            // Code for cleaning up both stack and vstack after each loop-iteration
-            println!(
-                "After loop body generation: vstack height = {}",
-                state.vstack.get_stack_height()
-            );
-            state.show_vstack_values();
-            let mut vstack_diff = vec![];
-            let mut cleanup_code = vec![];
-            while state.vstack.get_stack_height() != vstack_init_length {
-                vstack_diff.push(state.vstack.pop().unwrap());
-            }
+            let mut restore_stack_code = state.restore_stack_code(&vstack_init, &var_addr_init);
 
-            for (_, data_type) in vstack_diff.iter() {
-                cleanup_code.append(&mut vec![pop(); size_of(data_type)]);
-            }
-
-            loop_body_code.append(&mut cleanup_code);
-
-            println!(
-                "After loop body cleanup: vstack height = {}",
-                state.vstack.get_stack_height()
-            );
-            state.show_vstack_values();
+            loop_body_code.append(&mut restore_stack_code);
 
             let while_loop_code = vec![
                 vec![Label(while_loop_subroutine_name.clone())],
