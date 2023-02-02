@@ -36,7 +36,7 @@ pub fn compile_execute_and_compare_prop(
         {code}"
     );
 
-    println!("{code}");
+    // println!("{code}");
 
     let mut stack = get_init_tvm_stack();
     for input_arg in input_args {

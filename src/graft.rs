@@ -508,9 +508,9 @@ mod tests {
 
         match &tokens {
             syn::Item::Fn(item_fn) => {
-                println!("{item_fn:#?}");
-                let ret = graft(item_fn);
-                println!("{ret:#?}");
+                // println!("{item_fn:#?}");
+                let _ret = graft(item_fn);
+                // println!("{ret:#?}");
             }
             _ => panic!("unsupported"),
         }
@@ -531,9 +531,9 @@ mod tests {
 
         match &tokens {
             syn::Item::Fn(item_fn) => {
-                println!("{item_fn:#?}");
-                let ret = graft(item_fn);
-                println!("{ret:#?}");
+                // println!("{item_fn:#?}");
+                let _ret = graft(item_fn);
+                // println!("{ret:#?}");
             }
             _ => panic!("unsupported"),
         }
@@ -568,9 +568,9 @@ mod tests {
 
         match &tokens {
             syn::Item::Fn(item_fn) => {
-                println!("{item_fn:#?}");
-                let ret = graft(item_fn);
-                println!("{ret:#?}");
+                // println!("{item_fn:#?}");
+                let _ret = graft(item_fn);
+                // println!("{ret:#?}");
             }
             _ => panic!("unsupported"),
         }
@@ -597,9 +597,9 @@ mod tests {
 
         match &tokens {
             syn::Item::Fn(item_fn) => {
-                println!("{item_fn:#?}");
-                let ret = graft(item_fn);
-                println!("{ret:#?}");
+                // println!("{item_fn:#?}");
+                let _ret = graft(item_fn);
+                // println!("{ret:#?}");
             }
             _ => panic!("unsupported"),
         }
@@ -619,9 +619,9 @@ mod tests {
 
         match &tokens {
             syn::Item::Fn(item_fn) => {
-                println!("{item_fn:#?}");
-                let ret = graft(item_fn);
-                println!("{ret:#?}");
+                // println!("{item_fn:#?}");
+                let _ret = graft(item_fn);
+                // println!("{ret:#?}");
             }
             _ => panic!("unsupported"),
         }
@@ -637,9 +637,9 @@ mod tests {
 
         match &tokens {
             syn::Item::Fn(item_fn) => {
-                println!("{item_fn:#?}");
-                let ret = graft(item_fn);
-                println!("{ret:#?}");
+                // println!("{item_fn:#?}");
+                let _ret = graft(item_fn);
+                // println!("{ret:#?}");
             }
             _ => panic!("unsupported"),
         }
@@ -656,9 +656,9 @@ mod tests {
 
         match &tokens {
             syn::Item::Fn(item_fn) => {
-                println!("{item_fn:#?}");
-                let ret = graft(item_fn);
-                println!("{ret:#?}");
+                // println!("{item_fn:#?}");
+                let _ret = graft(item_fn);
+                // println!("{ret:#?}");
             }
             _ => panic!("unsupported"),
         }
@@ -678,9 +678,9 @@ mod tests {
 
         match &tokens {
             syn::Item::Fn(item_fn) => {
-                println!("{item_fn:#?}");
-                let ret = graft(item_fn);
-                println!("{ret:#?}");
+                // println!("{item_fn:#?}");
+                let _ret = graft(item_fn);
+                // println!("{ret:#?}");
             }
             _ => panic!("unsupported"),
         }
@@ -704,9 +704,9 @@ mod tests {
 
         match &tokens {
             syn::Item::Fn(item_fn) => {
-                println!("{item_fn:#?}");
-                let ret = graft(item_fn);
-                println!("{ret:#?}");
+                // println!("{item_fn:#?}");
+                let _ret = graft(item_fn);
+                // println!("{ret:#?}");
             }
             _ => panic!("unsupported"),
         }
@@ -735,9 +735,9 @@ mod tests {
 
         match &tokens {
             syn::Item::Fn(item_fn) => {
-                println!("{item_fn:#?}");
-                let ret = graft(item_fn);
-                println!("{ret:#?}");
+                // println!("{item_fn:#?}");
+                let _ret = graft(item_fn);
+                // println!("{ret:#?}");
             }
             _ => panic!("unsupported"),
         }
@@ -760,9 +760,9 @@ mod tests {
 
         match &tokens {
             syn::Item::Fn(item_fn) => {
-                println!("{item_fn:#?}");
-                let ret = graft(item_fn);
-                println!("{ret:#?}");
+                // println!("{item_fn:#?}");
+                let _ret = graft(item_fn);
+                // println!("{ret:#?}");
             }
             _ => panic!("unsupported"),
         }
@@ -780,9 +780,9 @@ mod tests {
 
         match &tokens {
             syn::Item::Fn(item_fn) => {
-                println!("{item_fn:#?}");
-                let ret = graft(item_fn);
-                println!("{ret:#?}");
+                // println!("{item_fn:#?}");
+                let _ret = graft(item_fn);
+                // println!("{ret:#?}");
             }
             _ => panic!("unsupported"),
         }
@@ -798,9 +798,9 @@ mod tests {
 
         match &tokens {
             syn::Item::Fn(item_fn) => {
-                println!("{item_fn:#?}");
-                let ret = graft(item_fn);
-                println!("{ret:#?}");
+                // println!("{item_fn:#?}");
+                let _ret = graft(item_fn);
+                // println!("{ret:#?}");
             }
             _ => panic!("unsupported"),
         }
@@ -817,9 +817,9 @@ mod tests {
 
         match &tokens {
             syn::Item::Fn(item_fn) => {
-                println!("{item_fn:#?}");
-                let ret = graft(item_fn);
-                println!("{ret:#?}");
+                // println!("{item_fn:#?}");
+                let _ret = graft(item_fn);
+                // println!("{ret:#?}");
             }
             _ => panic!("unsupported"),
         }
@@ -834,9 +834,9 @@ mod tests {
         };
         match &tokens {
             syn::Item::Fn(item_fn) => {
-                println!("{item_fn:#?}");
-                let ret = graft(item_fn);
-                println!("{ret:#?}");
+                // println!("{item_fn:#?}");
+                let _ret = graft(item_fn);
+                // println!("{ret:#?}");
             }
             _ => panic!("unsupported"),
         }
