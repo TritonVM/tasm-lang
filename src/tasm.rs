@@ -589,7 +589,7 @@ fn compile_expr(
 
                     state.vstack.pop();
                     state.vstack.pop();
-                    let addr = state.new_value_identifier("_binop_eq", &lhs_type);
+                    let addr = state.new_value_identifier("_binop_eq", &data_type);
 
                     (addr, vec![lhs_expr_code, rhs_expr_code, eq_code].concat())
                 }
@@ -644,7 +644,7 @@ fn compile_expr(
 
                     state.vstack.pop();
                     state.vstack.pop();
-                    let addr = state.new_value_identifier("_binop_neq", &lhs_type);
+                    let addr = state.new_value_identifier("_binop_neq", &data_type);
 
                     (addr, vec![lhs_expr_code, rhs_expr_code, neq_code].concat())
                 }
