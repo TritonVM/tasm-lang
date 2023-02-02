@@ -649,7 +649,22 @@ fn compile_expr(
                     (addr, vec![lhs_expr_code, rhs_expr_code, neq_code].concat())
                 }
 
-                ast::BinOp::Or => todo!(),
+                ast::BinOp::Or => {
+                    let or_code = vec![
+                        add(),   // _ (a + b)
+                        push(0), // _ (a + b) 0
+                        eq(),    // _ ((a + b) == 0)
+                        push(0), // _ ((a + b) == 0) 0
+                        eq(),    // _ ((a + b) != 0), or (a ∨ b)
+                    ];
+
+                    state.vstack.pop();
+                    state.vstack.pop();
+                    let addr = state.new_value_identifier("_binop_or", &data_type);
+
+                    (addr, vec![lhs_expr_code, rhs_expr_code, or_code].concat())
+                }
+
                 ast::BinOp::Rem => todo!(),
 
                 ast::BinOp::Shl => {
