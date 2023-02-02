@@ -25,6 +25,17 @@ impl<T: Eq> Stack<T> {
         self.inner.last()
     }
 
+    pub fn replace_value(&mut self, seek_value: &T, new_value: T) {
+        let index_to_replace = self
+            .inner
+            .iter()
+            .find_position(|found_value| seek_value == *found_value)
+            .expect("Value must be present when removing from stack")
+            .0;
+
+        self.inner[index_to_replace] = new_value;
+    }
+
     pub fn remove_value(&mut self, seek_value: &T) {
         let index_to_remove = self
             .inner

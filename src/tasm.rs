@@ -1,4 +1,4 @@
-use std::collections::{binary_heap, HashMap};
+use std::collections::HashMap;
 
 use itertools::Itertools;
 use tasm_lib::library::Library;
@@ -12,7 +12,7 @@ use twenty_first::amount::u32s::U32s;
 use twenty_first::shared_math::b_field_element::BFieldElement;
 use twenty_first::util_types::algebraic_hasher::Hashable;
 
-use crate::ast::{self, DataType, Identifier};
+use crate::ast;
 use crate::stack::Stack;
 use crate::tasm_function_signatures::{get_tasm_lib_fn, import_tasm_snippet};
 
@@ -51,9 +51,9 @@ impl VStack {
         &mut self,
         value_identifier_to_remove: &ValueIdentifier,
     ) -> Vec<LabelledInstruction> {
-        let (_top_element_id, top_element_type) = self.pop().expect("vstack cannot be empty");
         let (stack_position_of_value_to_remove, type_to_remove, _) =
             self.find_stack_value(value_identifier_to_remove);
+        let (top_element_id, top_element_type) = self.pop().expect("vstack cannot be empty");
 
         assert_eq!(
             top_element_type, type_to_remove,
@@ -64,11 +64,17 @@ impl VStack {
 
         // Remove the overwritten value from stack
         let code: Vec<LabelledInstruction> =
-            vec![vec![Instruction(Swap(stack_position_of_value_to_remove)), pop()]; value_size]
-                .concat();
+            if Into::<usize>::into(stack_position_of_value_to_remove) > 0 {
+                vec![vec![Instruction(Swap(stack_position_of_value_to_remove)), pop()]; value_size]
+                    .concat()
+            } else {
+                vec![]
+            };
 
         // Remove the overwritten value from vstack
-        self.remove_value(&(value_identifier_to_remove.to_owned(), type_to_remove));
+        let old_value = (value_identifier_to_remove.to_owned(), type_to_remove);
+        let new_value = (top_element_id, top_element_type);
+        self.replace_value(&old_value, new_value);
 
         code
     }
@@ -271,8 +277,9 @@ fn compile_stmt(
                     .insert(var_name.clone(), expr_addr.clone())
                     .expect("Value identifier must exist in var_addr");
 
+                // Currently, assignments just get the same place on the stack as the value
+                // that it is overwriting had. This may or may not be efficient.
                 // Get code to overwrite old value, and update the compiler's vstack
-                state.vstack.push((expr_addr, data_type));
                 let overwrite_code = state
                     .vstack
                     .overwrite_stack_value_with_same_data_type(&old_value_identifier);
@@ -312,8 +319,7 @@ fn compile_stmt(
 
                     // Swap returned value to bottom of stack
                     let data_type_size = size_of(&data_type);
-                    println!("stack_height = {stack_height}");
-                    println!("data_type_size = {data_type_size}");
+
                     let swap_length = stack_height - data_type_size;
                     let swap_code = if swap_length == 0 {
                         vec![]
