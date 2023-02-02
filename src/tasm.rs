@@ -519,10 +519,30 @@ fn compile_expr(
                     state.vstack.pop();
                     state.vstack.pop();
                     let addr = state.new_value_identifier("_binop_add", &data_type);
+
                     (addr, code)
                 }
 
-                ast::BinOp::BitXor => todo!(),
+                ast::BinOp::BitXor => {
+                    use ast::DataType::*;
+                    let xor_code = match data_type {
+                        U32 => vec![xor()],
+                        U64 => vec![
+                            // a_hi a_lo b_hi b_lo
+                            swap3(), // b_lo a_lo b_hi a_hi
+                            xor(),   // b_lo a_lo (b_hi ⊻ a_hi)
+                            swap2(), // (b_hi ⊻ a_hi) b_lo a_lo
+                            xor(),   // (b_hi ⊻ a_hi) (b_lo ⊻ a_lo)
+                        ],
+                        _ => panic!("xor on {data_type} is not supported"),
+                    };
+
+                    state.vstack.pop();
+                    state.vstack.pop();
+                    let addr = state.new_value_identifier("_binop_xor", &data_type);
+
+                    (addr, vec![lhs_expr_code, rhs_expr_code, xor_code].concat())
+                }
 
                 ast::BinOp::Div => {
                     use ast::DataType::*;
