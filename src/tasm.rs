@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 
 use itertools::Itertools;
-use num::One;
 use tasm_lib::library::Library;
 use tasm_lib::snippet::Snippet;
 use tasm_lib::{arithmetic, hashing};
@@ -163,6 +162,25 @@ impl CompilerState {
 
         panic!("Cannot find {seek_addr} on vstack")
     }
+
+    /// Helper function for debugging
+    fn show_vstack_values(&self) {
+        print!("vstack: ");
+        for (addr, data_type) in self.vstack.inner.iter() {
+            let var_names = self
+                .var_addr
+                .iter()
+                .filter(|(_k, v)| **v == *addr)
+                .map(|(k, _v)| k)
+                .collect_vec();
+            let var_name = match var_names.len() {
+                0 => "unnamed",
+                _ => var_names[0],
+            };
+            print!("{var_name} <{data_type}>, ");
+        }
+        println!();
+    }
 }
 
 pub fn compile(function: &ast::Fn<ast::Typing>) -> Vec<LabelledInstruction> {
@@ -289,12 +307,23 @@ fn compile_stmt(
 
                     // Swap returned value to bottom of stack
                     let data_type_size = size_of(&data_type);
-                    let swap_instr =
-                        Instruction(Swap((stack_height - data_type_size).try_into().unwrap()));
-                    let swap_code = vec![vec![swap_instr, pop()]; data_type_size].concat();
+                    println!("stack_height = {stack_height}");
+                    println!("data_type_size = {data_type_size}");
+                    let swap_length = stack_height - data_type_size;
+                    let swap_code = if swap_length == 0 {
+                        vec![]
+                    } else {
+                        let swap_instr = Instruction(Swap((swap_length).try_into().unwrap()));
+                        vec![vec![swap_instr, pop()]; data_type_size].concat()
+                    };
                     stack_height -= data_type_size;
 
-                    let last_pop_code = vec![pop(); stack_height - data_type_size];
+                    let remaining_pops = if stack_height > data_type_size {
+                        stack_height - data_type_size
+                    } else {
+                        0
+                    };
+                    let last_pop_code = vec![pop(); remaining_pops];
 
                     vec![first_pop_code, swap_code, last_pop_code].concat()
                 } else {
@@ -313,12 +342,28 @@ fn compile_stmt(
         ast::Stmt::While(ast::WhileStmt { condition, stmts }) => {
             // The code generated here is a subroutine that contains the while loop code
             // and then just a call to this subroutine.
+            println!(
+                "Before condition code generation: vstack height = {}",
+                state.get_stack_height()
+            );
+            state.show_vstack_values();
             let (cond_addr, cond_code) =
                 compile_expr(condition, "while_condition", &condition.get_type(), state);
+            println!(
+                "After condition code generation: vstack height = {}",
+                state.get_stack_height()
+            );
+            state.show_vstack_values();
 
             let while_loop_subroutine_name = format!("{cond_addr}_while_loop");
 
-            // state.vstack.pop();
+            // condition evaluation is not visible to loop body, so pop this from vstack
+            state.vstack.pop();
+            println!(
+                "Before loop body generation: vstack height = {}",
+                state.get_stack_height()
+            );
+            state.show_vstack_values();
             let vstack_init_length = state.get_stack_height();
             let mut loop_body_code = stmts
                 .iter()
@@ -327,6 +372,11 @@ fn compile_stmt(
                 .concat();
 
             // Code for cleaning up both stack and vstack after each loop-iteration
+            println!(
+                "After loop body generation: vstack height = {}",
+                state.get_stack_height()
+            );
+            state.show_vstack_values();
             let mut vstack_diff = vec![];
             let mut cleanup_code = vec![];
             while state.get_stack_height() != vstack_init_length {
@@ -338,6 +388,12 @@ fn compile_stmt(
             }
 
             loop_body_code.append(&mut cleanup_code);
+
+            println!(
+                "After loop body cleanup: vstack height = {}",
+                state.get_stack_height()
+            );
+            state.show_vstack_values();
 
             let while_loop_code = vec![
                 vec![Label(while_loop_subroutine_name.clone())],
