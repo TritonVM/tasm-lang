@@ -378,40 +378,27 @@ fn compile_stmt(
         ast::Stmt::Return(Some(ret_expr)) => {
             // special-case on returning variable, without unnecessary dup-instructions
             let expr_code =
-                if let ast::Expr::Var(ast::Identifier::String(var_name, known_type)) = ret_expr {
-                    let data_type = known_type.get_type();
-                    let var_addr = state.var_addr.get(var_name).expect("variable exists");
-                    let (stack_depth, old_data_type, _v_stack_depth) =
-                        state.vstack.find_stack_value(var_addr);
-                    let mut stack_height = state.vstack.get_stack_height();
+                if let ast::Expr::Var(ast::Identifier::String(var_name, _known_type)) = ret_expr {
+                    // Remove everything above returned value
+                    let needle = state
+                        .var_addr
+                        .get(var_name)
+                        .expect("Returned value must exist in value/addr map");
+                    let mut code = vec![];
+                    loop {
+                        let (haystack, dt) = state.vstack.peek().unwrap();
+                        if *haystack == *needle {
+                            break;
+                        }
 
-                    // sanity check
-                    assert_eq!(old_data_type, data_type, "type must match expected type");
+                        code.append(&mut vec![pop(); size_of(&dt)]);
+                        state.vstack.pop();
+                    }
 
-                    // Pop everything prior to sought value
-                    let first_pop_code = vec![pop(); stack_depth.into()];
-                    stack_height -= Into::<usize>::into(stack_depth);
+                    // Now returned value is top of stack. Remove everything below it
+                    code.append(&mut state.vstack.remove_all_but_top_stack_value());
 
-                    // Swap returned value to bottom of stack
-                    let data_type_size = size_of(&data_type);
-
-                    let swap_length = stack_height - data_type_size;
-                    let swap_code = if swap_length == 0 {
-                        vec![]
-                    } else {
-                        let swap_instr = Instruction(Swap((swap_length).try_into().unwrap()));
-                        vec![vec![swap_instr, pop()]; data_type_size].concat()
-                    };
-                    stack_height -= data_type_size;
-
-                    let remaining_pops = if stack_height > data_type_size {
-                        stack_height - data_type_size
-                    } else {
-                        0
-                    };
-                    let last_pop_code = vec![pop(); remaining_pops];
-
-                    vec![first_pop_code, swap_code, last_pop_code].concat()
+                    code
                 } else {
                     let expr_code =
                         compile_expr(ret_expr, "ret_expr", &function.fn_signature.output, state).1;
