@@ -2,9 +2,9 @@ use std::collections::HashMap;
 
 use itertools::Itertools;
 use num::One;
-use tasm_lib::arithmetic;
 use tasm_lib::library::Library;
 use tasm_lib::snippet::Snippet;
+use tasm_lib::{arithmetic, hashing};
 use triton_opcodes::instruction::{AnInstruction::*, LabelledInstruction::*};
 use triton_opcodes::ord_n::Ord16;
 use triton_opcodes::parser::{parse, to_labelled};
@@ -566,7 +566,7 @@ fn compile_expr(
 
                 ast::BinOp::Eq => {
                     use ast::DataType::*;
-                    let _code = match data_type {
+                    let code = match data_type {
                         Bool | U32 | BFE => vec![eq()],
                         U64 => vec![
                             // _ a_hi a_lo b_hi b_lo
@@ -577,13 +577,32 @@ fn compile_expr(
                             mul(),   // _ (b_hi == a_hi && a_lo == b_lo)
                         ],
 
-                        XFE => todo!(),
-                        Digest => todo!(),
+                        XFE => vec![
+                            // _ a_2 a_1 a_0 b_2 b_1 b_0
+                            swap4(), // _ a_2 b_0 a_0 b_2 b_1 a_1
+                            eq(),    // _ a_2 b_0 a_0 b_2 (b_1 == a_1)
+                            swap4(), // _ (b_1 == a_1) b_0 a_0 b_2 a_2
+                            eq(),    // _ (b_1 == a_1) b_0 a_0 (b_2 == a_2)
+                            swap2(), // _ (b_1 == a_1) (b_2 == a_2) a_0 b_0
+                            eq(),    // _ (b_1 == a_1) (b_2 == a_2) (a_0 == b_0)
+                            mul(),   // _ (b_1 == a_1) (b_2 == a_2)·(a_0 == b_0)
+                            mul(),   // _ (b_1 == a_1)·(b_2 == a_2)·(a_0 == b_0)
+                        ],
+                        Digest => {
+                            let eq_digest = state
+                                .import_snippet(Box::new(hashing::eq_digest::EqDigest))
+                                .to_string();
+                            vec![call(eq_digest)]
+                        }
                         List(_) => todo!(),
                         FlatList(_) => todo!(),
                     };
 
-                    todo!()
+                    state.vstack.pop();
+                    state.vstack.pop();
+                    let addr = state.new_value_identifier("_binop_eq", &lhs_type);
+
+                    (addr, code)
                 }
 
                 ast::BinOp::Lt => {
