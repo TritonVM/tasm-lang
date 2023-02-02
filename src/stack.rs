@@ -1,6 +1,6 @@
 use itertools::Itertools;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Stack<T: Eq> {
     pub inner: Vec<T>,
 }

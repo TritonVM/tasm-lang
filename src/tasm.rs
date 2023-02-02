@@ -309,7 +309,52 @@ fn compile_stmt(
         }
 
         ast::Stmt::FnCall(fn_call) => compile_fn_call(fn_call, state),
-        ast::Stmt::While(_) => todo!(),
+        ast::Stmt::While(ast::WhileStmt { condition, stmts }) => {
+            // The code generated here is a subroutine that contains the while loop code
+            // and then just a call to this subroutine.
+            let (cond_addr, cond_code) =
+                compile_expr(condition, "while_condition", &condition.get_type(), state);
+            let while_loop_subroutine_name = format!("{cond_addr}_while_loop");
+
+            let vstack_init = state.vstack.clone();
+            let mut loop_body_code = stmts
+                .iter()
+                .map(|stmt| compile_stmt(stmt, function, state))
+                .collect_vec()
+                .concat();
+
+            // Code for cleaning up stack after each loop-iteration
+            let mut vstack_diff = vec![];
+            let mut cleanup_code = vec![];
+            while state.vstack != vstack_init {
+                vstack_diff.push(state.vstack.pop().unwrap());
+            }
+
+            for (_, data_type) in vstack_diff.iter() {
+                cleanup_code.append(&mut vec![pop(); size_of(data_type)]);
+            }
+
+            loop_body_code.append(&mut cleanup_code);
+
+            // Reset vstack to reflect that variables declared in the loop are not visible outside it
+            state.vstack = vstack_init;
+
+            let while_loop_code = vec![
+                vec![Label(while_loop_subroutine_name.clone())],
+                // condition
+                cond_code,
+                vec![push(0), eq(), skiz(), return_()],
+                // body
+                loop_body_code,
+                // loop back (goto)
+                vec![recurse()],
+            ]
+            .concat();
+
+            state.subroutines.push(while_loop_code);
+
+            vec![call(while_loop_subroutine_name)]
+        }
         ast::Stmt::If(_) => todo!(),
     }
 }
@@ -556,7 +601,7 @@ fn compile_expr(
                     use ast::DataType::*;
                     match res_type {
                         U32 => {
-                            // TODO: Consider evaluating in oppossite order to save a clock-cycle by removing `swap1`
+                            // TODO: Consider evaluating in opposite order to save a clock-cycle by removing `swap1`
                             // below. This would change the "left-to-right" convention though.
                             let (_lhs_expr_addr, lhs_expr_code) =
                                 compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
