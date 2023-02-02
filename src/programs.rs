@@ -193,6 +193,21 @@ fn operator_evaluation_ordering_with_mul() -> syn::ItemFn {
     })
 }
 
+fn lt_u32() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn lt_for_u32_test_function() -> bool {
+            let a: u32 = 14u32;
+            let b: u32 = 20u32;
+            let c: u32 = 10u32;
+            let bool_0: bool = a < b;
+            let bool_1: bool = b < c;
+            let bool_2: bool = c < a;
+
+            return bool_1 || bool_2;
+        }
+    })
+}
+
 #[cfg(test)]
 mod compile_and_typecheck_tests {
     use crate::shared_test::graft_check_compile_prop;
@@ -277,6 +292,12 @@ mod compile_and_typecheck_tests {
     fn right_lineage_length_test() {
         graft_check_compile_prop(&right_lineage_length_rast());
     }
+
+    #[test]
+    fn lt_u32_test() {
+        graft_check_compile_prop(&lt_u32());
+    }
+
 }
 
 #[cfg(test)]
@@ -439,4 +460,10 @@ mod compile_and_run_tests {
         prop_right_lineage_length_run(32, 0);
         prop_right_lineage_length_run(33, 1);
     }
+
+    #[test]
+    fn lt_u32_test() {
+        compile_execute_and_compare_prop(&lt_u32(), vec![], vec![ast::ExprLit::Bool(true)]);
+    }
+
 }
