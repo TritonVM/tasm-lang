@@ -199,10 +199,11 @@ pub fn compile(function: &ast::Fn<ast::Typing>) -> Vec<LabelledInstruction> {
     assert!(
         state.subroutines.iter().all(|subroutine| {
             let begins_with_label = matches!(*subroutine.first().unwrap(), Label(_));
-            let ends_with_return = *subroutine.last().unwrap() == return_();
-            begins_with_label && ends_with_return
+            let ends_with_return_or_recurse = *subroutine.last().unwrap() == return_()
+                || *subroutine.last().unwrap() == recurse();
+            begins_with_label && ends_with_return_or_recurse
         }),
-        "Each subroutine must begin with a label and ends with a return"
+        "Each subroutine must begin with a label and end with a return or a recurse"
     );
 
     let ret = vec![
@@ -314,19 +315,21 @@ fn compile_stmt(
             // and then just a call to this subroutine.
             let (cond_addr, cond_code) =
                 compile_expr(condition, "while_condition", &condition.get_type(), state);
+
             let while_loop_subroutine_name = format!("{cond_addr}_while_loop");
 
-            let vstack_init = state.vstack.clone();
+            // state.vstack.pop();
+            let vstack_init_length = state.get_stack_height();
             let mut loop_body_code = stmts
                 .iter()
                 .map(|stmt| compile_stmt(stmt, function, state))
                 .collect_vec()
                 .concat();
 
-            // Code for cleaning up stack after each loop-iteration
+            // Code for cleaning up both stack and vstack after each loop-iteration
             let mut vstack_diff = vec![];
             let mut cleanup_code = vec![];
-            while state.vstack != vstack_init {
+            while state.get_stack_height() != vstack_init_length {
                 vstack_diff.push(state.vstack.pop().unwrap());
             }
 
@@ -335,9 +338,6 @@ fn compile_stmt(
             }
 
             loop_body_code.append(&mut cleanup_code);
-
-            // Reset vstack to reflect that variables declared in the loop are not visible outside it
-            state.vstack = vstack_init;
 
             let while_loop_code = vec![
                 vec![Label(while_loop_subroutine_name.clone())],

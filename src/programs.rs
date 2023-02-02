@@ -208,6 +208,21 @@ fn lt_u32() -> syn::ItemFn {
     })
 }
 
+fn simple_while_loop() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn simple_while_loop() -> u32 {
+            let mut acc: u32 = 0u32;
+            let mut i: u32 = 0u32;
+            while i < 101u32 {
+                acc = acc + i;
+                i = i + 1u32;
+            }
+
+            return acc;
+        }
+    })
+}
+
 #[cfg(test)]
 mod compile_and_typecheck_tests {
     use crate::shared_test::graft_check_compile_prop;
@@ -298,6 +313,10 @@ mod compile_and_typecheck_tests {
         graft_check_compile_prop(&lt_u32());
     }
 
+    #[test]
+    fn simple_while_loop_test() {
+        graft_check_compile_prop(&simple_while_loop());
+    }
 }
 
 #[cfg(test)]
@@ -466,4 +485,12 @@ mod compile_and_run_tests {
         compile_execute_and_compare_prop(&lt_u32(), vec![], vec![ast::ExprLit::Bool(true)]);
     }
 
+    #[test]
+    fn simple_while_loop_run_test() {
+        compile_execute_and_compare_prop(
+            &simple_while_loop(),
+            vec![],
+            vec![ast::ExprLit::U32(5050)],
+        );
+    }
 }
