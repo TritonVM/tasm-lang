@@ -566,7 +566,7 @@ fn compile_expr(
 
                 ast::BinOp::Eq => {
                     use ast::DataType::*;
-                    let code = match lhs_type {
+                    let eq_code = match lhs_type {
                         Bool | U32 | BFE => vec![eq()],
                         U64 => vec![
                             // _ a_hi a_lo b_hi b_lo
@@ -602,7 +602,7 @@ fn compile_expr(
                     state.vstack.pop();
                     let addr = state.new_value_identifier("_binop_eq", &lhs_type);
 
-                    (addr, code)
+                    (addr, vec![lhs_expr_code, rhs_expr_code, eq_code].concat())
                 }
 
                 ast::BinOp::Lt => {
