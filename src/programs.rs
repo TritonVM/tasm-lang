@@ -363,4 +363,48 @@ mod compile_and_run_tests {
         let outputs1 = vec![ast::ExprLit::U64(15)];
         compile_execute_and_compare_prop(&left_child_rast(), inputs1, outputs1);
     }
+
+    // right_lineage_length_test
+    #[test]
+    fn right_lineage_length_run_test() {
+        fn prop_right_lineage_length_run(node_index: u64, expected: u32) {
+            let inputs = vec![ast::ExprLit::U64(node_index)];
+            let outputs = vec![ast::ExprLit::U32(expected)];
+            compile_execute_and_compare_prop(&right_lineage_length_rast(), inputs, outputs);
+        }
+
+        prop_right_lineage_length_run(1, 0);
+        prop_right_lineage_length_run(2, 1);
+        prop_right_lineage_length_run(3, 0);
+        prop_right_lineage_length_run(4, 0);
+        prop_right_lineage_length_run(5, 2);
+        prop_right_lineage_length_run(6, 1);
+        prop_right_lineage_length_run(7, 0);
+        prop_right_lineage_length_run(8, 0);
+        prop_right_lineage_length_run(9, 1);
+        prop_right_lineage_length_run(10, 0);
+        prop_right_lineage_length_run(11, 0);
+        prop_right_lineage_length_run(12, 3);
+        prop_right_lineage_length_run(13, 2);
+        prop_right_lineage_length_run(14, 1);
+        prop_right_lineage_length_run(15, 0);
+        prop_right_lineage_length_run(16, 0);
+        prop_right_lineage_length_run(17, 1);
+        prop_right_lineage_length_run(18, 0);
+        prop_right_lineage_length_run(19, 0);
+        prop_right_lineage_length_run(20, 2);
+        prop_right_lineage_length_run(21, 1);
+        prop_right_lineage_length_run(22, 0);
+        prop_right_lineage_length_run(23, 0);
+        prop_right_lineage_length_run(24, 1);
+        prop_right_lineage_length_run(25, 0);
+        prop_right_lineage_length_run(26, 0);
+        prop_right_lineage_length_run(27, 4);
+        prop_right_lineage_length_run(28, 3);
+        prop_right_lineage_length_run(29, 2);
+        prop_right_lineage_length_run(30, 1);
+        prop_right_lineage_length_run(31, 0);
+        prop_right_lineage_length_run(32, 0);
+        prop_right_lineage_length_run(33, 1);
+    }
 }

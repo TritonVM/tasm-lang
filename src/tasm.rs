@@ -536,6 +536,18 @@ fn compile_expr(
                             let div2_fn_name =
                                 state.import_snippet(Box::new(arithmetic::u64::div2_u64::Div2U64));
 
+                            // Since we're throwing away the RHS expr (as we know its value), we need to recalculate
+                            // the LHS, as it was previously calculated with the wrong vstack.
+                            // TODO: Better solution: calculate all `rhs_expr_code` values locally. *Don't* factor
+                            // this out.
+                            let val0 = state.vstack.pop().unwrap();
+                            let val1 = state.vstack.pop().unwrap();
+                            let (_lhs_expr_addr, lhs_expr_code) =
+                                compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
+                            state.vstack.pop().unwrap();
+                            state.vstack.push(val0);
+                            state.vstack.push(val1);
+
                             vec![lhs_expr_code, vec![call(div2_fn_name.to_string())]].concat()
                         }
                         BFE => {
@@ -721,31 +733,40 @@ fn compile_expr(
             // Pop all vstack elements produced by `then_body`
             state.vstack = branch_start_vstack.clone();
 
-            let (else_addr, else_body_code) =
+            let (_else_addr, else_body_code) =
                 compile_expr(else_branch, "else", &else_branch.get_type(), state);
 
             // Pop all vstack elements produced by `else_body`
             state.vstack = branch_start_vstack;
 
             let mut if_code = cond_code;
+
+            // This naming should make it easier for the programmer to see which
+            // subroutines belong to the same if/else expression
+            let then_subroutine_name = format!("{then_addr}_then");
+            let else_subroutine_name = format!("{then_addr}_else");
             if_code.append(&mut vec![
-                push(1),                      // _ cond 1
-                swap1(),                      // _ 1 cond
-                skiz(),                       // _ 1
-                call(then_addr.name.clone()), // _ [then_branch_value] 0|1
-                skiz(),                       // _ [then_branch_value]
-                call(else_addr.name.clone()), // _ then_branch_value|else_branch_value
+                push(1),                            // _ cond 1
+                swap1(),                            // _ 1 cond
+                skiz(),                             // _ 1
+                call(then_subroutine_name.clone()), // _ [then_branch_value] 0|1
+                skiz(),                             // _ [then_branch_value]
+                call(else_subroutine_name.clone()), // _ then_branch_value|else_branch_value
             ]);
 
             let then_code = vec![
-                vec![Label(then_addr.name), pop()],
+                vec![Label(then_subroutine_name), pop()],
                 then_body_code,
                 vec![push(0), return_()],
             ]
             .concat();
 
-            let else_code =
-                vec![vec![Label(else_addr.name)], else_body_code, vec![return_()]].concat();
+            let else_code = vec![
+                vec![Label(else_subroutine_name)],
+                else_body_code,
+                vec![return_()],
+            ]
+            .concat();
 
             state.subroutines.push(then_code);
             state.subroutines.push(else_code);
@@ -766,14 +787,22 @@ fn compile_expr(
             match (expr_type, as_type) {
                 (ast::DataType::U64, ast::DataType::U32) => {
                     // No value check is performed here
-                    state.vstack.pop();
+                    let (_, old_data_type) = state.vstack.pop().unwrap();
+
+                    // sanity check
+                    assert_eq!(ast::DataType::U64, old_data_type);
+
                     let addr = state.new_value_identifier("_as_u32", as_type);
                     let cast_code = vec![swap1(), pop()];
 
                     (addr, vec![expr_code, cast_code].concat())
                 }
                 (ast::DataType::U32, ast::DataType::U64) => {
-                    state.vstack.pop();
+                    let (_, old_data_type) = state.vstack.pop().unwrap();
+
+                    // sanity check
+                    assert_eq!(ast::DataType::U32, old_data_type);
+
                     let addr = state.new_value_identifier("_as_u64", as_type);
                     let cast_code = vec![push(0), swap1()];
 
