@@ -175,11 +175,30 @@ impl CompilerState {
     /// Restore the vstack to a previous state, representing the state the stack had
     /// at the beginning of a codeblock.
     fn restore_stack_code(
-        &self,
+        &mut self,
         previous_stack: &VStack,
         previous_var_addr: &VarAddr,
     ) -> Vec<LabelledInstruction> {
-        // Get the variable names of all bindings at the start of the codeblock
+        // Clear stack, vstack, and var_addr of locally declared values for those that are on top of the stack
+        let mut code = vec![];
+        loop {
+            let (addr, dt) = self.vstack.peek().unwrap();
+            let binding_name = self
+                .var_addr
+                .iter()
+                .find(|(_var_name, ident)| **ident == *addr)
+                .unwrap_or_else(|| panic!("Cannot handle stack cleanup of unbound values"))
+                .0
+                .clone();
+            if previous_var_addr.contains_key(&binding_name) {
+                break;
+            } else {
+                code.append(&mut vec![pop(); size_of(dt)]);
+                self.vstack.pop();
+                let removed = self.var_addr.remove(&binding_name);
+                assert!(removed.is_some());
+            }
+        }
 
         // make a list of tuples (binding name, vstack position, stack position, data_type) as the stack looked at the beginning of the loop
         let bindings_start: HashMap<String, (usize, Ord16, ast::DataType)> = previous_var_addr
@@ -219,10 +238,10 @@ impl CompilerState {
             );
         }
 
-        // TODO:
-        // Sanity check that all data types of matching bindings are of the same data_type?
-
         // Generate a flip/flop list of tuple values (var_name, old_position, new_position)
+        // If assignments overwrite existing stack space, that means all values declared in
+        // the block will be on top of the stack, and that the flip_flop list will always
+        // be empty.
         let mut flip_flop_list = vec![];
         for (start_binding, (_start_vstack_pos, start_stack_pos, _start_data_type)) in
             bindings_start.iter()
@@ -238,12 +257,7 @@ impl CompilerState {
             panic!("non-empty flip-flop list is not yet supported!\n\n\nflip-flop list: {flip_flop_list:#?}");
         }
 
-        // TODO:
-        // For each value that is in a new position, generate the code to swap it back.
-        // For each binding that wasn't there at start, remove it from both own vstack and from the stack by returning the code
-        // to do that.
-
-        vec![]
+        code
     }
 
     /// Helper function for debugging
@@ -422,6 +436,8 @@ fn compile_stmt(
 
             // condition evaluation is not visible to loop body, so pop this from vstack
             state.vstack.pop();
+
+            // Store vstack and var_addr as they look before while-loop's code block
             let vstack_init = state.vstack.clone();
             let var_addr_init = state.var_addr.clone();
             let mut loop_body_code = stmts
