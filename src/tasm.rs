@@ -80,20 +80,24 @@ impl VStack {
     }
 
     /// Return code that clears the stack but leaves the value that's on the top of the stack
-    /// when this function is called.
-    fn remove_all_but_top_stack_value(&mut self) -> Vec<LabelledInstruction> {
-        let stack_height = self.get_stack_height();
+    /// when this function is called. Also updates vstack to reflect this.
+    fn clear_all_but_top_stack_value_above_height(
+        &mut self,
+        height: usize,
+    ) -> Vec<LabelledInstruction> {
+        let height_of_affected_stack: usize = self.get_stack_height() - height;
+        assert!(
+            height_of_affected_stack < STACK_SIZE,
+            "For now, we only support functions with max {STACK_SIZE} elements on the stack"
+        );
+
         let top_element = self
             .pop()
             .expect("Cannot remove all but top element from an empty stack");
         let top_value_size = size_of(&top_element.1);
-        assert!(
-            stack_height < STACK_SIZE,
-            "For now, we only support functions with max {STACK_SIZE} elements on the stack"
-        );
 
-        // Generate code to move value to the bottom of the stack
-        let words_to_remove = stack_height - top_value_size;
+        // Generate code to move value to the bottom of the requested stack range
+        let words_to_remove = height_of_affected_stack - top_value_size;
         let code = if words_to_remove != 0 {
             let swap_instruction = Instruction(Swap(words_to_remove.try_into().unwrap()));
             vec![vec![swap_instruction, pop()]; top_value_size].concat()
@@ -102,15 +106,26 @@ impl VStack {
         };
 
         // Clean up vstack
-        while let Some(_elem) = self.pop() {}
+        while self.get_stack_height() > height {
+            self.pop();
+        }
+
+        // Sanity check that input argument was aligned with a value
+        assert_eq!(
+            height,
+            self.get_stack_height(),
+            "Cannot clear stack to position that is not alligned with a value"
+        );
+
         self.push(top_element);
 
-        // Generate code to remove any remaining values from the stack
+        // Generate code to remove any remaining values from the requested stack range
         let remaining_pops = if words_to_remove > top_value_size {
             words_to_remove - top_value_size
         } else {
             0
         };
+
         vec![code, vec![pop(); remaining_pops]].concat()
     }
 
@@ -410,16 +425,21 @@ fn compile_stmt(
                     }
 
                     // Now returned value is top of stack. Remove everything below it
-                    code.append(&mut state.vstack.remove_all_but_top_stack_value());
+                    let cleanup_code = state.vstack.clear_all_but_top_stack_value_above_height(0);
 
-                    code
+                    // TODO: Cleanup `var_addr`
+
+                    vec![code, cleanup_code].concat()
                 } else {
-                    let expr_code =
+                    let code =
                         compile_expr(ret_expr, "ret_expr", &function.fn_signature.output, state).1;
 
                     // Remove all but top value from stack
-                    let remove_elements_code = state.vstack.remove_all_but_top_stack_value();
-                    vec![expr_code, remove_elements_code].concat()
+                    let cleanup_code = state.vstack.clear_all_but_top_stack_value_above_height(0);
+
+                    // TODO: Cleanup `var_addr`
+
+                    vec![code, cleanup_code].concat()
                 };
 
             expr_code
