@@ -1,7 +1,7 @@
 use tasm_lib::all_snippets::name_to_snippet;
 
 use crate::ast::{self, FnSignature};
-use crate::tasm::CompilerState;
+use crate::tasm_code_generator::CompilerState;
 
 pub fn import_tasm_snippet(
     tasm_fn_name: &str,

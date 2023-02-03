@@ -1,6 +1,5 @@
-use std::collections::HashMap;
-
 use itertools::Itertools;
+use std::collections::HashMap;
 use tasm_lib::library::Library;
 use tasm_lib::snippet::Snippet;
 use tasm_lib::{arithmetic, hashing};
@@ -13,8 +12,8 @@ use twenty_first::shared_math::b_field_element::BFieldElement;
 use twenty_first::util_types::algebraic_hasher::Hashable;
 
 use crate::ast;
+use crate::libraries::tasm;
 use crate::stack::Stack;
-use crate::tasm_function_signatures::{get_tasm_lib_fn, import_tasm_snippet};
 
 type VStack = Stack<(ValueIdentifier, ast::DataType)>;
 type VarAddr = HashMap<String, ValueIdentifier>;
@@ -576,8 +575,8 @@ fn compile_fn_call(
         .unzip();
 
     // If function is from tasm-lib, import it
-    if let Some(snippet_name) = get_tasm_lib_fn(&name) {
-        import_tasm_snippet(snippet_name, None, state);
+    if let Some(snippet_name) = tasm::get_tasm_lib_fn(&name) {
+        tasm::import_tasm_snippet(snippet_name, None, state);
         name = snippet_name.to_string();
     }
 

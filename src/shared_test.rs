@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use tasm_lib::get_init_tvm_stack;
 use twenty_first::shared_math::b_field_element::BFieldElement;
 
-use crate::{ast, graft::graft, tasm::compile, types::annotate_fn};
+use crate::{ast, graft::graft, tasm_code_generator::compile, types::annotate_fn};
 
 pub fn graft_check_compile_prop(item_fn: &syn::ItemFn) -> String {
     // parse test
