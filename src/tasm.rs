@@ -187,34 +187,11 @@ impl CompilerState {
         self.library.import(snippet)
     }
 
-    /// Restore the vstack to a previous state, representing the state the stack had
-    /// at the beginning of a codeblock.
-    fn restore_stack_code(
-        &mut self,
+    fn verify_same_ordering_of_bindings(
+        &self,
         previous_stack: &VStack,
         previous_var_addr: &VarAddr,
-    ) -> Vec<LabelledInstruction> {
-        // Clear stack, vstack, and var_addr of locally declared values for those that are on top of the stack
-        let mut code = vec![];
-        loop {
-            let (addr, dt) = self.vstack.peek().unwrap();
-            let binding_name = self
-                .var_addr
-                .iter()
-                .find(|(_var_name, ident)| **ident == *addr)
-                .unwrap_or_else(|| panic!("Cannot handle stack cleanup of unbound values"))
-                .0
-                .clone();
-            if previous_var_addr.contains_key(&binding_name) {
-                break;
-            } else {
-                code.append(&mut vec![pop(); size_of(dt)]);
-                self.vstack.pop();
-                let removed = self.var_addr.remove(&binding_name);
-                assert!(removed.is_some());
-            }
-        }
-
+    ) {
         // make a list of tuples (binding name, vstack position, stack position, data_type) as the stack looked at the beginning of the loop
         let bindings_start: HashMap<String, (usize, Ord16, ast::DataType)> = previous_var_addr
             .iter()
@@ -271,6 +248,43 @@ impl CompilerState {
         if !flip_flop_list.is_empty() {
             panic!("non-empty flip-flop list is not yet supported!\n\n\nflip-flop list: {flip_flop_list:#?}");
         }
+
+        // TODO: If we want to, we could change this function to return the code to recover from this
+        // re-ordering of value bindings. We can also just accept that we must generate code that does
+        // not change the stack-ordering of bindings when a value is re-assigned.
+    }
+
+    /// Restore the vstack to a previous state, representing the state the stack had
+    /// at the beginning of a codeblock.
+    fn restore_stack_code(
+        &mut self,
+        previous_stack: &VStack,
+        previous_var_addr: &VarAddr,
+    ) -> Vec<LabelledInstruction> {
+        // Clear stack, vstack, and var_addr of locally declared values for those that are on top of the stack
+        let mut code = vec![];
+        loop {
+            let (addr, dt) = self.vstack.peek().unwrap();
+            let binding_name = self
+                .var_addr
+                .iter()
+                .find(|(_var_name, ident)| **ident == *addr)
+                .unwrap_or_else(|| panic!("Cannot handle stack cleanup of unbound values"))
+                .0
+                .clone();
+            if previous_var_addr.contains_key(&binding_name) {
+                break;
+            } else {
+                code.append(&mut vec![pop(); size_of(dt)]);
+                self.vstack.pop();
+                let removed = self.var_addr.remove(&binding_name);
+                assert!(removed.is_some());
+            }
+        }
+
+        // Verify that ordering of previously declared bindings did not change from the execution of
+        // this code block.
+        self.verify_same_ordering_of_bindings(previous_stack, previous_var_addr);
 
         code
     }
@@ -1058,28 +1072,49 @@ fn compile_expr(
             let (_cond_addr, cond_code) =
                 compile_expr(condition, "if_cond", &condition.get_type(), state);
 
-            // Condition is handled immediately.
+            // Condition is handled immediately and it is not on the stack when
+            // the `then` or `else` branches are entered.
             state.vstack.pop();
 
             let branch_start_vstack = state.vstack.clone();
-            let (then_addr, then_body_code) =
-                compile_expr(then_branch, "then", &then_branch.get_type(), state);
+            let branch_start_var_addr = state.var_addr.clone();
+            let return_type = then_branch.get_type();
 
-            // Pop all vstack elements produced by `then_body`
-            state.vstack = branch_start_vstack.clone();
+            // Compile `then` branch
+            let (then_addr, mut then_body_code) =
+                compile_expr(then_branch, "then", &return_type, state);
 
-            let (_else_addr, else_body_code) =
-                compile_expr(else_branch, "else", &else_branch.get_type(), state);
+            // Cleanup stack and variable name mapping after `then` body. Preserve the return
+            // value from the `then` branch on the stack, but not on vstack as this value is
+            // not visible to the `else` branch.
+            let mut then_body_cleanup_code = state
+                .vstack
+                .clear_all_but_top_stack_value_above_height(branch_start_vstack.get_stack_height());
+            then_body_code.append(&mut then_body_cleanup_code);
+            let _returned_value_from_then_block = state.vstack.pop().unwrap();
+            state.verify_same_ordering_of_bindings(&branch_start_vstack, &branch_start_var_addr);
+            state.var_addr = branch_start_var_addr.clone();
 
-            // Pop all vstack elements produced by `else_body`
-            state.vstack = branch_start_vstack;
+            // Compile `else` branch
+            let (_else_addr, mut else_body_code) =
+                compile_expr(else_branch, "else", &return_type, state);
 
-            let mut if_code = cond_code;
+            // Cleanup stack and variable name mapping after `else` body. Preserve the return
+            // value from the `else` branch on the stack, but not on vstack, as this is added
+            // later.
+            let mut else_body_cleanup_code = state
+                .vstack
+                .clear_all_but_top_stack_value_above_height(branch_start_vstack.get_stack_height());
+            else_body_code.append(&mut else_body_cleanup_code);
+            let _returned_value_from_else_block = state.vstack.pop().unwrap();
+            state.verify_same_ordering_of_bindings(&branch_start_vstack, &branch_start_var_addr);
+            state.var_addr = branch_start_var_addr.clone();
 
-            // This naming should make it easier for the programmer to see which
-            // subroutines belong to the same if/else expression
+            // Both branches are compiled as subroutines which are called depending on what `cond`
+            // evaluates to.
             let then_subroutine_name = format!("{then_addr}_then");
             let else_subroutine_name = format!("{then_addr}_else");
+            let mut if_code = cond_code;
             if_code.append(&mut vec![
                 push(1),                            // _ cond 1
                 swap1(),                            // _ 1 cond
@@ -1106,11 +1141,7 @@ fn compile_expr(
             state.subroutines.push(then_code);
             state.subroutines.push(else_code);
 
-            let if_res_addr = state.new_value_identifier("if_then_else", &then_branch.get_type());
-
-            // TODO: Clear `var_addr` if then/else branches did assignment; this is not currently possible in if-expr,
-            // but it is possible in if-stmt. Either solve this when compiling if-stmt, or extend if-expr to allow for
-            // multi-statement blocks.
+            let if_res_addr = state.new_value_identifier("if_then_else", &return_type);
 
             (if_res_addr, if_code)
         }
