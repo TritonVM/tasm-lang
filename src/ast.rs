@@ -41,19 +41,25 @@ pub enum Stmt<T> {
     FnCall(FnCall<T>),
     While(WhileStmt<T>),
     If(IfStmt<T>),
+    Block(BlockStmt<T>),
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct WhileStmt<T> {
     pub condition: Expr<T>,
-    pub stmts: Vec<Stmt<T>>,
+    pub block: BlockStmt<T>,
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct IfStmt<T> {
     pub condition: Expr<T>,
-    pub if_branch: Vec<Stmt<T>>,
-    pub else_branch: Vec<Stmt<T>>,
+    pub then_branch: BlockStmt<T>,
+    pub else_branch: BlockStmt<T>,
+}
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub struct BlockStmt<T> {
+    pub stmts: Vec<Stmt<T>>,
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]

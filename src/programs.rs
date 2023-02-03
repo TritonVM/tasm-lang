@@ -141,7 +141,26 @@ fn left_child_rast() -> syn::ItemFn {
     })
 }
 
-fn right_lineage_length_rast() -> syn::ItemFn {
+fn right_lineage_length_stmt_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        pub fn right_lineage_length(node_index: u64) -> u32 {
+            let bit_width: u32 = tasm::log_2_floor_u64(node_index) + 1u32;
+            let npo2: u64 = 1u64 << bit_width;
+            let dist: u64 = npo2 - node_index;
+
+            let mut ret: u32 = 0u32;
+            if (bit_width as u64) < dist {
+                ret = right_lineage_length(node_index - (npo2 / 2u64) + 1u64);
+            } else {
+                ret = (dist - 1u64) as u32;
+            }
+
+            return ret;
+        }
+    })
+}
+
+fn right_lineage_length_expr_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn right_lineage_length(node_index: u64) -> u32 {
             let bit_width: u32 = tasm::log_2_floor_u64(node_index) + 1u32;
@@ -270,6 +289,21 @@ fn while_loop_with_declarations() -> syn::ItemFn {
     })
 }
 
+fn code_block() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn code_block(a: u64) -> u32 {
+            let b: u64 = a + 2u64;
+            {
+                let c: u32 = 0u32;
+                let d: u64 = 1u64;
+                let e: u64 = a + b + d;
+            }
+
+            return a as u32 + b as u32;
+        }
+    })
+}
+
 #[cfg(test)]
 mod compile_and_typecheck_tests {
     use crate::shared_test::graft_check_compile_prop;
@@ -352,7 +386,8 @@ mod compile_and_typecheck_tests {
 
     #[test]
     fn right_lineage_length_test() {
-        graft_check_compile_prop(&right_lineage_length_rast());
+        graft_check_compile_prop(&right_lineage_length_stmt_rast());
+        graft_check_compile_prop(&right_lineage_length_expr_rast());
     }
 
     #[test]
@@ -373,6 +408,11 @@ mod compile_and_typecheck_tests {
     #[test]
     fn while_loop_with_declarations_test() {
         graft_check_compile_prop(&while_loop_with_declarations());
+    }
+
+    #[test]
+    fn code_block_test() {
+        graft_check_compile_prop(&code_block());
     }
 }
 
@@ -499,7 +539,12 @@ mod compile_and_run_tests {
         fn prop_right_lineage_length_run(node_index: u64, expected: u32) {
             let inputs = vec![ast::ExprLit::U64(node_index)];
             let outputs = vec![ast::ExprLit::U32(expected)];
-            compile_execute_and_compare_prop(&right_lineage_length_rast(), inputs, outputs);
+            compile_execute_and_compare_prop(
+                &right_lineage_length_stmt_rast(),
+                inputs.clone(),
+                outputs.clone(),
+            );
+            compile_execute_and_compare_prop(&right_lineage_length_expr_rast(), inputs, outputs);
         }
 
         prop_right_lineage_length_run(1, 0);
@@ -558,5 +603,19 @@ mod compile_and_run_tests {
             vec![ast::ExprLit::U32(1000)],
             vec![ast::ExprLit::U64(2641)],
         );
+    }
+
+    #[test]
+    fn code_block_run_test() {
+        fn prop_code_block(input: u64) {
+            let inputs = vec![ast::ExprLit::U64(input)];
+            let outputs = vec![ast::ExprLit::U32(2 * (input as u32) + 2)];
+            compile_execute_and_compare_prop(&code_block(), inputs, outputs);
+        }
+
+        let mut rng = thread_rng();
+        for _ in 0..10 {
+            prop_code_block(rng.gen_range(0..(1u64 << 30)));
+        }
     }
 }

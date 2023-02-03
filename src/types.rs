@@ -99,36 +99,42 @@ fn annotate_stmt(
             *annot = ast::Typing::KnownType(fn_signature.output);
         }
 
-        ast::Stmt::While(ast::WhileStmt { condition, stmts }) => {
+        ast::Stmt::While(ast::WhileStmt { condition, block }) => {
             let condition_type = derive_annotate_expr_type(condition, state);
             assert_type_equals(&condition_type, &ast::DataType::Bool, "while-condition");
-
-            stmts
-                .iter_mut()
-                .for_each(|stmt| annotate_stmt(stmt, state, fn_name, fn_output));
+            annotate_block_stmt(block, fn_name, fn_output, state);
         }
 
         ast::Stmt::If(ast::IfStmt {
             condition,
-            if_branch,
+            then_branch,
             else_branch,
         }) => {
             let condition_type = derive_annotate_expr_type(condition, state);
             assert_type_equals(&condition_type, &ast::DataType::Bool, "if-condition");
 
-            // TODO: By sharing 'vtable' between branches, you cannot have the same 'let'
-            // statement in each branch, since type-checking the 'let' in the else-branch
-            // would trigger "let-assign cannot shadow existing variable".
+            annotate_block_stmt(then_branch, fn_name, fn_output, state);
+            annotate_block_stmt(else_branch, fn_name, fn_output, state);
+        }
 
-            if_branch
-                .iter_mut()
-                .for_each(|stmt| annotate_stmt(stmt, state, fn_name, fn_output));
-
-            else_branch
-                .iter_mut()
-                .for_each(|stmt| annotate_stmt(stmt, state, fn_name, fn_output));
+        ast::Stmt::Block(block_stmt) => {
+            annotate_block_stmt(block_stmt, fn_name, fn_output, state);
         }
     }
+}
+
+fn annotate_block_stmt(
+    block: &mut ast::BlockStmt<ast::Typing>,
+    fn_name: &str,
+    fn_output: &ast::DataType,
+    state: &mut CheckState,
+) {
+    let vtable_before = state.vtable.clone();
+    block
+        .stmts
+        .iter_mut()
+        .for_each(|stmt| annotate_stmt(stmt, state, fn_name, fn_output));
+    state.vtable = vtable_before;
 }
 
 fn assert_type_equals(derived_type: &ast::DataType, data_type: &ast::DataType, context: &str) {

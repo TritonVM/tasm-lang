@@ -358,13 +358,13 @@ pub fn graft_stmt(rust_stmt: &syn::Stmt) -> ast::Stmt<Annotation> {
 
                 let while_stmt = ast::WhileStmt {
                     condition: while_condition,
-                    stmts: while_stmts,
+                    block: ast::BlockStmt { stmts: while_stmts },
                 };
                 ast::Stmt::While(while_stmt)
             }
             syn::Expr::If(if_expr) => {
                 let if_condition = graft_expr(&if_expr.cond);
-                let if_stmts: Vec<ast::Stmt<Annotation>> = if_expr
+                let then_stmts: Vec<ast::Stmt<Annotation>> = if_expr
                     .then_branch
                     .stmts
                     .iter()
@@ -382,11 +382,19 @@ pub fn graft_stmt(rust_stmt: &syn::Stmt) -> ast::Stmt<Annotation> {
 
                 let if_stmt = ast::IfStmt {
                     condition: if_condition,
-                    if_branch: if_stmts,
-                    else_branch: else_stmts,
+                    then_branch: ast::BlockStmt { stmts: then_stmts },
+                    else_branch: ast::BlockStmt { stmts: else_stmts },
                 };
                 ast::Stmt::If(if_stmt)
             }
+            syn::Expr::Block(syn::ExprBlock { attrs: _attrs, label: _label, block }) => {
+                let stmts: Vec<ast::Stmt<Annotation>> = block
+                    .stmts
+                    .iter()
+                    .map(graft_stmt)
+                    .collect_vec();
+                ast::Stmt::Block(ast::BlockStmt { stmts })
+            },
             other => panic!("unsupported expression. make sure to end statements by semi-colon and to explicitly 'return': {other:?}"),
         },
         syn::Stmt::Semi(semi, _b) => match semi {

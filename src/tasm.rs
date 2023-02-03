@@ -346,9 +346,10 @@ pub fn compile(function: &ast::Fn<ast::Typing>) -> Vec<LabelledInstruction> {
             let begins_with_label = matches!(*subroutine.first().unwrap(), Label(_));
             let ends_with_return_or_recurse = *subroutine.last().unwrap() == return_()
                 || *subroutine.last().unwrap() == recurse();
-            begins_with_label && ends_with_return_or_recurse
+            let contains_return = subroutine.iter().any(|x| *x == return_());
+            begins_with_label && ends_with_return_or_recurse && contains_return
         }),
-        "Each subroutine must begin with a label and end with a return or a recurse"
+        "Each subroutine must begin with a label, contain a return and end with a return or a recurse"
     );
 
     let ret = vec![
@@ -460,7 +461,7 @@ fn compile_stmt(
         }
 
         ast::Stmt::FnCall(fn_call) => compile_fn_call(fn_call, state),
-        ast::Stmt::While(ast::WhileStmt { condition, stmts }) => {
+        ast::Stmt::While(ast::WhileStmt { condition, block }) => {
             // The code generated here is a subroutine that contains the while loop code
             // and then just a call to this subroutine.
             let (cond_addr, cond_code) =
@@ -471,19 +472,7 @@ fn compile_stmt(
             // condition evaluation is not visible to loop body, so pop this from vstack
             state.vstack.pop();
 
-            // Store vstack and var_addr as they look before while-loop's code block
-            let vstack_init = state.vstack.clone();
-            let var_addr_init = state.var_addr.clone();
-            let mut loop_body_code = stmts
-                .iter()
-                .map(|stmt| compile_stmt(stmt, function, state))
-                .collect_vec()
-                .concat();
-
-            let mut restore_stack_code = state.restore_stack_code(&vstack_init, &var_addr_init);
-
-            loop_body_code.append(&mut restore_stack_code);
-
+            let loop_body_code = compile_stmt(&ast::Stmt::Block(block.to_owned()), function, state);
             let while_loop_code = vec![
                 vec![Label(while_loop_subroutine_name.clone())],
                 // condition
@@ -500,7 +489,69 @@ fn compile_stmt(
 
             vec![call(while_loop_subroutine_name)]
         }
-        ast::Stmt::If(_) => todo!(),
+
+        ast::Stmt::If(ast::IfStmt {
+            condition,
+            then_branch,
+            else_branch,
+        }) => {
+            let (cond_addr, cond_code) =
+                compile_expr(condition, "if_condition", &condition.get_type(), state);
+
+            // Pop condition result from vstack as it's not on the stack inside the branches
+            let _condition_addr = state.vstack.pop();
+
+            let then_body_code =
+                compile_stmt(&ast::Stmt::Block(then_branch.to_owned()), function, state);
+
+            let else_body_code =
+                compile_stmt(&ast::Stmt::Block(else_branch.to_owned()), function, state);
+
+            let then_subroutine_name = format!("{cond_addr}_then");
+            let else_subroutine_name = format!("{cond_addr}_else");
+            let mut if_code = cond_code;
+            if_code.append(&mut vec![
+                push(1),                            // _ cond 1
+                swap1(),                            // _ 1 cond
+                skiz(),                             // _ 1
+                call(then_subroutine_name.clone()), // _ [then_branch_value] 0|1
+                skiz(),                             // _ [then_branch_value]
+                call(else_subroutine_name.clone()), // _ then_branch_value|else_branch_value
+            ]);
+
+            let then_code = vec![
+                vec![Label(then_subroutine_name), pop()],
+                then_body_code,
+                vec![push(0), return_()],
+            ]
+            .concat();
+
+            let else_code = vec![
+                vec![Label(else_subroutine_name)],
+                else_body_code,
+                vec![return_()],
+            ]
+            .concat();
+
+            state.subroutines.push(then_code);
+            state.subroutines.push(else_code);
+
+            if_code
+        }
+
+        ast::Stmt::Block(ast::BlockStmt { stmts }) => {
+            let vstack_init = state.vstack.clone();
+            let var_addr_init = state.var_addr.clone();
+            let block_body_code = stmts
+                .iter()
+                .map(|stmt| compile_stmt(stmt, function, state))
+                .collect_vec()
+                .concat();
+
+            let restore_stack_code = state.restore_stack_code(&vstack_init, &var_addr_init);
+
+            vec![block_body_code, restore_stack_code].concat()
+        }
     }
 }
 
@@ -1064,6 +1115,7 @@ fn compile_expr(
 
             (addr, code)
         }
+
         ast::Expr::If(ast::ExprIf {
             condition,
             then_branch,
