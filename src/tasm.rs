@@ -392,7 +392,7 @@ fn compile_stmt(
                 let (expr_addr, expr_code) = compile_expr(expr, "assign", &data_type, state);
                 let old_value_identifier = state
                     .var_addr
-                    .insert(var_name.clone(), expr_addr.clone())
+                    .insert(var_name.clone(), expr_addr)
                     .expect("Value identifier must exist in var_addr");
 
                 // Currently, assignments just get the same place on the stack as the value
@@ -434,7 +434,7 @@ fn compile_stmt(
                             break;
                         }
 
-                        code.append(&mut vec![pop(); size_of(&dt)]);
+                        code.append(&mut vec![pop(); size_of(dt)]);
                         state.vstack.pop();
                     }
 
@@ -1108,7 +1108,7 @@ fn compile_expr(
             else_body_code.append(&mut else_body_cleanup_code);
             let _returned_value_from_else_block = state.vstack.pop().unwrap();
             state.verify_same_ordering_of_bindings(&branch_start_vstack, &branch_start_var_addr);
-            state.var_addr = branch_start_var_addr.clone();
+            state.var_addr = branch_start_var_addr;
 
             // Both branches are compiled as subroutines which are called depending on what `cond`
             // evaluates to.
