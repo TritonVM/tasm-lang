@@ -603,6 +603,16 @@ mod compile_and_run_tests {
             vec![ast::ExprLit::U32(1000)],
             vec![ast::ExprLit::U64(2641)],
         );
+        compile_execute_and_compare_prop(
+            &while_loop_with_declarations(),
+            vec![ast::ExprLit::U32(2000)],
+            vec![ast::ExprLit::U64(3641)],
+        );
+        compile_execute_and_compare_prop(
+            &while_loop_with_declarations(),
+            vec![ast::ExprLit::U32(2001)],
+            vec![ast::ExprLit::U64(3642)],
+        );
     }
 
     #[test]
