@@ -223,6 +223,53 @@ fn simple_while_loop() -> syn::ItemFn {
     })
 }
 
+fn longer_while_loop() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn longer_while_loop(a: u32) -> u64 {
+            // Should return `1641 + a`
+            let mut ret: u64 = 600u64;
+            let var0: u64 = 77u64;
+            let var1: u64 = 10u64;
+            let mut j: u64 = 23u64;
+            let mut i: u32 = 0u32;
+            while i < var1 as u32 {
+                i = i + 1u32;
+                ret = ret + var0;
+                ret = ret + j;
+                j = j - 1u64;
+            }
+
+            ret = 9u64 + ret + a as u64;
+
+            return ret + var0;
+        }
+    })
+}
+
+fn while_loop_with_declarations() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn while_loop_with_declarations(a: u32) -> u64 {
+            // Should return `1641 + a`
+            let mut ret: u64 = 600u64;
+            let var0: u64 = 77u64;
+            let var1: u64 = 10u64;
+            let mut j: u64 = 23u64;
+            let mut i: u32 = 0u32;
+            while i < var1 as u32 {
+                let g: u32 = 10000u32;
+                i = i + 1u32;
+                ret = ret + var0;
+                ret = ret + j;
+                j = j - 1u64;
+            }
+
+            ret = 9u64 + ret + a as u64;
+
+            return ret + var0;
+        }
+    })
+}
+
 #[cfg(test)]
 mod compile_and_typecheck_tests {
     use crate::shared_test::graft_check_compile_prop;
@@ -316,6 +363,16 @@ mod compile_and_typecheck_tests {
     #[test]
     fn simple_while_loop_test() {
         graft_check_compile_prop(&simple_while_loop());
+    }
+
+    #[test]
+    fn complicated_while_loop_test() {
+        graft_check_compile_prop(&longer_while_loop());
+    }
+
+    #[test]
+    fn while_loop_with_declarations_test() {
+        graft_check_compile_prop(&while_loop_with_declarations());
     }
 }
 
@@ -491,6 +548,15 @@ mod compile_and_run_tests {
             &simple_while_loop(),
             vec![],
             vec![ast::ExprLit::U32(5050)],
+        );
+    }
+
+    #[test]
+    fn complicated_while_loop_test() {
+        compile_execute_and_compare_prop(
+            &longer_while_loop(),
+            vec![ast::ExprLit::U32(1000)],
+            vec![ast::ExprLit::U64(2641)],
         );
     }
 }
