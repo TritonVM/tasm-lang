@@ -53,6 +53,9 @@ pub fn compare_prop_with_stack_and_memory(
             ast::ExprLit::BFE(bfe) => vec![bfe],
             ast::ExprLit::XFE(xfe) => xfe.coefficients.to_vec(),
             ast::ExprLit::Digest(digest) => digest.values().to_vec(),
+            ast::ExprLit::UnknownIntegerType(_) => {
+                panic!("Unknown integer is not valid input to prop test")
+            }
         };
         stack.append(&mut bfe_sequence);
     }
@@ -74,6 +77,9 @@ pub fn compare_prop_with_stack_and_memory(
             ast::ExprLit::BFE(bfe) => vec![bfe],
             ast::ExprLit::XFE(xfe) => xfe.coefficients.to_vec(),
             ast::ExprLit::Digest(digest) => digest.values().to_vec(),
+            ast::ExprLit::UnknownIntegerType(_) => {
+                panic!("Unknown integer is not valid input to prop test")
+            }
         };
         expected_final_stack.append(&mut bfe_sequence);
     }

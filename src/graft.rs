@@ -1,4 +1,4 @@
-use crate::ast::{self};
+use crate::ast;
 use itertools::Itertools;
 
 type Annotation = ast::Typing;
@@ -328,6 +328,7 @@ pub fn graft_expr(rust_exp: &syn::Expr) -> ast::Expr<Annotation> {
 fn graft_lit(rust_val: &syn::Lit) -> ast::ExprLit {
     use ast::ExprLit::*;
 
+    println!("rust_val = {rust_val:#?}");
     const MIN_INT_LITERAL_LENGTH: usize = 4;
     match rust_val {
         syn::Lit::Bool(b) => Bool(b.value),
@@ -337,25 +338,26 @@ fn graft_lit(rust_val: &syn::Lit) -> ast::ExprLit {
             let int_lit: String = int_lit.token().to_string();
             let str_len = int_lit.len();
             if str_len < MIN_INT_LITERAL_LENGTH {
-                panic!(
-                        "Error in declaration of int literal. Did you forget a type annotation? Got: \"{int_lit}\""
-                    );
-            }
-            let int_lit_value = &int_lit.as_str()[0..str_len - 3];
-            let type_annotation = &int_lit[str_len - 3..];
-            let int_val: ast::ExprLit = match type_annotation {
-                "u32" => {
-                    let my_int = int_lit_value.parse::<u32>().unwrap();
-                    U32(my_int)
-                }
-                "u64" => {
-                    let my_int = int_lit_value.parse::<u64>().unwrap();
-                    U64(my_int)
-                }
-                other => panic!("unsupported int type annotation: {other:?}"),
-            };
+                // No type indicator found on int literal: Unknown integer type.
+                let my_int: u128 = int_lit.parse::<u128>().unwrap();
+                UnknownIntegerType(my_int)
+            } else {
+                let int_lit_value = &int_lit.as_str()[0..str_len - 3];
+                let type_annotation = &int_lit[str_len - 3..];
+                let int_val: ast::ExprLit = match type_annotation {
+                    "u32" => {
+                        let my_int = int_lit_value.parse::<u32>().unwrap();
+                        U32(my_int)
+                    }
+                    "u64" => {
+                        let my_int = int_lit_value.parse::<u64>().unwrap();
+                        U64(my_int)
+                    }
+                    other => panic!("unsupported int type annotation: {other:?}"),
+                };
 
-            int_val
+                int_val
+            }
         }
         other => panic!("unsupported: {other:?}"),
     }

@@ -71,6 +71,7 @@ pub enum ExprLit {
     BFE(BFieldElement),
     XFE(XFieldElement),
     Digest(Digest),
+    UnknownIntegerType(u128),
 }
 
 impl ExprLit {
@@ -82,6 +83,7 @@ impl ExprLit {
             ExprLit::BFE(_) => DataType::BFE,
             ExprLit::XFE(_) => DataType::XFE,
             ExprLit::Digest(_) => DataType::Digest,
+            ExprLit::UnknownIntegerType(_) => panic!("Did not resolve unknown integer type"),
         }
     }
 }
@@ -156,6 +158,7 @@ pub struct SymTable(HashMap<String, (u8, DataType)>);
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum DataType {
+    UnknownIntegerType,
     Bool,
     U32,
     U64,
@@ -200,6 +203,7 @@ impl TryFrom<DataType> for tasm_lib::snippet::DataType {
                 Ok(tasm_lib::snippet::DataType::List(Box::new(element_type)))
             },
             DataType::FlatList(_) => Err("FlatList cannot be converted to a tasm_lib type. Try converting its individual elements".to_string()),
+            DataType::UnknownIntegerType => Err("Unknown integer type must be resolved before converting to tasm-lib type".to_string()),
         }
     }
 }
@@ -251,6 +255,7 @@ impl Display for DataType {
                 XFE => "XField".to_string(),
                 Digest => "Digest".to_string(),
                 List(ty) => format!("List({ty})"),
+                UnknownIntegerType => format!("Unknown integer type"),
                 FlatList(tys) => tys.iter().map(|ty| format!("{ty}")).join(" "),
             }
         )

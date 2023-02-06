@@ -407,7 +407,57 @@ fn compile_stmt(
                 vec![expr_code, overwrite_code].concat()
             }
             ast::Identifier::TupleIndex(_, _) => todo!(),
-            ast::Identifier::ListIndex(_, _) => todo!(),
+            ast::Identifier::ListIndex(ident, index_expr) => {
+                let ident_type = ident.get_type();
+                let type_param = ident_type.type_parameter().unwrap_or_else(|| {
+                    panic!("identifier must have type parameter when assigning through indexing")
+                });
+                let fn_name = match type_param {
+                    ast::DataType::Bool => state.import_snippet(Box::new(
+                        tasm_lib::list::unsafe_u32::set::Set::<1>(type_param.try_into().unwrap()),
+                    )),
+                    ast::DataType::U32 => state.import_snippet(Box::new(
+                        tasm_lib::list::unsafe_u32::set::Set::<1>(type_param.try_into().unwrap()),
+                    )),
+                    ast::DataType::U64 => state.import_snippet(Box::new(
+                        tasm_lib::list::unsafe_u32::set::Set::<2>(type_param.try_into().unwrap()),
+                    )),
+                    ast::DataType::BFE => state.import_snippet(Box::new(
+                        tasm_lib::list::unsafe_u32::set::Set::<1>(type_param.try_into().unwrap()),
+                    )),
+                    ast::DataType::XFE => state.import_snippet(Box::new(
+                        tasm_lib::list::unsafe_u32::set::Set::<3>(type_param.try_into().unwrap()),
+                    )),
+                    ast::DataType::Digest => state.import_snippet(Box::new(
+                        tasm_lib::list::unsafe_u32::set::Set::<5>(type_param.try_into().unwrap()),
+                    )),
+                    _ => {
+                        panic!("Unsupported list type for list-assign. List type was: {ident_type}")
+                    }
+                };
+
+                let (_expr_addr, expr_code) = compile_expr(expr, "assign", &expr.get_type(), state);
+                let ident_expr = ast::Expr::Var(*ident.to_owned());
+                let (_ident_addr, ident_code) =
+                    compile_expr(&ident_expr, "ident_on_assign", &ident_type, state);
+                let (_index_expr, index_code) = compile_expr(
+                    &index_expr,
+                    "index_on_assign",
+                    &index_expr.get_type(),
+                    state,
+                );
+                state.vstack.pop();
+                state.vstack.pop();
+                state.vstack.pop();
+
+                vec![
+                    expr_code,
+                    ident_code,
+                    index_code,
+                    vec![call(fn_name.to_owned())],
+                ]
+                .concat()
+            }
         },
 
         // 'return;': Clean stack
@@ -682,6 +732,9 @@ fn compile_expr(
 
                 ast::ExprLit::XFE(_) => todo!(),
                 ast::ExprLit::Digest(_) => todo!(),
+                ast::ExprLit::UnknownIntegerType(_) => {
+                    panic!("Unknown integer type must be resolved in code generator")
+                }
             }
         }
 
@@ -1358,6 +1411,7 @@ fn compile_eq_code(
                 .to_string();
             vec![call(eq_digest)]
         }
+        UnknownIntegerType => panic!("Unknown integer type must be resolved in code generator"),
         List(_) => todo!(),
         FlatList(_) => todo!(),
     }
@@ -1374,6 +1428,7 @@ pub fn size_of(data_type: &ast::DataType) -> usize {
         Digest => 5,
         List(_list_type) => 1,
         FlatList(tuple_type) => tuple_type.iter().map(size_of).sum(),
+        UnknownIntegerType => panic!("Unknown integer type must be resolved in code generator"),
     }
 }
 

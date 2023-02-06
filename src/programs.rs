@@ -314,6 +314,8 @@ fn simple_list_support() -> syn::ItemFn {
             let b: u64 = a.pop().unwrap();
             let len: u32 = a.len() as u32;
 
+            a[1] = 5000u64;
+
             return (a, len, b);
         }
     })
@@ -707,7 +709,7 @@ mod compile_and_run_tests {
         );
         tasm_lib::rust_shadowing_helper_functions::unsafe_list_push(
             BFieldElement::zero(),
-            [BFieldElement::new(3000), BFieldElement::new(0)],
+            [BFieldElement::new(5000), BFieldElement::new(0)],
             &mut expected_final_memory,
         );
         tasm_lib::rust_shadowing_helper_functions::unsafe_list_push(

@@ -15,7 +15,7 @@ pub fn get_function_name(name: &str) -> Option<&str> {
 }
 
 /// tasm-lib contains no methods, only functions
-pub fn get_method_name(name: &str) -> Option<&str> {
+pub fn get_method_name(_name: &str) -> Option<&str> {
     None
 }
 

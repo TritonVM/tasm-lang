@@ -216,7 +216,17 @@ fn annotate_identifier_type(
 
         // x[e]
         ast::Identifier::ListIndex(list_identifier, index_expr) => {
+            if let ast::Expr::Lit(ast::ExprLit::UnknownIntegerType(val), _) = *index_expr.to_owned()
+            {
+                *index_expr = Box::new(ast::Expr::Lit(
+                    ast::ExprLit::U32(val as u32),
+                    ast::Typing::default(),
+                ));
+            };
+            println!("index_expr = {index_expr:?}");
             let index_type = derive_annotate_expr_type(index_expr, state);
+            println!("index_type = {index_type}");
+            println!("index_expr = {index_expr:?}");
             if !is_index_type(&index_type) {
                 panic!("Cannot index list with type '{index_type}'");
             }
@@ -227,11 +237,13 @@ fn annotate_identifier_type(
             }
 
             let list_type = annotate_identifier_type(list_identifier, state);
-            if !is_primitive_type(&list_type) {
-                panic!("Cannot index list of type '{list_type}");
-            }
+            println!("list_identifier = {index_expr:?}");
+            println!("list_type = {list_type:?}");
+            // if !is_primitive_type(&list_type) {
+            //     panic!("Cannot index list of type '{list_type}");
+            // }
 
-            list_type
+            list_type.type_parameter().unwrap()
         }
     }
 }
