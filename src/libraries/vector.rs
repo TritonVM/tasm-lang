@@ -7,6 +7,57 @@ use crate::{
 
 const VECTOR_LIB_INDICATOR: &str = "Vec::";
 
+/// Map list-function or method name to the TASM lib snippet type
+fn name_to_tasm_lib_snippet(
+    public_name: &str,
+    type_parameter: &Option<ast::DataType>,
+) -> Option<Box<dyn Snippet>> {
+    let tasm_type: Option<tasm_lib::snippet::DataType> =
+        type_parameter.clone().map(|x| x.try_into().unwrap());
+    match public_name {
+        "Vec::default" => Some(Box::new(tasm_lib::list::unsafe_u32::new::New(
+            tasm_type.unwrap(),
+        ))),
+        "default" => Some(Box::new(tasm_lib::list::unsafe_u32::new::New(
+            tasm_type.unwrap(),
+        ))),
+        "push" => match size_of(type_parameter.as_ref().unwrap()) {
+            1 => Some(Box::new(tasm_lib::list::unsafe_u32::push::Push::<1>(
+                tasm_type.unwrap(),
+            ))),
+            2 => Some(Box::new(tasm_lib::list::unsafe_u32::push::Push::<2>(
+                tasm_type.unwrap(),
+            ))),
+            3 => Some(Box::new(tasm_lib::list::unsafe_u32::push::Push::<3>(
+                tasm_type.unwrap(),
+            ))),
+            5 => Some(Box::new(tasm_lib::list::unsafe_u32::push::Push::<5>(
+                tasm_type.unwrap(),
+            ))),
+            _ => panic!("Cannot push to Vec<{}> yet", &type_parameter.unwrap()),
+        },
+        "pop" => match size_of(type_parameter.as_ref().unwrap()) {
+            1 => Some(Box::new(tasm_lib::list::unsafe_u32::pop::Pop::<1>(
+                tasm_type.unwrap(),
+            ))),
+            2 => Some(Box::new(tasm_lib::list::unsafe_u32::pop::Pop::<2>(
+                tasm_type.unwrap(),
+            ))),
+            3 => Some(Box::new(tasm_lib::list::unsafe_u32::pop::Pop::<3>(
+                tasm_type.unwrap(),
+            ))),
+            5 => Some(Box::new(tasm_lib::list::unsafe_u32::pop::Pop::<5>(
+                tasm_type.unwrap(),
+            ))),
+            _ => panic!("Cannot push to Vec<{}> yet", &type_parameter.unwrap()),
+        },
+        "len" => Some(Box::new(tasm_lib::list::unsafe_u32::length::LengthLong(
+            tasm_type.unwrap(),
+        ))),
+        _ => None,
+    }
+}
+
 pub fn get_function_name(name: &str) -> Option<&str> {
     if name.starts_with(VECTOR_LIB_INDICATOR) {
         let stripped_name = &name[VECTOR_LIB_INDICATOR.len()..name.len()];
@@ -26,94 +77,48 @@ pub fn get_method_name(name: &str) -> Option<&str> {
 
 pub fn import_tasm_snippet(
     vector_fn_name: &str,
-    type_parameter: Option<ast::DataType>,
+    type_parameter: &Option<ast::DataType>,
     state: &mut CompilerState,
 ) -> String {
-    // TODO: This does not allow for a collission of function names in the
-    // `tasm-lib` library and this library. Maybe we could prepend all tasm-lib
-    // names with something?
-    let tasm_type: Option<tasm_lib::snippet::DataType> =
-        type_parameter.clone().map(|x| x.try_into().unwrap());
-    let snippet_name: String = match vector_fn_name {
-        "default" => {
-            let snippet: Box<dyn Snippet> =
-                Box::new(tasm_lib::list::unsafe_u32::new::New(tasm_type.unwrap()));
-            let entrypoint = snippet.entrypoint().to_owned();
-            state.import_snippet(snippet);
-            entrypoint
-        }
-        "push" => {
-            let snippet: Box<dyn Snippet> = match size_of(type_parameter.as_ref().unwrap()) {
-                1 => Box::new(tasm_lib::list::unsafe_u32::push::Push::<1>(
-                    tasm_type.unwrap(),
-                )),
-                2 => Box::new(tasm_lib::list::unsafe_u32::push::Push::<2>(
-                    tasm_type.unwrap(),
-                )),
-                3 => Box::new(tasm_lib::list::unsafe_u32::push::Push::<3>(
-                    tasm_type.unwrap(),
-                )),
-                5 => Box::new(tasm_lib::list::unsafe_u32::push::Push::<5>(
-                    tasm_type.unwrap(),
-                )),
-                _ => panic!("Cannot push to Vec<{}> yet", &type_parameter.unwrap()),
-            };
-            let entrypoint = snippet.entrypoint().to_owned();
-            state.import_snippet(snippet);
-            entrypoint
-        }
-        "pop" => {
-            let snippet: Box<dyn Snippet> = match size_of(type_parameter.as_ref().unwrap()) {
-                1 => Box::new(tasm_lib::list::unsafe_u32::pop::Pop::<1>(
-                    tasm_type.unwrap(),
-                )),
-                2 => Box::new(tasm_lib::list::unsafe_u32::pop::Pop::<2>(
-                    tasm_type.unwrap(),
-                )),
-                3 => Box::new(tasm_lib::list::unsafe_u32::pop::Pop::<3>(
-                    tasm_type.unwrap(),
-                )),
-                5 => Box::new(tasm_lib::list::unsafe_u32::pop::Pop::<5>(
-                    tasm_type.unwrap(),
-                )),
-                _ => panic!("Cannot pop to Vec<{}> yet", &type_parameter.unwrap()),
-            };
-            let entrypoint = snippet.entrypoint().to_owned();
-            state.import_snippet(snippet);
-            entrypoint
-        }
-        "len" => {
-            let snippet: Box<dyn Snippet> = Box::new(
-                tasm_lib::list::unsafe_u32::length::LengthLong(tasm_type.unwrap()),
-            );
-            let entrypoint = snippet.entrypoint().to_owned();
-            state.import_snippet(snippet);
-            entrypoint
-        }
-        _ => panic!("Unknown list method {vector_fn_name}"),
-    };
+    let snippet = name_to_tasm_lib_snippet(vector_fn_name, type_parameter)
+        .unwrap_or_else(|| panic!("Unknown function name {vector_fn_name}"));
+    let entrypoint = snippet.entrypoint().to_owned();
+    state.import_snippet(snippet);
 
-    snippet_name
+    entrypoint
 }
 
 pub fn function_name_to_signature(
     fn_name: &str,
     element_type: &Option<ast::DataType>,
 ) -> ast::FnSignature {
-    match fn_name {
-        "default" => {
-            assert!(
-                element_type.is_some(),
-                "Type parameter for element type needed for list functions"
-            );
-            ast::FnSignature {
-                name: "default".to_string(),
-                args: vec![],
-                output: ast::DataType::List(Box::new(element_type.as_ref().unwrap().to_owned())),
-            }
-        }
-        &_ => todo!(),
+    let snippet = name_to_tasm_lib_snippet(fn_name, element_type)
+        .unwrap_or_else(|| panic!("Unknown function name {fn_name}"));
+
+    let input_types_lib = snippet.input_types();
+    let output_types_lib = snippet.output_types();
+    let name = snippet.entrypoint().to_string();
+    let mut args: Vec<ast::FnArg> = vec![];
+    for (i, itl) in input_types_lib.into_iter().enumerate() {
+        let fn_arg = ast::FnArg {
+            name: format!("input_{i}"),
+            data_type: itl.into(),
+        };
+        args.push(fn_arg);
     }
+
+    let mut output_types: Vec<ast::DataType> = vec![];
+    for otl in output_types_lib {
+        output_types.push(otl.into());
+    }
+
+    let output = match output_types.len() {
+        1 => output_types[0].clone(),
+        0 => ast::DataType::FlatList(vec![]),
+        _ => ast::DataType::FlatList(output_types),
+    };
+
+    ast::FnSignature { name, args, output }
 }
 
 pub fn method_name_to_signature(

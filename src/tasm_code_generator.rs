@@ -608,7 +608,7 @@ fn compile_method_call(
     let receiver_type = method_call.args[0].get_type();
     let type_parameter = receiver_type.type_parameter();
 
-    // Compile arguments left-to-right
+    // Compile arguments, including receiver, left-to-right
     let (_args_idents, args_code): (Vec<ValueIdentifier>, Vec<Vec<LabelledInstruction>>) =
         method_call
             .args
@@ -715,7 +715,7 @@ fn compile_expr(
 
         ast::Expr::MethodCall(method_call) => {
             let method_call_code = compile_method_call(method_call, state);
-            let method_call_ident_prefix = format!("_fn_call_{}", method_call.method_name);
+            let method_call_ident_prefix = format!("_method_call_{}", method_call.method_name);
             let method_call_ident = state
                 .new_value_identifier(&method_call_ident_prefix, &method_call.annot.get_type());
 
