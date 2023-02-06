@@ -460,6 +460,7 @@ fn compile_stmt(
         }
 
         ast::Stmt::FnCall(fn_call) => compile_fn_call(fn_call, state),
+        ast::Stmt::MethodCall(method_call) => todo!(),
         ast::Stmt::While(ast::WhileStmt { condition, block }) => {
             // The code generated here is a subroutine that contains the while loop code
             // and then just a call to this subroutine.
@@ -562,6 +563,7 @@ fn compile_fn_call(
         mut name,
         args,
         annot: _return_type, // void
+        type_parameter,
     } = fn_call.clone();
 
     // Compile arguments left-to-right
@@ -575,8 +577,8 @@ fn compile_fn_call(
         .unzip();
 
     // If function is from tasm-lib, import it
-    if let Some(snippet_name) = tasm::get_tasm_lib_fn(&name) {
-        tasm::import_tasm_snippet(snippet_name, None, state);
+    if let Some(snippet_name) = tasm::get_function_name(&name) {
+        tasm::import_tasm_snippet(snippet_name, type_parameter, state);
         name = snippet_name.to_string();
     }
 
@@ -670,6 +672,8 @@ fn compile_expr(
 
             (fn_call_ident, fn_call_code)
         }
+
+        ast::Expr::MethodCall(_) => todo!(),
 
         ast::Expr::Binop(lhs_expr, binop, rhs_expr, known_type) => {
             let res_type = known_type.get_type();

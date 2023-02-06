@@ -1,7 +1,10 @@
 use itertools::Itertools;
 use std::collections::HashMap;
 
-use crate::{ast, libraries::tasm};
+use crate::{
+    ast,
+    libraries::{tasm, vector},
+};
 
 #[derive(Debug, Default)]
 pub struct CheckState {
@@ -85,8 +88,13 @@ fn annotate_stmt(
             }
         },
 
-        ast::Stmt::FnCall(ast::FnCall { name, args, annot }) => {
-            let fn_signature = get_fn_signature(name, state);
+        ast::Stmt::FnCall(ast::FnCall {
+            name,
+            args,
+            annot,
+            type_parameter,
+        }) => {
+            let fn_signature = get_fn_signature(name, state, type_parameter);
             assert!(
                 is_void_type(&fn_signature.output),
                 "Function call '{name}' at statement-level must return the unit type."
@@ -95,6 +103,26 @@ fn annotate_stmt(
             derive_annotate_fn_call_args(&fn_signature, args, state);
 
             *annot = ast::Typing::KnownType(fn_signature.output);
+        }
+
+        ast::Stmt::MethodCall(ast::MethodCall {
+            receiver,
+            method_name,
+            args,
+            annot,
+        }) => {
+            println!("receiver: {receiver}");
+            let receiver_type: ast::DataType = annotate_identifier_type(receiver, state);
+            let type_parameter = receiver_type.type_parameter();
+            let method_signature = get_fn_signature(method_name, state, &type_parameter);
+            assert!(
+                is_void_type(&method_signature.output),
+                "Method call {receiver}.'{method_name}' at statement-level must return the unit type."
+            );
+
+            derive_annotate_fn_call_args(&method_signature, args, state);
+
+            *annot = ast::Typing::KnownType(method_signature.output)
         }
 
         ast::Stmt::While(ast::WhileStmt { condition, block }) => {
@@ -150,7 +178,10 @@ fn annotate_identifier_type(
     match identifier {
         // x
         ast::Identifier::String(var_name, var_type) => {
-            let found_type = state.vtable.get(var_name).expect("variable must exist");
+            let found_type = state
+                .vtable
+                .get(var_name)
+                .unwrap_or_else(|| panic!("variable {var_name} must have known type"));
             *var_type = ast::Typing::KnownType(found_type.clone());
             found_type.clone()
         }
@@ -199,16 +230,46 @@ fn annotate_identifier_type(
     }
 }
 
-fn get_fn_signature(name: &str, state: &CheckState) -> ast::FnSignature {
+fn get_fn_signature(
+    name: &str,
+    state: &CheckState,
+    type_parameter: &Option<ast::DataType>,
+) -> ast::FnSignature {
     // all functions from `tasm-lib` are in scope
-    if let Some(snippet_name) = tasm::get_tasm_lib_fn(name) {
-        return tasm::function_name_to_signature(snippet_name, None);
+    if let Some(snippet_name) = tasm::get_function_name(name) {
+        return tasm::function_name_to_signature(snippet_name, &type_parameter);
+    }
+
+    // Functions for lists are in scope
+    if let Some(function_name) = vector::get_function_name(name) {
+        return vector::function_name_to_signature(function_name, &type_parameter);
     }
 
     state
         .ftable
         .get(name)
-        .unwrap_or_else(|| panic!("Don't know what type of value '{name}' returns!"))
+        .unwrap_or_else(|| panic!("Don't know what type of value '{name}' returns! Type parameter was: {type_parameter:?}"))
+        .clone()
+}
+
+fn get_method_signature(
+    name: &str,
+    state: &CheckState,
+    type_parameter: &Option<ast::DataType>,
+) -> ast::FnSignature {
+    if let Some(snippet_name) = tasm::get_method_name(name) {
+        return tasm::function_name_to_signature(snippet_name, &type_parameter);
+    }
+
+    // Functions for lists are in scope
+    if let Some(function_name) = vector::get_method_name(name) {
+        return vector::function_name_to_signature(function_name, &type_parameter);
+    }
+
+    state
+        .ftable
+        .get(name)
+        .unwrap_or_else(|| panic!("Don't know what type of value '{name}' returns! Type parameter was: {type_parameter:?}"))
         .clone()
 }
 
@@ -269,8 +330,13 @@ fn derive_annotate_expr_type(
             ast::DataType::FlatList(tuple_types)
         }
 
-        ast::Expr::FnCall(ast::FnCall { name, args, annot }) => {
-            let fn_signature = get_fn_signature(name, state);
+        ast::Expr::FnCall(ast::FnCall {
+            name,
+            args,
+            annot,
+            type_parameter,
+        }) => {
+            let fn_signature = get_fn_signature(name, state, type_parameter);
             assert!(
                 !is_void_type(&fn_signature.output),
                 "Function calls in expressions cannot return the unit type"
@@ -281,6 +347,15 @@ fn derive_annotate_expr_type(
             *annot = ast::Typing::KnownType(fn_signature.output.clone());
 
             fn_signature.output
+        }
+
+        ast::Expr::MethodCall(ast::MethodCall {
+            receiver,
+            method_name,
+            args,
+            annot,
+        }) => {
+            todo!()
         }
 
         ast::Expr::Binop(lhs_expr, binop, rhs_expr, binop_type) => {

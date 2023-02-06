@@ -39,6 +39,7 @@ pub enum Stmt<T> {
     Assign(AssignStmt<T>),
     Return(Option<Expr<T>>),
     FnCall(FnCall<T>),
+    MethodCall(MethodCall<T>),
     While(WhileStmt<T>),
     If(IfStmt<T>),
     Block(BlockStmt<T>),
@@ -110,6 +111,7 @@ pub enum Expr<T> {
     // Index(Box<Expr<T>>, Box<Expr<T>>), // a_expr[i_expr]    (a + 5)[3]
     FlatList(Vec<Expr<T>>),
     FnCall(FnCall<T>),
+    MethodCall(MethodCall<T>),
     Binop(Box<Expr<T>>, BinOp, Box<Expr<T>>, T),
     If(ExprIf<T>),
     Cast(Box<Expr<T>>, DataType),
@@ -127,6 +129,7 @@ impl Expr<Typing> {
                 DataType::FlatList(types)
             }
             Expr::FnCall(fnc) => fnc.get_type(),
+            Expr::MethodCall(_) => todo!(),
             Expr::Binop(_, _, _, t) => t.get_type(),
             Expr::If(if_expr) => if_expr.get_type(),
             Expr::Cast(_expr, t) => t.to_owned(),
@@ -161,6 +164,16 @@ pub enum DataType {
     Digest,
     List(Box<DataType>),
     FlatList(Vec<DataType>),
+}
+
+impl DataType {
+    /// Return the element type for lists
+    pub fn type_parameter(&self) -> Option<DataType> {
+        match self {
+            DataType::List(element_type) => Some(*element_type.to_owned()),
+            _ => None,
+        }
+    }
 }
 
 impl TryFrom<DataType> for tasm_lib::snippet::DataType {
@@ -247,6 +260,20 @@ pub enum Identifier<T> {
     ListIndex(Box<Identifier<T>>, Box<Expr<T>>), // x[0]
 }
 
+impl<T: core::fmt::Debug> Display for Identifier<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                Identifier::String(name, _) => name.to_string(),
+                Identifier::TupleIndex(ident, t_index) => format!("{ident}.{t_index}"),
+                Identifier::ListIndex(ident, l_index_expr) => format!("{ident}[{l_index_expr:?}]"),
+            }
+        )
+    }
+}
+
 impl Identifier<Typing> {
     /// Return the type for an identifier. Must be run after completed type annotation.
     pub fn get_type(&self) -> DataType {
@@ -289,10 +316,25 @@ pub struct LetStmt<T> {
 pub struct FnCall<T> {
     pub name: String,
     pub args: Vec<Expr<T>>,
+    pub type_parameter: Option<DataType>,
     pub annot: T,
 }
 
 impl FnCall<Typing> {
+    pub fn get_type(&self) -> DataType {
+        self.annot.get_type()
+    }
+}
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub struct MethodCall<T> {
+    pub receiver: Identifier<T>,
+    pub method_name: String,
+    pub args: Vec<Expr<T>>,
+    pub annot: T,
+}
+
+impl MethodCall<Typing> {
     pub fn get_type(&self) -> DataType {
         self.annot.get_type()
     }

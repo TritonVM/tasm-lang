@@ -3,26 +3,43 @@ use tasm_lib::all_snippets::name_to_snippet;
 use crate::ast::{self, FnSignature};
 use crate::tasm_code_generator::CompilerState;
 
+const TASM_LIB_INDICATOR: &str = "tasm::";
+
+pub fn get_function_name(name: &str) -> Option<&str> {
+    if name.starts_with(TASM_LIB_INDICATOR) {
+        let stripped_name = &name[TASM_LIB_INDICATOR.len()..name.len()];
+        return Some(stripped_name);
+    }
+
+    None
+}
+
+/// tasm-lib contains no methods, only functions
+pub fn get_method_name(name: &str) -> Option<&str> {
+    None
+}
+
 pub fn import_tasm_snippet(
     tasm_fn_name: &str,
-    element_type: Option<ast::DataType>,
+    type_parameter: Option<ast::DataType>,
     state: &mut CompilerState,
 ) {
     // TODO: This does not allow for a collission of function names in the
     // `tasm-lib` library and this library. Maybe we could prepend all tasm-lib
     // names with something?
     let tasm_type: Option<tasm_lib::snippet::DataType> =
-        element_type.map(|x| x.try_into().unwrap());
+        type_parameter.map(|x| x.try_into().unwrap());
     let snippet = name_to_snippet(tasm_fn_name, tasm_type);
     state.import_snippet(snippet);
 }
 
 pub fn function_name_to_signature(
     tasm_fn_name: &str,
-    element_type: Option<ast::DataType>,
+    element_type: &Option<ast::DataType>,
 ) -> ast::FnSignature {
-    let tasm_type: Option<tasm_lib::snippet::DataType> =
-        element_type.map(|x| x.try_into().unwrap());
+    let tasm_type: Option<tasm_lib::snippet::DataType> = element_type
+        .as_ref()
+        .map(|x| x.to_owned().try_into().unwrap());
     let snippet = name_to_snippet(tasm_fn_name, tasm_type);
 
     let input_types_lib = snippet.input_types();
@@ -49,14 +66,4 @@ pub fn function_name_to_signature(
     };
 
     FnSignature { name, args, output }
-}
-
-pub fn get_tasm_lib_fn(name: &str) -> Option<&str> {
-    let tasm_lib_indicator = "tasm::";
-    if name.starts_with(tasm_lib_indicator) {
-        let stripped_name = &name[tasm_lib_indicator.len()..name.len()];
-        return Some(stripped_name);
-    }
-
-    None
 }

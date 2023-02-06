@@ -304,6 +304,18 @@ fn code_block() -> syn::ItemFn {
     })
 }
 
+fn simple_list_support() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn make_short_list() -> Vec<u64> {
+            let mut a: Vec<u64> = Vec::<u64>::default();
+            a.push(2000u64);
+            a.push(3000u64);
+
+            return a;
+        }
+    })
+}
+
 #[cfg(test)]
 mod compile_and_typecheck_tests {
     use crate::shared_test::graft_check_compile_prop;
@@ -413,6 +425,11 @@ mod compile_and_typecheck_tests {
     #[test]
     fn code_block_test() {
         graft_check_compile_prop(&code_block());
+    }
+
+    #[test]
+    fn simple_list_support_test() {
+        graft_check_compile_prop(&simple_list_support());
     }
 }
 

@@ -119,15 +119,52 @@ fn graft_return_type(rust_return_type: &syn::ReturnType) -> ast::DataType {
     }
 }
 
+/// Return type argument found in path
+fn path_to_type_parameter(path: &syn::Path) -> Option<ast::DataType> {
+    let mut type_parameter: Option<ast::DataType> = None;
+    for segment in path.segments.iter() {
+        match &segment.arguments {
+            syn::PathArguments::None => continue,
+            syn::PathArguments::AngleBracketed(abga) => {
+                assert_eq!(
+                    1,
+                    abga.args.len(),
+                    "Only one type parameter argument is supported"
+                );
+                if let syn::GenericArgument::Type(rdt) = &abga.args[0] {
+                    assert!(
+                        type_parameter.is_none(),
+                        "only one type parameter supported"
+                    );
+                    type_parameter = Some(rust_type_to_data_type(&rdt));
+                } else {
+                    panic!("unsupported GenericArgument: {:#?}", abga.args[0]);
+                }
+            }
+            syn::PathArguments::Parenthesized(_) => panic!("unsupported: {path:#?}"),
+        }
+    }
+
+    type_parameter
+}
+
 fn graft_call_exp(expr_call: &syn::ExprCall) -> ast::FnCall<Annotation> {
-    let name: String = match expr_call.func.as_ref() {
-        syn::Expr::Path(path) => path_to_ident(&path.path),
+    let (name, type_parameter) = match expr_call.func.as_ref() {
+        syn::Expr::Path(path) => (
+            path_to_ident(&path.path),
+            path_to_type_parameter(&path.path),
+        ),
         other => panic!("unsupported: {other:?}"),
     };
     let args = expr_call.args.iter().map(graft_expr).collect_vec();
     let annot = Default::default();
 
-    ast::FnCall { name, args, annot }
+    ast::FnCall {
+        name,
+        args,
+        annot,
+        type_parameter,
+    }
 }
 
 /// Return identifier if expression is a Path/identifier
@@ -138,7 +175,7 @@ fn expr_to_maybe_ident(rust_exp: &syn::Expr) -> Option<String> {
     }
 }
 
-fn graft_method_call(rust_method_call: &syn::ExprMethodCall) -> ast::FnCall<Annotation> {
+fn graft_method_call(rust_method_call: &syn::ExprMethodCall) -> ast::MethodCall<Annotation> {
     // TODO: This code only supports method calls on variable names and not on
     // list elements or on tuple elements. We definitely want to support this
     // on tuple elements, though. Expand!
@@ -146,14 +183,14 @@ fn graft_method_call(rust_method_call: &syn::ExprMethodCall) -> ast::FnCall<Anno
         syn::Expr::Path(path) => path_to_ident(&path.path),
         other => panic!("unsupported: {other:?}"),
     };
-    let name = rust_method_call.method.to_string();
-    let self_identifier = ast::Identifier::String(identifier, Default::default());
-    let self_expr = ast::Expr::Var(self_identifier);
-    let method_args = rust_method_call.args.iter().map(graft_expr).collect_vec();
+    let method_name = rust_method_call.method.to_string();
+    let receiver = ast::Identifier::String(identifier, Default::default());
+    let args = rust_method_call.args.iter().map(graft_expr).collect_vec();
     let annot = Default::default();
-    ast::FnCall {
-        name,
-        args: vec![vec![self_expr], method_args].concat(),
+    ast::MethodCall {
+        receiver,
+        method_name,
+        args,
         annot,
     }
 }
@@ -216,7 +253,7 @@ pub fn graft_expr(rust_exp: &syn::Expr) -> ast::Expr<Annotation> {
             })
         }
         syn::Expr::MethodCall(method_call_expr) => {
-            ast::Expr::FnCall(graft_method_call(method_call_expr))
+            ast::Expr::MethodCall(graft_method_call(method_call_expr))
         }
         syn::Expr::Field(field_expr) => {
             // This branch is for tuple support.
@@ -459,7 +496,7 @@ pub fn graft_stmt(rust_stmt: &syn::Stmt) -> ast::Stmt<Annotation> {
                 ast::Stmt::Assign(assign_stmt)
             }
             syn::Expr::MethodCall(method_call_expr) => {
-                ast::Stmt::FnCall(graft_method_call(method_call_expr))
+                ast::Stmt::MethodCall(graft_method_call(method_call_expr))
             }
             other => panic!("unsupported: {other:?}"),
         },
@@ -526,11 +563,10 @@ mod tests {
 
     #[test]
     fn make_a_list() {
-        let mut a: Vec<u64> = Vec::default();
-        Vec::push(&mut a, 43u64);
         let tokens: syn::Item = parse_quote! {
             fn make_and_return_a_list() -> Vec<u64> {
-                let mut a: Vec<u64> = Vec::default();
+                let mut a: Vec<u64> = Vec::<u64>::default();
+                let mut b: Vec<u64> = Vec::default();
                 a.push(43u64);
                 a.push(10u64);
                 return a;
@@ -539,9 +575,9 @@ mod tests {
 
         match &tokens {
             syn::Item::Fn(item_fn) => {
-                // println!("{item_fn:#?}");
+                println!("{item_fn:#?}");
                 let _ret = graft(item_fn);
-                // println!("{ret:#?}");
+                println!("{_ret:#?}");
             }
             _ => panic!("unsupported"),
         }
