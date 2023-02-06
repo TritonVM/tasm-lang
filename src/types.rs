@@ -106,11 +106,15 @@ fn annotate_stmt(
         }
 
         ast::Stmt::MethodCall(ast::MethodCall {
-            receiver,
             method_name,
             args,
             annot,
         }) => {
+            let receiver = if let ast::Expr::Var(rec) = &mut args[0] {
+                rec
+            } else {
+                panic!("Receiver must be an identifier")
+            };
             let receiver_type: ast::DataType = annotate_identifier_type(receiver, state);
             let type_parameter = receiver_type.type_parameter();
             let method_signature: ast::FnSignature =
@@ -348,11 +352,15 @@ fn derive_annotate_expr_type(
         }
 
         ast::Expr::MethodCall(ast::MethodCall {
-            receiver,
             method_name,
             args,
             annot,
         }) => {
+            let receiver = if let ast::Expr::Var(rec) = &mut args[0] {
+                rec
+            } else {
+                panic!("Receiver must be an identifier")
+            };
             let receiver_type: ast::DataType = annotate_identifier_type(receiver, state);
             let type_parameter = receiver_type.type_parameter();
             let method_signature: ast::FnSignature =

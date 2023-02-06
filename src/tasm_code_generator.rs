@@ -12,7 +12,7 @@ use twenty_first::shared_math::b_field_element::BFieldElement;
 use twenty_first::util_types::algebraic_hasher::Hashable;
 
 use crate::ast;
-use crate::libraries::tasm;
+use crate::libraries::{tasm, vector};
 use crate::stack::Stack;
 
 type VStack = Stack<(ValueIdentifier, ast::DataType)>;
@@ -367,6 +367,7 @@ pub fn compile(function: &ast::Fn<ast::Typing>) -> Vec<LabelledInstruction> {
     let assembler = ret.iter().map(|x| x.to_string()).join("\n");
     parse(&assembler)
         .map(|instructions| to_labelled(&instructions))
+        .map_err(|err| anyhow::anyhow!("{}", err))
         .expect("Produced code must parse")
 }
 
@@ -461,14 +462,8 @@ fn compile_stmt(
 
         ast::Stmt::FnCall(fn_call) => compile_fn_call(fn_call, state),
 
-        ast::Stmt::MethodCall(ast::MethodCall {
-            receiver,
-            method_name,
-            args,
-            annot,
-        }) => {
-            vec![]
-        }
+        ast::Stmt::MethodCall(method_call) => compile_method_call(method_call, state),
+
         ast::Stmt::While(ast::WhileStmt { condition, block }) => {
             // The code generated here is a subroutine that contains the while loop code
             // and then just a call to this subroutine.
@@ -586,8 +581,16 @@ fn compile_fn_call(
 
     // If function is from tasm-lib, import it
     if let Some(snippet_name) = tasm::get_function_name(&name) {
-        tasm::import_tasm_snippet(snippet_name, type_parameter, state);
+        tasm::import_tasm_snippet(snippet_name, type_parameter.clone(), state);
         name = snippet_name.to_string();
+    }
+
+    // If function is from vector-lib, import it
+    if let Some(snippet_name) = vector::get_function_name(&name) {
+        vector::import_tasm_snippet(snippet_name, type_parameter, state);
+        // name = snippet_name.to_string();
+
+        // tasm::import_tasm_snippet(snippet_name, type_parameter, state);
     }
 
     for _ in 0..args.len() {
@@ -595,10 +598,43 @@ fn compile_fn_call(
     }
 
     let mut fn_call_code = args_code;
-    fn_call_code.push(vec![
-        //
-        call(name.to_string()),
-    ]);
+    fn_call_code.push(vec![call(name.to_string())]);
+
+    fn_call_code.concat()
+}
+
+fn compile_method_call(
+    method_call: &ast::MethodCall<ast::Typing>,
+    state: &mut CompilerState,
+) -> Vec<LabelledInstruction> {
+    let mut name = method_call.method_name.clone();
+    let receiver_type = method_call.args[0].get_type();
+    let type_parameter = receiver_type.type_parameter();
+
+    // Compile arguments left-to-right
+    let (_args_idents, args_code): (Vec<ValueIdentifier>, Vec<Vec<LabelledInstruction>>) =
+        method_call
+            .args
+            .iter()
+            .enumerate()
+            .map(|(arg_pos, arg_expr)| {
+                let context = format!("_{name}_arg_{arg_pos}");
+                compile_expr(arg_expr, &context, &arg_expr.get_type(), state)
+            })
+            .unzip();
+
+    // If function is from vector-lib, ...
+    if let Some(snippet_name) = vector::get_method_name(&name) {
+        vector::import_tasm_snippet(snippet_name, type_parameter, state);
+        name = snippet_name.to_string();
+    }
+
+    for _ in 0..method_call.args.len() {
+        state.vstack.pop();
+    }
+
+    let mut fn_call_code = args_code;
+    fn_call_code.push(vec![call(name.to_string())]);
 
     fn_call_code.concat()
 }
@@ -681,7 +717,14 @@ fn compile_expr(
             (fn_call_ident, fn_call_code)
         }
 
-        ast::Expr::MethodCall(_) => todo!(),
+        ast::Expr::MethodCall(method_call) => {
+            let method_call_code = compile_method_call(method_call, state);
+            let method_call_ident_prefix = format!("_fn_call_{}", method_call.method_name);
+            let method_call_ident = state
+                .new_value_identifier(&method_call_ident_prefix, &method_call.annot.get_type());
+
+            (method_call_ident, method_call_code)
+        }
 
         ast::Expr::Binop(lhs_expr, binop, rhs_expr, known_type) => {
             let res_type = known_type.get_type();

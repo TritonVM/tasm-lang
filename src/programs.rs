@@ -310,8 +310,9 @@ fn simple_list_support() -> syn::ItemFn {
             let mut a: Vec<u64> = Vec::<u64>::default();
             a.push(2000u64);
             a.push(3000u64);
+            // TODO: We haven't figured out `pop` yet.
             // let b: u64 = a.pop().unwrap();
-            let len: u32 = a.len();
+            let len: u32 = a.len() as u32;
 
             return a;
         }

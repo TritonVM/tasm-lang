@@ -184,11 +184,13 @@ fn graft_method_call(rust_method_call: &syn::ExprMethodCall) -> ast::MethodCall<
         other => panic!("unsupported: {other:?}"),
     };
     let method_name = rust_method_call.method.to_string();
-    let receiver = ast::Identifier::String(identifier, Default::default());
-    let args = rust_method_call.args.iter().map(graft_expr).collect_vec();
+    let mut args = vec![ast::Expr::Var(ast::Identifier::String(
+        identifier,
+        Default::default(),
+    ))];
+    args.append(&mut rust_method_call.args.iter().map(graft_expr).collect_vec());
     let annot = Default::default();
     ast::MethodCall {
-        receiver,
         method_name,
         args,
         annot,

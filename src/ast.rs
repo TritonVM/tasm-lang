@@ -332,7 +332,6 @@ impl FnCall<Typing> {
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct MethodCall<T> {
-    pub receiver: Identifier<T>,
     pub method_name: String,
     pub args: Vec<Expr<T>>,
     pub annot: T,
