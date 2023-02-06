@@ -365,6 +365,7 @@ pub fn compile(function: &ast::Fn<ast::Typing>) -> Vec<LabelledInstruction> {
     // then parsing it again. A duplicated label should be caught by the parser.
     // I wanted to add a test for this, but I couldn't find a good way of doing that.
     let assembler = ret.iter().map(|x| x.to_string()).join("\n");
+    println!("{assembler}");
     parse(&assembler)
         .map(|instructions| to_labelled(&instructions))
         .map_err(|err| anyhow::anyhow!("{}", err))
@@ -581,16 +582,12 @@ fn compile_fn_call(
 
     // If function is from tasm-lib, import it
     if let Some(snippet_name) = tasm::get_function_name(&name) {
-        tasm::import_tasm_snippet(snippet_name, type_parameter.clone(), state);
-        name = snippet_name.to_string();
+        name = tasm::import_tasm_snippet(snippet_name, type_parameter.clone(), state);
     }
 
     // If function is from vector-lib, import it
     if let Some(snippet_name) = vector::get_function_name(&name) {
-        vector::import_tasm_snippet(snippet_name, type_parameter, state);
-        // name = snippet_name.to_string();
-
-        // tasm::import_tasm_snippet(snippet_name, type_parameter, state);
+        name = vector::import_tasm_snippet(snippet_name, type_parameter, state);
     }
 
     for _ in 0..args.len() {
@@ -625,8 +622,7 @@ fn compile_method_call(
 
     // If function is from vector-lib, ...
     if let Some(snippet_name) = vector::get_method_name(&name) {
-        vector::import_tasm_snippet(snippet_name, type_parameter, state);
-        name = snippet_name.to_string();
+        name = vector::import_tasm_snippet(snippet_name, type_parameter, state);
     }
 
     for _ in 0..method_call.args.len() {
@@ -1279,6 +1275,28 @@ fn compile_expr(
                     let cast_code = vec![push(0), swap1()];
 
                     (addr, vec![expr_code, cast_code].concat())
+                }
+                // Allow identity-casting since we might need this to make the types
+                // agree with code compiled by rustc.
+                (ast::DataType::U32, ast::DataType::U32) => {
+                    let (_, old_data_type) = state.vstack.pop().unwrap();
+
+                    // sanity check
+                    assert_eq!(ast::DataType::U32, old_data_type);
+
+                    let addr = state.new_value_identifier("_as_u32", as_type);
+
+                    (addr, vec![])
+                }
+                (ast::DataType::U64, ast::DataType::U64) => {
+                    let (_, old_data_type) = state.vstack.pop().unwrap();
+
+                    // sanity check
+                    assert_eq!(ast::DataType::U32, old_data_type);
+
+                    let addr = state.new_value_identifier("_as_u64", as_type);
+
+                    (addr, vec![])
                 }
                 _ => todo!(),
             }

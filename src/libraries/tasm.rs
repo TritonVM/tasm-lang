@@ -23,14 +23,17 @@ pub fn import_tasm_snippet(
     tasm_fn_name: &str,
     type_parameter: Option<ast::DataType>,
     state: &mut CompilerState,
-) {
+) -> String {
     // TODO: This does not allow for a collission of function names in the
     // `tasm-lib` library and this library. Maybe we could prepend all tasm-lib
     // names with something?
     let tasm_type: Option<tasm_lib::snippet::DataType> =
         type_parameter.map(|x| x.try_into().unwrap());
     let snippet = name_to_snippet(tasm_fn_name, tasm_type);
+    let entrypoint = snippet.entrypoint().to_owned();
     state.import_snippet(snippet);
+
+    entrypoint
 }
 
 pub fn function_name_to_signature(

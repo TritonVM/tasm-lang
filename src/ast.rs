@@ -129,7 +129,7 @@ impl Expr<Typing> {
                 DataType::FlatList(types)
             }
             Expr::FnCall(fnc) => fnc.get_type(),
-            Expr::MethodCall(_) => todo!(),
+            Expr::MethodCall(mtc) => mtc.get_type(),
             Expr::Binop(_, _, _, t) => t.get_type(),
             Expr::If(if_expr) => if_expr.get_type(),
             Expr::Cast(_expr, t) => t.to_owned(),

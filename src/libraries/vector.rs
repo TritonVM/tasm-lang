@@ -37,17 +37,25 @@ pub fn import_tasm_snippet(
     let snippet_name: String = match vector_fn_name {
         "default" => {
             let snippet: Box<dyn Snippet> =
-                Box::new(tasm_lib::list::u32::new::New(tasm_type.unwrap()));
+                Box::new(tasm_lib::list::unsafe_u32::new::New(tasm_type.unwrap()));
             let entrypoint = snippet.entrypoint().to_owned();
             state.import_snippet(snippet);
             entrypoint
         }
         "push" => {
             let snippet: Box<dyn Snippet> = match size_of(type_parameter.as_ref().unwrap()) {
-                1 => Box::new(tasm_lib::list::u32::push::Push::<1>(tasm_type.unwrap())),
-                2 => Box::new(tasm_lib::list::u32::push::Push::<2>(tasm_type.unwrap())),
-                3 => Box::new(tasm_lib::list::u32::push::Push::<3>(tasm_type.unwrap())),
-                5 => Box::new(tasm_lib::list::u32::push::Push::<5>(tasm_type.unwrap())),
+                1 => Box::new(tasm_lib::list::unsafe_u32::push::Push::<1>(
+                    tasm_type.unwrap(),
+                )),
+                2 => Box::new(tasm_lib::list::unsafe_u32::push::Push::<2>(
+                    tasm_type.unwrap(),
+                )),
+                3 => Box::new(tasm_lib::list::unsafe_u32::push::Push::<3>(
+                    tasm_type.unwrap(),
+                )),
+                5 => Box::new(tasm_lib::list::unsafe_u32::push::Push::<5>(
+                    tasm_type.unwrap(),
+                )),
                 _ => panic!("Cannot push to Vec<{}> yet", &type_parameter.unwrap()),
             };
             let entrypoint = snippet.entrypoint().to_owned();
@@ -56,10 +64,18 @@ pub fn import_tasm_snippet(
         }
         "pop" => {
             let snippet: Box<dyn Snippet> = match size_of(type_parameter.as_ref().unwrap()) {
-                1 => Box::new(tasm_lib::list::u32::pop::Pop::<1>(tasm_type.unwrap())),
-                2 => Box::new(tasm_lib::list::u32::pop::Pop::<2>(tasm_type.unwrap())),
-                3 => Box::new(tasm_lib::list::u32::pop::Pop::<3>(tasm_type.unwrap())),
-                5 => Box::new(tasm_lib::list::u32::pop::Pop::<5>(tasm_type.unwrap())),
+                1 => Box::new(tasm_lib::list::unsafe_u32::pop::Pop::<1>(
+                    tasm_type.unwrap(),
+                )),
+                2 => Box::new(tasm_lib::list::unsafe_u32::pop::Pop::<2>(
+                    tasm_type.unwrap(),
+                )),
+                3 => Box::new(tasm_lib::list::unsafe_u32::pop::Pop::<3>(
+                    tasm_type.unwrap(),
+                )),
+                5 => Box::new(tasm_lib::list::unsafe_u32::pop::Pop::<5>(
+                    tasm_type.unwrap(),
+                )),
                 _ => panic!("Cannot pop to Vec<{}> yet", &type_parameter.unwrap()),
             };
             let entrypoint = snippet.entrypoint().to_owned();
@@ -67,8 +83,9 @@ pub fn import_tasm_snippet(
             entrypoint
         }
         "len" => {
-            let snippet: Box<dyn Snippet> =
-                Box::new(tasm_lib::list::u32::length::LengthLong(tasm_type.unwrap()));
+            let snippet: Box<dyn Snippet> = Box::new(
+                tasm_lib::list::unsafe_u32::length::LengthLong(tasm_type.unwrap()),
+            );
             let entrypoint = snippet.entrypoint().to_owned();
             state.import_snippet(snippet);
             entrypoint
