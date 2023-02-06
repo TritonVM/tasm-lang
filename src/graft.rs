@@ -136,7 +136,7 @@ fn path_to_type_parameter(path: &syn::Path) -> Option<ast::DataType> {
                         type_parameter.is_none(),
                         "only one type parameter supported"
                     );
-                    type_parameter = Some(rust_type_to_data_type(&rdt));
+                    type_parameter = Some(rust_type_to_data_type(rdt));
                 } else {
                     panic!("unsupported GenericArgument: {:#?}", abga.args[0]);
                 }
@@ -179,21 +179,43 @@ fn graft_method_call(rust_method_call: &syn::ExprMethodCall) -> ast::MethodCall<
     // TODO: This code only supports method calls on variable names and not on
     // list elements or on tuple elements. We definitely want to support this
     // on tuple elements, though. Expand!
-    let identifier = match rust_method_call.receiver.as_ref() {
-        syn::Expr::Path(path) => path_to_ident(&path.path),
+    match rust_method_call.receiver.as_ref() {
+        syn::Expr::Path(path) => {
+            let identifier = ast::Identifier::String(path_to_ident(&path.path), Default::default());
+            let method_name = rust_method_call.method.to_string();
+            let mut args = vec![ast::Expr::Var(identifier)];
+            args.append(&mut rust_method_call.args.iter().map(graft_expr).collect_vec());
+            let annot = Default::default();
+            ast::MethodCall {
+                method_name,
+                args,
+                annot,
+            }
+        }
+        syn::Expr::MethodCall(rust_inner_method_call) => {
+            let inner_method_call = graft_method_call(rust_inner_method_call);
+            let identifier = match &inner_method_call.args[0] {
+                ast::Expr::Var(ident) => ident.to_owned(),
+                _ => todo!(),
+            };
+            assert_eq!("pop", inner_method_call.method_name, ".pop().unwrap() only");
+            let method_name = "pop".to_string();
+            let mut args = vec![ast::Expr::Var(identifier)];
+            args.append(
+                &mut rust_inner_method_call
+                    .args
+                    .iter()
+                    .map(graft_expr)
+                    .collect_vec(),
+            );
+            let annot = Default::default();
+            ast::MethodCall {
+                method_name,
+                args,
+                annot,
+            }
+        }
         other => panic!("unsupported: {other:?}"),
-    };
-    let method_name = rust_method_call.method.to_string();
-    let mut args = vec![ast::Expr::Var(ast::Identifier::String(
-        identifier,
-        Default::default(),
-    ))];
-    args.append(&mut rust_method_call.args.iter().map(graft_expr).collect_vec());
-    let annot = Default::default();
-    ast::MethodCall {
-        method_name,
-        args,
-        annot,
     }
 }
 
@@ -571,6 +593,8 @@ mod tests {
                 let mut b: Vec<u64> = Vec::default();
                 a.push(43u64);
                 a.push(10u64);
+                a.pop().unwrap();
+
                 return a;
             }
         };

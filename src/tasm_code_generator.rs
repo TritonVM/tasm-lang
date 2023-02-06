@@ -703,7 +703,28 @@ fn compile_expr(
             ast::Identifier::ListIndex(_, _) => todo!(),
         },
 
-        ast::Expr::FlatList(_) => todo!(),
+        ast::Expr::FlatList(exprs) => {
+            // Compile arguments left-to-right
+            let (idents, code): (Vec<ValueIdentifier>, Vec<Vec<LabelledInstruction>>) = exprs
+                .iter()
+                .enumerate()
+                .map(|(arg_pos, arg_expr)| {
+                    let context = format!("_flat_{arg_pos}");
+                    compile_expr(arg_expr, &context, &arg_expr.get_type(), state)
+                })
+                .unzip();
+
+            // Combine vstack entries into one FlatList entry
+            for _ in idents {
+                state.vstack.pop();
+            }
+
+            let flat_list_ident = state.new_value_identifier("flat_list_ident", &expr.get_type());
+
+            let code = code.concat();
+            (flat_list_ident, code)
+        }
+
         ast::Expr::FnCall(fn_call) => {
             let fn_call_code = compile_fn_call(fn_call, state);
             let fn_call_ident_prefix = format!("_fn_call_{}", fn_call.name);
@@ -1286,7 +1307,7 @@ fn compile_expr(
 
                     let addr = state.new_value_identifier("_as_u32", as_type);
 
-                    (addr, vec![])
+                    (addr, expr_code)
                 }
                 (ast::DataType::U64, ast::DataType::U64) => {
                     let (_, old_data_type) = state.vstack.pop().unwrap();
@@ -1296,7 +1317,7 @@ fn compile_expr(
 
                     let addr = state.new_value_identifier("_as_u64", as_type);
 
-                    (addr, vec![])
+                    (addr, expr_code)
                 }
                 _ => todo!(),
             }

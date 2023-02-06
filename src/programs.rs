@@ -306,15 +306,27 @@ fn code_block() -> syn::ItemFn {
 
 fn simple_list_support() -> syn::ItemFn {
     item_fn(parse_quote! {
-        fn make_short_list() -> Vec<u64> {
+        fn make_short_list() -> (Vec<u64>, u32, u64) {
             let mut a: Vec<u64> = Vec::<u64>::default();
             a.push(2000u64);
-            // a.push(3000u64);
-            // TODO: We haven't figured out `pop` yet.
-            // let b: u64 = a.pop().unwrap();
-            // let len: u32 = a.len() as u32;
+            a.push(3000u64);
+            a.push(4000u64);
+            let b: u64 = a.pop().unwrap();
+            let len: u32 = a.len() as u32;
 
-            return a;
+            return (a, len, b);
+        }
+    })
+}
+
+fn tuple_support() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn return_many() -> (bool, u32, u64) {
+            let a: bool = true;
+            let b: u32 = 42u32;
+            let c: u64 = 100u64;
+
+            return (a, b, c);
         }
     })
 }
@@ -445,6 +457,11 @@ mod compile_and_typecheck_tests {
     #[test]
     fn simple_list_support_test() {
         graft_check_compile_prop(&simple_list_support());
+    }
+
+    #[test]
+    fn tuple_support_test() {
+        graft_check_compile_prop(&tuple_support());
     }
 
     // #[test]
@@ -672,7 +689,11 @@ mod compile_and_run_tests {
     #[test]
     fn simple_list_support_run_test() {
         let inputs = vec![];
-        let outputs = vec![ast::ExprLit::BFE(BFieldElement::zero())];
+        let outputs = vec![
+            ast::ExprLit::BFE(BFieldElement::zero()),
+            ast::ExprLit::U32(2),
+            ast::ExprLit::U64(4000),
+        ];
         let input_memory = HashMap::default();
         let mut expected_final_memory = HashMap::default();
         tasm_lib::rust_shadowing_helper_functions::unsafe_list_new(
@@ -689,6 +710,16 @@ mod compile_and_run_tests {
             [BFieldElement::new(3000), BFieldElement::new(0)],
             &mut expected_final_memory,
         );
+        tasm_lib::rust_shadowing_helper_functions::unsafe_list_push(
+            BFieldElement::zero(),
+            [BFieldElement::new(4000), BFieldElement::new(0)],
+            &mut expected_final_memory,
+        );
+        tasm_lib::rust_shadowing_helper_functions::unsafe_list_set_length(
+            BFieldElement::zero(),
+            2,
+            &mut expected_final_memory,
+        );
         compare_prop_with_stack_and_memory(
             &simple_list_support(),
             inputs,
@@ -696,6 +727,17 @@ mod compile_and_run_tests {
             input_memory,
             expected_final_memory,
         );
+    }
+
+    #[test]
+    fn tuple_support_run_test() {
+        let outputs = vec![
+            ast::ExprLit::Bool(true),
+            ast::ExprLit::U32(42),
+            ast::ExprLit::U64(100),
+        ];
+
+        compare_prop_with_stack(&tuple_support(), vec![], outputs);
     }
 
     // #[test]
