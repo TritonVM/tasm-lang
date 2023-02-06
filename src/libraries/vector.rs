@@ -38,3 +38,33 @@ pub fn function_name_to_signature(
         &_ => todo!(),
     }
 }
+
+pub fn method_name_to_signature(
+    fn_name: &str,
+    element_type: &Option<ast::DataType>,
+) -> ast::FnSignature {
+    match fn_name {
+        "push" => ast::FnSignature {
+            name: "push".to_string(),
+            args: vec![ast::FnArg {
+                name: "push_arg".to_string(),
+                data_type: element_type.as_ref().unwrap().to_owned(),
+            }],
+            output: ast::DataType::unit(),
+        },
+
+        "pop" => ast::FnSignature {
+            name: "pop".to_string(),
+            args: vec![],
+            output: element_type.as_ref().unwrap().to_owned(),
+        },
+
+        "len" => ast::FnSignature {
+            name: "len".to_string(),
+            args: vec![],
+            output: ast::DataType::U32,
+        },
+
+        _ => panic!("Unknown method Vec::{fn_name}"),
+    }
+}

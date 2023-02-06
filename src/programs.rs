@@ -310,8 +310,22 @@ fn simple_list_support() -> syn::ItemFn {
             let mut a: Vec<u64> = Vec::<u64>::default();
             a.push(2000u64);
             a.push(3000u64);
+            // let b: u64 = a.pop().unwrap();
+            let len: u32 = a.len();
 
             return a;
+        }
+    })
+}
+
+fn mut_list_argument() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn foo(values: &mut Vec<u64>) {
+            let mut i: u64 = 0u64;
+            while i < 10u64 {
+                values.push(i);
+                i += 1u64;
+            }
         }
     })
 }
@@ -431,6 +445,11 @@ mod compile_and_typecheck_tests {
     fn simple_list_support_test() {
         graft_check_compile_prop(&simple_list_support());
     }
+
+    // #[test]
+    // fn mut_list_argument_test() {
+    //     graft_check_compile_prop(&mut_list_argument());
+    // }
 }
 
 #[cfg(test)]

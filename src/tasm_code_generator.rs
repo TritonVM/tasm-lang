@@ -460,7 +460,15 @@ fn compile_stmt(
         }
 
         ast::Stmt::FnCall(fn_call) => compile_fn_call(fn_call, state),
-        ast::Stmt::MethodCall(method_call) => todo!(),
+
+        ast::Stmt::MethodCall(ast::MethodCall {
+            receiver,
+            method_name,
+            args,
+            annot,
+        }) => {
+            vec![]
+        }
         ast::Stmt::While(ast::WhileStmt { condition, block }) => {
             // The code generated here is a subroutine that contains the while loop code
             // and then just a call to this subroutine.
@@ -562,7 +570,7 @@ fn compile_fn_call(
     let ast::FnCall {
         mut name,
         args,
-        annot: _return_type, // void
+        annot: _return_type, // unit for statement-level fn calls
         type_parameter,
     } = fn_call.clone();
 

@@ -174,6 +174,10 @@ impl DataType {
             _ => None,
         }
     }
+
+    pub fn unit() -> Self {
+        Self::FlatList(vec![])
+    }
 }
 
 impl TryFrom<DataType> for tasm_lib::snippet::DataType {

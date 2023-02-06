@@ -111,14 +111,16 @@ fn annotate_stmt(
             args,
             annot,
         }) => {
-            println!("receiver: {receiver}");
             let receiver_type: ast::DataType = annotate_identifier_type(receiver, state);
             let type_parameter = receiver_type.type_parameter();
-            let method_signature = get_fn_signature(method_name, state, &type_parameter);
+            let method_signature: ast::FnSignature =
+                get_method_signature(method_name, state, &type_parameter);
             assert!(
                 is_void_type(&method_signature.output),
                 "Method call {receiver}.'{method_name}' at statement-level must return the unit type."
             );
+
+            // TODO: Check that receiver_type corresponds to method's FnSignature
 
             derive_annotate_fn_call_args(&method_signature, args, state);
 
@@ -254,7 +256,7 @@ fn get_fn_signature(
 
 fn get_method_signature(
     name: &str,
-    state: &CheckState,
+    _state: &CheckState,
     type_parameter: &Option<ast::DataType>,
 ) -> ast::FnSignature {
     if let Some(snippet_name) = tasm::get_method_name(name) {
@@ -263,14 +265,10 @@ fn get_method_signature(
 
     // Functions for lists are in scope
     if let Some(function_name) = vector::get_method_name(name) {
-        return vector::function_name_to_signature(function_name, &type_parameter);
+        return vector::method_name_to_signature(function_name, &type_parameter);
     }
 
-    state
-        .ftable
-        .get(name)
-        .unwrap_or_else(|| panic!("Don't know what type of value '{name}' returns! Type parameter was: {type_parameter:?}"))
-        .clone()
+    panic!("Don't know what type of value '{name}' returns! Type parameter was: {type_parameter:?}")
 }
 
 fn derive_annotate_fn_call_args(
@@ -355,7 +353,22 @@ fn derive_annotate_expr_type(
             args,
             annot,
         }) => {
-            todo!()
+            let receiver_type: ast::DataType = annotate_identifier_type(receiver, state);
+            let type_parameter = receiver_type.type_parameter();
+            let method_signature: ast::FnSignature =
+                get_method_signature(method_name, state, &type_parameter);
+            assert!(
+                !is_void_type(&method_signature.output),
+                "Method calls in expressions cannot return the unit type"
+            );
+
+            // TODO: Do more type-checking here if we need
+
+            derive_annotate_fn_call_args(&method_signature, args, state);
+
+            *annot = ast::Typing::KnownType(method_signature.output.clone());
+
+            method_signature.output
         }
 
         ast::Expr::Binop(lhs_expr, binop, rhs_expr, binop_type) => {
