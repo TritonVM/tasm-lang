@@ -34,7 +34,10 @@ fn name_to_tasm_lib_snippet(
             5 => Some(Box::new(tasm_lib::list::unsafe_u32::push::Push::<5>(
                 tasm_type.unwrap(),
             ))),
-            _ => panic!("Cannot push to Vec<{}> yet", &type_parameter.unwrap()),
+            _ => panic!(
+                "Cannot push to Vec<{}> yet",
+                type_parameter.as_ref().unwrap()
+            ),
         },
         "pop" => match size_of(type_parameter.as_ref().unwrap()) {
             1 => Some(Box::new(tasm_lib::list::unsafe_u32::pop::Pop::<1>(
@@ -49,7 +52,10 @@ fn name_to_tasm_lib_snippet(
             5 => Some(Box::new(tasm_lib::list::unsafe_u32::pop::Pop::<5>(
                 tasm_type.unwrap(),
             ))),
-            _ => panic!("Cannot push to Vec<{}> yet", &type_parameter.unwrap()),
+            _ => panic!(
+                "Cannot push to Vec<{}> yet",
+                type_parameter.as_ref().unwrap()
+            ),
         },
         "len" => Some(Box::new(tasm_lib::list::unsafe_u32::length::LengthLong(
             tasm_type.unwrap(),
@@ -125,36 +131,5 @@ pub fn method_name_to_signature(
     fn_name: &str,
     element_type: &Option<ast::DataType>,
 ) -> ast::FnSignature {
-    let receiver = ast::FnArg {
-        name: "receiver".to_string(),
-        data_type: ast::DataType::List(Box::new(element_type.as_ref().unwrap().to_owned())),
-    };
-
-    match fn_name {
-        "push" => ast::FnSignature {
-            name: "push".to_string(),
-            args: vec![
-                receiver,
-                ast::FnArg {
-                    name: "push_arg".to_string(),
-                    data_type: element_type.as_ref().unwrap().to_owned(),
-                },
-            ],
-            output: ast::DataType::unit(),
-        },
-
-        "pop" => ast::FnSignature {
-            name: "pop".to_string(),
-            args: vec![receiver],
-            output: element_type.as_ref().unwrap().to_owned(),
-        },
-
-        "len" => ast::FnSignature {
-            name: "len".to_string(),
-            args: vec![receiver],
-            output: ast::DataType::U32,
-        },
-
-        _ => panic!("Unknown method Vec::{fn_name}"),
-    }
+    function_name_to_signature(fn_name, element_type)
 }

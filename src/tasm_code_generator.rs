@@ -587,7 +587,7 @@ fn compile_fn_call(
 
     // If function is from vector-lib, import it
     if let Some(snippet_name) = vector::get_function_name(&name) {
-        name = vector::import_tasm_snippet(snippet_name, type_parameter, state);
+        name = vector::import_tasm_snippet(snippet_name, &type_parameter, state);
     }
 
     for _ in 0..args.len() {
@@ -622,7 +622,7 @@ fn compile_method_call(
 
     // If function is from vector-lib, ...
     if let Some(snippet_name) = vector::get_method_name(&name) {
-        name = vector::import_tasm_snippet(snippet_name, type_parameter, state);
+        name = vector::import_tasm_snippet(snippet_name, &type_parameter, state);
     }
 
     for _ in 0..method_call.args.len() {

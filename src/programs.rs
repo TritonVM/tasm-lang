@@ -679,6 +679,16 @@ mod compile_and_run_tests {
             BFieldElement::zero(),
             &mut expected_final_memory,
         );
+        tasm_lib::rust_shadowing_helper_functions::unsafe_list_push(
+            BFieldElement::zero(),
+            [BFieldElement::new(2000), BFieldElement::new(0)],
+            &mut expected_final_memory,
+        );
+        tasm_lib::rust_shadowing_helper_functions::unsafe_list_push(
+            BFieldElement::zero(),
+            [BFieldElement::new(3000), BFieldElement::new(0)],
+            &mut expected_final_memory,
+        );
         compare_prop_with_stack_and_memory(
             &simple_list_support(),
             inputs,
