@@ -14,6 +14,7 @@ use twenty_first::util_types::algebraic_hasher::Hashable;
 use crate::ast;
 use crate::libraries::{tasm, vector};
 use crate::stack::Stack;
+use crate::types::is_list_type;
 
 type VStack = Stack<(ValueIdentifier, ast::DataType)>;
 type VarAddr = HashMap<String, ValueIdentifier>;
@@ -753,7 +754,71 @@ fn compile_expr(
                 (var_copy_addr, var_copy_code)
             }
             ast::Identifier::TupleIndex(_, _) => todo!(),
-            ast::Identifier::ListIndex(_, _) => todo!(),
+            ast::Identifier::ListIndex(ident, index_expr) => {
+                let res_type = expr.get_type();
+                let ident_type = ident.get_type();
+                let type_param = ident_type.type_parameter().unwrap_or_else(|| {
+                    panic!("identifier must have type parameter when reading through indexing")
+                });
+                let fn_name = match type_param {
+                    ast::DataType::Bool => state.import_snippet(Box::new(
+                        tasm_lib::list::unsafe_u32::get::Get::<1>(type_param.try_into().unwrap()),
+                    )),
+                    ast::DataType::U32 => state.import_snippet(Box::new(
+                        tasm_lib::list::unsafe_u32::get::Get::<1>(type_param.try_into().unwrap()),
+                    )),
+                    ast::DataType::U64 => state.import_snippet(Box::new(
+                        tasm_lib::list::unsafe_u32::get::Get::<2>(type_param.try_into().unwrap()),
+                    )),
+                    ast::DataType::BFE => state.import_snippet(Box::new(
+                        tasm_lib::list::unsafe_u32::get::Get::<1>(type_param.try_into().unwrap()),
+                    )),
+                    ast::DataType::XFE => state.import_snippet(Box::new(
+                        tasm_lib::list::unsafe_u32::get::Get::<3>(type_param.try_into().unwrap()),
+                    )),
+                    ast::DataType::Digest => state.import_snippet(Box::new(
+                        tasm_lib::list::unsafe_u32::get::Get::<5>(type_param.try_into().unwrap()),
+                    )),
+                    _ => {
+                        panic!("Unsupported list type for list-assign. List type was: {ident_type}")
+                    }
+                };
+
+                let ident_as_string = match *ident.to_owned() {
+                    ast::Identifier::String(as_str, _) => as_str,
+                    _ => panic!("Nested list indexing not yet supported"),
+                };
+                let var_addr = state
+                    .var_addr
+                    .get(&ident_as_string)
+                    .expect("variable exists");
+                let (position, old_data_type, _) = state.vstack.find_stack_value(var_addr);
+
+                assert_eq!(
+                    ident_type, old_data_type,
+                    "Type found on vstack must match expected type"
+                );
+                assert!(
+                    is_list_type(&old_data_type),
+                    "Can only index into list types"
+                );
+
+                let ident_expr = ast::Expr::Var(*ident.to_owned());
+                let (_ident_addr, ident_code) =
+                    compile_expr(&ident_expr, "ident_on_assign", &ident_type, state);
+                let (_index_expr, index_code) = compile_expr(
+                    &index_expr,
+                    "index_on_assign",
+                    &index_expr.get_type(),
+                    state,
+                );
+                state.vstack.pop();
+                state.vstack.pop();
+                let assign_addr = state.new_value_identifier("list_index_assign", &res_type);
+
+                let code = vec![ident_code, index_code, vec![call(fn_name.to_owned())]].concat();
+                (assign_addr, code)
+            }
         },
 
         ast::Expr::FlatList(exprs) => {

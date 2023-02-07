@@ -581,6 +581,11 @@ pub fn is_string_identifier<T>(identifier: &ast::Identifier<T>) -> bool {
     matches!(identifier, ast::Identifier::String(_, _))
 }
 
+pub fn is_list_type(data_type: &ast::DataType) -> bool {
+    use ast::DataType::*;
+    matches!(data_type, List(_))
+}
+
 /// A type that can be used as address in `read_mem` and `write_mem` calls.
 ///
 /// Since memory addresses are essentially `BFieldElement`s, only types

@@ -306,7 +306,7 @@ fn code_block() -> syn::ItemFn {
 
 fn simple_list_support() -> syn::ItemFn {
     item_fn(parse_quote! {
-        fn make_short_list() -> (Vec<u64>, u32, u64) {
+        fn make_short_list() -> (Vec<u64>, u32, u64, u64) {
             let mut a: Vec<u64> = Vec::<u64>::default();
             a.push(2000u64);
             a.push(3000u64);
@@ -316,7 +316,9 @@ fn simple_list_support() -> syn::ItemFn {
 
             a[1] = 5000u64;
 
-            return (a, len, b);
+            let d: u64 = a[0];
+
+            return (a, len, b, d);
         }
     })
 }
@@ -695,6 +697,7 @@ mod compile_and_run_tests {
             ast::ExprLit::BFE(BFieldElement::zero()),
             ast::ExprLit::U32(2),
             ast::ExprLit::U64(4000),
+            ast::ExprLit::U64(2000),
         ];
         let input_memory = HashMap::default();
         let mut expected_final_memory = HashMap::default();
