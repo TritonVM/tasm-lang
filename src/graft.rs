@@ -219,6 +219,24 @@ fn graft_method_call(rust_method_call: &syn::ExprMethodCall) -> ast::MethodCall<
     }
 }
 
+/// Handle Rust expressions of the type i += 1
+pub fn graft_binop_eq_expr(
+    left: &syn::Expr,
+    op: &syn::BinOp,
+    right: &syn::Expr,
+) -> ast::Expr<Annotation> {
+    let left = graft_expr(left);
+    let ast_binop: ast::BinOp = graft_eq_binop(op);
+    let right = graft_expr(right);
+
+    ast::Expr::Binop(
+        Box::new(left),
+        ast_binop,
+        Box::new(right),
+        Default::default(),
+    )
+}
+
 pub fn graft_expr(rust_exp: &syn::Expr) -> ast::Expr<Annotation> {
     match rust_exp {
         syn::Expr::Binary(bin_expr) => {
@@ -383,6 +401,21 @@ fn graft_binop(rust_binop: syn::BinOp) -> ast::BinOp {
     }
 }
 
+fn graft_eq_binop(rust_eq_binop: &syn::BinOp) -> ast::BinOp {
+    match rust_eq_binop {
+        syn::BinOp::AddEq(_) => ast::BinOp::Add,
+        syn::BinOp::SubEq(_) => ast::BinOp::Sub,
+        syn::BinOp::MulEq(_) => ast::BinOp::Mul,
+        syn::BinOp::DivEq(_) => ast::BinOp::Div,
+        syn::BinOp::RemEq(_) => ast::BinOp::Rem,
+        syn::BinOp::BitXorEq(_) => ast::BinOp::BitXor,
+        syn::BinOp::BitAndEq(_) => ast::BinOp::BitAnd,
+        syn::BinOp::ShlEq(_) => ast::BinOp::Shl,
+        syn::BinOp::ShrEq(_) => ast::BinOp::Shr,
+        other => panic!("unsupported for eq binop: {other:?}"),
+    }
+}
+
 pub fn graft_stmt(rust_stmt: &syn::Stmt) -> ast::Stmt<Annotation> {
     match rust_stmt {
         syn::Stmt::Local(local) => {
@@ -521,6 +554,19 @@ pub fn graft_stmt(rust_stmt: &syn::Stmt) -> ast::Stmt<Annotation> {
 
                 ast::Stmt::Assign(assign_stmt)
             }
+            // Handle expressions of the type `i += 1`
+            syn::Expr::AssignOp(syn::ExprAssignOp { attrs: _, left, op, right }) => {
+                let identifier_expr = left.as_ref();
+                let identifier = expr_as_identifier(identifier_expr);
+                let assign_expr = graft_binop_eq_expr(left, op, right);
+                let assign_stmt = ast::AssignStmt {
+                    identifier,
+                    expr: assign_expr,
+                };
+
+                println!("assign_stmt: {assign_stmt:?}");
+                ast::Stmt::Assign(assign_stmt)
+            },
             syn::Expr::MethodCall(method_call_expr) => {
                 ast::Stmt::MethodCall(graft_method_call(method_call_expr))
             }
