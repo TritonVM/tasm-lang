@@ -318,6 +318,7 @@ pub struct AssignStmt<T> {
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct LetStmt<T> {
     pub var_name: String,
+    pub mutable: bool,
     pub data_type: DataType,
     pub expr: Expr<T>,
 }

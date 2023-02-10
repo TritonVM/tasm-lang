@@ -58,13 +58,25 @@ fn rust_type_to_data_type(x: &syn::Type) -> ast::DataType {
     }
 }
 
-fn pat_type_to_data_type(rust_type_path: &syn::PatType) -> ast::DataType {
+// Extract type and mutability from syn::PatType
+fn pat_type_to_data_type(rust_type_path: &syn::PatType) -> (ast::DataType, bool) {
+    let mutable = match *rust_type_path.pat.to_owned() {
+        syn::Pat::Ident(syn::PatIdent {
+            attrs: _,
+            by_ref: _,
+            mutability,
+            ident: _,
+            subpat: _,
+        }) => mutability.is_some(),
+        other_type => panic!("Unsupported {other_type:#?}"),
+    };
     match rust_type_path.ty.as_ref() {
-        syn::Type::Path(path) => rust_type_path_to_data_type(path),
+        syn::Type::Path(path) => (rust_type_path_to_data_type(path), mutable),
         syn::Type::Tuple(tuple) => {
             let types = tuple.elems.iter().map(rust_type_to_data_type).collect_vec();
 
-            ast::DataType::FlatList(types)
+            // TODO: Is the `mutable = false` correct here?
+            (ast::DataType::FlatList(types), false)
         }
         other_type => panic!("Unsupported {other_type:#?}"),
     }
@@ -405,7 +417,6 @@ pub fn graft_expr(rust_exp: &syn::Expr) -> ast::Expr<Annotation> {
 fn graft_lit(rust_val: &syn::Lit) -> ast::ExprLit {
     use ast::ExprLit::*;
 
-    println!("rust_val = {rust_val:#?}");
     const MIN_INT_LITERAL_LENGTH: usize = 4;
     match rust_val {
         syn::Lit::Bool(b) => Bool(b.value),
@@ -478,12 +489,13 @@ fn graft_eq_binop(rust_eq_binop: &syn::BinOp) -> ast::BinOp {
 pub fn graft_stmt(rust_stmt: &syn::Stmt) -> ast::Stmt<Annotation> {
     match rust_stmt {
         syn::Stmt::Local(local) => {
-            let (ident, data_type): (String, ast::DataType) = match &local.pat {
+            // Handle variable declarations
+            let (ident, data_type, mutable): (String, ast::DataType, bool) = match &local.pat {
                 syn::Pat::Type(pat_type) => {
-                    let dt: ast::DataType = pat_type_to_data_type(pat_type);
+                    let (dt, mutable): (ast::DataType, bool) = pat_type_to_data_type(pat_type);
                     let ident: String = pat_to_name(&pat_type.pat);
 
-                    (ident, dt)
+                    (ident, dt, mutable)
                 }
                 syn::Pat::Ident(d) => {
                     // This would indicate that the explicit type is missing
@@ -500,6 +512,7 @@ pub fn graft_stmt(rust_stmt: &syn::Stmt) -> ast::Stmt<Annotation> {
                 var_name: ident,
                 data_type,
                 expr: ast_expt,
+                mutable
             };
             ast::Stmt::Let(let_stmt)
         }
@@ -583,7 +596,6 @@ pub fn graft_stmt(rust_stmt: &syn::Stmt) -> ast::Stmt<Annotation> {
                     expr: assign_expr,
                 };
 
-                println!("assign_stmt: {assign_stmt:?}");
                 ast::Stmt::Assign(assign_stmt)
             },
             syn::Expr::MethodCall(method_call_expr) => {
@@ -668,9 +680,9 @@ mod tests {
 
         match &tokens {
             syn::Item::Fn(item_fn) => {
-                println!("{item_fn:#?}");
+                // println!("{item_fn:#?}");
                 let _ret = graft(item_fn);
-                println!("{_ret:#?}");
+                // println!("{_ret:#?}");
             }
             _ => panic!("unsupported"),
         }

@@ -8,13 +8,37 @@ use crate::{
 
 #[derive(Debug, Default)]
 pub struct CheckState {
-    pub vtable: HashMap<String, ast::DataType>,
+    pub vtable: HashMap<String, DataTypeAndMutability>,
     pub ftable: HashMap<String, ast::FnSignature>,
+}
+
+#[derive(Clone, Debug)]
+pub struct DataTypeAndMutability {
+    pub data_type: ast::DataType,
+    pub mutable: bool,
+}
+
+impl From<ast::FnArg> for DataTypeAndMutability {
+    fn from(value: ast::FnArg) -> Self {
+        Self {
+            data_type: value.data_type,
+            mutable: value.mutable,
+        }
+    }
+}
+
+impl DataTypeAndMutability {
+    pub fn new(data_type: &ast::DataType, mutable: bool) -> Self {
+        Self {
+            data_type: data_type.to_owned(),
+            mutable,
+        }
+    }
 }
 
 pub fn annotate_fn(function: &mut ast::Fn<ast::Typing>) {
     // Initialize `CheckState`
-    let vtable: HashMap<String, ast::DataType> =
+    let vtable: HashMap<String, DataTypeAndMutability> =
         HashMap::with_capacity(function.fn_signature.args.len());
     let mut ftable: HashMap<String, ast::FnSignature> = HashMap::new();
     // Insert self into ftable; TODO: Handle multiple functions
@@ -28,7 +52,7 @@ pub fn annotate_fn(function: &mut ast::Fn<ast::Typing>) {
     for arg in function.fn_signature.args.iter() {
         let duplicate_fn_arg = state
             .vtable
-            .insert(arg.name.clone(), arg.data_type.clone())
+            .insert(arg.name.clone(), arg.to_owned().into())
             .is_some();
         if duplicate_fn_arg {
             panic!("Duplicate function argument {}", arg.name);
@@ -57,6 +81,7 @@ fn annotate_stmt(
             var_name,
             data_type,
             expr,
+            mutable,
         }) => {
             if state.vtable.contains_key(var_name) {
                 panic!("let-assign cannot shadow existing variable '{var_name}'!");
@@ -64,13 +89,22 @@ fn annotate_stmt(
 
             let derived_type = derive_annotate_expr_type(expr, state);
             assert_type_equals(&derived_type, data_type, "let-statement");
-            state.vtable.insert(var_name.clone(), data_type.clone());
+            state.vtable.insert(
+                var_name.clone(),
+                DataTypeAndMutability::new(data_type, *mutable),
+            );
         }
 
         ast::Stmt::Assign(ast::AssignStmt { identifier, expr }) => {
-            let identifier_type = annotate_identifier_type(identifier, state);
+            let (identifier_type, mutable) = annotate_identifier_type(identifier, state);
             let expr_type = derive_annotate_expr_type(expr, state);
+
+            // Only allow assignment if binding was declared as mutable
             assert_type_equals(&identifier_type, &expr_type, "assign-statement");
+            assert!(
+                mutable,
+                "Cannot re-assign non-mutable binding: {identifier}"
+            )
         }
 
         ast::Stmt::Return(opt_expr) => match (opt_expr, fn_output) {
@@ -115,7 +149,7 @@ fn annotate_stmt(
             } else {
                 panic!("Receiver must be an identifier")
             };
-            let receiver_type: ast::DataType = annotate_identifier_type(receiver, state);
+            let (receiver_type, _mutable) = annotate_identifier_type(receiver, state);
             let type_parameter = receiver_type.type_parameter();
             let method_signature: ast::FnSignature =
                 get_method_signature(method_name, state, &type_parameter);
@@ -177,10 +211,11 @@ fn assert_type_equals(derived_type: &ast::DataType, data_type: &ast::DataType, c
     }
 }
 
+/// Set type and return type and whether the identifier was declared as mutable
 fn annotate_identifier_type(
     identifier: &mut ast::Identifier<ast::Typing>,
     state: &mut CheckState,
-) -> ast::DataType {
+) -> (ast::DataType, bool) {
     match identifier {
         // x
         ast::Identifier::String(var_name, var_type) => {
@@ -188,8 +223,8 @@ fn annotate_identifier_type(
                 .vtable
                 .get(var_name)
                 .unwrap_or_else(|| panic!("variable {var_name} must have known type"));
-            *var_type = ast::Typing::KnownType(found_type.clone());
-            found_type.clone()
+            *var_type = ast::Typing::KnownType(found_type.data_type.clone());
+            (found_type.data_type.clone(), found_type.mutable)
         }
 
         // x.0
@@ -199,7 +234,7 @@ fn annotate_identifier_type(
             // the type inference generally here.
             let tuple_type = annotate_identifier_type(tuple_identifier, state);
 
-            if let ast::DataType::FlatList(elem_types) = tuple_type {
+            if let ast::DataType::FlatList(elem_types) = tuple_type.0 {
                 if elem_types.len() < *index {
                     panic!(
                         "Cannot index tuple of {} elements with index {}",
@@ -208,7 +243,7 @@ fn annotate_identifier_type(
                     );
                 }
 
-                elem_types[*index].clone()
+                (elem_types[*index].clone(), tuple_type.1)
             } else {
                 panic!("Cannot index non-tuple with tuple index {index}");
             }
@@ -223,10 +258,7 @@ fn annotate_identifier_type(
                     ast::Typing::default(),
                 ));
             };
-            println!("index_expr = {index_expr:?}");
             let index_type = derive_annotate_expr_type(index_expr, state);
-            println!("index_type = {index_type}");
-            println!("index_expr = {index_expr:?}");
             if !is_index_type(&index_type) {
                 panic!("Cannot index list with type '{index_type}'");
             }
@@ -237,13 +269,8 @@ fn annotate_identifier_type(
             }
 
             let list_type = annotate_identifier_type(list_identifier, state);
-            println!("list_identifier = {index_expr:?}");
-            println!("list_type = {list_type:?}");
-            // if !is_primitive_type(&list_type) {
-            //     panic!("Cannot index list of type '{list_type}");
-            // }
 
-            list_type.type_parameter().unwrap()
+            (list_type.0.type_parameter().unwrap(), list_type.1)
         }
     }
 }
@@ -335,7 +362,10 @@ fn derive_annotate_expr_type(
             found_type
         }
 
-        ast::Expr::Var(identifier) => annotate_identifier_type(identifier, state),
+        ast::Expr::Var(identifier) => {
+            let identifier_type = annotate_identifier_type(identifier, state);
+            identifier_type.0
+        }
 
         ast::Expr::FlatList(tuple_exprs) => {
             let tuple_types: Vec<ast::DataType> = tuple_exprs
@@ -374,7 +404,7 @@ fn derive_annotate_expr_type(
             } else {
                 panic!("Receiver must be an identifier")
             };
-            let receiver_type: ast::DataType = annotate_identifier_type(receiver, state);
+            let (receiver_type, _mutable) = annotate_identifier_type(receiver, state);
             let type_parameter = receiver_type.type_parameter();
             let method_signature: ast::FnSignature =
                 get_method_signature(method_name, state, &type_parameter);

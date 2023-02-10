@@ -349,6 +349,15 @@ fn mut_list_argument() -> syn::ItemFn {
     })
 }
 
+fn missing_mut_keyword() -> syn::ItemFn {
+    item_fn(parse_quote!(
+        fn missing_mut() {
+            let a = 5000u64;
+            a = a + 1;
+        }
+    ))
+}
+
 #[cfg(test)]
 mod compile_and_typecheck_tests {
     use crate::shared_test::graft_check_compile_prop;
@@ -473,6 +482,12 @@ mod compile_and_typecheck_tests {
     #[test]
     fn mut_list_argument_test() {
         graft_check_compile_prop(&mut_list_argument());
+    }
+
+    #[should_panic]
+    #[test]
+    fn missing_mut_keyword_test() {
+        graft_check_compile_prop(&missing_mut_keyword());
     }
 }
 

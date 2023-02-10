@@ -366,7 +366,7 @@ pub fn compile(function: &ast::Fn<ast::Typing>) -> Vec<LabelledInstruction> {
     // then parsing it again. A duplicated label should be caught by the parser.
     // I wanted to add a test for this, but I couldn't find a good way of doing that.
     let assembler = ret.iter().map(|x| x.to_string()).join("\n");
-    println!("{assembler}");
+    // println!("{assembler}");
     parse(&assembler)
         .map(|instructions| to_labelled(&instructions))
         .map_err(|err| anyhow::anyhow!("{}", err))
@@ -383,6 +383,7 @@ fn compile_stmt(
             var_name,
             data_type,
             expr,
+            mutable: _,
         }) => {
             let (expr_addr, expr_code) = compile_expr(expr, var_name, data_type, state);
             state.var_addr.insert(var_name.clone(), expr_addr);
