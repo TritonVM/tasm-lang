@@ -255,12 +255,12 @@ fn get_fn_signature(
 ) -> ast::FnSignature {
     // all functions from `tasm-lib` are in scope
     if let Some(snippet_name) = tasm::get_function_name(name) {
-        return tasm::function_name_to_signature(snippet_name, &type_parameter);
+        return tasm::function_name_to_signature(snippet_name, type_parameter);
     }
 
     // Functions for lists are in scope
     if let Some(function_name) = vector::get_function_name(name) {
-        return vector::function_name_to_signature(function_name, &type_parameter);
+        return vector::function_name_to_signature(function_name, type_parameter);
     }
 
     state
@@ -276,12 +276,12 @@ fn get_method_signature(
     type_parameter: &Option<ast::DataType>,
 ) -> ast::FnSignature {
     if let Some(snippet_name) = tasm::get_method_name(name) {
-        return tasm::function_name_to_signature(snippet_name, &type_parameter);
+        return tasm::function_name_to_signature(snippet_name, type_parameter);
     }
 
     // Functions for lists are in scope
     if let Some(function_name) = vector::get_method_name(name) {
-        return vector::method_name_to_signature(function_name, &type_parameter);
+        return vector::method_name_to_signature(function_name, type_parameter);
     }
 
     panic!("Don't know what type of value '{name}' returns! Type parameter was: {type_parameter:?}")

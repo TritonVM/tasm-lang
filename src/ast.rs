@@ -256,7 +256,7 @@ impl Display for DataType {
                 XFE => "XField".to_string(),
                 Digest => "Digest".to_string(),
                 List(ty) => format!("List({ty})"),
-                UnknownIntegerType => format!("Unknown integer type"),
+                UnknownIntegerType => "Unknown integer type".to_string(),
                 FlatList(tys) => tys.iter().map(|ty| format!("{ty}")).join(" "),
             }
         )

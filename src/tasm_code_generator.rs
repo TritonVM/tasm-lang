@@ -441,12 +441,8 @@ fn compile_stmt(
                 let ident_expr = ast::Expr::Var(*ident.to_owned());
                 let (_ident_addr, ident_code) =
                     compile_expr(&ident_expr, "ident_on_assign", &ident_type, state);
-                let (_index_expr, index_code) = compile_expr(
-                    &index_expr,
-                    "index_on_assign",
-                    &index_expr.get_type(),
-                    state,
-                );
+                let (_index_expr, index_code) =
+                    compile_expr(index_expr, "index_on_assign", &index_expr.get_type(), state);
                 state.vstack.pop();
                 state.vstack.pop();
                 state.vstack.pop();
@@ -806,12 +802,8 @@ fn compile_expr(
                 let ident_expr = ast::Expr::Var(*ident.to_owned());
                 let (_ident_addr, ident_code) =
                     compile_expr(&ident_expr, "ident_on_assign", &ident_type, state);
-                let (_index_expr, index_code) = compile_expr(
-                    &index_expr,
-                    "index_on_assign",
-                    &index_expr.get_type(),
-                    state,
-                );
+                let (_index_expr, index_code) =
+                    compile_expr(index_expr, "index_on_assign", &index_expr.get_type(), state);
                 state.vstack.pop();
                 state.vstack.pop();
                 let assign_addr = state.new_value_identifier("list_index_assign", &res_type);
