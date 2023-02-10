@@ -282,7 +282,7 @@ fn get_fn_signature(
 ) -> ast::FnSignature {
     // all functions from `tasm-lib` are in scope
     if let Some(snippet_name) = tasm::get_function_name(name) {
-        return tasm::function_name_to_signature(snippet_name, type_parameter);
+        return tasm::function_name_to_signature(snippet_name);
     }
 
     // Functions for lists are in scope
@@ -303,7 +303,7 @@ fn get_method_signature(
     type_parameter: &Option<ast::DataType>,
 ) -> ast::FnSignature {
     if let Some(snippet_name) = tasm::get_method_name(name) {
-        return tasm::function_name_to_signature(snippet_name, type_parameter);
+        return tasm::function_name_to_signature(snippet_name);
     }
 
     // Functions for lists are in scope

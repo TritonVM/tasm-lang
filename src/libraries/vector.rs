@@ -1,9 +1,6 @@
 use tasm_lib::snippet::Snippet;
 
-use crate::{
-    ast,
-    tasm_code_generator::{size_of, CompilerState},
-};
+use crate::{ast, tasm_code_generator::CompilerState};
 
 const VECTOR_LIB_INDICATOR: &str = "Vec::";
 
@@ -15,51 +12,22 @@ fn name_to_tasm_lib_snippet(
     let tasm_type: Option<tasm_lib::snippet::DataType> =
         type_parameter.clone().map(|x| x.try_into().unwrap());
     match public_name {
-        "Vec::default" => Some(Box::new(tasm_lib::list::unsafe_u32::new::New(
+        // TODO: Replace with "Vec::with_capacity" and use Safe list implementation
+        "Vec::default" => Some(Box::new(tasm_lib::list::unsafe_u32::new::UnsafeNew(
             tasm_type.unwrap(),
         ))),
-        "default" => Some(Box::new(tasm_lib::list::unsafe_u32::new::New(
+        "default" => Some(Box::new(tasm_lib::list::unsafe_u32::new::UnsafeNew(
             tasm_type.unwrap(),
         ))),
-        "push" => match size_of(type_parameter.as_ref().unwrap()) {
-            1 => Some(Box::new(tasm_lib::list::unsafe_u32::push::Push::<1>(
-                tasm_type.unwrap(),
-            ))),
-            2 => Some(Box::new(tasm_lib::list::unsafe_u32::push::Push::<2>(
-                tasm_type.unwrap(),
-            ))),
-            3 => Some(Box::new(tasm_lib::list::unsafe_u32::push::Push::<3>(
-                tasm_type.unwrap(),
-            ))),
-            5 => Some(Box::new(tasm_lib::list::unsafe_u32::push::Push::<5>(
-                tasm_type.unwrap(),
-            ))),
-            _ => panic!(
-                "Cannot push to Vec<{}> yet",
-                type_parameter.as_ref().unwrap()
-            ),
-        },
-        "pop" => match size_of(type_parameter.as_ref().unwrap()) {
-            1 => Some(Box::new(tasm_lib::list::unsafe_u32::pop::Pop::<1>(
-                tasm_type.unwrap(),
-            ))),
-            2 => Some(Box::new(tasm_lib::list::unsafe_u32::pop::Pop::<2>(
-                tasm_type.unwrap(),
-            ))),
-            3 => Some(Box::new(tasm_lib::list::unsafe_u32::pop::Pop::<3>(
-                tasm_type.unwrap(),
-            ))),
-            5 => Some(Box::new(tasm_lib::list::unsafe_u32::pop::Pop::<5>(
-                tasm_type.unwrap(),
-            ))),
-            _ => panic!(
-                "Cannot push to Vec<{}> yet",
-                type_parameter.as_ref().unwrap()
-            ),
-        },
-        "len" => Some(Box::new(tasm_lib::list::unsafe_u32::length::LengthLong(
+        "push" => Some(Box::new(tasm_lib::list::unsafe_u32::push::UnsafePush(
             tasm_type.unwrap(),
         ))),
+        "pop" => Some(Box::new(tasm_lib::list::unsafe_u32::pop::UnsafePop(
+            tasm_type.unwrap(),
+        ))),
+        "len" => Some(Box::new(
+            tasm_lib::list::unsafe_u32::length::UnsafeLengthLong(tasm_type.unwrap()),
+        )),
         _ => None,
     }
 }

@@ -183,7 +183,7 @@ impl CompilerState {
         address
     }
 
-    pub fn import_snippet(&mut self, snippet: Box<dyn Snippet>) -> &'static str {
+    pub fn import_snippet(&mut self, snippet: Box<dyn Snippet>) -> String {
         self.library.import(snippet)
     }
 
@@ -414,29 +414,9 @@ fn compile_stmt(
                 let type_param = ident_type.type_parameter().unwrap_or_else(|| {
                     panic!("identifier must have type parameter when assigning through indexing")
                 });
-                let fn_name = match type_param {
-                    ast::DataType::Bool => state.import_snippet(Box::new(
-                        tasm_lib::list::unsafe_u32::set::Set::<1>(type_param.try_into().unwrap()),
-                    )),
-                    ast::DataType::U32 => state.import_snippet(Box::new(
-                        tasm_lib::list::unsafe_u32::set::Set::<1>(type_param.try_into().unwrap()),
-                    )),
-                    ast::DataType::U64 => state.import_snippet(Box::new(
-                        tasm_lib::list::unsafe_u32::set::Set::<2>(type_param.try_into().unwrap()),
-                    )),
-                    ast::DataType::BFE => state.import_snippet(Box::new(
-                        tasm_lib::list::unsafe_u32::set::Set::<1>(type_param.try_into().unwrap()),
-                    )),
-                    ast::DataType::XFE => state.import_snippet(Box::new(
-                        tasm_lib::list::unsafe_u32::set::Set::<3>(type_param.try_into().unwrap()),
-                    )),
-                    ast::DataType::Digest => state.import_snippet(Box::new(
-                        tasm_lib::list::unsafe_u32::set::Set::<5>(type_param.try_into().unwrap()),
-                    )),
-                    _ => {
-                        panic!("Unsupported list type for list-assign. List type was: {ident_type}")
-                    }
-                };
+                let fn_name = state.import_snippet(Box::new(
+                    tasm_lib::list::unsafe_u32::set::UnsafeSet(type_param.try_into().unwrap()),
+                ));
 
                 let (_expr_addr, expr_code) = compile_expr(expr, "assign", &expr.get_type(), state);
                 let ident_expr = ast::Expr::Var(*ident.to_owned());
@@ -630,7 +610,7 @@ fn compile_fn_call(
 
     // If function is from tasm-lib, import it
     if let Some(snippet_name) = tasm::get_function_name(&name) {
-        name = tasm::import_tasm_snippet(snippet_name, type_parameter.clone(), state);
+        name = tasm::import_tasm_snippet(snippet_name, state);
     }
 
     // If function is from vector-lib, import it
@@ -757,29 +737,9 @@ fn compile_expr(
                 let type_param = ident_type.type_parameter().unwrap_or_else(|| {
                     panic!("identifier must have type parameter when reading through indexing")
                 });
-                let fn_name = match type_param {
-                    ast::DataType::Bool => state.import_snippet(Box::new(
-                        tasm_lib::list::unsafe_u32::get::Get::<1>(type_param.try_into().unwrap()),
-                    )),
-                    ast::DataType::U32 => state.import_snippet(Box::new(
-                        tasm_lib::list::unsafe_u32::get::Get::<1>(type_param.try_into().unwrap()),
-                    )),
-                    ast::DataType::U64 => state.import_snippet(Box::new(
-                        tasm_lib::list::unsafe_u32::get::Get::<2>(type_param.try_into().unwrap()),
-                    )),
-                    ast::DataType::BFE => state.import_snippet(Box::new(
-                        tasm_lib::list::unsafe_u32::get::Get::<1>(type_param.try_into().unwrap()),
-                    )),
-                    ast::DataType::XFE => state.import_snippet(Box::new(
-                        tasm_lib::list::unsafe_u32::get::Get::<3>(type_param.try_into().unwrap()),
-                    )),
-                    ast::DataType::Digest => state.import_snippet(Box::new(
-                        tasm_lib::list::unsafe_u32::get::Get::<5>(type_param.try_into().unwrap()),
-                    )),
-                    _ => {
-                        panic!("Unsupported list type for list-assign. List type was: {ident_type}")
-                    }
-                };
+                let fn_name = state.import_snippet(Box::new(
+                    tasm_lib::list::unsafe_u32::get::UnsafeGet(type_param.try_into().unwrap()),
+                ));
 
                 let ident_as_string = match *ident.to_owned() {
                     ast::Identifier::String(as_str, _) => as_str,

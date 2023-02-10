@@ -19,31 +19,16 @@ pub fn get_method_name(_name: &str) -> Option<&str> {
     None
 }
 
-pub fn import_tasm_snippet(
-    tasm_fn_name: &str,
-    type_parameter: Option<ast::DataType>,
-    state: &mut CompilerState,
-) -> String {
-    // TODO: This does not allow for a collission of function names in the
-    // `tasm-lib` library and this library. Maybe we could prepend all tasm-lib
-    // names with something?
-    let tasm_type: Option<tasm_lib::snippet::DataType> =
-        type_parameter.map(|x| x.try_into().unwrap());
-    let snippet = name_to_snippet(tasm_fn_name, tasm_type);
+pub fn import_tasm_snippet(tasm_fn_name: &str, state: &mut CompilerState) -> String {
+    let snippet = name_to_snippet(tasm_fn_name);
     let entrypoint = snippet.entrypoint().to_owned();
     state.import_snippet(snippet);
 
     entrypoint
 }
 
-pub fn function_name_to_signature(
-    tasm_fn_name: &str,
-    element_type: &Option<ast::DataType>,
-) -> ast::FnSignature {
-    let tasm_type: Option<tasm_lib::snippet::DataType> = element_type
-        .as_ref()
-        .map(|x| x.to_owned().try_into().unwrap());
-    let snippet = name_to_snippet(tasm_fn_name, tasm_type);
+pub fn function_name_to_signature(tasm_fn_name: &str) -> ast::FnSignature {
+    let snippet = name_to_snippet(tasm_fn_name);
 
     let input_types_lib = snippet.input_types();
     let output_types_lib = snippet.output_types();

@@ -144,7 +144,7 @@ fn left_child_rast() -> syn::ItemFn {
 fn right_lineage_length_stmt_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         pub fn right_lineage_length(node_index: u64) -> u32 {
-            let bit_width: u32 = tasm::log_2_floor_u64(node_index) + 1u32;
+            let bit_width: u32 = tasm::tasm_arithmetic_u64_log_2_floor(node_index) + 1u32;
             let npo2: u64 = 1u64 << bit_width;
             let dist: u64 = npo2 - node_index;
 
@@ -163,7 +163,7 @@ fn right_lineage_length_stmt_rast() -> syn::ItemFn {
 fn right_lineage_length_expr_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn right_lineage_length(node_index: u64) -> u32 {
-            let bit_width: u32 = tasm::log_2_floor_u64(node_index) + 1u32;
+            let bit_width: u32 = tasm::tasm_arithmetic_u64_log_2_floor(node_index) + 1u32;
             let npo2: u64 = 1u64 << bit_width;
             let dist: u64 = npo2 - node_index;
 
@@ -718,26 +718,29 @@ mod compile_and_run_tests {
         ];
         let input_memory = HashMap::default();
         let mut expected_final_memory = HashMap::default();
-        tasm_lib::rust_shadowing_helper_functions::unsafe_list_new(
+        tasm_lib::rust_shadowing_helper_functions::unsafe_list::unsafe_list_new(
             BFieldElement::zero(),
             &mut expected_final_memory,
         );
-        tasm_lib::rust_shadowing_helper_functions::unsafe_list_push(
+        tasm_lib::rust_shadowing_helper_functions::unsafe_list::unsafe_list_push(
             BFieldElement::zero(),
-            [BFieldElement::new(2000), BFieldElement::new(0)],
+            vec![BFieldElement::new(2000), BFieldElement::new(0)],
             &mut expected_final_memory,
+            2,
         );
-        tasm_lib::rust_shadowing_helper_functions::unsafe_list_push(
+        tasm_lib::rust_shadowing_helper_functions::unsafe_list::unsafe_list_push(
             BFieldElement::zero(),
-            [BFieldElement::new(5000), BFieldElement::new(0)],
+            vec![BFieldElement::new(5000), BFieldElement::new(0)],
             &mut expected_final_memory,
+            2,
         );
-        tasm_lib::rust_shadowing_helper_functions::unsafe_list_push(
+        tasm_lib::rust_shadowing_helper_functions::unsafe_list::unsafe_list_push(
             BFieldElement::zero(),
-            [BFieldElement::new(4000), BFieldElement::new(0)],
+            vec![BFieldElement::new(4000), BFieldElement::new(0)],
             &mut expected_final_memory,
+            2,
         );
-        tasm_lib::rust_shadowing_helper_functions::unsafe_list_set_length(
+        tasm_lib::rust_shadowing_helper_functions::unsafe_list::unsafe_list_set_length(
             BFieldElement::zero(),
             2,
             &mut expected_final_memory,
@@ -766,19 +769,24 @@ mod compile_and_run_tests {
     fn simple_list_support_test() {
         let mut init_memory = HashMap::default();
         let list_pointer = BFieldElement::one();
-        tasm_lib::rust_shadowing_helper_functions::unsafe_list_new(list_pointer, &mut init_memory);
-        tasm_lib::rust_shadowing_helper_functions::unsafe_list_push(
+        tasm_lib::rust_shadowing_helper_functions::unsafe_list::unsafe_list_new(
             list_pointer,
-            [BFieldElement::new(2000), BFieldElement::new(0)],
             &mut init_memory,
+        );
+        tasm_lib::rust_shadowing_helper_functions::unsafe_list::unsafe_list_push(
+            list_pointer,
+            vec![BFieldElement::new(2000), BFieldElement::new(0)],
+            &mut init_memory,
+            2,
         );
 
         let mut expected_final_memory = init_memory.clone();
         for i in 0..10 {
-            tasm_lib::rust_shadowing_helper_functions::unsafe_list_push(
+            tasm_lib::rust_shadowing_helper_functions::unsafe_list::unsafe_list_push(
                 list_pointer,
-                [BFieldElement::new(i), BFieldElement::new(0)],
+                vec![BFieldElement::new(i), BFieldElement::new(0)],
                 &mut expected_final_memory,
+                2,
             );
         }
         compare_prop_with_stack_and_memory(

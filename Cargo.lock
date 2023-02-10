@@ -499,12 +499,12 @@ dependencies = [
 
 [[package]]
 name = "darling"
-version = "0.14.2"
+version = "0.14.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b0dd3cd20dc6b5a876612a6e5accfe7f3dd883db6d07acfbf14c128f61550dfa"
+checksum = "c0808e1bd8671fb44a113a14e13497557533369847788fa2ae912b6ebfce9fa8"
 dependencies = [
- "darling_core 0.14.2",
- "darling_macro 0.14.2",
+ "darling_core 0.14.3",
+ "darling_macro 0.14.3",
 ]
 
 [[package]]
@@ -523,9 +523,9 @@ dependencies = [
 
 [[package]]
 name = "darling_core"
-version = "0.14.2"
+version = "0.14.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a784d2ccaf7c98501746bf0be29b2022ba41fd62a2e622af997a03e9f972859f"
+checksum = "001d80444f28e193f30c2f293455da62dcf9a6b29918a4253152ae2b1de592cb"
 dependencies = [
  "fnv",
  "ident_case",
@@ -548,11 +548,11 @@ dependencies = [
 
 [[package]]
 name = "darling_macro"
-version = "0.14.2"
+version = "0.14.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7618812407e9402654622dd402b0a89dff9ba93badd6540781526117b92aab7e"
+checksum = "b36230598a2d5de7ec1c6f51f72d8a99a9208daff41de2084d06e3fd3ea56685"
 dependencies = [
- "darling_core 0.14.2",
+ "darling_core 0.14.3",
  "quote",
  "syn",
 ]
@@ -1116,9 +1116,9 @@ checksum = "9b7820b9daea5457c9f21c69448905d723fbd21136ccf521748f23fd49e723ee"
 
 [[package]]
 name = "parity-scale-codec"
-version = "3.3.0"
+version = "3.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c3840933452adf7b3b9145e27086a5a3376c619dca1a21b1e5a5af0d54979bed"
+checksum = "637935964ff85a605d114591d4d2c13c5d1ba2806dae97cea6bf180238a749ac"
 dependencies = [
  "arrayvec",
  "bitvec",
@@ -1609,9 +1609,9 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.92"
+version = "1.0.93"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7434af0dc1cbd59268aa98b4c22c131c0584d2232f6fb166efb993e2832e896a"
+checksum = "cad406b69c91885b5107daf2c29572f6c8cdb3c66826821e286c533490c0bc76"
 dependencies = [
  "itoa",
  "ryu",
@@ -1662,7 +1662,7 @@ version = "2.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a1966009f3c05f095697c537312f5415d1e3ed31ce0a56942bac4c771c5c335e"
 dependencies = [
- "darling 0.14.2",
+ "darling 0.14.3",
  "proc-macro2",
  "quote",
  "syn",
@@ -1801,7 +1801,7 @@ dependencies = [
 [[package]]
 name = "tasm-lib"
 version = "0.1.0"
-source = "git+https://github.com/TritonVM/tasm-lib#3233c93342a6f2060e953678a87f944cd304f368"
+source = "git+https://github.com/TritonVM/tasm-lib#4c436922cc04c01f78c8e0fd38c13dbbb4c69a78"
 dependencies = [
  "itertools",
  "num",
@@ -1896,7 +1896,7 @@ dependencies = [
 [[package]]
 name = "triton-opcodes"
 version = "0.14.0"
-source = "git+https://github.com/TritonVM/triton-vm.git?branch=master#567efc00395bd06a37442114f1318511129596f8"
+source = "git+https://github.com/TritonVM/triton-vm.git?branch=master#022245b76bb83551426715062ea33e7a6210ddce"
 dependencies = [
  "anyhow",
  "itertools",
@@ -1912,7 +1912,7 @@ dependencies = [
 [[package]]
 name = "triton-profiler"
 version = "0.13.0"
-source = "git+https://github.com/TritonVM/triton-vm.git?branch=master#567efc00395bd06a37442114f1318511129596f8"
+source = "git+https://github.com/TritonVM/triton-vm.git?branch=master#022245b76bb83551426715062ea33e7a6210ddce"
 dependencies = [
  "anyhow",
  "bincode",
