@@ -25,6 +25,7 @@ pub struct Fn<T> {
 pub struct FnArg {
     pub name: String,
     pub data_type: DataType,
+    pub mutable: bool,
 }
 
 impl Display for FnArg {

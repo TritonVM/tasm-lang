@@ -109,6 +109,8 @@ pub fn function_name_to_signature(
         let fn_arg = ast::FnArg {
             name: format!("input_{i}"),
             data_type: itl.into(),
+            // The tasm snippet input arguments are all considered mutable
+            mutable: true,
         };
         args.push(fn_arg);
     }

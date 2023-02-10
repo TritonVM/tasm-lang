@@ -343,6 +343,8 @@ fn mut_list_argument() -> syn::ItemFn {
                 values.push(i);
                 i += 1u64;
             }
+
+            return;
         }
     })
 }
@@ -468,17 +470,17 @@ mod compile_and_typecheck_tests {
         graft_check_compile_prop(&tuple_support());
     }
 
-    // #[test]
-    // fn mut_list_argument_test() {
-    //     graft_check_compile_prop(&mut_list_argument());
-    // }
+    #[test]
+    fn mut_list_argument_test() {
+        graft_check_compile_prop(&mut_list_argument());
+    }
 }
 
 #[cfg(test)]
 mod compile_and_run_tests {
     use std::collections::HashMap;
 
-    use num::Zero;
+    use num::{One, Zero};
     use rand::{thread_rng, Rng, RngCore};
     use twenty_first::shared_math::b_field_element::BFieldElement;
 
@@ -745,8 +747,31 @@ mod compile_and_run_tests {
         compare_prop_with_stack(&tuple_support(), vec![], outputs);
     }
 
-    // #[test]
-    // fn simple_list_support_test() {
-    //     graft_check_compile_prop(&simple_list_support());
-    // }
+    #[test]
+    fn simple_list_support_test() {
+        let mut init_memory = HashMap::default();
+        let list_pointer = BFieldElement::one();
+        tasm_lib::rust_shadowing_helper_functions::unsafe_list_new(list_pointer, &mut init_memory);
+        tasm_lib::rust_shadowing_helper_functions::unsafe_list_push(
+            list_pointer,
+            [BFieldElement::new(2000), BFieldElement::new(0)],
+            &mut init_memory,
+        );
+
+        let mut expected_final_memory = init_memory.clone();
+        for i in 0..10 {
+            tasm_lib::rust_shadowing_helper_functions::unsafe_list_push(
+                list_pointer,
+                [BFieldElement::new(i), BFieldElement::new(0)],
+                &mut expected_final_memory,
+            );
+        }
+        compare_prop_with_stack_and_memory(
+            &mut_list_argument(),
+            vec![ast::ExprLit::BFE(list_pointer)],
+            vec![],
+            init_memory,
+            expected_final_memory,
+        );
+    }
 }

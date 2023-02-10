@@ -315,6 +315,7 @@ fn derive_annotate_fn_call_args(
         let ast::FnArg {
             name: arg_name,
             data_type: arg_type,
+            mutable: _mutable,
         } = fn_arg;
         assert_eq!(
         arg_type, expr_type,

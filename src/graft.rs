@@ -88,12 +88,33 @@ fn graft_fn_arg(rust_fn_arg: &syn::FnArg) -> ast::FnArg {
     match rust_fn_arg {
         syn::FnArg::Typed(pat_type) => {
             let name = pat_to_name(&pat_type.pat);
-            let data_type: ast::DataType = match pat_type.ty.as_ref() {
-                syn::Type::Path(type_path) => rust_type_path_to_data_type(type_path),
+            let (data_type, mutable): (ast::DataType, bool) = match pat_type.ty.as_ref() {
+                // Input is an owned value
+                syn::Type::Path(type_path) => (rust_type_path_to_data_type(type_path), false),
+
+                // Input is a mutable reference
+                syn::Type::Reference(syn::TypeReference {
+                    and_token: _,
+                    lifetime: _,
+                    mutability,
+                    elem,
+                }) => {
+                    assert!(mutability.is_some(), "Reference input must be mutable");
+                    match *elem.to_owned() {
+                        syn::Type::Path(type_path) => {
+                            (rust_type_path_to_data_type(&type_path), true)
+                        }
+                        _ => todo!(),
+                    }
+                }
                 other => panic!("unsupported: {other:?}"),
             };
 
-            ast::FnArg { name, data_type }
+            ast::FnArg {
+                name,
+                data_type,
+                mutable,
+            }
         }
         other => panic!("unsupported: {other:?}"),
     }
@@ -172,6 +193,44 @@ fn expr_to_maybe_ident(rust_exp: &syn::Expr) -> Option<String> {
     match rust_exp {
         syn::Expr::Path(path_expr) => Some(path_to_ident(&path_expr.path)),
         _ => None,
+    }
+}
+
+/// Interpret an expression as an identifier
+fn expr_as_identifier(rust_exp: &syn::Expr) -> ast::Identifier<Annotation> {
+    match rust_exp {
+        syn::Expr::Path(path) => {
+            ast::Identifier::String(path_to_ident(&path.path), Default::default())
+        }
+        syn::Expr::Field(field_expr) => {
+            // This is for tuple support. E.g.: `a.2 = 14u32;`
+            let path = field_expr.base.as_ref();
+            let ident = match expr_to_maybe_ident(path) {
+                Some(ident) => ident,
+                None => panic!("unsupported: {field_expr:?}"),
+            };
+            let tuple_index = match &field_expr.member {
+                syn::Member::Named(_) => panic!("unsupported: {field_expr:?}"),
+                syn::Member::Unnamed(tuple_index) => tuple_index,
+            };
+
+            ast::Identifier::TupleIndex(
+                Box::new(ast::Identifier::String(ident, Default::default())),
+                tuple_index.index as usize,
+            )
+        }
+        syn::Expr::Index(index_expr) => {
+            let ident = match expr_to_maybe_ident(&index_expr.expr) {
+                Some(ident) => ident,
+                None => panic!("unsupported: {index_expr:?}"),
+            };
+            let index_expr = graft_expr(index_expr.index.as_ref());
+            ast::Identifier::ListIndex(
+                Box::new(ast::Identifier::String(ident, Default::default())),
+                Box::new(index_expr),
+            )
+        }
+        other => panic!("unsupported: {other:?}"),
     }
 }
 
@@ -505,53 +564,13 @@ pub fn graft_stmt(rust_stmt: &syn::Stmt) -> ast::Stmt<Annotation> {
                 ast::Stmt::FnCall(ast_fn_call)
             }
             syn::Expr::Assign(assign) => {
-                let identifier = assign.left.as_ref();
+                let identifier_expr = assign.left.as_ref();
+                let identifier = expr_as_identifier(identifier_expr);
                 let assign_expr = graft_expr(assign.right.as_ref());
-                let assign_stmt = match identifier {
-                    syn::Expr::Path(path) => ast::AssignStmt {
-                        identifier: ast::Identifier::String(
-                            path_to_ident(&path.path),
-                            Default::default(),
-                        ),
-                        expr: assign_expr,
-                    },
-                    syn::Expr::Field(field_expr) => {
-                        // This is for tuple support. E.g.: `a.2 = 14u32;`
-                        let path = field_expr.base.as_ref();
-                        let ident = match expr_to_maybe_ident(path) {
-                            Some(ident) => ident,
-                            None => panic!("unsupported: {field_expr:?}"),
-                        };
-                        let tuple_index = match &field_expr.member {
-                            syn::Member::Named(_) => panic!("unsupported: {field_expr:?}"),
-                            syn::Member::Unnamed(tuple_index) => tuple_index,
-                        };
-
-                        ast::AssignStmt {
-                            identifier: ast::Identifier::TupleIndex(
-                                Box::new(ast::Identifier::String(ident, Default::default())),
-                                tuple_index.index as usize,
-                            ),
-                            expr: assign_expr,
-                        }
-                    }
-                    syn::Expr::Index(index_expr) => {
-                        let ident = match expr_to_maybe_ident(&index_expr.expr) {
-                            Some(ident) => ident,
-                            None => panic!("unsupported: {index_expr:?}"),
-                        };
-                        let index_expr = graft_expr(index_expr.index.as_ref());
-                        ast::AssignStmt {
-                            identifier: ast::Identifier::ListIndex(
-                                Box::new(ast::Identifier::String(ident, Default::default())),
-                                Box::new(index_expr),
-                            ),
-                            expr: assign_expr,
-                        }
-                    }
-                    other => panic!("unsupported: {other:?}"),
+                let assign_stmt = ast::AssignStmt {
+                    identifier,
+                    expr: assign_expr,
                 };
-
                 ast::Stmt::Assign(assign_stmt)
             }
             // Handle expressions of the type `i += 1`

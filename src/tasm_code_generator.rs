@@ -792,7 +792,7 @@ fn compile_expr(
                     .var_addr
                     .get(&ident_as_string)
                     .expect("variable exists");
-                let (position, old_data_type, _) = state.vstack.find_stack_value(var_addr);
+                let (_position, old_data_type, _) = state.vstack.find_stack_value(var_addr);
 
                 assert_eq!(
                     ident_type, old_data_type,
