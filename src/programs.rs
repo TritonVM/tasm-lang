@@ -497,20 +497,21 @@ mod compile_and_run_tests {
 
     use num::{One, Zero};
     use rand::{thread_rng, Rng, RngCore};
+
     use twenty_first::shared_math::b_field_element::BFieldElement;
 
     use super::*;
-    use crate::{
-        ast,
-        shared_test::{compare_prop_with_stack, compare_prop_with_stack_and_memory},
+    use crate::ast;
+    use crate::shared_test::{
+        bfe_lit, compare_prop_with_stack, compare_prop_with_stack_and_memory, u32_lit, u64_lit,
     };
 
     #[test]
     fn simple_sub_test() {
         compare_prop_with_stack(
             &simple_sub(),
-            vec![ast::ExprLit::U32(100), ast::ExprLit::U32(51)],
-            vec![ast::ExprLit::U32(49)],
+            vec![u32_lit(100), u32_lit(51)],
+            vec![u32_lit(49)],
         );
     }
 
@@ -519,19 +520,19 @@ mod compile_and_run_tests {
         compare_prop_with_stack(
             &operator_evaluation_ordering_with_div_u32(),
             vec![],
-            vec![ast::ExprLit::U32(94)],
+            vec![u32_lit(94)],
         );
 
         compare_prop_with_stack(
             &operator_evaluation_ordering_with_div_u64(),
             vec![],
-            vec![ast::ExprLit::U64(94)],
+            vec![u64_lit(94)],
         );
 
         compare_prop_with_stack(
             &operator_evaluation_ordering_with_mul(),
             vec![],
-            vec![ast::ExprLit::U32(60)],
+            vec![u32_lit(60)],
         );
     }
 
@@ -540,78 +541,74 @@ mod compile_and_run_tests {
         compare_prop_with_stack(
             &add_u64_rast(),
             vec![
-                ast::ExprLit::U64((1 << 33) + (1 << 16)),
-                ast::ExprLit::U64((1 << 33) + (1 << 16)),
+                u64_lit((1 << 33) + (1 << 16)),
+                u64_lit((1 << 33) + (1 << 16)),
             ],
-            vec![ast::ExprLit::U64((1 << 34) + (1 << 17))],
+            vec![u64_lit((1 << 34) + (1 << 17))],
         );
         for _ in 0..10 {
             let lhs = thread_rng().gen_range(0..u64::MAX / 2);
             let rhs = thread_rng().gen_range(0..u64::MAX / 2);
             compare_prop_with_stack(
                 &add_u64_rast(),
-                vec![ast::ExprLit::U64(lhs), ast::ExprLit::U64(rhs)],
-                vec![ast::ExprLit::U64(lhs + rhs)],
+                vec![u64_lit(lhs), u64_lit(rhs)],
+                vec![u64_lit(lhs + rhs)],
             )
         }
     }
 
     #[test]
     fn sub_u32_run_test() {
-        let input_args_1 = vec![ast::ExprLit::U32(200), ast::ExprLit::U32(95)];
-        let expected_outputs_1 = vec![ast::ExprLit::U32(105)];
+        let input_args_1 = vec![u32_lit(200), u32_lit(95)];
+        let expected_outputs_1 = vec![u32_lit(105)];
         compare_prop_with_stack(&sub_u32_rast_1(), input_args_1, expected_outputs_1);
 
-        let input_args_2 = vec![ast::ExprLit::U32(95), ast::ExprLit::U32(200)];
-        let expected_outputs_2 = vec![ast::ExprLit::U32(105)];
+        let input_args_2 = vec![u32_lit(95), u32_lit(200)];
+        let expected_outputs_2 = vec![u32_lit(105)];
         compare_prop_with_stack(&sub_u32_rast_2(), input_args_2, expected_outputs_2);
     }
 
     #[test]
     fn sub_u64_run_test() {
-        let input_args_1 = vec![ast::ExprLit::U64(200), ast::ExprLit::U64(95)];
-        let expected_outputs_1 = vec![ast::ExprLit::U64(105)];
+        let input_args_1 = vec![u64_lit(200), u64_lit(95)];
+        let expected_outputs_1 = vec![u64_lit(105)];
         compare_prop_with_stack(&sub_u64_rast_1(), input_args_1, expected_outputs_1);
 
-        let input_args_2 = vec![ast::ExprLit::U64(95), ast::ExprLit::U64(200)];
-        let expected_outputs_2 = vec![ast::ExprLit::U64(105)];
+        let input_args_2 = vec![u64_lit(95), u64_lit(200)];
+        let expected_outputs_2 = vec![u64_lit(105)];
         compare_prop_with_stack(&sub_u64_rast_2(), input_args_2, expected_outputs_2);
 
-        let input_args_3 = vec![ast::ExprLit::U64(1), ast::ExprLit::U64(1 << 32)];
-        let expected_outputs_3 = vec![ast::ExprLit::U64(u32::MAX as u64)];
+        let input_args_3 = vec![u64_lit(1), u64_lit(1 << 32)];
+        let expected_outputs_3 = vec![u64_lit(u32::MAX as u64)];
         compare_prop_with_stack(&sub_u64_rast_2(), input_args_3, expected_outputs_3);
 
         let lhs = thread_rng().gen_range(0..u64::MAX);
         let rhs = thread_rng().gen_range(0..=lhs);
-        let input_args_4 = vec![ast::ExprLit::U64(rhs), ast::ExprLit::U64(lhs)];
-        let expected_outputs_4 = vec![ast::ExprLit::U64(lhs - rhs)];
+        let input_args_4 = vec![u64_lit(rhs), u64_lit(lhs)];
+        let expected_outputs_4 = vec![u64_lit(lhs - rhs)];
         compare_prop_with_stack(&sub_u64_rast_2(), input_args_4, expected_outputs_4);
     }
 
     #[test]
     fn right_child_run_test() {
-        compare_prop_with_stack(
-            &right_child_rast(),
-            vec![ast::ExprLit::U64(120)],
-            vec![ast::ExprLit::U64(119)],
-        );
+        compare_prop_with_stack(&right_child_rast(), vec![u64_lit(120)], vec![u64_lit(119)]);
         let mut rng = thread_rng();
         let rand = rng.next_u64();
         compare_prop_with_stack(
             &right_child_rast(),
-            vec![ast::ExprLit::U64(rand)],
-            vec![ast::ExprLit::U64(rand - 1)],
+            vec![u64_lit(rand)],
+            vec![u64_lit(rand - 1)],
         );
     }
 
     #[test]
     fn left_child_run_test() {
-        let inputs0 = vec![ast::ExprLit::U64(120), ast::ExprLit::U32(2)];
-        let outputs0 = vec![ast::ExprLit::U64(116)];
+        let inputs0 = vec![u64_lit(120), u32_lit(2)];
+        let outputs0 = vec![u64_lit(116)];
         compare_prop_with_stack(&left_child_rast(), inputs0, outputs0);
 
-        let inputs1 = vec![ast::ExprLit::U64(31), ast::ExprLit::U32(4)];
-        let outputs1 = vec![ast::ExprLit::U64(15)];
+        let inputs1 = vec![u64_lit(31), u32_lit(4)];
+        let outputs1 = vec![u64_lit(15)];
         compare_prop_with_stack(&left_child_rast(), inputs1, outputs1);
     }
 
@@ -619,8 +616,8 @@ mod compile_and_run_tests {
     #[test]
     fn right_lineage_length_run_test() {
         fn prop_right_lineage_length_run(node_index: u64, expected: u32) {
-            let inputs = vec![ast::ExprLit::U64(node_index)];
-            let outputs = vec![ast::ExprLit::U32(expected)];
+            let inputs = vec![u64_lit(node_index)];
+            let outputs = vec![u32_lit(expected)];
             compare_prop_with_stack(
                 &right_lineage_length_stmt_rast(),
                 inputs.clone(),
@@ -671,33 +668,33 @@ mod compile_and_run_tests {
 
     #[test]
     fn simple_while_loop_run_test() {
-        compare_prop_with_stack(&simple_while_loop(), vec![], vec![ast::ExprLit::U32(5050)]);
+        compare_prop_with_stack(&simple_while_loop(), vec![], vec![u32_lit(5050)]);
     }
 
     #[test]
     fn complicated_while_loop_test() {
         compare_prop_with_stack(
             &longer_while_loop(),
-            vec![ast::ExprLit::U32(1000)],
-            vec![ast::ExprLit::U64(2641)],
+            vec![u32_lit(1000)],
+            vec![u64_lit(2641)],
         );
         compare_prop_with_stack(
             &while_loop_with_declarations(),
-            vec![ast::ExprLit::U32(2000)],
-            vec![ast::ExprLit::U64(3641)],
+            vec![u32_lit(2000)],
+            vec![u64_lit(3641)],
         );
         compare_prop_with_stack(
             &while_loop_with_declarations(),
-            vec![ast::ExprLit::U32(2001)],
-            vec![ast::ExprLit::U64(3642)],
+            vec![u32_lit(2001)],
+            vec![u64_lit(3642)],
         );
     }
 
     #[test]
     fn code_block_run_test() {
         fn prop_code_block(input: u64) {
-            let inputs = vec![ast::ExprLit::U64(input)];
-            let outputs = vec![ast::ExprLit::U32(2 * (input as u32) + 2)];
+            let inputs = vec![u64_lit(input)];
+            let outputs = vec![u32_lit(2 * (input as u32) + 2)];
             compare_prop_with_stack(&code_block(), inputs, outputs);
         }
 
@@ -709,91 +706,78 @@ mod compile_and_run_tests {
 
     #[test]
     fn simple_list_support_run_test() {
+        use tasm_lib::rust_shadowing_helper_functions::unsafe_list::unsafe_list_new;
+        use tasm_lib::rust_shadowing_helper_functions::unsafe_list::unsafe_list_push;
+        use tasm_lib::rust_shadowing_helper_functions::unsafe_list::unsafe_list_set_length;
+
         let inputs = vec![];
         let outputs = vec![
             ast::ExprLit::BFE(BFieldElement::zero()),
-            ast::ExprLit::U32(2),
-            ast::ExprLit::U64(4000),
-            ast::ExprLit::U64(2000),
+            u32_lit(2),
+            u64_lit(4000),
+            u64_lit(2000),
         ];
+
+        let mut memory = HashMap::default();
+        let list_pointer = BFieldElement::zero();
+        unsafe_list_new(list_pointer, &mut memory);
+
+        let elem_1 = vec![BFieldElement::new(2000), BFieldElement::new(0)];
+        unsafe_list_push(list_pointer, elem_1.clone(), &mut memory, elem_1.len());
+
+        let elem_2 = vec![BFieldElement::new(5000), BFieldElement::new(0)];
+        unsafe_list_push(list_pointer, elem_2.clone(), &mut memory, elem_2.len());
+
+        let elem_3 = vec![BFieldElement::new(4000), BFieldElement::new(0)];
+        unsafe_list_push(list_pointer, elem_3.clone(), &mut memory, elem_3.len());
+
+        unsafe_list_set_length(list_pointer, 2, &mut memory);
+
         let input_memory = HashMap::default();
-        let mut expected_final_memory = HashMap::default();
-        tasm_lib::rust_shadowing_helper_functions::unsafe_list::unsafe_list_new(
-            BFieldElement::zero(),
-            &mut expected_final_memory,
-        );
-        tasm_lib::rust_shadowing_helper_functions::unsafe_list::unsafe_list_push(
-            BFieldElement::zero(),
-            vec![BFieldElement::new(2000), BFieldElement::new(0)],
-            &mut expected_final_memory,
-            2,
-        );
-        tasm_lib::rust_shadowing_helper_functions::unsafe_list::unsafe_list_push(
-            BFieldElement::zero(),
-            vec![BFieldElement::new(5000), BFieldElement::new(0)],
-            &mut expected_final_memory,
-            2,
-        );
-        tasm_lib::rust_shadowing_helper_functions::unsafe_list::unsafe_list_push(
-            BFieldElement::zero(),
-            vec![BFieldElement::new(4000), BFieldElement::new(0)],
-            &mut expected_final_memory,
-            2,
-        );
-        tasm_lib::rust_shadowing_helper_functions::unsafe_list::unsafe_list_set_length(
-            BFieldElement::zero(),
-            2,
-            &mut expected_final_memory,
-        );
         compare_prop_with_stack_and_memory(
             &simple_list_support(),
             inputs,
             outputs,
             input_memory,
-            expected_final_memory,
+            memory,
         );
     }
 
     #[test]
     fn tuple_support_run_test() {
-        let outputs = vec![
-            ast::ExprLit::Bool(true),
-            ast::ExprLit::U32(42),
-            ast::ExprLit::U64(100),
-        ];
+        let outputs = vec![ast::ExprLit::Bool(true), u32_lit(42), u64_lit(100)];
 
         compare_prop_with_stack(&tuple_support(), vec![], outputs);
     }
 
     #[test]
     fn simple_list_support_test() {
-        let mut init_memory = HashMap::default();
-        let list_pointer = BFieldElement::one();
-        tasm_lib::rust_shadowing_helper_functions::unsafe_list::unsafe_list_new(
-            list_pointer,
-            &mut init_memory,
-        );
-        tasm_lib::rust_shadowing_helper_functions::unsafe_list::unsafe_list_push(
-            list_pointer,
-            vec![BFieldElement::new(2000), BFieldElement::new(0)],
-            &mut init_memory,
-            2,
-        );
+        use tasm_lib::rust_shadowing_helper_functions::unsafe_list::unsafe_list_new;
+        use tasm_lib::rust_shadowing_helper_functions::unsafe_list::unsafe_list_push;
 
-        let mut expected_final_memory = init_memory.clone();
+        let mut memory = HashMap::default();
+        let list_pointer = BFieldElement::one();
+        unsafe_list_new(list_pointer, &mut memory);
+
+        let elem_1 = vec![BFieldElement::new(2000), BFieldElement::new(0)];
+        unsafe_list_push(list_pointer, elem_1.clone(), &mut memory, elem_1.len());
+
+        let mut expected_final_memory = memory.clone();
         for i in 0..10 {
-            tasm_lib::rust_shadowing_helper_functions::unsafe_list::unsafe_list_push(
+            let elem_i = vec![BFieldElement::new(i), BFieldElement::new(0)];
+            unsafe_list_push(
                 list_pointer,
-                vec![BFieldElement::new(i), BFieldElement::new(0)],
+                elem_i.clone(),
                 &mut expected_final_memory,
-                2,
+                elem_i.len(),
             );
         }
+
         compare_prop_with_stack_and_memory(
             &mut_list_argument(),
-            vec![ast::ExprLit::BFE(list_pointer)],
+            vec![bfe_lit(list_pointer)],
             vec![],
-            init_memory,
+            memory,
             expected_final_memory,
         );
     }

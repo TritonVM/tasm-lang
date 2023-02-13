@@ -1,10 +1,108 @@
 use itertools::Itertools;
 use std::collections::HashMap;
 
-use crate::{
-    ast,
-    libraries::{tasm, vector},
-};
+use crate::ast;
+use crate::libraries::tasm;
+use crate::libraries::vector;
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub enum Typing {
+    UnknownType,
+    KnownType(ast::DataType),
+}
+
+impl Default for Typing {
+    fn default() -> Self {
+        Typing::UnknownType
+    }
+}
+
+impl GetType for Typing {
+    fn get_type(&self) -> ast::DataType {
+        match self {
+            Typing::UnknownType => {
+                panic!("Cannot unpack type before complete type annotation.")
+            }
+            Typing::KnownType(data_type) => data_type.clone(),
+        }
+    }
+}
+
+pub trait GetType {
+    fn get_type(&self) -> ast::DataType;
+}
+
+impl<T: GetType> GetType for ast::ExprLit<T> {
+    fn get_type(&self) -> ast::DataType {
+        match self {
+            ast::ExprLit::Bool(_) => ast::DataType::Bool,
+            ast::ExprLit::U32(_) => ast::DataType::U32,
+            ast::ExprLit::U64(_) => ast::DataType::U64,
+            ast::ExprLit::BFE(_) => ast::DataType::BFE,
+            ast::ExprLit::XFE(_) => ast::DataType::XFE,
+            ast::ExprLit::Digest(_) => ast::DataType::Digest,
+            ast::ExprLit::GenericNum(_, ty) => ty.get_type(),
+        }
+    }
+}
+
+impl<T: GetType> GetType for ast::Expr<T> {
+    fn get_type(&self) -> ast::DataType {
+        match self {
+            ast::Expr::Lit(lit) => lit.get_type(),
+            ast::Expr::Var(id) => id.get_type(),
+            ast::Expr::FlatList(t_list) => {
+                let types = t_list.iter().map(|elem| elem.get_type()).collect_vec();
+                ast::DataType::FlatList(types)
+            }
+            ast::Expr::FnCall(fn_call) => fn_call.get_type(),
+            ast::Expr::MethodCall(method_call) => method_call.get_type(),
+            ast::Expr::Binop(_, _, _, t) => t.get_type(),
+            ast::Expr::If(if_expr) => if_expr.get_type(),
+            ast::Expr::Cast(_expr, t) => t.to_owned(),
+        }
+    }
+}
+
+impl<T: GetType> GetType for ast::ExprIf<T> {
+    fn get_type(&self) -> ast::DataType {
+        self.then_branch.get_type()
+    }
+}
+
+impl<T: GetType> GetType for ast::Identifier<T> {
+    fn get_type(&self) -> ast::DataType {
+        match self {
+            ast::Identifier::String(_, t) => t.get_type(),
+            ast::Identifier::TupleIndex(id, idx) => {
+                let rec = id.get_type();
+                match rec {
+                    ast::DataType::FlatList(list) => list[*idx].clone(),
+                    dt => panic!("Type error. Expected FlatList got: {dt:?}"),
+                }
+            }
+            ast::Identifier::ListIndex(id, _) => {
+                let rec = id.get_type();
+                match rec {
+                    ast::DataType::List(element_type) => *element_type,
+                    dt => panic!("Type error. Expected List got: {dt:?}"),
+                }
+            }
+        }
+    }
+}
+
+impl<T: GetType> GetType for ast::FnCall<T> {
+    fn get_type(&self) -> ast::DataType {
+        self.annot.get_type()
+    }
+}
+
+impl<T: GetType> GetType for ast::MethodCall<T> {
+    fn get_type(&self) -> ast::DataType {
+        self.annot.get_type()
+    }
+}
 
 #[derive(Debug, Default)]
 pub struct CheckState {
@@ -36,7 +134,7 @@ impl DataTypeAndMutability {
     }
 }
 
-pub fn annotate_fn(function: &mut ast::Fn<ast::Typing>) {
+pub fn annotate_fn(function: &mut ast::Fn<Typing>) {
     // Initialize `CheckState`
     let vtable: HashMap<String, DataTypeAndMutability> =
         HashMap::with_capacity(function.fn_signature.args.len());
@@ -71,7 +169,7 @@ pub fn annotate_fn(function: &mut ast::Fn<ast::Typing>) {
 }
 
 fn annotate_stmt(
-    stmt: &mut ast::Stmt<ast::Typing>,
+    stmt: &mut ast::Stmt<Typing>,
     state: &mut CheckState,
     fn_name: &str,
     fn_output: &ast::DataType,
@@ -136,7 +234,7 @@ fn annotate_stmt(
 
             derive_annotate_fn_call_args(&fn_signature, args, state);
 
-            *annot = ast::Typing::KnownType(fn_signature.output);
+            *annot = Typing::KnownType(fn_signature.output);
         }
 
         ast::Stmt::MethodCall(ast::MethodCall {
@@ -162,7 +260,7 @@ fn annotate_stmt(
 
             derive_annotate_fn_call_args(&method_signature, args, state);
 
-            *annot = ast::Typing::KnownType(method_signature.output)
+            *annot = Typing::KnownType(method_signature.output)
         }
 
         ast::Stmt::While(ast::WhileStmt { condition, block }) => {
@@ -190,7 +288,7 @@ fn annotate_stmt(
 }
 
 fn annotate_block_stmt(
-    block: &mut ast::BlockStmt<ast::Typing>,
+    block: &mut ast::BlockStmt<Typing>,
     fn_name: &str,
     fn_output: &ast::DataType,
     state: &mut CheckState,
@@ -213,7 +311,7 @@ fn assert_type_equals(derived_type: &ast::DataType, data_type: &ast::DataType, c
 
 /// Set type and return type and whether the identifier was declared as mutable
 fn annotate_identifier_type(
-    identifier: &mut ast::Identifier<ast::Typing>,
+    identifier: &mut ast::Identifier<Typing>,
     state: &mut CheckState,
 ) -> (ast::DataType, bool) {
     match identifier {
@@ -223,7 +321,7 @@ fn annotate_identifier_type(
                 .vtable
                 .get(var_name)
                 .unwrap_or_else(|| panic!("variable {var_name} must have known type"));
-            *var_type = ast::Typing::KnownType(found_type.data_type.clone());
+            *var_type = Typing::KnownType(found_type.data_type.clone());
             (found_type.data_type.clone(), found_type.mutable)
         }
 
@@ -251,13 +349,12 @@ fn annotate_identifier_type(
 
         // x[e]
         ast::Identifier::ListIndex(list_identifier, index_expr) => {
-            if let ast::Expr::Lit(ast::ExprLit::UnknownIntegerType(val), _) = *index_expr.to_owned()
-            {
-                *index_expr = Box::new(ast::Expr::Lit(
-                    ast::ExprLit::U32(val as u32),
-                    ast::Typing::default(),
-                ));
-            };
+            // if let ast::Expr::Lit(ast::ExprLit::Num(val, t)) = *index_expr.to_owned() {
+            //     *index_expr = Box::new(ast::Expr::Lit(
+            //         ast::ExprLit::U32(val as u32),
+            //         Typing::default(),
+            //     ));
+            // };
             let index_type = derive_annotate_expr_type(index_expr, state);
             if !is_index_type(&index_type) {
                 panic!("Cannot index list with type '{index_type}'");
@@ -316,7 +413,7 @@ fn get_method_signature(
 
 fn derive_annotate_fn_call_args(
     fn_signature: &ast::FnSignature,
-    args: &mut [ast::Expr<ast::Typing>],
+    args: &mut [ast::Expr<Typing>],
     state: &mut CheckState,
 ) {
     let fn_name = &fn_signature.name;
@@ -352,14 +449,18 @@ fn derive_annotate_fn_call_args(
 }
 
 fn derive_annotate_expr_type(
-    expr: &mut ast::Expr<ast::Typing>,
+    expr: &mut ast::Expr<Typing>,
     state: &mut CheckState,
 ) -> ast::DataType {
     match expr {
-        ast::Expr::Lit(expr_lit, var_type) => {
-            let found_type = expr_lit.get_type();
-            *var_type = ast::Typing::KnownType(found_type.clone());
-            found_type
+        ast::Expr::Lit(ast::ExprLit::Bool(_)) => ast::DataType::Bool,
+        ast::Expr::Lit(ast::ExprLit::U32(_)) => ast::DataType::U32,
+        ast::Expr::Lit(ast::ExprLit::U64(_)) => ast::DataType::U64,
+        ast::Expr::Lit(ast::ExprLit::BFE(_)) => ast::DataType::BFE,
+        ast::Expr::Lit(ast::ExprLit::XFE(_)) => ast::DataType::XFE,
+        ast::Expr::Lit(ast::ExprLit::Digest(_)) => ast::DataType::Digest,
+        ast::Expr::Lit(ast::ExprLit::GenericNum(_n, _t)) => {
+            panic!("TODO: Inject type hint into `t`")
         }
 
         ast::Expr::Var(identifier) => {
@@ -389,7 +490,7 @@ fn derive_annotate_expr_type(
 
             derive_annotate_fn_call_args(&fn_signature, args, state);
 
-            *annot = ast::Typing::KnownType(fn_signature.output.clone());
+            *annot = Typing::KnownType(fn_signature.output.clone());
 
             fn_signature.output
         }
@@ -417,7 +518,7 @@ fn derive_annotate_expr_type(
 
             derive_annotate_fn_call_args(&method_signature, args, state);
 
-            *annot = ast::Typing::KnownType(method_signature.output.clone());
+            *annot = Typing::KnownType(method_signature.output.clone());
 
             method_signature.output
         }
@@ -435,7 +536,7 @@ fn derive_annotate_expr_type(
                         is_arithmetic_type(&lhs_type),
                         "Cannot add non-arithmetic type '{lhs_type}'",
                     );
-                    *binop_type = ast::Typing::KnownType(lhs_type.clone());
+                    *binop_type = Typing::KnownType(lhs_type.clone());
                     lhs_type
                 }
 
@@ -443,7 +544,7 @@ fn derive_annotate_expr_type(
                 And => {
                     assert_type_equals(&lhs_type, &ast::DataType::Bool, "and-expr lhs");
                     assert_type_equals(&rhs_type, &ast::DataType::Bool, "and-expr rhs");
-                    *binop_type = ast::Typing::KnownType(ast::DataType::Bool);
+                    *binop_type = Typing::KnownType(ast::DataType::Bool);
                     ast::DataType::Bool
                 }
 
@@ -454,7 +555,7 @@ fn derive_annotate_expr_type(
                         is_u32_based_type(&lhs_type),
                         "Cannot bitwise-and type '{lhs_type}' (not u32-based)",
                     );
-                    *binop_type = ast::Typing::KnownType(lhs_type.clone());
+                    *binop_type = Typing::KnownType(lhs_type.clone());
                     lhs_type
                 }
 
@@ -465,7 +566,7 @@ fn derive_annotate_expr_type(
                         is_u32_based_type(&lhs_type),
                         "Cannot bitwise-xor type '{lhs_type}' (not u32-based)"
                     );
-                    *binop_type = ast::Typing::KnownType(lhs_type.clone());
+                    *binop_type = Typing::KnownType(lhs_type.clone());
                     lhs_type
                 }
 
@@ -476,7 +577,7 @@ fn derive_annotate_expr_type(
                         is_arithmetic_type(&lhs_type),
                         "Cannot divide non-arithmetic type '{lhs_type}'"
                     );
-                    *binop_type = ast::Typing::KnownType(lhs_type.clone());
+                    *binop_type = Typing::KnownType(lhs_type.clone());
                     lhs_type
                 }
 
@@ -487,7 +588,7 @@ fn derive_annotate_expr_type(
                         is_primitive_type(&lhs_type),
                         "Cannot compare non-primitive type '{lhs_type}' for equality"
                     );
-                    *binop_type = ast::Typing::KnownType(ast::DataType::Bool);
+                    *binop_type = Typing::KnownType(ast::DataType::Bool);
                     ast::DataType::Bool
                 }
 
@@ -498,7 +599,7 @@ fn derive_annotate_expr_type(
                         is_u32_based_type(&lhs_type),
                         "Cannot compare type '{lhs_type}' with less-than (not u32-based)"
                     );
-                    *binop_type = ast::Typing::KnownType(ast::DataType::Bool);
+                    *binop_type = Typing::KnownType(ast::DataType::Bool);
                     ast::DataType::Bool
                 }
 
@@ -509,7 +610,7 @@ fn derive_annotate_expr_type(
                         is_arithmetic_type(&lhs_type),
                         "Cannot multiply non-arithmetic type '{lhs_type}'"
                     );
-                    *binop_type = ast::Typing::KnownType(lhs_type.clone());
+                    *binop_type = Typing::KnownType(lhs_type.clone());
                     lhs_type
                 }
 
@@ -520,7 +621,7 @@ fn derive_annotate_expr_type(
                         is_primitive_type(&lhs_type),
                         "Cannot compare type '{lhs_type}' with not-equal (not primitive)"
                     );
-                    *binop_type = ast::Typing::KnownType(ast::DataType::Bool);
+                    *binop_type = Typing::KnownType(ast::DataType::Bool);
                     ast::DataType::Bool
                 }
 
@@ -528,7 +629,7 @@ fn derive_annotate_expr_type(
                 Or => {
                     assert_type_equals(&lhs_type, &ast::DataType::Bool, "or-expr lhs");
                     assert_type_equals(&rhs_type, &ast::DataType::Bool, "or-expr rhs");
-                    *binop_type = ast::Typing::KnownType(ast::DataType::Bool);
+                    *binop_type = Typing::KnownType(ast::DataType::Bool);
                     ast::DataType::Bool
                 }
 
@@ -539,7 +640,7 @@ fn derive_annotate_expr_type(
                         is_u32_based_type(&lhs_type),
                         "Cannot find remainder for type '{lhs_type}' (not u32-based)"
                     );
-                    *binop_type = ast::Typing::KnownType(lhs_type.clone());
+                    *binop_type = Typing::KnownType(lhs_type.clone());
 
                     lhs_type
                 }
@@ -551,7 +652,7 @@ fn derive_annotate_expr_type(
                         "Cannot shift-left for type '{lhs_type}' (not u32-based)"
                     );
                     assert_type_equals(&rhs_type, &ast::DataType::U32, "shl-rhs-expr");
-                    *binop_type = ast::Typing::KnownType(lhs_type.clone());
+                    *binop_type = Typing::KnownType(lhs_type.clone());
 
                     lhs_type
                 }
@@ -563,7 +664,7 @@ fn derive_annotate_expr_type(
                         "Cannot shift-right for type '{lhs_type}' (not u32-based)"
                     );
                     assert_type_equals(&rhs_type, &ast::DataType::U32, "shr-rhs-expr");
-                    *binop_type = ast::Typing::KnownType(lhs_type.clone());
+                    *binop_type = Typing::KnownType(lhs_type.clone());
 
                     lhs_type
                 }
@@ -575,7 +676,7 @@ fn derive_annotate_expr_type(
                         is_arithmetic_type(&lhs_type),
                         "Cannot subtract non-arithmetic type '{lhs_type}'"
                     );
-                    *binop_type = ast::Typing::KnownType(lhs_type.clone());
+                    *binop_type = Typing::KnownType(lhs_type.clone());
                     lhs_type
                 }
             }

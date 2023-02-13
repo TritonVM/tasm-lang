@@ -11,10 +11,10 @@ use twenty_first::amount::u32s::U32s;
 use twenty_first::shared_math::b_field_element::BFieldElement;
 use twenty_first::util_types::algebraic_hasher::Hashable;
 
-use crate::ast;
 use crate::libraries::{tasm, vector};
 use crate::stack::Stack;
-use crate::types::is_list_type;
+use crate::types::{is_list_type, GetType};
+use crate::{ast, types};
 
 type VStack = Stack<(ValueIdentifier, ast::DataType)>;
 type VarAddr = HashMap<String, ValueIdentifier>;
@@ -310,7 +310,7 @@ impl CompilerState {
     }
 }
 
-pub fn compile(function: &ast::Fn<ast::Typing>) -> Vec<LabelledInstruction> {
+pub fn compile(function: &ast::Fn<types::Typing>) -> Vec<LabelledInstruction> {
     let fn_name = &function.fn_signature.name;
     let _fn_stack_input_sig = function
         .fn_signature
@@ -374,8 +374,8 @@ pub fn compile(function: &ast::Fn<ast::Typing>) -> Vec<LabelledInstruction> {
 }
 
 fn compile_stmt(
-    stmt: &ast::Stmt<ast::Typing>,
-    function: &ast::Fn<ast::Typing>,
+    stmt: &ast::Stmt<types::Typing>,
+    function: &ast::Fn<types::Typing>,
     state: &mut CompilerState,
 ) -> Vec<LabelledInstruction> {
     match stmt {
@@ -588,7 +588,7 @@ fn compile_stmt(
 }
 
 fn compile_fn_call(
-    fn_call: &ast::FnCall<ast::Typing>,
+    fn_call: &ast::FnCall<types::Typing>,
     state: &mut CompilerState,
 ) -> Vec<LabelledInstruction> {
     let ast::FnCall {
@@ -629,7 +629,7 @@ fn compile_fn_call(
 }
 
 fn compile_method_call(
-    method_call: &ast::MethodCall<ast::Typing>,
+    method_call: &ast::MethodCall<types::Typing>,
     state: &mut CompilerState,
 ) -> Vec<LabelledInstruction> {
     let mut name = method_call.method_name.clone();
@@ -664,14 +664,14 @@ fn compile_method_call(
 }
 
 fn compile_expr(
-    expr: &ast::Expr<ast::Typing>,
+    expr: &ast::Expr<types::Typing>,
     _context: &str,
     _data_type: &ast::DataType,
     state: &mut CompilerState,
 ) -> (ValueIdentifier, Vec<LabelledInstruction>) {
     match expr {
-        ast::Expr::Lit(expr_lit, known_type) => {
-            let res_type = known_type.get_type();
+        ast::Expr::Lit(expr_lit) => {
+            let res_type = expr_lit.get_type();
 
             match expr_lit {
                 ast::ExprLit::Bool(value) => {
@@ -710,8 +710,8 @@ fn compile_expr(
 
                 ast::ExprLit::XFE(_) => todo!(),
                 ast::ExprLit::Digest(_) => todo!(),
-                ast::ExprLit::UnknownIntegerType(_) => {
-                    panic!("Unknown integer type must be resolved in code generator")
+                ast::ExprLit::GenericNum(n, _) => {
+                    panic!("Type of number literal {n} not resolved")
                 }
             }
         }
@@ -824,8 +824,8 @@ fn compile_expr(
             //     compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
             // let (_lhs_expr_addr, lhs_expr_code) =
             //     compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
-            // let lhs_expr_owned: ast::Expr<ast::Typing> = *(*lhs_expr).to_owned();
-            // let rhs_expr_owned: ast::Expr<ast::Typing> = *(*rhs_expr).to_owned();
+            // let lhs_expr_owned: ast::Expr<types::Typing> = *(*lhs_expr).to_owned();
+            // let rhs_expr_owned: ast::Expr<types::Typing> = *(*rhs_expr).to_owned();
 
             let (addr, code) = match binop {
                 ast::BinOp::Add => {
@@ -960,7 +960,7 @@ fn compile_expr(
                         U64 => {
                             // For now we can only divide u64s by 2.
                             let rhs_expr_owned = *rhs_expr.to_owned();
-                            if !matches!(rhs_expr_owned, ast::Expr::Lit(ast::ExprLit::U64(2), _)) {
+                            if !matches!(rhs_expr_owned, ast::Expr::Lit(ast::ExprLit::U64(2))) {
                                 panic!("Unsupported division with denominator: {rhs_expr_owned:#?}")
                             }
 
@@ -1166,7 +1166,7 @@ fn compile_expr(
                 ast::BinOp::Shl => {
                     // For now we can only `1 << n` for some n
                     let lhs_expr_owned = *lhs_expr.to_owned();
-                    if !matches!(lhs_expr_owned, ast::Expr::Lit(ast::ExprLit::U64(1), _)) {
+                    if !matches!(lhs_expr_owned, ast::Expr::Lit(ast::ExprLit::U64(1))) {
                         panic!("Unsupported shift left: {lhs_expr_owned:#?}")
                     }
 

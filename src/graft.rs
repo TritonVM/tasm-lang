@@ -1,7 +1,9 @@
-use crate::ast;
 use itertools::Itertools;
 
-type Annotation = ast::Typing;
+use crate::ast;
+use crate::types;
+
+type Annotation = types::Typing;
 
 pub fn graft(input: &syn::ItemFn) -> ast::Fn<Annotation> {
     let name = input.sig.ident.to_string();
@@ -333,7 +335,7 @@ pub fn graft_expr(rust_exp: &syn::Expr) -> ast::Expr<Annotation> {
         }
         syn::Expr::Lit(litexp) => {
             let lit = &litexp.lit;
-            ast::Expr::Lit(graft_lit(lit), Default::default())
+            ast::Expr::Lit(graft_lit(lit))
         }
         syn::Expr::Call(call_exp) => ast::Expr::FnCall(graft_call_exp(call_exp)),
         syn::Expr::Paren(paren_exp) => graft_expr(&paren_exp.expr),
@@ -414,38 +416,28 @@ pub fn graft_expr(rust_exp: &syn::Expr) -> ast::Expr<Annotation> {
     }
 }
 
-fn graft_lit(rust_val: &syn::Lit) -> ast::ExprLit {
+fn graft_lit(rust_val: &syn::Lit) -> ast::ExprLit<Annotation> {
     use ast::ExprLit::*;
 
-    const MIN_INT_LITERAL_LENGTH: usize = 4;
     match rust_val {
         syn::Lit::Bool(b) => Bool(b.value),
         syn::Lit::Int(int_lit) => {
-            // integer literals are expected to be read as e.g. `4u32` or `332u64`.
-            // So the type aanotation is required.
-            let int_lit: String = int_lit.token().to_string();
-            let str_len = int_lit.len();
-            if str_len < MIN_INT_LITERAL_LENGTH {
-                // No type indicator found on int literal: Unknown integer type.
-                let my_int: u128 = int_lit.parse::<u128>().unwrap();
-                UnknownIntegerType(my_int)
-            } else {
-                let int_lit_value = &int_lit.as_str()[0..str_len - 3];
-                let type_annotation = &int_lit[str_len - 3..];
-                let int_val: ast::ExprLit = match type_annotation {
-                    "u32" => {
-                        let my_int = int_lit_value.parse::<u32>().unwrap();
-                        U32(my_int)
-                    }
-                    "u64" => {
-                        let my_int = int_lit_value.parse::<u64>().unwrap();
-                        U64(my_int)
-                    }
-                    other => panic!("unsupported int type annotation: {other:?}"),
-                };
-
-                int_val
+            let int_lit = int_lit.token().to_string();
+            if let Some(int_lit) = int_lit.strip_suffix("u32") {
+                if let Ok(int_u32) = int_lit.parse::<u32>() {
+                    return ast::ExprLit::U32(int_u32);
+                }
             }
+
+            if let Some(int_lit) = int_lit.strip_suffix("u64") {
+                if let Ok(int_u64) = int_lit.parse::<u64>() {
+                    return ast::ExprLit::U64(int_u64);
+                }
+            }
+
+            let literal_err = format!("unsupported integer literal: {int_lit}");
+            let literal: u64 = int_lit.parse::<u64>().expect(&literal_err);
+            ast::ExprLit::GenericNum(literal, Default::default())
         }
         other => panic!("unsupported: {other:?}"),
     }
@@ -656,9 +648,7 @@ mod tests {
 
         match &tokens {
             syn::Item::Fn(item_fn) => {
-                // println!("{item_fn:#?}");
                 let _ret = graft(item_fn);
-                // println!("{ret:#?}");
             }
             _ => panic!("unsupported"),
         }
@@ -680,9 +670,7 @@ mod tests {
 
         match &tokens {
             syn::Item::Fn(item_fn) => {
-                // println!("{item_fn:#?}");
                 let _ret = graft(item_fn);
-                // println!("{_ret:#?}");
             }
             _ => panic!("unsupported"),
         }
@@ -909,9 +897,7 @@ mod tests {
 
         match &tokens {
             syn::Item::Fn(item_fn) => {
-                // println!("{item_fn:#?}");
                 let _ret = graft(item_fn);
-                // println!("{ret:#?}");
             }
             _ => panic!("unsupported"),
         }
@@ -929,9 +915,7 @@ mod tests {
 
         match &tokens {
             syn::Item::Fn(item_fn) => {
-                // println!("{item_fn:#?}");
                 let _ret = graft(item_fn);
-                // println!("{ret:#?}");
             }
             _ => panic!("unsupported"),
         }
@@ -947,9 +931,7 @@ mod tests {
 
         match &tokens {
             syn::Item::Fn(item_fn) => {
-                // println!("{item_fn:#?}");
                 let _ret = graft(item_fn);
-                // println!("{ret:#?}");
             }
             _ => panic!("unsupported"),
         }

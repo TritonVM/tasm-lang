@@ -1,4 +1,4 @@
-use crate::ast::{DataType, ExprLit};
+use crate::ast::DataType;
 
 #[derive(Debug, Default)]
 pub struct ControlFlowGraph {
@@ -118,4 +118,11 @@ pub struct Assignment {
 pub enum Expr {
     Var(Variable),
     Lit(ExprLit),
+}
+
+#[derive(Debug, Hash, PartialEq, Eq, Clone)]
+pub enum ExprLit {
+    Bool(bool),
+    U32(u32),
+    U64(u64),
 }

@@ -7,6 +7,7 @@ use itertools::Itertools;
 use twenty_first::shared_math::b_field_element::BFieldElement;
 use twenty_first::shared_math::rescue_prime_digest::Digest;
 use twenty_first::shared_math::x_field_element::XFieldElement;
+use twenty_first::util_types::algebraic_hasher::Hashable;
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct FnSignature {
@@ -65,26 +66,30 @@ pub struct BlockStmt<T> {
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub enum ExprLit {
+pub enum ExprLit<T> {
     Bool(bool),
     U32(u32),
     U64(u64),
     BFE(BFieldElement),
     XFE(XFieldElement),
     Digest(Digest),
-    UnknownIntegerType(u128),
+    GenericNum(u64, T),
 }
 
-impl ExprLit {
-    pub fn get_type(&self) -> DataType {
+// FIXME: Use u64::to_sequence() after upgrading twenty-first
+impl<T> Hashable for ExprLit<T> {
+    fn to_sequence(&self) -> Vec<BFieldElement> {
         match self {
-            ExprLit::Bool(_) => DataType::Bool,
-            ExprLit::U32(_) => DataType::U32,
-            ExprLit::U64(_) => DataType::U64,
-            ExprLit::BFE(_) => DataType::BFE,
-            ExprLit::XFE(_) => DataType::XFE,
-            ExprLit::Digest(_) => DataType::Digest,
-            ExprLit::UnknownIntegerType(_) => panic!("Did not resolve unknown integer type"),
+            ExprLit::Bool(value) => vec![BFieldElement::new(*value as u64)],
+            ExprLit::U32(value) => value.to_sequence(),
+            ExprLit::U64(value) => vec![
+                BFieldElement::new((value & 0xffff_ffff) as u64),
+                BFieldElement::new((value >> 32) as u64),
+            ],
+            ExprLit::BFE(value) => value.to_sequence(),
+            ExprLit::XFE(value) => value.to_sequence(),
+            ExprLit::Digest(value) => value.to_sequence(),
+            ExprLit::GenericNum(_, _) => todo!(),
         }
     }
 }
@@ -109,35 +114,16 @@ pub enum BinOp {
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum Expr<T> {
-    Lit(ExprLit, T),
-    Var(Identifier<T>), // x[i]
-    // Index(Box<Expr<T>>, Box<Expr<T>>), // a_expr[i_expr]    (a + 5)[3]
+    Lit(ExprLit<T>),
+    Var(Identifier<T>),
     FlatList(Vec<Expr<T>>),
     FnCall(FnCall<T>),
     MethodCall(MethodCall<T>),
     Binop(Box<Expr<T>>, BinOp, Box<Expr<T>>, T),
     If(ExprIf<T>),
     Cast(Box<Expr<T>>, DataType),
-    // TODO: Overloaded arithmetic operators
+    // Index(Box<Expr<T>>, Box<Expr<T>>), // a_expr[i_expr]    (a + 5)[3]
     // TODO: VM-specific intrinsics (hash, absorb, squeeze, etc.)
-}
-
-impl Expr<Typing> {
-    pub fn get_type(&self) -> DataType {
-        match self {
-            Expr::Lit(_, t) => t.get_type(),
-            Expr::Var(id) => id.get_type(),
-            Expr::FlatList(t_list) => {
-                let types = t_list.iter().map(|elem| elem.get_type()).collect_vec();
-                DataType::FlatList(types)
-            }
-            Expr::FnCall(fnc) => fnc.get_type(),
-            Expr::MethodCall(mtc) => mtc.get_type(),
-            Expr::Binop(_, _, _, t) => t.get_type(),
-            Expr::If(if_expr) => if_expr.get_type(),
-            Expr::Cast(_expr, t) => t.to_owned(),
-        }
-    }
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
@@ -145,14 +131,6 @@ pub struct ExprIf<T> {
     pub condition: Box<Expr<T>>,
     pub then_branch: Box<Expr<T>>,
     pub else_branch: Box<Expr<T>>,
-}
-
-impl ExprIf<Typing> {
-    pub fn get_type(&self) -> DataType {
-        // The type check should have verified that the then branch and else branch
-        // returns the same type. So we can just pick one of them.
-        self.then_branch.get_type()
-    }
 }
 
 pub struct SymTable(HashMap<String, (u8, DataType)>);
@@ -284,31 +262,6 @@ impl<T: core::fmt::Debug> Display for Identifier<T> {
     }
 }
 
-impl Identifier<Typing> {
-    /// Return the type for an identifier. Must be run after completed type annotation.
-    pub fn get_type(&self) -> DataType {
-        let t = match self {
-            Identifier::String(_, t) => t.to_owned(),
-            Identifier::TupleIndex(id, idx) => {
-                let rec = id.get_type();
-                match rec {
-                    DataType::FlatList(list) => Typing::KnownType(list[*idx].clone()),
-                    dt => panic!("Internal type error. Expected FlatList got: {dt:?}"),
-                }
-            }
-            Identifier::ListIndex(id, _) => {
-                let rec = id.get_type();
-                match rec {
-                    DataType::List(element_type) => Typing::KnownType(*element_type),
-                    dt => panic!("Internal type error. Expected List got: {dt:?}"),
-                }
-            }
-        };
-
-        t.get_type()
-    }
-}
-
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct AssignStmt<T> {
     pub identifier: Identifier<T>,
@@ -331,42 +284,9 @@ pub struct FnCall<T> {
     pub annot: T,
 }
 
-impl FnCall<Typing> {
-    pub fn get_type(&self) -> DataType {
-        self.annot.get_type()
-    }
-}
-
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct MethodCall<T> {
     pub method_name: String,
     pub args: Vec<Expr<T>>,
     pub annot: T,
-}
-
-impl MethodCall<Typing> {
-    pub fn get_type(&self) -> DataType {
-        self.annot.get_type()
-    }
-}
-
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub enum Typing {
-    UnknownType,
-    KnownType(DataType),
-}
-
-impl Default for Typing {
-    fn default() -> Self {
-        Typing::UnknownType
-    }
-}
-
-impl Typing {
-    pub fn get_type(&self) -> DataType {
-        match self {
-            Typing::UnknownType => panic!("Cannot unpack type before complete type annotation."),
-            Typing::KnownType(data_type) => data_type.clone(),
-        }
-    }
 }
