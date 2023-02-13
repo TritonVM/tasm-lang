@@ -459,8 +459,8 @@ fn derive_annotate_expr_type(
         ast::Expr::Lit(ast::ExprLit::BFE(_)) => ast::DataType::BFE,
         ast::Expr::Lit(ast::ExprLit::XFE(_)) => ast::DataType::XFE,
         ast::Expr::Lit(ast::ExprLit::Digest(_)) => ast::DataType::Digest,
-        ast::Expr::Lit(ast::ExprLit::GenericNum(_n, _t)) => {
-            panic!("TODO: Inject type hint into `t`")
+        ast::Expr::Lit(ast::ExprLit::GenericNum(n, t)) => {
+            panic!("TODO: Inject type hint into `t`: {n}, {t:?}")
         }
 
         ast::Expr::Var(identifier) => {

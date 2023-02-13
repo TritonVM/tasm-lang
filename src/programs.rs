@@ -2,6 +2,24 @@ use syn::parse_quote;
 
 use crate::graft::item_fn;
 
+fn inferred_literals() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn main(arr: Vec<u64>) {
+            let a: u32 = 0;
+            let b: u64 = 1;
+            let c: u32 = a + 2;
+            let d: u64 = b + 4;
+
+            // u32 indices, u64 values
+            arr[5] = b;
+            arr[a] = d;
+            arr[c + 6] = b + d + 7;
+
+            return;
+        }
+    })
+}
+
 fn nop_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn nop_nop() {
@@ -363,6 +381,11 @@ mod compile_and_typecheck_tests {
     use crate::shared_test::graft_check_compile_prop;
 
     use super::*;
+
+    #[test]
+    fn inferred_literals_test() {
+        graft_check_compile_prop(&inferred_literals());
+    }
 
     #[test]
     fn nop_test() {
