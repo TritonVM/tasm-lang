@@ -428,13 +428,7 @@ fn compile_stmt(
                 state.vstack.pop();
                 state.vstack.pop();
 
-                vec![
-                    expr_code,
-                    ident_code,
-                    index_code,
-                    vec![call(fn_name.to_owned())],
-                ]
-                .concat()
+                vec![expr_code, ident_code, index_code, vec![call(fn_name)]].concat()
             }
         },
 
@@ -769,7 +763,7 @@ fn compile_expr(
                 state.vstack.pop();
                 let assign_addr = state.new_value_identifier("list_index_assign", &res_type);
 
-                let code = vec![ident_code, index_code, vec![call(fn_name.to_owned())]].concat();
+                let code = vec![ident_code, index_code, vec![call(fn_name)]].concat();
                 (assign_addr, code)
             }
         },
@@ -838,16 +832,14 @@ fn compile_expr(
                     let add_code = match res_type {
                         ast::DataType::U32 => {
                             // We use the safe, overflow-checking, add code as default
-                            let safe_add_u32 = state
-                                .import_snippet(Box::new(arithmetic::u32::safe_add::SafeAdd))
-                                .to_string();
+                            let safe_add_u32 =
+                                state.import_snippet(Box::new(arithmetic::u32::safe_add::SafeAdd));
                             vec![call(safe_add_u32)]
                         }
                         ast::DataType::U64 => {
                             // We use the safe, overflow-checking, add code as default
-                            let add_u64 = state
-                                .import_snippet(Box::new(arithmetic::u64::add_u64::AddU64))
-                                .to_string();
+                            let add_u64 =
+                                state.import_snippet(Box::new(arithmetic::u64::add_u64::AddU64));
                             vec![call(add_u64)]
                         }
                         ast::DataType::BFE => vec![add()],
@@ -892,9 +884,8 @@ fn compile_expr(
                     let bitwise_and_code = match res_type {
                         ast::DataType::U32 => vec![and()],
                         ast::DataType::U64 => {
-                            let and_u64 = state
-                                .import_snippet(Box::new(arithmetic::u64::and_u64::AndU64))
-                                .to_string();
+                            let and_u64 =
+                                state.import_snippet(Box::new(arithmetic::u64::and_u64::AndU64));
                             vec![call(and_u64)]
                         }
                         _ => panic!("Logical AND operator is not supported for {res_type}"),
@@ -966,9 +957,8 @@ fn compile_expr(
 
                             let (_lhs_expr_addr, lhs_expr_code) =
                                 compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
-                            let div2 = state
-                                .import_snippet(Box::new(arithmetic::u64::div2_u64::Div2U64))
-                                .to_string();
+                            let div2 =
+                                state.import_snippet(Box::new(arithmetic::u64::div2_u64::Div2U64));
 
                             // Pop the numerator that was divided by two
                             state.vstack.pop();
@@ -1067,8 +1057,7 @@ fn compile_expr(
 
                         U64 => {
                             let lt_u64 = state
-                                .import_snippet(Box::new(arithmetic::u64::lt_u64::LtStandardU64))
-                                .to_string();
+                                .import_snippet(Box::new(arithmetic::u64::lt_u64::LtStandardU64));
 
                             vec![
                                 lhs_expr_code,
@@ -1106,12 +1095,7 @@ fn compile_expr(
                             let fn_name =
                                 state.import_snippet(Box::new(arithmetic::u32::safe_mul::SafeMul));
 
-                            vec![
-                                rhs_expr_code,
-                                lhs_expr_code,
-                                vec![call(fn_name.to_string())],
-                            ]
-                            .concat()
+                            vec![rhs_expr_code, lhs_expr_code, vec![call(fn_name)]].concat()
                         }
                         _ => panic!("Unsupported MUL for type {lhs_type}"),
                     };
@@ -1173,9 +1157,8 @@ fn compile_expr(
                     let (_rhs_expr_addr, rhs_expr_code) =
                         compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
 
-                    let pow2_fn = state
-                        .import_snippet(Box::new(arithmetic::u64::pow2_u64::Pow2U64))
-                        .to_string();
+                    let pow2_fn =
+                        state.import_snippet(Box::new(arithmetic::u64::pow2_u64::Pow2U64));
                     let code = vec![rhs_expr_code, vec![call(pow2_fn)]].concat();
 
                     state.vstack.pop();
@@ -1198,16 +1181,14 @@ fn compile_expr(
                     let sub_code: Vec<LabelledInstruction> = match res_type {
                         ast::DataType::U32 => {
                             // As standard, we use safe arithmetic that crashes on overflow
-                            let safe_sub_u32 = state
-                                .import_snippet(Box::new(arithmetic::u32::safe_sub::SafeSub))
-                                .to_string();
+                            let safe_sub_u32 =
+                                state.import_snippet(Box::new(arithmetic::u32::safe_sub::SafeSub));
                             vec![swap1(), call(safe_sub_u32)]
                         }
                         ast::DataType::U64 => {
                             // As standard, we use safe arithmetic that crashes on overflow
-                            let sub_u64 = state
-                                .import_snippet(Box::new(arithmetic::u64::sub_u64::SubU64))
-                                .to_string();
+                            let sub_u64 =
+                                state.import_snippet(Box::new(arithmetic::u64::sub_u64::SubU64));
                             vec![
                                 // _ lhs_hi lhs_lo rhs_hi rhs_lo
                                 swap3(),       // _ rhs_lo lhs_lo rhs_hi lhs_hi
@@ -1424,12 +1405,9 @@ fn compile_eq_code(
             mul(),   // _ (b_1 == a_1)·(b_2 == a_2)·(a_0 == b_0)
         ],
         Digest => {
-            let eq_digest = state
-                .import_snippet(Box::new(hashing::eq_digest::EqDigest))
-                .to_string();
+            let eq_digest = state.import_snippet(Box::new(hashing::eq_digest::EqDigest));
             vec![call(eq_digest)]
         }
-        UnknownIntegerType => panic!("Unknown integer type must be resolved in code generator"),
         List(_) => todo!(),
         FlatList(_) => todo!(),
     }
@@ -1446,7 +1424,6 @@ pub fn size_of(data_type: &ast::DataType) -> usize {
         Digest => 5,
         List(_list_type) => 1,
         FlatList(tuple_type) => tuple_type.iter().map(size_of).sum(),
-        UnknownIntegerType => panic!("Unknown integer type must be resolved in code generator"),
     }
 }
 

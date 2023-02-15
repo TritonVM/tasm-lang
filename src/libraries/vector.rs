@@ -56,7 +56,7 @@ pub fn import_tasm_snippet(
 ) -> String {
     let snippet = name_to_tasm_lib_snippet(vector_fn_name, type_parameter)
         .unwrap_or_else(|| panic!("Unknown function name {vector_fn_name}"));
-    let entrypoint = snippet.entrypoint().to_owned();
+    let entrypoint = snippet.entrypoint();
     state.import_snippet(snippet);
 
     entrypoint
@@ -71,7 +71,7 @@ pub fn function_name_to_signature(
 
     let input_types_lib = snippet.input_types();
     let output_types_lib = snippet.output_types();
-    let name = snippet.entrypoint().to_string();
+    let name = snippet.entrypoint();
     let mut args: Vec<ast::FnArg> = vec![];
     for (i, itl) in input_types_lib.into_iter().enumerate() {
         let fn_arg = ast::FnArg {

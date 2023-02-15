@@ -83,8 +83,8 @@ impl<T> Hashable for ExprLit<T> {
             ExprLit::Bool(value) => vec![BFieldElement::new(*value as u64)],
             ExprLit::U32(value) => value.to_sequence(),
             ExprLit::U64(value) => vec![
-                BFieldElement::new((value & 0xffff_ffff) as u64),
-                BFieldElement::new((value >> 32) as u64),
+                BFieldElement::new(value & 0xffff_ffff),
+                BFieldElement::new(value >> 32),
             ],
             ExprLit::BFE(value) => value.to_sequence(),
             ExprLit::XFE(value) => value.to_sequence(),
@@ -137,7 +137,6 @@ pub struct SymTable(HashMap<String, (u8, DataType)>);
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum DataType {
-    UnknownIntegerType,
     Bool,
     U32,
     U64,
@@ -182,7 +181,6 @@ impl TryFrom<DataType> for tasm_lib::snippet::DataType {
                 Ok(tasm_lib::snippet::DataType::List(Box::new(element_type)))
             },
             DataType::FlatList(_) => Err("FlatList cannot be converted to a tasm_lib type. Try converting its individual elements".to_string()),
-            DataType::UnknownIntegerType => Err("Unknown integer type must be resolved before converting to tasm-lib type".to_string()),
         }
     }
 }
@@ -234,7 +232,6 @@ impl Display for DataType {
                 XFE => "XField".to_string(),
                 Digest => "Digest".to_string(),
                 List(ty) => format!("List({ty})"),
-                UnknownIntegerType => "Unknown integer type".to_string(),
                 FlatList(tys) => tys.iter().map(|ty| format!("{ty}")).join(" "),
             }
         )

@@ -1,5 +1,7 @@
 use itertools::Itertools;
 use std::collections::HashMap;
+use twenty_first::shared_math::b_field_element::BFieldElement;
+use twenty_first::shared_math::x_field_element::XFieldElement;
 
 use crate::ast;
 use crate::libraries::tasm;
@@ -7,7 +9,10 @@ use crate::libraries::vector;
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum Typing {
+    /// An `UnknownType` has not been determined; this is produced by the parser/grafter.
     UnknownType,
+
+    /// A `KnownType` has been determined; this is performed by the type checker.
     KnownType(ast::DataType),
 }
 
@@ -41,7 +46,7 @@ impl<T: GetType> GetType for ast::ExprLit<T> {
             ast::ExprLit::BFE(_) => ast::DataType::BFE,
             ast::ExprLit::XFE(_) => ast::DataType::XFE,
             ast::ExprLit::Digest(_) => ast::DataType::Digest,
-            ast::ExprLit::GenericNum(_, ty) => ty.get_type(),
+            ast::ExprLit::GenericNum(_, t) => t.get_type(),
         }
     }
 }
@@ -52,8 +57,7 @@ impl<T: GetType> GetType for ast::Expr<T> {
             ast::Expr::Lit(lit) => lit.get_type(),
             ast::Expr::Var(id) => id.get_type(),
             ast::Expr::FlatList(t_list) => {
-                let types = t_list.iter().map(|elem| elem.get_type()).collect_vec();
-                ast::DataType::FlatList(types)
+                ast::DataType::FlatList(t_list.iter().map(|elem| elem.get_type()).collect())
             }
             ast::Expr::FnCall(fn_call) => fn_call.get_type(),
             ast::Expr::MethodCall(method_call) => method_call.get_type(),
@@ -106,7 +110,14 @@ impl<T: GetType> GetType for ast::MethodCall<T> {
 
 #[derive(Debug, Default)]
 pub struct CheckState {
+    /// The `vtable` maps variable names to their type.
+    ///
+    /// This is used for determining the type of variables in expressions.
     pub vtable: HashMap<String, DataTypeAndMutability>,
+
+    /// The `ftable` maps function names to their signature (argument and output) types.
+    ///
+    /// This is used for determining the type of function calls in expressions.
     pub ftable: HashMap<String, ast::FnSignature>,
 }
 
@@ -185,7 +196,8 @@ fn annotate_stmt(
                 panic!("let-assign cannot shadow existing variable '{var_name}'!");
             }
 
-            let derived_type = derive_annotate_expr_type(expr, state);
+            let let_expr_hint: Option<&ast::DataType> = Some(data_type);
+            let derived_type = derive_annotate_expr_type(expr, let_expr_hint, state);
             assert_type_equals(&derived_type, data_type, "let-statement");
             state.vtable.insert(
                 var_name.clone(),
@@ -195,7 +207,8 @@ fn annotate_stmt(
 
         ast::Stmt::Assign(ast::AssignStmt { identifier, expr }) => {
             let (identifier_type, mutable) = annotate_identifier_type(identifier, state);
-            let expr_type = derive_annotate_expr_type(expr, state);
+            let assign_expr_hint = &identifier_type;
+            let expr_type = derive_annotate_expr_type(expr, Some(assign_expr_hint), state);
 
             // Only allow assignment if binding was declared as mutable
             assert_type_equals(&identifier_type, &expr_type, "assign-statement");
@@ -215,7 +228,8 @@ fn annotate_stmt(
                 panic!("Return without value; expect function {fn_name} to return {fn_output}")
             }
             (Some(ret_expr), _) => {
-                let expr_ret_type = derive_annotate_expr_type(ret_expr, state);
+                let hint = &fn_output;
+                let expr_ret_type = derive_annotate_expr_type(ret_expr, Some(hint), state);
                 assert_type_equals(fn_output, &expr_ret_type, "return stmt");
             }
         },
@@ -264,7 +278,8 @@ fn annotate_stmt(
         }
 
         ast::Stmt::While(ast::WhileStmt { condition, block }) => {
-            let condition_type = derive_annotate_expr_type(condition, state);
+            let condition_hint = ast::DataType::Bool;
+            let condition_type = derive_annotate_expr_type(condition, Some(&condition_hint), state);
             assert_type_equals(&condition_type, &ast::DataType::Bool, "while-condition");
             annotate_block_stmt(block, fn_name, fn_output, state);
         }
@@ -274,7 +289,8 @@ fn annotate_stmt(
             then_branch,
             else_branch,
         }) => {
-            let condition_type = derive_annotate_expr_type(condition, state);
+            let condition_hint = ast::DataType::Bool;
+            let condition_type = derive_annotate_expr_type(condition, Some(&condition_hint), state);
             assert_type_equals(&condition_type, &ast::DataType::Bool, "if-condition");
 
             annotate_block_stmt(then_branch, fn_name, fn_output, state);
@@ -349,13 +365,8 @@ fn annotate_identifier_type(
 
         // x[e]
         ast::Identifier::ListIndex(list_identifier, index_expr) => {
-            // if let ast::Expr::Lit(ast::ExprLit::Num(val, t)) = *index_expr.to_owned() {
-            //     *index_expr = Box::new(ast::Expr::Lit(
-            //         ast::ExprLit::U32(val as u32),
-            //         Typing::default(),
-            //     ));
-            // };
-            let index_type = derive_annotate_expr_type(index_expr, state);
+            let index_hint = ast::DataType::U32;
+            let index_type = derive_annotate_expr_type(index_expr, Some(&index_hint), state);
             if !is_index_type(&index_type) {
                 panic!("Cannot index list with type '{index_type}'");
             }
@@ -419,8 +430,13 @@ fn derive_annotate_fn_call_args(
     let fn_name = &fn_signature.name;
     let arg_types: Vec<ast::DataType> = args
         .iter_mut()
-        .map(|arg_expr| derive_annotate_expr_type(arg_expr, state))
+        .zip_eq(fn_signature.args.iter())
+        .map(|(arg_expr, fn_arg)| {
+            let arg_hint = Some(&fn_arg.data_type);
+            derive_annotate_expr_type(arg_expr, arg_hint, state)
+        })
         .collect();
+
     assert_eq!(
         fn_signature.args.len(),
         arg_types.len(),
@@ -429,6 +445,7 @@ fn derive_annotate_fn_call_args(
         fn_signature.args.len(),
         arg_types.len(),
     );
+
     for (arg_pos, (fn_arg, expr_type)) in fn_signature
         .args
         .iter()
@@ -450,8 +467,10 @@ fn derive_annotate_fn_call_args(
 
 fn derive_annotate_expr_type(
     expr: &mut ast::Expr<Typing>,
+    hint: Option<&ast::DataType>,
     state: &mut CheckState,
 ) -> ast::DataType {
+    // println!("derive_annotate_expr_type({expr:?}, {hint:?}, state)");
     match expr {
         ast::Expr::Lit(ast::ExprLit::Bool(_)) => ast::DataType::Bool,
         ast::Expr::Lit(ast::ExprLit::U32(_)) => ast::DataType::U32,
@@ -459,8 +478,36 @@ fn derive_annotate_expr_type(
         ast::Expr::Lit(ast::ExprLit::BFE(_)) => ast::DataType::BFE,
         ast::Expr::Lit(ast::ExprLit::XFE(_)) => ast::DataType::XFE,
         ast::Expr::Lit(ast::ExprLit::Digest(_)) => ast::DataType::Digest,
-        ast::Expr::Lit(ast::ExprLit::GenericNum(n, t)) => {
-            panic!("TODO: Inject type hint into `t`: {n}, {t:?}")
+        ast::Expr::Lit(ast::ExprLit::GenericNum(n, _t)) => {
+            use ast::DataType::*;
+
+            match hint {
+                Some(&U32) => {
+                    let err = format!("Cannot infer number literal {n} as u32");
+                    let n: u32 = (*n).try_into().expect(&err);
+                    *expr = ast::Expr::Lit(ast::ExprLit::U32(n));
+                    U32
+                }
+                Some(&U64) => {
+                    *expr = ast::Expr::Lit(ast::ExprLit::U64(*n));
+                    U64
+                }
+                Some(&BFE) => {
+                    assert!(*n <= BFieldElement::MAX);
+                    let n = BFieldElement::new(*n);
+                    *expr = ast::Expr::Lit(ast::ExprLit::BFE(n));
+                    BFE
+                }
+                Some(&XFE) => {
+                    assert!(*n <= BFieldElement::MAX);
+                    let n = BFieldElement::new(*n);
+                    let n = XFieldElement::new_const(n);
+                    *expr = ast::Expr::Lit(ast::ExprLit::XFE(n));
+                    XFE
+                }
+                Some(hint) => panic!("GenericNum does not infer as type hint {hint}"),
+                None => panic!("GenericNum does not infer in context with no type hint"),
+            }
         }
 
         ast::Expr::Var(identifier) => {
@@ -469,9 +516,10 @@ fn derive_annotate_expr_type(
         }
 
         ast::Expr::FlatList(tuple_exprs) => {
+            let no_hint = None;
             let tuple_types: Vec<ast::DataType> = tuple_exprs
                 .iter_mut()
-                .map(|expr| derive_annotate_expr_type(expr, state))
+                .map(|expr| derive_annotate_expr_type(expr, no_hint, state))
                 .collect();
             ast::DataType::FlatList(tuple_types)
         }
@@ -489,9 +537,7 @@ fn derive_annotate_expr_type(
             );
 
             derive_annotate_fn_call_args(&fn_signature, args, state);
-
             *annot = Typing::KnownType(fn_signature.output.clone());
-
             fn_signature.output
         }
 
@@ -524,13 +570,13 @@ fn derive_annotate_expr_type(
         }
 
         ast::Expr::Binop(lhs_expr, binop, rhs_expr, binop_type) => {
-            let lhs_type = derive_annotate_expr_type(lhs_expr, state);
-            let rhs_type = derive_annotate_expr_type(rhs_expr, state);
-
             use ast::BinOp::*;
             match binop {
                 // Overloaded for all arithmetic types.
                 Add => {
+                    let lhs_type = derive_annotate_expr_type(lhs_expr, hint, state);
+                    let rhs_type = derive_annotate_expr_type(rhs_expr, hint, state);
+
                     assert_type_equals(&lhs_type, &rhs_type, "add-expr");
                     assert!(
                         is_arithmetic_type(&lhs_type),
@@ -542,6 +588,10 @@ fn derive_annotate_expr_type(
 
                 // Restricted to bool only.
                 And => {
+                    let bool_hint = Some(&ast::DataType::Bool);
+                    let lhs_type = derive_annotate_expr_type(lhs_expr, bool_hint, state);
+                    let rhs_type = derive_annotate_expr_type(rhs_expr, bool_hint, state);
+
                     assert_type_equals(&lhs_type, &ast::DataType::Bool, "and-expr lhs");
                     assert_type_equals(&rhs_type, &ast::DataType::Bool, "and-expr rhs");
                     *binop_type = Typing::KnownType(ast::DataType::Bool);
@@ -550,6 +600,9 @@ fn derive_annotate_expr_type(
 
                 // Restricted to U32-based types. (Triton VM limitation)
                 BitAnd => {
+                    let lhs_type = derive_annotate_expr_type(lhs_expr, hint, state);
+                    let rhs_type = derive_annotate_expr_type(rhs_expr, hint, state);
+
                     assert_type_equals(&lhs_type, &rhs_type, "bitwise-and-expr");
                     assert!(
                         is_u32_based_type(&lhs_type),
@@ -561,6 +614,9 @@ fn derive_annotate_expr_type(
 
                 // Restricted to U32-based types. (Triton VM limitation)
                 BitXor => {
+                    let lhs_type = derive_annotate_expr_type(lhs_expr, hint, state);
+                    let rhs_type = derive_annotate_expr_type(rhs_expr, hint, state);
+
                     assert_type_equals(&lhs_type, &rhs_type, "bitwise-xor-expr");
                     assert!(
                         is_u32_based_type(&lhs_type),
@@ -572,6 +628,9 @@ fn derive_annotate_expr_type(
 
                 // Overloaded for all arithmetic types.
                 Div => {
+                    let lhs_type = derive_annotate_expr_type(lhs_expr, hint, state);
+                    let rhs_type = derive_annotate_expr_type(rhs_expr, hint, state);
+
                     assert_type_equals(&lhs_type, &rhs_type, "div-expr");
                     assert!(
                         is_arithmetic_type(&lhs_type),
@@ -583,6 +642,11 @@ fn derive_annotate_expr_type(
 
                 // Overloaded for all primitive types.
                 Eq => {
+                    // FIXME: Cannot provide parent `hint` (since it's Bool)
+                    let no_hint = None;
+                    let lhs_type = derive_annotate_expr_type(lhs_expr, no_hint, state);
+                    let rhs_type = derive_annotate_expr_type(rhs_expr, no_hint, state);
+
                     assert_type_equals(&lhs_type, &rhs_type, "eq-expr");
                     assert!(
                         is_primitive_type(&lhs_type),
@@ -594,6 +658,11 @@ fn derive_annotate_expr_type(
 
                 // Restricted to U32-based types. (Triton VM limitation)
                 Lt => {
+                    // FIXME: Cannot provide parent `hint` (since it's Bool)
+                    let no_hint = None;
+                    let lhs_type = derive_annotate_expr_type(lhs_expr, no_hint, state);
+                    let rhs_type = derive_annotate_expr_type(rhs_expr, no_hint, state);
+
                     assert_type_equals(&lhs_type, &rhs_type, "lt-expr");
                     assert!(
                         is_u32_based_type(&lhs_type),
@@ -605,6 +674,9 @@ fn derive_annotate_expr_type(
 
                 // Overloaded for all primitive types.
                 Mul => {
+                    let lhs_type = derive_annotate_expr_type(lhs_expr, hint, state);
+                    let rhs_type = derive_annotate_expr_type(rhs_expr, hint, state);
+
                     assert_type_equals(&lhs_type, &rhs_type, "mul-expr");
                     assert!(
                         is_arithmetic_type(&lhs_type),
@@ -616,6 +688,11 @@ fn derive_annotate_expr_type(
 
                 // Overloaded for all primitive types.
                 Neq => {
+                    // FIXME: Cannot provide parent `hint` (since it's Bool)
+                    let no_hint = None;
+                    let lhs_type = derive_annotate_expr_type(lhs_expr, no_hint, state);
+                    let rhs_type = derive_annotate_expr_type(rhs_expr, no_hint, state);
+
                     assert_type_equals(&lhs_type, &rhs_type, "neq-expr");
                     assert!(
                         is_primitive_type(&lhs_type),
@@ -627,6 +704,9 @@ fn derive_annotate_expr_type(
 
                 // Restricted to bool only.
                 Or => {
+                    let lhs_type = derive_annotate_expr_type(lhs_expr, hint, state);
+                    let rhs_type = derive_annotate_expr_type(rhs_expr, hint, state);
+
                     assert_type_equals(&lhs_type, &ast::DataType::Bool, "or-expr lhs");
                     assert_type_equals(&rhs_type, &ast::DataType::Bool, "or-expr rhs");
                     *binop_type = Typing::KnownType(ast::DataType::Bool);
@@ -635,42 +715,55 @@ fn derive_annotate_expr_type(
 
                 // Restricted to U32-based types. (Triton VM limitation)
                 Rem => {
+                    let lhs_type = derive_annotate_expr_type(lhs_expr, hint, state);
+                    let rhs_type = derive_annotate_expr_type(rhs_expr, hint, state);
+
                     assert_type_equals(&lhs_type, &rhs_type, "rem-expr");
                     assert!(
                         is_u32_based_type(&lhs_type),
                         "Cannot find remainder for type '{lhs_type}' (not u32-based)"
                     );
                     *binop_type = Typing::KnownType(lhs_type.clone());
-
                     lhs_type
                 }
 
                 // Restricted to U32-based types. (Triton VM limitation)
                 Shl => {
+                    let lhs_type = derive_annotate_expr_type(lhs_expr, hint, state);
+
+                    let rhs_hint = Some(&ast::DataType::U32);
+                    let rhs_type = derive_annotate_expr_type(rhs_expr, rhs_hint, state);
+
                     assert!(
                         is_u32_based_type(&lhs_type),
                         "Cannot shift-left for type '{lhs_type}' (not u32-based)"
                     );
                     assert_type_equals(&rhs_type, &ast::DataType::U32, "shl-rhs-expr");
                     *binop_type = Typing::KnownType(lhs_type.clone());
-
                     lhs_type
                 }
 
                 // Restricted to U32-based types. (Triton VM limitation)
                 Shr => {
+                    let lhs_type = derive_annotate_expr_type(lhs_expr, hint, state);
+
+                    let rhs_hint = Some(&ast::DataType::U32);
+                    let rhs_type = derive_annotate_expr_type(rhs_expr, rhs_hint, state);
+
                     assert!(
                         is_u32_based_type(&lhs_type),
                         "Cannot shift-right for type '{lhs_type}' (not u32-based)"
                     );
                     assert_type_equals(&rhs_type, &ast::DataType::U32, "shr-rhs-expr");
                     *binop_type = Typing::KnownType(lhs_type.clone());
-
                     lhs_type
                 }
 
                 // Overloaded for all arithmetic types.
                 Sub => {
+                    let lhs_type = derive_annotate_expr_type(lhs_expr, hint, state);
+                    let rhs_type = derive_annotate_expr_type(rhs_expr, hint, state);
+
                     assert_type_equals(&lhs_type, &rhs_type, "sub-expr");
                     assert!(
                         is_arithmetic_type(&lhs_type),
@@ -687,17 +780,21 @@ fn derive_annotate_expr_type(
             then_branch,
             else_branch,
         }) => {
-            let condition_type = derive_annotate_expr_type(condition, state);
+            let condition_hint = ast::DataType::Bool;
+            let condition_type = derive_annotate_expr_type(condition, Some(&condition_hint), state);
             assert_type_equals(&condition_type, &ast::DataType::Bool, "if-condition-expr");
 
-            let then_type = derive_annotate_expr_type(then_branch, state);
-            let else_type = derive_annotate_expr_type(else_branch, state);
+            // FIXME: Unify branches
+            let branch_hint = None;
+            let then_type = derive_annotate_expr_type(then_branch, branch_hint, state);
+            let else_type = derive_annotate_expr_type(else_branch, branch_hint, state);
             assert_type_equals(&then_type, &else_type, "if-then-else-expr");
 
             then_type
         }
+
         ast::Expr::Cast(expr, as_type) => {
-            let expr_type = derive_annotate_expr_type(expr, state);
+            let expr_type = derive_annotate_expr_type(expr, Some(as_type), state);
             assert!(
                 is_u32_based_type(&expr_type),
                 "Can only cast from u32 and u64"

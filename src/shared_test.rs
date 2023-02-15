@@ -16,7 +16,7 @@ pub fn graft_check_compile_prop(item_fn: &syn::ItemFn) -> String {
     // type-check and annotate
     annotate_fn(&mut function);
 
-    println!("{:#?}", function);
+    println!("{function:#?}");
 
     // compile
     let tasm = compile(&function);

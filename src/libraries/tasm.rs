@@ -21,7 +21,7 @@ pub fn get_method_name(_name: &str) -> Option<&str> {
 
 pub fn import_tasm_snippet(tasm_fn_name: &str, state: &mut CompilerState) -> String {
     let snippet = name_to_snippet(tasm_fn_name);
-    let entrypoint = snippet.entrypoint().to_owned();
+    let entrypoint = snippet.entrypoint();
     state.import_snippet(snippet);
 
     entrypoint
@@ -32,7 +32,7 @@ pub fn function_name_to_signature(tasm_fn_name: &str) -> ast::FnSignature {
 
     let input_types_lib = snippet.input_types();
     let output_types_lib = snippet.output_types();
-    let name = snippet.entrypoint().to_string();
+    let name = snippet.entrypoint();
     let mut args: Vec<ast::FnArg> = vec![];
     for (i, itl) in input_types_lib.into_iter().enumerate() {
         let fn_arg = ast::FnArg {

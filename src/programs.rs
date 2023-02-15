@@ -4,16 +4,95 @@ use crate::graft::item_fn;
 
 fn inferred_literals() -> syn::ItemFn {
     item_fn(parse_quote! {
-        fn main(arr: Vec<u64>) {
+        fn main() {
+            // infer from let context
             let a: u32 = 0;
             let b: u64 = 1;
-            let c: u32 = a + 2;
-            let d: u64 = b + 4;
 
-            // u32 indices, u64 values
-            arr[5] = b;
-            arr[a] = d;
-            arr[c + 6] = b + d + 7;
+            // infer as lhs and rhs
+            // block scope ensures stack isn't exhausted
+            {
+                let add_1: u32 = a + 1;
+                let add_2: u32 = 2 + a;
+                let add_3: u64 = b + 3;
+                let add_4: u64 = 4 + b;
+            }
+
+            {
+                let sub_1: u32 = a - 5;
+                let sub_2: u32 = 6 - a;
+                let sub_3: u64 = b - 7;
+                let sub_4: u64 = 8 - b;
+            }
+
+            {
+                let bit_and_1: u32 = a & 9;
+                let bit_and_2: u32 = 10 & a;
+                let bit_and_3: u64 = b & 11;
+                let bit_and_4: u64 = 12 & b;
+            }
+
+            {
+                let bit_xor_1: u32 = a ^ 13;
+                let bit_xor_2: u32 = 14 ^ a;
+                let bit_xor_3: u64 = b ^ 15;
+                let bit_xor_4: u64 = 16 ^ b;
+            }
+
+            // div only supports the denominator 2
+            {
+                let div_1: u32 = a / 2;
+                // let div_2: u32 = 18 / a;
+                let div_3: u64 = b / 2;
+                // let div_4: u64 = 20 / b;
+            }
+
+            // mul is only implemented for u32, not u64
+            {
+                let mul_1: u32 = a * 21;
+                let mul_2: u32 = 22 * a;
+                // let mul_3: u64 = b * 23;
+                // let mul_4: u64 = 24 * b;
+            }
+
+            // rem is not implemented yet
+            // {
+            //     let rem_1: u32 = a % 25;
+            //     let rem_2: u32 = 26 % a;
+            //     let rem_3: u64 = b % 27;
+            //     let rem_4: u64 = 28 % b;
+            // }
+
+            {
+                // let bit_shl_1: u32 = 1 << 3; // result must be a u64
+                // let bit_shl_2: u32 = 1 << a; // result must be a u64
+                // let bit_shl_3: u32 = 2 << 1; // lhs must currently be 1
+                // let bit_shl_4: u32 = a << 1; // lhs must currently be 1
+                // let bit_shl_5: u64 = b << 5; // lhs must currently be 1
+                let bit_shl_6: u64 = 1 << 5;
+                let bit_shl_7: u64 = 1 << a;
+                // let bit_shl_7: u64 = 6 << 7; // lhs must currently be 1
+                // let bit_shl_8: u64 = 8 << a; // u64 shifting by u32 only, rhs must currently be constant
+            }
+
+            // shr is not implemented yet
+            // {
+            //     let bit_shr_6: u64 = 1 >> 5;
+            //     let bit_shr_7: u64 = 1 >> a;
+            // }
+
+            {
+                let three: u64 = tasm::tasm_arithmetic_u64_add(1, 2);
+            }
+
+            {
+                let mut arr: Vec<u64> = Vec::<u64>::default();
+                arr[0] = b;
+                arr[a] = b + 1;
+                arr[2 * a + 3] = 1 << (4 / a + 5);
+
+                arr.push(4);
+            }
 
             return;
         }
