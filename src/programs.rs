@@ -455,6 +455,15 @@ fn missing_mut_keyword() -> syn::ItemFn {
     ))
 }
 
+fn load_auth_path() -> syn::ItemFn {
+    item_fn(parse_quote!(
+        fn load_auth_path() -> Vec<Digest> {
+            let ap: Vec<Digest> = tasm::tasm_hashing_load_auth_path_from_secret_in();
+            return ap;
+        }
+    ))
+}
+
 #[cfg(test)]
 mod compile_and_typecheck_tests {
     use crate::shared_test::graft_check_compile_prop;
@@ -590,6 +599,11 @@ mod compile_and_typecheck_tests {
     #[test]
     fn missing_mut_keyword_test() {
         graft_check_compile_prop(&missing_mut_keyword());
+    }
+
+    #[test]
+    fn tasm_lib_load_auth_path_test() {
+        graft_check_compile_prop(&load_auth_path());
     }
 }
 
