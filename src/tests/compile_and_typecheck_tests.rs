@@ -1,4 +1,7 @@
-use super::{programs::*, shared_test::graft_check_compile_prop};
+use super::{
+    programs::{arithmetic::*, mmr::*, other::*},
+    shared_test::graft_check_compile_prop,
+};
 
 #[test]
 fn inferred_literals_test() {

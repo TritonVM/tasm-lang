@@ -6,8 +6,11 @@ use rand::{thread_rng, Rng, RngCore};
 use twenty_first::shared_math::b_field_element::BFieldElement;
 
 use crate::ast;
-use crate::tests::programs::*;
 use crate::tests::shared_test::*;
+
+use super::programs::arithmetic::*;
+use super::programs::mmr::*;
+use super::programs::other::*;
 
 #[test]
 fn simple_sub_test() {
