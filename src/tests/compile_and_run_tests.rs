@@ -8,14 +8,12 @@ use twenty_first::shared_math::b_field_element::BFieldElement;
 use crate::ast;
 use crate::tests::shared_test::*;
 
-use super::programs::arithmetic::*;
-use super::programs::mmr::*;
-use super::programs::other::*;
+use super::programs::*;
 
 #[test]
 fn simple_sub_test() {
     compare_prop_with_stack(
-        &simple_sub(),
+        &arithmetic::simple_sub(),
         vec![u32_lit(100), u32_lit(51)],
         vec![u32_lit(49)],
     );
@@ -24,19 +22,19 @@ fn simple_sub_test() {
 #[test]
 fn operator_evaluation_ordering_test() {
     compare_prop_with_stack(
-        &operator_evaluation_ordering_with_div_u32(),
+        &arithmetic::operator_evaluation_ordering_with_div_u32(),
         vec![],
         vec![u32_lit(94)],
     );
 
     compare_prop_with_stack(
-        &operator_evaluation_ordering_with_div_u64(),
+        &arithmetic::operator_evaluation_ordering_with_div_u64(),
         vec![],
         vec![u64_lit(94)],
     );
 
     compare_prop_with_stack(
-        &operator_evaluation_ordering_with_mul(),
+        &arithmetic::operator_evaluation_ordering_with_mul(),
         vec![],
         vec![u32_lit(60)],
     );
@@ -45,7 +43,7 @@ fn operator_evaluation_ordering_test() {
 #[test]
 fn add_u64_run_test() {
     compare_prop_with_stack(
-        &add_u64_rast(),
+        &arithmetic::add_u64_rast(),
         vec![
             u64_lit((1 << 33) + (1 << 16)),
             u64_lit((1 << 33) + (1 << 16)),
@@ -56,7 +54,7 @@ fn add_u64_run_test() {
         let lhs = thread_rng().gen_range(0..u64::MAX / 2);
         let rhs = thread_rng().gen_range(0..u64::MAX / 2);
         compare_prop_with_stack(
-            &add_u64_rast(),
+            &arithmetic::add_u64_rast(),
             vec![u64_lit(lhs), u64_lit(rhs)],
             vec![u64_lit(lhs + rhs)],
         )
@@ -67,41 +65,69 @@ fn add_u64_run_test() {
 fn sub_u32_run_test() {
     let input_args_1 = vec![u32_lit(200), u32_lit(95)];
     let expected_outputs_1 = vec![u32_lit(105)];
-    compare_prop_with_stack(&sub_u32_rast_1(), input_args_1, expected_outputs_1);
+    compare_prop_with_stack(
+        &arithmetic::sub_u32_rast_1(),
+        input_args_1,
+        expected_outputs_1,
+    );
 
     let input_args_2 = vec![u32_lit(95), u32_lit(200)];
     let expected_outputs_2 = vec![u32_lit(105)];
-    compare_prop_with_stack(&sub_u32_rast_2(), input_args_2, expected_outputs_2);
+    compare_prop_with_stack(
+        &arithmetic::sub_u32_rast_2(),
+        input_args_2,
+        expected_outputs_2,
+    );
 }
 
 #[test]
 fn sub_u64_run_test() {
     let input_args_1 = vec![u64_lit(200), u64_lit(95)];
     let expected_outputs_1 = vec![u64_lit(105)];
-    compare_prop_with_stack(&sub_u64_rast_1(), input_args_1, expected_outputs_1);
+    compare_prop_with_stack(
+        &arithmetic::sub_u64_rast_1(),
+        input_args_1,
+        expected_outputs_1,
+    );
 
     let input_args_2 = vec![u64_lit(95), u64_lit(200)];
     let expected_outputs_2 = vec![u64_lit(105)];
-    compare_prop_with_stack(&sub_u64_rast_2(), input_args_2, expected_outputs_2);
+    compare_prop_with_stack(
+        &arithmetic::sub_u64_rast_2(),
+        input_args_2,
+        expected_outputs_2,
+    );
 
     let input_args_3 = vec![u64_lit(1), u64_lit(1 << 32)];
     let expected_outputs_3 = vec![u64_lit(u32::MAX as u64)];
-    compare_prop_with_stack(&sub_u64_rast_2(), input_args_3, expected_outputs_3);
+    compare_prop_with_stack(
+        &arithmetic::sub_u64_rast_2(),
+        input_args_3,
+        expected_outputs_3,
+    );
 
     let lhs = thread_rng().gen_range(0..u64::MAX);
     let rhs = thread_rng().gen_range(0..=lhs);
     let input_args_4 = vec![u64_lit(rhs), u64_lit(lhs)];
     let expected_outputs_4 = vec![u64_lit(lhs - rhs)];
-    compare_prop_with_stack(&sub_u64_rast_2(), input_args_4, expected_outputs_4);
+    compare_prop_with_stack(
+        &arithmetic::sub_u64_rast_2(),
+        input_args_4,
+        expected_outputs_4,
+    );
 }
 
 #[test]
 fn right_child_run_test() {
-    compare_prop_with_stack(&right_child_rast(), vec![u64_lit(120)], vec![u64_lit(119)]);
+    compare_prop_with_stack(
+        &mmr::right_child_rast(),
+        vec![u64_lit(120)],
+        vec![u64_lit(119)],
+    );
     let mut rng = thread_rng();
     let rand = rng.next_u64();
     compare_prop_with_stack(
-        &right_child_rast(),
+        &mmr::right_child_rast(),
         vec![u64_lit(rand)],
         vec![u64_lit(rand - 1)],
     );
@@ -111,11 +137,11 @@ fn right_child_run_test() {
 fn left_child_run_test() {
     let inputs0 = vec![u64_lit(120), u32_lit(2)];
     let outputs0 = vec![u64_lit(116)];
-    compare_prop_with_stack(&left_child_rast(), inputs0, outputs0);
+    compare_prop_with_stack(&mmr::left_child_rast(), inputs0, outputs0);
 
     let inputs1 = vec![u64_lit(31), u32_lit(4)];
     let outputs1 = vec![u64_lit(15)];
-    compare_prop_with_stack(&left_child_rast(), inputs1, outputs1);
+    compare_prop_with_stack(&mmr::left_child_rast(), inputs1, outputs1);
 }
 
 // right_lineage_length_test
@@ -125,11 +151,11 @@ fn right_lineage_length_run_test() {
         let inputs = vec![u64_lit(node_index)];
         let outputs = vec![u32_lit(expected)];
         compare_prop_with_stack(
-            &right_lineage_length_stmt_rast(),
+            &mmr::right_lineage_length_stmt_rast(),
             inputs.clone(),
             outputs.clone(),
         );
-        compare_prop_with_stack(&right_lineage_length_expr_rast(), inputs, outputs);
+        compare_prop_with_stack(&mmr::right_lineage_length_expr_rast(), inputs, outputs);
     }
 
     prop_right_lineage_length_run(1, 0);
@@ -168,29 +194,58 @@ fn right_lineage_length_run_test() {
 }
 
 #[test]
+fn leftmost_ancestor_run_test() {
+    let test_cases = vec![
+        InputOutputTestCase::new(vec![u64_lit(1)], vec![u64_lit(1), u32_lit(0)]),
+        InputOutputTestCase::new(vec![u64_lit(2)], vec![u64_lit(3), u32_lit(1)]),
+        InputOutputTestCase::new(vec![u64_lit(3)], vec![u64_lit(3), u32_lit(1)]),
+        InputOutputTestCase::new(vec![u64_lit(4)], vec![u64_lit(7), u32_lit(2)]),
+        InputOutputTestCase::new(vec![u64_lit(5)], vec![u64_lit(7), u32_lit(2)]),
+        InputOutputTestCase::new(vec![u64_lit(6)], vec![u64_lit(7), u32_lit(2)]),
+        InputOutputTestCase::new(vec![u64_lit(7)], vec![u64_lit(7), u32_lit(2)]),
+        InputOutputTestCase::new(vec![u64_lit(8)], vec![u64_lit(15), u32_lit(3)]),
+        InputOutputTestCase::new(vec![u64_lit(9)], vec![u64_lit(15), u32_lit(3)]),
+        InputOutputTestCase::new(vec![u64_lit(15)], vec![u64_lit(15), u32_lit(3)]),
+        InputOutputTestCase::new(vec![u64_lit(16)], vec![u64_lit(31), u32_lit(4)]),
+    ];
+
+    for test_case in test_cases {
+        compare_prop_with_stack(
+            &mmr::leftmost_ancestor_rast(),
+            test_case.input_args,
+            test_case.expected_outputs,
+        );
+    }
+}
+
+#[test]
 fn lt_u32_test() {
-    compare_prop_with_stack(&lt_u32(), vec![], vec![ast::ExprLit::Bool(true)]);
+    compare_prop_with_stack(
+        &arithmetic::lt_u32(),
+        vec![],
+        vec![ast::ExprLit::Bool(true)],
+    );
 }
 
 #[test]
 fn simple_while_loop_run_test() {
-    compare_prop_with_stack(&simple_while_loop(), vec![], vec![u32_lit(5050)]);
+    compare_prop_with_stack(&other::simple_while_loop(), vec![], vec![u32_lit(5050)]);
 }
 
 #[test]
 fn complicated_while_loop_test() {
     compare_prop_with_stack(
-        &longer_while_loop(),
+        &other::longer_while_loop(),
         vec![u32_lit(1000)],
         vec![u64_lit(2641)],
     );
     compare_prop_with_stack(
-        &while_loop_with_declarations(),
+        &other::while_loop_with_declarations(),
         vec![u32_lit(2000)],
         vec![u64_lit(3641)],
     );
     compare_prop_with_stack(
-        &while_loop_with_declarations(),
+        &other::while_loop_with_declarations(),
         vec![u32_lit(2001)],
         vec![u64_lit(3642)],
     );
@@ -201,7 +256,7 @@ fn code_block_run_test() {
     fn prop_code_block(input: u64) {
         let inputs = vec![u64_lit(input)];
         let outputs = vec![u32_lit(2 * (input as u32) + 2)];
-        compare_prop_with_stack(&code_block(), inputs, outputs);
+        compare_prop_with_stack(&other::code_block(), inputs, outputs);
     }
 
     let mut rng = thread_rng();
@@ -241,7 +296,7 @@ fn simple_list_support_run_test() {
 
     let input_memory = HashMap::default();
     compare_prop_with_stack_and_memory(
-        &simple_list_support(),
+        &other::simple_list_support(),
         inputs,
         outputs,
         input_memory,
@@ -253,7 +308,7 @@ fn simple_list_support_run_test() {
 fn tuple_support_run_test() {
     let outputs = vec![ast::ExprLit::Bool(true), u32_lit(42), u64_lit(100)];
 
-    compare_prop_with_stack(&tuple_support(), vec![], outputs);
+    compare_prop_with_stack(&other::tuple_support(), vec![], outputs);
 }
 
 #[test]
@@ -280,7 +335,7 @@ fn simple_list_support_test() {
     }
 
     compare_prop_with_stack_and_memory(
-        &mut_list_argument(),
+        &other::mut_list_argument(),
         vec![bfe_lit(list_pointer)],
         vec![],
         memory,

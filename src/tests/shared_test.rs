@@ -10,6 +10,25 @@ use crate::tasm_code_generator::compile;
 use crate::types::{self, annotate_fn, Typing};
 
 #[allow(dead_code)]
+pub struct InputOutputTestCase {
+    pub input_args: Vec<ast::ExprLit<Typing>>,
+    pub expected_outputs: Vec<ast::ExprLit<Typing>>,
+}
+
+impl InputOutputTestCase {
+    #[allow(dead_code)]
+    pub fn new(
+        input_args: Vec<ast::ExprLit<Typing>>,
+        expected_outputs: Vec<ast::ExprLit<Typing>>,
+    ) -> Self {
+        Self {
+            input_args,
+            expected_outputs,
+        }
+    }
+}
+
+#[allow(dead_code)]
 pub fn graft_check_compile_prop(item_fn: &syn::ItemFn) -> String {
     // parse test
     let mut function = graft(item_fn);

@@ -3,24 +3,32 @@ use syn::parse_quote;
 use crate::graft::item_fn;
 
 #[allow(dead_code)]
-pub fn right_child_rast() -> syn::ItemFn {
+pub fn left_child_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
-        fn right_child(node_index: u64) -> u64 {
-            return node_index - 1u64;
+        fn left_child(node_index: u64, height: u32) -> u64 {
+            return node_index - (1 << height);
         }
     })
 }
 
 #[allow(dead_code)]
-pub fn left_child_rast() -> syn::ItemFn {
+pub fn right_child_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
-        fn left_child(node_index: u64, height: u32) -> u64 {
-            // return node_index - pow2(height);
-            // return node_index - 2u64.pow(height);
-            return node_index - (1u64 << height);
-            // return node_index - 2u32.pow(height);
-
+        fn right_child(node_index: u64) -> u64 {
+            return node_index - 1;
         }
+    })
+}
+
+#[allow(dead_code)]
+pub fn leftmost_ancestor_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn leftmost_ancestor(node_index: u64) -> (u64, u32) {
+            let h: u32 = tasm::tasm_arithmetic_u64_log_2_floor(node_index);
+            let ret: u64 = (1 << (h + 1)) - 1;
+
+            return (ret, h);
+    }
     })
 }
 
