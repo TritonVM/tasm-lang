@@ -247,3 +247,188 @@ pub fn missing_mut_keyword() -> syn::ItemFn {
         }
     ))
 }
+
+#[cfg(test)]
+mod run_tests {
+    use std::collections::HashMap;
+
+    use num::{One, Zero};
+    use rand::{thread_rng, Rng};
+    use twenty_first::shared_math::b_field_element::BFieldElement;
+
+    use super::*;
+    use crate::tests::shared_test::*;
+
+    #[test]
+    fn simple_while_loop_run_test() {
+        compare_prop_with_stack(&simple_while_loop(), vec![], vec![u32_lit(5050)]);
+    }
+
+    #[test]
+    fn complicated_while_loop_test() {
+        compare_prop_with_stack(
+            &longer_while_loop(),
+            vec![u32_lit(1000)],
+            vec![u64_lit(2641)],
+        );
+        compare_prop_with_stack(
+            &while_loop_with_declarations(),
+            vec![u32_lit(2000)],
+            vec![u64_lit(3641)],
+        );
+        compare_prop_with_stack(
+            &while_loop_with_declarations(),
+            vec![u32_lit(2001)],
+            vec![u64_lit(3642)],
+        );
+    }
+
+    #[test]
+    fn code_block_run_test() {
+        fn prop_code_block(input: u64) {
+            let inputs = vec![u64_lit(input)];
+            let outputs = vec![u32_lit(2 * (input as u32) + 2)];
+            compare_prop_with_stack(&code_block(), inputs, outputs);
+        }
+
+        let mut rng = thread_rng();
+        for _ in 0..10 {
+            prop_code_block(rng.gen_range(0..(1u64 << 30)));
+        }
+    }
+
+    #[test]
+    fn simple_list_support_run_test() {
+        use tasm_lib::rust_shadowing_helper_functions::unsafe_list::unsafe_list_new;
+        use tasm_lib::rust_shadowing_helper_functions::unsafe_list::unsafe_list_push;
+        use tasm_lib::rust_shadowing_helper_functions::unsafe_list::unsafe_list_set_length;
+
+        let inputs = vec![];
+        let outputs = vec![
+            bfe_lit(BFieldElement::zero()),
+            u32_lit(2),
+            u64_lit(4000),
+            u64_lit(2000),
+        ];
+
+        let mut memory = HashMap::default();
+        let list_pointer = BFieldElement::zero();
+        unsafe_list_new(list_pointer, &mut memory);
+
+        let elem_1 = vec![BFieldElement::new(2000), BFieldElement::new(0)];
+        unsafe_list_push(list_pointer, elem_1.clone(), &mut memory, elem_1.len());
+
+        let elem_2 = vec![BFieldElement::new(5000), BFieldElement::new(0)];
+        unsafe_list_push(list_pointer, elem_2.clone(), &mut memory, elem_2.len());
+
+        let elem_3 = vec![BFieldElement::new(4000), BFieldElement::new(0)];
+        unsafe_list_push(list_pointer, elem_3.clone(), &mut memory, elem_3.len());
+
+        unsafe_list_set_length(list_pointer, 2, &mut memory);
+
+        let input_memory = HashMap::default();
+        compare_prop_with_stack_and_memory(
+            &simple_list_support(),
+            inputs,
+            outputs,
+            input_memory,
+            memory,
+        );
+    }
+
+    #[test]
+    fn tuple_support_run_test() {
+        let outputs = vec![bool_lit(true), u32_lit(42), u64_lit(100)];
+
+        compare_prop_with_stack(&tuple_support(), vec![], outputs);
+    }
+
+    #[test]
+    fn simple_list_support_test() {
+        use tasm_lib::rust_shadowing_helper_functions::unsafe_list::unsafe_list_new;
+        use tasm_lib::rust_shadowing_helper_functions::unsafe_list::unsafe_list_push;
+
+        let mut memory = HashMap::default();
+        let list_pointer = BFieldElement::one();
+        unsafe_list_new(list_pointer, &mut memory);
+
+        let elem_1 = vec![BFieldElement::new(2000), BFieldElement::new(0)];
+        unsafe_list_push(list_pointer, elem_1.clone(), &mut memory, elem_1.len());
+
+        let mut expected_final_memory = memory.clone();
+        for i in 0..10 {
+            let elem_i = vec![BFieldElement::new(i), BFieldElement::new(0)];
+            unsafe_list_push(
+                list_pointer,
+                elem_i.clone(),
+                &mut expected_final_memory,
+                elem_i.len(),
+            );
+        }
+
+        compare_prop_with_stack_and_memory(
+            &mut_list_argument(),
+            vec![bfe_lit(list_pointer)],
+            vec![],
+            memory,
+            expected_final_memory,
+        );
+    }
+}
+
+#[cfg(test)]
+mod compile_and_typecheck_tests {
+    use super::*;
+    use crate::tests::shared_test::graft_check_compile_prop;
+
+    #[test]
+    fn inferred_literals_test() {
+        graft_check_compile_prop(&inferred_literals());
+    }
+
+    #[test]
+    fn nop_test() {
+        graft_check_compile_prop(&nop_rast());
+    }
+
+    #[test]
+    fn simple_while_loop_test() {
+        graft_check_compile_prop(&simple_while_loop());
+    }
+
+    #[test]
+    fn complicated_while_loop_test() {
+        graft_check_compile_prop(&longer_while_loop());
+    }
+
+    #[test]
+    fn while_loop_with_declarations_test() {
+        graft_check_compile_prop(&while_loop_with_declarations());
+    }
+
+    #[test]
+    fn code_block_test() {
+        graft_check_compile_prop(&code_block());
+    }
+
+    #[test]
+    fn simple_list_support_test() {
+        graft_check_compile_prop(&simple_list_support());
+    }
+
+    #[test]
+    fn tuple_support_test() {
+        graft_check_compile_prop(&tuple_support());
+    }
+
+    #[test]
+    fn mut_list_argument_test() {
+        graft_check_compile_prop(&mut_list_argument());
+    }
+
+    #[should_panic]
+    #[test]
+    fn missing_mut_keyword_test() {
+        graft_check_compile_prop(&missing_mut_keyword());
+    }
+}

@@ -176,3 +176,170 @@ pub fn lt_u32() -> syn::ItemFn {
         }
     })
 }
+
+#[cfg(test)]
+mod run_tests {
+    use rand::{thread_rng, Rng};
+
+    use super::*;
+    use crate::tests::shared_test::*;
+
+    #[test]
+    fn simple_sub_test() {
+        compare_prop_with_stack(
+            &simple_sub(),
+            vec![u32_lit(100), u32_lit(51)],
+            vec![u32_lit(49)],
+        );
+    }
+
+    #[test]
+    fn operator_evaluation_ordering_test() {
+        compare_prop_with_stack(
+            &operator_evaluation_ordering_with_div_u32(),
+            vec![],
+            vec![u32_lit(94)],
+        );
+
+        compare_prop_with_stack(
+            &operator_evaluation_ordering_with_div_u64(),
+            vec![],
+            vec![u64_lit(94)],
+        );
+
+        compare_prop_with_stack(
+            &operator_evaluation_ordering_with_mul(),
+            vec![],
+            vec![u32_lit(60)],
+        );
+    }
+
+    #[test]
+    fn add_u64_run_test() {
+        compare_prop_with_stack(
+            &add_u64_rast(),
+            vec![
+                u64_lit((1 << 33) + (1 << 16)),
+                u64_lit((1 << 33) + (1 << 16)),
+            ],
+            vec![u64_lit((1 << 34) + (1 << 17))],
+        );
+        for _ in 0..10 {
+            let lhs = thread_rng().gen_range(0..u64::MAX / 2);
+            let rhs = thread_rng().gen_range(0..u64::MAX / 2);
+            compare_prop_with_stack(
+                &add_u64_rast(),
+                vec![u64_lit(lhs), u64_lit(rhs)],
+                vec![u64_lit(lhs + rhs)],
+            )
+        }
+    }
+
+    #[test]
+    fn sub_u32_run_test() {
+        let input_args_1 = vec![u32_lit(200), u32_lit(95)];
+        let expected_outputs_1 = vec![u32_lit(105)];
+        compare_prop_with_stack(&sub_u32_rast_1(), input_args_1, expected_outputs_1);
+
+        let input_args_2 = vec![u32_lit(95), u32_lit(200)];
+        let expected_outputs_2 = vec![u32_lit(105)];
+        compare_prop_with_stack(&sub_u32_rast_2(), input_args_2, expected_outputs_2);
+    }
+
+    #[test]
+    fn sub_u64_run_test() {
+        let input_args_1 = vec![u64_lit(200), u64_lit(95)];
+        let expected_outputs_1 = vec![u64_lit(105)];
+        compare_prop_with_stack(&sub_u64_rast_1(), input_args_1, expected_outputs_1);
+
+        let input_args_2 = vec![u64_lit(95), u64_lit(200)];
+        let expected_outputs_2 = vec![u64_lit(105)];
+        compare_prop_with_stack(&sub_u64_rast_2(), input_args_2, expected_outputs_2);
+
+        let input_args_3 = vec![u64_lit(1), u64_lit(1 << 32)];
+        let expected_outputs_3 = vec![u64_lit(u32::MAX as u64)];
+        compare_prop_with_stack(&sub_u64_rast_2(), input_args_3, expected_outputs_3);
+
+        let lhs = thread_rng().gen_range(0..u64::MAX);
+        let rhs = thread_rng().gen_range(0..=lhs);
+        let input_args_4 = vec![u64_lit(rhs), u64_lit(lhs)];
+        let expected_outputs_4 = vec![u64_lit(lhs - rhs)];
+        compare_prop_with_stack(&sub_u64_rast_2(), input_args_4, expected_outputs_4);
+    }
+
+    #[test]
+    fn lt_u32_test() {
+        compare_prop_with_stack(&lt_u32(), vec![], vec![bool_lit(true)]);
+    }
+}
+
+#[cfg(test)]
+mod compile_and_typecheck_tests {
+    use crate::tests::shared_test::graft_check_compile_prop;
+
+    use super::*;
+
+    #[test]
+    fn add_u32_test() {
+        graft_check_compile_prop(&add_u32_rast());
+    }
+
+    #[test]
+    fn add_u32_overwrite_rast_test() {
+        graft_check_compile_prop(&add_u32_overwrite_rast());
+    }
+
+    #[test]
+    fn sub_u32_rast_1_test() {
+        graft_check_compile_prop(&sub_u32_rast_1());
+    }
+
+    #[test]
+    fn sub_u32_rast_2_test() {
+        graft_check_compile_prop(&sub_u32_rast_2());
+    }
+
+    #[test]
+    fn sub_u64_rast_1_test() {
+        graft_check_compile_prop(&sub_u64_rast_1());
+    }
+
+    #[test]
+    fn sub_u64_rast_2_test() {
+        graft_check_compile_prop(&sub_u64_rast_2());
+    }
+    #[test]
+    fn add_bfe_test() {
+        graft_check_compile_prop(&add_bfe_rast());
+    }
+
+    #[test]
+    fn add_xfe_test() {
+        graft_check_compile_prop(&add_xfe_rast());
+    }
+
+    #[test]
+    fn add_u64_test() {
+        graft_check_compile_prop(&add_u64_rast());
+    }
+
+    #[test]
+    fn and_bool_test() {
+        graft_check_compile_prop(&and_bool_rast());
+    }
+
+    #[test]
+    fn bitwise_and_u32_test() {
+        graft_check_compile_prop(&bitwise_and_u32_rast());
+    }
+
+    #[test]
+    fn bitwise_and_u64_test() {
+        graft_check_compile_prop(&bitwise_and_u64_rast());
+    }
+
+    #[test]
+    fn lt_u32_test() {
+        graft_check_compile_prop(&lt_u32());
+    }
+}
