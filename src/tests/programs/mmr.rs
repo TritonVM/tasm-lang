@@ -73,6 +73,23 @@ pub fn right_lineage_length_expr_rast() -> syn::ItemFn {
     })
 }
 
+pub fn right_lineage_length_and_own_height_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn right_lineage_length_and_own_height(node_index: u64) -> (u32, u32) {
+            let mut candidate_and_candidate_height: (u64, u32) = tasm::tasm_mmr_leftmost_ancestor(node_index);
+
+            let mut right_ancestor_count: u32 = 0;
+
+            while candidate_and_candidate_height.0 != node_index {
+                right_ancestor_count += 1;
+                candidate_and_candidate_height = tasm::tasm_mmr_leftmost_ancestor(candidate_and_candidate_height.0);
+            }
+
+            return (right_ancestor_count, candidate_and_candidate_height.1);
+        }
+    })
+}
+
 #[cfg(test)]
 mod run_tests {
     use rand::{thread_rng, RngCore};
@@ -202,5 +219,10 @@ mod compile_and_typecheck_tests {
     #[test]
     fn leftmost_ancestor_test() {
         graft_check_compile_prop(&leftmost_ancestor_rast());
+    }
+
+    #[test]
+    fn right_lineage_length_and_own_height_test() {
+        graft_check_compile_prop(&right_lineage_length_and_own_height_rast());
     }
 }
