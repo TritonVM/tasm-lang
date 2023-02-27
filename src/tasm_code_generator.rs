@@ -44,6 +44,34 @@ impl VStack {
         panic!("Cannot find {seek_addr} on vstack")
     }
 
+    /// Return the stack position of an element inside a tuple
+    fn find_tuple_element(
+        &self,
+        seek_addr: &ValueIdentifier,
+        tuple_index: usize,
+    ) -> (Ord16, ast::DataType) {
+        let (tuple_value_position, tuple_type, _) = self.find_stack_value(seek_addr);
+        let element_types = if let ast::DataType::FlatList(ets) = &tuple_type {
+            ets
+        } else {
+            panic!("Expected type was tuple.")
+        };
+
+        let tuple_value_position: usize = tuple_value_position.into();
+
+        let tuple_depth: usize = element_types
+            .iter()
+            .enumerate()
+            .filter(|(i, _x)| *i > tuple_index)
+            .map(|(_i, x)| size_of(x))
+            .sum::<usize>();
+
+        (
+            (tuple_value_position + tuple_depth).try_into().unwrap(),
+            element_types[tuple_index].clone(),
+        )
+    }
+
     /// Return the code to overwrite a stack value with the value that's on top of the stack
     /// Note that the top value and the value to be removed *must* be of the same type.
     /// Updates the `vstack` but not the `var_addr` as this is assumed to be handled by the caller.
@@ -161,9 +189,9 @@ impl VStack {
             vec![vec![swap_instruction, pop()]; top_value_size].concat()
         } else if words_to_remove != 0 {
             // Here, the number of words under the top element is less than the size of
-            // the top element. We special-case this.
-            let clear_bottom_code = clear_bottom_of_stack(top_value_size, words_to_remove);
-            clear_bottom_code
+            // the top element. We special-case this as the order on the stack
+            // must be preserverved, which is non-trivial.
+            clear_bottom_of_stack(top_value_size, words_to_remove)
         } else {
             vec![]
         };
@@ -475,7 +503,7 @@ fn compile_stmt(
                 ast::Identifier::TupleIndex(ident, tuple_index) => {
                     let var_name =
                         if let ast::Identifier::String(var_name, _known_type) = *ident.to_owned() {
-                            var_name.to_owned()
+                            var_name
                         } else {
                             panic!("Nested tuple expressions not yet supported");
                         };
@@ -800,7 +828,21 @@ fn compile_expr(
 
                 (var_copy_addr, var_copy_code)
             }
-            ast::Identifier::TupleIndex(_, _) => todo!(),
+            ast::Identifier::TupleIndex(ident, tuple_index) => {
+                let var_name = if let ast::Identifier::String(var_name, _) = *ident.to_owned() {
+                    var_name
+                } else {
+                    panic!("Nested tuple references not yet supported");
+                };
+                let var_addr = state.var_addr.get(&var_name).expect("variable exists");
+                let (position, element_type) =
+                    state.vstack.find_tuple_element(var_addr, *tuple_index);
+
+                let var_copy_code = dup_value_from_stack_code(position, &element_type);
+                let var_copy_addr = state.new_value_identifier("_var_copy", &element_type);
+
+                (var_copy_addr, var_copy_code)
+            }
             ast::Identifier::ListIndex(ident, index_expr) => {
                 let res_type = expr.get_type();
                 let ident_type = ident.get_type();

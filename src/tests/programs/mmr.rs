@@ -73,6 +73,7 @@ pub fn right_lineage_length_expr_rast() -> syn::ItemFn {
     })
 }
 
+#[allow(dead_code)]
 pub fn right_lineage_length_and_own_height_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn right_lineage_length_and_own_height(node_index: u64) -> (u32, u32) {
@@ -81,8 +82,17 @@ pub fn right_lineage_length_and_own_height_rast() -> syn::ItemFn {
             let mut right_ancestor_count: u32 = 0;
 
             while candidate_and_candidate_height.0 != node_index {
-                right_ancestor_count += 1;
-                candidate_and_candidate_height = tasm::tasm_mmr_leftmost_ancestor(candidate_and_candidate_height.0);
+                let left_child: u64 = candidate_and_candidate_height.0 - (1 << candidate_and_candidate_height.1);
+                let candidate_is_right_child: bool = left_child < node_index;
+                if candidate_is_right_child {
+                    candidate_and_candidate_height.0 = candidate_and_candidate_height.0 - 1;
+                    right_ancestor_count = right_ancestor_count + 1;
+                } else {
+                    candidate_and_candidate_height.0 = left_child;
+                    right_ancestor_count = 0;
+                }
+
+                candidate_and_candidate_height.1 = candidate_and_candidate_height.1 - 1;
             }
 
             return (right_ancestor_count, candidate_and_candidate_height.1);
@@ -188,6 +198,41 @@ mod run_tests {
         for test_case in test_cases {
             compare_prop_with_stack(
                 &leftmost_ancestor_rast(),
+                test_case.input_args,
+                test_case.expected_outputs,
+            );
+        }
+    }
+
+    #[test]
+    fn right_lineage_length_and_own_height_test() {
+        let test_cases = vec![
+            InputOutputTestCase::new(vec![u64_lit(1)], vec![u32_lit(0), u32_lit(0)]),
+            InputOutputTestCase::new(vec![u64_lit(2)], vec![u32_lit(1), u32_lit(0)]),
+            InputOutputTestCase::new(vec![u64_lit(3)], vec![u32_lit(0), u32_lit(1)]),
+            InputOutputTestCase::new(vec![u64_lit(4)], vec![u32_lit(0), u32_lit(0)]),
+            InputOutputTestCase::new(vec![u64_lit(5)], vec![u32_lit(2), u32_lit(0)]),
+            InputOutputTestCase::new(vec![u64_lit(6)], vec![u32_lit(1), u32_lit(1)]),
+            InputOutputTestCase::new(vec![u64_lit(7)], vec![u32_lit(0), u32_lit(2)]),
+            InputOutputTestCase::new(vec![u64_lit(8)], vec![u32_lit(0), u32_lit(0)]),
+            InputOutputTestCase::new(vec![u64_lit(9)], vec![u32_lit(1), u32_lit(0)]),
+            InputOutputTestCase::new(vec![u64_lit(10)], vec![u32_lit(0), u32_lit(1)]),
+            InputOutputTestCase::new(vec![u64_lit(11)], vec![u32_lit(0), u32_lit(0)]),
+            InputOutputTestCase::new(vec![u64_lit(12)], vec![u32_lit(3), u32_lit(0)]),
+            InputOutputTestCase::new(vec![u64_lit(13)], vec![u32_lit(2), u32_lit(1)]),
+            InputOutputTestCase::new(vec![u64_lit(14)], vec![u32_lit(1), u32_lit(2)]),
+            InputOutputTestCase::new(vec![u64_lit(15)], vec![u32_lit(0), u32_lit(3)]),
+            InputOutputTestCase::new(vec![u64_lit(16)], vec![u32_lit(0), u32_lit(0)]),
+            InputOutputTestCase::new(vec![u64_lit(17)], vec![u32_lit(1), u32_lit(0)]),
+            InputOutputTestCase::new(
+                vec![u64_lit(u64::MAX / 2 - 2)],
+                vec![u32_lit(2), u32_lit(60)],
+            ),
+        ];
+
+        for test_case in test_cases {
+            compare_prop_with_stack(
+                &right_lineage_length_and_own_height_rast(),
                 test_case.input_args,
                 test_case.expected_outputs,
             );
