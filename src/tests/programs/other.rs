@@ -264,12 +264,26 @@ pub fn allow_mutable_tuple_rast() -> syn::ItemFn {
     })
 }
 
+#[allow(dead_code)]
+pub fn allow_mutable_triplet_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn allow_mutable_triplet() -> (u64, u64, u32) {
+            let mut tuple: (u64, u64, u32) = (1u64, 2u64, 3u32);
+            tuple.0 = 4u64;
+            tuple.1 = 5u64;
+            tuple.2 = 6u32;
+
+            return tuple;
+        }
+    })
+}
+
 // TODO: This code fails! Why?
 #[allow(dead_code)]
 pub fn allow_mutable_tuple_complicated_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn allow_mutable_tuple_complicated() -> (u64, u64) {
-            let a: u64 = 1 << 40;
+            let a: u64 = 1u64;
             let mut tuple: (u64, u64) = (1u64, 2u64);
             tuple.0 = 3u64;
             let b: u32 = 100;
@@ -486,6 +500,15 @@ mod run_tests {
             &allow_mutable_tuple_complicated_rast(),
             vec![],
             vec![u64_lit(3), u64_lit(4)],
+        );
+    }
+
+    #[test]
+    fn allow_mutable_triplet_test() {
+        compare_prop_with_stack(
+            &allow_mutable_triplet_rast(),
+            vec![],
+            vec![u64_lit(4), u64_lit(5), u32_lit(6)],
         );
     }
 }

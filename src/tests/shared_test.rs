@@ -36,7 +36,7 @@ pub fn graft_check_compile_prop(item_fn: &syn::ItemFn) -> String {
     // type-check and annotate
     annotate_fn(&mut function);
 
-    println!("{function:#?}");
+    // println!("{function:#?}");
 
     // compile
     let tasm = compile(&function);
@@ -63,7 +63,7 @@ pub fn compare_prop_with_stack_and_memory(
         {code}"
     );
 
-    println!("{code}");
+    // println!("{code}");
 
     let mut stack = get_init_tvm_stack();
     for input_arg in input_args {

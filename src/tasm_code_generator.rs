@@ -131,6 +131,18 @@ impl VStack {
         &mut self,
         height: usize,
     ) -> Vec<LabelledInstruction> {
+        /// Code generation for removing elements from the bottom of the stack while preserving
+        /// the order of the values above.
+        fn clear_bottom_of_stack(
+            top_value_size: usize,
+            words_to_remove: usize,
+        ) -> Vec<LabelledInstruction> {
+            match (top_value_size, words_to_remove) {
+                (4, 2) => vec![swap1(), swap3(), swap5(), pop(), swap1(), swap3(), pop()],
+                _ => panic!("Unsupported. Please cover more special cases. Got: {top_value_size}, {words_to_remove}"),
+            }
+        }
+
         let height_of_affected_stack: usize = self.get_stack_height() - height;
         assert!(
             height_of_affected_stack < STACK_SIZE,
@@ -144,9 +156,14 @@ impl VStack {
 
         // Generate code to move value to the bottom of the requested stack range
         let words_to_remove = height_of_affected_stack - top_value_size;
-        let code = if words_to_remove != 0 {
+        let code = if words_to_remove != 0 && top_value_size <= words_to_remove {
             let swap_instruction = Instruction(Swap(words_to_remove.try_into().unwrap()));
             vec![vec![swap_instruction, pop()]; top_value_size].concat()
+        } else if words_to_remove != 0 {
+            // Here, the number of words under the top element is less than the size of
+            // the top element. We special-case this.
+            let clear_bottom_code = clear_bottom_of_stack(top_value_size, words_to_remove);
+            clear_bottom_code
         } else {
             vec![]
         };
