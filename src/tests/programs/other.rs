@@ -248,6 +248,102 @@ pub fn missing_mut_keyword() -> syn::ItemFn {
     ))
 }
 
+#[allow(dead_code)]
+pub fn allow_mutable_tuple_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn allow_mutable_tuple() -> (u64, u64) {
+            let mut tuple: (u64, u64) = (1u64, 2u64);
+            tuple.0 = 3u64;
+            let b: u32 = 100;
+            let c: u32 = 101;
+            tuple.1 = 4u64;
+            let d: (u64, u32) = (1000u64, 2000u32);
+
+            return tuple;
+        }
+    })
+}
+
+// TODO: This code fails! Why?
+#[allow(dead_code)]
+pub fn allow_mutable_tuple_complicated_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn allow_mutable_tuple() -> (u64, u64) {
+            let a: u64 = 1 << 40;
+            let mut tuple: (u64, u64) = (1u64, 2u64);
+            tuple.0 = 3u64;
+            let b: u32 = 100;
+            let c: u32 = 101;
+            tuple.1 = 4u64;
+            let d: (u64, u32) = (1000u64, 2000u32);
+
+            return tuple;
+        }
+    })
+}
+
+#[cfg(test)]
+mod compile_and_typecheck_tests {
+    use super::*;
+    use crate::tests::shared_test::graft_check_compile_prop;
+
+    #[test]
+    fn inferred_literals_test() {
+        graft_check_compile_prop(&inferred_literals());
+    }
+
+    #[test]
+    fn nop_test() {
+        graft_check_compile_prop(&nop_rast());
+    }
+
+    #[test]
+    fn simple_while_loop_test() {
+        graft_check_compile_prop(&simple_while_loop());
+    }
+
+    #[test]
+    fn complicated_while_loop_test() {
+        graft_check_compile_prop(&longer_while_loop());
+    }
+
+    #[test]
+    fn while_loop_with_declarations_test() {
+        graft_check_compile_prop(&while_loop_with_declarations());
+    }
+
+    #[test]
+    fn code_block_test() {
+        graft_check_compile_prop(&code_block());
+    }
+
+    #[test]
+    fn simple_list_support_test() {
+        graft_check_compile_prop(&simple_list_support());
+    }
+
+    #[test]
+    fn tuple_support_test() {
+        graft_check_compile_prop(&tuple_support());
+    }
+
+    #[test]
+    fn mut_list_argument_test() {
+        graft_check_compile_prop(&mut_list_argument());
+    }
+
+    #[should_panic]
+    #[test]
+    fn missing_mut_keyword_test() {
+        graft_check_compile_prop(&missing_mut_keyword());
+    }
+
+    #[test]
+    fn allow_mutable_tuple_test() {
+        graft_check_compile_prop(&allow_mutable_tuple_rast());
+    }
+}
+
 #[cfg(test)]
 mod run_tests {
     use std::collections::HashMap;
@@ -374,61 +470,22 @@ mod run_tests {
             expected_final_memory,
         );
     }
-}
-
-#[cfg(test)]
-mod compile_and_typecheck_tests {
-    use super::*;
-    use crate::tests::shared_test::graft_check_compile_prop;
 
     #[test]
-    fn inferred_literals_test() {
-        graft_check_compile_prop(&inferred_literals());
+    fn allow_mutable_tuple_test() {
+        compare_prop_with_stack(
+            &allow_mutable_tuple_rast(),
+            vec![],
+            vec![u64_lit(3), u64_lit(4)],
+        );
     }
 
     #[test]
-    fn nop_test() {
-        graft_check_compile_prop(&nop_rast());
-    }
-
-    #[test]
-    fn simple_while_loop_test() {
-        graft_check_compile_prop(&simple_while_loop());
-    }
-
-    #[test]
-    fn complicated_while_loop_test() {
-        graft_check_compile_prop(&longer_while_loop());
-    }
-
-    #[test]
-    fn while_loop_with_declarations_test() {
-        graft_check_compile_prop(&while_loop_with_declarations());
-    }
-
-    #[test]
-    fn code_block_test() {
-        graft_check_compile_prop(&code_block());
-    }
-
-    #[test]
-    fn simple_list_support_test() {
-        graft_check_compile_prop(&simple_list_support());
-    }
-
-    #[test]
-    fn tuple_support_test() {
-        graft_check_compile_prop(&tuple_support());
-    }
-
-    #[test]
-    fn mut_list_argument_test() {
-        graft_check_compile_prop(&mut_list_argument());
-    }
-
-    #[should_panic]
-    #[test]
-    fn missing_mut_keyword_test() {
-        graft_check_compile_prop(&missing_mut_keyword());
+    fn allow_mutable_tuple_complicated_test() {
+        compare_prop_with_stack(
+            &allow_mutable_tuple_complicated_rast(),
+            vec![],
+            vec![u64_lit(3), u64_lit(4)],
+        );
     }
 }

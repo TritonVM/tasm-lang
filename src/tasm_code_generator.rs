@@ -62,7 +62,7 @@ impl VStack {
 
         let value_size = size_of(&type_to_remove);
 
-        // Remove the overwritten value from stack
+        // Replace the overwritten value on stack
         let code: Vec<LabelledInstruction> =
             if Into::<usize>::into(stack_position_of_value_to_remove) > 0 {
                 vec![vec![Instruction(Swap(stack_position_of_value_to_remove)), pop()]; value_size]
@@ -75,6 +75,52 @@ impl VStack {
         let old_value = (value_identifier_to_remove.to_owned(), type_to_remove);
         let new_value = (top_element_id, top_element_type);
         self.replace_value(&old_value, new_value);
+
+        code
+    }
+
+    fn replace_tuple_element(
+        &mut self,
+        tuple_identifier: &ValueIdentifier,
+        tuple_index: usize,
+    ) -> Vec<LabelledInstruction> {
+        // This function assumes that the last element of the tuple is placed on top of the stack
+        let (stack_position_of_tuple, tuple_type, _) = self.find_stack_value(tuple_identifier);
+        let element_types = if let ast::DataType::FlatList(ets) = &tuple_type {
+            ets
+        } else {
+            panic!("Original value must have type tuple")
+        };
+
+        let (_top_element_id, _top_element_type) = self.pop().expect("vstack cannot be empty");
+
+        // Last element of tuple is on top of stack. How many machine
+        // words deep is the value we want to replace?
+        let tuple_depth: usize = element_types
+            .iter()
+            .enumerate()
+            .filter(|(i, _x)| *i > tuple_index)
+            .map(|(_i, x)| size_of(x))
+            .sum::<usize>();
+
+        let stack_position_of_value_to_remove =
+            Into::<usize>::into(stack_position_of_tuple) + tuple_depth;
+
+        // Replace the overwritten value on stack
+        let value_size = size_of(&element_types[tuple_index]);
+        let code: Vec<LabelledInstruction> =
+            if Into::<usize>::into(stack_position_of_value_to_remove) > 0 {
+                vec![
+                    vec![
+                        Instruction(Swap(stack_position_of_value_to_remove.try_into().unwrap())),
+                        pop()
+                    ];
+                    value_size
+                ]
+                .concat()
+            } else {
+                vec![]
+            };
 
         code
     }
@@ -255,7 +301,7 @@ impl CompilerState {
     }
 
     /// Restore the vstack to a previous state, representing the state the stack had
-    /// at the beginning of a codeblock.
+    /// at the beginning of a codeblock. Also returns the code to achieve this.
     fn restore_stack_code(
         &mut self,
         previous_stack: &VStack,
@@ -390,47 +436,60 @@ fn compile_stmt(
             expr_code
         }
 
-        ast::Stmt::Assign(ast::AssignStmt { identifier, expr }) => match identifier {
-            ast::Identifier::String(var_name, known_type) => {
-                let data_type = known_type.get_type();
-                let (expr_addr, expr_code) = compile_expr(expr, "assign", &data_type, state);
-                let old_value_identifier = state
-                    .var_addr
-                    .insert(var_name.clone(), expr_addr)
-                    .expect("Value identifier must exist in var_addr");
+        ast::Stmt::Assign(ast::AssignStmt { identifier, expr }) => {
+            let data_type = expr.get_type();
+            let (expr_addr, expr_code) = compile_expr(expr, "assign", &data_type, state);
+            match identifier {
+                ast::Identifier::String(var_name, _known_type) => {
+                    let old_value_identifier = state
+                        .var_addr
+                        .insert(var_name.clone(), expr_addr)
+                        .expect("Value identifier must exist in var_addr");
 
-                // Currently, assignments just get the same place on the stack as the value
-                // that it is overwriting had. This may or may not be efficient.
-                // Get code to overwrite old value, and update the compiler's vstack
-                let overwrite_code = state
-                    .vstack
-                    .overwrite_stack_value_with_same_data_type(&old_value_identifier);
+                    // Currently, assignments just get the same place on the stack as the value
+                    // that it is overwriting had. This may or may not be efficient.
+                    // Get code to overwrite old value, and update the compiler's vstack
+                    let overwrite_code = state
+                        .vstack
+                        .overwrite_stack_value_with_same_data_type(&old_value_identifier);
 
-                vec![expr_code, overwrite_code].concat()
+                    vec![expr_code, overwrite_code].concat()
+                }
+                ast::Identifier::TupleIndex(ident, tuple_index) => {
+                    let var_name =
+                        if let ast::Identifier::String(var_name, _known_type) = *ident.to_owned() {
+                            var_name.to_owned()
+                        } else {
+                            panic!("Nested tuple expressions not yet supported");
+                        };
+
+                    let value_identifier = state.var_addr[&var_name].clone();
+
+                    let overwrite_code = state
+                        .vstack
+                        .replace_tuple_element(&value_identifier, *tuple_index);
+
+                    vec![expr_code, overwrite_code].concat()
+                }
+                ast::Identifier::ListIndex(ident, index_expr) => {
+                    let fn_name =
+                        state.import_snippet(Box::new(tasm_lib::list::unsafe_u32::set::UnsafeSet(
+                            data_type.clone().try_into().unwrap(),
+                        )));
+
+                    let ident_expr = ast::Expr::Var(*ident.to_owned());
+                    let (_ident_addr, ident_code) =
+                        compile_expr(&ident_expr, "ident_on_assign", &data_type, state);
+                    let (_index_expr, index_code) =
+                        compile_expr(index_expr, "index_on_assign", &index_expr.get_type(), state);
+                    state.vstack.pop();
+                    state.vstack.pop();
+                    state.vstack.pop();
+
+                    vec![expr_code, ident_code, index_code, vec![call(fn_name)]].concat()
+                }
             }
-            ast::Identifier::TupleIndex(_, _) => todo!(),
-            ast::Identifier::ListIndex(ident, index_expr) => {
-                let ident_type = ident.get_type();
-                let type_param = ident_type.type_parameter().unwrap_or_else(|| {
-                    panic!("identifier must have type parameter when assigning through indexing")
-                });
-                let fn_name = state.import_snippet(Box::new(
-                    tasm_lib::list::unsafe_u32::set::UnsafeSet(type_param.try_into().unwrap()),
-                ));
-
-                let (_expr_addr, expr_code) = compile_expr(expr, "assign", &expr.get_type(), state);
-                let ident_expr = ast::Expr::Var(*ident.to_owned());
-                let (_ident_addr, ident_code) =
-                    compile_expr(&ident_expr, "ident_on_assign", &ident_type, state);
-                let (_index_expr, index_code) =
-                    compile_expr(index_expr, "index_on_assign", &index_expr.get_type(), state);
-                state.vstack.pop();
-                state.vstack.pop();
-                state.vstack.pop();
-
-                vec![expr_code, ident_code, index_code, vec![call(fn_name)]].concat()
-            }
-        },
+        }
 
         // 'return;': Clean stack
         ast::Stmt::Return(None) => {

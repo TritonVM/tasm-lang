@@ -77,8 +77,9 @@ fn pat_type_to_data_type(rust_type_path: &syn::PatType) -> (ast::DataType, bool)
         syn::Type::Tuple(tuple) => {
             let types = tuple.elems.iter().map(rust_type_to_data_type).collect_vec();
 
-            // TODO: Is the `mutable = false` correct here?
-            (ast::DataType::FlatList(types), false)
+            // I think this is the correct handling interpretation of mutability as long
+            // as we don't allow destructuring for tuple definitions.
+            (ast::DataType::FlatList(types), mutable)
         }
         other_type => panic!("Unsupported {other_type:#?}"),
     }
