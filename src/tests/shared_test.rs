@@ -9,6 +9,26 @@ use crate::graft::graft;
 use crate::tasm_code_generator::compile;
 use crate::types::{self, annotate_fn, Typing};
 
+#[allow(dead_code)]
+pub struct InputOutputTestCase {
+    pub input_args: Vec<ast::ExprLit<Typing>>,
+    pub expected_outputs: Vec<ast::ExprLit<Typing>>,
+}
+
+impl InputOutputTestCase {
+    #[allow(dead_code)]
+    pub fn new(
+        input_args: Vec<ast::ExprLit<Typing>>,
+        expected_outputs: Vec<ast::ExprLit<Typing>>,
+    ) -> Self {
+        Self {
+            input_args,
+            expected_outputs,
+        }
+    }
+}
+
+#[allow(dead_code)]
 pub fn graft_check_compile_prop(item_fn: &syn::ItemFn) -> String {
     // parse test
     let mut function = graft(item_fn);
@@ -16,7 +36,7 @@ pub fn graft_check_compile_prop(item_fn: &syn::ItemFn) -> String {
     // type-check and annotate
     annotate_fn(&mut function);
 
-    println!("{function:#?}");
+    // println!("{function:#?}");
 
     // compile
     let tasm = compile(&function);
@@ -25,6 +45,7 @@ pub fn graft_check_compile_prop(item_fn: &syn::ItemFn) -> String {
     tasm_string
 }
 
+#[allow(dead_code)]
 pub fn compare_prop_with_stack_and_memory(
     item_fn: &syn::ItemFn,
     input_args: Vec<ast::ExprLit<Typing>>,
@@ -42,7 +63,7 @@ pub fn compare_prop_with_stack_and_memory(
         {code}"
     );
 
-    println!("{code}");
+    // println!("{code}");
 
     let mut stack = get_init_tvm_stack();
     for input_arg in input_args {
@@ -108,6 +129,7 @@ pub fn compare_prop_with_stack_and_memory(
     }
 }
 
+#[allow(dead_code)]
 pub fn compare_prop_with_stack(
     item_fn: &syn::ItemFn,
     input_args: Vec<ast::ExprLit<Typing>>,
@@ -122,18 +144,22 @@ pub fn compare_prop_with_stack(
     )
 }
 
+#[allow(dead_code)]
 pub fn bool_lit(value: bool) -> ast::ExprLit<types::Typing> {
     ast::ExprLit::Bool(value)
 }
 
+#[allow(dead_code)]
 pub fn u32_lit(value: u32) -> ast::ExprLit<types::Typing> {
     ast::ExprLit::U32(value)
 }
 
+#[allow(dead_code)]
 pub fn u64_lit(value: u64) -> ast::ExprLit<types::Typing> {
     ast::ExprLit::U64(value)
 }
 
+#[allow(dead_code)]
 pub fn bfe_lit(value: BFieldElement) -> ast::ExprLit<types::Typing> {
     ast::ExprLit::BFE(value)
 }
