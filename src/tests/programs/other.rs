@@ -268,7 +268,7 @@ pub fn allow_mutable_tuple_rast() -> syn::ItemFn {
 #[allow(dead_code)]
 pub fn allow_mutable_tuple_complicated_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
-        fn allow_mutable_tuple() -> (u64, u64) {
+        fn allow_mutable_tuple_complicated() -> (u64, u64) {
             let a: u64 = 1 << 40;
             let mut tuple: (u64, u64) = (1u64, 2u64);
             tuple.0 = 3u64;
