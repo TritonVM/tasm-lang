@@ -46,12 +46,14 @@ pub fn graft_check_compile_prop(item_fn: &syn::ItemFn) -> String {
 }
 
 #[allow(dead_code)]
-pub fn compare_prop_with_stack_and_memory(
+pub fn compare_prop_with_stack_and_memory_and_ins(
     item_fn: &syn::ItemFn,
     input_args: Vec<ast::ExprLit<Typing>>,
     expected_outputs: Vec<ast::ExprLit<Typing>>,
     init_memory: HashMap<BFieldElement, BFieldElement>,
     expected_final_memory: HashMap<BFieldElement, BFieldElement>,
+    std_in: Vec<BFieldElement>,
+    secret_in: Vec<BFieldElement>,
 ) {
     let code = graft_check_compile_prop(item_fn);
     let function_name = item_fn.sig.ident.to_string();
@@ -83,8 +85,8 @@ pub fn compare_prop_with_stack_and_memory(
         &code,
         &mut stack,
         expected_final_stack.len() as isize - init_stack_length as isize,
-        vec![],
-        vec![],
+        std_in,
+        secret_in,
         &mut actual_memory,
     );
 
@@ -127,6 +129,25 @@ pub fn compare_prop_with_stack_and_memory(
             .join(",");
         panic!("Memory must match expected value after execution.\n\nGot: {actual_memory_str}\n\nExpected: {expected_final_memory_str}",)
     }
+}
+
+#[allow(dead_code)]
+pub fn compare_prop_with_stack_and_memory(
+    item_fn: &syn::ItemFn,
+    input_args: Vec<ast::ExprLit<Typing>>,
+    expected_outputs: Vec<ast::ExprLit<Typing>>,
+    init_memory: HashMap<BFieldElement, BFieldElement>,
+    expected_final_memory: HashMap<BFieldElement, BFieldElement>,
+) {
+    compare_prop_with_stack_and_memory_and_ins(
+        item_fn,
+        input_args,
+        expected_outputs,
+        init_memory,
+        expected_final_memory,
+        vec![],
+        vec![],
+    )
 }
 
 #[allow(dead_code)]
