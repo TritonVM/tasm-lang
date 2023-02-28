@@ -12,6 +12,16 @@ pub fn stdin_rast() -> syn::ItemFn {
     })
 }
 
+#[allow(dead_code)]
+pub fn secretin_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn stdin() -> BFieldElement {
+            let res: BFieldElement = tasm::tasm_io_read_secret_bfe();
+            return res;
+        }
+    })
+}
+
 #[cfg(test)]
 mod run_tests {
 
@@ -33,6 +43,20 @@ mod run_tests {
             HashMap::default(),
             vec![my_bfe],
             vec![],
+        )
+    }
+
+    #[test]
+    fn secretin_test() {
+        let my_bfe = BFieldElement::new(42);
+        compare_prop_with_stack_and_memory_and_ins(
+            &secretin_rast(),
+            vec![],
+            vec![bfe_lit(my_bfe)],
+            HashMap::default(),
+            HashMap::default(),
+            vec![],
+            vec![my_bfe],
         )
     }
 }
