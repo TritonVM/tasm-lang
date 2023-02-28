@@ -116,7 +116,7 @@ pub enum BinOp {
 pub enum Expr<T> {
     Lit(ExprLit<T>),
     Var(Identifier<T>),
-    FlatList(Vec<Expr<T>>),
+    Tuple(Vec<Expr<T>>),
     FnCall(FnCall<T>),
     MethodCall(MethodCall<T>),
     Binop(Box<Expr<T>>, BinOp, Box<Expr<T>>, T),
@@ -144,7 +144,7 @@ pub enum DataType {
     XFE,
     Digest,
     List(Box<DataType>),
-    FlatList(Vec<DataType>),
+    Tuple(Vec<DataType>),
 }
 
 impl DataType {
@@ -157,7 +157,7 @@ impl DataType {
     }
 
     pub fn unit() -> Self {
-        Self::FlatList(vec![])
+        Self::Tuple(vec![])
     }
 }
 
@@ -180,7 +180,7 @@ impl TryFrom<DataType> for tasm_lib::snippet::DataType {
                 };
                 Ok(tasm_lib::snippet::DataType::List(Box::new(element_type)))
             },
-            DataType::FlatList(_) => Err("FlatList cannot be converted to a tasm_lib type. Try converting its individual elements".to_string()),
+            DataType::Tuple(_) => Err("Tuple cannot be converted to a tasm_lib type. Try converting its individual elements".to_string()),
         }
     }
 }
@@ -232,7 +232,7 @@ impl Display for DataType {
                 XFE => "XField".to_string(),
                 Digest => "Digest".to_string(),
                 List(ty) => format!("List({ty})"),
-                FlatList(tys) => tys.iter().map(|ty| format!("{ty}")).join(" "),
+                Tuple(tys) => tys.iter().map(|ty| format!("{ty}")).join(" "),
             }
         )
     }

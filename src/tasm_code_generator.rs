@@ -51,7 +51,7 @@ impl VStack {
         tuple_index: usize,
     ) -> (Ord16, ast::DataType) {
         let (tuple_value_position, tuple_type, _) = self.find_stack_value(seek_addr);
-        let element_types = if let ast::DataType::FlatList(ets) = &tuple_type {
+        let element_types = if let ast::DataType::Tuple(ets) = &tuple_type {
             ets
         } else {
             panic!("Expected type was tuple.")
@@ -114,7 +114,7 @@ impl VStack {
     ) -> Vec<LabelledInstruction> {
         // This function assumes that the last element of the tuple is placed on top of the stack
         let (stack_position_of_tuple, tuple_type, _) = self.find_stack_value(tuple_identifier);
-        let element_types = if let ast::DataType::FlatList(ets) = &tuple_type {
+        let element_types = if let ast::DataType::Tuple(ets) = &tuple_type {
             ets
         } else {
             panic!("Original value must have type tuple")
@@ -886,26 +886,26 @@ fn compile_expr(
             }
         },
 
-        ast::Expr::FlatList(exprs) => {
+        ast::Expr::Tuple(exprs) => {
             // Compile arguments left-to-right
             let (idents, code): (Vec<ValueIdentifier>, Vec<Vec<LabelledInstruction>>) = exprs
                 .iter()
                 .enumerate()
                 .map(|(arg_pos, arg_expr)| {
-                    let context = format!("_flat_{arg_pos}");
+                    let context = format!("_tuple_{arg_pos}");
                     compile_expr(arg_expr, &context, &arg_expr.get_type(), state)
                 })
                 .unzip();
 
-            // Combine vstack entries into one FlatList entry
+            // Combine vstack entries into one Tuple entry
             for _ in idents {
                 state.vstack.pop();
             }
 
-            let flat_list_ident = state.new_value_identifier("flat_list_ident", &expr.get_type());
+            let tuple_ident = state.new_value_identifier("tuple_ident", &expr.get_type());
 
             let code = code.concat();
-            (flat_list_ident, code)
+            (tuple_ident, code)
         }
 
         ast::Expr::FnCall(fn_call) => {
@@ -1527,7 +1527,7 @@ fn compile_eq_code(
             vec![call(eq_digest)]
         }
         List(_) => todo!(),
-        FlatList(_) => todo!(),
+        Tuple(_) => todo!(),
     }
 }
 
@@ -1541,7 +1541,7 @@ pub fn size_of(data_type: &ast::DataType) -> usize {
         XFE => 3,
         Digest => 5,
         List(_list_type) => 1,
-        FlatList(tuple_type) => tuple_type.iter().map(size_of).sum(),
+        Tuple(tuple_type) => tuple_type.iter().map(size_of).sum(),
     }
 }
 

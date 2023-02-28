@@ -79,7 +79,7 @@ fn pat_type_to_data_type(rust_type_path: &syn::PatType) -> (ast::DataType, bool)
 
             // I think this is the correct handling interpretation of mutability as long
             // as we don't allow destructuring for tuple definitions.
-            (ast::DataType::FlatList(types), mutable)
+            (ast::DataType::Tuple(types), mutable)
         }
         other_type => panic!("Unsupported {other_type:#?}"),
     }
@@ -147,11 +147,11 @@ fn graft_return_type(rust_return_type: &syn::ReturnType) -> ast::DataType {
                     .map(rust_type_to_data_type)
                     .collect_vec();
 
-                ast::DataType::FlatList(output_elements)
+                ast::DataType::Tuple(output_elements)
             }
             _ => panic!("unsupported: {path:?}"),
         },
-        syn::ReturnType::Default => ast::DataType::FlatList(vec![]),
+        syn::ReturnType::Default => ast::DataType::Tuple(vec![]),
     }
 }
 
@@ -332,7 +332,7 @@ pub fn graft_expr(rust_exp: &syn::Expr) -> ast::Expr<Annotation> {
         }
         syn::Expr::Tuple(tuple_expr) => {
             let exprs = tuple_expr.elems.iter().map(graft_expr).collect_vec();
-            ast::Expr::FlatList(exprs)
+            ast::Expr::Tuple(exprs)
         }
         syn::Expr::Lit(litexp) => {
             let lit = &litexp.lit;
