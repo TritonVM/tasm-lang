@@ -56,8 +56,8 @@ impl<T: GetType> GetType for ast::Expr<T> {
         match self {
             ast::Expr::Lit(lit) => lit.get_type(),
             ast::Expr::Var(id) => id.get_type(),
-            ast::Expr::FlatList(t_list) => {
-                ast::DataType::FlatList(t_list.iter().map(|elem| elem.get_type()).collect())
+            ast::Expr::Tuple(t_list) => {
+                ast::DataType::Tuple(t_list.iter().map(|elem| elem.get_type()).collect())
             }
             ast::Expr::FnCall(fn_call) => fn_call.get_type(),
             ast::Expr::MethodCall(method_call) => method_call.get_type(),
@@ -81,8 +81,8 @@ impl<T: GetType> GetType for ast::Identifier<T> {
             ast::Identifier::TupleIndex(id, idx) => {
                 let rec = id.get_type();
                 match rec {
-                    ast::DataType::FlatList(list) => list[*idx].clone(),
-                    dt => panic!("Type error. Expected FlatList got: {dt:?}"),
+                    ast::DataType::Tuple(list) => list[*idx].clone(),
+                    dt => panic!("Type error. Expected Tuple got: {dt:?}"),
                 }
             }
             ast::Identifier::ListIndex(id, _) => {
@@ -219,7 +219,7 @@ fn annotate_stmt(
         }
 
         ast::Stmt::Return(opt_expr) => match (opt_expr, fn_output) {
-            (None, ast::DataType::FlatList(tys)) => assert_eq!(
+            (None, ast::DataType::Tuple(tys)) => assert_eq!(
                 0,
                 tys.len(),
                 "Return without value; expect {fn_name} to return nothing."
@@ -348,7 +348,7 @@ fn annotate_identifier_type(
             // the type inference generally here.
             let tuple_type = annotate_identifier_type(tuple_identifier, state);
 
-            if let ast::DataType::FlatList(elem_types) = tuple_type.0 {
+            if let ast::DataType::Tuple(elem_types) = tuple_type.0 {
                 if elem_types.len() < *index {
                     panic!(
                         "Cannot index tuple of {} elements with index {}",
@@ -515,13 +515,13 @@ fn derive_annotate_expr_type(
             identifier_type.0
         }
 
-        ast::Expr::FlatList(tuple_exprs) => {
+        ast::Expr::Tuple(tuple_exprs) => {
             let no_hint = None;
             let tuple_types: Vec<ast::DataType> = tuple_exprs
                 .iter_mut()
                 .map(|expr| derive_annotate_expr_type(expr, no_hint, state))
                 .collect();
-            ast::DataType::FlatList(tuple_types)
+            ast::DataType::Tuple(tuple_types)
         }
 
         ast::Expr::FnCall(ast::FnCall {
@@ -849,7 +849,7 @@ pub fn is_primitive_type(data_type: &ast::DataType) -> bool {
 }
 
 pub fn is_void_type(data_type: &ast::DataType) -> bool {
-    if let ast::DataType::FlatList(tys) = data_type {
+    if let ast::DataType::Tuple(tys) = data_type {
         tys.is_empty()
     } else {
         false

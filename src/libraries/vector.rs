@@ -90,8 +90,8 @@ pub fn function_name_to_signature(
 
     let output = match output_types.len() {
         1 => output_types[0].clone(),
-        0 => ast::DataType::FlatList(vec![]),
-        _ => ast::DataType::FlatList(output_types),
+        0 => ast::DataType::Tuple(vec![]),
+        _ => ast::DataType::Tuple(output_types),
     };
 
     ast::FnSignature { name, args, output }
