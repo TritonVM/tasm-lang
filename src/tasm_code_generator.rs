@@ -173,7 +173,7 @@ impl VStack {
 
         let height_of_affected_stack: usize = self.get_stack_height() - height;
         assert!(
-            height_of_affected_stack < STACK_SIZE,
+            height_of_affected_stack <= STACK_SIZE,
             "For now, we only support functions with max {STACK_SIZE} elements on the stack"
         );
 
