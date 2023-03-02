@@ -65,6 +65,38 @@ pub fn stdin_rast_most_types() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
+pub fn stdin_rast_all_types_one_liner() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn all_types_one_liner() -> (bool, u32, u64, BFieldElement, XFieldElement, Digest) {
+            return (
+                tasm::tasm_io_read_stdin_bool(),
+                tasm::tasm_io_read_stdin_u32(),
+                tasm::tasm_io_read_stdin_u64(),
+                tasm::tasm_io_read_stdin_bfe(),
+                tasm::tasm_io_read_stdin_xfe(),
+                tasm::tasm_io_read_stdin_digest()
+            );
+        }
+    })
+}
+
+#[allow(dead_code)]
+pub fn secret_rast_all_types_one_liner() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn all_types_one_liner() -> (bool, u32, u64, BFieldElement, XFieldElement, Digest) {
+            return (
+                tasm::tasm_io_read_secret_bool(),
+                tasm::tasm_io_read_secret_u32(),
+                tasm::tasm_io_read_secret_u64(),
+                tasm::tasm_io_read_secret_bfe(),
+                tasm::tasm_io_read_secret_xfe(),
+                tasm::tasm_io_read_secret_digest()
+            );
+        }
+    })
+}
+
+#[allow(dead_code)]
 pub fn stdin_rast_digest() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn get_digest() -> Digest {
@@ -102,6 +134,7 @@ pub fn secretin_rast_digest() -> syn::ItemFn {
 mod run_tests {
     use super::*;
     use crate::tests::shared_test::*;
+    use rand::random;
     use std::{collections::HashMap, vec};
     use triton_vm::bfield_codec::BFieldCodec;
     use twenty_first::shared_math::{
@@ -188,6 +221,90 @@ mod run_tests {
             vec![
                 my_bfe, my_bfe, my_bfe, my_bfe, my_bfe, my_bfe, my_bfe, my_bfe999,
             ],
+        )
+    }
+
+    #[test]
+    fn stdin_all_types_one_liner_test() {
+        let my_bool = true;
+        let my_u32 = 125241;
+        let my_u64 = 123456789012345u64;
+        let my_bfe = BFieldElement::new(42);
+        let my_xfe = XFieldElement::new([
+            BFieldElement::new(1045),
+            BFieldElement::new(1047),
+            BFieldElement::new(1049),
+        ]);
+        let digest: Digest = random();
+        let mut reversed_xfe = my_xfe.encode();
+        reversed_xfe.reverse();
+        let mut reversed_digest = digest.encode();
+        reversed_digest.reverse();
+        compare_prop_with_stack_and_memory_and_ins(
+            &stdin_rast_all_types_one_liner(),
+            vec![],
+            vec![
+                bool_lit(my_bool),
+                u32_lit(my_u32),
+                u64_lit(my_u64),
+                bfe_lit(my_bfe),
+                xfe_lit(my_xfe),
+                digest_lit(digest),
+            ],
+            HashMap::default(),
+            HashMap::default(),
+            vec![
+                vec![bool_to_bfe(my_bool)],
+                vec![my_u32.into()],
+                split(my_u64),
+                vec![my_bfe],
+                reversed_xfe,
+                reversed_digest,
+            ]
+            .concat(),
+            vec![],
+        )
+    }
+
+    #[test]
+    fn secret_all_types_one_liner_test() {
+        let my_bool = true;
+        let my_u32 = 125241;
+        let my_u64 = 123456789012345u64;
+        let my_bfe = BFieldElement::new(42);
+        let my_xfe = XFieldElement::new([
+            BFieldElement::new(1045),
+            BFieldElement::new(1047),
+            BFieldElement::new(1049),
+        ]);
+        let digest: Digest = random();
+        let mut reversed_xfe = my_xfe.encode();
+        reversed_xfe.reverse();
+        let mut reversed_digest = digest.encode();
+        reversed_digest.reverse();
+        compare_prop_with_stack_and_memory_and_ins(
+            &secret_rast_all_types_one_liner(),
+            vec![],
+            vec![
+                bool_lit(my_bool),
+                u32_lit(my_u32),
+                u64_lit(my_u64),
+                bfe_lit(my_bfe),
+                xfe_lit(my_xfe),
+                digest_lit(digest),
+            ],
+            HashMap::default(),
+            HashMap::default(),
+            vec![],
+            vec![
+                vec![bool_to_bfe(my_bool)],
+                vec![my_u32.into()],
+                split(my_u64),
+                vec![my_bfe],
+                reversed_xfe,
+                reversed_digest,
+            ]
+            .concat(),
         )
     }
 
