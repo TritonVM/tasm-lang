@@ -100,6 +100,32 @@ pub fn right_lineage_length_and_own_height_rast() -> syn::ItemFn {
     })
 }
 
+#[allow(dead_code)]
+pub fn left_sibling_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn left_sibling(node_index: u64, height: u32) -> u64 {
+            return node_index - (1 << (height + 1)) + 1;
+        }
+    })
+}
+
+#[allow(dead_code)]
+pub fn right_sibling_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn right_sibling(node_index: u64, height: u32) -> u64 {
+            return node_index + (1 << (height + 1)) - 1;
+        }
+    })
+}
+#[allow(dead_code)]
+pub fn get_height_from_leaf_index_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn get_height_from_leaf_index(leaf_index: u64) -> u32 {
+            return tasm::tasm_arithmetic_u64_log_2_floor(leaf_index + 1u64);
+        }
+    })
+}
+
 #[cfg(test)]
 mod run_tests {
     use rand::{thread_rng, RngCore};
@@ -237,6 +263,72 @@ mod run_tests {
                 test_case.expected_outputs,
             );
         }
+    }
+
+    #[test]
+    fn left_sibling_test() {
+        fn prop(node_index: u64, height: u32, expected: u64) {
+            compare_prop_with_stack(
+                &left_sibling_rast(),
+                vec![u64_lit(node_index), u32_lit(height)],
+                vec![u64_lit(expected)],
+            )
+        }
+
+        prop(6, 1, 3);
+        prop(2, 0, 1);
+        prop(5, 0, 4);
+        prop(30, 3, 15);
+        prop(29, 2, 22);
+        prop(14, 2, 7);
+    }
+
+    #[test]
+    fn right_sibling_test() {
+        fn prop(node_index: u64, height: u32, expected: u64) {
+            compare_prop_with_stack(
+                &right_sibling_rast(),
+                vec![u64_lit(node_index), u32_lit(height)],
+                vec![u64_lit(expected)],
+            )
+        }
+
+        prop(3, 1, 6);
+        prop(1, 0, 2);
+        prop(4, 0, 5);
+        prop(15, 3, 30);
+        prop(22, 2, 29);
+        prop(7, 2, 14);
+    }
+
+    #[test]
+    fn get_height_from_leaf_index_test() {
+        fn prop(node_index: u64, expected: u32) {
+            compare_prop_with_stack(
+                &get_height_from_leaf_index_rast(),
+                vec![u64_lit(node_index)],
+                vec![u32_lit(expected)],
+            )
+        }
+
+        prop(0, 0);
+        prop(1, 1);
+        prop(2, 1);
+        prop(3, 2);
+        prop(4, 2);
+        prop(5, 2);
+        prop(6, 2);
+        prop(7, 3);
+        prop(8, 3);
+        prop(9, 3);
+        prop((1 << 33) - 2, 32);
+        prop((1 << 33) - 1, 33);
+        prop(1 << 33, 33);
+        prop((1 << 33) + 1, 33);
+        prop((1 << 45) - 2, 44);
+        prop((1 << 45) - 1, 45);
+        prop((1 << 62) - 2, 61);
+        prop((1 << 62) - 1, 62);
     }
 }
 
