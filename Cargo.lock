@@ -392,9 +392,9 @@ dependencies = [
 
 [[package]]
 name = "crossbeam-channel"
-version = "0.5.6"
+version = "0.5.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c2dd04ddaf88237dc3b8d8f9a3c1004b506b54b3313403944054d23c0870c521"
+checksum = "cf2b3e8478797446514c91ef04bafcb59faba183e621ad488df88983cc14128c"
 dependencies = [
  "cfg-if",
  "crossbeam-utils",
@@ -402,9 +402,9 @@ dependencies = [
 
 [[package]]
 name = "crossbeam-deque"
-version = "0.8.2"
+version = "0.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "715e8152b692bba2d374b53d4875445368fdf21a94751410af607a5ac677d1fc"
+checksum = "ce6fd6f855243022dcecf8702fef0c297d4338e226845fe067f6341ad9fa0cef"
 dependencies = [
  "cfg-if",
  "crossbeam-epoch",
@@ -413,9 +413,9 @@ dependencies = [
 
 [[package]]
 name = "crossbeam-epoch"
-version = "0.9.13"
+version = "0.9.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "01a9af1f4c2ef74bb8aa1f7e19706bc72d03598c8a570bb5de72243c7a9d9d5a"
+checksum = "46bd5f3f85273295a9d14aedfb86f6aadbff6d8f5295c4a9edb08e819dcf5695"
 dependencies = [
  "autocfg",
  "cfg-if",
@@ -426,9 +426,9 @@ dependencies = [
 
 [[package]]
 name = "crossbeam-utils"
-version = "0.8.14"
+version = "0.8.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4fb766fa798726286dbbb842f174001dab8abc7b627a1dd86e0b7222a95d929f"
+checksum = "3c063cd8cc95f5c377ed0d4b49a4b21f632396ff690e8470c29b3359b346984b"
 dependencies = [
  "cfg-if",
 ]
@@ -962,9 +962,9 @@ checksum = "2dffe52ecf27772e601905b7522cb4ef790d2cc203488bbd0e2fe85fcb74566d"
 
 [[package]]
 name = "memoffset"
-version = "0.7.1"
+version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5de893c32cde5f383baa4c04c5d6dbdd735cfd4a794b0debdb2bb1b421da5ff4"
+checksum = "d61c719bcfbcf5d62b3a09efa6088de8c54bc0bfcd3ea7ae39fcc186108b8de1"
 dependencies = [
  "autocfg",
 ]
@@ -1801,8 +1801,9 @@ dependencies = [
  "rand 0.8.5",
  "syn",
  "tasm-lib",
- "triton-opcodes",
- "twenty-first",
+ "triton-opcodes 0.14.0 (git+https://github.com/TritonVM/triton-vm.git?branch=master)",
+ "triton-vm 0.14.0",
+ "twenty-first 0.14.1",
 ]
 
 [[package]]
@@ -1817,9 +1818,9 @@ dependencies = [
  "rayon",
  "serde",
  "serde_json",
- "triton-opcodes",
- "triton-vm",
- "twenty-first",
+ "triton-opcodes 0.14.0 (git+https://github.com/TritonVM/triton-vm.git?branch=master)",
+ "triton-vm 0.15.0",
+ "twenty-first 0.14.1",
 ]
 
 [[package]]
@@ -1903,6 +1904,23 @@ dependencies = [
 [[package]]
 name = "triton-opcodes"
 version = "0.14.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e2b992336d142f271e98440932e6947dbb2c838a5ed8bdb3ec61533e17a97d58"
+dependencies = [
+ "anyhow",
+ "itertools",
+ "nom",
+ "num-traits",
+ "rand 0.8.5",
+ "regex",
+ "strum",
+ "strum_macros",
+ "twenty-first 0.14.1",
+]
+
+[[package]]
+name = "triton-opcodes"
+version = "0.14.0"
 source = "git+https://github.com/TritonVM/triton-vm.git?branch=master#c1be5bb92c47e7cb55b11355a33f7b1eb8aeff94"
 dependencies = [
  "anyhow",
@@ -1913,7 +1931,49 @@ dependencies = [
  "regex",
  "strum",
  "strum_macros",
- "twenty-first",
+ "twenty-first 0.14.1",
+]
+
+[[package]]
+name = "triton-profiler"
+version = "0.13.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dc302cde40db3c3c6bf6831bf221062c10077b29301ed3df075c2789b12d07cb"
+dependencies = [
+ "anyhow",
+ "bincode",
+ "blake3",
+ "byteorder",
+ "colored",
+ "console",
+ "criterion",
+ "hashbrown 0.13.2",
+ "itertools",
+ "nom",
+ "num-bigint",
+ "num-traits",
+ "parity-scale-codec",
+ "paw",
+ "phf 0.11.1",
+ "primitive-types 0.12.1",
+ "rand 0.8.5",
+ "rand_chacha 0.3.1",
+ "rand_core 0.6.4",
+ "rand_distr",
+ "rand_pcg",
+ "rayon",
+ "ring",
+ "rusty-leveldb",
+ "serde",
+ "serde-big-array 0.5.0",
+ "serde_derive",
+ "serde_json",
+ "serde_with 2.2.0",
+ "structopt",
+ "strum",
+ "strum_macros",
+ "twenty-first 0.11.0",
+ "unicode-width",
 ]
 
 [[package]]
@@ -1953,8 +2013,52 @@ dependencies = [
  "structopt",
  "strum",
  "strum_macros",
- "twenty-first",
+ "twenty-first 0.14.1",
  "unicode-width",
+]
+
+[[package]]
+name = "triton-vm"
+version = "0.14.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "81f2d9066f34155da0d7801c6b49953f5c3c0b947155c432ea3dbbd980ad5c3d"
+dependencies = [
+ "anyhow",
+ "bincode",
+ "blake3",
+ "byteorder",
+ "colored",
+ "console",
+ "hashbrown 0.13.2",
+ "itertools",
+ "ndarray",
+ "nom",
+ "num-bigint",
+ "num-traits",
+ "parity-scale-codec",
+ "paw",
+ "phf 0.11.1",
+ "primitive-types 0.12.1",
+ "rand 0.8.5",
+ "rand_chacha 0.3.1",
+ "rand_core 0.6.4",
+ "rand_distr",
+ "rand_pcg",
+ "rayon",
+ "regex",
+ "ring",
+ "rusty-leveldb",
+ "serde",
+ "serde-big-array 0.4.1",
+ "serde_derive",
+ "serde_json",
+ "serde_with 2.2.0",
+ "structopt",
+ "strum",
+ "strum_macros",
+ "triton-opcodes 0.14.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "triton-profiler 0.13.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "twenty-first 0.14.1",
 ]
 
 [[package]]
@@ -1994,9 +2098,47 @@ dependencies = [
  "structopt",
  "strum",
  "strum_macros",
- "triton-opcodes",
- "triton-profiler",
- "twenty-first",
+ "triton-opcodes 0.14.0 (git+https://github.com/TritonVM/triton-vm.git?branch=master)",
+ "triton-profiler 0.13.0 (git+https://github.com/TritonVM/triton-vm.git?branch=master)",
+ "twenty-first 0.14.1",
+]
+
+[[package]]
+name = "twenty-first"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e2055db373502fef8bf3dbfe27e1fbc08bb4a3505f1a046a9f7d8f118040afda"
+dependencies = [
+ "anyhow",
+ "bincode",
+ "blake3",
+ "byteorder",
+ "colored",
+ "console",
+ "emojihash-rs",
+ "get-size",
+ "hashbrown 0.12.3",
+ "itertools",
+ "nom",
+ "num-bigint",
+ "num-traits",
+ "parity-scale-codec",
+ "paw",
+ "phf 0.10.1",
+ "primitive-types 0.11.1",
+ "rand 0.8.5",
+ "rand_core 0.6.4",
+ "rand_distr",
+ "rand_pcg",
+ "rayon",
+ "ring",
+ "rusty-leveldb",
+ "serde",
+ "serde-big-array 0.5.0",
+ "serde_derive",
+ "serde_json",
+ "serde_with 1.14.0",
+ "structopt",
 ]
 
 [[package]]
