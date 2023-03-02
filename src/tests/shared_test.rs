@@ -2,6 +2,8 @@ use itertools::Itertools;
 use std::collections::HashMap;
 use tasm_lib::get_init_tvm_stack;
 use twenty_first::shared_math::b_field_element::BFieldElement;
+use twenty_first::shared_math::rescue_prime_digest::Digest;
+use twenty_first::shared_math::x_field_element::XFieldElement;
 use twenty_first::util_types::algebraic_hasher::Hashable;
 
 use crate::ast;
@@ -183,4 +185,14 @@ pub fn u64_lit(value: u64) -> ast::ExprLit<types::Typing> {
 #[allow(dead_code)]
 pub fn bfe_lit(value: BFieldElement) -> ast::ExprLit<types::Typing> {
     ast::ExprLit::BFE(value)
+}
+
+#[allow(dead_code)]
+pub fn xfe_lit(value: XFieldElement) -> ast::ExprLit<types::Typing> {
+    ast::ExprLit::XFE(value)
+}
+
+#[allow(dead_code)]
+pub fn digest_lit(value: Digest) -> ast::ExprLit<types::Typing> {
+    ast::ExprLit::Digest(value)
 }
