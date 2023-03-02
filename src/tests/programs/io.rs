@@ -112,9 +112,9 @@ mod run_tests {
 
     fn bool_to_bfe(b: bool) -> BFieldElement {
         if b {
-            return BFIELD_ONE;
+            BFIELD_ONE
         } else {
-            return BFIELD_ZERO;
+            BFIELD_ZERO
         }
     }
 
