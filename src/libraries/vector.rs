@@ -13,21 +13,21 @@ fn name_to_tasm_lib_snippet(
         type_parameter.clone().map(|x| x.try_into().unwrap());
     match public_name {
         // TODO: Replace with "Vec::with_capacity" and use Safe list implementation
-        "Vec::default" => Some(Box::new(tasm_lib::list::unsafe_u32::new::UnsafeNew(
+        "Vec::default" => Some(Box::new(tasm_lib::list::safe_u32::new::SafeNew(
             tasm_type.unwrap(),
         ))),
-        "default" => Some(Box::new(tasm_lib::list::unsafe_u32::new::UnsafeNew(
+        "default" => Some(Box::new(tasm_lib::list::safe_u32::new::SafeNew(
             tasm_type.unwrap(),
         ))),
-        "push" => Some(Box::new(tasm_lib::list::unsafe_u32::push::UnsafePush(
+        "push" => Some(Box::new(tasm_lib::list::safe_u32::push::SafePush(
             tasm_type.unwrap(),
         ))),
-        "pop" => Some(Box::new(tasm_lib::list::unsafe_u32::pop::UnsafePop(
+        "pop" => Some(Box::new(tasm_lib::list::safe_u32::pop::SafePop(
             tasm_type.unwrap(),
         ))),
-        "len" => Some(Box::new(
-            tasm_lib::list::unsafe_u32::length::UnsafeLengthLong(tasm_type.unwrap()),
-        )),
+        "len" => Some(Box::new(tasm_lib::list::safe_u32::length::SafeLength(
+            tasm_type.unwrap(),
+        ))),
         _ => None,
     }
 }

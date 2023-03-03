@@ -455,20 +455,20 @@ mod run_tests {
 
     #[test]
     fn simple_list_support_test() {
-        use tasm_lib::rust_shadowing_helper_functions::unsafe_list::unsafe_list_new;
-        use tasm_lib::rust_shadowing_helper_functions::unsafe_list::unsafe_list_push;
+        use tasm_lib::rust_shadowing_helper_functions::safe_list::safe_list_new;
+        use tasm_lib::rust_shadowing_helper_functions::safe_list::safe_list_push;
 
         let mut memory = HashMap::default();
         let list_pointer = BFieldElement::one();
-        unsafe_list_new(list_pointer, &mut memory);
+        safe_list_new(list_pointer, 43, &mut memory);
 
         let elem_1 = vec![BFieldElement::new(2000), BFieldElement::new(0)];
-        unsafe_list_push(list_pointer, elem_1.clone(), &mut memory, elem_1.len());
+        safe_list_push(list_pointer, elem_1.clone(), &mut memory, elem_1.len());
 
         let mut expected_final_memory = memory.clone();
         for i in 0..10 {
             let elem_i = vec![BFieldElement::new(i), BFieldElement::new(0)];
-            unsafe_list_push(
+            safe_list_push(
                 list_pointer,
                 elem_i.clone(),
                 &mut expected_final_memory,
