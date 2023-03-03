@@ -2,6 +2,8 @@ use itertools::Itertools;
 use std::collections::HashMap;
 use tasm_lib::get_init_tvm_stack;
 use twenty_first::shared_math::b_field_element::BFieldElement;
+use twenty_first::shared_math::rescue_prime_digest::Digest;
+use twenty_first::shared_math::x_field_element::XFieldElement;
 use twenty_first::util_types::algebraic_hasher::Hashable;
 
 use crate::ast;
@@ -46,12 +48,14 @@ pub fn graft_check_compile_prop(item_fn: &syn::ItemFn) -> String {
 }
 
 #[allow(dead_code)]
-pub fn compare_prop_with_stack_and_memory(
+pub fn compare_prop_with_stack_and_memory_and_ins(
     item_fn: &syn::ItemFn,
     input_args: Vec<ast::ExprLit<Typing>>,
     expected_outputs: Vec<ast::ExprLit<Typing>>,
     init_memory: HashMap<BFieldElement, BFieldElement>,
     expected_final_memory: HashMap<BFieldElement, BFieldElement>,
+    std_in: Vec<BFieldElement>,
+    secret_in: Vec<BFieldElement>,
 ) {
     let code = graft_check_compile_prop(item_fn);
     let function_name = item_fn.sig.ident.to_string();
@@ -83,8 +87,8 @@ pub fn compare_prop_with_stack_and_memory(
         &code,
         &mut stack,
         expected_final_stack.len() as isize - init_stack_length as isize,
-        vec![],
-        vec![],
+        std_in,
+        secret_in,
         &mut actual_memory,
     );
 
@@ -130,6 +134,25 @@ pub fn compare_prop_with_stack_and_memory(
 }
 
 #[allow(dead_code)]
+pub fn compare_prop_with_stack_and_memory(
+    item_fn: &syn::ItemFn,
+    input_args: Vec<ast::ExprLit<Typing>>,
+    expected_outputs: Vec<ast::ExprLit<Typing>>,
+    init_memory: HashMap<BFieldElement, BFieldElement>,
+    expected_final_memory: HashMap<BFieldElement, BFieldElement>,
+) {
+    compare_prop_with_stack_and_memory_and_ins(
+        item_fn,
+        input_args,
+        expected_outputs,
+        init_memory,
+        expected_final_memory,
+        vec![],
+        vec![],
+    )
+}
+
+#[allow(dead_code)]
 pub fn compare_prop_with_stack(
     item_fn: &syn::ItemFn,
     input_args: Vec<ast::ExprLit<Typing>>,
@@ -162,4 +185,14 @@ pub fn u64_lit(value: u64) -> ast::ExprLit<types::Typing> {
 #[allow(dead_code)]
 pub fn bfe_lit(value: BFieldElement) -> ast::ExprLit<types::Typing> {
     ast::ExprLit::BFE(value)
+}
+
+#[allow(dead_code)]
+pub fn xfe_lit(value: XFieldElement) -> ast::ExprLit<types::Typing> {
+    ast::ExprLit::XFE(value)
+}
+
+#[allow(dead_code)]
+pub fn digest_lit(value: Digest) -> ast::ExprLit<types::Typing> {
+    ast::ExprLit::Digest(value)
 }

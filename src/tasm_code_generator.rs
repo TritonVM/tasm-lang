@@ -172,10 +172,6 @@ impl VStack {
         }
 
         let height_of_affected_stack: usize = self.get_stack_height() - height;
-        assert!(
-            height_of_affected_stack < STACK_SIZE,
-            "For now, we only support functions with max {STACK_SIZE} elements on the stack"
-        );
 
         let top_element = self
             .pop()
@@ -184,6 +180,10 @@ impl VStack {
 
         // Generate code to move value to the bottom of the requested stack range
         let words_to_remove = height_of_affected_stack - top_value_size;
+        assert!(
+            words_to_remove <= STACK_SIZE,
+            "Return statement can max remove {STACK_SIZE} elements from the stack. Needs to move: {words_to_remove}"
+        );
         let code = if words_to_remove != 0 && top_value_size <= words_to_remove {
             let swap_instruction = Instruction(Swap(words_to_remove.try_into().unwrap()));
             vec![vec![swap_instruction, pop()]; top_value_size].concat()
