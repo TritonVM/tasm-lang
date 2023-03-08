@@ -96,7 +96,7 @@ pub fn compare_prop_with_stack_and_memory_and_ins(
     assert_eq!(
         expected_final_stack,
         exec_result.final_stack,
-        "Code execution must produce expected stack `{}`. \n\nTVM:\n{}\nExpected:\n{}",
+        "Code execution must produce expected stack `{}`. \n\nActual:\n{}\n\nExpected:\n{}\n",
         function_name,
         exec_result
             .final_stack

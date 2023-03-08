@@ -12,11 +12,8 @@ fn name_to_tasm_lib_snippet(
     let tasm_type: Option<tasm_lib::snippet::DataType> =
         type_parameter.clone().map(|x| x.try_into().unwrap());
     match public_name {
-        // TODO: Replace with "Vec::with_capacity" and use Safe list implementation
-        "Vec::default" => Some(Box::new(tasm_lib::list::safe_u32::new::SafeNew(
-            tasm_type.unwrap(),
-        ))),
-        "default" => Some(Box::new(tasm_lib::list::safe_u32::new::SafeNew(
+        "default" => panic!("Change `Vec::default()` to `Vec::with_capacity(n)`."),
+        "with_capacity" => Some(Box::new(tasm_lib::list::safe_u32::new::SafeNew(
             tasm_type.unwrap(),
         ))),
         "push" => Some(Box::new(tasm_lib::list::safe_u32::push::SafePush(
