@@ -423,6 +423,14 @@ fn derive_annotate_fn_call_args(
     state: &mut CheckState,
 ) {
     let fn_name = &fn_signature.name;
+    assert_eq!(
+        fn_signature.args.len(),
+        args.len(),
+        "Wrong number of arguments in function call to '{}'; expected {} arguments, got {}.",
+        fn_name,
+        fn_signature.args.len(),
+        args.len(),
+    );
     let arg_types: Vec<ast::DataType> = args
         .iter_mut()
         .zip_eq(fn_signature.args.iter())
@@ -431,15 +439,6 @@ fn derive_annotate_fn_call_args(
             derive_annotate_expr_type(arg_expr, arg_hint, state)
         })
         .collect();
-
-    assert_eq!(
-        fn_signature.args.len(),
-        arg_types.len(),
-        "Wrong number of arguments in function call to '{}'; expected {} arguments, got {}.",
-        fn_name,
-        fn_signature.args.len(),
-        arg_types.len(),
-    );
 
     for (arg_pos, (fn_arg, expr_type)) in fn_signature
         .args

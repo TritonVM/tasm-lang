@@ -518,7 +518,7 @@ fn compile_stmt(
                 }
                 ast::Identifier::ListIndex(ident, index_expr) => {
                     let fn_name =
-                        state.import_snippet(Box::new(tasm_lib::list::unsafe_u32::set::UnsafeSet(
+                        state.import_snippet(Box::new(tasm_lib::list::safe_u32::set::SafeSet(
                             data_type.clone().try_into().unwrap(),
                         )));
 
@@ -850,7 +850,7 @@ fn compile_expr(
                     panic!("identifier must have type parameter when reading through indexing")
                 });
                 let fn_name = state.import_snippet(Box::new(
-                    tasm_lib::list::unsafe_u32::get::UnsafeGet(type_param.try_into().unwrap()),
+                    tasm_lib::list::safe_u32::get::SafeGet(type_param.try_into().unwrap()),
                 ));
 
                 let ident_as_string = match *ident.to_owned() {
