@@ -392,9 +392,9 @@ dependencies = [
 
 [[package]]
 name = "crossbeam-channel"
-version = "0.5.6"
+version = "0.5.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c2dd04ddaf88237dc3b8d8f9a3c1004b506b54b3313403944054d23c0870c521"
+checksum = "cf2b3e8478797446514c91ef04bafcb59faba183e621ad488df88983cc14128c"
 dependencies = [
  "cfg-if",
  "crossbeam-utils",
@@ -402,9 +402,9 @@ dependencies = [
 
 [[package]]
 name = "crossbeam-deque"
-version = "0.8.2"
+version = "0.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "715e8152b692bba2d374b53d4875445368fdf21a94751410af607a5ac677d1fc"
+checksum = "ce6fd6f855243022dcecf8702fef0c297d4338e226845fe067f6341ad9fa0cef"
 dependencies = [
  "cfg-if",
  "crossbeam-epoch",
@@ -413,9 +413,9 @@ dependencies = [
 
 [[package]]
 name = "crossbeam-epoch"
-version = "0.9.13"
+version = "0.9.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "01a9af1f4c2ef74bb8aa1f7e19706bc72d03598c8a570bb5de72243c7a9d9d5a"
+checksum = "46bd5f3f85273295a9d14aedfb86f6aadbff6d8f5295c4a9edb08e819dcf5695"
 dependencies = [
  "autocfg",
  "cfg-if",
@@ -426,9 +426,9 @@ dependencies = [
 
 [[package]]
 name = "crossbeam-utils"
-version = "0.8.14"
+version = "0.8.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4fb766fa798726286dbbb842f174001dab8abc7b627a1dd86e0b7222a95d929f"
+checksum = "3c063cd8cc95f5c377ed0d4b49a4b21f632396ff690e8470c29b3359b346984b"
 dependencies = [
  "cfg-if",
 ]
@@ -451,9 +451,9 @@ dependencies = [
 
 [[package]]
 name = "cxx"
-version = "1.0.89"
+version = "1.0.91"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bc831ee6a32dd495436e317595e639a587aa9907bef96fe6e6abc290ab6204e9"
+checksum = "86d3488e7665a7a483b57e25bdd90d0aeb2bc7608c8d0346acf2ad3f1caf1d62"
 dependencies = [
  "cc",
  "cxxbridge-flags",
@@ -463,9 +463,9 @@ dependencies = [
 
 [[package]]
 name = "cxx-build"
-version = "1.0.89"
+version = "1.0.91"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "94331d54f1b1a8895cd81049f7eaaaef9d05a7dcb4d1fd08bf3ff0806246789d"
+checksum = "48fcaf066a053a41a81dfb14d57d99738b767febb8b735c3016e469fac5da690"
 dependencies = [
  "cc",
  "codespan-reporting",
@@ -478,15 +478,15 @@ dependencies = [
 
 [[package]]
 name = "cxxbridge-flags"
-version = "1.0.89"
+version = "1.0.91"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "48dcd35ba14ca9b40d6e4b4b39961f23d835dbb8eed74565ded361d93e1feb8a"
+checksum = "a2ef98b8b717a829ca5603af80e1f9e2e48013ab227b68ef37872ef84ee479bf"
 
 [[package]]
 name = "cxxbridge-macro"
-version = "1.0.89"
+version = "1.0.91"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "81bbeb29798b407ccd82a3324ade1a7286e0d29851475990b612670f6f5124d2"
+checksum = "086c685979a698443656e5cf7856c95c642295a38599f12fb1ff76fb28d19892"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -962,9 +962,9 @@ checksum = "2dffe52ecf27772e601905b7522cb4ef790d2cc203488bbd0e2fe85fcb74566d"
 
 [[package]]
 name = "memoffset"
-version = "0.7.1"
+version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5de893c32cde5f383baa4c04c5d6dbdd735cfd4a794b0debdb2bb1b421da5ff4"
+checksum = "d61c719bcfbcf5d62b3a09efa6088de8c54bc0bfcd3ea7ae39fcc186108b8de1"
 dependencies = [
  "autocfg",
 ]
@@ -997,15 +997,6 @@ checksum = "d273983c5a657a70a3e8f2a01329822f3b8c8172b73826411a55751e404a0a4a"
 dependencies = [
  "memchr",
  "minimal-lexical",
-]
-
-[[package]]
-name = "nom8"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ae01545c9c7fc4486ab7debaf2aad7003ac19431791868fb2e8066df97fad2f8"
-dependencies = [
- "memchr",
 ]
 
 [[package]]
@@ -1098,9 +1089,9 @@ dependencies = [
 
 [[package]]
 name = "once_cell"
-version = "1.17.0"
+version = "1.17.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6f61fba1741ea2b3d6a1e3178721804bb716a68a6aeba1149b5d52e3d464ea66"
+checksum = "b7e5500299e16ebb147ae15a00a942af264cf3688f47923b8fc2cd5858f23ad3"
 
 [[package]]
 name = "oorandom"
@@ -1319,9 +1310,9 @@ dependencies = [
 
 [[package]]
 name = "proc-macro-crate"
-version = "1.3.0"
+version = "1.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "66618389e4ec1c7afe67d51a9bf34ff9236480f8d51e7489b7d5ab0303c13f34"
+checksum = "7f4c021e1093a56626774e81216a4ce732a735e5bad4868a03f3ed65ca0c3919"
 dependencies = [
  "once_cell",
  "toml_edit",
@@ -1603,6 +1594,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "serde-big-array"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f1bb66e1af4481c21cbc943cabb68b98aabb4d7f935e47d1b4de722ca09da0b4"
+dependencies = [
+ "serde",
+]
+
+[[package]]
 name = "serde_derive"
 version = "1.0.152"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1774,9 +1774,9 @@ checksum = "6bdef32e8150c2a081110b42772ffe7d7c9032b606bc226c8260fd97e0976601"
 
 [[package]]
 name = "syn"
-version = "1.0.107"
+version = "1.0.109"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1f4064b5b16e03ae50984a5a8ed5d4f8803e6bc1fd170a3cda91a1be4b18e3f5"
+checksum = "72b64191b275b66ffe2469e8af2c1cfe3bafa67b529ead792a6d0160888b4237"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1801,14 +1801,15 @@ dependencies = [
  "rand 0.8.5",
  "syn",
  "tasm-lib",
- "triton-opcodes",
- "twenty-first",
+ "triton-opcodes 0.14.0 (git+https://github.com/TritonVM/triton-vm.git?branch=master)",
+ "triton-vm 0.14.0",
+ "twenty-first 0.14.1",
 ]
 
 [[package]]
 name = "tasm-lib"
 version = "0.1.0"
-source = "git+https://github.com/TritonVM/tasm-lib#4c436922cc04c01f78c8e0fd38c13dbbb4c69a78"
+source = "git+https://github.com/TritonVM/tasm-lib#095a35c814ae23409a47cd0d89bf31cccf955bca"
 dependencies = [
  "itertools",
  "num",
@@ -1817,9 +1818,9 @@ dependencies = [
  "rayon",
  "serde",
  "serde_json",
- "triton-opcodes",
- "triton-vm",
- "twenty-first",
+ "triton-opcodes 0.14.0 (git+https://github.com/TritonVM/triton-vm.git?branch=master)",
+ "triton-vm 0.15.0",
+ "twenty-first 0.14.1",
 ]
 
 [[package]]
@@ -1848,9 +1849,9 @@ checksum = "222a222a5bfe1bba4a77b45ec488a741b3cb8872e5e499451fd7d0129c9c7c3d"
 
 [[package]]
 name = "time"
-version = "0.3.17"
+version = "0.3.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a561bf4617eebd33bca6434b988f39ed798e527f51a1e797d0ee4f61c0a38376"
+checksum = "cd0cbfecb4d19b5ea75bb31ad904eb5b9fa13f21079c3b92017ebdf4999a5890"
 dependencies = [
  "itoa",
  "serde",
@@ -1866,9 +1867,9 @@ checksum = "2e153e1f1acaef8acc537e68b44906d2db6436e2b35ac2c6b42640fff91f00fd"
 
 [[package]]
 name = "time-macros"
-version = "0.2.6"
+version = "0.2.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d967f99f534ca7e495c575c62638eebc2898a8c84c119b89e250477bc4ba16b2"
+checksum = "fd80a657e71da814b8e5d60d3374fc6d35045062245d80224748ae522dd76f36"
 dependencies = [
  "time-core",
 ]
@@ -1885,25 +1886,26 @@ dependencies = [
 
 [[package]]
 name = "toml_datetime"
-version = "0.5.1"
+version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4553f467ac8e3d374bc9a177a26801e5d0f9b211aa1673fb137a403afd1c9cf5"
+checksum = "3ab8ed2edee10b50132aed5f331333428b011c99402b5a534154ed15746f9622"
 
 [[package]]
 name = "toml_edit"
-version = "0.18.1"
+version = "0.19.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "56c59d8dd7d0dcbc6428bf7aa2f0e823e26e43b3c9aca15bbc9475d23e5fa12b"
+checksum = "9a1eb0622d28f4b9c90adc4ea4b2b46b47663fde9ac5fafcb14a1369d5508825"
 dependencies = [
  "indexmap",
- "nom8",
  "toml_datetime",
+ "winnow",
 ]
 
 [[package]]
 name = "triton-opcodes"
 version = "0.14.0"
-source = "git+https://github.com/TritonVM/triton-vm.git?branch=master#022245b76bb83551426715062ea33e7a6210ddce"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e2b992336d142f271e98440932e6947dbb2c838a5ed8bdb3ec61533e17a97d58"
 dependencies = [
  "anyhow",
  "itertools",
@@ -1913,13 +1915,30 @@ dependencies = [
  "regex",
  "strum",
  "strum_macros",
- "twenty-first",
+ "twenty-first 0.14.1",
+]
+
+[[package]]
+name = "triton-opcodes"
+version = "0.14.0"
+source = "git+https://github.com/TritonVM/triton-vm.git?branch=master#c1be5bb92c47e7cb55b11355a33f7b1eb8aeff94"
+dependencies = [
+ "anyhow",
+ "itertools",
+ "nom",
+ "num-traits",
+ "rand 0.8.5",
+ "regex",
+ "strum",
+ "strum_macros",
+ "twenty-first 0.14.1",
 ]
 
 [[package]]
 name = "triton-profiler"
 version = "0.13.0"
-source = "git+https://github.com/TritonVM/triton-vm.git?branch=master#022245b76bb83551426715062ea33e7a6210ddce"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dc302cde40db3c3c6bf6831bf221062c10077b29301ed3df075c2789b12d07cb"
 dependencies = [
  "anyhow",
  "bincode",
@@ -1946,15 +1965,100 @@ dependencies = [
  "ring",
  "rusty-leveldb",
  "serde",
- "serde-big-array",
+ "serde-big-array 0.5.0",
  "serde_derive",
  "serde_json",
  "serde_with 2.2.0",
  "structopt",
  "strum",
  "strum_macros",
- "twenty-first",
+ "twenty-first 0.11.0",
  "unicode-width",
+]
+
+[[package]]
+name = "triton-profiler"
+version = "0.13.0"
+source = "git+https://github.com/TritonVM/triton-vm.git?branch=master#c1be5bb92c47e7cb55b11355a33f7b1eb8aeff94"
+dependencies = [
+ "anyhow",
+ "bincode",
+ "blake3",
+ "byteorder",
+ "colored",
+ "console",
+ "criterion",
+ "hashbrown 0.13.2",
+ "itertools",
+ "nom",
+ "num-bigint",
+ "num-traits",
+ "parity-scale-codec",
+ "paw",
+ "phf 0.11.1",
+ "primitive-types 0.12.1",
+ "rand 0.8.5",
+ "rand_chacha 0.3.1",
+ "rand_core 0.6.4",
+ "rand_distr",
+ "rand_pcg",
+ "rayon",
+ "ring",
+ "rusty-leveldb",
+ "serde",
+ "serde-big-array 0.5.0",
+ "serde_derive",
+ "serde_json",
+ "serde_with 2.2.0",
+ "structopt",
+ "strum",
+ "strum_macros",
+ "twenty-first 0.14.1",
+ "unicode-width",
+]
+
+[[package]]
+name = "triton-vm"
+version = "0.14.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "81f2d9066f34155da0d7801c6b49953f5c3c0b947155c432ea3dbbd980ad5c3d"
+dependencies = [
+ "anyhow",
+ "bincode",
+ "blake3",
+ "byteorder",
+ "colored",
+ "console",
+ "hashbrown 0.13.2",
+ "itertools",
+ "ndarray",
+ "nom",
+ "num-bigint",
+ "num-traits",
+ "parity-scale-codec",
+ "paw",
+ "phf 0.11.1",
+ "primitive-types 0.12.1",
+ "rand 0.8.5",
+ "rand_chacha 0.3.1",
+ "rand_core 0.6.4",
+ "rand_distr",
+ "rand_pcg",
+ "rayon",
+ "regex",
+ "ring",
+ "rusty-leveldb",
+ "serde",
+ "serde-big-array 0.4.1",
+ "serde_derive",
+ "serde_json",
+ "serde_with 2.2.0",
+ "structopt",
+ "strum",
+ "strum_macros",
+ "triton-opcodes 0.14.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "triton-profiler 0.13.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "twenty-first 0.14.1",
 ]
 
 [[package]]
@@ -1987,16 +2091,54 @@ dependencies = [
  "ring",
  "rusty-leveldb",
  "serde",
- "serde-big-array",
+ "serde-big-array 0.4.1",
  "serde_derive",
  "serde_json",
  "serde_with 2.2.0",
  "structopt",
  "strum",
  "strum_macros",
- "triton-opcodes",
- "triton-profiler",
- "twenty-first",
+ "triton-opcodes 0.14.0 (git+https://github.com/TritonVM/triton-vm.git?branch=master)",
+ "triton-profiler 0.13.0 (git+https://github.com/TritonVM/triton-vm.git?branch=master)",
+ "twenty-first 0.14.1",
+]
+
+[[package]]
+name = "twenty-first"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e2055db373502fef8bf3dbfe27e1fbc08bb4a3505f1a046a9f7d8f118040afda"
+dependencies = [
+ "anyhow",
+ "bincode",
+ "blake3",
+ "byteorder",
+ "colored",
+ "console",
+ "emojihash-rs",
+ "get-size",
+ "hashbrown 0.12.3",
+ "itertools",
+ "nom",
+ "num-bigint",
+ "num-traits",
+ "parity-scale-codec",
+ "paw",
+ "phf 0.10.1",
+ "primitive-types 0.11.1",
+ "rand 0.8.5",
+ "rand_core 0.6.4",
+ "rand_distr",
+ "rand_pcg",
+ "rayon",
+ "ring",
+ "rusty-leveldb",
+ "serde",
+ "serde-big-array 0.5.0",
+ "serde_derive",
+ "serde_json",
+ "serde_with 1.14.0",
+ "structopt",
 ]
 
 [[package]]
@@ -2030,7 +2172,7 @@ dependencies = [
  "ring",
  "rusty-leveldb",
  "serde",
- "serde-big-array",
+ "serde-big-array 0.5.0",
  "serde_derive",
  "serde_json",
  "serde_with 1.14.0",
@@ -2265,6 +2407,15 @@ name = "windows_x86_64_msvc"
 version = "0.42.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "447660ad36a13288b1db4d4248e857b510e8c3a225c822ba4fb748c0aafecffd"
+
+[[package]]
+name = "winnow"
+version = "0.3.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "faf09497b8f8b5ac5d3bb4d05c0a99be20f26fd3d5f2db7b0716e946d5103658"
+dependencies = [
+ "memchr",
+]
 
 [[package]]
 name = "wyz"
