@@ -543,18 +543,17 @@ mod run_tests {
 
         let inputs = vec![];
         let outputs = vec![
-            bfe_lit(BFieldElement::one()),
-            u32_lit(1000),
-            u32_lit(2000),
+            bfe_lit(BFieldElement::new(1)),
             bfe_lit(BFieldElement::new(2)),
-            u64_lit(3000),
+            bfe_lit(BFieldElement::new(16 + 2 + 1)),
+            bfe_lit(BFieldElement::new(1)),
         ];
 
         let mut memory: HashMap<BFieldElement, BFieldElement> = HashMap::default();
 
         // Free-pointer
         assert!(memory
-            .insert(BFieldElement::zero(), BFieldElement::new(100),)
+            .insert(BFieldElement::zero(), BFieldElement::new(53))
             .is_none());
 
         let list_pointer_a = BFieldElement::one();
