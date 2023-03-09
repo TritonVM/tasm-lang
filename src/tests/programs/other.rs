@@ -87,7 +87,7 @@ pub fn inferred_literals() -> syn::ItemFn {
             }
 
             {
-                let mut arr: Vec<u64> = Vec::<u64>::default();
+                let mut arr: Vec<u64> = Vec::<u64>::with_capacity(16u32);
                 arr[0] = b;
                 arr[a] = b + 1;
                 arr[2 * a + 3] = 1 << (4 / a + 5);
@@ -194,7 +194,7 @@ pub fn code_block() -> syn::ItemFn {
 pub fn simple_list_support() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn make_short_list() -> (Vec<u64>, u32, u64, u64) {
-            let mut a: Vec<u64> = Vec::<u64>::default();
+            let mut a: Vec<u64> = Vec::<u64>::with_capacity(17);
             a.push(2000u64);
             a.push(3000u64);
             a.push(4000u64);
@@ -292,6 +292,23 @@ pub fn allow_mutable_tuple_complicated_rast() -> syn::ItemFn {
             let d: (u64, u32) = (1000u64, 2000u32);
 
             return tuple;
+        }
+    })
+}
+
+#[allow(dead_code)]
+pub fn polymorphic_vectors_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn polymorphic_vectors() -> (Vec<u32>, u32, Vec<u64>, u32) {
+            let mut a: Vec<u32> = Vec::<u32>::with_capacity(16);
+            let mut b: Vec<u64> = Vec::<u64>::with_capacity(16);
+            a.push(1000u32);
+            a.push(2000u32);
+            b.push(3000u64);
+            let a_len: u32 = a.len() as u32;
+            let b_len: u32 = b.len() as u32;
+
+            return (a, a_len, b, b_len);
         }
     })
 }
@@ -409,32 +426,39 @@ mod run_tests {
 
     #[test]
     fn simple_list_support_run_test() {
-        use tasm_lib::rust_shadowing_helper_functions::unsafe_list::unsafe_list_new;
-        use tasm_lib::rust_shadowing_helper_functions::unsafe_list::unsafe_list_push;
-        use tasm_lib::rust_shadowing_helper_functions::unsafe_list::unsafe_list_set_length;
+        use tasm_lib::rust_shadowing_helper_functions::safe_list::safe_list_new;
+        use tasm_lib::rust_shadowing_helper_functions::safe_list::safe_list_push;
 
         let inputs = vec![];
         let outputs = vec![
-            bfe_lit(BFieldElement::zero()),
+            bfe_lit(BFieldElement::one()),
             u32_lit(2),
             u64_lit(4000),
             u64_lit(2000),
         ];
 
-        let mut memory = HashMap::default();
-        let list_pointer = BFieldElement::zero();
-        unsafe_list_new(list_pointer, &mut memory);
+        let mut memory: HashMap<BFieldElement, BFieldElement> = HashMap::default();
+
+        // Free-pointer
+        let elem_0 = vec![BFieldElement::new(37), BFieldElement::new(0)];
+        assert!(memory.insert(BFieldElement::zero(), elem_0[0]).is_none());
+
+        let list_pointer = BFieldElement::one();
+        safe_list_new(list_pointer, 17, &mut memory);
 
         let elem_1 = vec![BFieldElement::new(2000), BFieldElement::new(0)];
-        unsafe_list_push(list_pointer, elem_1.clone(), &mut memory, elem_1.len());
+        safe_list_push(list_pointer, elem_1.clone(), &mut memory, elem_1.len());
 
         let elem_2 = vec![BFieldElement::new(5000), BFieldElement::new(0)];
-        unsafe_list_push(list_pointer, elem_2.clone(), &mut memory, elem_2.len());
+        safe_list_push(list_pointer, elem_2.clone(), &mut memory, elem_2.len());
 
         let elem_3 = vec![BFieldElement::new(4000), BFieldElement::new(0)];
-        unsafe_list_push(list_pointer, elem_3.clone(), &mut memory, elem_3.len());
+        safe_list_push(list_pointer, elem_3.clone(), &mut memory, elem_3.len());
 
-        unsafe_list_set_length(list_pointer, 2, &mut memory);
+        // We do not have an equivalent to `unsafe_list_set_length`.
+        assert!(memory
+            .insert(list_pointer, BFieldElement::new(2_u64))
+            .is_some());
 
         let input_memory = HashMap::default();
         compare_prop_with_stack_and_memory(
@@ -455,20 +479,20 @@ mod run_tests {
 
     #[test]
     fn simple_list_support_test() {
-        use tasm_lib::rust_shadowing_helper_functions::unsafe_list::unsafe_list_new;
-        use tasm_lib::rust_shadowing_helper_functions::unsafe_list::unsafe_list_push;
+        use tasm_lib::rust_shadowing_helper_functions::safe_list::safe_list_new;
+        use tasm_lib::rust_shadowing_helper_functions::safe_list::safe_list_push;
 
         let mut memory = HashMap::default();
         let list_pointer = BFieldElement::one();
-        unsafe_list_new(list_pointer, &mut memory);
+        safe_list_new(list_pointer, 43, &mut memory);
 
         let elem_1 = vec![BFieldElement::new(2000), BFieldElement::new(0)];
-        unsafe_list_push(list_pointer, elem_1.clone(), &mut memory, elem_1.len());
+        safe_list_push(list_pointer, elem_1.clone(), &mut memory, elem_1.len());
 
         let mut expected_final_memory = memory.clone();
         for i in 0..10 {
             let elem_i = vec![BFieldElement::new(i), BFieldElement::new(0)];
-            unsafe_list_push(
+            safe_list_push(
                 list_pointer,
                 elem_i.clone(),
                 &mut expected_final_memory,
@@ -509,6 +533,51 @@ mod run_tests {
             &allow_mutable_triplet_rast(),
             vec![],
             vec![u64_lit(4), u64_lit(5), u32_lit(6)],
+        );
+    }
+
+    #[test]
+    fn polymorphic_vectors_test() {
+        use tasm_lib::rust_shadowing_helper_functions::safe_list::safe_list_new;
+        use tasm_lib::rust_shadowing_helper_functions::safe_list::safe_list_push;
+
+        let inputs = vec![];
+        let outputs = vec![
+            bfe_lit(BFieldElement::new(1)),
+            bfe_lit(BFieldElement::new(2)),
+            bfe_lit(BFieldElement::new(16 + 2 + 1)),
+            bfe_lit(BFieldElement::new(1)),
+        ];
+
+        let mut memory: HashMap<BFieldElement, BFieldElement> = HashMap::default();
+
+        // Free-pointer
+        assert!(memory
+            .insert(BFieldElement::zero(), BFieldElement::new(53))
+            .is_none());
+
+        let list_pointer_a = BFieldElement::one();
+        safe_list_new(list_pointer_a, 16, &mut memory);
+
+        let list_pointer_b = BFieldElement::new(16 + 2 + 1);
+        safe_list_new(list_pointer_b, 16, &mut memory);
+
+        let elem_1 = vec![BFieldElement::new(1000)];
+        safe_list_push(list_pointer_a, elem_1.clone(), &mut memory, elem_1.len());
+
+        let elem_2 = vec![BFieldElement::new(2000)];
+        safe_list_push(list_pointer_a, elem_2.clone(), &mut memory, elem_2.len());
+
+        let elem_3 = vec![BFieldElement::new(3000), BFieldElement::new(0)];
+        safe_list_push(list_pointer_b, elem_3.clone(), &mut memory, elem_3.len());
+
+        let input_memory = HashMap::default();
+        compare_prop_with_stack_and_memory(
+            &polymorphic_vectors_rast(),
+            inputs,
+            outputs,
+            input_memory,
+            memory,
         );
     }
 }
