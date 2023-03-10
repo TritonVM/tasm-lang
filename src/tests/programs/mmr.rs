@@ -33,6 +33,49 @@ pub fn leftmost_ancestor_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
+pub fn leaf_index_to_mt_index_and_peak_index_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn leaf_index_to_mt_index_and_peak_index(leaf_index: u64, leaf_count: u64) -> (u64, u32) {
+
+            /*
+            assert!(
+                leaf_index < leaf_count,
+                "Leaf index must be stricly smaller than leaf count"
+            );
+            */
+
+            // a) Get the index as if this was a Merkle tree
+            let discrepancies: u64 = leaf_index ^ leaf_count;
+            //let local_mt_height: u64 = log_2_floor(discrepancies as u128);
+            let local_mt_height: u32 = tasm::tasm_arithmetic_u64_log_2_floor(discrepancies);
+            //let local_mt_leaf_count: u64  = 2u64.pow(local_mt_height as u32);
+            let local_mt_leaf_count: u64  = 2 << local_mt_height;
+            let remainder_bitmask: u64 = local_mt_leaf_count - 1;
+            let local_leaf_index: u64 = remainder_bitmask & leaf_index;
+            let mt_index: u64 = local_leaf_index + local_mt_leaf_count;
+
+            // b) Find the peak_index (in constant time)
+            //let all_the_ones: u32 = leaf_count.count_ones();
+            let mut all_the_ones_u64: u64 = 0;
+            let mut lc: u64 = leaf_count;
+            while 0u64 < lc {
+                all_the_ones_u64 += lc & 1u64;
+                lc = (lc >> 1u64) as u64;
+            }
+            let all_the_ones: u32 = all_the_ones_u64 as u32;
+
+            //let ones_to_subtract: u32 = (leaf_count & remainder_bitmask).count_ones();
+            let to_subtract: u32 = leaf_count & remainder_bitmask;
+            let ones_to_subtract: u32 = to_subtract.count_ones();
+            let peak_index: u32 = all_the_ones - ones_to_subtract - 1;
+
+
+            return (mt_index, peak_index);
+        }
+    })
+}
+
+#[allow(dead_code)]
 pub fn right_lineage_length_stmt_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         pub fn right_lineage_length(node_index: u64) -> u32 {
@@ -269,5 +312,10 @@ mod compile_and_typecheck_tests {
     #[test]
     fn right_lineage_length_and_own_height_test() {
         graft_check_compile_prop(&right_lineage_length_and_own_height_rast());
+    }
+
+    #[test]
+    fn leaf_index_to_mt_index_and_peak_index_test() {
+        graft_check_compile_prop(&leaf_index_to_mt_index_and_peak_index_rast());
     }
 }
