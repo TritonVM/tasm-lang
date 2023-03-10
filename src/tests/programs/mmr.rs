@@ -47,28 +47,39 @@ pub fn leaf_index_to_mt_index_and_peak_index_rast() -> syn::ItemFn {
             // a) Get the index as if this was a Merkle tree
             let discrepancies: u64 = leaf_index ^ leaf_count;
             //let local_mt_height: u64 = log_2_floor(discrepancies as u128);
-            let local_mt_height: u32 = tasm::tasm_arithmetic_u64_log_2_floor(discrepancies);
-            //let local_mt_leaf_count: u64  = 2u64.pow(local_mt_height as u32);
-            let local_mt_leaf_count: u64  = 2 << local_mt_height;
+            //let local_mt_height: u32 = tasm::tasm_arithmetic_u64_log_2_floor(discrepancies);
+            let local_mt_height_u32: u32 = tasm::tasm_arithmetic_u64_log_2_floor(discrepancies);
+            let local_mt_height: u64 = local_mt_height_u32 as u64;
+
+            let local_mt_leaf_count: u64 = tasm::tasm_arithmetic_u64_pow2(local_mt_height_u32);
             let remainder_bitmask: u64 = local_mt_leaf_count - 1;
             let local_leaf_index: u64 = remainder_bitmask & leaf_index;
             let mt_index: u64 = local_leaf_index + local_mt_leaf_count;
 
             // b) Find the peak_index (in constant time)
             //let all_the_ones: u32 = leaf_count.count_ones();
-            let mut all_the_ones_u64: u64 = 0;
-            let mut lc: u64 = leaf_count;
-            while 0u64 < lc {
-                all_the_ones_u64 += lc & 1u64;
-                lc = (lc >> 1u64) as u64;
+
+            // .count_ones()
+            let mut all_the_ones: u32 = 0u32;
+            let mut tmp1: u64 = leaf_count;
+            while 0u64 < tmp1 {
+                all_the_ones += (tmp1 & 1u64) as u32;
+                // Shift operators are only defined for u32.
+                tmp1 >>= 1u32;
             }
-            let all_the_ones: u32 = all_the_ones_u64 as u32;
 
             //let ones_to_subtract: u32 = (leaf_count & remainder_bitmask).count_ones();
-            let to_subtract: u32 = leaf_count & remainder_bitmask;
-            let ones_to_subtract: u32 = to_subtract.count_ones();
+            let mut tmp2: u64 = leaf_count & remainder_bitmask;
+            // .count_ones()
+            let mut ones_to_subtract: u32 = 0u32;
+            while 0u64 < tmp2 {
+                ones_to_subtract += (tmp2 & 1u64) as u32;
+                tmp2 >>= 1u32;
+            }
+
             let peak_index: u32 = all_the_ones - ones_to_subtract - 1;
 
+            //let HELPER: u64 = 1 << 1u64;
 
             return (mt_index, peak_index);
         }
