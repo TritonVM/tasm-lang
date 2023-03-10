@@ -33,6 +33,44 @@ pub fn leftmost_ancestor_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
+pub fn leaf_index_to_mt_index_and_peak_index_rast_loops_reduced() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn leaf_index_to_mt_index_and_peak_index(leaf_index: u64, leaf_count: u64) -> (u64, u32) {
+
+            // a) Get the index as if this was a Merkle tree
+            let local_mt_height_u32: u32 = tasm::tasm_arithmetic_u64_log_2_floor(leaf_index ^ leaf_count);
+            let local_mt_leaf_count: u64 = tasm::tasm_arithmetic_u64_pow2(local_mt_height_u32);
+            let remainder_bitmask: u64 = local_mt_leaf_count - 1;
+            let mt_index: u64 = (remainder_bitmask & leaf_index) as u64 + local_mt_leaf_count;
+
+            // b) Find the peak_index (in constant time)
+            //let all_the_ones: u32 = leaf_count.count_ones();
+
+            // TODO: Use .count_ones() / popcount when available
+            // the following two loops can probably be merged.
+            // .count_ones()
+            let mut peak_index: u32 = 0u32;
+            let mut tmp: u64 = leaf_count;
+            while 0u64 < tmp {
+                peak_index += (tmp & 1u64) as u32;
+                tmp >>= 1u32;
+            }
+
+            //let ones_to_subtract: u32 = (leaf_count & remainder_bitmask).count_ones();
+            tmp = leaf_count & remainder_bitmask;
+            // .count_ones()
+            while 0u64 < tmp {
+                peak_index -= (tmp & 1u64) as u32;
+                tmp >>= 1u32;
+            }
+
+            peak_index -= 1u32;
+            return (mt_index, peak_index);
+        }
+    })
+}
+
+#[allow(dead_code)]
 pub fn right_lineage_length_stmt_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         pub fn right_lineage_length(node_index: u64) -> u32 {
@@ -238,6 +276,119 @@ mod run_tests {
             );
         }
     }
+
+    #[test]
+    fn leaf_index_to_mt_index_run_test() {
+        fn check((out1, out2): (u64, u32), (leaf_count, leaf_index): (u64, u64)) {
+            let inputs = vec![u64_lit(leaf_count), u64_lit(leaf_index)];
+            let outputs = vec![u64_lit(out1), u32_lit(out2)];
+            compare_prop_with_stack(
+                &leaf_index_to_mt_index_and_peak_index_rast_loops_reduced(),
+                inputs,
+                outputs,
+            );
+        }
+
+        // Leaf count = 1
+        check((1, 0), (0, 1));
+
+        // Leaf count = 2
+        check((2, 0), (0, 2));
+        check((2, 0), (0, 2));
+        check((3, 0), (1, 2));
+
+        // Leaf count = 3
+        check((2, 0), (0, 3));
+        check((3, 0), (1, 3));
+        check((1, 1), (2, 3));
+
+        // Leaf count = 4
+        check((4, 0), (0, 4));
+        check((5, 0), (1, 4));
+        check((6, 0), (2, 4));
+        check((7, 0), (3, 4));
+
+        // Leaf count = 14
+        check((8, 0), (0, 14));
+        check((9, 0), (1, 14));
+        check((10, 0), (2, 14));
+        check((11, 0), (3, 14));
+        check((12, 0), (4, 14));
+        check((13, 0), (5, 14));
+        check((14, 0), (6, 14));
+        check((15, 0), (7, 14));
+        check((4, 1), (8, 14));
+        check((5, 1), (9, 14));
+        check((6, 1), (10, 14));
+        check((7, 1), (11, 14));
+        check((7, 1), (11, 14));
+
+        // Leaf count = 22
+        check((16, 0), (0, 23));
+        check((17, 0), (1, 23));
+        check((18, 0), (2, 23));
+        check((19, 0), (3, 23));
+        check((30, 0), (14, 23));
+        check((31, 0), (15, 23));
+        check((4, 1), (16, 23));
+        check((5, 1), (17, 23));
+        check((6, 1), (18, 23));
+        check((7, 1), (19, 23));
+        check((2, 2), (20, 23));
+        check((3, 2), (21, 23));
+        check((1, 3), (22, 23));
+
+        // Leaf count = 32
+        for i in 0..32 {
+            check((32 + i, 0), (i, 32));
+        }
+
+        // Leaf count = 33
+        for i in 0..32 {
+            check((32 + i, 0), (i, 33));
+        }
+        check((1, 1), (32, 33));
+
+        // Leaf count = 34
+        for i in 0..32 {
+            check((32 + i, 0), (i, 34));
+        }
+        check((2, 1), (32, 34));
+        check((3, 1), (33, 34));
+
+        // Leaf count = 35
+        for i in 0..32 {
+            check((32 + i, 0), (i, 35));
+        }
+        check((2, 1), (32, 35));
+        check((3, 1), (33, 35));
+        check((1, 2), (34, 35));
+
+        // Leaf count = 36
+        for i in 0..32 {
+            check((32 + i, 0), (i, 36));
+        }
+        check((4, 1), (32, 36));
+        check((5, 1), (33, 36));
+        check((6, 1), (34, 36));
+        check((7, 1), (35, 36));
+
+        // Leaf count = 37
+        for i in 0..32 {
+            check((32 + i, 0), (i, 37));
+        }
+        check((4, 1), (32, 37));
+        check((5, 1), (33, 37));
+        check((6, 1), (34, 37));
+        check((7, 1), (35, 37));
+        check((1, 2), (36, 37));
+
+        for i in 10..63 {
+            check((14 + (1 << i), 0), (14, 1 << i));
+            check((3, 2), ((1 << i) + 9, (1 << i) + 11));
+            check((1, 3), ((1 << i) + 10, (1 << i) + 11));
+        }
+    }
 }
 
 #[cfg(test)]
@@ -269,5 +420,10 @@ mod compile_and_typecheck_tests {
     #[test]
     fn right_lineage_length_and_own_height_test() {
         graft_check_compile_prop(&right_lineage_length_and_own_height_rast());
+    }
+
+    #[test]
+    fn leaf_index_to_mt_index_and_peak_index_test() {
+        graft_check_compile_prop(&leaf_index_to_mt_index_and_peak_index_rast_loops_reduced());
     }
 }
