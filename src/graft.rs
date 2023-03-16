@@ -86,11 +86,10 @@ fn pat_type_to_data_type(rust_type_path: &syn::PatType) -> (ast::DataType, bool)
 }
 
 fn pat_to_name(pat: &syn::Pat) -> String {
-    let name = match pat {
+    match pat {
         syn::Pat::Ident(ident) => ident.ident.to_string(),
         other => panic!("unsupported: {other:?}"),
-    };
-    name
+    }
 }
 
 fn path_to_ident(path: &syn::Path) -> String {
@@ -353,11 +352,11 @@ pub fn graft_expr(rust_exp: &syn::Expr) -> ast::Expr<Annotation> {
                 syn::Expr::Block(block) => {
                     let else_branch = &block.block.stmts;
                     assert_eq!(1, else_branch.len(), "Max one line in if/else expressions");
-                    let else_branch = match &else_branch[0] {
+
+                    match &else_branch[0] {
                         syn::Stmt::Expr(expr) => graft_expr(expr),
                         other => panic!("unsupported: {other:?}"),
-                    };
-                    else_branch
+                    }
                 }
                 other => panic!("unsupported: {other:?}"),
             };

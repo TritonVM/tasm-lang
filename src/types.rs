@@ -7,19 +7,14 @@ use crate::ast;
 use crate::libraries::tasm;
 use crate::libraries::vector;
 
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, Hash, PartialEq, Eq)]
 pub enum Typing {
     /// An `UnknownType` has not been determined; this is produced by the parser/grafter.
+    #[default]
     UnknownType,
 
     /// A `KnownType` has been determined; this is performed by the type checker.
     KnownType(ast::DataType),
-}
-
-impl Default for Typing {
-    fn default() -> Self {
-        Typing::UnknownType
-    }
 }
 
 impl GetType for Typing {
