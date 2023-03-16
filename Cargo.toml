@@ -1,6 +1,6 @@
 [package]
 name = "tasm-lang"
-version = "0.1.0"
+version = "0.18.0"
 edition = "2021"
 
 [dev-dependencies.cargo-husky]
@@ -10,12 +10,12 @@ features = ["precommit-hook", "run-cargo-test", "run-cargo-clippy", "run-cargo-f
 
 [dependencies]
 tasm-lib = { git = "https://github.com/TritonVM/tasm-lib" }
-twenty-first = "0.14"
-triton-opcodes = { version = "0.14", git = "https://github.com/TritonVM/triton-vm.git", branch = "master" }
-triton-vm = { version = "0.14"}
+twenty-first = "0.18.0"
+triton-opcodes = "0.18.0"
+triton-vm = "0.18.0"
 itertools = "0.10"
 num = "0.4"
 quote = "1.0"
-rand = "*"
+rand = "0"
 syn = { version = "1.0", features = ["full", "extra-traits"] }
-anyhow = "*"
+anyhow = "1"
