@@ -191,6 +191,45 @@ pub fn powers_of_two_with_bit_shifting() -> syn::ItemFn {
     })
 }
 
+#[allow(dead_code)]
+pub fn leftshift_u32_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn leftshift_u32(lhs: u32, rhs: u32) -> u32 {
+            let c: u32 = lhs << rhs;
+            return c;
+        }
+    })
+}
+
+#[allow(dead_code)]
+pub fn leftshift_u64_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn leftshift_u64(lhs: u64, rhs: u32) -> u64 {
+            let c: u64 = lhs << rhs;
+            return c;
+        }
+    })
+}
+
+#[allow(dead_code)]
+pub fn rightshift_u32_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn rightshift_u32(lhs: u32, rhs: u32) -> u32 {
+            let c: u32 = lhs >> rhs;
+            return c;
+        }
+    })
+}
+
+#[allow(dead_code)]
+pub fn rightshift_u64_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn rightshift_u64(lhs: u64, rhs: u32) -> u64 {
+            let c: u64 = lhs >> rhs;
+            return c;
+        }
+    })
+}
 #[cfg(test)]
 mod run_tests {
     use rand::{thread_rng, Rng};
@@ -294,6 +333,34 @@ mod run_tests {
             vec![u64_lit((1u64 << 40) + (1u64 << 60))],
         );
     }
+
+    #[test]
+    fn leftshift_u32_run_test() {
+        let input = vec![u32_lit(0b101010101010101u32), u32_lit(16u32)];
+        let expected_output = vec![u32_lit(1431633920)];
+        compare_prop_with_stack(&leftshift_u32_rast(), input, expected_output);
+    }
+
+    #[test]
+    fn leftshift_u64_run_test() {
+        let input = vec![u64_lit(0b10101010101010101010101010101u64), u32_lit(32u32)];
+        let expected_output = vec![u64_lit(1537228671377473536)];
+        compare_prop_with_stack(&leftshift_u64_rast(), input, expected_output);
+    }
+
+    #[test]
+    fn rightshift_u32_run_test() {
+        let input = vec![u32_lit(0b101010101010101u32), u32_lit(3u32)];
+        let expected_output = vec![u32_lit(2730)];
+        compare_prop_with_stack(&rightshift_u32_rast(), input, expected_output);
+    }
+
+    #[test]
+    fn rightshift_u64_run_test() {
+        let input = vec![u64_lit(0b10101010101010101010101010101u64), u32_lit(3u32)];
+        let expected_output = vec![u64_lit(44739242)];
+        compare_prop_with_stack(&rightshift_u64_rast(), input, expected_output);
+    }
 }
 
 #[cfg(test)]
@@ -364,5 +431,25 @@ mod compile_and_typecheck_tests {
     #[test]
     fn lt_u32_test() {
         graft_check_compile_prop(&lt_u32());
+    }
+
+    #[test]
+    fn leftshift_u32_test() {
+        graft_check_compile_prop(&leftshift_u32_rast());
+    }
+
+    #[test]
+    fn leftshift_u64_test() {
+        graft_check_compile_prop(&leftshift_u64_rast());
+    }
+
+    #[test]
+    fn rightshift_u32_test() {
+        graft_check_compile_prop(&rightshift_u32_rast());
+    }
+
+    #[test]
+    fn rightshift_u64_test() {
+        graft_check_compile_prop(&rightshift_u64_rast());
     }
 }
