@@ -1272,11 +1272,14 @@ fn compile_expr(
                     let (_rhs_expr_addr, rhs_expr_code) =
                         compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
 
-                    let shl = if matches!(lhs_expr.to_owned().get_type(), ast::DataType::U32) {
+                    let lhs_type = lhs_expr.get_type();
+                    let shl = if matches!(lhs_type, ast::DataType::U32) {
                         state.import_snippet(Box::new(arithmetic::u32::shift_left::ShiftLeftU32))
-                    } else {
+                    } else if matches!(lhs_type, ast::DataType::U64) {
                         state
                             .import_snippet(Box::new(arithmetic::u64::shift_left_u64::ShiftLeftU64))
+                    } else {
+                        panic!("Unsupported SHL of type {lhs_type}");
                     };
 
                     let code = vec![lhs_expr_code, rhs_expr_code, vec![call(shl)]].concat();
@@ -1295,12 +1298,15 @@ fn compile_expr(
                     let (_rhs_expr_addr, rhs_expr_code) =
                         compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
 
-                    let shr = if matches!(lhs_expr.to_owned().get_type(), ast::DataType::U32) {
+                    let lhs_type = lhs_expr.get_type();
+                    let shr = if matches!(lhs_type, ast::DataType::U32) {
                         state.import_snippet(Box::new(arithmetic::u32::shift_right::ShiftRightU32))
-                    } else {
+                    } else if matches!(lhs_type, ast::DataType::U64) {
                         state.import_snippet(Box::new(
                             arithmetic::u64::shift_right_u64::ShiftRightU64,
                         ))
+                    } else {
+                        panic!("Unsupported SHL of type {lhs_type}");
                     };
 
                     let code = vec![lhs_expr_code, rhs_expr_code, vec![call(shr)]].concat();
