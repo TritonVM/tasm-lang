@@ -726,13 +726,14 @@ fn derive_annotate_expr_type(
                 Shl => {
                     let lhs_type = derive_annotate_expr_type(lhs_expr, hint, state);
 
-                    let rhs_hint = Some(&ast::DataType::U32);
-                    let rhs_type = derive_annotate_expr_type(rhs_expr, rhs_hint, state);
-
                     assert!(
                         is_u32_based_type(&lhs_type),
                         "Cannot shift-left for type '{lhs_type}' (not u32-based)"
                     );
+
+                    let rhs_hint = Some(&ast::DataType::U32);
+                    let rhs_type = derive_annotate_expr_type(rhs_expr, rhs_hint, state);
+
                     assert_type_equals(&rhs_type, &ast::DataType::U32, "shl-rhs-expr");
                     *binop_type = Typing::KnownType(lhs_type.clone());
                     lhs_type
@@ -742,13 +743,14 @@ fn derive_annotate_expr_type(
                 Shr => {
                     let lhs_type = derive_annotate_expr_type(lhs_expr, hint, state);
 
-                    let rhs_hint = Some(&ast::DataType::U32);
-                    let rhs_type = derive_annotate_expr_type(rhs_expr, rhs_hint, state);
-
                     assert!(
                         is_u32_based_type(&lhs_type),
                         "Cannot shift-right for type '{lhs_type}' (not u32-based)"
                     );
+
+                    let rhs_hint = Some(&ast::DataType::U32);
+                    let rhs_type = derive_annotate_expr_type(rhs_expr, rhs_hint, state);
+
                     assert_type_equals(&rhs_type, &ast::DataType::U32, "shr-rhs-expr");
                     *binop_type = Typing::KnownType(lhs_type.clone());
                     lhs_type
