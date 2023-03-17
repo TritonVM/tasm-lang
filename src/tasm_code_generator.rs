@@ -166,7 +166,7 @@ impl VStack {
             words_to_remove: usize,
         ) -> Vec<LabelledInstruction> {
             match (top_value_size, words_to_remove) {
-                (4, 2) => vec![swap1(), swap3(), swap5(), pop(), swap1(), swap3(), pop()],
+                (4, 2) => vec![swap(1), swap(3), swap(5), pop(), swap(1), swap(3), pop()],
                 _ => panic!("Unsupported. Please cover more special cases. Got: {top_value_size}, {words_to_remove}"),
             }
         }
@@ -642,7 +642,7 @@ fn compile_stmt(
             let mut if_code = cond_code;
             if_code.append(&mut vec![
                 push(1),                            // _ cond 1
-                swap1(),                            // _ 1 cond
+                swap(1),                            // _ 1 cond
                 skiz(),                             // _ 1
                 call(then_subroutine_name.clone()), // _ [then_branch_value] 0|1
                 skiz(),                             // _ [then_branch_value]
@@ -962,7 +962,7 @@ fn compile_expr(
                         }
                         ast::DataType::BFE => vec![add()],
                         ast::DataType::XFE => {
-                            vec![xxadd(), swap3(), pop(), swap3(), pop(), swap3(), pop()]
+                            vec![xxadd(), swap(3), pop(), swap(3), pop(), swap(3), pop()]
                         }
                         _ => panic!("Operator add is not supported for type {res_type}"),
                     };
@@ -1029,9 +1029,9 @@ fn compile_expr(
                         U32 => vec![xor()],
                         U64 => vec![
                             // a_hi a_lo b_hi b_lo
-                            swap3(), // b_lo a_lo b_hi a_hi
+                            swap(3), // b_lo a_lo b_hi a_hi
                             xor(),   // b_lo a_lo (b_hi ⊻ a_hi)
-                            swap2(), // (b_hi ⊻ a_hi) b_lo a_lo
+                            swap(2), // (b_hi ⊻ a_hi) b_lo a_lo
                             xor(),   // (b_hi ⊻ a_hi) (b_lo ⊻ a_lo)
                         ],
                         _ => panic!("xor on {res_type} is not supported"),
@@ -1062,7 +1062,7 @@ fn compile_expr(
 
                             (
                                 addr,
-                                vec![lhs_expr_code, rhs_expr_code, vec![swap1(), div(), pop()]]
+                                vec![lhs_expr_code, rhs_expr_code, vec![swap(1), div(), pop()]]
                                     .concat(),
                             )
                         }
@@ -1092,7 +1092,7 @@ fn compile_expr(
 
                             // div num
                             let bfe_div_code = vec![
-                                swap1(),  // _ num div
+                                swap(1),  // _ num div
                                 invert(), // _ num (1/div)
                                 mul(),    // _ num·(1/div), or (num/div)
                             ];
@@ -1115,20 +1115,20 @@ fn compile_expr(
 
                             // div_2 div_1 div_0 num_2 num_1 num_0
                             let xfe_div_code = vec![
-                                swap5(),   // num_0 div_1 div_0 num_2 num_1 div_2
-                                swap2(),   // num_0 div_1 div_0 div_2 num_1 num_2
-                                swap5(),   // num_2 div_1 div_0 div_2 num_1 num_0
-                                swap4(),   // num_2 num_0 div_0 div_2 num_1 div_1
-                                swap1(),   // num_2 num_0 div_0 div_2 div_1 num_1
-                                swap4(),   // num_2 num_1 div_0 div_2 div_1 num_0
-                                swap3(),   // num_2 num_1 num_0 div_2 div_1 div_0
+                                swap(5),   // num_0 div_1 div_0 num_2 num_1 div_2
+                                swap(2),   // num_0 div_1 div_0 div_2 num_1 num_2
+                                swap(5),   // num_2 div_1 div_0 div_2 num_1 num_0
+                                swap(4),   // num_2 num_0 div_0 div_2 num_1 div_1
+                                swap(1),   // num_2 num_0 div_0 div_2 div_1 num_1
+                                swap(4),   // num_2 num_1 div_0 div_2 div_1 num_0
+                                swap(3),   // num_2 num_1 num_0 div_2 div_1 div_0
                                 xinvert(), // num_2 num_1 num_0 (1/div)_2 (1/div)_1 (1/div)_0
                                 xxmul(),   // num_2 num_1 num_0 (num/div)_2 (num/div)_1 (num/div)_0
-                                swap3(),   // num_2 num_1 (num/div)_0 (num/div)_2 (num/div)_1 num_0
+                                swap(3),   // num_2 num_1 (num/div)_0 (num/div)_2 (num/div)_1 num_0
                                 pop(),     // num_2 num_1 (num/div)_0 (num/div)_2 (num/div)_1
-                                swap3(),   // num_2 (num/div)_1 (num/div)_0 (num/div)_2 num_1
+                                swap(3),   // num_2 (num/div)_1 (num/div)_0 (num/div)_2 num_1
                                 pop(),     // num_2 (num/div)_1 (num/div)_0 (num/div)_2
-                                swap3(),   // (num/div)_2 (num/div)_1 (num/div)_0 num_2
+                                swap(3),   // (num/div)_2 (num/div)_1 (num/div)_0 num_2
                                 pop(),     // (num/div)_2 (num/div)_1 (num/div)_0
                             ];
 
@@ -1171,7 +1171,7 @@ fn compile_expr(
 
                     use ast::DataType::*;
                     let code = match lhs_type {
-                        U32 => vec![lhs_expr_code, rhs_expr_code, vec![swap1(), lt()]].concat(),
+                        U32 => vec![lhs_expr_code, rhs_expr_code, vec![swap(1), lt()]].concat(),
 
                         U64 => {
                             let lt_u64 = state
@@ -1182,10 +1182,10 @@ fn compile_expr(
                                 rhs_expr_code,
                                 vec![
                                     // _ lhs_hi lhs_lo rhs_hi rhs_lo
-                                    swap3(),      // _ rhs_lo lhs_lo rhs_hi lhs_hi
-                                    swap1(),      // _ rhs_lo lhs_lo lhs_hi rhs_hi
-                                    swap3(),      // _ rhs_hi lhs_lo lhs_hi rhs_lo
-                                    swap2(),      // _ rhs_hi rhs_lo lhs_hi lhs_lo
+                                    swap(3),      // _ rhs_lo lhs_lo rhs_hi lhs_hi
+                                    swap(1),      // _ rhs_lo lhs_lo lhs_hi rhs_hi
+                                    swap(3),      // _ rhs_hi lhs_lo lhs_hi rhs_lo
+                                    swap(2),      // _ rhs_hi rhs_lo lhs_hi lhs_lo
                                     call(lt_u64), // _ (lhs < rhs)
                                 ],
                             ]
@@ -1332,7 +1332,7 @@ fn compile_expr(
                             // As standard, we use safe arithmetic that crashes on overflow
                             let safe_sub_u32 =
                                 state.import_snippet(Box::new(arithmetic::u32::safe_sub::SafeSub));
-                            vec![swap1(), call(safe_sub_u32)]
+                            vec![swap(1), call(safe_sub_u32)]
                         }
                         ast::DataType::U64 => {
                             // As standard, we use safe arithmetic that crashes on overflow
@@ -1340,36 +1340,36 @@ fn compile_expr(
                                 state.import_snippet(Box::new(arithmetic::u64::sub_u64::SubU64));
                             vec![
                                 // _ lhs_hi lhs_lo rhs_hi rhs_lo
-                                swap3(),       // _ rhs_lo lhs_lo rhs_hi lhs_hi
-                                swap1(),       // _ rhs_lo lhs_lo lhs_hi rhs_hi
-                                swap3(),       // _ rhs_hi lhs_lo lhs_hi rhs_lo
-                                swap2(),       // _ rhs_hi rhs_lo lhs_hi lhs_lo
+                                swap(3),       // _ rhs_lo lhs_lo rhs_hi lhs_hi
+                                swap(1),       // _ rhs_lo lhs_lo lhs_hi rhs_hi
+                                swap(3),       // _ rhs_hi lhs_lo lhs_hi rhs_lo
+                                swap(2),       // _ rhs_hi rhs_lo lhs_hi lhs_lo
                                 call(sub_u64), // _ (lhs - rhs)_hi (lhs - rhs)_lo
                             ]
                         }
                         ast::DataType::BFE => {
-                            vec![swap1(), push(neg_1), mul(), add()]
+                            vec![swap(1), push(neg_1), mul(), add()]
                         }
                         ast::DataType::XFE => {
                             vec![
                                 // flip the x operands
-                                swap3(),
-                                swap1(),
-                                swap4(),
-                                swap1(),
-                                swap3(),
-                                swap5(),
+                                swap(3),
+                                swap(1),
+                                swap(4),
+                                swap(1),
+                                swap(3),
+                                swap(5),
                                 // multiply top element with -1
                                 push(neg_1),
                                 xbmul(),
                                 // Perform (lhs - rhs)
                                 xxadd(),
                                 // Get rid of the rhs, only leaving the result
-                                swap3(),
+                                swap(3),
                                 pop(),
-                                swap3(),
+                                swap(3),
                                 pop(),
-                                swap3(),
+                                swap(3),
                                 pop(),
                             ]
                         }
@@ -1441,7 +1441,7 @@ fn compile_expr(
             let mut if_code = cond_code;
             if_code.append(&mut vec![
                 push(1),                            // _ cond 1
-                swap1(),                            // _ 1 cond
+                swap(1),                            // _ 1 cond
                 skiz(),                             // _ 1
                 call(then_subroutine_name.clone()), // _ [then_branch_value] 0|1
                 skiz(),                             // _ [then_branch_value]
@@ -1483,7 +1483,7 @@ fn compile_expr(
                     assert_eq!(ast::DataType::U64, old_data_type);
 
                     let addr = state.new_value_identifier("_as_u32", as_type);
-                    let cast_code = vec![swap1(), pop()];
+                    let cast_code = vec![swap(1), pop()];
 
                     (addr, vec![expr_code, cast_code].concat())
                 }
@@ -1494,7 +1494,7 @@ fn compile_expr(
                     assert_eq!(ast::DataType::U32, old_data_type);
 
                     let addr = state.new_value_identifier("_as_u64", as_type);
-                    let cast_code = vec![push(0), swap1()];
+                    let cast_code = vec![push(0), swap(1)];
 
                     (addr, vec![expr_code, cast_code].concat())
                 }
@@ -1535,20 +1535,21 @@ fn compile_eq_code(
         Bool | U32 | BFE => vec![eq()],
         U64 => vec![
             // _ a_hi a_lo b_hi b_lo
-            swap3(), // _ b_lo a_lo b_hi a_hi
+            swap(3), // _ b_lo a_lo b_hi a_hi
             eq(),    // _ b_lo a_lo (b_hi == a_hi)
-            swap2(), // _ (b_hi == a_hi) a_lo b_lo
+            swap(2), // _ (b_hi == a_hi) a_lo b_lo
             eq(),    // _ (b_hi == a_hi) (a_lo == b_lo)
             mul(),   // _ (b_hi == a_hi && a_lo == b_lo)
         ],
+        U128 => todo!(),
 
         XFE => vec![
             // _ a_2 a_1 a_0 b_2 b_1 b_0
-            swap4(), // _ a_2 b_0 a_0 b_2 b_1 a_1
+            swap(4), // _ a_2 b_0 a_0 b_2 b_1 a_1
             eq(),    // _ a_2 b_0 a_0 b_2 (b_1 == a_1)
-            swap4(), // _ (b_1 == a_1) b_0 a_0 b_2 a_2
+            swap(4), // _ (b_1 == a_1) b_0 a_0 b_2 a_2
             eq(),    // _ (b_1 == a_1) b_0 a_0 (b_2 == a_2)
-            swap2(), // _ (b_1 == a_1) (b_2 == a_2) a_0 b_0
+            swap(2), // _ (b_1 == a_1) (b_2 == a_2) a_0 b_0
             eq(),    // _ (b_1 == a_1) (b_2 == a_2) (a_0 == b_0)
             mul(),   // _ (b_1 == a_1) (b_2 == a_2)·(a_0 == b_0)
             mul(),   // _ (b_1 == a_1)·(b_2 == a_2)·(a_0 == b_0)
@@ -1568,6 +1569,7 @@ pub fn size_of(data_type: &ast::DataType) -> usize {
         Bool => 1,
         U32 => 1,
         U64 => 2,
+        U128 => 4,
         BFE => 1,
         XFE => 3,
         Digest => 5,
