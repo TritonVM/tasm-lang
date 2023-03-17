@@ -1266,26 +1266,57 @@ fn compile_expr(
                 ast::BinOp::Rem => todo!(),
 
                 ast::BinOp::Shl => {
-                    // For now we can only `1 << n` for some n
-                    let lhs_expr_owned = *lhs_expr.to_owned();
-                    if !matches!(lhs_expr_owned, ast::Expr::Lit(ast::ExprLit::U64(1))) {
-                        panic!("Unsupported shift left: {lhs_expr_owned:#?}")
-                    }
+                    let (_lhs_expr_addr, lhs_expr_code) =
+                        compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
 
                     let (_rhs_expr_addr, rhs_expr_code) =
                         compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
 
-                    let pow2_fn =
-                        state.import_snippet(Box::new(arithmetic::u64::pow2_u64::Pow2U64));
-                    let code = vec![rhs_expr_code, vec![call(pow2_fn)]].concat();
+                    let lhs_type = lhs_expr.get_type();
+                    let shl = if matches!(lhs_type, ast::DataType::U32) {
+                        state.import_snippet(Box::new(arithmetic::u32::shift_left::ShiftLeftU32))
+                    } else if matches!(lhs_type, ast::DataType::U64) {
+                        state
+                            .import_snippet(Box::new(arithmetic::u64::shift_left_u64::ShiftLeftU64))
+                    } else {
+                        panic!("Unsupported SHL of type {lhs_type}");
+                    };
 
+                    let code = vec![lhs_expr_code, rhs_expr_code, vec![call(shl)]].concat();
+
+                    state.vstack.pop();
                     state.vstack.pop();
                     let addr = state.new_value_identifier("_binop_shl", &res_type);
 
                     (addr, code)
                 }
 
-                ast::BinOp::Shr => todo!(),
+                ast::BinOp::Shr => {
+                    let (_lhs_expr_addr, lhs_expr_code) =
+                        compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
+
+                    let (_rhs_expr_addr, rhs_expr_code) =
+                        compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
+
+                    let lhs_type = lhs_expr.get_type();
+                    let shr = if matches!(lhs_type, ast::DataType::U32) {
+                        state.import_snippet(Box::new(arithmetic::u32::shift_right::ShiftRightU32))
+                    } else if matches!(lhs_type, ast::DataType::U64) {
+                        state.import_snippet(Box::new(
+                            arithmetic::u64::shift_right_u64::ShiftRightU64,
+                        ))
+                    } else {
+                        panic!("Unsupported SHL of type {lhs_type}");
+                    };
+
+                    let code = vec![lhs_expr_code, rhs_expr_code, vec![call(shr)]].concat();
+
+                    state.vstack.pop();
+                    state.vstack.pop();
+                    let addr = state.new_value_identifier("_binop_shr", &res_type);
+
+                    (addr, code)
+                }
 
                 ast::BinOp::Sub => {
                     let (_lhs_expr_addr, lhs_expr_code) =
@@ -1483,7 +1514,7 @@ fn compile_expr(
                     let (_, old_data_type) = state.vstack.pop().unwrap();
 
                     // sanity check
-                    assert_eq!(ast::DataType::U32, old_data_type);
+                    assert_eq!(ast::DataType::U64, old_data_type);
 
                     let addr = state.new_value_identifier("_as_u64", as_type);
 
