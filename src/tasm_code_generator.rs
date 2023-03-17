@@ -1215,6 +1215,13 @@ fn compile_expr(
 
                             vec![rhs_expr_code, lhs_expr_code, vec![call(fn_name)]].concat()
                         }
+                        U64 => {
+                            let fn_name = state.import_snippet(Box::new(
+                                arithmetic::u64::safe_mul_u64::SafeMulU64,
+                            ));
+
+                            vec![rhs_expr_code, lhs_expr_code, vec![call(fn_name)]].concat()
+                        }
                         _ => panic!("Unsupported MUL for type {lhs_type}"),
                     };
 
