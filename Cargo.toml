@@ -15,6 +15,6 @@ triton-opcodes = "0.19.0"
 triton-vm = "0.19.0"
 itertools = "0.10"
 num = "0.4"
-rand = "0"
+rand = "0.8.5"
 syn = { version = "1.0", features = ["full", "extra-traits"] }
 anyhow = "1"
