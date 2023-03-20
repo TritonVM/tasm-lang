@@ -16,48 +16,46 @@ use crate::stack::Stack;
 use crate::types::{is_list_type, GetType};
 use crate::{ast, types};
 
-type VStack = Stack<(ValueIdentifier, ast::DataType)>;
+// the compiler's view of the stack, including information about whether value has been spilled to memory
+type VStack = Stack<(ValueIdentifier, (ast::DataType, Option<u32>))>;
 type VarAddr = HashMap<String, ValueIdentifier>;
 
 impl VStack {
-    /// Returns (stack_position, data_type, vstack_position). Top of stack has index 0.
-    pub fn find_stack_value(&self, seek_addr: &ValueIdentifier) -> (Ord16, ast::DataType, usize) {
+    /// Returns (stack_position, data_type, maybe_memory_location). Top of stack has index 0.
+    pub fn find_stack_value(
+        &self,
+        seek_addr: &ValueIdentifier,
+    ) -> (usize, ast::DataType, Option<u32>) {
         let mut position: usize = 0;
-        for (i, (found_addr, data_type)) in self.inner.iter().rev().enumerate() {
+        for (_i, (found_addr, (data_type, spilled))) in self.inner.iter().rev().enumerate() {
             if seek_addr == found_addr {
-                return (
-                    position
-                        .try_into()
-                        .expect("Found stack position must match a stack element"),
-                    data_type.to_owned(),
-                    i,
-                );
+                return (position, data_type.to_owned(), spilled.to_owned());
             }
 
             position += data_type.size_of();
 
             // By asserting after `+= data_type.size_of()`, we check that the deepest part
             // of the sought value is addressable, not just the top part of the value.
+            // TODO: REMOVE THIS ASSERT!
             assert!(position < STACK_SIZE, "Addressing beyond the {STACK_SIZE}'th stack element requires spilling and register-allocation.");
         }
 
         panic!("Cannot find {seek_addr} on vstack")
     }
 
-    /// Return the stack position of an element inside a tuple
+    /// Return the stack position of an element inside a tuple.
+    /// Returns (stack_position, data_type, maybe_memory_location).
     fn find_tuple_element(
         &self,
         seek_addr: &ValueIdentifier,
         tuple_index: usize,
-    ) -> (Ord16, ast::DataType) {
-        let (tuple_value_position, tuple_type, _) = self.find_stack_value(seek_addr);
+    ) -> (usize, ast::DataType, Option<u32>) {
+        let (tuple_value_position, tuple_type, spilled) = self.find_stack_value(seek_addr);
         let element_types = if let ast::DataType::Tuple(ets) = &tuple_type {
             ets
         } else {
             panic!("Expected type was tuple.")
         };
-
-        let tuple_value_position: usize = tuple_value_position.into();
 
         let tuple_depth: usize = element_types
             .iter()
@@ -67,8 +65,9 @@ impl VStack {
             .sum::<usize>();
 
         (
-            (tuple_value_position + tuple_depth).try_into().unwrap(),
+            tuple_value_position + tuple_depth,
             element_types[tuple_index].clone(),
+            spilled.map(|x| x + tuple_depth as u32),
         )
     }
 
@@ -79,13 +78,18 @@ impl VStack {
         &mut self,
         value_identifier_to_remove: &ValueIdentifier,
     ) -> Vec<LabelledInstruction> {
-        let (stack_position_of_value_to_remove, type_to_remove, _) =
+        let (stack_position_of_value_to_remove, type_to_remove, spilled) =
             self.find_stack_value(value_identifier_to_remove);
-        let (top_element_id, top_element_type) = self.pop().expect("vstack cannot be empty");
+        let (top_element_id, (top_element_type, _)) = self.pop().expect("vstack cannot be empty");
 
         assert_eq!(
             top_element_type, type_to_remove,
             "Top stack value and value to remove must match"
+        );
+
+        assert!(
+            spilled.is_none(),
+            "Function can't handle spilled values yet"
         );
 
         let value_size = type_to_remove.size_of();
@@ -93,15 +97,24 @@ impl VStack {
         // Replace the overwritten value on stack
         let code: Vec<LabelledInstruction> =
             if Into::<usize>::into(stack_position_of_value_to_remove) > 0 {
-                vec![vec![Instruction(Swap(stack_position_of_value_to_remove)), pop()]; value_size]
-                    .concat()
+                vec![
+                    vec![
+                        Instruction(Swap(stack_position_of_value_to_remove.try_into().unwrap())),
+                        pop()
+                    ];
+                    value_size
+                ]
+                .concat()
             } else {
                 vec![]
             };
 
         // Remove the overwritten value from vstack
-        let old_value = (value_identifier_to_remove.to_owned(), type_to_remove);
-        let new_value = (top_element_id, top_element_type);
+        let old_value = (
+            value_identifier_to_remove.to_owned(),
+            (type_to_remove, None),
+        );
+        let new_value = (top_element_id, (top_element_type, None));
         self.replace_value(&old_value, new_value);
 
         code
@@ -153,8 +166,9 @@ impl VStack {
         code
     }
 
-    /// Return code that clears the stack but leaves the value that's on the top of the stack
-    /// when this function is called. Also updates vstack to reflect this.
+    /// Return code that clears the stack above a certain height but leaves the value
+    /// that's on the top of the stack when this function is called.
+    /// Also updates vstack to reflect this.
     fn clear_all_but_top_stack_value_above_height(
         &mut self,
         height: usize,
@@ -176,7 +190,7 @@ impl VStack {
         let top_element = self
             .pop()
             .expect("Cannot remove all but top element from an empty stack");
-        let top_value_size = top_element.1.size_of();
+        let top_value_size = top_element.1 .0.size_of();
 
         // Generate code to move value to the bottom of the requested stack range
         let words_to_remove = height_of_affected_stack - top_value_size;
@@ -223,7 +237,7 @@ impl VStack {
     fn get_stack_height(&self) -> usize {
         self.inner
             .iter()
-            .map(|(_, data_type)| data_type.size_of())
+            .map(|(_, (data_type, _))| data_type.size_of())
             .sum()
     }
 }
@@ -234,6 +248,11 @@ pub struct CompilerState {
 
     // Where on stack is the variable placed?
     pub vstack: VStack,
+
+    // TODO: `VStack` might be able to handle this `spilled_values` info.
+    // Variables that have been spilled to memory.
+    // Mapping from value identifier to memory location.
+    // pub spilled_values: HashMap<ValueIdentifier, u32>,
 
     // Mapping from variable name to its internal identifier
     pub var_addr: VarAddr,
@@ -269,8 +288,19 @@ impl CompilerState {
     ) -> ValueIdentifier {
         let name = format!("_{}_{}_{}", prefix, data_type, self.counter);
         let address = ValueIdentifier { name };
-        self.vstack.push((address.clone(), data_type.clone()));
+
+        // TODO: I think new value identifiers will always *not* be spilled, so it should be
+        // safe to set the "spilled" value to `None` here.
+        self.vstack
+            .push((address.clone(), (data_type.clone(), None)));
         self.counter += 1;
+
+        // Check if we need to start spilling/duplicating variables to memory
+        if self.vstack.get_stack_height() > STACK_SIZE {
+            // TODO: Add memory spilling here
+            // panic!("Cannot allocate more than {STACK_SIZE} words on stack");
+        }
+
         address
     }
 
@@ -283,32 +313,25 @@ impl CompilerState {
         previous_stack: &VStack,
         previous_var_addr: &VarAddr,
     ) {
-        // make a list of tuples (binding name, vstack position, stack position, data_type) as the stack looked at the beginning of the loop
-        let bindings_start: HashMap<String, (usize, Ord16, ast::DataType)> = previous_var_addr
+        // make a list of tuples (binding name, stack position, spilled_value) as the stack looked at the beginning of the loop
+        let bindings_start: HashMap<String, (usize, Option<u32>)> = previous_var_addr
             .iter()
             .map(|(k, v)| {
                 let binding_name = k.to_string();
-                let (previous_stack_depth, data_type, previous_vstack_depth) =
+                let (previous_stack_depth, _data_type, spilled) =
                     previous_stack.find_stack_value(v);
-                (
-                    binding_name,
-                    (previous_vstack_depth, previous_stack_depth, data_type),
-                )
+                (binding_name, (previous_stack_depth, spilled))
             })
             .collect();
 
-        // make a list of tuples (variable names, vstack position, stack position, data_type) as the stack looks now
-        let bindings_end: HashMap<String, (usize, Ord16, ast::DataType)> = self
+        // make a list of tuples (binding name, stack position, spilled_value) as the stack looks now
+        let bindings_end: HashMap<String, (usize, Option<u32>)> = self
             .var_addr
             .iter()
             .map(|(k, v)| {
                 let binding_name = k.to_string();
-                let (previous_stack_depth, data_type, previous_vstack_depth) =
-                    self.vstack.find_stack_value(v);
-                (
-                    binding_name,
-                    (previous_vstack_depth, previous_stack_depth, data_type),
-                )
+                let (previous_stack_depth, _data_type, spilled) = self.vstack.find_stack_value(v);
+                (binding_name, (previous_stack_depth, spilled))
             })
             .collect();
 
@@ -326,11 +349,8 @@ impl CompilerState {
         // the block will be on top of the stack, and that the flip_flop list will always
         // be empty.
         let mut flip_flop_list = vec![];
-        for (start_binding, (_start_vstack_pos, start_stack_pos, _start_data_type)) in
-            bindings_start.iter()
-        {
-            let (_end_vstack_pow, end_stack_pos, _end_data_type) =
-                bindings_end[start_binding].clone();
+        for (start_binding, (start_stack_pos, _spilled)) in bindings_start.iter() {
+            let (end_stack_pos, _end_data_type) = bindings_end[start_binding];
             if end_stack_pos != *start_stack_pos {
                 flip_flop_list.push((start_binding, end_stack_pos, start_stack_pos));
             }
@@ -347,6 +367,7 @@ impl CompilerState {
 
     /// Restore the vstack to a previous state, representing the state the stack had
     /// at the beginning of a codeblock. Also returns the code to achieve this.
+    // TODO: Should also handle spilled_values
     fn restore_stack_code(
         &mut self,
         previous_stack: &VStack,
@@ -355,7 +376,7 @@ impl CompilerState {
         // Clear stack, vstack, and var_addr of locally declared values for those that are on top of the stack
         let mut code = vec![];
         loop {
-            let (addr, dt) = self.vstack.peek().unwrap();
+            let (addr, (dt, spilled)) = self.vstack.peek().unwrap();
             let binding_name = self
                 .var_addr
                 .iter()
@@ -363,6 +384,7 @@ impl CompilerState {
                 .unwrap_or_else(|| panic!("Cannot handle stack cleanup of unbound values"))
                 .0
                 .clone();
+            assert!(spilled.is_none(), "Cannot handle spilled values yet");
             if previous_var_addr.contains_key(&binding_name) {
                 break;
             } else {
@@ -384,7 +406,7 @@ impl CompilerState {
     #[allow(dead_code)]
     fn show_vstack_values(&self) {
         print!("vstack: ");
-        for (addr, data_type) in self.vstack.inner.iter() {
+        for (addr, (data_type, spilled)) in self.vstack.inner.iter() {
             let var_names = self
                 .var_addr
                 .iter()
@@ -395,7 +417,12 @@ impl CompilerState {
                 0 => "unnamed",
                 _ => var_names[0],
             };
-            print!("{var_name} <{data_type}>, ");
+            match spilled {
+                Some(spilled_addr) => {
+                    print!("{var_name} <{data_type}> spilled to: {spilled_addr}; ")
+                }
+                None => print!("{var_name} <{data_type}>; "),
+            }
         }
         println!();
     }
@@ -539,7 +566,10 @@ fn compile_stmt(
         // 'return;': Clean stack
         ast::Stmt::Return(None) => {
             let mut code = vec![];
-            while let Some((_addr, data_type)) = state.vstack.pop() {
+            while let Some((_addr, (data_type, spilled))) = state.vstack.pop() {
+                // TODO: Handle spilled values here. Maybe just by leaving the memory unchanged and
+                // not reusing that par of memory without overwriting it first?
+                assert!(spilled.is_none(), "Can't handle spilled values yet");
                 code.push(vec![pop(); data_type.size_of()]);
             }
 
@@ -557,8 +587,10 @@ fn compile_stmt(
                         .expect("Returned value must exist in value/addr map");
                     let mut code = vec![];
                     loop {
-                        let (haystack, dt) = state.vstack.peek().unwrap();
+                        let (haystack, (dt, spilled)) = state.vstack.peek().unwrap();
                         if *haystack == *needle {
+                            // TODO: Handle spilled values somehow.
+                            assert!(spilled.is_none(), "Cannot handle spilled return values yet");
                             break;
                         }
 
@@ -770,31 +802,22 @@ fn compile_expr(
     match expr {
         ast::Expr::Lit(expr_lit) => {
             let res_type = expr_lit.get_type();
+            let addr = state.new_value_identifier(&format!("{res_type}_lit"), &res_type);
 
             match expr_lit {
-                ast::ExprLit::Bool(value) => {
-                    let addr = state.new_value_identifier("_bool_lit", &res_type);
-                    (
-                        addr,
-                        vec![Instruction(Push(BFieldElement::new(*value as u64)))],
-                    )
-                }
+                ast::ExprLit::Bool(value) => (
+                    addr,
+                    vec![Instruction(Push(BFieldElement::new(*value as u64)))],
+                ),
 
-                ast::ExprLit::U32(value) => {
-                    let addr = state.new_value_identifier("_u32_lit", &res_type);
-                    (
-                        addr,
-                        vec![Instruction(Push(BFieldElement::new(*value as u64)))],
-                    )
-                }
+                ast::ExprLit::U32(value) => (
+                    addr,
+                    vec![Instruction(Push(BFieldElement::new(*value as u64)))],
+                ),
 
-                ast::ExprLit::BFE(value) => {
-                    let addr = state.new_value_identifier("_bfe_lit", &res_type);
-                    (addr, vec![Instruction(Push(*value))])
-                }
+                ast::ExprLit::BFE(value) => (addr, vec![Instruction(Push(*value))]),
 
                 ast::ExprLit::U64(value) => {
-                    let addr = state.new_value_identifier("_u64_lit", &res_type);
                     let as_u32s = U32s::<2>::try_from(*value).unwrap().to_sequence();
                     let stack_serialized: Vec<_> = as_u32s.iter().rev().collect();
 
@@ -818,12 +841,16 @@ fn compile_expr(
             ast::Identifier::String(var_name, known_type) => {
                 let data_type = known_type.get_type();
                 let var_addr = state.var_addr.get(var_name).expect("variable exists");
-                let (position, old_data_type, _) = state.vstack.find_stack_value(var_addr);
+                let (position, old_data_type, spilled) = state.vstack.find_stack_value(var_addr);
+
+                // TODO: Handle spilled values
+                assert!(spilled.is_none(), "Cannot handle spilled values yet.");
 
                 // sanity check
                 assert_eq!(old_data_type, data_type, "type must match expected type");
 
-                let var_copy_code = dup_value_from_stack_code(position, &data_type);
+                let var_copy_code =
+                    dup_value_from_stack_code(position.try_into().unwrap(), &data_type);
                 let var_copy_addr = state.new_value_identifier("_var_copy", &data_type);
 
                 (var_copy_addr, var_copy_code)
@@ -835,10 +862,14 @@ fn compile_expr(
                     panic!("Nested tuple references not yet supported");
                 };
                 let var_addr = state.var_addr.get(&var_name).expect("variable exists");
-                let (position, element_type) =
+                let (position, element_type, spilled) =
                     state.vstack.find_tuple_element(var_addr, *tuple_index);
 
-                let var_copy_code = dup_value_from_stack_code(position, &element_type);
+                // TODO: Handle spilled values
+                assert!(spilled.is_none(), "Cannot handle spilled values yet.");
+
+                let var_copy_code =
+                    dup_value_from_stack_code(position.try_into().unwrap(), &element_type);
                 let var_copy_addr = state.new_value_identifier("_var_copy", &element_type);
 
                 (var_copy_addr, var_copy_code)
@@ -861,7 +892,10 @@ fn compile_expr(
                     .var_addr
                     .get(&ident_as_string)
                     .expect("variable exists");
-                let (_position, old_data_type, _) = state.vstack.find_stack_value(var_addr);
+                let (_position, old_data_type, spilled) = state.vstack.find_stack_value(var_addr);
+
+                // TODO: Handle spilled values
+                assert!(spilled.is_none(), "Cannot handle spilled values yet.");
 
                 assert_eq!(
                     ident_type, old_data_type,
@@ -1485,7 +1519,10 @@ fn compile_expr(
             match (expr_type, as_type) {
                 (ast::DataType::U64, ast::DataType::U32) => {
                     // No value check is performed here
-                    let (_, old_data_type) = state.vstack.pop().unwrap();
+                    let (_, (old_data_type, spilled)) = state.vstack.pop().unwrap();
+
+                    // TODO: Do we need to handle spilled values here?
+                    assert!(spilled.is_none(), "Top stack value cannot be spilled");
 
                     // sanity check
                     assert_eq!(ast::DataType::U64, old_data_type);
@@ -1496,7 +1533,10 @@ fn compile_expr(
                     (addr, vec![expr_code, cast_code].concat())
                 }
                 (ast::DataType::U32, ast::DataType::U64) => {
-                    let (_, old_data_type) = state.vstack.pop().unwrap();
+                    let (_, (old_data_type, spilled)) = state.vstack.pop().unwrap();
+
+                    // TODO: Do we need to handle spilled values here?
+                    assert!(spilled.is_none(), "Top stack value cannot be spilled");
 
                     // sanity check
                     assert_eq!(ast::DataType::U32, old_data_type);
@@ -1509,7 +1549,7 @@ fn compile_expr(
                 // Allow identity-casting since we might need this to make the types
                 // agree with code compiled by rustc.
                 (ast::DataType::U32, ast::DataType::U32) => {
-                    let (_, old_data_type) = state.vstack.pop().unwrap();
+                    let (_, (old_data_type, _spilled)) = state.vstack.pop().unwrap();
 
                     // sanity check
                     assert_eq!(ast::DataType::U32, old_data_type);
@@ -1519,7 +1559,7 @@ fn compile_expr(
                     (addr, expr_code)
                 }
                 (ast::DataType::U64, ast::DataType::U64) => {
-                    let (_, old_data_type) = state.vstack.pop().unwrap();
+                    let (_, (old_data_type, _spilled)) = state.vstack.pop().unwrap();
 
                     // sanity check
                     assert_eq!(ast::DataType::U64, old_data_type);
