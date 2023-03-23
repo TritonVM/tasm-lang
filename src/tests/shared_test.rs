@@ -96,7 +96,7 @@ pub fn compare_prop_with_stack_and_memory_and_ins(
     assert_eq!(
         expected_final_stack,
         exec_result.final_stack,
-        "Code execution must produce expected stack `{}`. \n\nTVM:\n{}\nExpected:\n{}",
+        "Code execution must produce expected stack `{}`. \n\nTVM:\n{}\n\nExpected:\n{}\n",
         function_name,
         exec_result
             .final_stack
@@ -129,7 +129,7 @@ pub fn compare_prop_with_stack_and_memory_and_ins(
             .map(|x| format!("({} => {})", x.0, x.1))
             .collect_vec()
             .join(",");
-        panic!("Memory must match expected value after execution.\n\nGot: {actual_memory_str}\n\nExpected: {expected_final_memory_str}",)
+        panic!("Memory must match expected value after execution.\n\nTVM: {actual_memory_str}\n\nExpected: {expected_final_memory_str}",)
     }
 }
 

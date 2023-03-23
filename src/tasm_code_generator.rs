@@ -34,9 +34,9 @@ impl VStack {
                 );
             }
 
-            position += size_of(data_type);
+            position += data_type.size_of();
 
-            // By asserting after `+= size_of(data_type)`, we check that the deepest part
+            // By asserting after `+= data_type.size_of()`, we check that the deepest part
             // of the sought value is addressable, not just the top part of the value.
             assert!(position < STACK_SIZE, "Addressing beyond the {STACK_SIZE}'th stack element requires spilling and register-allocation.");
         }
@@ -63,7 +63,7 @@ impl VStack {
             .iter()
             .enumerate()
             .filter(|(i, _x)| *i > tuple_index)
-            .map(|(_i, x)| size_of(x))
+            .map(|(_i, x)| x.size_of())
             .sum::<usize>();
 
         (
@@ -88,7 +88,7 @@ impl VStack {
             "Top stack value and value to remove must match"
         );
 
-        let value_size = size_of(&type_to_remove);
+        let value_size = type_to_remove.size_of();
 
         // Replace the overwritten value on stack
         let code: Vec<LabelledInstruction> =
@@ -128,14 +128,14 @@ impl VStack {
             .iter()
             .enumerate()
             .filter(|(i, _x)| *i > tuple_index)
-            .map(|(_i, x)| size_of(x))
+            .map(|(_i, x)| x.size_of())
             .sum::<usize>();
 
         let stack_position_of_value_to_remove =
             Into::<usize>::into(stack_position_of_tuple) + tuple_depth;
 
         // Replace the overwritten value on stack
-        let value_size = size_of(&element_types[tuple_index]);
+        let value_size = element_types[tuple_index].size_of();
         let code: Vec<LabelledInstruction> =
             if Into::<usize>::into(stack_position_of_value_to_remove) > 0 {
                 vec![
@@ -176,7 +176,7 @@ impl VStack {
         let top_element = self
             .pop()
             .expect("Cannot remove all but top element from an empty stack");
-        let top_value_size = size_of(&top_element.1);
+        let top_value_size = top_element.1.size_of();
 
         // Generate code to move value to the bottom of the requested stack range
         let words_to_remove = height_of_affected_stack - top_value_size;
@@ -223,7 +223,7 @@ impl VStack {
     fn get_stack_height(&self) -> usize {
         self.inner
             .iter()
-            .map(|(_, data_type)| size_of(data_type))
+            .map(|(_, data_type)| data_type.size_of())
             .sum()
     }
 }
@@ -366,7 +366,7 @@ impl CompilerState {
             if previous_var_addr.contains_key(&binding_name) {
                 break;
             } else {
-                code.append(&mut vec![pop(); size_of(dt)]);
+                code.append(&mut vec![pop(); dt.size_of()]);
                 self.vstack.pop();
                 let removed = self.var_addr.remove(&binding_name);
                 assert!(removed.is_some());
@@ -518,7 +518,7 @@ fn compile_stmt(
                 }
                 ast::Identifier::ListIndex(ident, index_expr) => {
                     let fn_name =
-                        state.import_snippet(Box::new(tasm_lib::list::unsafe_u32::set::UnsafeSet(
+                        state.import_snippet(Box::new(tasm_lib::list::safe_u32::set::SafeSet(
                             data_type.clone().try_into().unwrap(),
                         )));
 
@@ -540,7 +540,7 @@ fn compile_stmt(
         ast::Stmt::Return(None) => {
             let mut code = vec![];
             while let Some((_addr, data_type)) = state.vstack.pop() {
-                code.push(vec![pop(); size_of(&data_type)]);
+                code.push(vec![pop(); data_type.size_of()]);
             }
 
             code.concat()
@@ -562,7 +562,7 @@ fn compile_stmt(
                             break;
                         }
 
-                        code.append(&mut vec![pop(); size_of(dt)]);
+                        code.append(&mut vec![pop(); dt.size_of()]);
                         state.vstack.pop();
                     }
 
@@ -850,7 +850,7 @@ fn compile_expr(
                     panic!("identifier must have type parameter when reading through indexing")
                 });
                 let fn_name = state.import_snippet(Box::new(
-                    tasm_lib::list::unsafe_u32::get::UnsafeGet(type_param.try_into().unwrap()),
+                    tasm_lib::list::safe_u32::get::SafeGet(type_param.try_into().unwrap()),
                 ));
 
                 let ident_as_string = match *ident.to_owned() {
@@ -1571,27 +1571,12 @@ fn compile_eq_code(
     }
 }
 
-pub fn size_of(data_type: &ast::DataType) -> usize {
-    use ast::DataType::*;
-    match data_type {
-        Bool => 1,
-        U32 => 1,
-        U64 => 2,
-        U128 => 4,
-        BFE => 1,
-        XFE => 3,
-        Digest => 5,
-        List(_list_type) => 1,
-        Tuple(tuple_type) => tuple_type.iter().map(size_of).sum(),
-    }
-}
-
 /// Copy a value at a position on the stack to the top
 fn dup_value_from_stack_code(
     position: Ord16,
     data_type: &ast::DataType,
 ) -> Vec<LabelledInstruction> {
-    let elem_size = size_of(data_type);
+    let elem_size = data_type.size_of();
 
     // the position of the deepest element of the value.
     let n: usize = Into::<usize>::into(position) + elem_size - 1;

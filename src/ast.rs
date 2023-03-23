@@ -160,6 +160,20 @@ impl DataType {
     pub fn unit() -> Self {
         Self::Tuple(vec![])
     }
+
+    pub fn size_of(&self) -> usize {
+        match self {
+            Self::Bool => 1,
+            Self::U32 => 1,
+            Self::U64 => 2,
+            Self::U128 => 4,
+            Self::BFE => 1,
+            Self::XFE => 3,
+            Self::Digest => 5,
+            Self::List(_list_type) => 1,
+            Self::Tuple(tuple_type) => tuple_type.iter().map(Self::size_of).sum(),
+        }
+    }
 }
 
 impl TryFrom<DataType> for tasm_lib::snippet::DataType {
