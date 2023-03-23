@@ -553,7 +553,7 @@ mod run_tests {
         let mut memory: HashMap<BFieldElement, BFieldElement> = HashMap::default();
 
         // Dynamic allocator
-        let space_used = 1 + 16 * 1 + 2 + 16 * 2 + 2;
+        let space_used = 1 + 16 + 2 + 16 * 2 + 2;
         assert!(memory
             .insert(BFieldElement::zero(), BFieldElement::new(space_used))
             .is_none());
