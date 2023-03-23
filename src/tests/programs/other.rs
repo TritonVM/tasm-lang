@@ -552,9 +552,10 @@ mod run_tests {
 
         let mut memory: HashMap<BFieldElement, BFieldElement> = HashMap::default();
 
-        // Free-pointer
+        // Dynamic allocator
+        let space_used = 1 + 16 * 1 + 2 + 16 * 2 + 2;
         assert!(memory
-            .insert(BFieldElement::zero(), BFieldElement::new(53))
+            .insert(BFieldElement::zero(), BFieldElement::new(space_used))
             .is_none());
 
         let list_pointer_a = BFieldElement::one();
