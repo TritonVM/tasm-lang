@@ -467,7 +467,7 @@ mod run_tests {
             inputs,
             outputs,
             input_memory,
-            memory,
+            Some(memory),
         );
     }
 
@@ -506,7 +506,7 @@ mod run_tests {
             vec![bfe_lit(list_pointer)],
             vec![],
             memory,
-            expected_final_memory,
+            Some(expected_final_memory),
         );
     }
 
@@ -579,7 +579,7 @@ mod run_tests {
             inputs,
             outputs,
             input_memory,
-            memory,
+            Some(memory),
         );
     }
 }
