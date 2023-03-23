@@ -384,7 +384,7 @@ mod run_tests {
     use twenty_first::shared_math::b_field_element::BFieldElement;
 
     use super::*;
-    use crate::tests::shared_test::*;
+    use crate::{ast, tests::shared_test::*};
 
     #[test]
     fn simple_while_loop_run_test() {
@@ -427,6 +427,7 @@ mod run_tests {
     #[test]
     fn simple_list_support_run_test() {
         use tasm_lib::rust_shadowing_helper_functions::safe_list::safe_list_new;
+        use tasm_lib::rust_shadowing_helper_functions::safe_list::safe_list_pop;
         use tasm_lib::rust_shadowing_helper_functions::safe_list::safe_list_push;
 
         let inputs = vec![];
@@ -440,25 +441,25 @@ mod run_tests {
         let mut memory: HashMap<BFieldElement, BFieldElement> = HashMap::default();
 
         // Free-pointer
-        let elem_0 = vec![BFieldElement::new(37), BFieldElement::new(0)];
-        assert!(memory.insert(BFieldElement::zero(), elem_0[0]).is_none());
+        // `2 * 17 + 2` is used by list. `1` is used by the dynamic allocator.
+        let total_memory_used = 2 * 17 + 2 + 1;
+        assert!(memory
+            .insert(BFieldElement::zero(), BFieldElement::new(total_memory_used))
+            .is_none());
 
         let list_pointer = BFieldElement::one();
         safe_list_new(list_pointer, 17, &mut memory);
 
-        let elem_1 = vec![BFieldElement::new(2000), BFieldElement::new(0)];
+        let elem_0 = vec![BFieldElement::new(2000), BFieldElement::new(0)];
+        safe_list_push(list_pointer, elem_0.clone(), &mut memory, elem_0.len());
+
+        let elem_1 = vec![BFieldElement::new(5000), BFieldElement::new(0)];
         safe_list_push(list_pointer, elem_1.clone(), &mut memory, elem_1.len());
 
-        let elem_2 = vec![BFieldElement::new(5000), BFieldElement::new(0)];
+        let elem_2 = vec![BFieldElement::new(4000), BFieldElement::new(0)];
         safe_list_push(list_pointer, elem_2.clone(), &mut memory, elem_2.len());
 
-        let elem_3 = vec![BFieldElement::new(4000), BFieldElement::new(0)];
-        safe_list_push(list_pointer, elem_3.clone(), &mut memory, elem_3.len());
-
-        // We do not have an equivalent to `unsafe_list_set_length`.
-        assert!(memory
-            .insert(list_pointer, BFieldElement::new(2_u64))
-            .is_some());
+        safe_list_pop(list_pointer, &mut memory, ast::DataType::U64.size_of());
 
         let input_memory = HashMap::default();
         compare_prop_with_stack_and_memory(
