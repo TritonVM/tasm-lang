@@ -1,5 +1,6 @@
 use itertools::Itertools;
 use std::collections::{HashMap, HashSet};
+use syn::token::In;
 use tasm_lib::library::Library;
 use tasm_lib::snippet::Snippet;
 use tasm_lib::{arithmetic, hashing};
@@ -102,13 +103,32 @@ impl VStack {
 
         // Generate code to move value to the bottom of the requested stack range
         let words_to_remove = height_of_affected_stack - top_value_size;
-        assert!(
-            words_to_remove <= STACK_SIZE,
-            "Return statement can max remove {STACK_SIZE} elements from the stack. Needs to move: {words_to_remove}"
-        );
-        let code = if words_to_remove != 0 && top_value_size <= words_to_remove {
+        // assert!(
+        //     words_to_remove <= STACK_SIZE,
+        //     "Return statement can max remove {STACK_SIZE} elements from the stack. Needs to move: {words_to_remove}"
+        // );
+        let code = if words_to_remove != 0
+            && top_value_size <= words_to_remove
+            && words_to_remove < STACK_SIZE
+        {
             let swap_instruction = Instruction(Swap(words_to_remove.try_into().unwrap()));
             vec![vec![swap_instruction, pop()]; top_value_size].concat()
+        } else if words_to_remove >= STACK_SIZE {
+            // How to handle this. By spilling to memory. Popping everything and then restoring?
+            let mut words_to_remove = words_to_remove;
+            let mut code = vec![];
+            while words_to_remove > 0 {
+                let swap_arg = if words_to_remove >= STACK_SIZE {
+                    STACK_SIZE as u64 - 1
+                } else {
+                    words_to_remove as u64
+                };
+                let swap_instruction = swap(swap_arg);
+                code.append(&mut vec![vec![swap_instruction, pop()]; top_value_size].concat());
+                code.append(&mut vec![pop(); words_to_remove - top_value_size]);
+                words_to_remove -= swap_arg as usize;
+            }
+            code
         } else if words_to_remove != 0 {
             // Here, the number of words under the top element is less than the size of
             // the top element. We special-case this as the order on the stack
@@ -210,11 +230,20 @@ impl CompilerState {
             // panic!("Cannot allocate more than {STACK_SIZE} words on stack");
         }
 
+        if self.spill_required.contains(&address) {
+            println!("Warning: spill required of: {address}");
+        }
+
         address
     }
 
     pub fn import_snippet(&mut self, snippet: Box<dyn Snippet>) -> String {
         self.library.import(snippet)
+    }
+
+    pub fn mark_as_spilled(&mut self, value_identifier: &ValueIdentifier) {
+        println!("Warning: Marking {value_identifier} as spilled");
+        self.spill_required.insert(value_identifier.to_owned());
     }
 
     fn verify_same_ordering_of_bindings(
@@ -289,8 +318,7 @@ impl CompilerState {
         if spilled.is_none()
             && stack_position_of_value_to_remove + type_to_remove.size_of() - 1 >= STACK_SIZE
         {
-            self.spill_required
-                .insert(value_identifier_to_remove.to_owned());
+            self.mark_as_spilled(value_identifier_to_remove);
         }
 
         let (top_element_id, (top_element_type, _)) =
@@ -369,7 +397,7 @@ impl CompilerState {
         if spilled.is_none()
             && stack_position_of_value_to_remove + top_element_type.size_of() - 1 >= STACK_SIZE
         {
-            self.spill_required.insert(tuple_identifier.to_owned());
+            self.mark_as_spilled(tuple_identifier);
         }
 
         // TODO: Handle code for spilled variables and remove this assert
@@ -886,13 +914,19 @@ fn compile_expr(
         ast::Expr::Var(identifier) => match identifier {
             ast::Identifier::String(var_name, known_type) => {
                 let data_type = known_type.get_type();
-                let var_addr = state.var_addr.get(var_name).expect("variable exists");
-                let (position, old_data_type, spilled) = state.vstack.find_stack_value(var_addr);
+                let var_addr = state
+                    .var_addr
+                    .get(var_name)
+                    .expect("variable exists")
+                    .to_owned();
+                let (position, old_data_type, spilled) = state.vstack.find_stack_value(&var_addr);
 
                 // If value is not marked as a spilled value and it's inacessible through swap(n)/dup(n),
                 // this value must be marked as a value to be spilled, and the compiler must be run again.
-                if spilled.is_none() && position + data_type.size_of() - 1 >= STACK_SIZE {
-                    state.spill_required.insert(var_addr.to_owned());
+                let bottom_position = position + data_type.size_of() - 1;
+                let accessible = bottom_position < STACK_SIZE;
+                if spilled.is_none() && !accessible {
+                    state.mark_as_spilled(&var_addr);
                 }
 
                 // TODO: Handle spilled values
@@ -901,38 +935,55 @@ fn compile_expr(
                 // sanity check
                 assert_eq!(old_data_type, data_type, "type must match expected type");
 
-                let var_copy_code =
-                    dup_value_from_stack_code(position.try_into().unwrap(), &data_type);
+                let var_copy_code = match spilled {
+                    Some(spill_address) => todo!(),
+                    None => {
+                        if !accessible {
+                            vec![push(0), assert_()]
+                        } else {
+                            dup_value_from_stack_code(position.try_into().unwrap(), &data_type)
+                        }
+                    }
+                };
                 let var_copy_addr = state.new_value_identifier("_var_copy", &data_type);
 
                 (var_copy_addr, var_copy_code)
             }
             ast::Identifier::TupleIndex(ident, tuple_index) => {
-                let data_type = ident.get_type();
-                let data_type = match data_type {
-                    ast::DataType::Tuple(types) => types[*tuple_index].clone(),
-                    _ => panic!("Expected type was tuple"),
-                };
                 let var_name = if let ast::Identifier::String(var_name, _) = *ident.to_owned() {
                     var_name
                 } else {
                     panic!("Nested tuple references not yet supported");
                 };
-                let var_addr = state.var_addr.get(&var_name).expect("variable exists");
+                let var_addr = state
+                    .var_addr
+                    .get(&var_name)
+                    .expect("variable exists")
+                    .to_owned();
                 let (position, element_type, spilled) =
-                    state.vstack.find_tuple_element(var_addr, *tuple_index);
+                    state.vstack.find_tuple_element(&var_addr, *tuple_index);
 
                 // If value is not marked as a spilled value and it's inacessible through swap(n)/dup(n),
                 // this value must be marked as a value to be spilled, and the compiler must be run again.
-                if spilled.is_none() && position + data_type.size_of() - 1 >= STACK_SIZE {
-                    state.spill_required.insert(var_addr.to_owned());
+                let bottom_position = position + element_type.size_of() - 1;
+                let accessible = bottom_position < STACK_SIZE;
+                if spilled.is_none() && !accessible {
+                    state.mark_as_spilled(&var_addr);
                 }
 
                 // TODO: Handle spilled values
                 assert!(spilled.is_none(), "Cannot handle spilled values yet.");
 
-                let var_copy_code =
-                    dup_value_from_stack_code(position.try_into().unwrap(), &element_type);
+                let var_copy_code = match spilled {
+                    Some(spill_address) => todo!(),
+                    None => {
+                        if !accessible {
+                            vec![push(0), assert_()]
+                        } else {
+                            dup_value_from_stack_code(position.try_into().unwrap(), &element_type)
+                        }
+                    }
+                };
                 let var_copy_addr = state.new_value_identifier("_var_copy", &element_type);
 
                 (var_copy_addr, var_copy_code)
@@ -954,13 +1005,16 @@ fn compile_expr(
                 let var_addr = state
                     .var_addr
                     .get(&ident_as_string)
-                    .expect("variable exists");
-                let (position, old_data_type, spilled) = state.vstack.find_stack_value(var_addr);
+                    .expect("variable exists")
+                    .to_owned();
+                let (position, old_data_type, spilled) = state.vstack.find_stack_value(&var_addr);
 
                 // If value is not marked as a spilled value and it's inacessible through swap(n)/dup(n),
                 // this value must be marked as a value to be spilled, and the compiler must be run again.
-                if spilled.is_none() && position + old_data_type.size_of() - 1 >= STACK_SIZE {
-                    state.spill_required.insert(var_addr.to_owned());
+                let bottom_position = position + old_data_type.size_of() - 1;
+                let accessible = bottom_position < STACK_SIZE;
+                if spilled.is_none() && !accessible {
+                    state.mark_as_spilled(&var_addr)
                 }
 
                 // TODO: Handle spilled values
