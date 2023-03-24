@@ -1,5 +1,5 @@
 use itertools::Itertools;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use tasm_lib::library::Library;
 use tasm_lib::snippet::Snippet;
 use tasm_lib::{arithmetic, hashing};
@@ -21,7 +21,10 @@ type VStack = Stack<(ValueIdentifier, (ast::DataType, Option<u32>))>;
 type VarAddr = HashMap<String, ValueIdentifier>;
 
 impl VStack {
-    /// Returns (stack_position, data_type, maybe_memory_location). Top of stack has index 0.
+    /// Returns (stack_position, data_type, maybe_memory_location) where `stack_position` is the top of
+    /// the value on the stack, i.e. the most shallow part of the value. Top of stack has index 0.
+    /// May return a depth that exceeds the addressable space (16 elements) in which case spilling
+    /// may be required.
     pub fn find_stack_value(
         &self,
         seek_addr: &ValueIdentifier,
@@ -37,7 +40,7 @@ impl VStack {
             // By asserting after `+= data_type.size_of()`, we check that the deepest part
             // of the sought value is addressable, not just the top part of the value.
             // TODO: REMOVE THIS ASSERT!
-            assert!(position < STACK_SIZE, "Addressing beyond the {STACK_SIZE}'th stack element requires spilling and register-allocation.");
+            // assert!(position < STACK_SIZE, "Addressing beyond the {STACK_SIZE}'th stack element requires spilling and register-allocation.");
         }
 
         panic!("Cannot find {seek_addr} on vstack")
@@ -69,101 +72,6 @@ impl VStack {
             element_types[tuple_index].clone(),
             spilled.map(|x| x + tuple_depth as u32),
         )
-    }
-
-    /// Return the code to overwrite a stack value with the value that's on top of the stack
-    /// Note that the top value and the value to be removed *must* be of the same type.
-    /// Updates the `vstack` but not the `var_addr` as this is assumed to be handled by the caller.
-    fn overwrite_stack_value_with_same_data_type(
-        &mut self,
-        value_identifier_to_remove: &ValueIdentifier,
-    ) -> Vec<LabelledInstruction> {
-        let (stack_position_of_value_to_remove, type_to_remove, spilled) =
-            self.find_stack_value(value_identifier_to_remove);
-        let (top_element_id, (top_element_type, _)) = self.pop().expect("vstack cannot be empty");
-
-        assert_eq!(
-            top_element_type, type_to_remove,
-            "Top stack value and value to remove must match"
-        );
-
-        assert!(
-            spilled.is_none(),
-            "Function can't handle spilled values yet"
-        );
-
-        let value_size = type_to_remove.size_of();
-
-        // Replace the overwritten value on stack
-        let code: Vec<LabelledInstruction> =
-            if Into::<usize>::into(stack_position_of_value_to_remove) > 0 {
-                vec![
-                    vec![
-                        Instruction(Swap(stack_position_of_value_to_remove.try_into().unwrap())),
-                        pop()
-                    ];
-                    value_size
-                ]
-                .concat()
-            } else {
-                vec![]
-            };
-
-        // Remove the overwritten value from vstack
-        let old_value = (
-            value_identifier_to_remove.to_owned(),
-            (type_to_remove, None),
-        );
-        let new_value = (top_element_id, (top_element_type, None));
-        self.replace_value(&old_value, new_value);
-
-        code
-    }
-
-    fn replace_tuple_element(
-        &mut self,
-        tuple_identifier: &ValueIdentifier,
-        tuple_index: usize,
-    ) -> Vec<LabelledInstruction> {
-        // This function assumes that the last element of the tuple is placed on top of the stack
-        let (stack_position_of_tuple, tuple_type, _) = self.find_stack_value(tuple_identifier);
-        let element_types = if let ast::DataType::Tuple(ets) = &tuple_type {
-            ets
-        } else {
-            panic!("Original value must have type tuple")
-        };
-
-        let (_top_element_id, _top_element_type) = self.pop().expect("vstack cannot be empty");
-
-        // Last element of tuple is on top of stack. How many machine
-        // words deep is the value we want to replace?
-        let tuple_depth: usize = element_types
-            .iter()
-            .enumerate()
-            .filter(|(i, _x)| *i > tuple_index)
-            .map(|(_i, x)| x.size_of())
-            .sum::<usize>();
-
-        let stack_position_of_value_to_remove =
-            Into::<usize>::into(stack_position_of_tuple) + tuple_depth;
-
-        // Replace the overwritten value on stack
-        let value_size = element_types[tuple_index].size_of();
-        let code: Vec<LabelledInstruction> =
-            if Into::<usize>::into(stack_position_of_value_to_remove) > 0 {
-                vec![
-                    vec![
-                        Instruction(Swap(stack_position_of_value_to_remove.try_into().unwrap())),
-                        pop()
-                    ];
-                    value_size
-                ]
-                .concat()
-            } else {
-                vec![]
-            };
-
-        code
     }
 
     /// Return code that clears the stack above a certain height but leaves the value
@@ -253,6 +161,7 @@ pub struct CompilerState {
     // Variables that have been spilled to memory.
     // Mapping from value identifier to memory location.
     // pub spilled_values: HashMap<ValueIdentifier, u32>,
+    pub spill_required: HashSet<ValueIdentifier>,
 
     // Mapping from variable name to its internal identifier
     pub var_addr: VarAddr,
@@ -365,6 +274,129 @@ impl CompilerState {
         // not change the stack-ordering of bindings when a value is re-assigned.
     }
 
+    /// Return the code to overwrite a stack value with the value that's on top of the stack
+    /// Note that the top value and the value to be removed *must* be of the same type.
+    /// Updates the `vstack` but not the `var_addr` as this is assumed to be handled by the caller.
+    fn overwrite_stack_value_with_same_data_type(
+        &mut self,
+        value_identifier_to_remove: &ValueIdentifier,
+    ) -> Vec<LabelledInstruction> {
+        let (stack_position_of_value_to_remove, type_to_remove, spilled) =
+            self.vstack.find_stack_value(value_identifier_to_remove);
+
+        // If value is not marked as a spilled value and it's inacessible through swap(n)/dup(n),
+        // this value must be marked as a value to be spilled, and the compiler must be run again.
+        if spilled.is_none()
+            && stack_position_of_value_to_remove + type_to_remove.size_of() - 1 >= STACK_SIZE
+        {
+            self.spill_required
+                .insert(value_identifier_to_remove.to_owned());
+        }
+
+        let (top_element_id, (top_element_type, _)) =
+            self.vstack.pop().expect("vstack cannot be empty");
+
+        assert_eq!(
+            top_element_type, type_to_remove,
+            "Top stack value and value to remove must match"
+        );
+
+        // TODO: Handle code for spilled variables and remove this assert
+        assert!(
+            spilled.is_none(),
+            "Function can't handle spilled values yet"
+        );
+
+        let value_size = type_to_remove.size_of();
+
+        // Replace the overwritten value on stack
+        let code: Vec<LabelledInstruction> =
+            if Into::<usize>::into(stack_position_of_value_to_remove) > 0 {
+                vec![
+                    vec![
+                        Instruction(Swap(stack_position_of_value_to_remove.try_into().unwrap())),
+                        pop()
+                    ];
+                    value_size
+                ]
+                .concat()
+            } else {
+                vec![]
+            };
+
+        // Remove the overwritten value from vstack
+        let old_value = (
+            value_identifier_to_remove.to_owned(),
+            (type_to_remove, None),
+        );
+        let new_value = (top_element_id, (top_element_type, None));
+        self.vstack.replace_value(&old_value, new_value);
+
+        code
+    }
+
+    fn replace_tuple_element(
+        &mut self,
+        tuple_identifier: &ValueIdentifier,
+        tuple_index: usize,
+    ) -> Vec<LabelledInstruction> {
+        // This function assumes that the last element of the tuple is placed on top of the stack
+        let (stack_position_of_tuple, tuple_type, spilled) =
+            self.vstack.find_stack_value(tuple_identifier);
+        let element_types = if let ast::DataType::Tuple(ets) = &tuple_type {
+            ets
+        } else {
+            panic!("Original value must have type tuple")
+        };
+
+        let (_top_element_id, (top_element_type, _)) =
+            self.vstack.pop().expect("vstack cannot be empty");
+
+        // Last element of tuple is on top of stack. How many machine
+        // words deep is the value we want to replace?
+        let tuple_depth: usize = element_types
+            .iter()
+            .enumerate()
+            .filter(|(i, _x)| *i > tuple_index)
+            .map(|(_i, x)| x.size_of())
+            .sum::<usize>();
+
+        let stack_position_of_value_to_remove =
+            Into::<usize>::into(stack_position_of_tuple) + tuple_depth;
+
+        // If value is not marked as a spilled value and it's inacessible through swap(n)/dup(n),
+        // this value must be marked as a value to be spilled, and the compiler must be run again.
+        if spilled.is_none()
+            && stack_position_of_value_to_remove + top_element_type.size_of() - 1 >= STACK_SIZE
+        {
+            self.spill_required.insert(tuple_identifier.to_owned());
+        }
+
+        // TODO: Handle code for spilled variables and remove this assert
+        assert!(
+            spilled.is_none(),
+            "Function can't handle spilled values yet"
+        );
+
+        // Replace the overwritten value on stack
+        let value_size = element_types[tuple_index].size_of();
+        let code: Vec<LabelledInstruction> =
+            if Into::<usize>::into(stack_position_of_value_to_remove) > 0 {
+                vec![
+                    vec![
+                        Instruction(Swap(stack_position_of_value_to_remove.try_into().unwrap())),
+                        pop()
+                    ];
+                    value_size
+                ]
+                .concat()
+            } else {
+                vec![]
+            };
+
+        code
+    }
+
     /// Restore the vstack to a previous state, representing the state the stack had
     /// at the beginning of a codeblock. Also returns the code to achieve this.
     // TODO: Should also handle spilled_values
@@ -440,6 +472,22 @@ pub fn compile(function: &ast::Fn<types::Typing>) -> Vec<LabelledInstruction> {
 
     let mut state = CompilerState::default();
 
+    for arg in function.fn_signature.args.iter() {
+        let fn_arg_addr = state.new_value_identifier("_fn_arg", &arg.data_type);
+        state.var_addr.insert(arg.name.clone(), fn_arg_addr);
+    }
+
+    // Figure out which values have to be spilled
+    let _fn_body_code = function
+        .body
+        .iter()
+        .map(|stmt| compile_stmt(stmt, function, &mut state))
+        .concat();
+
+    // Run the compilation
+    let spill_required = state.spill_required;
+    state = CompilerState::default();
+    state.spill_required = spill_required;
     for arg in function.fn_signature.args.iter() {
         let fn_arg_addr = state.new_value_identifier("_fn_arg", &arg.data_type);
         state.var_addr.insert(arg.name.clone(), fn_arg_addr);
@@ -521,9 +569,8 @@ fn compile_stmt(
                     // Currently, assignments just get the same place on the stack as the value
                     // that it is overwriting had. This may or may not be efficient.
                     // Get code to overwrite old value, and update the compiler's vstack
-                    let overwrite_code = state
-                        .vstack
-                        .overwrite_stack_value_with_same_data_type(&old_value_identifier);
+                    let overwrite_code =
+                        state.overwrite_stack_value_with_same_data_type(&old_value_identifier);
 
                     vec![expr_code, overwrite_code].concat()
                 }
@@ -537,9 +584,8 @@ fn compile_stmt(
 
                     let value_identifier = state.var_addr[&var_name].clone();
 
-                    let overwrite_code = state
-                        .vstack
-                        .replace_tuple_element(&value_identifier, *tuple_index);
+                    let overwrite_code =
+                        state.replace_tuple_element(&value_identifier, *tuple_index);
 
                     vec![expr_code, overwrite_code].concat()
                 }
@@ -843,6 +889,12 @@ fn compile_expr(
                 let var_addr = state.var_addr.get(var_name).expect("variable exists");
                 let (position, old_data_type, spilled) = state.vstack.find_stack_value(var_addr);
 
+                // If value is not marked as a spilled value and it's inacessible through swap(n)/dup(n),
+                // this value must be marked as a value to be spilled, and the compiler must be run again.
+                if spilled.is_none() && position + data_type.size_of() - 1 >= STACK_SIZE {
+                    state.spill_required.insert(var_addr.to_owned());
+                }
+
                 // TODO: Handle spilled values
                 assert!(spilled.is_none(), "Cannot handle spilled values yet.");
 
@@ -856,6 +908,11 @@ fn compile_expr(
                 (var_copy_addr, var_copy_code)
             }
             ast::Identifier::TupleIndex(ident, tuple_index) => {
+                let data_type = ident.get_type();
+                let data_type = match data_type {
+                    ast::DataType::Tuple(types) => types[*tuple_index].clone(),
+                    _ => panic!("Expected type was tuple"),
+                };
                 let var_name = if let ast::Identifier::String(var_name, _) = *ident.to_owned() {
                     var_name
                 } else {
@@ -864,6 +921,12 @@ fn compile_expr(
                 let var_addr = state.var_addr.get(&var_name).expect("variable exists");
                 let (position, element_type, spilled) =
                     state.vstack.find_tuple_element(var_addr, *tuple_index);
+
+                // If value is not marked as a spilled value and it's inacessible through swap(n)/dup(n),
+                // this value must be marked as a value to be spilled, and the compiler must be run again.
+                if spilled.is_none() && position + data_type.size_of() - 1 >= STACK_SIZE {
+                    state.spill_required.insert(var_addr.to_owned());
+                }
 
                 // TODO: Handle spilled values
                 assert!(spilled.is_none(), "Cannot handle spilled values yet.");
@@ -892,7 +955,13 @@ fn compile_expr(
                     .var_addr
                     .get(&ident_as_string)
                     .expect("variable exists");
-                let (_position, old_data_type, spilled) = state.vstack.find_stack_value(var_addr);
+                let (position, old_data_type, spilled) = state.vstack.find_stack_value(var_addr);
+
+                // If value is not marked as a spilled value and it's inacessible through swap(n)/dup(n),
+                // this value must be marked as a value to be spilled, and the compiler must be run again.
+                if spilled.is_none() && position + old_data_type.size_of() - 1 >= STACK_SIZE {
+                    state.spill_required.insert(var_addr.to_owned());
+                }
 
                 // TODO: Handle spilled values
                 assert!(spilled.is_none(), "Cannot handle spilled values yet.");
