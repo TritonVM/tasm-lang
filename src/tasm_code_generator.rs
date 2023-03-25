@@ -75,93 +75,6 @@ impl VStack {
         )
     }
 
-    /// Return code that clears the stack above a certain height but leaves the value
-    /// that's on the top of the stack when this function is called.
-    /// Also updates vstack to reflect this.
-    fn clear_all_but_top_stack_value_above_height(
-        &mut self,
-        height: usize,
-    ) -> Vec<LabelledInstruction> {
-        /// Code generation for removing elements from the bottom of the stack while preserving
-        /// the order of the values above.
-        fn clear_bottom_of_stack(
-            top_value_size: usize,
-            words_to_remove: usize,
-        ) -> Vec<LabelledInstruction> {
-            match (top_value_size, words_to_remove) {
-                (4, 2) => vec![swap(1), swap(3), swap(5), pop(), swap(1), swap(3), pop()],
-                _ => panic!("Unsupported. Please cover more special cases. Got: {top_value_size}, {words_to_remove}"),
-            }
-        }
-
-        let height_of_affected_stack: usize = self.get_stack_height() - height;
-
-        let top_element = self
-            .pop()
-            .expect("Cannot remove all but top element from an empty stack");
-        let top_value_size = top_element.1 .0.size_of();
-
-        // Generate code to move value to the bottom of the requested stack range
-        let words_to_remove = height_of_affected_stack - top_value_size;
-        // assert!(
-        //     words_to_remove <= STACK_SIZE,
-        //     "Return statement can max remove {STACK_SIZE} elements from the stack. Needs to move: {words_to_remove}"
-        // );
-        let code = if words_to_remove != 0
-            && top_value_size <= words_to_remove
-            && words_to_remove < STACK_SIZE
-        {
-            let swap_instruction = Instruction(Swap(words_to_remove.try_into().unwrap()));
-            vec![vec![swap_instruction, pop()]; top_value_size].concat()
-        } else if words_to_remove >= STACK_SIZE {
-            // How to handle this. By spilling to memory. Popping everything and then restoring?
-            let mut words_to_remove = words_to_remove;
-            let mut code = vec![];
-            while words_to_remove > 0 {
-                let swap_arg = if words_to_remove >= STACK_SIZE {
-                    STACK_SIZE as u64 - 1
-                } else {
-                    words_to_remove as u64
-                };
-                let swap_instruction = swap(swap_arg);
-                code.append(&mut vec![vec![swap_instruction, pop()]; top_value_size].concat());
-                code.append(&mut vec![pop(); words_to_remove - top_value_size]);
-                words_to_remove -= swap_arg as usize;
-            }
-            code
-        } else if words_to_remove != 0 {
-            // Here, the number of words under the top element is less than the size of
-            // the top element. We special-case this as the order on the stack
-            // must be preserverved, which is non-trivial.
-            clear_bottom_of_stack(top_value_size, words_to_remove)
-        } else {
-            vec![]
-        };
-
-        // Clean up vstack
-        while self.get_stack_height() > height {
-            self.pop();
-        }
-
-        // Sanity check that input argument was aligned with a value
-        assert_eq!(
-            height,
-            self.get_stack_height(),
-            "Cannot clear stack to position that is not alligned with a value"
-        );
-
-        self.push(top_element);
-
-        // Generate code to remove any remaining values from the requested stack range
-        let remaining_pops = if words_to_remove > top_value_size {
-            words_to_remove - top_value_size
-        } else {
-            0
-        };
-
-        vec![code, vec![pop(); remaining_pops]].concat()
-    }
-
     fn get_stack_height(&self) -> usize {
         self.inner
             .iter()
@@ -462,6 +375,105 @@ impl CompilerState {
         code
     }
 
+    /// Return code that clears the stack above a certain height but leaves the value
+    /// that's on the top of the stack when this function is called.
+    /// Also updates vstack to reflect this.
+    fn clear_all_but_top_stack_value_above_height(
+        &mut self,
+        height: usize,
+    ) -> Vec<LabelledInstruction> {
+        /// Code generation for removing elements from the bottom of the stack while preserving
+        /// the order of the values above.
+        fn clear_bottom_of_stack(
+            top_value_size: usize,
+            words_to_remove: usize,
+        ) -> Vec<LabelledInstruction> {
+            match (top_value_size, words_to_remove) {
+                (4, 2) => vec![swap(1), swap(3), swap(5), pop(), swap(1), swap(3), pop()],
+                _ => panic!("Unsupported. Please cover more special cases. Got: {top_value_size}, {words_to_remove}"),
+            }
+        }
+
+        let height_of_affected_stack: usize = self.vstack.get_stack_height() - height;
+
+        let top_element = self
+            .vstack
+            .pop()
+            .expect("Cannot remove all but top element from an empty stack");
+        let top_value_size = top_element.1 .0.size_of();
+
+        // Generate code to move value to the bottom of the requested stack range
+        let words_to_remove = height_of_affected_stack - top_value_size;
+        let code = if words_to_remove != 0
+            && top_value_size <= words_to_remove
+            && words_to_remove < STACK_SIZE
+        {
+            // If we can handle the stack clearing by just swapping the top value
+            // lower onto the stack and removing everything above, we do that.
+            let swap_instruction = Instruction(Swap(words_to_remove.try_into().unwrap()));
+            let mut code = vec![vec![swap_instruction, pop()]; top_value_size].concat();
+
+            // Generate code to remove any remaining values from the requested stack range
+            let remaining_pops = if words_to_remove > top_value_size {
+                words_to_remove - top_value_size
+            } else {
+                0
+            };
+
+            code.append(&mut vec![pop(); remaining_pops]);
+
+            code
+        } else if words_to_remove >= STACK_SIZE {
+            // In this case, we have to clear more elements from the stack than we can
+            // access with dup15/swap15. Our solution is to store the return value in
+            // memory, clear the stack, and read it back from memory.
+            let memory_location = self.library.kmalloc(top_value_size);
+            let mut code = store_top_value_in_memory(memory_location, top_value_size);
+            code.append(&mut vec![pop(); height_of_affected_stack]);
+            code.append(&mut load_from_memory(memory_location, top_value_size));
+
+            // let mut words_to_remove = words_to_remove;
+            // let mut code = vec![];
+            // while words_to_remove > 0 {
+            //     let swap_arg = if words_to_remove >= STACK_SIZE {
+            //         STACK_SIZE as u64 - 1
+            //     } else {
+            //         words_to_remove as u64
+            //     };
+            //     let swap_instruction = swap(swap_arg);
+            //     code.append(&mut vec![vec![swap_instruction, pop()]; top_value_size].concat());
+            //     code.append(&mut vec![pop(); words_to_remove - top_value_size]);
+            //     words_to_remove -= swap_arg as usize;
+            // }
+            code
+        } else if words_to_remove != 0 {
+            // Here, the number of words under the top element is less than the size of
+            // the top element. We special-case this as the order on the stack
+            // must be preserverved, which is non-trivial.
+            clear_bottom_of_stack(top_value_size, words_to_remove)
+        } else {
+            // The case where nothing has to be done since there is nothing below the
+            // top value that needs to be removed
+            vec![]
+        };
+
+        // Clean up vstack
+        while self.vstack.get_stack_height() > height {
+            self.vstack.pop();
+        }
+
+        // Sanity check that input argument was aligned with a value
+        assert_eq!(
+            height,
+            self.vstack.get_stack_height(),
+            "Cannot clear stack to position that is not alligned with a value"
+        );
+
+        self.vstack.push(top_element);
+
+        code
+    }
+
     /// Helper function for debugging
     #[allow(dead_code)]
     fn show_vstack_values(&self) {
@@ -673,7 +685,7 @@ fn compile_stmt(
                     }
 
                     // Now returned value is top of stack. Remove everything below it
-                    let cleanup_code = state.vstack.clear_all_but_top_stack_value_above_height(0);
+                    let cleanup_code = state.clear_all_but_top_stack_value_above_height(0);
 
                     // TODO: Cleanup `var_addr`
 
@@ -683,7 +695,7 @@ fn compile_stmt(
                         compile_expr(ret_expr, "ret_expr", &function.fn_signature.output, state).1;
 
                     // Remove all but top value from stack
-                    let cleanup_code = state.vstack.clear_all_but_top_stack_value_above_height(0);
+                    let cleanup_code = state.clear_all_but_top_stack_value_above_height(0);
 
                     // TODO: Cleanup `var_addr`
 
@@ -1577,7 +1589,6 @@ fn compile_expr(
             // value from the `then` branch on the stack, but not on vstack as this value is
             // not visible to the `else` branch.
             let mut then_body_cleanup_code = state
-                .vstack
                 .clear_all_but_top_stack_value_above_height(branch_start_vstack.get_stack_height());
             then_body_code.append(&mut then_body_cleanup_code);
             let _returned_value_from_then_block = state.vstack.pop().unwrap();
@@ -1592,7 +1603,6 @@ fn compile_expr(
             // value from the `else` branch on the stack, but not on vstack, as this is added
             // later.
             let mut else_body_cleanup_code = state
-                .vstack
                 .clear_all_but_top_stack_value_above_height(branch_start_vstack.get_stack_height());
             else_body_code.append(&mut else_body_cleanup_code);
             let _returned_value_from_else_block = state.vstack.pop().unwrap();
@@ -1695,6 +1705,67 @@ fn compile_expr(
             }
         }
     }
+}
+
+/// Return the code to store the top stack element at a
+/// specific memory address
+fn store_top_value_in_memory(
+    memory_location: usize,
+    top_value_size: usize,
+) -> Vec<LabelledInstruction> {
+    // Note that a spilled value is stored in memory as
+    // element_N element_{N -1 } ... element_0
+    // where N is `data_size - 1`.
+    // The same value has element_0 on top of the stack
+    let mut ret = vec![];
+    ret.push(push(memory_location as u64));
+    for i in 0..top_value_size {
+        let mut stack_depth: u64 = top_value_size as u64;
+        stack_depth -= i as u64;
+        ret.push(dup(stack_depth));
+        ret.push(write_mem());
+        // Stack: _ memory_address
+
+        // Increment memory address to prepare for next loop iteration
+        if i != top_value_size - 1 {
+            ret.push(push(1));
+            ret.push(add());
+            // Stack: _ (memory_address + 1)
+        }
+    }
+
+    // Remove memory address from top of stack
+    ret.push(pop());
+
+    ret
+}
+
+fn load_from_memory(memory_location: usize, top_value_size: usize) -> Vec<LabelledInstruction> {
+    let mut ret = vec![];
+    ret.push(push(memory_location as u64));
+
+    for i in 0..top_value_size {
+        // Stack: _ memory_address
+
+        ret.push(read_mem());
+        // Stack: _ memory_address value
+
+        ret.push(swap(1));
+
+        // Increment memory address to prepare for next loop iteration
+        if i != top_value_size - 1 {
+            ret.push(push(1));
+            ret.push(add());
+            // Stack: _ (memory_address + 1)
+        }
+    }
+
+    // Remove memory address from top of stack
+    ret.push(pop());
+
+    // Stack: _ element_N element_{N - 1} ... element_0
+
+    ret
 }
 
 fn compile_eq_code(
