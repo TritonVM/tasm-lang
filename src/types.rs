@@ -6,6 +6,7 @@ use twenty_first::shared_math::x_field_element::XFieldElement;
 use crate::ast;
 use crate::libraries::tasm;
 use crate::libraries::vector;
+use crate::tasm_code_generator::STACK_SIZE;
 
 #[derive(Debug, Default, Clone, Hash, PartialEq, Eq)]
 pub enum Typing {
@@ -162,6 +163,19 @@ pub fn annotate_fn(function: &mut ast::Fn<Typing>) {
             panic!("Duplicate function argument {}", arg.name);
         }
     }
+
+    // Verify that input arguments do not exceed 15 words
+    assert!(
+        state
+            .vtable
+            .values()
+            .map(|x| x.data_type.size_of())
+            .sum::<usize>()
+            < STACK_SIZE,
+        "{}: Cannot handle function signatures with input size exceeding {} words",
+        function.fn_signature.name,
+        STACK_SIZE - 1
+    );
 
     // Type-annotate each statement in-place
     function.body.iter_mut().for_each(|stmt| {
@@ -532,6 +546,7 @@ fn derive_annotate_expr_type(
 
             derive_annotate_fn_call_args(&fn_signature, args, state);
             *annot = Typing::KnownType(fn_signature.output.clone());
+
             fn_signature.output
         }
 

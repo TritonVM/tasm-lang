@@ -1,6 +1,5 @@
 use itertools::Itertools;
 use std::collections::{HashMap, HashSet};
-use syn::token::In;
 use tasm_lib::library::Library;
 use tasm_lib::snippet::Snippet;
 use tasm_lib::{arithmetic, hashing};
@@ -107,7 +106,7 @@ pub struct CompilerState {
 }
 
 // TODO: Use this value from Triton-VM
-const STACK_SIZE: usize = 16;
+pub const STACK_SIZE: usize = 16;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ValueIdentifier {
@@ -123,31 +122,35 @@ impl std::fmt::Display for ValueIdentifier {
 }
 
 impl CompilerState {
+    /// Get a new, guaranteed unique, identifier for a value. Returns an address to
+    /// spill the value to, iff spilling of this value is required.
     pub fn new_value_identifier(
         &mut self,
         prefix: &str,
         data_type: &ast::DataType,
-    ) -> ValueIdentifier {
+    ) -> (ValueIdentifier, Option<u32>) {
         let name = format!("_{}_{}_{}", prefix, data_type, self.counter);
         let address = ValueIdentifier { name };
 
-        // TODO: I think new value identifiers will always *not* be spilled, so it should be
-        // safe to set the "spilled" value to `None` here.
+        // Get a statically known memory address if value needs to be spilled to
+        // memory.
+        let spilled = if self.spill_required.contains(&address) {
+            println!("Warning: spill required of: {address}");
+            let spill_address = self
+                .library
+                .kmalloc(data_type.size_of())
+                .try_into()
+                .unwrap();
+            Some(spill_address)
+        } else {
+            None
+        };
+
         self.vstack
-            .push((address.clone(), (data_type.clone(), None)));
+            .push((address.clone(), (data_type.clone(), spilled)));
         self.counter += 1;
 
-        // Check if we need to start spilling/duplicating variables to memory
-        if self.vstack.get_stack_height() > STACK_SIZE {
-            // TODO: Add memory spilling here
-            // panic!("Cannot allocate more than {STACK_SIZE} words on stack");
-        }
-
-        if self.spill_required.contains(&address) {
-            println!("Warning: spill required of: {address}");
-        }
-
-        address
+        (address, spilled)
     }
 
     pub fn import_snippet(&mut self, snippet: Box<dyn Snippet>) -> String {
@@ -229,7 +232,7 @@ impl CompilerState {
         // If value is not marked as a spilled value and it's inacessible through swap(n)/dup(n),
         // this value must be marked as a value to be spilled, and the compiler must be run again.
         if spilled.is_none()
-            && stack_position_of_value_to_remove + type_to_remove.size_of() - 1 >= STACK_SIZE
+            && stack_position_of_value_to_remove + type_to_remove.size_of() > STACK_SIZE
         {
             self.mark_as_spilled(value_identifier_to_remove);
         }
@@ -308,7 +311,7 @@ impl CompilerState {
         // If value is not marked as a spilled value and it's inacessible through swap(n)/dup(n),
         // this value must be marked as a value to be spilled, and the compiler must be run again.
         if spilled.is_none()
-            && stack_position_of_value_to_remove + top_element_type.size_of() - 1 >= STACK_SIZE
+            && stack_position_of_value_to_remove + top_element_type.size_of() > STACK_SIZE
         {
             self.mark_as_spilled(tuple_identifier);
         }
@@ -427,7 +430,7 @@ impl CompilerState {
             // In this case, we have to clear more elements from the stack than we can
             // access with dup15/swap15. Our solution is to store the return value in
             // memory, clear the stack, and read it back from memory.
-            let memory_location = self.library.kmalloc(top_value_size);
+            let memory_location: u32 = self.library.kmalloc(top_value_size).try_into().unwrap();
             let mut code = store_top_value_in_memory(memory_location, top_value_size);
             code.append(&mut vec![pop(); height_of_affected_stack]);
             code.append(&mut load_from_memory(memory_location, top_value_size));
@@ -501,6 +504,7 @@ impl CompilerState {
 }
 
 pub fn compile(function: &ast::Fn<types::Typing>) -> Vec<LabelledInstruction> {
+    const FN_ARG_NAME_PREFIX: &str = "fn_arg";
     let fn_name = &function.fn_signature.name;
     let _fn_stack_input_sig = function
         .fn_signature
@@ -510,34 +514,61 @@ pub fn compile(function: &ast::Fn<types::Typing>) -> Vec<LabelledInstruction> {
         .join(" ");
     let _fn_stack_output_sig = format!("{}", function.fn_signature.output);
 
+    // Run the compilation 1st time to learn which values need to be spilled to memory
     let mut state = CompilerState::default();
 
     for arg in function.fn_signature.args.iter() {
-        let fn_arg_addr = state.new_value_identifier("_fn_arg", &arg.data_type);
+        let (fn_arg_addr, spill) = state.new_value_identifier(FN_ARG_NAME_PREFIX, &arg.data_type);
         state.var_addr.insert(arg.name.clone(), fn_arg_addr);
+
+        assert!(
+            spill.is_none(),
+            "Cannot handle spill 1st time code generator runs"
+        );
     }
 
-    // Figure out which values have to be spilled
     let _fn_body_code = function
         .body
         .iter()
         .map(|stmt| compile_stmt(stmt, function, &mut state))
         .concat();
 
-    // Run the compilation
+    // Run the compilation again know that we know which values to spill
     let spill_required = state.spill_required;
     state = CompilerState::default();
     state.spill_required = spill_required;
+    let mut fn_arg_spilling = vec![];
     for arg in function.fn_signature.args.iter() {
-        let fn_arg_addr = state.new_value_identifier("_fn_arg", &arg.data_type);
-        state.var_addr.insert(arg.name.clone(), fn_arg_addr);
+        let (fn_arg_addr, spill) = state.new_value_identifier(FN_ARG_NAME_PREFIX, &arg.data_type);
+        state.var_addr.insert(arg.name.clone(), fn_arg_addr.clone());
+
+        if let Some(_spill_addr) = spill {
+            fn_arg_spilling.push(fn_arg_addr);
+        }
     }
 
-    let fn_body_code = function
-        .body
-        .iter()
-        .map(|stmt| compile_stmt(stmt, function, &mut state))
-        .concat();
+    let mut fn_body_code = vec![];
+
+    // Spill required function arguments to memory
+    for value_id in fn_arg_spilling {
+        // Get stack depth of value
+        let (stack_depth, data_type, spill_addr) = state.vstack.find_stack_value(&value_id);
+
+        // Produce the code to spill the function argument
+        let bottom_of_value = stack_depth + data_type.size_of() - 1;
+        let mut spill_code =
+            store_value_in_memory(spill_addr.unwrap(), data_type.size_of(), bottom_of_value);
+
+        fn_body_code.append(&mut spill_code);
+    }
+
+    fn_body_code.append(
+        &mut function
+            .body
+            .iter()
+            .map(|stmt| compile_stmt(stmt, function, &mut state))
+            .concat(),
+    );
 
     // TODO: Use this function once triton-opcodes reaches 0.15.0
     // let dependencies = state.library.all_imports_as_instruction_lists();
@@ -885,23 +916,25 @@ fn compile_expr(
     _data_type: &ast::DataType,
     state: &mut CompilerState,
 ) -> (ValueIdentifier, Vec<LabelledInstruction>) {
+    let result_type = expr.get_type();
     match expr {
         ast::Expr::Lit(expr_lit) => {
-            let res_type = expr_lit.get_type();
-            let addr = state.new_value_identifier(&format!("{res_type}_lit"), &res_type);
+            let (addr, spill) =
+                state.new_value_identifier(&format!("{result_type}_lit"), &result_type);
+            let spill_code = spill
+                .map(|x| store_top_value_in_memory(x, result_type.size_of()))
+                .unwrap_or_default();
 
-            match expr_lit {
-                ast::ExprLit::Bool(value) => (
-                    addr,
-                    vec![Instruction(Push(BFieldElement::new(*value as u64)))],
-                ),
+            let code = match expr_lit {
+                ast::ExprLit::Bool(value) => {
+                    vec![Instruction(Push(BFieldElement::new(*value as u64)))]
+                }
 
-                ast::ExprLit::U32(value) => (
-                    addr,
-                    vec![Instruction(Push(BFieldElement::new(*value as u64)))],
-                ),
+                ast::ExprLit::U32(value) => {
+                    vec![Instruction(Push(BFieldElement::new(*value as u64)))]
+                }
 
-                ast::ExprLit::BFE(value) => (addr, vec![Instruction(Push(*value))]),
+                ast::ExprLit::BFE(value) => vec![Instruction(Push(*value))],
 
                 ast::ExprLit::U64(value) => {
                     let as_u32s = U32s::<2>::try_from(*value).unwrap().to_sequence();
@@ -912,7 +945,7 @@ fn compile_expr(
                         .map(|bfe| Instruction(Push(**bfe)))
                         .collect_vec();
 
-                    (addr, code)
+                    code
                 }
 
                 ast::ExprLit::XFE(_) => todo!(),
@@ -920,12 +953,13 @@ fn compile_expr(
                 ast::ExprLit::GenericNum(n, _) => {
                     panic!("Type of number literal {n} not resolved")
                 }
-            }
+            };
+
+            (addr, vec![code, spill_code].concat())
         }
 
         ast::Expr::Var(identifier) => match identifier {
-            ast::Identifier::String(var_name, known_type) => {
-                let data_type = known_type.get_type();
+            ast::Identifier::String(var_name, _known_type) => {
                 let var_addr = state
                     .var_addr
                     .get(var_name)
@@ -935,31 +969,36 @@ fn compile_expr(
 
                 // If value is not marked as a spilled value and it's inacessible through swap(n)/dup(n),
                 // this value must be marked as a value to be spilled, and the compiler must be run again.
-                let bottom_position = position + data_type.size_of() - 1;
+                let bottom_position = position + result_type.size_of() - 1;
                 let accessible = bottom_position < STACK_SIZE;
                 if spilled.is_none() && !accessible {
                     state.mark_as_spilled(&var_addr);
                 }
 
-                // TODO: Handle spilled values
-                assert!(spilled.is_none(), "Cannot handle spilled values yet.");
-
                 // sanity check
-                assert_eq!(old_data_type, data_type, "type must match expected type");
+                assert_eq!(old_data_type, result_type, "type must match expected type");
 
-                let var_copy_code = match spilled {
-                    Some(spill_address) => todo!(),
+                let code = match spilled {
+                    Some(spill_address) => {
+                        // The value has been spilled to memory. Get it from there.
+                        load_from_memory(spill_address, result_type.size_of())
+                    }
                     None => {
                         if !accessible {
+                            // The compiler needs to run again. Produce unusable code.
                             vec![push(0), assert_()]
                         } else {
-                            dup_value_from_stack_code(position.try_into().unwrap(), &data_type)
+                            // The value is accessible on the stack. Copy it from there.
+                            dup_value_from_stack_code(position.try_into().unwrap(), &result_type)
                         }
                     }
                 };
-                let var_copy_addr = state.new_value_identifier("_var_copy", &data_type);
+                let (addr, spill) = state.new_value_identifier("_var_copy", &result_type);
+                let spill_code = spill
+                    .map(|x| store_top_value_in_memory(x, result_type.size_of()))
+                    .unwrap_or_default();
 
-                (var_copy_addr, var_copy_code)
+                (addr, vec![code, spill_code].concat())
             }
             ast::Identifier::TupleIndex(ident, tuple_index) => {
                 let var_name = if let ast::Identifier::String(var_name, _) = *ident.to_owned() {
@@ -972,6 +1011,10 @@ fn compile_expr(
                     .get(&var_name)
                     .expect("variable exists")
                     .to_owned();
+
+                // Note that this function returns the address of the *tuple element*, both
+                // on the stack and in memory if spilled. So the stack position/spilled address
+                // should not be shifted with the elements position inside the tuple.
                 let (position, element_type, spilled) =
                     state.vstack.find_tuple_element(&var_addr, *tuple_index);
 
@@ -983,25 +1026,30 @@ fn compile_expr(
                     state.mark_as_spilled(&var_addr);
                 }
 
-                // TODO: Handle spilled values
-                assert!(spilled.is_none(), "Cannot handle spilled values yet.");
-
-                let var_copy_code = match spilled {
-                    Some(spill_address) => todo!(),
+                let code = match spilled {
+                    Some(spill_address) => {
+                        // The value has been spilled to memory. Get it from there.
+                        load_from_memory(spill_address, element_type.size_of())
+                    }
                     None => {
                         if !accessible {
+                            // The compiler needs to run again. Produce unusable code.
                             vec![push(0), assert_()]
                         } else {
+                            // The value is accessible on the stack. Copy it from there.
                             dup_value_from_stack_code(position.try_into().unwrap(), &element_type)
                         }
                     }
                 };
-                let var_copy_addr = state.new_value_identifier("_var_copy", &element_type);
+                let (addr, spill) = state.new_value_identifier("_var_copy", &element_type);
 
-                (var_copy_addr, var_copy_code)
+                let spill_code = spill
+                    .map(|x| store_top_value_in_memory(x, element_type.size_of()))
+                    .unwrap_or_default();
+
+                (addr, vec![code, spill_code].concat())
             }
             ast::Identifier::ListIndex(ident, index_expr) => {
-                let res_type = expr.get_type();
                 let ident_type = ident.get_type();
                 let type_param = ident_type.type_parameter().unwrap_or_else(|| {
                     panic!("identifier must have type parameter when reading through indexing")
@@ -1010,6 +1058,7 @@ fn compile_expr(
                     tasm_lib::list::safe_u32::get::SafeGet(type_param.try_into().unwrap()),
                 ));
 
+                // TODO: Remove these sanity checks
                 let ident_as_string = match *ident.to_owned() {
                     ast::Identifier::String(as_str, _) => as_str,
                     _ => panic!("Nested list indexing not yet supported"),
@@ -1019,19 +1068,7 @@ fn compile_expr(
                     .get(&ident_as_string)
                     .expect("variable exists")
                     .to_owned();
-                let (position, old_data_type, spilled) = state.vstack.find_stack_value(&var_addr);
-
-                // If value is not marked as a spilled value and it's inacessible through swap(n)/dup(n),
-                // this value must be marked as a value to be spilled, and the compiler must be run again.
-                let bottom_position = position + old_data_type.size_of() - 1;
-                let accessible = bottom_position < STACK_SIZE;
-                if spilled.is_none() && !accessible {
-                    state.mark_as_spilled(&var_addr)
-                }
-
-                // TODO: Handle spilled values
-                assert!(spilled.is_none(), "Cannot handle spilled values yet.");
-
+                let (_position, old_data_type, _spilled) = state.vstack.find_stack_value(&var_addr);
                 assert_eq!(
                     ident_type, old_data_type,
                     "Type found on vstack must match expected type"
@@ -1041,6 +1078,9 @@ fn compile_expr(
                     "Can only index into list types"
                 );
 
+                // The recursive calls below should be able to handle spilled values, so we don't
+                // need to handle it here.
+
                 let ident_expr = ast::Expr::Var(*ident.to_owned());
                 let (_ident_addr, ident_code) =
                     compile_expr(&ident_expr, "ident_on_assign", &ident_type, state);
@@ -1048,10 +1088,14 @@ fn compile_expr(
                     compile_expr(index_expr, "index_on_assign", &index_expr.get_type(), state);
                 state.vstack.pop();
                 state.vstack.pop();
-                let assign_addr = state.new_value_identifier("list_index_assign", &res_type);
-
                 let code = vec![ident_code, index_code, vec![call(fn_name)]].concat();
-                (assign_addr, code)
+                let (addr, spill) = state.new_value_identifier("list_index_assign", &result_type);
+
+                let spill_code = spill
+                    .map(|x| store_top_value_in_memory(x, result_type.size_of()))
+                    .unwrap_or_default();
+
+                (addr, vec![code, spill_code].concat())
             }
         },
 
@@ -1071,32 +1115,38 @@ fn compile_expr(
                 state.vstack.pop();
             }
 
-            let tuple_ident = state.new_value_identifier("tuple_ident", &expr.get_type());
-
             let code = code.concat();
-            (tuple_ident, code)
+            let (addr, spill) = state.new_value_identifier("tuple_ident", &result_type);
+            let spill_code = spill
+                .map(|x| store_top_value_in_memory(x, result_type.size_of()))
+                .unwrap_or_default();
+
+            (addr, vec![code, spill_code].concat())
         }
 
         ast::Expr::FnCall(fn_call) => {
-            let fn_call_code = compile_fn_call(fn_call, state);
+            let code = compile_fn_call(fn_call, state);
             let fn_call_ident_prefix = format!("_fn_call_{}", fn_call.name);
-            let fn_call_ident =
-                state.new_value_identifier(&fn_call_ident_prefix, &fn_call.annot.get_type());
+            let (addr, spill) = state.new_value_identifier(&fn_call_ident_prefix, &result_type);
+            let spill_code = spill
+                .map(|x| store_top_value_in_memory(x, result_type.size_of()))
+                .unwrap_or_default();
 
-            (fn_call_ident, fn_call_code)
+            (addr, vec![code, spill_code].concat())
         }
 
         ast::Expr::MethodCall(method_call) => {
-            let method_call_code = compile_method_call(method_call, state);
+            let code = compile_method_call(method_call, state);
             let method_call_ident_prefix = format!("_method_call_{}", method_call.method_name);
-            let method_call_ident = state
-                .new_value_identifier(&method_call_ident_prefix, &method_call.annot.get_type());
+            let (addr, spill) = state.new_value_identifier(&method_call_ident_prefix, &result_type);
+            let spill_code = spill
+                .map(|x| store_top_value_in_memory(x, result_type.size_of()))
+                .unwrap_or_default();
 
-            (method_call_ident, method_call_code)
+            (addr, vec![code, spill_code].concat())
         }
 
-        ast::Expr::Binop(lhs_expr, binop, rhs_expr, known_type) => {
-            let res_type = known_type.get_type();
+        ast::Expr::Binop(lhs_expr, binop, rhs_expr, _known_type) => {
             let lhs_type = lhs_expr.get_type();
             let rhs_type = rhs_expr.get_type();
 
@@ -1116,7 +1166,7 @@ fn compile_expr(
                     let (_rhs_expr_addr, rhs_expr_code) =
                         compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
 
-                    let add_code = match res_type {
+                    let add_code = match result_type {
                         ast::DataType::U32 => {
                             // We use the safe, overflow-checking, add code as default
                             let safe_add_u32 =
@@ -1133,14 +1183,18 @@ fn compile_expr(
                         ast::DataType::XFE => {
                             vec![xxadd(), swap(3), pop(), swap(3), pop(), swap(3), pop()]
                         }
-                        _ => panic!("Operator add is not supported for type {res_type}"),
+                        _ => panic!("Operator add is not supported for type {result_type}"),
                     };
 
                     let code = vec![lhs_expr_code, rhs_expr_code, add_code].concat();
                     state.vstack.pop();
                     state.vstack.pop();
-                    let addr = state.new_value_identifier("_binop_add", &res_type);
-                    (addr, code)
+                    let (addr, spill) = state.new_value_identifier("_binop_add", &result_type);
+                    let spill_code = spill
+                        .map(|x| store_top_value_in_memory(x, result_type.size_of()))
+                        .unwrap_or_default();
+
+                    (addr, vec![code, spill_code].concat())
                 }
                 ast::BinOp::And => {
                     let (_lhs_expr_addr, lhs_expr_code) =
@@ -1149,16 +1203,20 @@ fn compile_expr(
                     let (_rhs_expr_addr, rhs_expr_code) =
                         compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
 
-                    let and_code = match res_type {
+                    let and_code = match result_type {
                         ast::DataType::Bool => vec![add(), push(2), eq()],
-                        _ => panic!("Logical AND operator is not supported for {res_type}"),
+                        _ => panic!("Logical AND operator is not supported for {result_type}"),
                     };
 
                     let code = vec![lhs_expr_code, rhs_expr_code, and_code].concat();
                     state.vstack.pop();
                     state.vstack.pop();
-                    let addr = state.new_value_identifier("_binop_add", &res_type);
-                    (addr, code)
+                    let (addr, spill) = state.new_value_identifier("_binop_add", &result_type);
+                    let spill_code = spill
+                        .map(|x| store_top_value_in_memory(x, result_type.size_of()))
+                        .unwrap_or_default();
+
+                    (addr, vec![code, spill_code].concat())
                 }
 
                 ast::BinOp::BitAnd => {
@@ -1168,22 +1226,25 @@ fn compile_expr(
                     let (_rhs_expr_addr, rhs_expr_code) =
                         compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
 
-                    let bitwise_and_code = match res_type {
+                    let bitwise_and_code = match result_type {
                         ast::DataType::U32 => vec![and()],
                         ast::DataType::U64 => {
                             let and_u64 =
                                 state.import_snippet(Box::new(arithmetic::u64::and_u64::AndU64));
                             vec![call(and_u64)]
                         }
-                        _ => panic!("Logical AND operator is not supported for {res_type}"),
+                        _ => panic!("Logical AND operator is not supported for {result_type}"),
                     };
 
                     let code = vec![lhs_expr_code, rhs_expr_code, bitwise_and_code].concat();
                     state.vstack.pop();
                     state.vstack.pop();
-                    let addr = state.new_value_identifier("_binop_add", &res_type);
+                    let (addr, spill) = state.new_value_identifier("_binop_add", &result_type);
+                    let spill_code = spill
+                        .map(|x| store_top_value_in_memory(x, result_type.size_of()))
+                        .unwrap_or_default();
 
-                    (addr, code)
+                    (addr, vec![code, spill_code].concat())
                 }
 
                 ast::BinOp::BitXor => {
@@ -1194,7 +1255,7 @@ fn compile_expr(
                         compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
 
                     use ast::DataType::*;
-                    let xor_code = match res_type {
+                    let xor_code = match result_type {
                         U32 => vec![xor()],
                         U64 => vec![
                             // a_hi a_lo b_hi b_lo
@@ -1203,19 +1264,23 @@ fn compile_expr(
                             swap(2), // (b_hi ⊻ a_hi) b_lo a_lo
                             xor(),   // (b_hi ⊻ a_hi) (b_lo ⊻ a_lo)
                         ],
-                        _ => panic!("xor on {res_type} is not supported"),
+                        _ => panic!("xor on {result_type} is not supported"),
                     };
 
                     state.vstack.pop();
                     state.vstack.pop();
-                    let addr = state.new_value_identifier("_binop_xor", &res_type);
+                    let code = vec![lhs_expr_code, rhs_expr_code, xor_code].concat();
+                    let (addr, spill) = state.new_value_identifier("_binop_xor", &result_type);
+                    let spill_code = spill
+                        .map(|x| store_top_value_in_memory(x, result_type.size_of()))
+                        .unwrap_or_default();
 
-                    (addr, vec![lhs_expr_code, rhs_expr_code, xor_code].concat())
+                    (addr, vec![code, spill_code].concat())
                 }
 
                 ast::BinOp::Div => {
                     use ast::DataType::*;
-                    match res_type {
+                    match result_type {
                         U32 => {
                             // TODO: Consider evaluating in opposite order to save a clock-cycle by removing `swap1`
                             // below. This would change the "left-to-right" convention though.
@@ -1227,13 +1292,16 @@ fn compile_expr(
                             // Pop numerator and denominator
                             state.vstack.pop();
                             state.vstack.pop();
-                            let addr = state.new_value_identifier("_binop_div", &res_type);
-
-                            (
-                                addr,
+                            let code =
                                 vec![lhs_expr_code, rhs_expr_code, vec![swap(1), div(), pop()]]
-                                    .concat(),
-                            )
+                                    .concat();
+                            let (addr, spill) =
+                                state.new_value_identifier("_binop_div", &result_type);
+                            let spill_code = spill
+                                .map(|x| store_top_value_in_memory(x, result_type.size_of()))
+                                .unwrap_or_default();
+
+                            (addr, vec![code, spill_code].concat())
                         }
                         U64 => {
                             // For now we can only divide u64s by 2.
@@ -1249,9 +1317,14 @@ fn compile_expr(
 
                             // Pop the numerator that was divided by two
                             state.vstack.pop();
-                            let addr = state.new_value_identifier("_binop_div", &res_type);
+                            let code = vec![lhs_expr_code, vec![call(div2)]].concat();
+                            let (addr, spill) =
+                                state.new_value_identifier("_binop_div", &result_type);
+                            let spill_code = spill
+                                .map(|x| store_top_value_in_memory(x, result_type.size_of()))
+                                .unwrap_or_default();
 
-                            (addr, vec![lhs_expr_code, vec![call(div2)]].concat())
+                            (addr, vec![code, spill_code].concat())
                         }
                         BFE => {
                             let (_lhs_expr_addr, lhs_expr_code) =
@@ -1269,12 +1342,14 @@ fn compile_expr(
                             // Pop numerator and denominator
                             state.vstack.pop();
                             state.vstack.pop();
-                            let addr = state.new_value_identifier("_binop_div", &res_type);
+                            let code = vec![lhs_expr_code, rhs_expr_code, bfe_div_code].concat();
+                            let (addr, spill) =
+                                state.new_value_identifier("_binop_div", &result_type);
+                            let spill_code = spill
+                                .map(|x| store_top_value_in_memory(x, result_type.size_of()))
+                                .unwrap_or_default();
 
-                            (
-                                addr,
-                                vec![lhs_expr_code, rhs_expr_code, bfe_div_code].concat(),
-                            )
+                            (addr, vec![code, spill_code].concat())
                         }
                         XFE => {
                             let (_lhs_expr_addr, lhs_expr_code) =
@@ -1304,14 +1379,16 @@ fn compile_expr(
                             // Pop numerator and denominator
                             state.vstack.pop();
                             state.vstack.pop();
-                            let addr = state.new_value_identifier("_binop_div", &res_type);
+                            let code = vec![lhs_expr_code, rhs_expr_code, xfe_div_code].concat();
+                            let (addr, spill) =
+                                state.new_value_identifier("_binop_div", &result_type);
+                            let spill_code = spill
+                                .map(|x| store_top_value_in_memory(x, result_type.size_of()))
+                                .unwrap_or_default();
 
-                            (
-                                addr,
-                                vec![lhs_expr_code, rhs_expr_code, xfe_div_code].concat(),
-                            )
+                            (addr, vec![code, spill_code].concat())
                         }
-                        _ => panic!("Unsupported div for type {res_type}"),
+                        _ => panic!("Unsupported div for type {result_type}"),
                     }
                 }
 
@@ -1326,9 +1403,13 @@ fn compile_expr(
 
                     state.vstack.pop();
                     state.vstack.pop();
-                    let addr = state.new_value_identifier("_binop_eq", &res_type);
+                    let code = vec![lhs_expr_code, rhs_expr_code, eq_code].concat();
+                    let (addr, spill) = state.new_value_identifier("_binop_eq", &result_type);
+                    let spill_code = spill
+                        .map(|x| store_top_value_in_memory(x, result_type.size_of()))
+                        .unwrap_or_default();
 
-                    (addr, vec![lhs_expr_code, rhs_expr_code, eq_code].concat())
+                    (addr, vec![code, spill_code].concat())
                 }
 
                 ast::BinOp::Lt => {
@@ -1365,9 +1446,12 @@ fn compile_expr(
 
                     state.vstack.pop();
                     state.vstack.pop();
-                    let addr = state.new_value_identifier("_binop_lt", &res_type);
+                    let (addr, spill) = state.new_value_identifier("_binop_lt", &result_type);
+                    let spill_code = spill
+                        .map(|x| store_top_value_in_memory(x, result_type.size_of()))
+                        .unwrap_or_default();
 
-                    (addr, code)
+                    (addr, vec![code, spill_code].concat())
                 }
                 ast::BinOp::Mul => {
                     let (_lhs_expr_addr, lhs_expr_code) =
@@ -1397,9 +1481,12 @@ fn compile_expr(
 
                     state.vstack.pop();
                     state.vstack.pop();
-                    let addr = state.new_value_identifier("_binop_lt", &res_type);
+                    let (addr, spill) = state.new_value_identifier("_binop_lt", &result_type);
+                    let spill_code = spill
+                        .map(|x| store_top_value_in_memory(x, result_type.size_of()))
+                        .unwrap_or_default();
 
-                    (addr, code)
+                    (addr, vec![code, spill_code].concat())
                 }
                 ast::BinOp::Neq => {
                     let (_lhs_expr_addr, lhs_expr_code) =
@@ -1413,9 +1500,13 @@ fn compile_expr(
 
                     state.vstack.pop();
                     state.vstack.pop();
-                    let addr = state.new_value_identifier("_binop_neq", &res_type);
+                    let code = vec![lhs_expr_code, rhs_expr_code, neq_code].concat();
+                    let (addr, spill) = state.new_value_identifier("_binop_neq", &result_type);
+                    let spill_code = spill
+                        .map(|x| store_top_value_in_memory(x, result_type.size_of()))
+                        .unwrap_or_default();
 
-                    (addr, vec![lhs_expr_code, rhs_expr_code, neq_code].concat())
+                    (addr, vec![code, spill_code].concat())
                 }
 
                 ast::BinOp::Or => {
@@ -1435,9 +1526,13 @@ fn compile_expr(
 
                     state.vstack.pop();
                     state.vstack.pop();
-                    let addr = state.new_value_identifier("_binop_or", &res_type);
+                    let code = vec![lhs_expr_code, rhs_expr_code, or_code].concat();
+                    let (addr, spill) = state.new_value_identifier("_binop_or", &result_type);
+                    let spill_code = spill
+                        .map(|x| store_top_value_in_memory(x, result_type.size_of()))
+                        .unwrap_or_default();
 
-                    (addr, vec![lhs_expr_code, rhs_expr_code, or_code].concat())
+                    (addr, vec![code, spill_code].concat())
                 }
 
                 ast::BinOp::Rem => todo!(),
@@ -1463,9 +1558,12 @@ fn compile_expr(
 
                     state.vstack.pop();
                     state.vstack.pop();
-                    let addr = state.new_value_identifier("_binop_shl", &res_type);
+                    let (addr, spill) = state.new_value_identifier("_binop_shl", &result_type);
+                    let spill_code = spill
+                        .map(|x| store_top_value_in_memory(x, result_type.size_of()))
+                        .unwrap_or_default();
 
-                    (addr, code)
+                    (addr, vec![code, spill_code].concat())
                 }
 
                 ast::BinOp::Shr => {
@@ -1490,9 +1588,12 @@ fn compile_expr(
 
                     state.vstack.pop();
                     state.vstack.pop();
-                    let addr = state.new_value_identifier("_binop_shr", &res_type);
+                    let (addr, spill) = state.new_value_identifier("_binop_shr", &result_type);
+                    let spill_code = spill
+                        .map(|x| store_top_value_in_memory(x, result_type.size_of()))
+                        .unwrap_or_default();
 
-                    (addr, code)
+                    (addr, vec![code, spill_code].concat())
                 }
 
                 ast::BinOp::Sub => {
@@ -1504,7 +1605,7 @@ fn compile_expr(
 
                     let neg_1 = BFieldElement::P - 1;
 
-                    let sub_code: Vec<LabelledInstruction> = match res_type {
+                    let sub_code: Vec<LabelledInstruction> = match result_type {
                         ast::DataType::U32 => {
                             // As standard, we use safe arithmetic that crashes on overflow
                             let safe_sub_u32 =
@@ -1550,15 +1651,18 @@ fn compile_expr(
                                 pop(),
                             ]
                         }
-                        _ => panic!("subtraction operator is not supported for {res_type}"),
+                        _ => panic!("subtraction operator is not supported for {result_type}"),
                     };
 
                     let code = vec![lhs_expr_code, rhs_expr_code, sub_code].concat();
                     state.vstack.pop();
                     state.vstack.pop();
-                    let addr = state.new_value_identifier("_binop_sub", &res_type);
+                    let (addr, spill) = state.new_value_identifier("_binop_sub", &result_type);
+                    let spill_code = spill
+                        .map(|x| store_top_value_in_memory(x, result_type.size_of()))
+                        .unwrap_or_default();
 
-                    (addr, code)
+                    (addr, vec![code, spill_code].concat())
                 }
             };
 
@@ -1613,8 +1717,8 @@ fn compile_expr(
             // evaluates to.
             let then_subroutine_name = format!("{then_addr}_then");
             let else_subroutine_name = format!("{then_addr}_else");
-            let mut if_code = cond_code;
-            if_code.append(&mut vec![
+            let mut code = cond_code;
+            code.append(&mut vec![
                 push(1),                            // _ cond 1
                 swap(1),                            // _ 1 cond
                 skiz(),                             // _ 1
@@ -1640,30 +1744,37 @@ fn compile_expr(
             state.subroutines.push(then_code);
             state.subroutines.push(else_code);
 
-            let if_res_addr = state.new_value_identifier("if_then_else", &return_type);
+            let (addr, spill) = state.new_value_identifier("if_then_else", &return_type);
+            let spill_code = spill
+                .map(|x| store_top_value_in_memory(x, result_type.size_of()))
+                .unwrap_or_default();
 
-            (if_res_addr, if_code)
+            (addr, vec![code, spill_code].concat())
         }
 
-        ast::Expr::Cast(expr, as_type) => {
-            let expr_type = expr.get_type();
-            let (_expr_addr, expr_code) = compile_expr(expr, "as", &expr_type, state);
+        ast::Expr::Cast(expr, _as_type) => {
+            let previous_type = expr.get_type();
+            let (_expr_addr, expr_code) = compile_expr(expr, "as", &previous_type, state);
 
-            match (expr_type, as_type) {
+            match (&previous_type, &result_type) {
                 (ast::DataType::U64, ast::DataType::U32) => {
                     // No value check is performed here
-                    let (_, (old_data_type, spilled)) = state.vstack.pop().unwrap();
+                    let (_, (old_data_type, _spilled)) = state.vstack.pop().unwrap();
 
                     // TODO: Do we need to handle spilled values here?
-                    assert!(spilled.is_none(), "Top stack value cannot be spilled");
+                    // assert!(spilled.is_none(), "Top stack value cannot be spilled");
 
                     // sanity check
                     assert_eq!(ast::DataType::U64, old_data_type);
 
-                    let addr = state.new_value_identifier("_as_u32", as_type);
                     let cast_code = vec![swap(1), pop()];
+                    let code = vec![expr_code, cast_code].concat();
+                    let (addr, spill) = state.new_value_identifier("_as_u32", &result_type);
+                    let spill_code = spill
+                        .map(|x| store_top_value_in_memory(x, result_type.size_of()))
+                        .unwrap_or_default();
 
-                    (addr, vec![expr_code, cast_code].concat())
+                    (addr, vec![code, spill_code].concat())
                 }
                 (ast::DataType::U32, ast::DataType::U64) => {
                     let (_, (old_data_type, spilled)) = state.vstack.pop().unwrap();
@@ -1674,10 +1785,14 @@ fn compile_expr(
                     // sanity check
                     assert_eq!(ast::DataType::U32, old_data_type);
 
-                    let addr = state.new_value_identifier("_as_u64", as_type);
                     let cast_code = vec![push(0), swap(1)];
+                    let code = vec![expr_code, cast_code].concat();
+                    let (addr, spill) = state.new_value_identifier("_as_u64", &result_type);
+                    let spill_code = spill
+                        .map(|x| store_top_value_in_memory(x, result_type.size_of()))
+                        .unwrap_or_default();
 
-                    (addr, vec![expr_code, cast_code].concat())
+                    (addr, vec![code, spill_code].concat())
                 }
                 // Allow identity-casting since we might need this to make the types
                 // agree with code compiled by rustc.
@@ -1687,9 +1802,13 @@ fn compile_expr(
                     // sanity check
                     assert_eq!(ast::DataType::U32, old_data_type);
 
-                    let addr = state.new_value_identifier("_as_u32", as_type);
+                    let code = expr_code;
+                    let (addr, spill) = state.new_value_identifier("_as_u32", &result_type);
+                    let spill_code = spill
+                        .map(|x| store_top_value_in_memory(x, result_type.size_of()))
+                        .unwrap_or_default();
 
-                    (addr, expr_code)
+                    (addr, vec![code, spill_code].concat())
                 }
                 (ast::DataType::U64, ast::DataType::U64) => {
                     let (_, (old_data_type, _spilled)) = state.vstack.pop().unwrap();
@@ -1697,9 +1816,13 @@ fn compile_expr(
                     // sanity check
                     assert_eq!(ast::DataType::U64, old_data_type);
 
-                    let addr = state.new_value_identifier("_as_u64", as_type);
+                    let code = expr_code;
+                    let (addr, spill) = state.new_value_identifier("_as_u64", &result_type);
+                    let spill_code = spill
+                        .map(|x| store_top_value_in_memory(x, result_type.size_of()))
+                        .unwrap_or_default();
 
-                    (addr, expr_code)
+                    (addr, vec![code, spill_code].concat())
                 }
                 _ => todo!(),
             }
@@ -1707,12 +1830,43 @@ fn compile_expr(
     }
 }
 
+/// Return the code to store a stack-value in memory
+fn store_value_in_memory(
+    memory_location: u32,
+    value_size: usize,
+    stack_location_for_bottom_of_value: usize,
+) -> Vec<LabelledInstruction> {
+    let mut ret = vec![];
+    ret.push(push(memory_location as u64));
+    for i in 0..value_size {
+        let mut stack_depth: u64 = stack_location_for_bottom_of_value as u64 + 1;
+        stack_depth -= i as u64;
+        ret.push(dup(stack_depth));
+        ret.push(write_mem());
+        // Stack: _ memory_address
+
+        // Increment memory address to prepare for next loop iteration
+        if i != value_size - 1 {
+            ret.push(push(1));
+            ret.push(add());
+            // Stack: _ (memory_address + 1)
+        }
+    }
+
+    // Remove memory address from top of stack
+    ret.push(pop());
+
+    ret
+}
+
 /// Return the code to store the top stack element at a
-/// specific memory address
+/// specific memory address. Leaves the stack unchanged.
 fn store_top_value_in_memory(
-    memory_location: usize,
+    memory_location: u32,
     top_value_size: usize,
 ) -> Vec<LabelledInstruction> {
+    // TODO: Consider making subroutines out of this in
+    // order to get shorter programs.
     // Note that a spilled value is stored in memory as
     // element_N element_{N -1 } ... element_0
     // where N is `data_size - 1`.
@@ -1740,7 +1894,9 @@ fn store_top_value_in_memory(
     ret
 }
 
-fn load_from_memory(memory_location: usize, top_value_size: usize) -> Vec<LabelledInstruction> {
+fn load_from_memory(memory_location: u32, top_value_size: usize) -> Vec<LabelledInstruction> {
+    // TODO: Consider making subroutines out of this in
+    // order to get shorter programs.
     let mut ret = vec![];
     ret.push(push(memory_location as u64));
 

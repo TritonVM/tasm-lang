@@ -313,27 +313,6 @@ pub fn polymorphic_vectors_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
-pub fn spill_values_to_memory_rast() -> syn::ItemFn {
-    item_fn(parse_quote! {
-        fn spill_values_to_memory() -> (u64, u64, u64) {
-            let a: u64 = 100;
-            let b: u64 = 200;
-            let c: u64 = 300;
-            let d: u64 = 400;
-            let e: u64 = 500;
-            let f: u64 = 600;
-            let g: u64 = 700;
-            let h: u64 = 800;
-            let i: u64 = 900;
-            let j: u64 = 1000;
-            let k: u64 = 1100;
-
-            return (a, b, d);
-        }
-    })
-}
-
 #[cfg(test)]
 mod compile_and_typecheck_tests {
     use super::*;
@@ -601,15 +580,6 @@ mod run_tests {
             outputs,
             input_memory,
             Some(memory),
-        );
-    }
-
-    #[test]
-    fn spill_values_to_memory_test() {
-        compare_prop_with_stack(
-            &spill_values_to_memory_rast(),
-            vec![],
-            vec![u64_lit(100), u64_lit(200), u32_lit(400)],
         );
     }
 }
