@@ -122,6 +122,13 @@ impl std::fmt::Display for ValueIdentifier {
 }
 
 impl CompilerState {
+    fn get_binding_name(&self, value_identifier: &ValueIdentifier) -> String {
+        match self.var_addr.iter().find(|x| x.1 == value_identifier) {
+            Some(binding) => binding.0.to_owned(),
+            None => "Unbound value".to_string(),
+        }
+    }
+
     /// Get a new, guaranteed unique, identifier for a value. Returns an address to
     /// spill the value to, iff spilling of this value is required.
     pub fn new_value_identifier(
@@ -135,12 +142,12 @@ impl CompilerState {
         // Get a statically known memory address if value needs to be spilled to
         // memory.
         let spilled = if self.spill_required.contains(&address) {
-            println!("Warning: spill required of: {address}");
             let spill_address = self
                 .library
                 .kmalloc(data_type.size_of())
                 .try_into()
                 .unwrap();
+            println!("Warning: spill required of {address}. Spilling to address: {spill_address}");
             Some(spill_address)
         } else {
             None
@@ -158,7 +165,10 @@ impl CompilerState {
     }
 
     pub fn mark_as_spilled(&mut self, value_identifier: &ValueIdentifier) {
-        println!("Warning: Marking {value_identifier} as spilled");
+        println!(
+            "Warning: Marking {value_identifier} as spilled. Binding: {}",
+            self.get_binding_name(value_identifier)
+        );
         self.spill_required.insert(value_identifier.to_owned());
     }
 
