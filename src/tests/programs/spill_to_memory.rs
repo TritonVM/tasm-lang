@@ -63,9 +63,9 @@ fn spill_u32_values_to_memory_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-fn long_expression_that_must_spill_rast() -> syn::ItemFn {
+fn long_expression_that_must_spill_1_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
-        fn long_expression_that_must_spill(input: u64) -> (u64, u32, u64, u64, u64, u64) {
+        fn long_expression_that_must_spill_1(input: u64) -> (u64, u32, u64, u64, u64, u64) {
             let a: u64 = 100;
             let b: u64 = 200;
             let c: u64 = 300;
@@ -103,6 +103,29 @@ fn long_expression_that_must_spill_rast() -> syn::ItemFn {
     })
 }
 
+#[allow(dead_code)]
+fn long_expression_that_must_spill_2_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn long_expression_that_must_spill_2(a: u64, b: u32, c: u64, d: u64) -> u32 {
+
+            let val1: u64 = 100;
+            let val2: u64 = 200;
+            let val3: u64 = 300;
+            let val4: u64 = 400;
+            let val5: u64 = 500;
+            let val6: u64 = 500;
+            let val7: u64 = 500;
+            let val8: u64 = 500;
+            let val9: u64 = 500;
+            let val10: u64 = 500;
+
+            let res: u32 = (1u32 + d as u32) + 2u32 * a as u32 + 3u32 * b + 4u32 * d as u32 + 200u32 + 300u32 + val10 as u32 + val1 as u32;
+
+            return res;
+        }
+    })
+}
+
 #[cfg(test)]
 mod run_tests {
     use super::*;
@@ -133,9 +156,9 @@ mod run_tests {
     }
 
     #[test]
-    fn long_expression_that_must_spill_test() {
+    fn long_expression_that_must_spill_1_test() {
         compare_prop_with_stack(
-            &long_expression_that_must_spill_rast(),
+            &long_expression_that_must_spill_1_rast(),
             vec![u64_lit(107)],
             vec![
                 u64_lit(19007),
@@ -145,6 +168,15 @@ mod run_tests {
                 u64_lit(1000),
                 u64_lit(1100),
             ],
+        );
+    }
+
+    #[test]
+    fn long_expression_that_must_spill_2_test() {
+        compare_prop_with_stack(
+            &long_expression_that_must_spill_2_rast(),
+            vec![u64_lit(1), u32_lit(2), u64_lit(3), u64_lit(4u64.into())],
+            vec![u32_lit(1129)],
         );
     }
 }
