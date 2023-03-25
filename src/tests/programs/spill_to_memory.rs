@@ -150,6 +150,60 @@ fn spill_many_types() -> syn::ItemFn {
     })
 }
 
+#[allow(dead_code)]
+pub fn spill_to_memory_overwrite_values() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn overwrite_values() -> (u32, u32) {
+            let mut a: u32 = 100;
+            let s10: Digest = tasm::tasm_io_read_stdin_digest();
+            let s11: Digest = tasm::tasm_io_read_stdin_digest();
+            let s12: Digest = tasm::tasm_io_read_stdin_digest();
+            let s13: Digest = tasm::tasm_io_read_stdin_digest();
+            a = a + 1;
+
+            return (a, a + 1u32);
+        }
+    })
+}
+
+#[allow(dead_code)]
+fn spill_to_memory_in_branch_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn spill_to_memory_in_branch(a: u64, b: u64, c: u64, d: u64, e: u64, f: u64) -> (u64, u64) {
+            let mut g: u64 = a + b;
+            let h: u64 = c + d;
+            let i: u64 = e + f;
+            let mut j: u64 = 0;
+
+            if h < i {
+                // In this branch `g` is updated, but that update must happen
+                // in memory since `g` lives in memory because of the other
+                // branch.
+                g = 2 * g + a + b;
+                // g = 2;
+            } else {
+                // In this branch `g` is spilled to memory
+                let k: u64 = 0;
+                let l: u64 = 0;
+                let m: u64 = 0;
+                let n: u64 = 0;
+                let o: u64 = 0;
+                let p: u64 = 0;
+                let q: u64 = 0;
+                let r: u64 = 0;
+                let s: u64 = 0;
+                let t: u64 = 0;
+                let u: u64 = 0;
+                j = g;
+            }
+
+
+
+            return (g, j);
+        }
+    })
+}
+
 #[cfg(test)]
 mod run_tests {
     use std::collections::HashMap;
@@ -210,6 +264,91 @@ mod run_tests {
             &long_expression_that_must_spill_2_rast(),
             vec![u64_lit(1), u32_lit(2), u64_lit(3), u64_lit(4u64)],
             vec![u32_lit(1129)],
+        );
+    }
+
+    // spill_to_memory_overwrite_values
+    #[test]
+    fn spill_to_memory_overwrite_values_test() {
+        let digests: Vec<Digest> = random_elements(4);
+        let reversed_digest = digests
+            .iter()
+            .map(|digest| {
+                let mut digest = digest.encode();
+                digest.reverse();
+                digest
+            })
+            .concat();
+        compare_prop_with_stack_and_memory_and_ins(
+            &spill_to_memory_overwrite_values(),
+            vec![],
+            vec![u32_lit(101), u32_lit(102)],
+            HashMap::default(),
+            None,
+            vec![reversed_digest].concat(),
+            vec![],
+        );
+    }
+
+    // fn spill_to_memory_in_branch(a: u64, b: u64, c: u64, d: u64, e: u64, f: u64) -> (u64, u64) {
+    //     let mut g: u64 = a + b;
+    //     let h: u64 = c + d;
+    //     let i: u64 = e + f;
+    //     let mut j: u64 = 0;
+
+    //     if h < i {
+    //         // In this branch `g` is updated, but that update must happen
+    //         // in memory since `g` lives in memory because of the other
+    //         // branch.
+    //         g = 2 * g + a + b;
+    //     } else {
+    //         // In this branch `g` is spilled to memory
+    //         let k: u64 = 0;
+    //         let l: u64 = 0;
+    //         let m: u64 = 0;
+    //         let n: u64 = 0;
+    //         let o: u64 = 0;
+    //         let p: u64 = 0;
+    //         let q: u64 = 0;
+    //         let r: u64 = 0;
+    //         let s: u64 = 0;
+    //         let t: u64 = 0;
+    //         let u: u64 = 0;
+    //         j = g;
+    //     }
+
+    //     return (g, j);
+    // }
+
+    #[test]
+    fn spill_to_memory_in_branch_test_1() {
+        compare_prop_with_stack(
+            &spill_to_memory_in_branch_rast(),
+            vec![
+                u64_lit(1),
+                u64_lit(2),
+                u64_lit(3),
+                u64_lit(4),
+                u64_lit(5),
+                u64_lit(6),
+            ],
+            vec![u64_lit(9), u64_lit(0)],
+        );
+    }
+
+    #[test]
+    fn spill_to_memory_in_branch_test_2() {
+        compare_prop_with_stack(
+            &spill_to_memory_in_branch_rast(),
+            vec![
+                u64_lit(6),
+                u64_lit(5),
+                u64_lit(4),
+                u64_lit(3),
+                u64_lit(2),
+                u64_lit(1),
+            ],
+            vec![u64_lit(11), u64_lit(11)],
         );
     }
 

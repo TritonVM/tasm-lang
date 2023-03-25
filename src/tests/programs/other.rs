@@ -278,7 +278,21 @@ pub fn allow_mutable_triplet_rast() -> syn::ItemFn {
     })
 }
 
-// TODO: This code fails! Why?
+#[allow(dead_code)]
+pub fn overwrite_values_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn overwrite_values() -> (u32, u32) {
+            let mut a: u32 = 100;
+            a = 200;
+            a = 300;
+            a = a + 300;
+            a = a + a;
+
+            return (a, a + 100u32);
+        }
+    })
+}
+
 #[allow(dead_code)]
 pub fn allow_mutable_tuple_complicated_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
@@ -534,6 +548,15 @@ mod run_tests {
             &allow_mutable_triplet_rast(),
             vec![],
             vec![u64_lit(4), u64_lit(5), u32_lit(6)],
+        );
+    }
+
+    #[test]
+    fn overwrite_values_test() {
+        compare_prop_with_stack(
+            &&overwrite_values_rast(),
+            vec![],
+            vec![u32_lit(1200), u32_lit(1300)],
         );
     }
 

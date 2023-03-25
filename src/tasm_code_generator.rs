@@ -232,23 +232,26 @@ impl CompilerState {
     /// Return the code to overwrite a stack value with the value that's on top of the stack
     /// Note that the top value and the value to be removed *must* be of the same type.
     /// Updates the `vstack` but not the `var_addr` as this is assumed to be handled by the caller.
-    fn overwrite_stack_value_with_same_data_type(
+    fn overwrite_value(
         &mut self,
         value_identifier_to_remove: &ValueIdentifier,
     ) -> Vec<LabelledInstruction> {
-        let (stack_position_of_value_to_remove, type_to_remove, spilled) =
+        let (stack_position_of_value_to_remove, type_to_remove, old_value_spilled) =
             self.vstack.find_stack_value(value_identifier_to_remove);
 
         // If value is not marked as a spilled value and it's inacessible through swap(n)/dup(n),
         // this value must be marked as a value to be spilled, and the compiler must be run again.
-        if spilled.is_none()
-            && stack_position_of_value_to_remove + type_to_remove.size_of() > STACK_SIZE
-        {
+        let accessible = stack_position_of_value_to_remove < STACK_SIZE;
+        if old_value_spilled.is_none() && !accessible {
             self.mark_as_spilled(value_identifier_to_remove);
         }
 
-        let (top_element_id, (top_element_type, _)) =
+        let (top_element_id, (top_element_type, new_value_spilled)) =
             self.vstack.pop().expect("vstack cannot be empty");
+        // assert!(
+        //     new_value_spilled.is_none(),
+        //     "New value cannot be spilled -- yet"
+        // );
 
         assert_eq!(
             top_element_type, type_to_remove,
@@ -256,34 +259,43 @@ impl CompilerState {
         );
 
         // TODO: Handle code for spilled variables and remove this assert
-        assert!(
-            spilled.is_none(),
-            "Function can't handle spilled values yet"
-        );
+        // assert!(
+        //     spilled.is_none(),
+        //     "Function can't handle spilled values yet"
+        // );
 
         let value_size = type_to_remove.size_of();
 
-        // Replace the overwritten value on stack
-        let code: Vec<LabelledInstruction> =
-            if Into::<usize>::into(stack_position_of_value_to_remove) > 0 {
-                vec![
+        // Overwrite the value
+        let code = match old_value_spilled {
+            Some(spill_addr) => overwrite_in_memory(spill_addr, value_size),
+            None => {
+                if stack_position_of_value_to_remove > 0 && accessible {
                     vec![
-                        Instruction(Swap(stack_position_of_value_to_remove.try_into().unwrap())),
-                        pop()
-                    ];
-                    value_size
-                ]
-                .concat()
-            } else {
-                vec![]
-            };
+                        vec![
+                            Instruction(Swap(
+                                stack_position_of_value_to_remove.try_into().unwrap()
+                            )),
+                            pop()
+                        ];
+                        value_size
+                    ]
+                    .concat()
+                } else if !accessible {
+                    println!("Compiler must run again because of {value_identifier_to_remove}");
+                    vec![push(0), assert_()]
+                } else {
+                    vec![]
+                }
+            }
+        };
 
         // Remove the overwritten value from vstack
         let old_value = (
             value_identifier_to_remove.to_owned(),
-            (type_to_remove, None),
+            (type_to_remove, old_value_spilled),
         );
-        let new_value = (top_element_id, (top_element_type, None));
+        let new_value = (top_element_id, (top_element_type, old_value_spilled));
         self.vstack.replace_value(&old_value, new_value);
 
         code
@@ -403,6 +415,7 @@ impl CompilerState {
         ) -> Vec<LabelledInstruction> {
             match (top_value_size, words_to_remove) {
                 (4, 2) => vec![swap(1), swap(3), swap(5), pop(), swap(1), swap(3), pop()],
+                (2, 1) => vec![swap(1), swap(2), pop()],
                 _ => panic!("Unsupported. Please cover more special cases. Got: {top_value_size}, {words_to_remove}"),
             }
         }
@@ -504,9 +517,9 @@ impl CompilerState {
             };
             match spilled {
                 Some(spilled_addr) => {
-                    print!("{var_name} <{data_type}> spilled to: {spilled_addr}; ")
+                    print!("{addr}: {var_name} <{data_type}> spilled to: {spilled_addr}\n")
                 }
-                None => print!("{var_name} <{data_type}>; "),
+                None => print!("{addr}: {var_name} <{data_type}>\n"),
             }
         }
         println!();
@@ -544,6 +557,7 @@ pub fn compile(function: &ast::Fn<types::Typing>) -> Vec<LabelledInstruction> {
         .concat();
 
     // Run the compilation again know that we know which values to spill
+    println!("\n\n\nRunning compiler again\n\n\n");
     let spill_required = state.spill_required;
     state = CompilerState::default();
     state.spill_required = spill_required;
@@ -650,8 +664,15 @@ fn compile_stmt(
                     // Currently, assignments just get the same place on the stack as the value
                     // that it is overwriting had. This may or may not be efficient.
                     // Get code to overwrite old value, and update the compiler's vstack
-                    let overwrite_code =
-                        state.overwrite_stack_value_with_same_data_type(&old_value_identifier);
+                    // println!("BEFORE");
+                    // state.show_vstack_values();
+                    let overwrite_code = state.overwrite_value(&old_value_identifier);
+                    // println!("AFTER");
+                    // state.show_vstack_values();
+                    // println!(
+                    //     "overwrite_code: {}",
+                    //     overwrite_code.iter().map(|x| x.to_string()).join("; ")
+                    // );
 
                     vec![expr_code, overwrite_code].concat()
                 }
@@ -1839,6 +1860,31 @@ fn compile_expr(
             }
         }
     }
+}
+
+fn overwrite_in_memory(memory_location: u32, value_size: usize) -> Vec<LabelledInstruction> {
+    let mut ret = vec![];
+    ret.push(push(memory_location as u64 + value_size as u64 - 1));
+
+    for i in 0..value_size {
+        ret.push(swap(1));
+        // Stack: _ [remaining_elements] memory_addres element
+
+        ret.push(write_mem());
+        // Stack: _ [remaining_elements] memory_addres
+
+        // Decrement memory address to prepare for next loop iteration
+        if i != value_size - 1 {
+            ret.push(push(u64::MAX));
+            ret.push(add());
+            // Stack: _ (memory_address - 1)
+        }
+    }
+
+    // remove memory address
+    ret.push(pop());
+
+    ret
 }
 
 /// Return the code to store a stack-value in memory

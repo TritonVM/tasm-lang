@@ -158,18 +158,6 @@ mod run_tests {
         x_field_element::XFieldElement,
     };
 
-    fn bool_to_bfe(b: bool) -> BFieldElement {
-        if b {
-            BFIELD_ONE
-        } else {
-            BFIELD_ZERO
-        }
-    }
-
-    fn split(value: u64) -> Vec<BFieldElement> {
-        vec![((value >> 32) as u32).into(), (value as u32).into()]
-    }
-
     #[test]
     fn stdin_test() {
         let my_bfe = BFieldElement::new(42);
