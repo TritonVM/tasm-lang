@@ -248,6 +248,13 @@ impl CompilerState {
 
         let (top_element_id, (top_element_type, new_value_spilled)) =
             self.vstack.pop().expect("vstack cannot be empty");
+        assert_eq!(
+            old_value_spilled,
+            new_value_spilled,
+            "Spill mismatch for {value_identifier_to_remove}: {} and {top_element_id}: {}",
+            self.get_binding_name(value_identifier_to_remove),
+            self.get_binding_name(&top_element_id)
+        );
         // assert!(
         //     new_value_spilled.is_none(),
         //     "New value cannot be spilled -- yet"
@@ -382,7 +389,7 @@ impl CompilerState {
                 .unwrap_or_else(|| panic!("Cannot handle stack cleanup of unbound values"))
                 .0
                 .clone();
-            assert!(spilled.is_none(), "Cannot handle spilled values yet");
+            // assert!(spilled.is_none(), "Cannot handle spilled values yet");
             if previous_var_addr.contains_key(&binding_name) {
                 break;
             } else {
