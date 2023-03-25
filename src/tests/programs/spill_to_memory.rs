@@ -126,8 +126,41 @@ fn long_expression_that_must_spill_2_rast() -> syn::ItemFn {
     })
 }
 
+#[allow(dead_code)]
+fn spill_many_types() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn all_types() -> (bool, u32, u64, BFieldElement, XFieldElement, Digest, u32) {
+            let s0: bool = tasm::tasm_io_read_stdin_bool();
+            let s1: u32 = tasm::tasm_io_read_stdin_u32() * 2;
+            let s2: u64 = tasm::tasm_io_read_stdin_u64() * 2;
+            let s3: BFieldElement = tasm::tasm_io_read_stdin_bfe();
+            let s4: XFieldElement = tasm::tasm_io_read_stdin_xfe();
+            let s5: Digest = tasm::tasm_io_read_stdin_digest();
+            let s6: u32 = s1 * s1;
+            let s7: u64 = s2 * s2;
+            let s8: Digest = tasm::tasm_io_read_stdin_digest();
+            let s9: Digest = tasm::tasm_io_read_stdin_digest();
+            let s10: Digest = tasm::tasm_io_read_stdin_digest();
+            let s11: Digest = tasm::tasm_io_read_stdin_digest();
+            let s12: Digest = tasm::tasm_io_read_stdin_digest();
+            let s13: Digest = tasm::tasm_io_read_stdin_digest();
+
+            return (s0, s1, s2, s3, s4, s8, s6);
+        }
+    })
+}
+
 #[cfg(test)]
 mod run_tests {
+    use std::collections::HashMap;
+
+    use itertools::Itertools;
+    use triton_vm::bfield_codec::BFieldCodec;
+    use twenty_first::shared_math::{
+        b_field_element::BFieldElement, other::random_elements, tip5::Digest,
+        x_field_element::XFieldElement,
+    };
+
     use super::*;
     use crate::tests::shared_test::*;
 
@@ -175,8 +208,57 @@ mod run_tests {
     fn long_expression_that_must_spill_2_test() {
         compare_prop_with_stack(
             &long_expression_that_must_spill_2_rast(),
-            vec![u64_lit(1), u32_lit(2), u64_lit(3), u64_lit(4u64.into())],
+            vec![u64_lit(1), u32_lit(2), u64_lit(3), u64_lit(4u64)],
             vec![u32_lit(1129)],
         );
+    }
+
+    #[test]
+    fn spill_many_types_test() {
+        let my_bool = true;
+        let my_u32 = 125;
+        let my_u64 = 1255;
+        let my_bfe = BFieldElement::new(420);
+        let my_xfe = XFieldElement::new([
+            BFieldElement::new(1045),
+            BFieldElement::new(1047),
+            BFieldElement::new(1049),
+        ]);
+        let digests: Vec<Digest> = random_elements(7);
+        let mut reversed_xfe = my_xfe.encode();
+        reversed_xfe.reverse();
+        let reversed_digest = digests
+            .iter()
+            .map(|digest| {
+                let mut digest = digest.encode();
+                digest.reverse();
+                digest
+            })
+            .concat();
+        compare_prop_with_stack_and_memory_and_ins(
+            &spill_many_types(),
+            vec![],
+            vec![
+                bool_lit(my_bool),
+                u32_lit(my_u32 * 2),
+                u64_lit(my_u64 * 2),
+                bfe_lit(my_bfe),
+                xfe_lit(my_xfe),
+                digest_lit(digests[1]),
+                u32_lit(my_u32 * my_u32 * 4),
+            ],
+            HashMap::default(),
+            None,
+            vec![
+                vec![BFieldElement::new(my_bool as u64)],
+                vec![my_u32.into()],
+                split(my_u64),
+                vec![my_bfe],
+                reversed_xfe,
+                reversed_digest,
+            ]
+            .concat(),
+            vec![],
+        )
     }
 }

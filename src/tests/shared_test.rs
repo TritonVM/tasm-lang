@@ -1,7 +1,7 @@
 use itertools::Itertools;
 use std::collections::HashMap;
 use tasm_lib::get_init_tvm_stack;
-use twenty_first::shared_math::b_field_element::BFieldElement;
+use twenty_first::shared_math::b_field_element::{BFieldElement, BFIELD_ONE, BFIELD_ZERO};
 use twenty_first::shared_math::rescue_prime_digest::Digest;
 use twenty_first::shared_math::x_field_element::XFieldElement;
 use twenty_first::util_types::algebraic_hasher::Hashable;
@@ -197,4 +197,18 @@ pub fn xfe_lit(value: XFieldElement) -> ast::ExprLit<types::Typing> {
 #[allow(dead_code)]
 pub fn digest_lit(value: Digest) -> ast::ExprLit<types::Typing> {
     ast::ExprLit::Digest(value)
+}
+
+#[allow(dead_code)]
+pub fn bool_to_bfe(b: bool) -> BFieldElement {
+    if b {
+        BFIELD_ONE
+    } else {
+        BFIELD_ZERO
+    }
+}
+
+#[allow(dead_code)]
+pub fn split(value: u64) -> Vec<BFieldElement> {
+    vec![((value >> 32) as u32).into(), (value as u32).into()]
 }
