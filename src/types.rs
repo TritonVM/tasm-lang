@@ -478,7 +478,7 @@ fn derive_annotate_expr_type(
     hint: Option<&ast::DataType>,
     state: &mut CheckState,
 ) -> ast::DataType {
-    // println!("derive_annotate_expr_type({expr:?}, {hint:?}, state)");
+    // println!("derive_annotate_expr_type({expr:?}, hint: {hint:?})");
     match expr {
         ast::Expr::Lit(ast::ExprLit::Bool(_)) => ast::DataType::Bool,
         ast::Expr::Lit(ast::ExprLit::U32(_)) => ast::DataType::U32,
@@ -514,7 +514,7 @@ fn derive_annotate_expr_type(
                     XFE
                 }
                 Some(hint) => panic!("GenericNum does not infer as type hint {hint}"),
-                None => panic!("GenericNum does not infer in context with no type hint"),
+                None => panic!("GenericNum does not infer in context with no type hint. Missing type hint for: {:?}", expr),
             }
         }
 
@@ -805,7 +805,7 @@ fn derive_annotate_expr_type(
         }
 
         ast::Expr::Cast(expr, as_type) => {
-            let expr_type = derive_annotate_expr_type(expr, Some(as_type), state);
+            let expr_type = derive_annotate_expr_type(expr, None, state);
             assert!(
                 is_u32_based_type(&expr_type),
                 "Can only cast from u32 and u64"
