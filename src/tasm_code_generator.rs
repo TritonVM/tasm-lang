@@ -1177,6 +1177,7 @@ fn compile_expr(
                             // We use the safe, overflow-checking, add code as default
                             let add_u64 =
                                 state.import_snippet(Box::new(arithmetic::u64::add_u64::AddU64));
+
                             vec![call(add_u64)]
                         }
                         ast::DataType::BFE => vec![add()],
@@ -1466,16 +1467,16 @@ fn compile_expr(
                             let fn_name =
                                 state.import_snippet(Box::new(arithmetic::u32::safe_mul::SafeMul));
 
-                            vec![rhs_expr_code, lhs_expr_code, vec![call(fn_name)]].concat()
+                            vec![lhs_expr_code, rhs_expr_code, vec![call(fn_name)]].concat()
                         }
                         U64 => {
                             let fn_name = state.import_snippet(Box::new(
                                 arithmetic::u64::safe_mul_u64::SafeMulU64,
                             ));
 
-                            vec![rhs_expr_code, lhs_expr_code, vec![call(fn_name)]].concat()
+                            vec![lhs_expr_code, rhs_expr_code, vec![call(fn_name)]].concat()
                         }
-                        BFE => vec![rhs_expr_code, lhs_expr_code, vec![mul()]].concat(),
+                        BFE => vec![lhs_expr_code, rhs_expr_code, vec![mul()]].concat(),
                         _ => panic!("Unsupported MUL for type {lhs_type}"),
                     };
 

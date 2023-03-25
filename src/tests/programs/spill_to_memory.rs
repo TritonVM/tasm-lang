@@ -65,24 +65,40 @@ fn spill_u32_values_to_memory_rast() -> syn::ItemFn {
 #[allow(dead_code)]
 fn long_expression_that_must_spill_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
-        fn long_expression_that_must_spill(input: u64) -> u64 {
+        fn long_expression_that_must_spill(input: u64) -> (u64, u32, u64, u64, u64, u64) {
             let a: u64 = 100;
             let b: u64 = 200;
             let c: u64 = 300;
             let d: u32 = 400;
             let e: u64 = 500;
             let f: u64 = 600;
-            let g: u32 = 700;
-            let h: u32 = 800;
-            let i: u32 = 900;
-            let j: u32 = 1000;
-            let k: u32 = 1100;
-            let l: u32 = 1200;
-            let m: u32 = 1300;
-            let n: u32 = 1400;
+            let g: u64 = 700;
+            let h: u64 = 800;
+            let i: u64 = 900;
+            let j: u64 = 1000;
+            let k: u64 = 1100;
+            let l: u64 = 1200;
+            let m: u64 = 1300;
+            let n: u64 = 1400;
 
-            let res: u64 = 10 * a + 10 * b + 10 * c + 10 * d as u64 - e - f + 10000 + input;
-            return res;
+            let res0: u64 = 10 * a + 10 * b + 10 * c + 10 * d as u64 - e - f + 10000 + input;
+            let res1: u32 = (
+                2u64 * a                // 200
+                + 2u64 * b              // 600
+                + 2u64 * c              // 1200
+                + 2u64 * (d as u64)     // 2000
+                + 2u64 * e              // 3000
+                + 2u64 * f              // 4200
+                + 2u64 * g              // 5600
+                + 2u64 * h              // 7200
+                + 2u64 * i              // 9000
+                + 2u64 * j              // 11000
+                + 2u64 * k              // 13200
+                + 2u64 * l              // 15600
+                + 2u64 * m              // 18200
+                + 2u64 * n              // 21000
+            ) as u32;
+            return (res0, res1, h, i, j, k);
         }
     })
 }
@@ -120,8 +136,15 @@ mod run_tests {
     fn long_expression_that_must_spill_test() {
         compare_prop_with_stack(
             &long_expression_that_must_spill_rast(),
-            vec![u64_lit(100)],
-            vec![u64_lit(19000)],
+            vec![u64_lit(107)],
+            vec![
+                u64_lit(19007),
+                u32_lit(21000),
+                u64_lit(800),
+                u64_lit(900),
+                u64_lit(1000),
+                u64_lit(1100),
+            ],
         );
     }
 }
