@@ -554,7 +554,7 @@ mod run_tests {
     #[test]
     fn overwrite_values_test() {
         compare_prop_with_stack(
-            &&overwrite_values_rast(),
+            &overwrite_values_rast(),
             vec![],
             vec![u32_lit(1200), u32_lit(1300)],
         );

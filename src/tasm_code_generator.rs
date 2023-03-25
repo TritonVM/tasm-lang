@@ -246,35 +246,18 @@ impl CompilerState {
             self.mark_as_spilled(value_identifier_to_remove);
         }
 
-        let (top_element_id, (top_element_type, new_value_spilled)) =
+        let (_top_element_id, (top_element_type, _new_value_spilled)) =
             self.vstack.pop().expect("vstack cannot be empty");
-        assert_eq!(
-            old_value_spilled,
-            new_value_spilled,
-            "Spill mismatch for {value_identifier_to_remove}: {} and {top_element_id}: {}",
-            self.get_binding_name(value_identifier_to_remove),
-            self.get_binding_name(&top_element_id)
-        );
-        // assert!(
-        //     new_value_spilled.is_none(),
-        //     "New value cannot be spilled -- yet"
-        // );
 
         assert_eq!(
             top_element_type, type_to_remove,
             "Top stack value and value to remove must match"
         );
 
-        // TODO: Handle code for spilled variables and remove this assert
-        // assert!(
-        //     spilled.is_none(),
-        //     "Function can't handle spilled values yet"
-        // );
-
+        // Overwrite the value, whether it lives on stack or in memory
         let value_size = type_to_remove.size_of();
 
-        // Overwrite the value
-        let code = match old_value_spilled {
+        match old_value_spilled {
             Some(spill_addr) => overwrite_in_memory(spill_addr, value_size),
             None => {
                 if stack_position_of_value_to_remove > 0 && accessible {
@@ -295,17 +278,7 @@ impl CompilerState {
                     vec![]
                 }
             }
-        };
-
-        // Remove the overwritten value from vstack
-        let old_value = (
-            value_identifier_to_remove.to_owned(),
-            (type_to_remove, old_value_spilled),
-        );
-        let new_value = (top_element_id, (top_element_type, old_value_spilled));
-        self.vstack.replace_value(&old_value, new_value);
-
-        code
+        }
     }
 
     fn replace_tuple_element(
@@ -381,7 +354,7 @@ impl CompilerState {
         // Clear stack, vstack, and var_addr of locally declared values for those that are on top of the stack
         let mut code = vec![];
         loop {
-            let (addr, (dt, spilled)) = self.vstack.peek().unwrap();
+            let (addr, (dt, _spilled)) = self.vstack.peek().unwrap();
             let binding_name = self
                 .var_addr
                 .iter()
@@ -389,7 +362,6 @@ impl CompilerState {
                 .unwrap_or_else(|| panic!("Cannot handle stack cleanup of unbound values"))
                 .0
                 .clone();
-            // assert!(spilled.is_none(), "Cannot handle spilled values yet");
             if previous_var_addr.contains_key(&binding_name) {
                 break;
             } else {
@@ -524,9 +496,9 @@ impl CompilerState {
             };
             match spilled {
                 Some(spilled_addr) => {
-                    print!("{addr}: {var_name} <{data_type}> spilled to: {spilled_addr}\n")
+                    println!("{addr}: {var_name} <{data_type}> spilled to: {spilled_addr}")
                 }
-                None => print!("{addr}: {var_name} <{data_type}>\n"),
+                None => println!("{addr}: {var_name} <{data_type}>"),
             }
         }
         println!();
@@ -660,26 +632,14 @@ fn compile_stmt(
 
         ast::Stmt::Assign(ast::AssignStmt { identifier, expr }) => {
             let data_type = expr.get_type();
-            let (expr_addr, expr_code) = compile_expr(expr, "assign", &data_type, state);
+
+            // When overwriting a value, we ignore the identifier of the new expression as
+            // it's simply popped from the stack and the old identifier is used.
+            let (_expr_addr, expr_code) = compile_expr(expr, "assign", &data_type, state);
             match identifier {
                 ast::Identifier::String(var_name, _known_type) => {
-                    let old_value_identifier = state
-                        .var_addr
-                        .insert(var_name.clone(), expr_addr)
-                        .expect("Value identifier must exist in var_addr");
-
-                    // Currently, assignments just get the same place on the stack as the value
-                    // that it is overwriting had. This may or may not be efficient.
-                    // Get code to overwrite old value, and update the compiler's vstack
-                    // println!("BEFORE");
-                    // state.show_vstack_values();
-                    let overwrite_code = state.overwrite_value(&old_value_identifier);
-                    // println!("AFTER");
-                    // state.show_vstack_values();
-                    // println!(
-                    //     "overwrite_code: {}",
-                    //     overwrite_code.iter().map(|x| x.to_string()).join("; ")
-                    // );
+                    let value_identifier = state.var_addr[var_name].clone();
+                    let overwrite_code = state.overwrite_value(&value_identifier);
 
                     vec![expr_code, overwrite_code].concat()
                 }
@@ -721,10 +681,7 @@ fn compile_stmt(
         // 'return;': Clean stack
         ast::Stmt::Return(None) => {
             let mut code = vec![];
-            while let Some((_addr, (data_type, spilled))) = state.vstack.pop() {
-                // TODO: Handle spilled values here. Maybe just by leaving the memory unchanged and
-                // not reusing that par of memory without overwriting it first?
-                assert!(spilled.is_none(), "Can't handle spilled values yet");
+            while let Some((_addr, (data_type, _spilled))) = state.vstack.pop() {
                 code.push(vec![pop(); data_type.size_of()]);
             }
 

@@ -153,9 +153,7 @@ mod run_tests {
     use std::{collections::HashMap, vec};
     use triton_vm::bfield_codec::BFieldCodec;
     use twenty_first::shared_math::{
-        b_field_element::{BFieldElement, BFIELD_ONE, BFIELD_ZERO},
-        rescue_prime_digest::Digest,
-        x_field_element::XFieldElement,
+        b_field_element::BFieldElement, rescue_prime_digest::Digest, x_field_element::XFieldElement,
     };
 
     #[test]
