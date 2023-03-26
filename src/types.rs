@@ -807,8 +807,8 @@ fn derive_annotate_expr_type(
         ast::Expr::Cast(expr, as_type) => {
             let expr_type = derive_annotate_expr_type(expr, None, state);
             assert!(
-                is_u32_based_type(&expr_type),
-                "Can only cast from u32 and u64"
+                is_u32_based_type(&expr_type) || expr_type == ast::DataType::Bool,
+                "Can only cast from u32, u64, and bool"
             );
             assert!(is_u32_based_type(as_type), "Can only cast to u32 and u64");
 

@@ -204,6 +204,30 @@ fn spill_to_memory_in_branch_rast() -> syn::ItemFn {
     })
 }
 
+#[allow(dead_code)]
+fn spill_many_bindings_to_memory_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn spill_many_bindings_to_memory(a: u64, b: u64, c: u64, d: u64, e: u64, f: u64) -> u64 {
+            let val0: u64 = 0;
+            let val1: u64 = 0;
+            let val2: u64 = 0;
+            let mut res: u64 = a * 2u64 + (b * 2u64 + (c * 2u64 + (d * 2u64 + (e * 2u64 + f * 2u64)))) + 2u64 * a + 2u64 * b + (true || false) as u64;
+            let val3: u64 = 0;
+            let val4: u64 = 0;
+            let val5: u64 = 0;
+            let val6: u64 = 0;
+            let val7: u64 = 0;
+            let val8: u64 = 0;
+            let val9: u64 = 0;
+            let val10: u64 = 0;
+            res = res + a + b + c + d + e + f + res;
+            res = res * 2u64 + a * 2u64 + ((b * 2u64 + c * 2u64) as u32) as u64 + (d * 2u64 + e * 2u64 + f * 2u64) * 2u64 + a + b + c;
+
+            return res;
+        }
+    })
+}
+
 #[cfg(test)]
 mod run_tests {
     use std::collections::HashMap;
@@ -399,5 +423,21 @@ mod run_tests {
             .concat(),
             vec![],
         )
+    }
+
+    #[test]
+    fn spill_many_bindings_to_memory_test() {
+        compare_prop_with_stack(
+            &spill_many_bindings_to_memory_rast(),
+            vec![
+                u64_lit(6),
+                u64_lit(5),
+                u64_lit(4),
+                u64_lit(3),
+                u64_lit(2),
+                u64_lit(1),
+            ],
+            vec![u64_lit(371)],
+        );
     }
 }

@@ -1828,6 +1828,34 @@ fn compile_expr(
 
                     (addr, vec![code, spill_code].concat())
                 }
+                (ast::DataType::Bool, ast::DataType::U64) => {
+                    let (_, (old_data_type, _spilled)) = state.vstack.pop().unwrap();
+
+                    // sanity check
+                    assert_eq!(ast::DataType::Bool, old_data_type);
+
+                    let code = vec![expr_code, vec![push(0), swap(1)]].concat();
+                    let (addr, spill) = state.new_value_identifier("_as_u64", &result_type);
+                    let spill_code = spill
+                        .map(|x| store_top_value_in_memory(x, result_type.size_of()))
+                        .unwrap_or_default();
+
+                    (addr, vec![code, spill_code].concat())
+                }
+                (ast::DataType::Bool, ast::DataType::U32) => {
+                    let (_, (old_data_type, _spilled)) = state.vstack.pop().unwrap();
+
+                    // sanity check
+                    assert_eq!(ast::DataType::Bool, old_data_type);
+
+                    let code = expr_code;
+                    let (addr, spill) = state.new_value_identifier("_as_u32", &result_type);
+                    let spill_code = spill
+                        .map(|x| store_top_value_in_memory(x, result_type.size_of()))
+                        .unwrap_or_default();
+
+                    (addr, vec![code, spill_code].concat())
+                }
                 _ => todo!(),
             }
         }
