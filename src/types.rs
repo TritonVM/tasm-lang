@@ -666,7 +666,7 @@ fn derive_annotate_expr_type(
                 }
 
                 // Restricted to U32-based types. (Triton VM limitation)
-                Lt => {
+                Lt | Gt => {
                     // FIXME: Cannot provide parent `hint` (since it's Bool)
                     let no_hint = None;
                     let lhs_type = derive_annotate_expr_type(lhs_expr, no_hint, state);

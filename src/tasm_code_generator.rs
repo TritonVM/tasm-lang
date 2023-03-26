@@ -1457,6 +1457,18 @@ fn compile_expr(
 
                     (addr, vec![code, spill_code].concat())
                 }
+                // ast::Expr::Binop(lhs_expr, binop, rhs_expr, _known_type)
+                ast::BinOp::Gt => compile_expr(
+                    &ast::Expr::Binop(
+                        rhs_expr.to_owned(),
+                        ast::BinOp::Lt,
+                        lhs_expr.to_owned(),
+                        _known_type.to_owned(),
+                    ),
+                    _context,
+                    _data_type,
+                    state,
+                ),
                 ast::BinOp::Mul => {
                     let (_lhs_expr_addr, lhs_expr_code) =
                         compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
