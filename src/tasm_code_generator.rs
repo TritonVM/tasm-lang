@@ -690,43 +690,51 @@ fn compile_stmt(
 
         ast::Stmt::Return(Some(ret_expr)) => {
             // special-case on returning variable, without unnecessary dup-instructions
-            let expr_code =
-                if let ast::Expr::Var(ast::Identifier::String(var_name, _known_type)) = ret_expr {
-                    // Remove everything above returned value
-                    let needle = state
-                        .var_addr
-                        .get(var_name)
-                        .expect("Returned value must exist in value/addr map");
-                    let mut code = vec![];
-                    loop {
-                        let (haystack, (dt, spilled)) = state.vstack.peek().unwrap();
-                        if *haystack == *needle {
-                            // TODO: Handle spilled values somehow.
-                            assert!(spilled.is_none(), "Cannot handle spilled return values yet");
-                            break;
+            let expr_code = if let ast::Expr::Var(ast::Identifier::String(var_name, _known_type)) =
+                ret_expr
+            {
+                // Remove everything above returned value
+                let needle = state
+                    .var_addr
+                    .get(var_name)
+                    .expect("Returned value must exist in value/addr map");
+                let mut code = vec![];
+                loop {
+                    let (haystack, (dt, spilled)) = state.vstack.peek().unwrap();
+                    if *haystack == *needle {
+                        match spilled {
+                            // If the returned value is a spilled value, we pop everything and
+                            // load the value from memory. Otherwise, we pop until the sought
+                            // value is on top of the stack and then call a helper function
+                            // to remove everything below it.
+                            Some(spill_addr) => {
+                                code.append(&mut vec![pop(); state.vstack.get_stack_height()]);
+                                code.append(&mut load_from_memory(*spill_addr, dt.size_of()))
+                            }
+                            None => code
+                                .append(&mut state.clear_all_but_top_stack_value_above_height(0)),
                         }
-
-                        code.append(&mut vec![pop(); dt.size_of()]);
-                        state.vstack.pop();
+                        break;
                     }
 
-                    // Now returned value is top of stack. Remove everything below it
-                    let cleanup_code = state.clear_all_but_top_stack_value_above_height(0);
+                    code.append(&mut vec![pop(); dt.size_of()]);
+                    state.vstack.pop();
+                }
 
-                    // TODO: Cleanup `var_addr`
+                // TODO: Cleanup `var_addr`
 
-                    vec![code, cleanup_code].concat()
-                } else {
-                    let code =
-                        compile_expr(ret_expr, "ret_expr", &function.fn_signature.output, state).1;
+                code
+            } else {
+                let code =
+                    compile_expr(ret_expr, "ret_expr", &function.fn_signature.output, state).1;
 
-                    // Remove all but top value from stack
-                    let cleanup_code = state.clear_all_but_top_stack_value_above_height(0);
+                // Remove all but top value from stack
+                let cleanup_code = state.clear_all_but_top_stack_value_above_height(0);
 
-                    // TODO: Cleanup `var_addr`
+                // TODO: Cleanup `var_addr`
 
-                    vec![code, cleanup_code].concat()
-                };
+                vec![code, cleanup_code].concat()
+            };
 
             expr_code
         }
