@@ -1856,6 +1856,20 @@ fn compile_expr(
 
                     (addr, vec![code, spill_code].concat())
                 }
+                (ast::DataType::Bool, ast::DataType::BFE) => {
+                    let (_, (old_data_type, _spilled)) = state.vstack.pop().unwrap();
+
+                    // sanity check
+                    assert_eq!(ast::DataType::Bool, old_data_type);
+
+                    let code = expr_code;
+                    let (addr, spill) = state.new_value_identifier("_as_bfe", &result_type);
+                    let spill_code = spill
+                        .map(|x| store_top_value_in_memory(x, result_type.size_of()))
+                        .unwrap_or_default();
+
+                    (addr, vec![code, spill_code].concat())
+                }
                 _ => todo!(),
             }
         }

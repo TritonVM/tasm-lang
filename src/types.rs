@@ -804,15 +804,14 @@ fn derive_annotate_expr_type(
             then_type
         }
 
-        ast::Expr::Cast(expr, as_type) => {
-            let expr_type = derive_annotate_expr_type(expr, None, state);
-            assert!(
-                is_u32_based_type(&expr_type) || expr_type == ast::DataType::Bool,
-                "Can only cast from u32, u64, and bool"
-            );
-            assert!(is_u32_based_type(as_type), "Can only cast to u32 and u64");
+        ast::Expr::Cast(expr, to_type) => {
+            let from_type = derive_annotate_expr_type(expr, None, state);
+            let valid_cast = is_u32_based_type(&from_type) && is_u32_based_type(to_type)
+                || from_type == ast::DataType::Bool && is_arithmetic_type(to_type);
 
-            as_type.to_owned()
+            assert!(valid_cast, "Cannot cast from {from_type} to {to_type}");
+
+            to_type.to_owned()
         }
     }
 }

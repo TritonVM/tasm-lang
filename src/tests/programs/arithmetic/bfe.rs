@@ -3,7 +3,7 @@ use syn::parse_quote;
 use crate::graft::item_fn;
 
 #[allow(dead_code)]
-pub fn add_bfe_rast() -> syn::ItemFn {
+fn add_bfe_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn add_bfe(lhs: BFieldElement, rhs: BFieldElement) -> BFieldElement {
             let c: BFieldElement = lhs + rhs;
@@ -13,10 +13,19 @@ pub fn add_bfe_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn mul_bfe_rast() -> syn::ItemFn {
+fn mul_bfe_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn add_bfe(lhs: BFieldElement, rhs: BFieldElement) -> BFieldElement {
             return lhs * rhs;
+        }
+    })
+}
+
+#[allow(dead_code)]
+fn cast_from_bool_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn cast_from_bool(input: bool) -> BFieldElement {
+            return input as BFieldElement;
         }
     })
 }
@@ -57,6 +66,20 @@ mod run_tests {
                 bfe_lit(10_000_000_000u64.into()),
             ],
             vec![bfe_lit(7766279652927078395u64.into())],
+        );
+    }
+
+    #[test]
+    fn cast_from_bool_test() {
+        compare_prop_with_stack(
+            &cast_from_bool_rast(),
+            vec![bool_lit(false)],
+            vec![bfe_lit(0u64.into())],
+        );
+        compare_prop_with_stack(
+            &cast_from_bool_rast(),
+            vec![bool_lit(true)],
+            vec![bfe_lit(1u64.into())],
         );
     }
 }
