@@ -228,6 +228,42 @@ fn spill_many_bindings_to_memory_rast() -> syn::ItemFn {
     })
 }
 
+#[allow(dead_code)]
+fn big_branches_spill_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn big_branches_spill(a: u64, b: u64, c: u64, d: u64, e: u64, f: u64) -> (u64, u64) {
+            let mut g: u64 = a + b;
+            if a > b {
+                if b > c {
+                    if d == 0u64 {
+                        let val0: u64 = 0;
+                        let val1: u64 = 0;
+                        let val2: u64 = 0;
+                        let val3: u64 = 0;
+                        let val4: u64 = 0;
+                        let val5: u64 = 0;
+                        let val6: u64 = 0;
+                        let val7: u64 = 0;
+                        let val8: u64 = 0;
+                        let val9: u64 = 0;
+                        g = g * 2u64;
+                    } else {
+                        g = 0;
+                    }
+                } else {
+                    g = 0;
+                }
+            } else {
+                g = 0;
+            }
+
+
+
+            return (a, g);
+        }
+    })
+}
+
 #[cfg(test)]
 mod run_tests {
     use std::collections::HashMap;
@@ -313,36 +349,6 @@ mod run_tests {
             vec![],
         );
     }
-
-    // fn spill_to_memory_in_branch(a: u64, b: u64, c: u64, d: u64, e: u64, f: u64) -> (u64, u64) {
-    //     let mut g: u64 = a + b;
-    //     let h: u64 = c + d;
-    //     let i: u64 = e + f;
-    //     let mut j: u64 = 0;
-
-    //     if h < i {
-    //         // In this branch `g` is updated, but that update must happen
-    //         // in memory since `g` lives in memory because of the other
-    //         // branch.
-    //         g = 2 * g + a + b;
-    //     } else {
-    //         // In this branch `g` is spilled to memory
-    //         let k: u64 = 0;
-    //         let l: u64 = 0;
-    //         let m: u64 = 0;
-    //         let n: u64 = 0;
-    //         let o: u64 = 0;
-    //         let p: u64 = 0;
-    //         let q: u64 = 0;
-    //         let r: u64 = 0;
-    //         let s: u64 = 0;
-    //         let t: u64 = 0;
-    //         let u: u64 = 0;
-    //         j = g;
-    //     }
-
-    //     return (g, j);
-    // }
 
     #[test]
     fn spill_to_memory_in_branch_test_1() {
@@ -438,6 +444,22 @@ mod run_tests {
                 u64_lit(1),
             ],
             vec![u64_lit(371)],
+        );
+    }
+
+    #[test]
+    fn big_branches_spill_test() {
+        compare_prop_with_stack(
+            &big_branches_spill_rast(),
+            vec![
+                u64_lit(6),
+                u64_lit(5),
+                u64_lit(4),
+                u64_lit(3),
+                u64_lit(2),
+                u64_lit(1),
+            ],
+            vec![u64_lit(6), u64_lit(0)],
         );
     }
 }
