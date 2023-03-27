@@ -62,6 +62,24 @@ pub fn mul_u32_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
+pub fn div_u32_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn div_u32(rhs: u32, lhs: u32) -> u32 {
+            return rhs / lhs;
+        }
+    })
+}
+
+#[allow(dead_code)]
+pub fn rem_u32_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn rem_u32(rhs: u32, lhs: u32) -> u32 {
+            return rhs % lhs;
+        }
+    })
+}
+
+#[allow(dead_code)]
 pub fn bitwise_and_u32_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn bitwise_and_u32(lhs: u32, rhs: u32) -> u32 {

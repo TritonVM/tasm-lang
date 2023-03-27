@@ -44,6 +44,24 @@ pub fn mul_u64_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
+pub fn div_u64_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn div_u64(rhs: u64, lhs: u64) -> u64 {
+            return rhs / lhs;
+        }
+    })
+}
+
+#[allow(dead_code)]
+pub fn rem_u64_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn rem_u64(rhs: u64, lhs: u64) -> u64 {
+            return rhs % lhs;
+        }
+    })
+}
+
+#[allow(dead_code)]
 pub fn bitwise_and_u64_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn bitwise_and_u64(lhs: u64, rhs: u64) -> u64 {
