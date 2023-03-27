@@ -6,6 +6,7 @@ use twenty_first::shared_math::x_field_element::XFieldElement;
 use crate::ast;
 use crate::libraries::tasm;
 use crate::libraries::vector;
+use crate::tasm_code_generator::STACK_SIZE;
 
 #[derive(Debug, Default, Clone, Hash, PartialEq, Eq)]
 pub enum Typing {
@@ -162,6 +163,19 @@ pub fn annotate_fn(function: &mut ast::Fn<Typing>) {
             panic!("Duplicate function argument {}", arg.name);
         }
     }
+
+    // Verify that input arguments do not exceed 15 words
+    assert!(
+        state
+            .vtable
+            .values()
+            .map(|x| x.data_type.size_of())
+            .sum::<usize>()
+            < STACK_SIZE,
+        "{}: Cannot handle function signatures with input size exceeding {} words",
+        function.fn_signature.name,
+        STACK_SIZE - 1
+    );
 
     // Type-annotate each statement in-place
     function.body.iter_mut().for_each(|stmt| {
@@ -464,7 +478,7 @@ fn derive_annotate_expr_type(
     hint: Option<&ast::DataType>,
     state: &mut CheckState,
 ) -> ast::DataType {
-    // println!("derive_annotate_expr_type({expr:?}, {hint:?}, state)");
+    // println!("derive_annotate_expr_type({expr:?}, hint: {hint:?})");
     match expr {
         ast::Expr::Lit(ast::ExprLit::Bool(_)) => ast::DataType::Bool,
         ast::Expr::Lit(ast::ExprLit::U32(_)) => ast::DataType::U32,
@@ -500,7 +514,7 @@ fn derive_annotate_expr_type(
                     XFE
                 }
                 Some(hint) => panic!("GenericNum does not infer as type hint {hint}"),
-                None => panic!("GenericNum does not infer in context with no type hint"),
+                None => panic!("GenericNum does not infer in context with no type hint. Missing type hint for: {:?}", expr),
             }
         }
 
@@ -532,6 +546,7 @@ fn derive_annotate_expr_type(
 
             derive_annotate_fn_call_args(&fn_signature, args, state);
             *annot = Typing::KnownType(fn_signature.output.clone());
+
             fn_signature.output
         }
 
@@ -651,7 +666,7 @@ fn derive_annotate_expr_type(
                 }
 
                 // Restricted to U32-based types. (Triton VM limitation)
-                Lt => {
+                Lt | Gt => {
                     // FIXME: Cannot provide parent `hint` (since it's Bool)
                     let no_hint = None;
                     let lhs_type = derive_annotate_expr_type(lhs_expr, no_hint, state);
@@ -789,15 +804,14 @@ fn derive_annotate_expr_type(
             then_type
         }
 
-        ast::Expr::Cast(expr, as_type) => {
-            let expr_type = derive_annotate_expr_type(expr, Some(as_type), state);
-            assert!(
-                is_u32_based_type(&expr_type),
-                "Can only cast from u32 and u64"
-            );
-            assert!(is_u32_based_type(as_type), "Can only cast to u32 and u64");
+        ast::Expr::Cast(expr, to_type) => {
+            let from_type = derive_annotate_expr_type(expr, None, state);
+            let valid_cast = is_u32_based_type(&from_type) && is_u32_based_type(to_type)
+                || from_type == ast::DataType::Bool && is_arithmetic_type(to_type);
 
-            as_type.to_owned()
+            assert!(valid_cast, "Cannot cast from {from_type} to {to_type}");
+
+            to_type.to_owned()
         }
     }
 }

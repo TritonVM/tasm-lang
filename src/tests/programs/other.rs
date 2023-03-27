@@ -224,6 +224,56 @@ pub fn tuple_support() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
+pub fn return_tuple_element_0() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn return_tuple_element() -> bool {
+            let tuple: (bool, u32, u64, u64, u32) = (true, 42u32, 10000000000u64, 60000000000u64, 20000u32);
+            return tuple.0;
+        }
+    })
+}
+
+#[allow(dead_code)]
+pub fn return_tuple_element_1() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn return_tuple_element() -> u32 {
+            let tuple: (bool, u32, u64, u64, u32) = (true, 42u32, 10000000000u64, 60000000000u64, 20000u32);
+            return tuple.1;
+        }
+    })
+}
+
+#[allow(dead_code)]
+pub fn return_tuple_element_2() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn return_tuple_element() -> u64 {
+            let tuple: (bool, u32, u64, u64, u32) = (true, 42u32, 10000000000u64, 60000000000u64, 20000u32);
+            return tuple.2;
+        }
+    })
+}
+
+#[allow(dead_code)]
+pub fn return_tuple_element_3() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn return_tuple_element() -> u64 {
+            let tuple: (bool, u32, u64, u64, u32) = (true, 42u32, 10000000000u64, 60000000000u64, 20000u32);
+            return tuple.3;
+        }
+    })
+}
+
+#[allow(dead_code)]
+pub fn return_tuple_element_4() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn return_tuple_element() -> u32 {
+            let tuple: (bool, u32, u64, u64, u32) = (true, 42u32, 10000000000u64, 60000000000u64, 20000u32);
+            return tuple.4;
+        }
+    })
+}
+
+#[allow(dead_code)]
 pub fn mut_list_argument() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn foo(values: &mut Vec<u64>) {
@@ -278,7 +328,21 @@ pub fn allow_mutable_triplet_rast() -> syn::ItemFn {
     })
 }
 
-// TODO: This code fails! Why?
+#[allow(dead_code)]
+pub fn overwrite_values_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn overwrite_values() -> (u32, u32) {
+            let mut a: u32 = 100;
+            a = 200;
+            a = 300;
+            a = a + 300;
+            a = a + a;
+
+            return (a, a + 100u32);
+        }
+    })
+}
+
 #[allow(dead_code)]
 pub fn allow_mutable_tuple_complicated_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
@@ -467,7 +531,7 @@ mod run_tests {
             inputs,
             outputs,
             input_memory,
-            memory,
+            Some(memory),
         );
     }
 
@@ -476,6 +540,24 @@ mod run_tests {
         let outputs = vec![bool_lit(true), u32_lit(42), u64_lit(100)];
 
         compare_prop_with_stack(&tuple_support(), vec![], outputs);
+    }
+
+    #[test]
+    fn return_tuple_element() {
+        // let tuple: (bool, u32, u64, u64, u32) = (true, 42u32, 10000000000u64, 60000000000u64, 20000u32);
+        compare_prop_with_stack(&return_tuple_element_0(), vec![], vec![bool_lit(true)]);
+        compare_prop_with_stack(&return_tuple_element_1(), vec![], vec![u32_lit(42)]);
+        compare_prop_with_stack(
+            &return_tuple_element_2(),
+            vec![],
+            vec![u64_lit(10_000_000_000)],
+        );
+        compare_prop_with_stack(
+            &return_tuple_element_3(),
+            vec![],
+            vec![u64_lit(60_000_000_000)],
+        );
+        compare_prop_with_stack(&return_tuple_element_4(), vec![], vec![u32_lit(20000)]);
     }
 
     #[test]
@@ -506,7 +588,7 @@ mod run_tests {
             vec![bfe_lit(list_pointer)],
             vec![],
             memory,
-            expected_final_memory,
+            Some(expected_final_memory),
         );
     }
 
@@ -534,6 +616,15 @@ mod run_tests {
             &allow_mutable_triplet_rast(),
             vec![],
             vec![u64_lit(4), u64_lit(5), u32_lit(6)],
+        );
+    }
+
+    #[test]
+    fn overwrite_values_test() {
+        compare_prop_with_stack(
+            &overwrite_values_rast(),
+            vec![],
+            vec![u32_lit(1200), u32_lit(1300)],
         );
     }
 
@@ -579,7 +670,7 @@ mod run_tests {
             inputs,
             outputs,
             input_memory,
-            memory,
+            Some(memory),
         );
     }
 }

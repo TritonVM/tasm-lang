@@ -153,22 +153,8 @@ mod run_tests {
     use std::{collections::HashMap, vec};
     use triton_vm::bfield_codec::BFieldCodec;
     use twenty_first::shared_math::{
-        b_field_element::{BFieldElement, BFIELD_ONE, BFIELD_ZERO},
-        rescue_prime_digest::Digest,
-        x_field_element::XFieldElement,
+        b_field_element::BFieldElement, rescue_prime_digest::Digest, x_field_element::XFieldElement,
     };
-
-    fn bool_to_bfe(b: bool) -> BFieldElement {
-        if b {
-            BFIELD_ONE
-        } else {
-            BFIELD_ZERO
-        }
-    }
-
-    fn split(value: u64) -> Vec<BFieldElement> {
-        vec![((value >> 32) as u32).into(), (value as u32).into()]
-    }
 
     #[test]
     fn stdin_test() {
@@ -178,7 +164,7 @@ mod run_tests {
             vec![],
             vec![bfe_lit(my_bfe)],
             HashMap::default(),
-            HashMap::default(),
+            Some(HashMap::default()),
             vec![my_bfe],
             vec![],
         )
@@ -193,7 +179,7 @@ mod run_tests {
             vec![],
             vec![bfe_lit(my_bfe), bfe_lit(my_bfe34)],
             HashMap::default(),
-            HashMap::default(),
+            Some(HashMap::default()),
             vec![my_bfe, my_bfe34],
             vec![],
         )
@@ -207,7 +193,7 @@ mod run_tests {
             vec![],
             vec![bfe_lit(my_bfe)],
             HashMap::default(),
-            HashMap::default(),
+            Some(HashMap::default()),
             vec![],
             vec![my_bfe],
         )
@@ -231,7 +217,7 @@ mod run_tests {
                 bfe_lit(my_bfe999),
             ],
             HashMap::default(),
-            HashMap::default(),
+            None,
             vec![],
             vec![
                 my_bfe, my_bfe, my_bfe, my_bfe, my_bfe, my_bfe, my_bfe, my_bfe999,
@@ -267,7 +253,7 @@ mod run_tests {
                 digest_lit(digest),
             ],
             HashMap::default(),
-            HashMap::default(),
+            None,
             vec![
                 vec![bool_to_bfe(my_bool)],
                 vec![my_u32.into()],
@@ -309,7 +295,7 @@ mod run_tests {
                 digest_lit(digest),
             ],
             HashMap::default(),
-            HashMap::default(),
+            Some(HashMap::default()),
             vec![
                 vec![bool_to_bfe(my_bool)],
                 vec![my_u32.into()],
@@ -351,7 +337,7 @@ mod run_tests {
                 digest_lit(digest),
             ],
             HashMap::default(),
-            HashMap::default(),
+            Some(HashMap::default()),
             vec![],
             vec![
                 vec![bool_to_bfe(my_bool)],
@@ -383,7 +369,7 @@ mod run_tests {
                 xfe_lit(my_xfe),
             ],
             HashMap::default(),
-            HashMap::default(),
+            None,
             vec![
                 vec![bool_to_bfe(my_bool)],
                 vec![my_u32.into()],
@@ -414,7 +400,7 @@ mod run_tests {
                 xfe_lit(my_xfe),
             ],
             HashMap::default(),
-            HashMap::default(),
+            None,
             vec![],
             vec![
                 vec![bool_to_bfe(my_bool)],
@@ -436,7 +422,7 @@ mod run_tests {
             vec![],
             vec![digest_lit(my_digest)],
             HashMap::default(),
-            HashMap::default(),
+            Some(HashMap::default()),
             my_digest.encode(),
             vec![],
         )
@@ -451,7 +437,7 @@ mod run_tests {
             vec![],
             vec![digest_lit(my_digest)],
             HashMap::default(),
-            HashMap::default(),
+            Some(HashMap::default()),
             vec![],
             my_digest.encode(),
         )

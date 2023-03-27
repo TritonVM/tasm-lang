@@ -103,6 +103,7 @@ pub enum BinOp {
     Div,
     Eq,
     Lt,
+    Gt,
     Mul,
     Neq,
     Or,
@@ -124,6 +125,25 @@ pub enum Expr<T> {
     Cast(Box<Expr<T>>, DataType),
     // Index(Box<Expr<T>>, Box<Expr<T>>), // a_expr[i_expr]    (a + 5)[3]
     // TODO: VM-specific intrinsics (hash, absorb, squeeze, etc.)
+}
+
+// Used for making nice value identifiers whose position you might be
+// able to guess in the source code.
+impl<T> Display for Expr<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let str = match self {
+            Expr::Lit(_lit) => "lit".to_owned(),
+            Expr::Var(_) => "var_copy".to_owned(),
+            Expr::Tuple(_) => "tuple".to_owned(),
+            Expr::FnCall(_) => "fn_call".to_owned(),
+            Expr::MethodCall(_) => "method_call.method_name".to_owned(),
+            Expr::Binop(_, binop, _, _) => format!("binop_{binop:?}"),
+            Expr::If(_) => "if_else".to_owned(),
+            Expr::Cast(_, dt) => format!("cast_{dt}"),
+        };
+
+        write!(f, "{str}")
+    }
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]

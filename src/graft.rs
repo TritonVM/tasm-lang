@@ -1,4 +1,5 @@
 use itertools::Itertools;
+use twenty_first::shared_math::b_field_element::BFieldElement;
 
 use crate::ast;
 use crate::types;
@@ -183,7 +184,7 @@ fn path_to_type_parameter(path: &syn::Path) -> Option<ast::DataType> {
     type_parameter
 }
 
-fn graft_call_exp(expr_call: &syn::ExprCall) -> ast::FnCall<Annotation> {
+fn graft_call_exp(expr_call: &syn::ExprCall) -> ast::Expr<Annotation> {
     let (name, type_parameter) = match expr_call.func.as_ref() {
         syn::Expr::Path(path) => (
             path_to_ident(&path.path),
@@ -194,11 +195,20 @@ fn graft_call_exp(expr_call: &syn::ExprCall) -> ast::FnCall<Annotation> {
     let args = expr_call.args.iter().map(graft_expr).collect_vec();
     let annot = Default::default();
 
-    ast::FnCall {
-        name,
-        args,
-        annot,
-        type_parameter,
+    // Special case for consturcting BFEs and XFEs from literals.
+    if name == "BFieldElement::new" && args.len() == 1 && matches!(args[0], ast::Expr::Lit(_)) {
+        if let ast::Expr::Lit(ast::ExprLit::U64(value)) = args[0] {
+            ast::Expr::Lit(ast::ExprLit::BFE(BFieldElement::new(value)))
+        } else {
+            panic!("Can only instantiate BFE with u64-literal. Please use casting for conversion to `BFieldElement`");
+        }
+    } else {
+        ast::Expr::FnCall(ast::FnCall {
+            name,
+            args,
+            annot,
+            type_parameter,
+        })
     }
 }
 
@@ -337,7 +347,7 @@ pub fn graft_expr(rust_exp: &syn::Expr) -> ast::Expr<Annotation> {
             let lit = &litexp.lit;
             ast::Expr::Lit(graft_lit(lit))
         }
-        syn::Expr::Call(call_exp) => ast::Expr::FnCall(graft_call_exp(call_exp)),
+        syn::Expr::Call(call_exp) => graft_call_exp(call_exp),
         syn::Expr::Paren(paren_exp) => graft_expr(&paren_exp.expr),
         syn::Expr::If(expr_if) => {
             let condition = graft_expr(&expr_if.cond);
@@ -452,6 +462,7 @@ fn graft_binop(rust_binop: syn::BinOp) -> ast::BinOp {
         syn::BinOp::Div(_) => ast::BinOp::Div,
         syn::BinOp::Eq(_) => ast::BinOp::Eq,
         syn::BinOp::Lt(_) => ast::BinOp::Lt,
+        syn::BinOp::Gt(_) => ast::BinOp::Gt,
         syn::BinOp::Mul(_) => ast::BinOp::Mul,
         syn::BinOp::Ne(_) => ast::BinOp::Neq,
         syn::BinOp::Or(_) => ast::BinOp::Or,
@@ -566,7 +577,10 @@ pub fn graft_stmt(rust_stmt: &syn::Stmt) -> ast::Stmt<Annotation> {
                 // Handle a function call that's not an assignment or a return expression
                 let ast_fn_call = graft_call_exp(call_exp);
 
-                ast::Stmt::FnCall(ast_fn_call)
+                match ast_fn_call {
+                    ast::Expr::FnCall(fncall) => ast::Stmt::FnCall(fncall),
+                    _ => panic!("function call as a statement cannot be a literal")
+                }
             }
             syn::Expr::Assign(assign) => {
                 let identifier_expr = assign.left.as_ref();

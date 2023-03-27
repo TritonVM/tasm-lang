@@ -1,7 +1,7 @@
 use itertools::Itertools;
 use std::collections::HashMap;
 use tasm_lib::get_init_tvm_stack;
-use twenty_first::shared_math::b_field_element::BFieldElement;
+use twenty_first::shared_math::b_field_element::{BFieldElement, BFIELD_ONE, BFIELD_ZERO};
 use twenty_first::shared_math::rescue_prime_digest::Digest;
 use twenty_first::shared_math::x_field_element::XFieldElement;
 use twenty_first::util_types::algebraic_hasher::Hashable;
@@ -53,7 +53,7 @@ pub fn compare_prop_with_stack_and_memory_and_ins(
     input_args: Vec<ast::ExprLit<Typing>>,
     expected_outputs: Vec<ast::ExprLit<Typing>>,
     init_memory: HashMap<BFieldElement, BFieldElement>,
-    expected_final_memory: HashMap<BFieldElement, BFieldElement>,
+    expected_final_memory: Option<HashMap<BFieldElement, BFieldElement>>,
     std_in: Vec<BFieldElement>,
     secret_in: Vec<BFieldElement>,
 ) {
@@ -111,25 +111,27 @@ pub fn compare_prop_with_stack_and_memory_and_ins(
             .join(","),
     );
 
-    // Verify that memory behaves as expected
-    if actual_memory != expected_final_memory {
-        let mut expected_final_memory = expected_final_memory.iter().collect_vec();
-        expected_final_memory
-            .sort_unstable_by(|&a, &b| a.0.value().partial_cmp(&b.0.value()).unwrap());
-        let expected_final_memory_str = expected_final_memory
-            .iter()
-            .map(|x| format!("({} => {})", x.0, x.1))
-            .collect_vec()
-            .join(",");
+    // Verify that memory behaves as expected, if expected value is set
+    if let Some(efm) = expected_final_memory {
+        if actual_memory != efm {
+            let mut expected_final_memory = efm.iter().collect_vec();
+            expected_final_memory
+                .sort_unstable_by(|&a, &b| a.0.value().partial_cmp(&b.0.value()).unwrap());
+            let expected_final_memory_str = expected_final_memory
+                .iter()
+                .map(|x| format!("({} => {})", x.0, x.1))
+                .collect_vec()
+                .join(",");
 
-        let mut actual_memory = actual_memory.iter().collect_vec();
-        actual_memory.sort_unstable_by(|&a, &b| a.0.value().partial_cmp(&b.0.value()).unwrap());
-        let actual_memory_str = actual_memory
-            .iter()
-            .map(|x| format!("({} => {})", x.0, x.1))
-            .collect_vec()
-            .join(",");
-        panic!("Memory must match expected value after execution.\n\nTVM: {actual_memory_str}\n\nExpected: {expected_final_memory_str}",)
+            let mut actual_memory = actual_memory.iter().collect_vec();
+            actual_memory.sort_unstable_by(|&a, &b| a.0.value().partial_cmp(&b.0.value()).unwrap());
+            let actual_memory_str = actual_memory
+                .iter()
+                .map(|x| format!("({} => {})", x.0, x.1))
+                .collect_vec()
+                .join(",");
+            panic!("Memory must match expected value after execution.\n\nTVM: {actual_memory_str}\n\nExpected: {expected_final_memory_str}",)
+        }
     }
 }
 
@@ -139,7 +141,7 @@ pub fn compare_prop_with_stack_and_memory(
     input_args: Vec<ast::ExprLit<Typing>>,
     expected_outputs: Vec<ast::ExprLit<Typing>>,
     init_memory: HashMap<BFieldElement, BFieldElement>,
-    expected_final_memory: HashMap<BFieldElement, BFieldElement>,
+    expected_final_memory: Option<HashMap<BFieldElement, BFieldElement>>,
 ) {
     compare_prop_with_stack_and_memory_and_ins(
         item_fn,
@@ -163,7 +165,7 @@ pub fn compare_prop_with_stack(
         input_args,
         expected_outputs,
         HashMap::default(),
-        HashMap::default(),
+        None,
     )
 }
 
@@ -195,4 +197,18 @@ pub fn xfe_lit(value: XFieldElement) -> ast::ExprLit<types::Typing> {
 #[allow(dead_code)]
 pub fn digest_lit(value: Digest) -> ast::ExprLit<types::Typing> {
     ast::ExprLit::Digest(value)
+}
+
+#[allow(dead_code)]
+pub fn bool_to_bfe(b: bool) -> BFieldElement {
+    if b {
+        BFIELD_ONE
+    } else {
+        BFIELD_ZERO
+    }
+}
+
+#[allow(dead_code)]
+pub fn split(value: u64) -> Vec<BFieldElement> {
+    vec![((value >> 32) as u32).into(), (value as u32).into()]
 }
