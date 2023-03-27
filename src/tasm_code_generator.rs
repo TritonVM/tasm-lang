@@ -1449,7 +1449,107 @@ fn compile_expr(
                     vec![lhs_expr_code, rhs_expr_code, or_code].concat()
                 }
 
-                ast::BinOp::Rem => todo!(),
+                ast::BinOp::Rem => {
+                    use ast::DataType::*;
+                    match res_type {
+                        U32 => {
+                            // TODO: Consider evaluating in opposite order to save a clock-cycle by removing `swap1`
+                            // below. This would change the "left-to-right" convention though.
+                            let (_lhs_expr_addr, lhs_expr_code) =
+                                compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
+                            let (_rhs_expr_addr, rhs_expr_code) =
+                                compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
+
+                            // Pop numerator and denominator
+                            state.vstack.pop();
+                            state.vstack.pop();
+                            let addr = state.new_value_identifier("_binop_div", &res_type);
+
+                            (
+                                addr,
+                                vec![lhs_expr_code, rhs_expr_code, vec![swap(1), div(), pop()]]
+                                    .concat(),
+                            )
+                        }
+                        U64 => {
+                            // For now we can only divide u64s by 2.
+                            let rhs_expr_owned = *rhs_expr.to_owned();
+                            if !matches!(rhs_expr_owned, ast::Expr::Lit(ast::ExprLit::U64(2))) {
+                                panic!("Unsupported division with denominator: {rhs_expr_owned:#?}")
+                            }
+
+                            let (_lhs_expr_addr, lhs_expr_code) =
+                                compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
+                            let div2 =
+                                state.import_snippet(Box::new(arithmetic::u64::div2_u64::Div2U64));
+
+                            // Pop the numerator that was divided by two
+                            state.vstack.pop();
+                            let addr = state.new_value_identifier("_binop_div", &res_type);
+
+                            (addr, vec![lhs_expr_code, vec![call(div2)]].concat())
+                        }
+                        BFE => {
+                            let (_lhs_expr_addr, lhs_expr_code) =
+                                compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
+                            let (_rhs_expr_addr, rhs_expr_code) =
+                                compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
+
+                            // div num
+                            let bfe_div_code = vec![
+                                swap(1),  // _ num div
+                                invert(), // _ num (1/div)
+                                mul(),    // _ num·(1/div), or (num/div)
+                            ];
+
+                            // Pop numerator and denominator
+                            state.vstack.pop();
+                            state.vstack.pop();
+                            let addr = state.new_value_identifier("_binop_div", &res_type);
+
+                            (
+                                addr,
+                                vec![lhs_expr_code, rhs_expr_code, bfe_div_code].concat(),
+                            )
+                        }
+                        XFE => {
+                            let (_lhs_expr_addr, lhs_expr_code) =
+                                compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
+                            let (_rhs_expr_addr, rhs_expr_code) =
+                                compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
+
+                            // div_2 div_1 div_0 num_2 num_1 num_0
+                            let xfe_div_code = vec![
+                                swap(5),   // num_0 div_1 div_0 num_2 num_1 div_2
+                                swap(2),   // num_0 div_1 div_0 div_2 num_1 num_2
+                                swap(5),   // num_2 div_1 div_0 div_2 num_1 num_0
+                                swap(4),   // num_2 num_0 div_0 div_2 num_1 div_1
+                                swap(1),   // num_2 num_0 div_0 div_2 div_1 num_1
+                                swap(4),   // num_2 num_1 div_0 div_2 div_1 num_0
+                                swap(3),   // num_2 num_1 num_0 div_2 div_1 div_0
+                                xinvert(), // num_2 num_1 num_0 (1/div)_2 (1/div)_1 (1/div)_0
+                                xxmul(),   // num_2 num_1 num_0 (num/div)_2 (num/div)_1 (num/div)_0
+                                swap(3),   // num_2 num_1 (num/div)_0 (num/div)_2 (num/div)_1 num_0
+                                pop(),     // num_2 num_1 (num/div)_0 (num/div)_2 (num/div)_1
+                                swap(3),   // num_2 (num/div)_1 (num/div)_0 (num/div)_2 num_1
+                                pop(),     // num_2 (num/div)_1 (num/div)_0 (num/div)_2
+                                swap(3),   // (num/div)_2 (num/div)_1 (num/div)_0 num_2
+                                pop(),     // (num/div)_2 (num/div)_1 (num/div)_0
+                            ];
+
+                            // Pop numerator and denominator
+                            state.vstack.pop();
+                            state.vstack.pop();
+                            let addr = state.new_value_identifier("_binop_div", &res_type);
+
+                            (
+                                addr,
+                                vec![lhs_expr_code, rhs_expr_code, xfe_div_code].concat(),
+                            )
+                        }
+                        _ => panic!("Unsupported div for type {res_type}"),
+                    }
+                }
 
                 ast::BinOp::Shl => {
                     let (_lhs_expr_addr, lhs_expr_code) =
