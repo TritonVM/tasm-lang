@@ -60,6 +60,7 @@ impl VStack {
             panic!("Expected type was tuple.")
         };
 
+        // Last elemen of the tuple is stored on top of the stack
         let tuple_depth: usize = element_types
             .iter()
             .enumerate()
@@ -258,7 +259,7 @@ impl CompilerState {
         let value_size = type_to_remove.size_of();
 
         match old_value_spilled {
-            Some(spill_addr) => overwrite_in_memory(spill_addr, value_size),
+            Some(spill_addr) => move_top_stack_value_to_memory(spill_addr, value_size),
             None => {
                 if stack_position_of_value_to_remove > 0 && accessible {
                     vec![
@@ -287,7 +288,7 @@ impl CompilerState {
         tuple_index: usize,
     ) -> Vec<LabelledInstruction> {
         // This function assumes that the last element of the tuple is placed on top of the stack
-        let (stack_position_of_tuple, tuple_type, spilled) =
+        let (stack_position_of_tuple, tuple_type, tuple_spilled) =
             self.vstack.find_stack_value(tuple_identifier);
         let element_types = if let ast::DataType::Tuple(ets) = &tuple_type {
             ets
@@ -295,7 +296,7 @@ impl CompilerState {
             panic!("Original value must have type tuple")
         };
 
-        let (_top_element_id, (top_element_type, _)) =
+        let (_top_element_id, (_top_element_type, _)) =
             self.vstack.pop().expect("vstack cannot be empty");
 
         // Last element of tuple is on top of stack. How many machine
@@ -307,40 +308,41 @@ impl CompilerState {
             .map(|(_i, x)| x.size_of())
             .sum::<usize>();
 
-        let stack_position_of_value_to_remove =
-            Into::<usize>::into(stack_position_of_tuple) + tuple_depth;
-
         // If value is not marked as a spilled value and it's inacessible through swap(n)/dup(n),
         // this value must be marked as a value to be spilled, and the compiler must be run again.
-        if spilled.is_none()
-            && stack_position_of_value_to_remove + top_element_type.size_of() > STACK_SIZE
-        {
+        let stack_position_of_value_to_remove = stack_position_of_tuple + tuple_depth;
+        let accessible = stack_position_of_value_to_remove < STACK_SIZE;
+        if tuple_spilled.is_none() && !accessible {
             self.mark_as_spilled(tuple_identifier);
         }
 
-        // TODO: Handle code for spilled variables and remove this assert
-        assert!(
-            spilled.is_none(),
-            "Function can't handle spilled values yet"
-        );
-
-        // Replace the overwritten value on stack
+        // Replace the overwritten value on stack, or in memory
         let value_size = element_types[tuple_index].size_of();
-        let code: Vec<LabelledInstruction> =
-            if Into::<usize>::into(stack_position_of_value_to_remove) > 0 {
-                vec![
+        match tuple_spilled {
+            Some(spill_addr) => {
+                let element_address = spill_addr + tuple_depth as u32;
+                move_top_stack_value_to_memory(element_address, value_size)
+            }
+            None => {
+                if !accessible {
+                    println!("Compiler must run again because of {tuple_identifier}");
+                    vec![push(0), assert_()]
+                } else if stack_position_of_value_to_remove > 0 && accessible {
                     vec![
-                        Instruction(Swap(stack_position_of_value_to_remove.try_into().unwrap())),
-                        pop()
-                    ];
-                    value_size
-                ]
-                .concat()
-            } else {
-                vec![]
-            };
-
-        code
+                        vec![
+                            Instruction(Swap(
+                                stack_position_of_value_to_remove.try_into().unwrap()
+                            )),
+                            pop()
+                        ];
+                        value_size
+                    ]
+                    .concat()
+                } else {
+                    vec![]
+                }
+            }
+        }
     }
 
     /// Restore the vstack to a previous state, representing the state the stack had
@@ -394,7 +396,15 @@ impl CompilerState {
         ) -> Vec<LabelledInstruction> {
             match (top_value_size, words_to_remove) {
                 (4, 2) => vec![swap(1), swap(3), swap(5), pop(), swap(1), swap(3), pop()],
-                (2, 1) => vec![swap(1), swap(2), pop()],
+                (6, 2) => vec![swap(2), swap(4), swap(6), pop(), swap(2), swap(4), swap(6), pop()],
+                (n, 1) => {
+                    let mut swaps = vec![];
+                    for i in 1..n {
+                        swaps.push(swap(i as u64));
+                    }
+
+                    vec![swaps, vec![pop()]].concat()
+                }
                 _ => panic!("Unsupported. Please cover more special cases. Got: {top_value_size}, {words_to_remove}"),
             }
         }
@@ -433,7 +443,7 @@ impl CompilerState {
             // access with dup15/swap15. Our solution is to store the return value in
             // memory, clear the stack, and read it back from memory.
             let memory_location: u32 = self.library.kmalloc(top_value_size).try_into().unwrap();
-            let mut code = store_top_value_in_memory(memory_location, top_value_size);
+            let mut code = copy_top_stack_value_to_memory(memory_location, top_value_size);
             code.append(&mut vec![pop(); height_of_affected_stack]);
             code.append(&mut load_from_memory(memory_location, top_value_size));
 
@@ -558,9 +568,9 @@ pub fn compile(function: &ast::Fn<types::Typing>) -> Vec<LabelledInstruction> {
         let (stack_depth, data_type, spill_addr) = state.vstack.find_stack_value(&value_id);
 
         // Produce the code to spill the function argument
-        let bottom_of_value = stack_depth + data_type.size_of() - 1;
+        let top_of_value = stack_depth;
         let mut spill_code =
-            store_value_in_memory(spill_addr.unwrap(), data_type.size_of(), bottom_of_value);
+            store_value_in_memory(spill_addr.unwrap(), data_type.size_of(), top_of_value);
 
         fn_body_code.append(&mut spill_code);
     }
@@ -925,7 +935,7 @@ fn compile_expr(
             let (addr, spill) =
                 state.new_value_identifier(&format!("{result_type}_lit"), &result_type);
             let spill_code = spill
-                .map(|x| store_top_value_in_memory(x, result_type.size_of()))
+                .map(|x| copy_top_stack_value_to_memory(x, result_type.size_of()))
                 .unwrap_or_default();
 
             let code = match expr_lit {
@@ -998,7 +1008,7 @@ fn compile_expr(
                 };
                 let (addr, spill) = state.new_value_identifier("_var_copy", &result_type);
                 let spill_code = spill
-                    .map(|x| store_top_value_in_memory(x, result_type.size_of()))
+                    .map(|x| copy_top_stack_value_to_memory(x, result_type.size_of()))
                     .unwrap_or_default();
 
                 (addr, vec![code, spill_code].concat())
@@ -1047,7 +1057,7 @@ fn compile_expr(
                 let (addr, spill) = state.new_value_identifier("_var_copy", &element_type);
 
                 let spill_code = spill
-                    .map(|x| store_top_value_in_memory(x, element_type.size_of()))
+                    .map(|x| copy_top_stack_value_to_memory(x, element_type.size_of()))
                     .unwrap_or_default();
 
                 (addr, vec![code, spill_code].concat())
@@ -1095,7 +1105,7 @@ fn compile_expr(
                 let (addr, spill) = state.new_value_identifier("list_index_assign", &result_type);
 
                 let spill_code = spill
-                    .map(|x| store_top_value_in_memory(x, result_type.size_of()))
+                    .map(|x| copy_top_stack_value_to_memory(x, result_type.size_of()))
                     .unwrap_or_default();
 
                 (addr, vec![code, spill_code].concat())
@@ -1121,7 +1131,7 @@ fn compile_expr(
             let code = code.concat();
             let (addr, spill) = state.new_value_identifier("tuple_ident", &result_type);
             let spill_code = spill
-                .map(|x| store_top_value_in_memory(x, result_type.size_of()))
+                .map(|x| copy_top_stack_value_to_memory(x, result_type.size_of()))
                 .unwrap_or_default();
 
             (addr, vec![code, spill_code].concat())
@@ -1132,7 +1142,7 @@ fn compile_expr(
             let fn_call_ident_prefix = format!("_fn_call_{}", fn_call.name);
             let (addr, spill) = state.new_value_identifier(&fn_call_ident_prefix, &result_type);
             let spill_code = spill
-                .map(|x| store_top_value_in_memory(x, result_type.size_of()))
+                .map(|x| copy_top_stack_value_to_memory(x, result_type.size_of()))
                 .unwrap_or_default();
 
             (addr, vec![code, spill_code].concat())
@@ -1143,7 +1153,7 @@ fn compile_expr(
             let method_call_ident_prefix = format!("_method_call_{}", method_call.method_name);
             let (addr, spill) = state.new_value_identifier(&method_call_ident_prefix, &result_type);
             let spill_code = spill
-                .map(|x| store_top_value_in_memory(x, result_type.size_of()))
+                .map(|x| copy_top_stack_value_to_memory(x, result_type.size_of()))
                 .unwrap_or_default();
 
             (addr, vec![code, spill_code].concat())
@@ -1195,7 +1205,7 @@ fn compile_expr(
                     state.vstack.pop();
                     let (addr, spill) = state.new_value_identifier("_binop_add", &result_type);
                     let spill_code = spill
-                        .map(|x| store_top_value_in_memory(x, result_type.size_of()))
+                        .map(|x| copy_top_stack_value_to_memory(x, result_type.size_of()))
                         .unwrap_or_default();
 
                     (addr, vec![code, spill_code].concat())
@@ -1217,7 +1227,7 @@ fn compile_expr(
                     state.vstack.pop();
                     let (addr, spill) = state.new_value_identifier("_binop_add", &result_type);
                     let spill_code = spill
-                        .map(|x| store_top_value_in_memory(x, result_type.size_of()))
+                        .map(|x| copy_top_stack_value_to_memory(x, result_type.size_of()))
                         .unwrap_or_default();
 
                     (addr, vec![code, spill_code].concat())
@@ -1245,7 +1255,7 @@ fn compile_expr(
                     state.vstack.pop();
                     let (addr, spill) = state.new_value_identifier("_binop_add", &result_type);
                     let spill_code = spill
-                        .map(|x| store_top_value_in_memory(x, result_type.size_of()))
+                        .map(|x| copy_top_stack_value_to_memory(x, result_type.size_of()))
                         .unwrap_or_default();
 
                     (addr, vec![code, spill_code].concat())
@@ -1276,7 +1286,7 @@ fn compile_expr(
                     let code = vec![lhs_expr_code, rhs_expr_code, xor_code].concat();
                     let (addr, spill) = state.new_value_identifier("_binop_xor", &result_type);
                     let spill_code = spill
-                        .map(|x| store_top_value_in_memory(x, result_type.size_of()))
+                        .map(|x| copy_top_stack_value_to_memory(x, result_type.size_of()))
                         .unwrap_or_default();
 
                     (addr, vec![code, spill_code].concat())
@@ -1302,7 +1312,7 @@ fn compile_expr(
                             let (addr, spill) =
                                 state.new_value_identifier("_binop_div", &result_type);
                             let spill_code = spill
-                                .map(|x| store_top_value_in_memory(x, result_type.size_of()))
+                                .map(|x| copy_top_stack_value_to_memory(x, result_type.size_of()))
                                 .unwrap_or_default();
 
                             (addr, vec![code, spill_code].concat())
@@ -1325,7 +1335,7 @@ fn compile_expr(
                             let (addr, spill) =
                                 state.new_value_identifier("_binop_div", &result_type);
                             let spill_code = spill
-                                .map(|x| store_top_value_in_memory(x, result_type.size_of()))
+                                .map(|x| copy_top_stack_value_to_memory(x, result_type.size_of()))
                                 .unwrap_or_default();
 
                             (addr, vec![code, spill_code].concat())
@@ -1350,7 +1360,7 @@ fn compile_expr(
                             let (addr, spill) =
                                 state.new_value_identifier("_binop_div", &result_type);
                             let spill_code = spill
-                                .map(|x| store_top_value_in_memory(x, result_type.size_of()))
+                                .map(|x| copy_top_stack_value_to_memory(x, result_type.size_of()))
                                 .unwrap_or_default();
 
                             (addr, vec![code, spill_code].concat())
@@ -1387,7 +1397,7 @@ fn compile_expr(
                             let (addr, spill) =
                                 state.new_value_identifier("_binop_div", &result_type);
                             let spill_code = spill
-                                .map(|x| store_top_value_in_memory(x, result_type.size_of()))
+                                .map(|x| copy_top_stack_value_to_memory(x, result_type.size_of()))
                                 .unwrap_or_default();
 
                             (addr, vec![code, spill_code].concat())
@@ -1410,7 +1420,7 @@ fn compile_expr(
                     let code = vec![lhs_expr_code, rhs_expr_code, eq_code].concat();
                     let (addr, spill) = state.new_value_identifier("_binop_eq", &result_type);
                     let spill_code = spill
-                        .map(|x| store_top_value_in_memory(x, result_type.size_of()))
+                        .map(|x| copy_top_stack_value_to_memory(x, result_type.size_of()))
                         .unwrap_or_default();
 
                     (addr, vec![code, spill_code].concat())
@@ -1452,7 +1462,7 @@ fn compile_expr(
                     state.vstack.pop();
                     let (addr, spill) = state.new_value_identifier("_binop_lt", &result_type);
                     let spill_code = spill
-                        .map(|x| store_top_value_in_memory(x, result_type.size_of()))
+                        .map(|x| copy_top_stack_value_to_memory(x, result_type.size_of()))
                         .unwrap_or_default();
 
                     (addr, vec![code, spill_code].concat())
@@ -1499,7 +1509,7 @@ fn compile_expr(
                     state.vstack.pop();
                     let (addr, spill) = state.new_value_identifier("_binop_lt", &result_type);
                     let spill_code = spill
-                        .map(|x| store_top_value_in_memory(x, result_type.size_of()))
+                        .map(|x| copy_top_stack_value_to_memory(x, result_type.size_of()))
                         .unwrap_or_default();
 
                     (addr, vec![code, spill_code].concat())
@@ -1519,7 +1529,7 @@ fn compile_expr(
                     let code = vec![lhs_expr_code, rhs_expr_code, neq_code].concat();
                     let (addr, spill) = state.new_value_identifier("_binop_neq", &result_type);
                     let spill_code = spill
-                        .map(|x| store_top_value_in_memory(x, result_type.size_of()))
+                        .map(|x| copy_top_stack_value_to_memory(x, result_type.size_of()))
                         .unwrap_or_default();
 
                     (addr, vec![code, spill_code].concat())
@@ -1545,7 +1555,7 @@ fn compile_expr(
                     let code = vec![lhs_expr_code, rhs_expr_code, or_code].concat();
                     let (addr, spill) = state.new_value_identifier("_binop_or", &result_type);
                     let spill_code = spill
-                        .map(|x| store_top_value_in_memory(x, result_type.size_of()))
+                        .map(|x| copy_top_stack_value_to_memory(x, result_type.size_of()))
                         .unwrap_or_default();
 
                     (addr, vec![code, spill_code].concat())
@@ -1576,7 +1586,7 @@ fn compile_expr(
                     state.vstack.pop();
                     let (addr, spill) = state.new_value_identifier("_binop_shl", &result_type);
                     let spill_code = spill
-                        .map(|x| store_top_value_in_memory(x, result_type.size_of()))
+                        .map(|x| copy_top_stack_value_to_memory(x, result_type.size_of()))
                         .unwrap_or_default();
 
                     (addr, vec![code, spill_code].concat())
@@ -1606,7 +1616,7 @@ fn compile_expr(
                     state.vstack.pop();
                     let (addr, spill) = state.new_value_identifier("_binop_shr", &result_type);
                     let spill_code = spill
-                        .map(|x| store_top_value_in_memory(x, result_type.size_of()))
+                        .map(|x| copy_top_stack_value_to_memory(x, result_type.size_of()))
                         .unwrap_or_default();
 
                     (addr, vec![code, spill_code].concat())
@@ -1675,7 +1685,7 @@ fn compile_expr(
                     state.vstack.pop();
                     let (addr, spill) = state.new_value_identifier("_binop_sub", &result_type);
                     let spill_code = spill
-                        .map(|x| store_top_value_in_memory(x, result_type.size_of()))
+                        .map(|x| copy_top_stack_value_to_memory(x, result_type.size_of()))
                         .unwrap_or_default();
 
                     (addr, vec![code, spill_code].concat())
@@ -1762,7 +1772,7 @@ fn compile_expr(
 
             let (addr, spill) = state.new_value_identifier("if_then_else", &return_type);
             let spill_code = spill
-                .map(|x| store_top_value_in_memory(x, result_type.size_of()))
+                .map(|x| copy_top_stack_value_to_memory(x, result_type.size_of()))
                 .unwrap_or_default();
 
             (addr, vec![code, spill_code].concat())
@@ -1787,7 +1797,7 @@ fn compile_expr(
                     let code = vec![expr_code, cast_code].concat();
                     let (addr, spill) = state.new_value_identifier("_as_u32", &result_type);
                     let spill_code = spill
-                        .map(|x| store_top_value_in_memory(x, result_type.size_of()))
+                        .map(|x| copy_top_stack_value_to_memory(x, result_type.size_of()))
                         .unwrap_or_default();
 
                     (addr, vec![code, spill_code].concat())
@@ -1805,7 +1815,7 @@ fn compile_expr(
                     let code = vec![expr_code, cast_code].concat();
                     let (addr, spill) = state.new_value_identifier("_as_u64", &result_type);
                     let spill_code = spill
-                        .map(|x| store_top_value_in_memory(x, result_type.size_of()))
+                        .map(|x| copy_top_stack_value_to_memory(x, result_type.size_of()))
                         .unwrap_or_default();
 
                     (addr, vec![code, spill_code].concat())
@@ -1821,7 +1831,7 @@ fn compile_expr(
                     let code = expr_code;
                     let (addr, spill) = state.new_value_identifier("_as_u32", &result_type);
                     let spill_code = spill
-                        .map(|x| store_top_value_in_memory(x, result_type.size_of()))
+                        .map(|x| copy_top_stack_value_to_memory(x, result_type.size_of()))
                         .unwrap_or_default();
 
                     (addr, vec![code, spill_code].concat())
@@ -1835,7 +1845,7 @@ fn compile_expr(
                     let code = expr_code;
                     let (addr, spill) = state.new_value_identifier("_as_u64", &result_type);
                     let spill_code = spill
-                        .map(|x| store_top_value_in_memory(x, result_type.size_of()))
+                        .map(|x| copy_top_stack_value_to_memory(x, result_type.size_of()))
                         .unwrap_or_default();
 
                     (addr, vec![code, spill_code].concat())
@@ -1849,7 +1859,7 @@ fn compile_expr(
                     let code = vec![expr_code, vec![push(0), swap(1)]].concat();
                     let (addr, spill) = state.new_value_identifier("_as_u64", &result_type);
                     let spill_code = spill
-                        .map(|x| store_top_value_in_memory(x, result_type.size_of()))
+                        .map(|x| copy_top_stack_value_to_memory(x, result_type.size_of()))
                         .unwrap_or_default();
 
                     (addr, vec![code, spill_code].concat())
@@ -1863,7 +1873,7 @@ fn compile_expr(
                     let code = expr_code;
                     let (addr, spill) = state.new_value_identifier("_as_u32", &result_type);
                     let spill_code = spill
-                        .map(|x| store_top_value_in_memory(x, result_type.size_of()))
+                        .map(|x| copy_top_stack_value_to_memory(x, result_type.size_of()))
                         .unwrap_or_default();
 
                     (addr, vec![code, spill_code].concat())
@@ -1877,7 +1887,7 @@ fn compile_expr(
                     let code = expr_code;
                     let (addr, spill) = state.new_value_identifier("_as_bfe", &result_type);
                     let spill_code = spill
-                        .map(|x| store_top_value_in_memory(x, result_type.size_of()))
+                        .map(|x| copy_top_stack_value_to_memory(x, result_type.size_of()))
                         .unwrap_or_default();
 
                     (addr, vec![code, spill_code].concat())
@@ -1888,100 +1898,112 @@ fn compile_expr(
     }
 }
 
-fn overwrite_in_memory(memory_location: u32, value_size: usize) -> Vec<LabelledInstruction> {
+/// Return the code to store a stack-value in memory
+fn store_value_in_memory(
+    memory_location: u32,
+    value_size: usize,
+    stack_location_for_top_of_value: usize,
+) -> Vec<LabelledInstruction> {
+    // A stack value of the form `_ val2 val1 val0`, with `val0` being on the top of the stack
+    // is stored in memory as: `val0 val1 val2`, where `val0` is stored on the `memory_location`
+    // address.
     let mut ret = vec![];
-    ret.push(push(memory_location as u64 + value_size as u64 - 1));
+    ret.push(push(memory_location as u64));
 
     for i in 0..value_size {
-        ret.push(swap(1));
-        // Stack: _ [remaining_elements] memory_addres element
+        ret.push(dup(1 + i as u64 + stack_location_for_top_of_value as u64));
+        // _ [elements] mem_address element
 
         ret.push(write_mem());
-        // Stack: _ [remaining_elements] memory_addres
+        // _ [elements] mem_address
 
-        // Decrement memory address to prepare for next loop iteration
         if i != value_size - 1 {
-            ret.push(push(u64::MAX));
+            ret.push(push(1));
             ret.push(add());
-            // Stack: _ (memory_address - 1)
+            // _ (mem_address + 1)
         }
     }
 
-    // remove memory address
+    // remove memory address from top of stack
     ret.push(pop());
 
     ret
 }
 
-/// Return the code to store a stack-value in memory
-fn store_value_in_memory(
+/// Return the code to move the top stack element at a
+/// specific memory address. Deletes top stack value.
+fn move_top_stack_value_to_memory(
     memory_location: u32,
-    value_size: usize,
-    stack_location_for_bottom_of_value: usize,
+    top_value_size: usize,
 ) -> Vec<LabelledInstruction> {
+    // A stack value of the form `_ val2 val1 val0`, with `val0` being on the top of the stack
+    // is stored in memory as: `val0 val1 val2`, where `val0` is stored on the `memory_location`
+    // address.
     let mut ret = vec![];
     ret.push(push(memory_location as u64));
-    for i in 0..value_size {
-        let mut stack_depth: u64 = stack_location_for_bottom_of_value as u64 + 1;
-        stack_depth -= i as u64;
-        ret.push(dup(stack_depth));
-        ret.push(write_mem());
-        // Stack: _ memory_address
 
-        // Increment memory address to prepare for next loop iteration
-        if i != value_size - 1 {
+    for i in 0..top_value_size {
+        ret.push(swap(1));
+        // _ mem_address element
+
+        ret.push(write_mem());
+        // _ mem_address
+
+        if i != top_value_size - 1 {
             ret.push(push(1));
             ret.push(add());
-            // Stack: _ (memory_address + 1)
+            // _ (mem_address + 1)
         }
     }
 
-    // Remove memory address from top of stack
+    // remove memory address from top of stack
     ret.push(pop());
+
+    // TODO: Needs to pop from vstack!
 
     ret
 }
 
 /// Return the code to store the top stack element at a
 /// specific memory address. Leaves the stack unchanged.
-fn store_top_value_in_memory(
+fn copy_top_stack_value_to_memory(
     memory_location: u32,
     top_value_size: usize,
 ) -> Vec<LabelledInstruction> {
-    // TODO: Consider making subroutines out of this in
-    // order to get shorter programs.
-    // Note that a spilled value is stored in memory as
-    // element_N element_{N -1 } ... element_0
-    // where N is `data_size - 1`.
-    // The same value has element_0 on top of the stack
+    // A stack value of the form `_ val2 val1 val0`, with `val0` being on the top of the stack
+    // is stored in memory as: `val0 val1 val2`, where `val0` is stored on the `memory_location`
+    // address.
     let mut ret = vec![];
     ret.push(push(memory_location as u64));
-    for i in 0..top_value_size {
-        let mut stack_depth: u64 = top_value_size as u64;
-        stack_depth -= i as u64;
-        ret.push(dup(stack_depth));
-        ret.push(write_mem());
-        // Stack: _ memory_address
 
-        // Increment memory address to prepare for next loop iteration
+    for i in 0..top_value_size {
+        ret.push(dup(1 + i as u64));
+        // _ [elements] mem_address element
+
+        ret.push(write_mem());
+        // _ [elements] mem_address
+
         if i != top_value_size - 1 {
             ret.push(push(1));
             ret.push(add());
-            // Stack: _ (memory_address + 1)
+            // _ (mem_address + 1)
         }
     }
 
-    // Remove memory address from top of stack
+    // remove memory address from top of stack
     ret.push(pop());
 
     ret
 }
 
 fn load_from_memory(memory_location: u32, top_value_size: usize) -> Vec<LabelledInstruction> {
+    // A stack value of the form `_ val2 val1 val0`, with `val0` being on the top of the stack
+    // is stored in memory as: `val0 val1 val2`, where `val0` is stored on the `memory_location`
+    // address. So we read the value at the highes memory location first.
     // TODO: Consider making subroutines out of this in
     // order to get shorter programs.
     let mut ret = vec![];
-    ret.push(push(memory_location as u64));
+    ret.push(push(memory_location as u64 + top_value_size as u64 - 1));
 
     for i in 0..top_value_size {
         // Stack: _ memory_address
@@ -1991,11 +2013,11 @@ fn load_from_memory(memory_location: u32, top_value_size: usize) -> Vec<Labelled
 
         ret.push(swap(1));
 
-        // Increment memory address to prepare for next loop iteration
+        // Decrement memory address to prepare for next loop iteration
         if i != top_value_size - 1 {
-            ret.push(push(1));
+            ret.push(push(BFieldElement::MAX));
             ret.push(add());
-            // Stack: _ (memory_address + 1)
+            // Stack: _ (memory_address - 1)
         }
     }
 

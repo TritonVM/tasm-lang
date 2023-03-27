@@ -205,6 +205,106 @@ fn spill_to_memory_in_branch_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
+fn spill_tuple_to_memory_index_0_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn spill_tuple_to_memory_index_0(a: u64) -> (u64, u32, u64, BFieldElement) {
+            let mut res: (u64, u32, u64, BFieldElement) = (100u64, 200u32, 300u64, BFieldElement::new(400u64));
+            let val0: (u64, u32, u64, BFieldElement) = (1000u64, 2000u32, 3000u64, BFieldElement::new(4000u64));
+            let val1: (u64, u32, u64, BFieldElement) = (10000u64, 20000u32, 30000u64, BFieldElement::new(40000u64));
+            let val2: (u64, u32, u64, BFieldElement) = (100000u64, 200000u32, 300000u64, BFieldElement::new(400000u64));
+            let val3: (u64, u32, u64, BFieldElement) = (1000000u64, 2000000u32, 3000000u64, BFieldElement::new(4000000u64));
+            let val4: u64 = 0;
+            let val5: u64 = 0;
+            let val6: u64 = 0;
+            let val7: u64 = 0;
+            let val8: u64 = 0;
+            let val9: u64 = 0;
+            let val10: u64 = 0;
+            let val11: u64 = 0;
+            let val12: u64 = 0;
+            res.0 = a;
+
+            return res;
+        }
+    })
+}
+
+#[allow(dead_code)]
+fn spill_tuple_to_memory_index_1_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn spill_tuple_to_memory_index_1(a: u32) -> (u64, u32, u64, BFieldElement) {
+            let mut res: (u64, u32, u64, BFieldElement) = (100u64, 200u32, 300u64, BFieldElement::new(400u64));
+            let val0: (u64, u32, u64, BFieldElement) = (1000u64, 2000u32, 3000u64, BFieldElement::new(4000u64));
+            let val1: (u64, u32, u64, BFieldElement) = (10000u64, 20000u32, 30000u64, BFieldElement::new(40000u64));
+            let val2: (u64, u32, u64, BFieldElement) = (100000u64, 200000u32, 300000u64, BFieldElement::new(400000u64));
+            let val3: (u64, u32, u64, BFieldElement) = (1000000u64, 2000000u32, 3000000u64, BFieldElement::new(4000000u64));
+            let val4: u64 = 0;
+            let val5: u64 = 0;
+            let val6: u64 = 0;
+            let val7: u64 = 0;
+            let val8: u64 = 0;
+            let val9: u64 = 0;
+            let val10: u64 = 0;
+            let val11: u64 = 0;
+            let val12: u64 = 0;
+            res.1 = a;
+
+            return res;
+        }
+    })
+}
+
+#[allow(dead_code)]
+fn spill_tuple_to_memory_index_2_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn spill_tuple_to_memory_index_2(a: u64) -> (u64, u32, u64, BFieldElement) {
+            let mut res: (u64, u32, u64, BFieldElement) = (100u64, 200u32, 300u64, BFieldElement::new(400u64));
+            let val0: (u64, u32, u64, BFieldElement) = (1000u64, 2000u32, 3000u64, BFieldElement::new(4000u64));
+            let val1: (u64, u32, u64, BFieldElement) = (10000u64, 20000u32, 30000u64, BFieldElement::new(40000u64));
+            let val2: (u64, u32, u64, BFieldElement) = (100000u64, 200000u32, 300000u64, BFieldElement::new(400000u64));
+            let val3: (u64, u32, u64, BFieldElement) = (1000000u64, 2000000u32, 3000000u64, BFieldElement::new(4000000u64));
+            let val4: u64 = 0;
+            let val5: u64 = 0;
+            let val6: u64 = 0;
+            let val7: u64 = 0;
+            let val8: u64 = 0;
+            let val9: u64 = 0;
+            let val10: u64 = 0;
+            let val11: u64 = 0;
+            let val12: u64 = 0;
+            res.2 = a;
+
+            return res;
+        }
+    })
+}
+
+#[allow(dead_code)]
+fn spill_tuple_to_memory_index_3_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn spill_tuple_to_memory_index_3(a: BFieldElement) -> (u64, u32, u64, BFieldElement) {
+            let mut res: (u64, u32, u64, BFieldElement) = (100u64, 200u32, 300u64, BFieldElement::new(400u64));
+            let val0: (u64, u32, u64, BFieldElement) = (1000u64, 2000u32, 3000u64, BFieldElement::new(4000u64));
+            let val1: (u64, u32, u64, BFieldElement) = (10000u64, 20000u32, 30000u64, BFieldElement::new(40000u64));
+            let val2: (u64, u32, u64, BFieldElement) = (100000u64, 200000u32, 300000u64, BFieldElement::new(400000u64));
+            let val3: (u64, u32, u64, BFieldElement) = (1000000u64, 2000000u32, 3000000u64, BFieldElement::new(4000000u64));
+            let val4: u64 = 0;
+            let val5: u64 = 0;
+            let val6: u64 = 0;
+            let val7: u64 = 0;
+            let val8: u64 = 0;
+            let val9: u64 = 0;
+            let val10: u64 = 0;
+            let val11: u64 = 0;
+            let val12: u64 = 0;
+            res.3 = a;
+
+            return res;
+        }
+    })
+}
+
+#[allow(dead_code)]
 fn spill_many_bindings_to_memory_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn spill_many_bindings_to_memory(a: u64, b: u64, c: u64, d: u64, e: u64, f: u64) -> u64 {
@@ -411,6 +511,55 @@ mod run_tests {
                 u64_lit(1),
             ],
             vec![u64_lit(11), u64_lit(11)],
+        );
+    }
+
+    #[test]
+    fn spill_tuple_to_memory_simple_test() {
+        let one_billion: u32 = 1_000_000_000;
+        let ten_billion: u64 = 10_000_000_000;
+        let hun_billion: u64 = 100_000_000_000;
+        let mil_billion: u64 = 1_000_000_000_000;
+        compare_prop_with_stack(
+            &spill_tuple_to_memory_index_0_rast(),
+            vec![u64_lit(ten_billion)],
+            vec![
+                u64_lit(ten_billion),
+                u32_lit(200),
+                u64_lit(300),
+                bfe_lit(400u64.into()),
+            ],
+        );
+
+        compare_prop_with_stack(
+            &spill_tuple_to_memory_index_1_rast(),
+            vec![u32_lit(one_billion)],
+            vec![
+                u64_lit(100),
+                u32_lit(one_billion),
+                u64_lit(300),
+                bfe_lit(400u64.into()),
+            ],
+        );
+        compare_prop_with_stack(
+            &spill_tuple_to_memory_index_2_rast(),
+            vec![u64_lit(hun_billion)],
+            vec![
+                u64_lit(100),
+                u32_lit(200),
+                u64_lit(hun_billion),
+                bfe_lit(400u64.into()),
+            ],
+        );
+        compare_prop_with_stack(
+            &spill_tuple_to_memory_index_3_rast(),
+            vec![bfe_lit(mil_billion.into())],
+            vec![
+                u64_lit(100),
+                u32_lit(200),
+                u64_lit(300),
+                bfe_lit(mil_billion.into()),
+            ],
         );
     }
 
