@@ -3,6 +3,16 @@ use syn::parse_quote;
 use crate::graft::item_fn;
 
 #[allow(dead_code)]
+fn instantiate_bfe_with_literal() -> syn::ItemFn {
+    item_fn(parse_quote! {
+            fn instantiate_bfe() -> (BFieldElement, BFieldElement) {
+                let a: BFieldElement = BFieldElement::new(400u64);
+                return (a, BFieldElement::new(500u64));
+            }
+    })
+}
+
+#[allow(dead_code)]
 fn add_bfe_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn add_bfe(lhs: BFieldElement, rhs: BFieldElement) -> BFieldElement {
@@ -47,6 +57,15 @@ mod run_tests {
 
     use super::*;
     use crate::tests::shared_test::*;
+
+    #[test]
+    fn instantiate_bfe_test() {
+        compare_prop_with_stack(
+            &instantiate_bfe_with_literal(),
+            vec![],
+            vec![bfe_lit(400u64.into()), bfe_lit(500u64.into())],
+        );
+    }
 
     #[test]
     fn add_bfe_test() {
