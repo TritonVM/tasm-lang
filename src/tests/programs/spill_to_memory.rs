@@ -234,6 +234,7 @@ fn big_branches_spill_rast() -> syn::ItemFn {
         fn big_branches_spill(a: u64, b: u64, c: u64, d: u64, e: u64, f: u64) -> (u64, u64) {
             let mut g: u64 = a + b;
             if a > b {
+                let val10: u64 = 100;
                 if b > c {
                     if d == 0u64 {
                         let val0: u64 = 0;
@@ -246,15 +247,46 @@ fn big_branches_spill_rast() -> syn::ItemFn {
                         let val7: u64 = 0;
                         let val8: u64 = 0;
                         let val9: u64 = 0;
-                        g = g * 2u64;
+                        g = g * 2u64 + val10;
                     } else {
-                        g = 0;
+                        let val0: u64 = 2;
+                        let val1: u64 = 0;
+                        let val2: u64 = 0;
+                        let val3: u64 = 0;
+                        let val4: u64 = 0;
+                        let val5: u64 = 0;
+                        let val6: u64 = 0;
+                        let val7: u64 = 0;
+                        let val8: u64 = 0;
+                        let val9: u64 = 0;
+                        g = 1 + val0 + val10;
                     }
                 } else {
-                    g = 0;
+                    let val0: u64 = 2;
+                    let val1: u64 = 0;
+                    let val2: u64 = 0;
+                    let val3: u64 = 0;
+                    let val4: u64 = 0;
+                    let val5: u64 = 0;
+                    let val6: u64 = 0;
+                    let val7: u64 = 0;
+                    let val8: u64 = 0;
+                    let val9: u64 = 0;
+                    g = 2 + val0 + val10;
                 }
             } else {
-                g = 0;
+                let val10: u64 = 200u64;
+                let val0: u64 = 2;
+                let val1: u64 = 0;
+                let val2: u64 = 0;
+                let val3: u64 = 0;
+                let val4: u64 = 0;
+                let val5: u64 = 0;
+                let val6: u64 = 0;
+                let val7: u64 = 0;
+                let val8: u64 = 0;
+                let val9: u64 = 0;
+                g = 3 + val0 + val10 + c;
             }
 
 
@@ -455,11 +487,47 @@ mod run_tests {
                 u64_lit(6),
                 u64_lit(5),
                 u64_lit(4),
+                u64_lit(0),
+                u64_lit(2),
+                u64_lit(1),
+            ],
+            vec![u64_lit(6), u64_lit(122)],
+        );
+        compare_prop_with_stack(
+            &big_branches_spill_rast(),
+            vec![
+                u64_lit(6),
+                u64_lit(5),
+                u64_lit(4),
                 u64_lit(3),
                 u64_lit(2),
                 u64_lit(1),
             ],
-            vec![u64_lit(6), u64_lit(0)],
+            vec![u64_lit(6), u64_lit(103)],
+        );
+        compare_prop_with_stack(
+            &big_branches_spill_rast(),
+            vec![
+                u64_lit(6),
+                u64_lit(6),
+                u64_lit(6),
+                u64_lit(6),
+                u64_lit(6),
+                u64_lit(6),
+            ],
+            vec![u64_lit(6), u64_lit(211)],
+        );
+        compare_prop_with_stack(
+            &big_branches_spill_rast(),
+            vec![
+                u64_lit(6),
+                u64_lit(5),
+                u64_lit(5),
+                u64_lit(3),
+                u64_lit(2),
+                u64_lit(1),
+            ],
+            vec![u64_lit(6), u64_lit(104)],
         );
     }
 }
