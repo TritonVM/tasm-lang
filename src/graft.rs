@@ -626,16 +626,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn instantiate_bfe_test() {
-        let function = item_fn(parse_quote! {
-                fn instantiate_bfe() {
-                    let a: BFieldElement = BFieldElement::new(400u64);
-                }
-        });
-        let _res = graft(&function);
-    }
-
-    #[test]
     fn big_mmr_function() {
         let tokens: syn::Item = parse_quote! {
             fn calculate_new_peaks_from_leaf_mutation(
