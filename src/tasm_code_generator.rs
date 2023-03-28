@@ -11,7 +11,7 @@ use twenty_first::amount::u32s::U32s;
 use twenty_first::shared_math::b_field_element::BFieldElement;
 use twenty_first::util_types::algebraic_hasher::Hashable;
 
-use crate::libraries::{tasm, vector};
+use crate::libraries::{tasm, unsigned_integers, vector};
 use crate::stack::Stack;
 use crate::types::{is_list_type, GetType};
 use crate::{ast, types};
@@ -357,17 +357,21 @@ impl CompilerState {
         let mut code = vec![];
         self.show_vstack_values();
         loop {
-            let (addr, (dt, _spilled)) = self.vstack.peek().unwrap();
+            let (addr, (dt, spilled)) = self.vstack.peek().unwrap().to_owned();
             let binding_name = self
                 .var_addr
                 .iter()
-                .find(|(_var_name, ident)| **ident == *addr)
+                .find(|(_var_name, ident)| **ident == addr)
                 //.unwrap_or_else(|| panic!("Cannot handle stack cleanup of unbound values"))
                 .map(|x| x.0.clone());
             // .0
             // .clone();
             if binding_name.is_some()
                 && previous_var_addr.contains_key(&binding_name.clone().unwrap())
+                || binding_name.is_none()
+                    && previous_stack
+                        .inner
+                        .contains(&(addr, (dt.clone(), spilled)))
             {
                 break;
             } else {
@@ -884,6 +888,11 @@ fn compile_fn_call(
         name = vector::import_tasm_snippet(snippet_name, &type_parameter, state);
     }
 
+    // If function is from unsigned_lib, import it
+    if let Some(snippet_name) = unsigned_integers::get_function_name(&name) {
+        name = vector::import_tasm_snippet(snippet_name, &type_parameter, state);
+    }
+
     for _ in 0..args.len() {
         state.vstack.pop();
     }
@@ -914,9 +923,14 @@ fn compile_method_call(
             })
             .unzip();
 
-    // If function is from vector-lib, ...
+    // If method is from vector-lib, ...
     if let Some(snippet_name) = vector::get_method_name(&name) {
         name = vector::import_tasm_snippet(snippet_name, &type_parameter, state);
+    }
+
+    // If method is from unsigned-integer-lib, ...
+    if let Some(snippet_name) = unsigned_integers::get_method_name(&name) {
+        name = unsigned_integers::import_tasm_snippet(snippet_name, &receiver_type, state);
     }
 
     for _ in 0..method_call.args.len() {

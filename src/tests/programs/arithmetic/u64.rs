@@ -70,7 +70,7 @@ pub fn div_u64_rast() -> syn::ItemFn {
                         }
                     }
                 } else {
-                    let mut bits: u32 = (divisor.leading_zeros() - numerator.leading_zeros() + 1u64) as u32;
+                    let mut bits: u32 = divisor.leading_zeros() - numerator.leading_zeros() + 1u32;
                     let mut rem: u64 = numerator >> bits;
                     numerator = numerator << 64 - bits;
                     let mut wrap: u64 = 0u64;
@@ -189,6 +189,26 @@ mod run_tests {
 
     #[test]
     fn div_u64_run_test() {
+        compare_prop_with_stack(
+            &div_u64_rast(),
+            vec![u64_lit(51), u64_lit(7)],
+            vec![u64_lit(7), u64_lit(2)],
+        );
+        compare_prop_with_stack(
+            &div_u64_rast(),
+            vec![u64_lit(14), u64_lit(2)],
+            vec![u64_lit(7), u64_lit(0)],
+        );
+        compare_prop_with_stack(
+            &div_u64_rast(),
+            vec![u64_lit(100), u64_lit(10)],
+            vec![u64_lit(10), u64_lit(0)],
+        );
+        compare_prop_with_stack(
+            &div_u64_rast(),
+            vec![u64_lit(100), u64_lit(3)],
+            vec![u64_lit(33), u64_lit(1)],
+        );
         compare_prop_with_stack(
             &div_u64_rast(),
             vec![u64_lit(1u64 << 46), u64_lit(1u64 << 4)],

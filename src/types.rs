@@ -430,7 +430,6 @@ fn get_method_signature(
         return vector::method_name_to_signature(function_name, &type_parameter);
     }
 
-    // TODO: Add a library for arithmetic!
     // Arithmetic for unsigned integers
     if let Some(function_name) = unsigned_integers::get_method_name(name) {
         return unsigned_integers::method_name_to_signature(function_name, &receiver_type);
