@@ -337,7 +337,16 @@ pub fn graft_expr(rust_exp: &syn::Expr) -> ast::Expr<Annotation> {
         syn::Expr::Path(path) => {
             let path = &path.path;
             let ident: String = path_to_ident(path);
-            ast::Expr::Var(ast::Identifier::String(ident, Default::default()))
+
+            // TODO: Maybe not so elegant to handle this here...
+            // Should be handled on a different level
+            if ident == "u32::MAX" {
+                ast::Expr::Lit(ast::ExprLit::U32(u32::MAX))
+            } else if ident == "u64::MAX" {
+                ast::Expr::Lit(ast::ExprLit::U64(u64::MAX))
+            } else {
+                ast::Expr::Var(ast::Identifier::String(ident, Default::default()))
+            }
         }
         syn::Expr::Tuple(tuple_expr) => {
             let exprs = tuple_expr.elems.iter().map(graft_expr).collect_vec();
@@ -459,6 +468,7 @@ fn graft_binop(rust_binop: syn::BinOp) -> ast::BinOp {
         syn::BinOp::And(_) => ast::BinOp::And,
         syn::BinOp::BitAnd(_) => ast::BinOp::BitAnd,
         syn::BinOp::BitXor(_) => ast::BinOp::BitXor,
+        syn::BinOp::BitOr(_) => ast::BinOp::BitOr,
         syn::BinOp::Div(_) => ast::BinOp::Div,
         syn::BinOp::Eq(_) => ast::BinOp::Eq,
         syn::BinOp::Lt(_) => ast::BinOp::Lt,

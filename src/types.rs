@@ -5,6 +5,7 @@ use twenty_first::shared_math::x_field_element::XFieldElement;
 
 use crate::ast;
 use crate::libraries::tasm;
+use crate::libraries::unsigned_integers;
 use crate::libraries::vector;
 use crate::tasm_code_generator::STACK_SIZE;
 
@@ -271,9 +272,9 @@ fn annotate_stmt(
                 panic!("Receiver must be an identifier")
             };
             let (receiver_type, _mutable) = annotate_identifier_type(receiver, state);
-            let type_parameter = receiver_type.type_parameter();
+
             let method_signature: ast::FnSignature =
-                get_method_signature(method_name, state, &type_parameter);
+                get_method_signature(method_name, state, receiver_type);
             assert!(
                 is_void_type(&method_signature.output),
                 "Method call {receiver}.'{method_name}' at statement-level must return the unit type."
@@ -417,15 +418,22 @@ fn get_fn_signature(
 fn get_method_signature(
     name: &str,
     _state: &CheckState,
-    type_parameter: &Option<ast::DataType>,
+    receiver_type: ast::DataType,
 ) -> ast::FnSignature {
     if let Some(snippet_name) = tasm::get_method_name(name) {
         return tasm::function_name_to_signature(snippet_name);
     }
 
     // Functions for lists are in scope
+    let type_parameter = receiver_type.type_parameter();
     if let Some(function_name) = vector::get_method_name(name) {
-        return vector::method_name_to_signature(function_name, type_parameter);
+        return vector::method_name_to_signature(function_name, &type_parameter);
+    }
+
+    // TODO: Add a library for arithmetic!
+    // Arithmetic for unsigned integers
+    if let Some(function_name) = unsigned_integers::get_method_name(name) {
+        return unsigned_integers::method_name_to_signature(function_name, &receiver_type);
     }
 
     panic!("Don't know what type of value '{name}' returns! Type parameter was: {type_parameter:?}")
@@ -561,9 +569,8 @@ fn derive_annotate_expr_type(
                 panic!("Receiver must be an identifier")
             };
             let (receiver_type, _mutable) = annotate_identifier_type(receiver, state);
-            let type_parameter = receiver_type.type_parameter();
             let method_signature: ast::FnSignature =
-                get_method_signature(method_name, state, &type_parameter);
+                get_method_signature(method_name, state, receiver_type);
             assert!(
                 !is_void_type(&method_signature.output),
                 "Method calls in expressions cannot return the unit type"
@@ -630,6 +637,20 @@ fn derive_annotate_expr_type(
                     assert!(
                         is_u32_based_type(&lhs_type),
                         "Cannot bitwise-xor type '{lhs_type}' (not u32-based)"
+                    );
+                    *binop_type = Typing::KnownType(lhs_type.clone());
+                    lhs_type
+                }
+
+                // Restricted to U32-based types. (Triton VM limitation)
+                BitOr => {
+                    let lhs_type = derive_annotate_expr_type(lhs_expr, hint, state);
+                    let rhs_type = derive_annotate_expr_type(rhs_expr, hint, state);
+
+                    assert_type_equals(&lhs_type, &rhs_type, "bitwise-or-expr");
+                    assert!(
+                        is_u32_based_type(&lhs_type),
+                        "Cannot bitwise-or type '{lhs_type}' (not u32-based)"
                     );
                     *binop_type = Typing::KnownType(lhs_type.clone());
                     lhs_type

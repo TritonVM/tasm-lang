@@ -3,6 +3,16 @@ use syn::parse_quote;
 use crate::graft::item_fn;
 
 #[allow(dead_code)]
+pub fn declare_u32_max_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn declare_u32_max() {
+            let a: u32 = u32::MAX;
+            return;
+        }
+    })
+}
+
+#[allow(dead_code)]
 pub fn add_u32_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn add_u32(lhs: u32, rhs: u32) -> u32 {
@@ -197,6 +207,11 @@ mod compile_and_typecheck_tests {
     use crate::tests::shared_test::graft_check_compile_prop;
 
     use super::*;
+
+    #[test]
+    fn declare_u32_max_test() {
+        graft_check_compile_prop(&declare_u32_max_rast());
+    }
 
     #[test]
     fn add_u32_test() {

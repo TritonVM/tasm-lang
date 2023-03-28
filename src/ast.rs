@@ -100,6 +100,7 @@ pub enum BinOp {
     And,
     BitAnd,
     BitXor,
+    BitOr,
     Div,
     Eq,
     Lt,

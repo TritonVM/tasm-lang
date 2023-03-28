@@ -44,6 +44,55 @@ pub fn mul_u64_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
+pub fn div_u64_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn divmoddi4_tasm_lang_friendly(numerator_input: u64, divisor: u64) -> (u64, u64) {
+            let num_hi: u32 = (numerator_input >> 32) as u32;
+            let num_lo: u32 = (numerator_input & u32::MAX as u64) as u32;
+            let div_hi: u32 = (divisor >> 32) as u32;
+            let div_lo: u32 = (divisor & u32::MAX as u64) as u32;
+            let mut ret: (u64, u64) = (0u64, 0u64);
+            // assert_ne!(0, divisor, "Cannot divide by zero");
+
+            let mut numerator: u64 = numerator_input;
+
+            if divisor > numerator {
+                ret = (0u64, numerator);
+            } else {
+                if div_hi == 0u32 && divisor == 1u64 || div_hi == 0u32 && num_hi == 0u32 {
+                    if divisor == 1u64 {
+                        // return (numerator, 0);
+                        ret = (numerator, 0u64);
+                    } else {
+                        if num_hi == 0u32 {
+                            // return ((num_lo / div_lo) as u64, (num_lo % div_lo) as u64);
+                            ret = ((num_lo / div_lo) as u64, (num_lo % div_lo) as u64);
+                        }
+                    }
+                } else {
+                    let mut bits: u32 = (divisor.leading_zeros() - numerator.leading_zeros() + 1u64) as u32;
+                    let mut rem: u64 = numerator >> bits;
+                    numerator = numerator << 64 - bits;
+                    let mut wrap: u64 = 0u64;
+                    while bits > 0u32 {
+                        rem = (rem << 1) | (numerator >> 63);
+                        numerator = (numerator << 1) | (wrap & 1u64);
+                        wrap = if divisor > rem { 0u64 } else { u64::MAX };
+                        rem = rem - divisor & wrap;
+
+                        bits = bits - 1u32;
+                    }
+
+                    ret = (numerator << 1 | wrap & 1u64, rem);
+                }
+            }
+
+            return ret;
+        }
+    })
+}
+
+#[allow(dead_code)]
 pub fn bitwise_and_u64_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn bitwise_and_u64(lhs: u64, rhs: u64) -> u64 {
@@ -136,6 +185,15 @@ mod run_tests {
         let input_args_1 = vec![u64_lit(1u64 << 46), u64_lit(1u64 << 4)];
         let expected_outputs_1 = vec![u64_lit(1u64 << 50)];
         compare_prop_with_stack(&mul_u64_rast(), input_args_1, expected_outputs_1);
+    }
+
+    #[test]
+    fn div_u64_run_test() {
+        compare_prop_with_stack(
+            &div_u64_rast(),
+            vec![u64_lit(1u64 << 46), u64_lit(1u64 << 4)],
+            vec![u64_lit(1u64 << 42), u64_lit(0)],
+        );
     }
 
     #[test]

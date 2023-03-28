@@ -355,22 +355,28 @@ impl CompilerState {
     ) -> Vec<LabelledInstruction> {
         // Clear stack, vstack, and var_addr of locally declared values for those that are on top of the stack
         let mut code = vec![];
+        self.show_vstack_values();
         loop {
             let (addr, (dt, _spilled)) = self.vstack.peek().unwrap();
             let binding_name = self
                 .var_addr
                 .iter()
                 .find(|(_var_name, ident)| **ident == *addr)
-                .unwrap_or_else(|| panic!("Cannot handle stack cleanup of unbound values"))
-                .0
-                .clone();
-            if previous_var_addr.contains_key(&binding_name) {
+                //.unwrap_or_else(|| panic!("Cannot handle stack cleanup of unbound values"))
+                .map(|x| x.0.clone());
+            // .0
+            // .clone();
+            if binding_name.is_some()
+                && previous_var_addr.contains_key(&binding_name.clone().unwrap())
+            {
                 break;
             } else {
                 code.append(&mut vec![pop(); dt.size_of()]);
                 self.vstack.pop();
-                let removed = self.var_addr.remove(&binding_name);
-                assert!(removed.is_some());
+                if let Some(binding) = binding_name {
+                    let removed = self.var_addr.remove(&binding);
+                    assert!(removed.is_some());
+                }
             }
         }
 
@@ -1210,6 +1216,33 @@ fn compile_expr(
 
                     vec![lhs_expr_code, rhs_expr_code, xor_code].concat()
                 }
+                ast::BinOp::BitOr => {
+                    let (_lhs_expr_addr, lhs_expr_code) =
+                        compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
+
+                    let (_rhs_expr_addr, rhs_expr_code) =
+                        compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
+
+                    use ast::DataType::*;
+
+                    let bitwise_or_code = match result_type {
+                        U32 => {
+                            let or_u32 = state.import_snippet(Box::new(arithmetic::u32::or::OrU32));
+                            vec![call(or_u32)]
+                        }
+                        U64 => {
+                            let or_u64 =
+                                state.import_snippet(Box::new(arithmetic::u64::or_u64::OrU64));
+                            vec![call(or_u64)]
+                        }
+                        _ => panic!("bitwise `or` on {result_type} is not supported"),
+                    };
+
+                    state.vstack.pop();
+                    state.vstack.pop();
+
+                    vec![lhs_expr_code, rhs_expr_code, bitwise_or_code].concat()
+                }
 
                 ast::BinOp::Div => {
                     use ast::DataType::*;
@@ -1449,7 +1482,33 @@ fn compile_expr(
                     vec![lhs_expr_code, rhs_expr_code, or_code].concat()
                 }
 
-                ast::BinOp::Rem => todo!(),
+                // ast::BinOp::Rem => todo!(),
+                ast::BinOp::Rem => {
+                    use ast::DataType::*;
+                    match result_type {
+                        U32 => {
+                            // TODO: Consider evaluating in opposite order to save a clock-cycle by removing `swap1`
+                            // below. This would change the "left-to-right" convention though.
+                            let (_lhs_expr_addr, lhs_expr_code) =
+                                compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
+                            let (_rhs_expr_addr, rhs_expr_code) =
+                                compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
+
+                            // Pop numerator and denominator
+                            state.vstack.pop();
+                            state.vstack.pop();
+                            let addr = state.new_value_identifier("_binop_div", &result_type);
+
+                            vec![
+                                lhs_expr_code,
+                                rhs_expr_code,
+                                vec![swap(1), div(), swap(1), pop()],
+                            ]
+                            .concat()
+                        }
+                        _ => panic!("Unsupported remainder of type {lhs_type}"),
+                    }
+                }
 
                 ast::BinOp::Shl => {
                     let (_lhs_expr_addr, lhs_expr_code) =
