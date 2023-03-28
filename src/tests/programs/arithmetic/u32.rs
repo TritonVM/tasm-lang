@@ -237,6 +237,21 @@ mod compile_and_typecheck_tests {
     }
 
     #[test]
+    fn mul_u32_rast_test() {
+        graft_check_compile_prop(&&mul_u32_rast());
+    }
+
+    #[test]
+    fn div_u32_rast_test() {
+        graft_check_compile_prop(&&div_u32_rast());
+    }
+
+    #[test]
+    fn rem_u32_rast_test() {
+        graft_check_compile_prop(&&rem_u32_rast());
+    }
+
+    #[test]
     fn bitwise_and_u32_test() {
         graft_check_compile_prop(&bitwise_and_u32_rast());
     }
