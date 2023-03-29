@@ -1468,9 +1468,9 @@ fn compile_expr(
                             (
                                 addr,
                                 vec![
-                                    rhs_expr_code,
                                     lhs_expr_code,
-                                    vec![ div(), swap(1), pop()],
+                                    rhs_expr_code,
+                                    vec![swap(1), div(), swap(1), pop()],
                                 ]
                                 .concat(),
                             )
@@ -1492,9 +1492,9 @@ fn compile_expr(
                             state.vstack.pop();
                             let addr = state.new_value_identifier("_binop_rem", &res_type);
 
-                            // 0, 17, 0, 2
-                            //(addr, vec![lhs_expr_code, rhs_expr_code, vec![swap(1), pop(), div(), swap(1), pop(), swap(1)]].concat())
-                            (addr, vec![lhs_expr_code, rhs_expr_code, vec![swap(3),pop(),pop(),div(),swap(1),pop(),dup(2),swap(1)]].concat())
+                            // This ignores the upper u32 part of the numerator since divisor is always 2.
+                            // Thus, the result only depends on LSB.
+                            (addr, vec![lhs_expr_code, rhs_expr_code, vec![swap(1),swap(2),div(),swap(2),pop(),pop()]].concat())
                         }
                         _ => panic!("Unsupported instruction `rem` for type {res_type}.  Only `u32` and `u64` are supported"),
                     }
