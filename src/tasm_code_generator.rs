@@ -1511,7 +1511,6 @@ fn compile_expr(
                             // Pop numerator and denominator
                             state.vstack.pop();
                             state.vstack.pop();
-                            let addr = state.new_value_identifier("_binop_div", &result_type);
 
                             vec![
                                 lhs_expr_code,

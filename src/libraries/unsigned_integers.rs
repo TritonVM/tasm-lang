@@ -27,7 +27,7 @@ fn name_to_tasm_lib_snippet(
     }
 }
 
-pub fn get_function_name(name: &str) -> Option<&str> {
+pub fn get_function_name(_name: &str) -> Option<&str> {
     None
 }
 

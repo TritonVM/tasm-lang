@@ -78,7 +78,7 @@ pub fn div_u64_rast() -> syn::ItemFn {
                         rem = (rem << 1) | (numerator >> 63);
                         numerator = (numerator << 1) | (wrap & 1u64);
                         wrap = if divisor > rem { 0u64 } else { u64::MAX };
-                        rem = rem - divisor & wrap;
+                        rem = rem - (divisor & wrap);
 
                         bits = bits - 1u32;
                     }
@@ -133,7 +133,7 @@ pub fn rightshift_u64_rast() -> syn::ItemFn {
 
 #[cfg(test)]
 mod run_tests {
-    use rand::{thread_rng, Rng};
+    use rand::{thread_rng, Rng, RngCore};
 
     use super::*;
     use crate::tests::shared_test::*;
@@ -214,6 +214,19 @@ mod run_tests {
             vec![u64_lit(1u64 << 46), u64_lit(1u64 << 4)],
             vec![u64_lit(1u64 << 42), u64_lit(0)],
         );
+
+        let mut rng = thread_rng();
+        for j in 0..16 {
+            for _ in 0..2 {
+                let numerator: u64 = rng.next_u64();
+                let divisor: u64 = rng.next_u32() as u64 + (1u64 << (32 + j * 2));
+                compare_prop_with_stack(
+                    &div_u64_rast(),
+                    vec![u64_lit(numerator), u64_lit(divisor)],
+                    vec![u64_lit(numerator / divisor), u64_lit(numerator % divisor)],
+                );
+            }
+        }
     }
 
     #[test]
