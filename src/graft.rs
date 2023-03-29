@@ -104,8 +104,13 @@ fn graft_fn_arg(rust_fn_arg: &syn::FnArg) -> ast::FnArg {
         syn::FnArg::Typed(pat_type) => {
             let name = pat_to_name(&pat_type.pat);
             let (data_type, mutable): (ast::DataType, bool) = match pat_type.ty.as_ref() {
-                // Input is an owned value
-                syn::Type::Path(type_path) => (rust_type_path_to_data_type(type_path), false),
+                syn::Type::Path(type_path) => {
+                    let mutable = match *pat_type.pat.to_owned() {
+                        syn::Pat::Ident(pi) => pi.mutability.is_some(),
+                        _ => todo!(),
+                    };
+                    (rust_type_path_to_data_type(type_path), mutable)
+                }
 
                 // Input is a mutable reference
                 syn::Type::Reference(syn::TypeReference {

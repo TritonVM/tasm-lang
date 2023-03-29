@@ -49,15 +49,15 @@ pub fn div_u64_rast() -> syn::ItemFn {
     // So the TASM code that this function compiles to can be used for the u64
     // div-mod snippet for this compiler.
     item_fn(parse_quote! {
-        fn divmoddi4_tasm_lang_friendly(numerator_input: u64, divisor: u64) -> (u64, u64) {
-            let num_hi: u32 = (numerator_input >> 32) as u32;
-            let num_lo: u32 = (numerator_input & u32::MAX as u64) as u32;
+        fn divmoddi4_tasm_lang_friendly(mut numerator: u64, divisor: u64) -> (u64, u64) {
+            let num_hi: u32 = (numerator >> 32) as u32;
+            let num_lo: u32 = (numerator & u32::MAX as u64) as u32;
             let div_hi: u32 = (divisor >> 32) as u32;
             let div_lo: u32 = (divisor & u32::MAX as u64) as u32;
             let mut ret: (u64, u64) = (0u64, 0u64);
             // assert_ne!(0, divisor, "Cannot divide by zero");
 
-            let mut numerator: u64 = numerator_input;
+            // let mut numerator: u64 = numerator_input;
 
             if divisor > numerator {
                 ret = (0u64, numerator);
@@ -217,12 +217,28 @@ mod run_tests {
             vec![u64_lit(1u64 << 46), u64_lit(1u64 << 4)],
             vec![u64_lit(1u64 << 42), u64_lit(0)],
         );
+        compare_prop_with_stack(
+            &div_u64_rast(),
+            vec![u64_lit(9075814844808036352), u64_lit(1675951742761566208)],
+            vec![u64_lit(5), u64_lit(696056131000205312)],
+        );
 
+        // Test with small divisors
         let mut rng = thread_rng();
-        for j in 0..16 {
+        for _ in 0..4 {
+            let numerator: u64 = rng.next_u64();
+            let divisor: u64 = rng.gen_range(0..(1 << 12));
+            compare_prop_with_stack(
+                &div_u64_rast(),
+                vec![u64_lit(numerator), u64_lit(divisor)],
+                vec![u64_lit(numerator / divisor), u64_lit(numerator % divisor)],
+            );
+        }
+
+        for j in 0..33 {
             for _ in 0..2 {
                 let numerator: u64 = rng.next_u64();
-                let divisor: u64 = rng.next_u32() as u64 + (1u64 << (32 + j * 2));
+                let divisor: u64 = rng.next_u32() as u64 + (1u64 << (31 + j));
                 compare_prop_with_stack(
                     &div_u64_rast(),
                     vec![u64_lit(numerator), u64_lit(divisor)],
