@@ -1468,9 +1468,9 @@ fn compile_expr(
                             (
                                 addr,
                                 vec![
-                                    lhs_expr_code,
                                     rhs_expr_code,
-                                    vec![swap(1), div(), swap(1), pop()],
+                                    lhs_expr_code,
+                                    vec![ div(), swap(1), pop()],
                                 ]
                                 .concat(),
                             )
@@ -1481,17 +1481,20 @@ fn compile_expr(
                             if !matches!(rhs_expr_owned, ast::Expr::Lit(ast::ExprLit::U64(2))) {
                                 panic!("Unsupported division with denominator: {rhs_expr_owned:#?}")
                             }
-
                             let (_lhs_expr_addr, lhs_expr_code) =
                                 compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
-                            let div2 =
-                                state.import_snippet(Box::new(arithmetic::u64::div2_u64::Div2U64));
+
+                            let (_rhs_expr_addr, rhs_expr_code) =
+                                compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
 
                             // Pop the numerator that was divided by two
                             state.vstack.pop();
+                            state.vstack.pop();
                             let addr = state.new_value_identifier("_binop_rem", &res_type);
 
-                            (addr, vec![lhs_expr_code, vec![call(div2)]].concat())
+                            // 0, 17, 0, 2
+                            //(addr, vec![lhs_expr_code, rhs_expr_code, vec![swap(1), pop(), div(), swap(1), pop(), swap(1)]].concat())
+                            (addr, vec![lhs_expr_code, rhs_expr_code, vec![swap(3),pop(),pop(),div(),swap(1),pop(),dup(2),swap(1)]].concat())
                         }
                         _ => panic!("Unsupported instruction `rem` for type {res_type}.  Only `u32` and `u64` are supported"),
                     }
