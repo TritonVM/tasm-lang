@@ -1463,7 +1463,7 @@ fn compile_expr(
                             // Pop numerator and denominator
                             state.vstack.pop();
                             state.vstack.pop();
-                            let addr = state.new_value_identifier("_binop_div", &res_type);
+                            let addr = state.new_value_identifier("_binop_rem", &res_type);
 
                             (
                                 addr,
@@ -1489,7 +1489,7 @@ fn compile_expr(
 
                             // Pop the numerator that was divided by two
                             state.vstack.pop();
-                            let addr = state.new_value_identifier("_binop_div", &res_type);
+                            let addr = state.new_value_identifier("_binop_rem", &res_type);
 
                             (addr, vec![lhs_expr_code, vec![call(div2)]].concat())
                         }

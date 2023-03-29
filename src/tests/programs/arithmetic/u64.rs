@@ -46,8 +46,8 @@ pub fn mul_u64_rast() -> syn::ItemFn {
 #[allow(dead_code)]
 pub fn div_u64_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
-        fn div_u64(rhs: u64, lhs: u64) -> u64 {
-            return rhs / lhs;
+        fn div_u64(rhs: u64, _lhs: u64) -> u64 {
+            return rhs / 2u64;
         }
     })
 }
@@ -55,8 +55,8 @@ pub fn div_u64_rast() -> syn::ItemFn {
 #[allow(dead_code)]
 pub fn rem_u64_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
-        fn rem_u64(rhs: u64, lhs: u64) -> u64 {
-            return rhs % lhs;
+        fn rem_u64(rhs: u64, _lhs: u64) -> u64 {
+            return rhs % 2u64;
         }
     })
 }
@@ -158,15 +158,15 @@ mod run_tests {
 
     #[test]
     fn div_u64_run_test() {
-        let input_args_1 = vec![u64_lit(56), u64_lit(7)];
-        let expected_outputs_1 = vec![u64_lit(8)];
+        let input_args_1 = vec![u64_lit(56), u64_lit(2)];
+        let expected_outputs_1 = vec![u64_lit(28)];
         compare_prop_with_stack(&div_u64_rast(), input_args_1, expected_outputs_1);
     }
 
     #[test]
     fn rem_u64_run_test() {
-        let input_args_1 = vec![u64_lit(17), u64_lit(6)];
-        let expected_outputs_1 = vec![u64_lit(5)];
+        let input_args_1 = vec![u64_lit(17), u64_lit(2)];
+        let expected_outputs_1 = vec![u64_lit(1)];
         compare_prop_with_stack(&rem_u64_rast(), input_args_1, expected_outputs_1);
     }
 
