@@ -176,6 +176,20 @@ mod run_tests {
     }
 
     #[test]
+    fn div_u32_run_test() {
+        let input_args_1 = vec![u32_lit(56), u32_lit(7)];
+        let expected_outputs_1 = vec![u32_lit(8)];
+        compare_prop_with_stack(&div_u32_rast(), input_args_1, expected_outputs_1);
+    }
+
+    #[test]
+    fn rem_u32_run_test() {
+        let input_args_1 = vec![u32_lit(17), u32_lit(6)];
+        let expected_outputs_1 = vec![u32_lit(5)];
+        compare_prop_with_stack(&rem_u32_rast(), input_args_1, expected_outputs_1);
+    }
+
+    #[test]
     fn lt_u32_test() {
         compare_prop_with_stack(&lt_u32(), vec![], vec![bool_lit(true)]);
     }
