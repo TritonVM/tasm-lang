@@ -1467,8 +1467,12 @@ fn compile_expr(
 
                             (
                                 addr,
-                                vec![lhs_expr_code, rhs_expr_code, vec![swap(1), div(), pop()]]
-                                    .concat(),
+                                vec![
+                                    lhs_expr_code,
+                                    rhs_expr_code,
+                                    vec![swap(1), div(), swap(1), pop()],
+                                ]
+                                .concat(),
                             )
                         }
                         U64 => {
