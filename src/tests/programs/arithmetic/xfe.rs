@@ -21,15 +21,6 @@ pub fn div_xfe_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
-pub fn rem_xfe_rast() -> syn::ItemFn {
-    item_fn(parse_quote! {
-        fn rem_xfe(rhs: XFieldElement, lhs: XFieldElement) ->  XFieldElement {
-            return rhs % lhs;
-        }
-    })
-}
-
 #[cfg(test)]
 mod compile_and_typecheck_tests {
     use crate::tests::shared_test::graft_check_compile_prop;

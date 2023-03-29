@@ -1493,65 +1493,7 @@ fn compile_expr(
 
                             (addr, vec![lhs_expr_code, vec![call(div2)]].concat())
                         }
-                        BFE => {
-                            let (_lhs_expr_addr, lhs_expr_code) =
-                                compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
-                            let (_rhs_expr_addr, rhs_expr_code) =
-                                compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
-
-                            // div num
-                            let bfe_div_code = vec![
-                                swap(1),  // _ num div
-                                invert(), // _ num (1/div)
-                                mul(),    // _ num·(1/div), or (num/div)
-                            ];
-
-                            // Pop numerator and denominator
-                            state.vstack.pop();
-                            state.vstack.pop();
-                            let addr = state.new_value_identifier("_binop_div", &res_type);
-
-                            (
-                                addr,
-                                vec![lhs_expr_code, rhs_expr_code, bfe_div_code].concat(),
-                            )
-                        }
-                        XFE => {
-                            let (_lhs_expr_addr, lhs_expr_code) =
-                                compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
-                            let (_rhs_expr_addr, rhs_expr_code) =
-                                compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
-
-                            // div_2 div_1 div_0 num_2 num_1 num_0
-                            let xfe_div_code = vec![
-                                swap(5),   // num_0 div_1 div_0 num_2 num_1 div_2
-                                swap(2),   // num_0 div_1 div_0 div_2 num_1 num_2
-                                swap(5),   // num_2 div_1 div_0 div_2 num_1 num_0
-                                swap(4),   // num_2 num_0 div_0 div_2 num_1 div_1
-                                swap(1),   // num_2 num_0 div_0 div_2 div_1 num_1
-                                swap(4),   // num_2 num_1 div_0 div_2 div_1 num_0
-                                swap(3),   // num_2 num_1 num_0 div_2 div_1 div_0
-                                xinvert(), // num_2 num_1 num_0 (1/div)_2 (1/div)_1 (1/div)_0
-                                xxmul(),   // num_2 num_1 num_0 (num/div)_2 (num/div)_1 (num/div)_0
-                                swap(3),   // num_2 num_1 (num/div)_0 (num/div)_2 (num/div)_1 num_0
-                                pop(),     // num_2 num_1 (num/div)_0 (num/div)_2 (num/div)_1
-                                swap(3),   // num_2 (num/div)_1 (num/div)_0 (num/div)_2 num_1
-                                pop(),     // num_2 (num/div)_1 (num/div)_0 (num/div)_2
-                                swap(3),   // (num/div)_2 (num/div)_1 (num/div)_0 num_2
-                                pop(),     // (num/div)_2 (num/div)_1 (num/div)_0
-                            ];
-
-                            // Pop numerator and denominator
-                            state.vstack.pop();
-                            state.vstack.pop();
-                            let addr = state.new_value_identifier("_binop_div", &res_type);
-
-                            (
-                                addr,
-                                vec![lhs_expr_code, rhs_expr_code, xfe_div_code].concat(),
-                            )
-                        }
-                        _ => panic!("Unsupported div for type {res_type}"),
+                        _ => panic!("Unsupported instruction `rem` for type {res_type}.  Only `u32` and `u64` are supported"),
                     }
                 }
 

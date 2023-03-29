@@ -157,6 +157,20 @@ mod run_tests {
     }
 
     #[test]
+    fn div_u64_run_test() {
+        let input_args_1 = vec![u64_lit(56), u64_lit(7)];
+        let expected_outputs_1 = vec![u64_lit(8)];
+        compare_prop_with_stack(&div_u64_rast(), input_args_1, expected_outputs_1);
+    }
+
+    #[test]
+    fn rem_u64_run_test() {
+        let input_args_1 = vec![u64_lit(17), u64_lit(6)];
+        let expected_outputs_1 = vec![u64_lit(5)];
+        compare_prop_with_stack(&rem_u64_rast(), input_args_1, expected_outputs_1);
+    }
+
+    #[test]
     fn leftshift_u64_run_test() {
         let input = vec![u64_lit(0b10101010101010101010101010101u64), u32_lit(32u32)];
         let expected_output = vec![u64_lit(1537228671377473536)];

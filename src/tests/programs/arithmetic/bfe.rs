@@ -49,14 +49,6 @@ pub fn div_bfe_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
-pub fn rem_bfe_rast() -> syn::ItemFn {
-    item_fn(parse_quote! {
-        fn rem_bfe(rhs: BFieldElement, lhs: BFieldElement) ->  BFieldElement {
-            return rhs % lhs;
-        }
-    })
-}
 #[cfg(test)]
 mod compile_and_typecheck_tests {
     use super::*;
