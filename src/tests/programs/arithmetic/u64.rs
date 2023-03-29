@@ -45,6 +45,9 @@ pub fn mul_u64_rast() -> syn::ItemFn {
 
 #[allow(dead_code)]
 pub fn div_u64_rast() -> syn::ItemFn {
+    // This code shows how to do u64 div-mod using only u32 div-mod primitives.
+    // So the TASM code that this function compiles to can be used for the u64
+    // div-mod snippet for this compiler.
     item_fn(parse_quote! {
         fn divmoddi4_tasm_lang_friendly(numerator_input: u64, divisor: u64) -> (u64, u64) {
             let num_hi: u32 = (numerator_input >> 32) as u32;
