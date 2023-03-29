@@ -1451,7 +1451,7 @@ fn compile_expr(
 
                 ast::BinOp::Rem => {
                     use ast::DataType::*;
-                    match res_type {
+                    match result_type {
                         U32 => {
                             // TODO: Consider evaluating in opposite order to save a clock-cycle by removing `swap1`
                             // below. This would change the "left-to-right" convention though.
@@ -1463,17 +1463,12 @@ fn compile_expr(
                             // Pop numerator and denominator
                             state.vstack.pop();
                             state.vstack.pop();
-                            let addr = state.new_value_identifier("_binop_rem", &res_type);
 
-                            (
-                                addr,
-                                vec![
-                                    lhs_expr_code,
-                                    rhs_expr_code,
-                                    vec![swap(1), div(), swap(1), pop()],
-                                ]
-                                .concat(),
-                            )
+                            vec![
+                                lhs_expr_code,
+                                rhs_expr_code,
+                                vec![swap(1), div(), swap(1), pop()],
+                            ].concat()
                         }
                         U64 => {
                             // For now we can only divide u64s by 2.
@@ -1490,13 +1485,10 @@ fn compile_expr(
                             // Pop the numerator that was divided by two
                             state.vstack.pop();
                             state.vstack.pop();
-                            let addr = state.new_value_identifier("_binop_rem", &res_type);
 
-                            // This ignores the upper u32 part of the numerator since divisor is always 2.
-                            // Thus, the result only depends on LSB.
-                            (addr, vec![lhs_expr_code, rhs_expr_code, vec![swap(1),swap(2),div(),swap(2),pop(),pop()]].concat())
+                            vec![lhs_expr_code, rhs_expr_code, vec![swap(1),swap(2),div(),swap(2),pop(),pop()]].concat()
                         }
-                        _ => panic!("Unsupported instruction `rem` for type {res_type}.  Only `u32` and `u64` are supported"),
+                        _ => panic!("Unsupported instruction `rem` for type {result_type}.  Only `u32` and `u64` are supported"),
                     }
                 }
 
