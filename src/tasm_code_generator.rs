@@ -616,8 +616,8 @@ pub fn compile(function: &ast::Fn<types::Typing>) -> Vec<LabelledInstruction> {
         vec![Label(fn_name.to_owned())],
         fn_body_code,
         vec![Instruction(Return)],
-        dependencies,
         state.subroutines.concat(),
+        dependencies,
     ]
     .concat();
 
