@@ -191,6 +191,28 @@ mod run_tests {
         compare_prop_with_stack(&mul_u64_rast(), input_args_1, expected_outputs_1);
     }
 
+    // TODO: Fix the two below tests when a better execution wrapper
+    // exists!
+    #[should_panic]
+    #[test]
+    fn div_u64_zero_divisor_small_numerator_test() {
+        compare_prop_with_stack(
+            &div_u64_rast(),
+            vec![u64_lit(51), u64_lit(0)],
+            vec![u64_lit(0), u64_lit(0)],
+        );
+    }
+
+    #[should_panic]
+    #[test]
+    fn div_u64_zero_divisor_big_numerator_test() {
+        compare_prop_with_stack(
+            &div_u64_rast(),
+            vec![u64_lit((1u64 << 32) + 100), u64_lit(0)],
+            vec![u64_lit(0), u64_lit(0)],
+        );
+    }
+
     #[test]
     fn div_u64_run_test() {
         compare_prop_with_stack(
