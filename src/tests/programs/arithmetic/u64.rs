@@ -49,14 +49,14 @@ pub fn div_u64_rast() -> syn::ItemFn {
     // So the TASM code that this function compiles to can be used for the u64
     // div-mod snippet for this compiler.
     item_fn(parse_quote! {
-        fn divmoddi4_tasm_lang_friendly(mut numerator: u64, divisor: u64) -> (u64, u64) {
-            let num_hi: u32 = (numerator >> 32) as u32;
-            let num_lo: u32 = (numerator & u32::MAX as u64) as u32;
+        fn divmoddi4_tasm_lang_friendly(numerator_input: u64, divisor: u64) -> (u64, u64) {
+            let num_hi: u32 = (numerator_input >> 32) as u32;
+            let num_lo: u32 = (numerator_input & u32::MAX as u64) as u32;
             let div_hi: u32 = (divisor >> 32) as u32;
             let div_lo: u32 = (divisor & u32::MAX as u64) as u32;
             let mut ret: (u64, u64) = (0u64, 0u64);
+            let mut numerator: u64 = numerator_input;
 
-            // let mut numerator: u64 = numerator_input;
 
             if divisor > numerator {
                 ret = (0u64, numerator);
@@ -329,5 +329,10 @@ mod compile_and_typecheck_tests {
     #[test]
     fn rightshift_u64_test() {
         graft_check_compile_prop(&rightshift_u64_rast());
+    }
+
+    #[test]
+    fn u64_div_mod_test() {
+        graft_check_compile_prop(&div_u64_rast());
     }
 }
