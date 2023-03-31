@@ -74,9 +74,7 @@ mod run_tests {
     fn assert_bool_test() {
         // TODO: Include `false` test here when we have a wrapper that doesn't panic on VM execution errors
         // for bool in [false, true] {
-        for bool in [true] {
-            compare_prop_with_stack(&assert_bool_rast(), vec![bool_lit(bool)], vec![]);
-        }
+        compare_prop_with_stack(&assert_bool_rast(), vec![bool_lit(true)], vec![]);
     }
 
     #[should_panic]

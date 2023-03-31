@@ -1285,21 +1285,40 @@ fn compile_expr(
                             vec![lhs_expr_code, rhs_expr_code, vec![swap(1), div(), pop()]].concat()
                         }
                         U64 => {
-                            // For now we can only divide u64s by 2.
+                            // Division is very expensive in the general case!
+                            // Try to do right shifting instead, if you can.
                             let rhs_expr_owned = *rhs_expr.to_owned();
-                            if !matches!(rhs_expr_owned, ast::Expr::Lit(ast::ExprLit::U64(2))) {
-                                panic!("Unsupported division with denominator: {rhs_expr_owned:#?}")
+                            if matches!(rhs_expr_owned, ast::Expr::Lit(ast::ExprLit::U64(2))) {
+                                let (_lhs_expr_addr, lhs_expr_code) =
+                                    compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
+                                let div2 = state
+                                    .import_snippet(Box::new(arithmetic::u64::div2_u64::Div2U64));
+
+                                // Pop the numerator that was divided by two
+                                state.vstack.pop();
+
+                                vec![lhs_expr_code, vec![call(div2)]].concat()
+                            } else {
+                                let (_lhs_expr_addr, lhs_expr_code) =
+                                    compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
+                                let (_rhs_expr_addr, rhs_expr_code) =
+                                    compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
+
+                                let div_mod_u64 = state.import_snippet(Box::new(
+                                    arithmetic::u64::div_mod_u64::DivModU64,
+                                ));
+
+                                state.vstack.pop();
+                                state.vstack.pop();
+
+                                // Call the div-mod function and throw away the remainder
+                                vec![
+                                    lhs_expr_code,
+                                    rhs_expr_code,
+                                    vec![call(div_mod_u64), pop(), pop()],
+                                ]
+                                .concat()
                             }
-
-                            let (_lhs_expr_addr, lhs_expr_code) =
-                                compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
-                            let div2 =
-                                state.import_snippet(Box::new(arithmetic::u64::div2_u64::Div2U64));
-
-                            // Pop the numerator that was divided by two
-                            state.vstack.pop();
-
-                            vec![lhs_expr_code, vec![call(div2)]].concat()
                         }
                         BFE => {
                             let (_lhs_expr_addr, lhs_expr_code) =
@@ -1352,6 +1371,54 @@ fn compile_expr(
                             vec![lhs_expr_code, rhs_expr_code, xfe_div_code].concat()
                         }
                         _ => panic!("Unsupported div for type {result_type}"),
+                    }
+                }
+
+                ast::BinOp::Rem => {
+                    use ast::DataType::*;
+                    match result_type {
+                        U32 => {
+                            // TODO: Consider evaluating in opposite order to save a clock-cycle by removing `swap1`
+                            // below. This would change the "left-to-right" convention though.
+                            let (_lhs_expr_addr, lhs_expr_code) =
+                                compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
+                            let (_rhs_expr_addr, rhs_expr_code) =
+                                compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
+
+                            // Pop numerator and denominator
+                            state.vstack.pop();
+                            state.vstack.pop();
+
+                            vec![
+                                lhs_expr_code,
+                                rhs_expr_code,
+                                vec![swap(1), div(), swap(1), pop()],
+                            ]
+                            .concat()
+                        }
+                        U64 => {
+                            // divsion and remainder are very expensive in the general case!
+                            // Try to use a bitmask instead.
+                            let (_lhs_expr_addr, lhs_expr_code) =
+                                compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
+                            let (_rhs_expr_addr, rhs_expr_code) =
+                                compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
+
+                            let div_mod_u64 = state
+                                .import_snippet(Box::new(arithmetic::u64::div_mod_u64::DivModU64));
+
+                            state.vstack.pop();
+                            state.vstack.pop();
+
+                            // Call the div-mod function and throw away the remainder
+                            vec![
+                                lhs_expr_code,
+                                rhs_expr_code,
+                                vec![call(div_mod_u64), swap(2), pop(), swap(2), pop()],
+                            ]
+                            .concat()
+                        }
+                        _ => panic!("Unsupported remainder of type {lhs_type}"),
                     }
                 }
 
@@ -1503,33 +1570,6 @@ fn compile_expr(
                     state.vstack.pop();
 
                     vec![lhs_expr_code, rhs_expr_code, or_code].concat()
-                }
-
-                // ast::BinOp::Rem => todo!(),
-                ast::BinOp::Rem => {
-                    use ast::DataType::*;
-                    match result_type {
-                        U32 => {
-                            // TODO: Consider evaluating in opposite order to save a clock-cycle by removing `swap1`
-                            // below. This would change the "left-to-right" convention though.
-                            let (_lhs_expr_addr, lhs_expr_code) =
-                                compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
-                            let (_rhs_expr_addr, rhs_expr_code) =
-                                compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
-
-                            // Pop numerator and denominator
-                            state.vstack.pop();
-                            state.vstack.pop();
-
-                            vec![
-                                lhs_expr_code,
-                                rhs_expr_code,
-                                vec![swap(1), div(), swap(1), pop()],
-                            ]
-                            .concat()
-                        }
-                        _ => panic!("Unsupported remainder of type {lhs_type}"),
-                    }
                 }
 
                 ast::BinOp::Shl => {
