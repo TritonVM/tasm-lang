@@ -226,7 +226,7 @@ mod run_tests {
         let mut rng = thread_rng();
         for _ in 0..4 {
             let numerator: u64 = rng.next_u64();
-            let divisor: u64 = rng.gen_range(0..(1 << 12));
+            let divisor: u64 = rng.gen_range(1..(1 << 12));
             compare_prop_with_stack(
                 &div_u64_rast(),
                 vec![u64_lit(numerator), u64_lit(divisor)],
@@ -265,7 +265,7 @@ mod run_tests {
         let mut rng = thread_rng();
         for _ in 0..4 {
             let numerator: u64 = rng.next_u64();
-            let divisor: u64 = rng.gen_range(0..(1 << 12));
+            let divisor: u64 = rng.gen_range(1..(1 << 12));
             compare_prop_with_stack(
                 &rem_u64_rast(),
                 vec![u64_lit(numerator), u64_lit(divisor)],
