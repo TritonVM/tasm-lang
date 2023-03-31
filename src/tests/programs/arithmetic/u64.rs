@@ -55,7 +55,6 @@ pub fn div_u64_rast() -> syn::ItemFn {
             let div_hi: u32 = (divisor >> 32) as u32;
             let div_lo: u32 = (divisor & u32::MAX as u64) as u32;
             let mut ret: (u64, u64) = (0u64, 0u64);
-            // assert_ne!(0, divisor, "Cannot divide by zero");
 
             // let mut numerator: u64 = numerator_input;
 
@@ -73,6 +72,8 @@ pub fn div_u64_rast() -> syn::ItemFn {
                         }
                     }
                 } else {
+                    // assert!(0u64 != divisor, "Cannot divide by zero");
+                    assert!(0u64 != divisor);
                     let mut bits: u32 = divisor.leading_zeros() - numerator.leading_zeros() + 1u32;
                     let mut rem: u64 = numerator >> bits;
                     numerator = numerator << 64 - bits;

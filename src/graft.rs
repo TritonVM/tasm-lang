@@ -1,7 +1,9 @@
 use itertools::Itertools;
+use syn::parse_quote;
 use twenty_first::shared_math::b_field_element::BFieldElement;
 
 use crate::ast;
+use crate::ast::AssertStmt;
 use crate::types;
 
 type Annotation = types::Typing;
@@ -621,8 +623,23 @@ pub fn graft_stmt(rust_stmt: &syn::Stmt) -> ast::Stmt<Annotation> {
             },
             syn::Expr::MethodCall(method_call_expr) => {
                 ast::Stmt::MethodCall(graft_method_call(method_call_expr))
-            }
-            other => panic!("unsupported: {other:?}"),
+            },
+            syn::Expr::Macro(expr_macro) => {
+                let ident = path_to_ident(&expr_macro.mac.path);
+                assert_eq!("assert", ident, "Can currently only handle `assert!` macro. Got: {ident}");
+
+                // The macro tokens are interpreted as an expression.
+                // We do not currently allow text associated with an assert statement,
+                // as I could not figure out how to parse such a token stream that an
+                // `assert( expr, "description" )` has.
+                let tokens = &expr_macro.mac.tokens;
+                let tokens_as_expr_syn: syn::Expr = parse_quote! { #tokens };
+                let tokens_as_expr = graft_expr(&tokens_as_expr_syn);
+                ast::Stmt::Assert(AssertStmt {
+                    expression: tokens_as_expr,
+                })
+            },
+            other => panic!("unsupported: {other:#?}"),
         },
     }
 }

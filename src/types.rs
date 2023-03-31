@@ -310,6 +310,14 @@ fn annotate_stmt(
         ast::Stmt::Block(block_stmt) => {
             annotate_block_stmt(block_stmt, fn_name, fn_output, state);
         }
+        ast::Stmt::Assert(assert_expr) => {
+            let expr_type = derive_annotate_expr_type(
+                &mut assert_expr.expression,
+                Some(&ast::DataType::Bool),
+                state,
+            );
+            assert_type_equals(&expr_type, &ast::DataType::Bool, "assert expression");
+        }
     }
 }
 

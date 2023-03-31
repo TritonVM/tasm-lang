@@ -854,6 +854,15 @@ fn compile_stmt(
 
             vec![block_body_code, restore_stack_code].concat()
         }
+        ast::Stmt::Assert(ast::AssertStmt { expression }) => {
+            let (_addr, assert_expr_code) =
+                compile_expr(expression, "assert-expr", &expression.get_type(), state);
+
+            // evaluated expression value is not visible after `assert` instruction has been executed
+            state.vstack.pop();
+
+            vec![assert_expr_code, vec![assert_()]].concat()
+        }
     }
 }
 
