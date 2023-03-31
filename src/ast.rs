@@ -45,6 +45,13 @@ pub enum Stmt<T> {
     While(WhileStmt<T>),
     If(IfStmt<T>),
     Block(BlockStmt<T>),
+    Assert(AssertStmt<T>),
+}
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub struct AssertStmt<T> {
+    pub expression: Expr<T>,
+    // pub decription: Option<String>,
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
@@ -100,6 +107,7 @@ pub enum BinOp {
     And,
     BitAnd,
     BitXor,
+    BitOr,
     Div,
     Eq,
     Lt,

@@ -1,7 +1,9 @@
 use itertools::Itertools;
+use syn::parse_quote;
 use twenty_first::shared_math::b_field_element::BFieldElement;
 
 use crate::ast;
+use crate::ast::AssertStmt;
 use crate::types;
 
 type Annotation = types::Typing;
@@ -104,8 +106,13 @@ fn graft_fn_arg(rust_fn_arg: &syn::FnArg) -> ast::FnArg {
         syn::FnArg::Typed(pat_type) => {
             let name = pat_to_name(&pat_type.pat);
             let (data_type, mutable): (ast::DataType, bool) = match pat_type.ty.as_ref() {
-                // Input is an owned value
-                syn::Type::Path(type_path) => (rust_type_path_to_data_type(type_path), false),
+                syn::Type::Path(type_path) => {
+                    let mutable = match *pat_type.pat.to_owned() {
+                        syn::Pat::Ident(pi) => pi.mutability.is_some(),
+                        _ => todo!(),
+                    };
+                    (rust_type_path_to_data_type(type_path), mutable)
+                }
 
                 // Input is a mutable reference
                 syn::Type::Reference(syn::TypeReference {
@@ -337,7 +344,16 @@ pub fn graft_expr(rust_exp: &syn::Expr) -> ast::Expr<Annotation> {
         syn::Expr::Path(path) => {
             let path = &path.path;
             let ident: String = path_to_ident(path);
-            ast::Expr::Var(ast::Identifier::String(ident, Default::default()))
+
+            // TODO: Maybe not so elegant to handle this here...
+            // Should be handled on a different level
+            if ident == "u32::MAX" {
+                ast::Expr::Lit(ast::ExprLit::U32(u32::MAX))
+            } else if ident == "u64::MAX" {
+                ast::Expr::Lit(ast::ExprLit::U64(u64::MAX))
+            } else {
+                ast::Expr::Var(ast::Identifier::String(ident, Default::default()))
+            }
         }
         syn::Expr::Tuple(tuple_expr) => {
             let exprs = tuple_expr.elems.iter().map(graft_expr).collect_vec();
@@ -459,6 +475,7 @@ fn graft_binop(rust_binop: syn::BinOp) -> ast::BinOp {
         syn::BinOp::And(_) => ast::BinOp::And,
         syn::BinOp::BitAnd(_) => ast::BinOp::BitAnd,
         syn::BinOp::BitXor(_) => ast::BinOp::BitXor,
+        syn::BinOp::BitOr(_) => ast::BinOp::BitOr,
         syn::BinOp::Div(_) => ast::BinOp::Div,
         syn::BinOp::Eq(_) => ast::BinOp::Eq,
         syn::BinOp::Lt(_) => ast::BinOp::Lt,
@@ -606,8 +623,23 @@ pub fn graft_stmt(rust_stmt: &syn::Stmt) -> ast::Stmt<Annotation> {
             },
             syn::Expr::MethodCall(method_call_expr) => {
                 ast::Stmt::MethodCall(graft_method_call(method_call_expr))
-            }
-            other => panic!("unsupported: {other:?}"),
+            },
+            syn::Expr::Macro(expr_macro) => {
+                let ident = path_to_ident(&expr_macro.mac.path);
+                assert_eq!("assert", ident, "Can currently only handle `assert!` macro. Got: {ident}");
+
+                // The macro tokens are interpreted as an expression.
+                // We do not currently allow text associated with an assert statement,
+                // as I could not figure out how to parse such a token stream that an
+                // `assert( expr, "description" )` has.
+                let tokens = &expr_macro.mac.tokens;
+                let tokens_as_expr_syn: syn::Expr = parse_quote! { #tokens };
+                let tokens_as_expr = graft_expr(&tokens_as_expr_syn);
+                ast::Stmt::Assert(AssertStmt {
+                    expression: tokens_as_expr,
+                })
+            },
+            other => panic!("unsupported: {other:#?}"),
         },
     }
 }

@@ -3,6 +3,16 @@ use syn::parse_quote;
 use crate::graft::item_fn;
 
 #[allow(dead_code)]
+pub fn declare_u32_max_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn declare_u32_max() {
+            let a: u32 = u32::MAX;
+            return;
+        }
+    })
+}
+
+#[allow(dead_code)]
 pub fn add_u32_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn add_u32(lhs: u32, rhs: u32) -> u32 {
@@ -57,6 +67,24 @@ pub fn mul_u32_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn mul_u32(rhs: u32, lhs: u32) -> u32 {
             return rhs * lhs;
+        }
+    })
+}
+
+#[allow(dead_code)]
+pub fn rem_u32_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn rem_u64(rhs: u32, lhs: u32) -> u32 {
+            return rhs % lhs;
+        }
+    })
+}
+
+#[allow(dead_code)]
+pub fn div_u32_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn rem_u64(rhs: u32, lhs: u32) -> u32 {
+            return rhs / lhs;
         }
     })
 }
@@ -127,6 +155,8 @@ pub fn rightshift_u32_rast() -> syn::ItemFn {
 
 #[cfg(test)]
 mod run_tests {
+    use rand::{thread_rng, RngCore};
+
     use super::*;
     use crate::tests::shared_test::*;
 
@@ -155,6 +185,26 @@ mod run_tests {
         let input_args_1 = vec![u32_lit(200), u32_lit(100)];
         let expected_outputs_1 = vec![u32_lit(20_000)];
         compare_prop_with_stack(&mul_u32_rast(), input_args_1, expected_outputs_1);
+    }
+
+    #[test]
+    fn div_rem_u32_run_test() {
+        let mut rng = thread_rng();
+        for _ in 0..100 {
+            let numerator = rng.next_u32();
+            let divisor = rng.next_u32();
+            let input_args_1 = vec![u32_lit(numerator), u32_lit(divisor)];
+            compare_prop_with_stack(
+                &rem_u32_rast(),
+                input_args_1.clone(),
+                vec![u32_lit(numerator % divisor)],
+            );
+            compare_prop_with_stack(
+                &div_u32_rast(),
+                input_args_1,
+                vec![u32_lit(numerator / divisor)],
+            );
+        }
     }
 
     #[test]
@@ -197,6 +247,11 @@ mod compile_and_typecheck_tests {
     use crate::tests::shared_test::graft_check_compile_prop;
 
     use super::*;
+
+    #[test]
+    fn declare_u32_max_test() {
+        graft_check_compile_prop(&declare_u32_max_rast());
+    }
 
     #[test]
     fn add_u32_test() {

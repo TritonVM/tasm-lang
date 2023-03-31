@@ -11,7 +11,7 @@ use twenty_first::amount::u32s::U32s;
 use twenty_first::shared_math::b_field_element::BFieldElement;
 use twenty_first::util_types::algebraic_hasher::Hashable;
 
-use crate::libraries::{tasm, vector};
+use crate::libraries::{tasm, unsigned_integers, vector};
 use crate::stack::Stack;
 use crate::types::{is_list_type, GetType};
 use crate::{ast, types};
@@ -355,22 +355,32 @@ impl CompilerState {
     ) -> Vec<LabelledInstruction> {
         // Clear stack, vstack, and var_addr of locally declared values for those that are on top of the stack
         let mut code = vec![];
+        self.show_vstack_values();
         loop {
-            let (addr, (dt, _spilled)) = self.vstack.peek().unwrap();
+            let (addr, (dt, spilled)) = self.vstack.peek().unwrap().to_owned();
             let binding_name = self
                 .var_addr
                 .iter()
-                .find(|(_var_name, ident)| **ident == *addr)
-                .unwrap_or_else(|| panic!("Cannot handle stack cleanup of unbound values"))
-                .0
-                .clone();
-            if previous_var_addr.contains_key(&binding_name) {
+                .find(|(_var_name, ident)| **ident == addr)
+                //.unwrap_or_else(|| panic!("Cannot handle stack cleanup of unbound values"))
+                .map(|x| x.0.clone());
+            // .0
+            // .clone();
+            if binding_name.is_some()
+                && previous_var_addr.contains_key(&binding_name.clone().unwrap())
+                || binding_name.is_none()
+                    && previous_stack
+                        .inner
+                        .contains(&(addr, (dt.clone(), spilled)))
+            {
                 break;
             } else {
                 code.append(&mut vec![pop(); dt.size_of()]);
                 self.vstack.pop();
-                let removed = self.var_addr.remove(&binding_name);
-                assert!(removed.is_some());
+                if let Some(binding) = binding_name {
+                    let removed = self.var_addr.remove(&binding);
+                    assert!(removed.is_some());
+                }
             }
         }
 
@@ -606,8 +616,8 @@ pub fn compile(function: &ast::Fn<types::Typing>) -> Vec<LabelledInstruction> {
         vec![Label(fn_name.to_owned())],
         fn_body_code,
         vec![Instruction(Return)],
-        dependencies,
         state.subroutines.concat(),
+        dependencies,
     ]
     .concat();
 
@@ -844,6 +854,15 @@ fn compile_stmt(
 
             vec![block_body_code, restore_stack_code].concat()
         }
+        ast::Stmt::Assert(ast::AssertStmt { expression }) => {
+            let (_addr, assert_expr_code) =
+                compile_expr(expression, "assert-expr", &expression.get_type(), state);
+
+            // evaluated expression value is not visible after `assert` instruction has been executed
+            state.vstack.pop();
+
+            vec![assert_expr_code, vec![assert_()]].concat()
+        }
     }
 }
 
@@ -878,6 +897,11 @@ fn compile_fn_call(
         name = vector::import_tasm_snippet(snippet_name, &type_parameter, state);
     }
 
+    // If function is from unsigned_lib, import it
+    if let Some(snippet_name) = unsigned_integers::get_function_name(&name) {
+        name = vector::import_tasm_snippet(snippet_name, &type_parameter, state);
+    }
+
     for _ in 0..args.len() {
         state.vstack.pop();
     }
@@ -908,9 +932,14 @@ fn compile_method_call(
             })
             .unzip();
 
-    // If function is from vector-lib, ...
+    // If method is from vector-lib, ...
     if let Some(snippet_name) = vector::get_method_name(&name) {
         name = vector::import_tasm_snippet(snippet_name, &type_parameter, state);
+    }
+
+    // If method is from unsigned-integer-lib, ...
+    if let Some(snippet_name) = unsigned_integers::get_method_name(&name) {
+        name = unsigned_integers::import_tasm_snippet(snippet_name, &receiver_type, state);
     }
 
     for _ in 0..method_call.args.len() {
@@ -1210,6 +1239,33 @@ fn compile_expr(
 
                     vec![lhs_expr_code, rhs_expr_code, xor_code].concat()
                 }
+                ast::BinOp::BitOr => {
+                    let (_lhs_expr_addr, lhs_expr_code) =
+                        compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
+
+                    let (_rhs_expr_addr, rhs_expr_code) =
+                        compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
+
+                    use ast::DataType::*;
+
+                    let bitwise_or_code = match result_type {
+                        U32 => {
+                            let or_u32 = state.import_snippet(Box::new(arithmetic::u32::or::OrU32));
+                            vec![call(or_u32)]
+                        }
+                        U64 => {
+                            let or_u64 =
+                                state.import_snippet(Box::new(arithmetic::u64::or_u64::OrU64));
+                            vec![call(or_u64)]
+                        }
+                        _ => panic!("bitwise `or` on {result_type} is not supported"),
+                    };
+
+                    state.vstack.pop();
+                    state.vstack.pop();
+
+                    vec![lhs_expr_code, rhs_expr_code, bitwise_or_code].concat()
+                }
 
                 ast::BinOp::Div => {
                     use ast::DataType::*;
@@ -1229,21 +1285,40 @@ fn compile_expr(
                             vec![lhs_expr_code, rhs_expr_code, vec![swap(1), div(), pop()]].concat()
                         }
                         U64 => {
-                            // For now we can only divide u64s by 2.
+                            // Division is very expensive in the general case!
+                            // Try to do right shifting instead, if you can.
                             let rhs_expr_owned = *rhs_expr.to_owned();
-                            if !matches!(rhs_expr_owned, ast::Expr::Lit(ast::ExprLit::U64(2))) {
-                                panic!("Unsupported division with denominator: {rhs_expr_owned:#?}")
+                            if matches!(rhs_expr_owned, ast::Expr::Lit(ast::ExprLit::U64(2))) {
+                                let (_lhs_expr_addr, lhs_expr_code) =
+                                    compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
+                                let div2 = state
+                                    .import_snippet(Box::new(arithmetic::u64::div2_u64::Div2U64));
+
+                                // Pop the numerator that was divided by two
+                                state.vstack.pop();
+
+                                vec![lhs_expr_code, vec![call(div2)]].concat()
+                            } else {
+                                let (_lhs_expr_addr, lhs_expr_code) =
+                                    compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
+                                let (_rhs_expr_addr, rhs_expr_code) =
+                                    compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
+
+                                let div_mod_u64 = state.import_snippet(Box::new(
+                                    arithmetic::u64::div_mod_u64::DivModU64,
+                                ));
+
+                                state.vstack.pop();
+                                state.vstack.pop();
+
+                                // Call the div-mod function and throw away the remainder
+                                vec![
+                                    lhs_expr_code,
+                                    rhs_expr_code,
+                                    vec![call(div_mod_u64), pop(), pop()],
+                                ]
+                                .concat()
                             }
-
-                            let (_lhs_expr_addr, lhs_expr_code) =
-                                compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
-                            let div2 =
-                                state.import_snippet(Box::new(arithmetic::u64::div2_u64::Div2U64));
-
-                            // Pop the numerator that was divided by two
-                            state.vstack.pop();
-
-                            vec![lhs_expr_code, vec![call(div2)]].concat()
                         }
                         BFE => {
                             let (_lhs_expr_addr, lhs_expr_code) =
@@ -1296,6 +1371,54 @@ fn compile_expr(
                             vec![lhs_expr_code, rhs_expr_code, xfe_div_code].concat()
                         }
                         _ => panic!("Unsupported div for type {result_type}"),
+                    }
+                }
+
+                ast::BinOp::Rem => {
+                    use ast::DataType::*;
+                    match result_type {
+                        U32 => {
+                            // TODO: Consider evaluating in opposite order to save a clock-cycle by removing `swap1`
+                            // below. This would change the "left-to-right" convention though.
+                            let (_lhs_expr_addr, lhs_expr_code) =
+                                compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
+                            let (_rhs_expr_addr, rhs_expr_code) =
+                                compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
+
+                            // Pop numerator and denominator
+                            state.vstack.pop();
+                            state.vstack.pop();
+
+                            vec![
+                                lhs_expr_code,
+                                rhs_expr_code,
+                                vec![swap(1), div(), swap(1), pop()],
+                            ]
+                            .concat()
+                        }
+                        U64 => {
+                            // divsion and remainder are very expensive in the general case!
+                            // Try to use a bitmask instead.
+                            let (_lhs_expr_addr, lhs_expr_code) =
+                                compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
+                            let (_rhs_expr_addr, rhs_expr_code) =
+                                compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
+
+                            let div_mod_u64 = state
+                                .import_snippet(Box::new(arithmetic::u64::div_mod_u64::DivModU64));
+
+                            state.vstack.pop();
+                            state.vstack.pop();
+
+                            // Call the div-mod function and throw away the remainder
+                            vec![
+                                lhs_expr_code,
+                                rhs_expr_code,
+                                vec![call(div_mod_u64), swap(2), pop(), swap(2), pop()],
+                            ]
+                            .concat()
+                        }
+                        _ => panic!("Unsupported remainder of type {lhs_type}"),
                     }
                 }
 
@@ -1448,8 +1571,6 @@ fn compile_expr(
 
                     vec![lhs_expr_code, rhs_expr_code, or_code].concat()
                 }
-
-                ast::BinOp::Rem => todo!(),
 
                 ast::BinOp::Shl => {
                     let (_lhs_expr_addr, lhs_expr_code) =
