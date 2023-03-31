@@ -1328,7 +1328,6 @@ fn compile_expr(
 
                             // div num
                             let bfe_div_code = vec![
-                                swap(1),  // _ num div
                                 invert(), // _ num (1/div)
                                 mul(),    // _ num·(1/div), or (num/div)
                             ];
@@ -1347,13 +1346,6 @@ fn compile_expr(
 
                             // div_2 div_1 div_0 num_2 num_1 num_0
                             let xfe_div_code = vec![
-                                swap(5),   // num_0 div_1 div_0 num_2 num_1 div_2
-                                swap(2),   // num_0 div_1 div_0 div_2 num_1 num_2
-                                swap(5),   // num_2 div_1 div_0 div_2 num_1 num_0
-                                swap(4),   // num_2 num_0 div_0 div_2 num_1 div_1
-                                swap(1),   // num_2 num_0 div_0 div_2 div_1 num_1
-                                swap(4),   // num_2 num_1 div_0 div_2 div_1 num_0
-                                swap(3),   // num_2 num_1 num_0 div_2 div_1 div_0
                                 xinvert(), // num_2 num_1 num_0 (1/div)_2 (1/div)_1 (1/div)_0
                                 xxmul(),   // num_2 num_1 num_0 (num/div)_2 (num/div)_1 (num/div)_0
                                 swap(3),   // num_2 num_1 (num/div)_0 (num/div)_2 (num/div)_1 num_0

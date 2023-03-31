@@ -32,6 +32,15 @@ fn mul_bfe_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
+pub fn div_bfe_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn div_bfe(numerator: BFieldElement, divisor: BFieldElement) ->  BFieldElement {
+            return numerator / divisor;
+        }
+    })
+}
+
+#[allow(dead_code)]
 fn cast_from_bool_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn cast_from_bool(input: bool) -> BFieldElement {
@@ -85,6 +94,28 @@ mod run_tests {
                 bfe_lit(10_000_000_000u64.into()),
             ],
             vec![bfe_lit(7766279652927078395u64.into())],
+        );
+    }
+
+    #[test]
+    fn div_bfe_test() {
+        compare_prop_with_stack(
+            &div_bfe_rast(),
+            vec![bfe_lit(1u64.into()), bfe_lit(8561862112314395584u64.into())],
+            vec![bfe_lit(17307602810081694772u64.into())],
+        );
+        compare_prop_with_stack(
+            &div_bfe_rast(),
+            vec![
+                bfe_lit(1u64.into()),
+                bfe_lit(17307602810081694772u64.into()),
+            ],
+            vec![bfe_lit(8561862112314395584u64.into())],
+        );
+        compare_prop_with_stack(
+            &div_bfe_rast(),
+            vec![bfe_lit(1u64.into()), bfe_lit(7u64.into())],
+            vec![bfe_lit(2635249152773512046u64.into())],
         );
     }
 

@@ -12,6 +12,15 @@ pub fn add_xfe_rast() -> syn::ItemFn {
     })
 }
 
+#[allow(dead_code)]
+pub fn div_xfe_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn div_xfe(numerator: XFieldElement, denominator: XFieldElement) ->  XFieldElement {
+            return numerator / denominator;
+        }
+    })
+}
+
 #[cfg(test)]
 mod compile_and_typecheck_tests {
     use crate::tests::shared_test::graft_check_compile_prop;
@@ -68,6 +77,30 @@ mod run_tests {
                 (u32::MAX as u64).into(),
                 (u32::MAX as u64 + 10).into(),
                 (u32::MAX as u64 + 12).into(),
+            ]))],
+        );
+    }
+
+    #[test]
+    fn div_xfe_run_test() {
+        compare_prop_with_stack(
+            &div_xfe_rast(),
+            vec![
+                xfe_lit(XFieldElement::new([
+                    14058438416488592029u64.into(),
+                    9323205069984740887u64.into(),
+                    17067945378368492892u64.into(),
+                ])),
+                xfe_lit(XFieldElement::new([
+                    1830538383633518907u64.into(),
+                    6059860057029841626u64.into(),
+                    16015800434434079444u64.into(),
+                ])),
+            ],
+            vec![xfe_lit(XFieldElement::new([
+                14483313154228911360u64.into(),
+                11258517663240461652u64.into(),
+                15927246224920701489u64.into(),
             ]))],
         );
     }
