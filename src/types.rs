@@ -178,6 +178,17 @@ pub fn annotate_fn(function: &mut ast::Fn<Typing>) {
         STACK_SIZE - 1
     );
 
+    // Verify that last statememnt of function exists, and that it is a `return` statement
+    let last_stmt = function
+        .body
+        .iter()
+        .last()
+        .unwrap_or_else(|| panic!("{}: Function cannot be emtpy.", function.fn_signature.name));
+    assert!(
+        matches!(last_stmt, ast::Stmt::Return(_)),
+        "Last line of function must be a `return`"
+    );
+
     // Type-annotate each statement in-place
     function.body.iter_mut().for_each(|stmt| {
         annotate_stmt(
