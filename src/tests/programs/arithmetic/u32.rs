@@ -153,6 +153,16 @@ pub fn rightshift_u32_rast() -> syn::ItemFn {
     })
 }
 
+#[allow(dead_code)]
+pub fn usize_as_alias_for_u32_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn usize_as_alias_for_u32(lhs: usize, rhs: u32) -> usize {
+            let c: u32 = lhs + rhs;
+            return c;
+        }
+    })
+}
+
 #[cfg(test)]
 mod run_tests {
     use rand::{thread_rng, RngCore};
@@ -240,6 +250,15 @@ mod run_tests {
             vec![u32_lit(60)],
         );
     }
+
+    #[test]
+    fn usize_as_alias_for_u32_test() {
+        compare_prop_with_stack(
+            &usize_as_alias_for_u32_rast(),
+            vec![u32_lit(1 << 25), u32_lit(1 << 27)],
+            vec![u32_lit((1 << 25) + (1 << 27))],
+        );
+    }
 }
 
 #[cfg(test)]
@@ -291,5 +310,10 @@ mod compile_and_typecheck_tests {
     #[test]
     fn rightshift_u32_test() {
         graft_check_compile_prop(&rightshift_u32_rast());
+    }
+
+    #[test]
+    fn usize_as_alias_for_u32_test() {
+        graft_check_compile_prop(&usize_as_alias_for_u32_rast());
     }
 }

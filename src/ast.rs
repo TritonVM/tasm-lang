@@ -254,6 +254,9 @@ impl FromStr for DataType {
         match s {
             "bool" => Ok(DataType::Bool),
             "u32" => Ok(DataType::U32),
+
+            // `usize` is just an alias for `u32` in this compiler
+            "usize" => Ok(DataType::U32),
             "u64" => Ok(DataType::U64),
             "BFieldElement" => Ok(DataType::BFE),
             "XFieldElement" => Ok(DataType::XFE),

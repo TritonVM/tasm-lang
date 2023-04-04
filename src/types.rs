@@ -346,7 +346,7 @@ fn annotate_block_stmt(
     state.vtable = vtable_before;
 }
 
-fn assert_type_equals(derived_type: &ast::DataType, data_type: &ast::DataType, context: &str) {
+pub fn assert_type_equals(derived_type: &ast::DataType, data_type: &ast::DataType, context: &str) {
     if derived_type != data_type {
         panic!(
             "Type mismatch between type '{data_type}' and derived type '{derived_type}' for {context}",
