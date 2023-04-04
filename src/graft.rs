@@ -455,6 +455,13 @@ fn graft_lit(rust_val: &syn::Lit) -> ast::ExprLit<Annotation> {
                 }
             }
 
+            // `usize` is just an alias for `u32` in this compiler
+            if let Some(int_lit) = int_lit.strip_suffix("usize") {
+                if let Ok(int_u32) = int_lit.parse::<u32>() {
+                    return ast::ExprLit::U32(int_u32);
+                }
+            }
+
             if let Some(int_lit) = int_lit.strip_suffix("u64") {
                 if let Ok(int_u64) = int_lit.parse::<u64>() {
                     return ast::ExprLit::U64(int_u64);
