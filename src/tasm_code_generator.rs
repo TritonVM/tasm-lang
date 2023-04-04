@@ -1,5 +1,6 @@
 use itertools::Itertools;
 use std::collections::{HashMap, HashSet};
+use tasm_lib::dyn_malloc::DynMalloc;
 use tasm_lib::library::Library;
 use tasm_lib::snippet::Snippet;
 use tasm_lib::{arithmetic, hashing};
@@ -600,7 +601,7 @@ pub fn compile(function: &ast::Fn<types::Typing>) -> Vec<LabelledInstruction> {
         .map(|instructions| to_labelled(&instructions))
         .unwrap_or_else(|_| panic!("Must be able to parse dependencies code:\n{dependencies}"));
 
-    // Assert that all subroutines start with a label and end with a return
+    // Sanity check: Assert that all subroutines start with a label and end with a return
     assert!(
         state.subroutines.iter().all(|subroutine| {
             let begins_with_label = matches!(*subroutine.first().unwrap(), Label(_));
@@ -612,9 +613,17 @@ pub fn compile(function: &ast::Fn<types::Typing>) -> Vec<LabelledInstruction> {
         "Each subroutine must begin with a label, contain a return and end with a return or a recurse"
     );
 
+    // After the spilling has been done, and after all dependencies have been loaded, the `library` field
+    // in the `state` now contains the information about how to initialize the dynamic memory allocator
+    // such that dynamically allocated memory does not overwrite statically allocated memory. The `library`
+    // field contains the number of words that were statically allocated.
+    let dyn_malloc_init_code = DynMalloc::get_initialization_code_as_instructions(
+        state.library.get_next_free_address().try_into().unwrap(),
+    );
+
     let ret = vec![
         vec![Label(fn_name.to_owned())],
-        fn_body_code,
+        vec![dyn_malloc_init_code, fn_body_code].concat(),
         vec![Instruction(Return)],
         state.subroutines.concat(),
         dependencies,
