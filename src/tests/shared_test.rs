@@ -77,7 +77,7 @@ pub fn execute_with_stack_memory_and_ins(
     // Run the tasm-lib's execute function without requesting initialization of the dynamic
     // memory allocator, as this is the compiler's responsibility.
     println!("executing code:\n {code}");
-    let exec_result = tasm_lib::execute(
+    tasm_lib::execute(
         &code,
         &mut stack,
         expected_stack_diff,
@@ -85,9 +85,7 @@ pub fn execute_with_stack_memory_and_ins(
         secret_in,
         memory,
         None,
-    );
-
-    exec_result
+    )
 }
 
 #[allow(dead_code)]
@@ -218,7 +216,7 @@ pub fn assert_list_equal(
     list_pointer: BFieldElement,
     memory: &HashMap<BFieldElement, BFieldElement>,
 ) {
-    let element_type: Option<ast::DataType> = if expected_list.len() > 0 {
+    let element_type: Option<ast::DataType> = if !expected_list.is_empty() {
         Some(expected_list[0].get_type())
     } else {
         None
@@ -253,6 +251,7 @@ pub fn assert_list_equal(
         );
     }
 
+    #[allow(clippy::needless_range_loop)]
     for i in 0..expected_list.len() {
         if expected_list[i].to_sequence()
             != rust_shadowing_helper_functions::safe_list::safe_list_read(

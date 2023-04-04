@@ -719,7 +719,7 @@ mod run_tests {
             DataType::List(Box::new(DataType::U32)).size_of() as isize,
         );
         let mut list_pointer = exec_result.final_stack.last().unwrap();
-        let mut expected_list = (0..16).map(|i| u32_lit(i)).collect_vec();
+        let mut expected_list = (0..16).map(u32_lit).collect_vec();
         assert_list_equal(expected_list, *list_pointer, &vm_memory);
 
         vm_memory = HashMap::default();
@@ -732,7 +732,7 @@ mod run_tests {
             DataType::List(Box::new(DataType::U64)).size_of() as isize,
         );
         list_pointer = exec_result.final_stack.last().unwrap();
-        expected_list = (0..16).map(|i| u64_lit(i)).collect_vec();
+        expected_list = (0..16).map(u64_lit).collect_vec();
         assert_list_equal(expected_list, *list_pointer, &vm_memory)
     }
 
