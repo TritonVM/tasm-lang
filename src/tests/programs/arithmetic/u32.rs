@@ -118,9 +118,27 @@ pub fn operator_evaluation_ordering_with_mul() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn lt_u32() -> syn::ItemFn {
+pub fn lt_u32_dynamic_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
-        fn lt_for_u32_test_function() -> bool {
+        fn lt_u32_dynamic(lhs: u32, rhs: u32) -> bool {
+            return lhs < rhs;
+        }
+    })
+}
+
+#[allow(dead_code)]
+pub fn gt_u32_dynamic_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn gt_u32_dynamic(lhs: u32, rhs: u32) -> bool {
+            return lhs > rhs;
+        }
+    })
+}
+
+#[allow(dead_code)]
+pub fn lt_u32_static() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn lt_u32_static() -> bool {
             let a: u32 = 14u32;
             let b: u32 = 20u32;
             let c: u32 = 10u32;
@@ -218,8 +236,88 @@ mod run_tests {
     }
 
     #[test]
-    fn lt_u32_test() {
-        compare_prop_with_stack(&lt_u32(), vec![], vec![bool_lit(true)]);
+    fn cmp_u32_dynamic_test() {
+        let mut rng = thread_rng();
+        for _ in 0..10 {
+            let lhs = rng.next_u32();
+            let rhs = rng.next_u32();
+            compare_prop_with_stack(
+                &lt_u32_dynamic_rast(),
+                vec![u32_lit(lhs), u32_lit(rhs)],
+                vec![bool_lit(lhs < rhs)],
+            );
+
+            compare_prop_with_stack(
+                &lt_u32_dynamic_rast(),
+                vec![u32_lit(lhs), u32_lit(lhs)],
+                vec![bool_lit(false)],
+            );
+
+            compare_prop_with_stack(
+                &gt_u32_dynamic_rast(),
+                vec![u32_lit(lhs), u32_lit(rhs)],
+                vec![bool_lit(lhs > rhs)],
+            );
+
+            compare_prop_with_stack(
+                &gt_u32_dynamic_rast(),
+                vec![u32_lit(lhs), u32_lit(lhs)],
+                vec![bool_lit(false)],
+            );
+        }
+
+        // 0 vs 0
+        compare_prop_with_stack(
+            &lt_u32_dynamic_rast(),
+            vec![u32_lit(0), u32_lit(0)],
+            vec![bool_lit(false)],
+        );
+        compare_prop_with_stack(
+            &gt_u32_dynamic_rast(),
+            vec![u32_lit(0), u32_lit(0)],
+            vec![bool_lit(false)],
+        );
+
+        // 0 vs 1
+        compare_prop_with_stack(
+            &lt_u32_dynamic_rast(),
+            vec![u32_lit(0), u32_lit(1)],
+            vec![bool_lit(true)],
+        );
+        compare_prop_with_stack(
+            &gt_u32_dynamic_rast(),
+            vec![u32_lit(0), u32_lit(1)],
+            vec![bool_lit(false)],
+        );
+
+        // 1 vs 0
+        compare_prop_with_stack(
+            &lt_u32_dynamic_rast(),
+            vec![u32_lit(1), u32_lit(0)],
+            vec![bool_lit(false)],
+        );
+        compare_prop_with_stack(
+            &gt_u32_dynamic_rast(),
+            vec![u32_lit(1), u32_lit(0)],
+            vec![bool_lit(true)],
+        );
+
+        // 1 vs 1
+        compare_prop_with_stack(
+            &lt_u32_dynamic_rast(),
+            vec![u32_lit(1), u32_lit(1)],
+            vec![bool_lit(false)],
+        );
+        compare_prop_with_stack(
+            &gt_u32_dynamic_rast(),
+            vec![u32_lit(1), u32_lit(1)],
+            vec![bool_lit(false)],
+        );
+    }
+
+    #[test]
+    fn lt_u32_static_test() {
+        compare_prop_with_stack(&lt_u32_static(), vec![], vec![bool_lit(true)]);
     }
 
     #[test]
@@ -299,7 +397,7 @@ mod compile_and_typecheck_tests {
 
     #[test]
     fn lt_u32_test() {
-        graft_check_compile_prop(&lt_u32());
+        graft_check_compile_prop(&lt_u32_static());
     }
 
     #[test]

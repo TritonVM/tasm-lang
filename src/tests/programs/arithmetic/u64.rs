@@ -62,6 +62,24 @@ pub fn rem_u64_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
+pub fn lt_u64_dynamic_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn lt_u64_dynamic(lhs: u64, rhs: u64) -> bool {
+            return lhs < rhs;
+        }
+    })
+}
+
+#[allow(dead_code)]
+pub fn gt_u64_dynamic_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn gt_u64_dynamic(lhs: u64, rhs: u64) -> bool {
+            return lhs > rhs;
+        }
+    })
+}
+
+#[allow(dead_code)]
 pub fn divmoddi4_u64_rast() -> syn::ItemFn {
     // This code shows how to do u64 div-mod using only u32 div-mod primitives.
     // So the TASM code that this function compiles to can be used for the u64
@@ -365,6 +383,98 @@ mod run_tests {
                 );
             }
         }
+    }
+
+    #[test]
+    fn lt_u64_dynamic_test() {
+        let mut rng = thread_rng();
+        for _ in 0..10 {
+            let lhs = rng.next_u64();
+            let rhs = rng.next_u64();
+            compare_prop_with_stack(
+                &lt_u64_dynamic_rast(),
+                vec![u64_lit(lhs), u64_lit(rhs)],
+                vec![bool_lit(lhs < rhs)],
+            );
+
+            compare_prop_with_stack(
+                &lt_u64_dynamic_rast(),
+                vec![u64_lit(lhs), u64_lit(lhs)],
+                vec![bool_lit(false)],
+            );
+
+            compare_prop_with_stack(
+                &gt_u64_dynamic_rast(),
+                vec![u64_lit(lhs), u64_lit(rhs)],
+                vec![bool_lit(lhs > rhs)],
+            );
+
+            compare_prop_with_stack(
+                &gt_u64_dynamic_rast(),
+                vec![u64_lit(lhs), u64_lit(lhs)],
+                vec![bool_lit(false)],
+            );
+        }
+
+        // 0 vs 0
+        compare_prop_with_stack(
+            &lt_u64_dynamic_rast(),
+            vec![u64_lit(0), u64_lit(0)],
+            vec![bool_lit(false)],
+        );
+        compare_prop_with_stack(
+            &gt_u64_dynamic_rast(),
+            vec![u64_lit(0), u64_lit(0)],
+            vec![bool_lit(false)],
+        );
+
+        // 0 vs 1
+        compare_prop_with_stack(
+            &lt_u64_dynamic_rast(),
+            vec![u64_lit(0), u64_lit(1)],
+            vec![bool_lit(true)],
+        );
+        compare_prop_with_stack(
+            &gt_u64_dynamic_rast(),
+            vec![u64_lit(0), u64_lit(1)],
+            vec![bool_lit(false)],
+        );
+
+        // 1 vs 0
+        compare_prop_with_stack(
+            &lt_u64_dynamic_rast(),
+            vec![u64_lit(1), u64_lit(0)],
+            vec![bool_lit(false)],
+        );
+        compare_prop_with_stack(
+            &gt_u64_dynamic_rast(),
+            vec![u64_lit(1), u64_lit(0)],
+            vec![bool_lit(true)],
+        );
+
+        // 1 vs 1
+        compare_prop_with_stack(
+            &lt_u64_dynamic_rast(),
+            vec![u64_lit(1), u64_lit(1)],
+            vec![bool_lit(false)],
+        );
+        compare_prop_with_stack(
+            &gt_u64_dynamic_rast(),
+            vec![u64_lit(1), u64_lit(1)],
+            vec![bool_lit(false)],
+        );
+
+        // 1^32 vs 1
+        compare_prop_with_stack(
+            &lt_u64_dynamic_rast(),
+            vec![u64_lit(1u64 << 32), u64_lit(1)],
+            vec![bool_lit(false)],
+        );
+        compare_prop_with_stack(
+            &gt_u64_dynamic_rast(),
+            vec![u64_lit(1u64 << 32), u64_lit(1)],
+            vec![bool_lit(true)],
+        );
     }
 
     #[test]
