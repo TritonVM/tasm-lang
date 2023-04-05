@@ -1,8 +1,28 @@
 use tasm_lib::snippet::Snippet;
+use triton_opcodes::{instruction::LabelledInstruction, shortcuts::call};
 
 use crate::{ast, tasm_code_generator::CompilerState};
 
 const VECTOR_LIB_INDICATOR: &str = "Vec::";
+
+/// Import the required snippet and return the code to call it
+pub fn call_method(
+    method_name: &str,
+    receiver_type: &ast::DataType,
+    state: &mut CompilerState,
+) -> Vec<LabelledInstruction> {
+    let type_param: ast::DataType = if let ast::DataType::List(type_param) = receiver_type {
+        *type_param.to_owned()
+    } else {
+        panic!("Cannot call vector method without type param. Got receiver_type: {receiver_type}")
+    };
+    let snippet = name_to_tasm_lib_snippet(method_name, &Some(type_param))
+        .unwrap_or_else(|| panic!("Unknown function name {method_name}"));
+    let entrypoint = snippet.entrypoint();
+    state.import_snippet(snippet);
+
+    vec![call(entrypoint)]
+}
 
 /// Map list-function or method name to the TASM lib snippet type
 fn name_to_tasm_lib_snippet(

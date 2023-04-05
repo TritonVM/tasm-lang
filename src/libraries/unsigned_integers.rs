@@ -1,6 +1,46 @@
 use tasm_lib::snippet::Snippet;
+use triton_opcodes::instruction::LabelledInstruction;
+use triton_opcodes::instruction::{AnInstruction::*, LabelledInstruction::*};
+use triton_opcodes::shortcuts::*;
 
 use crate::{ast, tasm_code_generator::CompilerState};
+
+use super::CompiledFunction;
+
+fn get_count_ones_u32_method() -> CompiledFunction {
+    let fn_signature = ast::FnSignature {
+        name: "count_ones".to_owned(),
+        args: vec![ast::FnArg {
+            name: "value".to_owned(),
+            data_type: ast::DataType::U32,
+            mutable: false,
+        }],
+        output: ast::DataType::U32,
+    };
+
+    CompiledFunction {
+        signature: fn_signature,
+        body: vec![Instruction(PopCount)],
+    }
+}
+
+/// Import the required snippet and return the code to call it
+pub fn call_method(
+    method_name: &str,
+    receiver_type: &ast::DataType,
+    state: &mut CompilerState,
+) -> Vec<LabelledInstruction> {
+    if method_name == "count_ones" && ast::DataType::U32 == *receiver_type {
+        return get_count_ones_u32_method().body;
+    }
+
+    let snippet = name_to_tasm_lib_snippet(method_name, receiver_type)
+        .unwrap_or_else(|| panic!("Unknown function name {method_name}"));
+    let entrypoint = snippet.entrypoint();
+    state.import_snippet(snippet);
+
+    vec![call(entrypoint)]
+}
 
 /// Map list-function or method name to the TASM lib snippet type
 fn name_to_tasm_lib_snippet(
@@ -41,10 +81,11 @@ pub fn get_method_name(name: &str) -> Option<&str> {
 
 pub fn import_tasm_snippet(
     vector_fn_name: &str,
-    receiver_type: &ast::DataType,
+    receiver_type: &Option<ast::DataType>,
     state: &mut CompilerState,
 ) -> String {
-    let snippet = name_to_tasm_lib_snippet(vector_fn_name, receiver_type)
+    let receiver_type = receiver_type.clone().unwrap();
+    let snippet = name_to_tasm_lib_snippet(vector_fn_name, &receiver_type)
         .unwrap_or_else(|| panic!("Unknown function name {vector_fn_name}"));
     let entrypoint = snippet.entrypoint();
     state.import_snippet(snippet);
@@ -56,6 +97,10 @@ pub fn function_name_to_signature(
     fn_name: &str,
     receiver_type: &ast::DataType,
 ) -> ast::FnSignature {
+    if fn_name == "count_ones" && *receiver_type == ast::DataType::U32 {
+        return get_count_ones_u32_method().signature;
+    }
+
     let snippet = name_to_tasm_lib_snippet(fn_name, receiver_type)
         .unwrap_or_else(|| panic!("Unknown function name {fn_name}"));
 

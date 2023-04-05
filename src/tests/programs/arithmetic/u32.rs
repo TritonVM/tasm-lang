@@ -74,7 +74,7 @@ pub fn mul_u32_rast() -> syn::ItemFn {
 #[allow(dead_code)]
 pub fn rem_u32_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
-        fn rem_u64(rhs: u32, lhs: u32) -> u32 {
+        fn rem_u32(rhs: u32, lhs: u32) -> u32 {
             return rhs % lhs;
         }
     })
@@ -83,7 +83,7 @@ pub fn rem_u32_rast() -> syn::ItemFn {
 #[allow(dead_code)]
 pub fn div_u32_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
-        fn rem_u64(rhs: u32, lhs: u32) -> u32 {
+        fn rem_u32(rhs: u32, lhs: u32) -> u32 {
             return rhs / lhs;
         }
     })
@@ -186,6 +186,15 @@ pub fn leading_zeros_u32_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn leading_zeros_u32(value: u32) -> u32 {
             return value.leading_zeros();
+        }
+    })
+}
+
+#[allow(dead_code)]
+pub fn count_ones_u32_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn count_ones_u32(value: u32) -> u32 {
+            return value.count_ones();
         }
     })
 }
@@ -410,6 +419,41 @@ mod run_tests {
             vec![u32_lit(0)],
         ));
         multiple_compare_prop_with_stack(&leading_zeros_u32_rast(), test_cases);
+    }
+
+    #[test]
+    fn count_ones_u32_test() {
+        let values: Vec<u32> = random_elements(40);
+        let mut test_cases = values
+            .iter()
+            .map(|value| {
+                InputOutputTestCase::new(vec![u32_lit(*value)], vec![u32_lit(value.count_ones())])
+            })
+            .collect_vec();
+        test_cases.push(InputOutputTestCase::new(vec![u32_lit(0)], vec![u32_lit(0)]));
+        test_cases.push(InputOutputTestCase::new(
+            vec![u32_lit(u32::MAX)],
+            vec![u32_lit(32)],
+        ));
+        test_cases.push(InputOutputTestCase::new(
+            vec![u32_lit(u32::MAX - 1)],
+            vec![u32_lit(31)],
+        ));
+        test_cases.push(InputOutputTestCase::new(
+            vec![u32_lit((1u32 << 31) - 1)],
+            vec![u32_lit(31)],
+        ));
+        for j in 0..32 {
+            test_cases.push(InputOutputTestCase::new(
+                vec![u32_lit((u32::MAX) << j)],
+                vec![u32_lit(32 - j)],
+            ));
+            test_cases.push(InputOutputTestCase::new(
+                vec![u32_lit((u32::MAX) >> j)],
+                vec![u32_lit(32 - j)],
+            ));
+        }
+        multiple_compare_prop_with_stack(&count_ones_u32_rast(), test_cases);
     }
 }
 

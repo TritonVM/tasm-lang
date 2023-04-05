@@ -910,7 +910,7 @@ fn compile_fn_call(
 
     // If function is from unsigned_lib, import it
     if let Some(snippet_name) = unsigned_integers::get_function_name(&name) {
-        name = vector::import_tasm_snippet(snippet_name, &type_parameter, state);
+        name = unsigned_integers::import_tasm_snippet(snippet_name, &type_parameter, state);
     }
 
     for _ in 0..args.len() {
@@ -927,9 +927,8 @@ fn compile_method_call(
     method_call: &ast::MethodCall<types::Typing>,
     state: &mut CompilerState,
 ) -> Vec<LabelledInstruction> {
-    let mut name = method_call.method_name.clone();
+    let name = method_call.method_name.clone();
     let receiver_type = method_call.args[0].get_type();
-    let type_parameter = receiver_type.type_parameter();
 
     // Compile arguments, including receiver, left-to-right
     let (_args_idents, args_code): (Vec<ValueIdentifier>, Vec<Vec<LabelledInstruction>>) =
@@ -943,24 +942,33 @@ fn compile_method_call(
             })
             .unzip();
 
-    // If method is from vector-lib, ...
-    if let Some(snippet_name) = vector::get_method_name(&name) {
-        name = vector::import_tasm_snippet(snippet_name, &type_parameter, state);
+    let mut code = args_code.concat();
+
+    if let Some(vector_fn_name) = vector::get_method_name(&name) {
+        // If method is from vector-lib, ...
+        code.append(&mut vector::call_method(
+            vector_fn_name,
+            &receiver_type,
+            state,
+        ));
+    } else if let Some(unsigned_fn_name) = unsigned_integers::get_method_name(&name) {
+        // If method is from unsigned-lib, ...
+        code.append(&mut unsigned_integers::call_method(
+            unsigned_fn_name,
+            &receiver_type,
+            state,
+        ));
+    } else {
+        panic!("Unknown method: {name}");
     }
 
-    // If method is from unsigned-integer-lib, ...
-    if let Some(snippet_name) = unsigned_integers::get_method_name(&name) {
-        name = unsigned_integers::import_tasm_snippet(snippet_name, &receiver_type, state);
-    }
-
+    // Update vstack to reflect that all input arguments, including receiver
+    // were consumed.
     for _ in 0..method_call.args.len() {
         state.vstack.pop();
     }
 
-    let mut fn_call_code = args_code;
-    fn_call_code.push(vec![call(name.to_string())]);
-
-    fn_call_code.concat()
+    code
 }
 
 fn compile_expr(

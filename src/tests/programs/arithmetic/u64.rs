@@ -89,6 +89,15 @@ pub fn leading_zeros_u64_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
+pub fn count_ones_u64_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn count_ones_u64(value: u64) -> u32 {
+            return value.count_ones();
+        }
+    })
+}
+
+#[allow(dead_code)]
 pub fn divmoddi4_u64_rast() -> syn::ItemFn {
     // This code shows how to do u64 div-mod using only u32 div-mod primitives.
     // So the TASM code that this function compiles to can be used for the u64
@@ -557,6 +566,37 @@ mod run_tests {
             vec![u32_lit(31)],
         ));
         multiple_compare_prop_with_stack(&leading_zeros_u64_rast(), test_cases);
+    }
+
+    #[test]
+    fn count_ones_u64_test() {
+        let values: Vec<u64> = random_elements(40);
+        let mut test_cases = values
+            .iter()
+            .map(|value| {
+                InputOutputTestCase::new(vec![u64_lit(*value)], vec![u32_lit(value.count_ones())])
+            })
+            .collect_vec();
+        test_cases.push(InputOutputTestCase::new(vec![u64_lit(0)], vec![u32_lit(0)]));
+        test_cases.push(InputOutputTestCase::new(
+            vec![u64_lit(u64::MAX)],
+            vec![u32_lit(64)],
+        ));
+        test_cases.push(InputOutputTestCase::new(
+            vec![u64_lit(u64::MAX - 1)],
+            vec![u32_lit(63)],
+        ));
+        test_cases.push(InputOutputTestCase::new(
+            vec![u64_lit((1u64 << 63) - 1)],
+            vec![u32_lit(63)],
+        ));
+        for j in 0..33 {
+            test_cases.push(InputOutputTestCase::new(
+                vec![u64_lit((u32::MAX as u64) << j)],
+                vec![u32_lit(32)],
+            ));
+        }
+        multiple_compare_prop_with_stack(&count_ones_u64_rast(), test_cases);
     }
 
     #[test]
