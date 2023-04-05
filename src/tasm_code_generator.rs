@@ -1970,8 +1970,8 @@ fn compile_eq_code(
             eq(),    // _ (b_1 == a_1) b_0 a_0 (b_2 == a_2)
             swap(2), // _ (b_1 == a_1) (b_2 == a_2) a_0 b_0
             eq(),    // _ (b_1 == a_1) (b_2 == a_2) (a_0 == b_0)
-            mul(),   // _ (b_1 == a_1) (b_2 == a_2)·(a_0 == b_0)
-            mul(),   // _ (b_1 == a_1)·(b_2 == a_2)·(a_0 == b_0)
+            mul(),   // _ (b_1 == a_1) ((b_2 == a_2)·(a_0 == b_0))
+            mul(),   // _ ((b_1 == a_1)·(b_2 == a_2)·(a_0 == b_0))
         ],
         Digest => {
             let eq_digest = state.import_snippet(Box::new(hashing::eq_digest::EqDigest));

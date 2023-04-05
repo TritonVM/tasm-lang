@@ -69,6 +69,15 @@ pub fn div_xfe_rast() -> syn::ItemFn {
     })
 }
 
+#[allow(dead_code)]
+pub fn eq_xfe_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn eq_xfe(lhs: XFieldElement, rhs: XFieldElement) -> (bool, bool) {
+            return (lhs == rhs, lhs != rhs);
+        }
+    })
+}
+
 #[cfg(test)]
 mod compile_and_typecheck_tests {
     use crate::tests::shared_test::graft_check_compile_prop;
@@ -88,7 +97,11 @@ mod compile_and_typecheck_tests {
 
 #[cfg(test)]
 mod run_tests {
-    use twenty_first::shared_math::{other::random_elements, x_field_element::XFieldElement};
+    use num::{One, Zero};
+    use twenty_first::shared_math::{
+        other::random_elements,
+        x_field_element::{XFieldElement, EXTENSION_DEGREE},
+    };
 
     use super::*;
     use crate::tests::shared_test::*;
@@ -205,6 +218,76 @@ mod run_tests {
                 11258517663240461652u64.into(),
                 15927246224920701489u64.into(),
             ]))],
+        );
+    }
+
+    #[test]
+    fn eq_xfe_test() {
+        let test_iterations = 1;
+        let lhs: Vec<XFieldElement> = random_elements(test_iterations);
+        let rhs: Vec<XFieldElement> = random_elements(test_iterations);
+        for i in 0..test_iterations {
+            let expected = vec![bool_lit(lhs == rhs), bool_lit(lhs != rhs)];
+            compare_prop_with_stack(
+                &eq_xfe_rast(),
+                vec![xfe_lit(lhs[i]), xfe_lit(rhs[i])],
+                expected,
+            );
+
+            compare_prop_with_stack(
+                &eq_xfe_rast(),
+                vec![xfe_lit(lhs[i]), xfe_lit(lhs[i])],
+                vec![bool_lit(true), bool_lit(false)],
+            );
+
+            // Verify that all coefficients in the XFE are tested
+            for j in 0..EXTENSION_DEGREE {
+                let mut new_lhs = lhs[i];
+                new_lhs.increment(j);
+                compare_prop_with_stack(
+                    &eq_xfe_rast(),
+                    vec![xfe_lit(new_lhs), xfe_lit(lhs[i])],
+                    vec![bool_lit(false), bool_lit(true)],
+                );
+                compare_prop_with_stack(
+                    &eq_xfe_rast(),
+                    vec![xfe_lit(lhs[i]), xfe_lit(new_lhs)],
+                    vec![bool_lit(false), bool_lit(true)],
+                );
+            }
+        }
+
+        compare_prop_with_stack(
+            &eq_xfe_rast(),
+            vec![
+                xfe_lit(XFieldElement::zero()),
+                xfe_lit(XFieldElement::zero()),
+            ],
+            vec![bool_lit(true), bool_lit(false)],
+        );
+
+        compare_prop_with_stack(
+            &eq_xfe_rast(),
+            vec![xfe_lit(XFieldElement::one()), xfe_lit(XFieldElement::one())],
+            vec![bool_lit(true), bool_lit(false)],
+        );
+
+        compare_prop_with_stack(
+            &eq_xfe_rast(),
+            vec![
+                xfe_lit(XFieldElement::zero()),
+                xfe_lit(XFieldElement::one()),
+            ],
+            vec![bool_lit(false), bool_lit(true)],
+        );
+
+        compare_prop_with_stack(
+            &eq_xfe_rast(),
+            vec![
+                xfe_lit(XFieldElement::one()),
+                xfe_lit(XFieldElement::zero()),
+            ],
+            vec![bool_lit(false), bool_lit(true)],
         );
     }
 }
