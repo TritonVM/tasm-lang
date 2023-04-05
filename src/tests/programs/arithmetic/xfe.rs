@@ -42,6 +42,16 @@ pub fn add_xfe_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
+pub fn sub_xfe_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn sub_xfe(lhs: XFieldElement, rhs: XFieldElement) -> XFieldElement {
+            let c: XFieldElement = lhs - rhs;
+            return c;
+        }
+    })
+}
+
+#[allow(dead_code)]
 pub fn mul_xfe_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn mul_xfe(lhs: XFieldElement, rhs: XFieldElement) ->  XFieldElement {
@@ -140,6 +150,23 @@ mod run_tests {
                 (u32::MAX as u64 + 12).into(),
             ]))],
         );
+    }
+
+    #[test]
+    fn sub_xfe_test() {
+        // TODO: Increase test iterations when we can compare multiple test cases without
+        // compiling multiply times
+        let test_iterations = 1;
+        let lhs: Vec<XFieldElement> = random_elements(test_iterations);
+        let rhs: Vec<XFieldElement> = random_elements(test_iterations);
+        for i in 0..test_iterations {
+            let expected = xfe_lit(lhs[i] - rhs[i]);
+            compare_prop_with_stack(
+                &sub_xfe_rast(),
+                vec![xfe_lit(lhs[i]), xfe_lit(rhs[i])],
+                vec![expected],
+            );
+        }
     }
 
     #[test]

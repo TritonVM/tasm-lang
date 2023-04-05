@@ -1670,19 +1670,12 @@ fn compile_expr(
                         }
                         ast::DataType::XFE => {
                             vec![
-                                // flip the x operands
-                                swap(3),
-                                swap(1),
-                                swap(4),
-                                swap(1),
-                                swap(3),
-                                swap(5),
                                 // multiply top element with -1
                                 push(neg_1),
                                 xbmul(),
                                 // Perform (lhs - rhs)
                                 xxadd(),
-                                // Get rid of the rhs, only leaving the result
+                                // Get rid of the lhs, only leaving the result
                                 swap(3),
                                 pop(),
                                 swap(3),
