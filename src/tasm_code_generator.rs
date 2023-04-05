@@ -1662,8 +1662,6 @@ fn compile_expr(
                     let (_rhs_expr_addr, rhs_expr_code) =
                         compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
 
-                    let neg_1 = BFieldElement::P - 1;
-
                     let sub_code: Vec<LabelledInstruction> = match result_type {
                         ast::DataType::U32 => {
                             // As standard, we use safe arithmetic that crashes on overflow
@@ -1685,12 +1683,12 @@ fn compile_expr(
                             ]
                         }
                         ast::DataType::BFE => {
-                            vec![swap(1), push(neg_1), mul(), add()]
+                            vec![push(NEG_1), mul(), add()]
                         }
                         ast::DataType::XFE => {
                             vec![
                                 // multiply top element with -1
-                                push(neg_1),
+                                push(NEG_1),
                                 xbmul(),
                                 // Perform (lhs - rhs)
                                 xxadd(),
