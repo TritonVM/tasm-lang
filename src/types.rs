@@ -61,6 +61,7 @@ impl<T: GetType> GetType for ast::Expr<T> {
             ast::Expr::Binop(_, _, _, t) => t.get_type(),
             ast::Expr::If(if_expr) => if_expr.get_type(),
             ast::Expr::Cast(_expr, t) => t.to_owned(),
+            ast::Expr::Unary(_unaryop, inner_expr, _) => inner_expr.get_type(),
         }
     }
 }
@@ -603,6 +604,22 @@ fn derive_annotate_expr_type(
             method_signature.output
         }
 
+        ast::Expr::Unary(unaryop, inner_expr, unaryop_type) => {
+            use ast::UnaryOp::*;
+            match unaryop {
+                Neg => {
+                    let inner_expr_type = derive_annotate_expr_type(inner_expr, hint, state);
+
+                    assert!(
+                        is_negatable_type(&inner_expr_type),
+                        "Cannot negate type '{inner_expr_type}'",
+                    );
+                    *unaryop_type = Typing::KnownType(inner_expr_type.clone());
+                    inner_expr_type
+                }
+            }
+        }
+
         ast::Expr::Binop(lhs_expr, binop, rhs_expr, binop_type) => {
             use ast::BinOp::*;
             match binop {
@@ -881,6 +898,12 @@ pub fn is_index_type(data_type: &ast::DataType) -> bool {
 pub fn is_arithmetic_type(data_type: &ast::DataType) -> bool {
     use ast::DataType::*;
     matches!(data_type, U32 | U64 | BFE | XFE)
+}
+
+/// A type from which expressions such as `-value` can be formed
+pub fn is_negatable_type(data_type: &ast::DataType) -> bool {
+    use ast::DataType::*;
+    matches!(data_type, BFE | XFE)
 }
 
 /// A type that is implemented in terms of `U32` values.

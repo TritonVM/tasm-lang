@@ -122,6 +122,11 @@ pub enum BinOp {
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub enum UnaryOp {
+    Neg,
+}
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum Expr<T> {
     Lit(ExprLit<T>),
     Var(Identifier<T>),
@@ -129,6 +134,7 @@ pub enum Expr<T> {
     FnCall(FnCall<T>),
     MethodCall(MethodCall<T>),
     Binop(Box<Expr<T>>, BinOp, Box<Expr<T>>, T),
+    Unary(UnaryOp, Box<Expr<T>>, T),
     If(ExprIf<T>),
     Cast(Box<Expr<T>>, DataType),
     // Index(Box<Expr<T>>, Box<Expr<T>>), // a_expr[i_expr]    (a + 5)[3]
@@ -148,6 +154,7 @@ impl<T> Display for Expr<T> {
             Expr::Binop(_, binop, _, _) => format!("binop_{binop:?}"),
             Expr::If(_) => "if_else".to_owned(),
             Expr::Cast(_, dt) => format!("cast_{dt}"),
+            Expr::Unary(unaryop, _, _) => format!("unaryop_{unaryop:?}"),
         };
 
         write!(f, "{str}")

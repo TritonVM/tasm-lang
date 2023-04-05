@@ -52,6 +52,15 @@ pub fn sub_xfe_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
+pub fn negate_xfe_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn negate_xfe(value: XFieldElement) -> XFieldElement {
+            return -value;
+        }
+    })
+}
+
+#[allow(dead_code)]
 pub fn mul_xfe_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn mul_xfe(lhs: XFieldElement, rhs: XFieldElement) ->  XFieldElement {
@@ -99,6 +108,7 @@ mod compile_and_typecheck_tests {
 mod run_tests {
     use num::{One, Zero};
     use twenty_first::shared_math::{
+        b_field_element::BFieldElement,
         other::random_elements,
         x_field_element::{XFieldElement, EXTENSION_DEGREE},
     };
@@ -178,6 +188,19 @@ mod run_tests {
                 &sub_xfe_rast(),
                 vec![xfe_lit(lhs[i]), xfe_lit(rhs[i])],
                 vec![expected],
+            );
+        }
+    }
+
+    #[test]
+    fn negate_xfe_test() {
+        let test_iterations = 1;
+        let values: Vec<XFieldElement> = random_elements(test_iterations);
+        for value in values {
+            compare_prop_with_stack(
+                &negate_xfe_rast(),
+                vec![xfe_lit(value)],
+                vec![xfe_lit(-value)],
             );
         }
     }

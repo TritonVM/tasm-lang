@@ -23,6 +23,25 @@ fn add_bfe_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
+pub fn sub_bfe_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn sub_bfe(lhs: BFieldElement, rhs: BFieldElement) -> BFieldElement {
+            let c: BFieldElement = lhs - rhs;
+            return c;
+        }
+    })
+}
+
+#[allow(dead_code)]
+pub fn negate_bfe_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn negate_bfe(value: BFieldElement) -> BFieldElement {
+            return -value;
+        }
+    })
+}
+
+#[allow(dead_code)]
 fn mul_bfe_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn add_bfe(lhs: BFieldElement, rhs: BFieldElement) -> BFieldElement {
@@ -129,7 +148,7 @@ mod compile_and_typecheck_tests {
 
 #[cfg(test)]
 mod run_tests {
-    use twenty_first::shared_math::b_field_element::BFieldElement;
+    use twenty_first::shared_math::{b_field_element::BFieldElement, other::random_elements};
 
     use super::*;
     use crate::tests::shared_test::*;
@@ -150,6 +169,36 @@ mod run_tests {
             vec![bfe_lit(1000u64.into()), bfe_lit(BFieldElement::MAX.into())],
             vec![bfe_lit(999u64.into())],
         );
+    }
+
+    #[test]
+    fn sub_bfe_test() {
+        // TODO: Increase test iterations when we can compare multiple test cases without
+        // compiling multiply times
+        let test_iterations = 1;
+        let lhs: Vec<BFieldElement> = random_elements(test_iterations);
+        let rhs: Vec<BFieldElement> = random_elements(test_iterations);
+        for i in 0..test_iterations {
+            let expected = bfe_lit(lhs[i] - rhs[i]);
+            compare_prop_with_stack(
+                &sub_bfe_rast(),
+                vec![bfe_lit(lhs[i]), bfe_lit(rhs[i])],
+                vec![expected],
+            );
+        }
+    }
+
+    #[test]
+    fn negate_bfe_test() {
+        let test_iterations = 1;
+        let values: Vec<BFieldElement> = random_elements(test_iterations);
+        for value in values {
+            compare_prop_with_stack(
+                &negate_bfe_rast(),
+                vec![bfe_lit(value)],
+                vec![bfe_lit(-value)],
+            );
+        }
     }
 
     #[test]

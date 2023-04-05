@@ -21,6 +21,8 @@ use crate::{ast, types};
 type VStack = Stack<(ValueIdentifier, (ast::DataType, Option<u32>))>;
 type VarAddr = HashMap<String, ValueIdentifier>;
 
+const NEG_1: u64 = BFieldElement::P - 1;
+
 impl VStack {
     /// Returns (stack_position, data_type, maybe_memory_location) where `stack_position` is the top of
     /// the value on the stack, i.e. the most shallow part of the value. Top of stack has index 0.
@@ -1153,6 +1155,23 @@ fn compile_expr(
         ast::Expr::FnCall(fn_call) => compile_fn_call(fn_call, state),
 
         ast::Expr::MethodCall(method_call) => compile_method_call(method_call, state),
+
+        ast::Expr::Unary(unaryop, inner_expr, _known_type) => {
+            let inner_type = inner_expr.get_type();
+            let (_inner_expr_addr, inner_expr_code) =
+                compile_expr(inner_expr, "_binop_lhs", &inner_type, state);
+            let code = match unaryop {
+                ast::UnaryOp::Neg => match inner_type {
+                    ast::DataType::BFE => vec![push(NEG_1), mul()],
+                    ast::DataType::XFE => vec![push(NEG_1), xbmul()],
+                    _ => panic!("Unsupported negation of type {inner_type}"),
+                },
+            };
+
+            state.vstack.pop();
+
+            vec![inner_expr_code, code].concat()
+        }
 
         ast::Expr::Binop(lhs_expr, binop, rhs_expr, _known_type) => {
             let lhs_type = lhs_expr.get_type();
