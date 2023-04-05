@@ -1543,6 +1543,12 @@ fn compile_expr(
                             vec![lhs_expr_code, rhs_expr_code, vec![call(fn_name)]].concat()
                         }
                         BFE => vec![lhs_expr_code, rhs_expr_code, vec![mul()]].concat(),
+                        XFE => vec![
+                            lhs_expr_code,
+                            rhs_expr_code,
+                            vec![xxmul(), swap(3), pop(), swap(3), pop(), swap(3), pop()],
+                        ]
+                        .concat(),
                         _ => panic!("Unsupported MUL for type {lhs_type}"),
                     }
                 }

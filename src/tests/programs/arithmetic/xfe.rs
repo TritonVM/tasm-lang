@@ -42,6 +42,15 @@ pub fn add_xfe_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
+pub fn mul_xfe_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn mul_xfe(lhs: XFieldElement, rhs: XFieldElement) ->  XFieldElement {
+            return lhs * rhs;
+        }
+    })
+}
+
+#[allow(dead_code)]
 pub fn div_xfe_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn div_xfe(numerator: XFieldElement, denominator: XFieldElement) ->  XFieldElement {
@@ -69,7 +78,7 @@ mod compile_and_typecheck_tests {
 
 #[cfg(test)]
 mod run_tests {
-    use twenty_first::shared_math::x_field_element::XFieldElement;
+    use twenty_first::shared_math::{other::random_elements, x_field_element::XFieldElement};
 
     use super::*;
     use crate::tests::shared_test::*;
@@ -131,6 +140,21 @@ mod run_tests {
                 (u32::MAX as u64 + 12).into(),
             ]))],
         );
+    }
+
+    #[test]
+    fn mul_xfe_test() {
+        let test_iterations = 5;
+        let lhs: Vec<XFieldElement> = random_elements(test_iterations);
+        let rhs: Vec<XFieldElement> = random_elements(test_iterations);
+        for i in 0..test_iterations {
+            let expected = xfe_lit(lhs[i] * rhs[i]);
+            compare_prop_with_stack(
+                &mul_xfe_rast(),
+                vec![xfe_lit(lhs[i]), xfe_lit(rhs[i])],
+                vec![expected],
+            );
+        }
     }
 
     #[test]
