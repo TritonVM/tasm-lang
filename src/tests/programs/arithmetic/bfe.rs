@@ -175,7 +175,7 @@ mod run_tests {
     fn sub_bfe_test() {
         // TODO: Increase test iterations when we can compare multiple test cases without
         // compiling multiply times
-        let test_iterations = 1;
+        let test_iterations = 2;
         let lhs: Vec<BFieldElement> = random_elements(test_iterations);
         let rhs: Vec<BFieldElement> = random_elements(test_iterations);
         for i in 0..test_iterations {
@@ -190,7 +190,7 @@ mod run_tests {
 
     #[test]
     fn negate_bfe_test() {
-        let test_iterations = 1;
+        let test_iterations = 2;
         let values: Vec<BFieldElement> = random_elements(test_iterations);
         for value in values {
             compare_prop_with_stack(
