@@ -17,7 +17,7 @@ pub fn graft_function(
 
     let args = args.iter().map(graft_expr).collect_vec();
 
-    let ret = if args.len() == 1 && matches!(args[0], ast::Expr::Lit(_)) {
+    if args.len() == 1 && matches!(args[0], ast::Expr::Lit(_)) {
         if let ast::Expr::Lit(ast::ExprLit::U64(value)) = args[0] {
             Some(ast::Expr::Lit(ast::ExprLit::BFE(BFieldElement::new(value))))
         } else if let ast::Expr::Lit(ast::ExprLit::GenericNum(value, _)) = args[0] {
@@ -27,9 +27,7 @@ pub fn graft_function(
         }
     } else {
         panic!("Unknown initialization expression for BFE");
-    };
-
-    ret
+    }
 }
 
 /// Return stripped function name iff grafting should be handled by
@@ -45,5 +43,5 @@ pub fn get_graft_function_name(name: &str) -> Option<&str> {
         return None;
     }
 
-    return Some(stripped_name);
+    Some(stripped_name)
 }

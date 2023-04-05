@@ -3,6 +3,35 @@ use syn::parse_quote;
 use crate::graft::item_fn;
 
 #[allow(dead_code)]
+fn instantiate_xfe_with_literal_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn instantiate_cfe() -> (XFieldElement, XFieldElement, XFieldElement, XFieldElement) {
+            let one: XFieldElement = XFieldElement::new([
+                BFieldElement::new(1),
+                BFieldElement::new(0),
+                BFieldElement::new(0),
+            ]);
+            let x: XFieldElement = XFieldElement::new([
+                BFieldElement::new(0),
+                BFieldElement::new(1),
+                BFieldElement::new(0),
+            ]);
+            let x_squared: XFieldElement = XFieldElement::new([
+                BFieldElement::new(0),
+                BFieldElement::new(0),
+                BFieldElement::new(1),
+            ]);
+            let big_numbers: XFieldElement = XFieldElement::new([
+                BFieldElement::new(12345678901234567890u64),
+                BFieldElement::new(12345678901234567892u64),
+                BFieldElement::new(12345678901234567894u64),
+            ]);
+            return (one, x, x_squared, big_numbers);
+        }
+    })
+}
+
+#[allow(dead_code)]
 pub fn add_xfe_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn add_xfe(lhs: XFieldElement, rhs: XFieldElement) -> XFieldElement {
@@ -28,6 +57,11 @@ mod compile_and_typecheck_tests {
     use super::*;
 
     #[test]
+    fn instantiate_xfe_with_literal_test() {
+        graft_check_compile_prop(&instantiate_xfe_with_literal_rast());
+    }
+
+    #[test]
     fn add_xfe_test() {
         graft_check_compile_prop(&add_xfe_rast());
     }
@@ -39,6 +73,24 @@ mod run_tests {
 
     use super::*;
     use crate::tests::shared_test::*;
+
+    #[test]
+    fn instantiate_xfe_with_literal_test() {
+        compare_prop_with_stack(
+            &instantiate_xfe_with_literal_rast(),
+            vec![],
+            vec![
+                xfe_lit(XFieldElement::new([1u64.into(), 0u64.into(), 0u64.into()])),
+                xfe_lit(XFieldElement::new([0u64.into(), 1u64.into(), 0u64.into()])),
+                xfe_lit(XFieldElement::new([0u64.into(), 0u64.into(), 1u64.into()])),
+                xfe_lit(XFieldElement::new([
+                    12345678901234567890u64.into(),
+                    12345678901234567892u64.into(),
+                    12345678901234567894u64.into(),
+                ])),
+            ],
+        );
+    }
 
     #[test]
     fn add_xfe_run_test() {
