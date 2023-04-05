@@ -1,9 +1,9 @@
 use itertools::Itertools;
 use syn::parse_quote;
-use twenty_first::shared_math::b_field_element::BFieldElement;
 
 use crate::ast;
 use crate::ast::AssertStmt;
+use crate::libraries::{bfe, xfe};
 use crate::types;
 
 type Annotation = types::Typing;
@@ -95,7 +95,7 @@ fn pat_to_name(pat: &syn::Pat) -> String {
     }
 }
 
-fn path_to_ident(path: &syn::Path) -> String {
+pub fn path_to_ident(path: &syn::Path) -> String {
     // We just join identifiers with `::` to get the full function name / identifier name
     let identifiers: Vec<String> = path.segments.iter().map(|x| x.ident.to_string()).collect();
     identifiers.join("::")
@@ -163,7 +163,7 @@ fn graft_return_type(rust_return_type: &syn::ReturnType) -> ast::DataType {
 }
 
 /// Return type argument found in path
-fn path_to_type_parameter(path: &syn::Path) -> Option<ast::DataType> {
+pub fn path_to_type_parameter(path: &syn::Path) -> Option<ast::DataType> {
     let mut type_parameter: Option<ast::DataType> = None;
     for segment in path.segments.iter() {
         match &segment.arguments {
@@ -191,32 +191,43 @@ fn path_to_type_parameter(path: &syn::Path) -> Option<ast::DataType> {
     type_parameter
 }
 
-fn graft_call_exp(expr_call: &syn::ExprCall) -> ast::Expr<Annotation> {
-    let (name, type_parameter) = match expr_call.func.as_ref() {
+fn graft_call_exp(
+    syn::ExprCall {
+        attrs: _,
+        func,
+        paren_token: _,
+        args,
+    }: &syn::ExprCall,
+) -> ast::Expr<Annotation> {
+    // fn graft_call_exp(expr_call: &syn::ExprCall) -> ast::Expr<Annotation> {
+    let (name, type_parameter) = match func.as_ref() {
         syn::Expr::Path(path) => (
             path_to_ident(&path.path),
             path_to_type_parameter(&path.path),
         ),
         other => panic!("unsupported: {other:?}"),
     };
-    let args = expr_call.args.iter().map(graft_expr).collect_vec();
+
+    // Check if grafting should be handled by a library
+    if let Some(bfe_fn_name) = bfe::get_graft_function_name(&name) {
+        return bfe::graft_function(bfe_fn_name, args).unwrap();
+    }
+
+    if let Some(xfe_fn_name) = xfe::get_graft_function_name(&name) {
+        return xfe::graft_function(xfe_fn_name, args).unwrap();
+    }
+
+    // Grafting was not handled by library. Treat function call as a regular
+    // function that is hopefully in scope
+    let args = args.iter().map(graft_expr).collect_vec();
     let annot = Default::default();
 
-    // Special case for consturcting BFEs and XFEs from literals.
-    if name == "BFieldElement::new" && args.len() == 1 && matches!(args[0], ast::Expr::Lit(_)) {
-        if let ast::Expr::Lit(ast::ExprLit::U64(value)) = args[0] {
-            ast::Expr::Lit(ast::ExprLit::BFE(BFieldElement::new(value)))
-        } else {
-            panic!("Can only instantiate BFE with u64-literal. Please use casting for conversion to `BFieldElement`");
-        }
-    } else {
-        ast::Expr::FnCall(ast::FnCall {
-            name,
-            args,
-            annot,
-            type_parameter,
-        })
-    }
+    ast::Expr::FnCall(ast::FnCall {
+        name,
+        args,
+        annot,
+        type_parameter,
+    })
 }
 
 /// Return identifier if expression is a Path/identifier

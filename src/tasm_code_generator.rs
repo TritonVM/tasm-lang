@@ -992,7 +992,17 @@ fn compile_expr(
                 code
             }
 
-            ast::ExprLit::XFE(_) => todo!(),
+            ast::ExprLit::XFE(value) => {
+                // In the VM, the 1st element of the array is expected to be on top of the stack.
+                // So the elements must be pushed onto the stack in reversed order.
+                let code = vec![
+                    Instruction(Push(value.coefficients[2])),
+                    Instruction(Push(value.coefficients[1])),
+                    Instruction(Push(value.coefficients[0])),
+                ];
+
+                code
+            }
             ast::ExprLit::Digest(_) => todo!(),
             ast::ExprLit::GenericNum(n, _) => {
                 panic!("Type of number literal {n} not resolved")
