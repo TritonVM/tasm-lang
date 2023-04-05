@@ -80,6 +80,15 @@ pub fn gt_u64_dynamic_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
+pub fn leading_zeros_u64_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn leading_zeros_u64(value: u64) -> u32 {
+            return value.leading_zeros();
+        }
+    })
+}
+
+#[allow(dead_code)]
 pub fn divmoddi4_u64_rast() -> syn::ItemFn {
     // This code shows how to do u64 div-mod using only u32 div-mod primitives.
     // So the TASM code that this function compiles to can be used for the u64
@@ -173,7 +182,9 @@ pub fn rightshift_u64_rast() -> syn::ItemFn {
 
 #[cfg(test)]
 mod run_tests {
+    use itertools::Itertools;
     use rand::{thread_rng, Rng, RngCore};
+    use twenty_first::shared_math::other::random_elements;
 
     use super::*;
     use crate::tests::shared_test::*;
@@ -475,6 +486,77 @@ mod run_tests {
             vec![u64_lit(1u64 << 32), u64_lit(1)],
             vec![bool_lit(true)],
         );
+    }
+
+    #[test]
+    fn leading_zeros_u64_test() {
+        let values: Vec<u64> = random_elements(40);
+        let mut test_cases = values
+            .iter()
+            .map(|value| {
+                InputOutputTestCase::new(
+                    vec![u64_lit(*value)],
+                    vec![u32_lit(value.leading_zeros())],
+                )
+            })
+            .collect_vec();
+        test_cases.push(InputOutputTestCase::new(
+            vec![u64_lit(0)],
+            vec![u32_lit(64)],
+        ));
+        test_cases.push(InputOutputTestCase::new(
+            vec![u64_lit(1)],
+            vec![u32_lit(63)],
+        ));
+        test_cases.push(InputOutputTestCase::new(
+            vec![u64_lit(2)],
+            vec![u32_lit(62)],
+        ));
+        test_cases.push(InputOutputTestCase::new(
+            vec![u64_lit(3)],
+            vec![u32_lit(62)],
+        ));
+        test_cases.push(InputOutputTestCase::new(
+            vec![u64_lit(u64::MAX)],
+            vec![u32_lit(0)],
+        ));
+        test_cases.push(InputOutputTestCase::new(
+            vec![u64_lit(1u64 << 63)],
+            vec![u32_lit(0)],
+        ));
+        test_cases.push(InputOutputTestCase::new(
+            vec![u64_lit((1u64 << 63) + 1)],
+            vec![u32_lit(0)],
+        ));
+        test_cases.push(InputOutputTestCase::new(
+            vec![u64_lit((1u64 << 63) - 1)],
+            vec![u32_lit(1)],
+        ));
+        test_cases.push(InputOutputTestCase::new(
+            vec![u64_lit(1u64 << 31)],
+            vec![u32_lit(32)],
+        ));
+        test_cases.push(InputOutputTestCase::new(
+            vec![u64_lit((1u64 << 31) + 1)],
+            vec![u32_lit(32)],
+        ));
+        test_cases.push(InputOutputTestCase::new(
+            vec![u64_lit((1u64 << 31) - 1)],
+            vec![u32_lit(33)],
+        ));
+        test_cases.push(InputOutputTestCase::new(
+            vec![u64_lit((1u64 << 32) - 1)],
+            vec![u32_lit(32)],
+        ));
+        test_cases.push(InputOutputTestCase::new(
+            vec![u64_lit(1u64 << 32)],
+            vec![u32_lit(31)],
+        ));
+        test_cases.push(InputOutputTestCase::new(
+            vec![u64_lit((1u64 << 32) + 1)],
+            vec![u32_lit(31)],
+        ));
+        multiple_compare_prop_with_stack(&leading_zeros_u64_rast(), test_cases);
     }
 
     #[test]

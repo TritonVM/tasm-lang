@@ -31,6 +31,21 @@ impl InputOutputTestCase {
     }
 }
 
+/// Get the execution code and the name of the compiled function
+fn compile_for_run_test(item_fn: &syn::ItemFn) -> (String, String) {
+    let function_name = item_fn.sig.ident.to_string();
+    let code = graft_check_compile_prop(item_fn);
+    let code = format!(
+        "
+        call {function_name}
+        halt
+
+        {code}"
+    );
+
+    (code, function_name)
+}
+
 #[allow(dead_code)]
 pub fn graft_check_compile_prop(item_fn: &syn::ItemFn) -> String {
     // parse test
@@ -49,25 +64,14 @@ pub fn graft_check_compile_prop(item_fn: &syn::ItemFn) -> String {
 }
 
 #[allow(dead_code)]
-/// Execute a function with provided input and initial memory
-pub fn execute_with_stack_memory_and_ins(
-    item_fn: &syn::ItemFn,
+fn execute_compiled_with_stack_memory_and_ins(
+    code: &str,
     input_args: Vec<ast::ExprLit<Typing>>,
     memory: &mut HashMap<BFieldElement, BFieldElement>,
     std_in: Vec<BFieldElement>,
     secret_in: Vec<BFieldElement>,
     expected_stack_diff: isize,
 ) -> tasm_lib::ExecutionResult {
-    let function_name = item_fn.sig.ident.to_string();
-    let code = graft_check_compile_prop(item_fn);
-    let code = format!(
-        "
-        call {function_name}
-        halt
-
-        {code}"
-    );
-
     let mut stack = get_init_tvm_stack();
     for input_arg in input_args {
         let input_arg_seq = input_arg.to_sequence();
@@ -78,7 +82,7 @@ pub fn execute_with_stack_memory_and_ins(
     // memory allocator, as this is the compiler's responsibility.
     println!("executing code:\n {code}");
     tasm_lib::execute(
-        &code,
+        code,
         &mut stack,
         expected_stack_diff,
         std_in,
@@ -89,8 +93,33 @@ pub fn execute_with_stack_memory_and_ins(
 }
 
 #[allow(dead_code)]
-pub fn compare_prop_with_stack_and_memory_and_ins(
+/// Execute a function with provided input and initial memory
+pub fn execute_with_stack_memory_and_ins(
     item_fn: &syn::ItemFn,
+    input_args: Vec<ast::ExprLit<Typing>>,
+    memory: &mut HashMap<BFieldElement, BFieldElement>,
+    std_in: Vec<BFieldElement>,
+    secret_in: Vec<BFieldElement>,
+    expected_stack_diff: isize,
+) -> tasm_lib::ExecutionResult {
+    // Compile
+    let (code, _fn_name) = compile_for_run_test(item_fn);
+
+    // Run and compare
+    execute_compiled_with_stack_memory_and_ins(
+        &code,
+        input_args,
+        memory,
+        std_in,
+        secret_in,
+        expected_stack_diff,
+    )
+}
+
+#[allow(clippy::too_many_arguments)]
+pub fn compare_compiled_prop_with_stack_and_memory_and_ins(
+    code: &str,
+    function_name: &str,
     input_args: Vec<ast::ExprLit<Typing>>,
     expected_outputs: Vec<ast::ExprLit<Typing>>,
     init_memory: HashMap<BFieldElement, BFieldElement>,
@@ -98,7 +127,6 @@ pub fn compare_prop_with_stack_and_memory_and_ins(
     std_in: Vec<BFieldElement>,
     secret_in: Vec<BFieldElement>,
 ) {
-    let function_name = item_fn.sig.ident.to_string();
     let mut expected_final_stack = get_init_tvm_stack();
     for output in expected_outputs {
         let output_seq = output.to_sequence();
@@ -111,8 +139,8 @@ pub fn compare_prop_with_stack_and_memory_and_ins(
             .map(|arg| arg.get_type().size_of())
             .sum::<usize>();
     let mut actual_memory = init_memory;
-    let exec_result = execute_with_stack_memory_and_ins(
-        item_fn,
+    let exec_result = execute_compiled_with_stack_memory_and_ins(
+        code,
         input_args,
         &mut actual_memory,
         std_in,
@@ -175,6 +203,29 @@ pub fn compare_prop_with_stack_and_memory_and_ins(
 }
 
 #[allow(dead_code)]
+pub fn compare_prop_with_stack_and_memory_and_ins(
+    item_fn: &syn::ItemFn,
+    input_args: Vec<ast::ExprLit<Typing>>,
+    expected_outputs: Vec<ast::ExprLit<Typing>>,
+    init_memory: HashMap<BFieldElement, BFieldElement>,
+    expected_final_memory: Option<HashMap<BFieldElement, BFieldElement>>,
+    std_in: Vec<BFieldElement>,
+    secret_in: Vec<BFieldElement>,
+) {
+    let (code, function_name) = compile_for_run_test(item_fn);
+    compare_compiled_prop_with_stack_and_memory_and_ins(
+        &code,
+        &function_name,
+        input_args,
+        expected_outputs,
+        init_memory,
+        expected_final_memory,
+        std_in,
+        secret_in,
+    )
+}
+
+#[allow(dead_code)]
 pub fn compare_prop_with_stack_and_memory(
     item_fn: &syn::ItemFn,
     input_args: Vec<ast::ExprLit<Typing>>,
@@ -206,6 +257,28 @@ pub fn compare_prop_with_stack(
         HashMap::default(),
         None,
     )
+}
+
+#[allow(dead_code)]
+pub fn multiple_compare_prop_with_stack(
+    item_fn: &syn::ItemFn,
+    test_cases: Vec<InputOutputTestCase>,
+) {
+    // Compile
+    let (code, fn_name) = compile_for_run_test(item_fn);
+
+    for test_case in test_cases {
+        compare_compiled_prop_with_stack_and_memory_and_ins(
+            &code,
+            &fn_name,
+            test_case.input_args,
+            test_case.expected_outputs,
+            HashMap::default(),
+            None,
+            vec![],
+            vec![],
+        )
+    }
 }
 
 /// Panic if expected list does not match list on specific memory address
