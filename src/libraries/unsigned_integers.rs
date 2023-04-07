@@ -99,7 +99,7 @@ impl Library for UnsignedIntegersLib {
     }
 
     fn get_graft_function_name(&self, _full_name: &str) -> Option<String> {
-        panic!("unsigned_integers lib cannot graft");
+        None
     }
 
     fn graft_function(
@@ -107,7 +107,7 @@ impl Library for UnsignedIntegersLib {
         _fn_name: &str,
         _args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
     ) -> Option<ast::Expr<super::Annotation>> {
-        None
+        panic!("unsigned_integers lib cannot graft");
     }
 }
 

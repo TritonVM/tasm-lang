@@ -3,12 +3,12 @@ use std::collections::HashMap;
 use twenty_first::shared_math::b_field_element::BFieldElement;
 use twenty_first::shared_math::x_field_element::XFieldElement;
 
-use crate::ast;
 use crate::libraries::tasm::TasmLibrary;
 use crate::libraries::unsigned_integers::UnsignedIntegersLib;
 use crate::libraries::vector::VectorLib;
 use crate::libraries::Library;
 use crate::tasm_code_generator::STACK_SIZE;
+use crate::{ast, libraries};
 
 #[derive(Debug, Default, Clone, Hash, PartialEq, Eq)]
 pub enum Typing {
@@ -420,13 +420,10 @@ fn get_fn_signature(
     type_parameter: &Option<ast::DataType>,
 ) -> ast::FnSignature {
     // all functions from `tasm-lib` are in scope
-    if let Some(snippet_name) = TasmLibrary.get_function_name(name) {
-        return TasmLibrary.function_name_to_signature(&snippet_name, type_parameter.to_owned());
-    }
-
-    // Functions for lists are in scope
-    if let Some(function_name) = VectorLib.get_function_name(name) {
-        return VectorLib.function_name_to_signature(&function_name, type_parameter.to_owned());
+    for lib in libraries::all_libraries() {
+        if let Some(fn_name) = lib.get_function_name(name) {
+            return lib.function_name_to_signature(&fn_name, type_parameter.to_owned());
+        }
     }
 
     state

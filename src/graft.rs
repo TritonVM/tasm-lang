@@ -1,12 +1,9 @@
 use itertools::Itertools;
 use syn::parse_quote;
 
-use crate::ast;
 use crate::ast::AssertStmt;
-use crate::libraries::bfe::BfeLibrary;
-use crate::libraries::xfe::XfeLibrary;
-use crate::libraries::Library;
 use crate::types;
+use crate::{ast, libraries};
 
 type Annotation = types::Typing;
 
@@ -202,7 +199,7 @@ fn graft_call_exp(
     }: &syn::ExprCall,
 ) -> ast::Expr<Annotation> {
     // fn graft_call_exp(expr_call: &syn::ExprCall) -> ast::Expr<Annotation> {
-    let (name, type_parameter) = match func.as_ref() {
+    let (full_name, type_parameter) = match func.as_ref() {
         syn::Expr::Path(path) => (
             path_to_ident(&path.path),
             path_to_type_parameter(&path.path),
@@ -211,21 +208,19 @@ fn graft_call_exp(
     };
 
     // Check if grafting should be handled by a library
-    if let Some(bfe_fn_name) = BfeLibrary.get_graft_function_name(&name) {
-        return BfeLibrary.graft_function(&bfe_fn_name, args).unwrap();
+    for lib in libraries::all_libraries() {
+        if let Some(fn_name) = lib.get_graft_function_name(&full_name) {
+            return lib.graft_function(&fn_name, args).unwrap();
+        }
     }
 
-    if let Some(xfe_fn_name) = XfeLibrary.get_graft_function_name(&name) {
-        return XfeLibrary.graft_function(&xfe_fn_name, args).unwrap();
-    }
-
-    // Grafting was not handled by library. Treat function call as a regular
+    // Grafting was not handled by a library. Treat function call as a regular
     // function that is hopefully in scope
     let args = args.iter().map(graft_expr).collect_vec();
     let annot = Default::default();
 
     ast::Expr::FnCall(ast::FnCall {
-        name,
+        name: full_name,
         args,
         annot,
         type_parameter,

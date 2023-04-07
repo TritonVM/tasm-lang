@@ -12,9 +12,6 @@ use twenty_first::amount::u32s::U32s;
 use twenty_first::shared_math::b_field_element::BFieldElement;
 use twenty_first::util_types::algebraic_hasher::Hashable;
 
-use crate::libraries::tasm::TasmLibrary;
-use crate::libraries::unsigned_integers::UnsignedIntegersLib;
-use crate::libraries::vector::VectorLib;
 use crate::libraries::{self, Library};
 use crate::stack::Stack;
 use crate::types::{is_list_type, GetType};
@@ -925,17 +922,19 @@ fn compile_fn_call(
         })
         .unzip();
 
-    let call_fn_code = if let Some(vector_fn_name) = VectorLib.get_function_name(&name) {
-        VectorLib.call_function(&vector_fn_name, type_parameter, state)
-    } else if let Some(unsigned_fn_name) = UnsignedIntegersLib.get_function_name(&name) {
-        UnsignedIntegersLib.call_function(&unsigned_fn_name, type_parameter, state)
-    } else if let Some(snippet_name) = TasmLibrary.get_function_name(&name) {
-        TasmLibrary.call_function(&snippet_name, type_parameter, state)
-    } else {
+    let mut call_fn_code = vec![];
+    for lib in libraries::all_libraries() {
+        if let Some(fn_name) = lib.get_function_name(&name) {
+            call_fn_code.append(&mut lib.call_function(&fn_name, type_parameter, state));
+            break;
+        }
+    }
+
+    if call_fn_code.is_empty() {
         // Function is not a library function, but type checker has guaranteed that it is in
         // scope. So we just call it.
-        vec![call(name)]
-    };
+        call_fn_code.push(call(name));
+    }
 
     for _ in 0..args.len() {
         state.vstack.pop();
@@ -948,7 +947,7 @@ fn compile_method_call(
     method_call: &ast::MethodCall<types::Typing>,
     state: &mut CompilerState,
 ) -> Vec<LabelledInstruction> {
-    let name = method_call.method_name.clone();
+    let method_name = method_call.method_name.clone();
     let receiver_type = method_call.args[0].get_type();
 
     // Compile arguments, including receiver, left-to-right
@@ -958,24 +957,20 @@ fn compile_method_call(
             .iter()
             .enumerate()
             .map(|(arg_pos, arg_expr)| {
-                let context = format!("_{name}_arg_{arg_pos}");
+                let context = format!("_{method_name}_arg_{arg_pos}");
                 compile_expr(arg_expr, &context, &arg_expr.get_type(), state)
             })
             .unzip();
 
-    let mut code = args_code.concat();
-
-    if let Some(vector_fn_name) = VectorLib.get_method_name(&name, &receiver_type) {
-        // If method is from vector-lib, ...
-        code.append(&mut VectorLib.call_method(&vector_fn_name, &receiver_type, state));
-    } else if let Some(unsigned_fn_name) =
-        UnsignedIntegersLib.get_method_name(&name, &receiver_type)
-    {
-        // If method is from unsigned-lib, ...
-        code.append(&mut UnsignedIntegersLib.call_method(&unsigned_fn_name, &receiver_type, state));
-    } else {
-        panic!("Unknown method: {name}");
+    let mut call_code = vec![];
+    for lib in libraries::all_libraries() {
+        if let Some(fn_name) = lib.get_method_name(&method_name, &receiver_type) {
+            call_code.append(&mut lib.call_method(&fn_name, &receiver_type, state));
+            break;
+        }
     }
+
+    assert!(!call_code.is_empty(), "Unknown method: {method_name}");
 
     // Update vstack to reflect that all input arguments, including receiver
     // were consumed.
@@ -983,7 +978,7 @@ fn compile_method_call(
         state.vstack.pop();
     }
 
-    code
+    vec![args_code.concat(), call_code].concat()
 }
 
 fn compile_expr(
