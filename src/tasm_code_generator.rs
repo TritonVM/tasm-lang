@@ -15,7 +15,7 @@ use twenty_first::util_types::algebraic_hasher::Hashable;
 use crate::libraries::tasm::TasmLibrary;
 use crate::libraries::unsigned_integers::UnsignedIntegersLib;
 use crate::libraries::vector::VectorLib;
-use crate::libraries::Library;
+use crate::libraries::{self, Library};
 use crate::stack::Stack;
 use crate::types::{is_list_type, GetType};
 use crate::{ast, types};
@@ -89,7 +89,7 @@ impl VStack {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct CompilerState {
     pub counter: usize,
 
@@ -110,6 +110,22 @@ pub struct CompilerState {
 
     // A list of call sites for ad-hoc branching
     pub subroutines: Vec<Vec<LabelledInstruction>>,
+
+    pub available_libraries: Vec<Box<dyn Library>>,
+}
+
+impl Default for CompilerState {
+    fn default() -> Self {
+        Self {
+            counter: Default::default(),
+            vstack: Default::default(),
+            spill_required: Default::default(),
+            var_addr: Default::default(),
+            snippet_state: Default::default(),
+            subroutines: Default::default(),
+            available_libraries: libraries::all_libraries(),
+        }
+    }
 }
 
 // TODO: Use this value from Triton-VM
@@ -909,12 +925,12 @@ fn compile_fn_call(
         })
         .unzip();
 
-    let call_fn_code = if let Some(vector_fn_name) = VectorLib::get_function_name(&name) {
-        VectorLib::call_function(&vector_fn_name, type_parameter, state)
-    } else if let Some(unsigned_fn_name) = UnsignedIntegersLib::get_function_name(&name) {
-        UnsignedIntegersLib::call_function(&unsigned_fn_name, type_parameter, state)
-    } else if let Some(snippet_name) = TasmLibrary::get_function_name(&name) {
-        TasmLibrary::call_function(&snippet_name, type_parameter, state)
+    let call_fn_code = if let Some(vector_fn_name) = VectorLib.get_function_name(&name) {
+        VectorLib.call_function(&vector_fn_name, type_parameter, state)
+    } else if let Some(unsigned_fn_name) = UnsignedIntegersLib.get_function_name(&name) {
+        UnsignedIntegersLib.call_function(&unsigned_fn_name, type_parameter, state)
+    } else if let Some(snippet_name) = TasmLibrary.get_function_name(&name) {
+        TasmLibrary.call_function(&snippet_name, type_parameter, state)
     } else {
         // Function is not a library function, but type checker has guaranteed that it is in
         // scope. So we just call it.
@@ -949,22 +965,14 @@ fn compile_method_call(
 
     let mut code = args_code.concat();
 
-    if let Some(vector_fn_name) = VectorLib::get_method_name(&name, &receiver_type) {
+    if let Some(vector_fn_name) = VectorLib.get_method_name(&name, &receiver_type) {
         // If method is from vector-lib, ...
-        code.append(&mut VectorLib::call_method(
-            &vector_fn_name,
-            &receiver_type,
-            state,
-        ));
+        code.append(&mut VectorLib.call_method(&vector_fn_name, &receiver_type, state));
     } else if let Some(unsigned_fn_name) =
-        UnsignedIntegersLib::get_method_name(&name, &receiver_type)
+        UnsignedIntegersLib.get_method_name(&name, &receiver_type)
     {
         // If method is from unsigned-lib, ...
-        code.append(&mut UnsignedIntegersLib::call_method(
-            &unsigned_fn_name,
-            &receiver_type,
-            state,
-        ));
+        code.append(&mut UnsignedIntegersLib.call_method(&unsigned_fn_name, &receiver_type, state));
     } else {
         panic!("Unknown method: {name}");
     }

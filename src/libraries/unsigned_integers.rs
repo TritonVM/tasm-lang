@@ -7,14 +7,15 @@ use crate::{ast, tasm_code_generator::CompilerState};
 
 use super::{CompiledFunction, Library};
 
+#[derive(Clone, Debug)]
 pub struct UnsignedIntegersLib;
 
 impl Library for UnsignedIntegersLib {
-    fn get_function_name(_full_name: &str) -> Option<String> {
+    fn get_function_name(&self, _full_name: &str) -> Option<String> {
         None
     }
 
-    fn get_method_name(method_name: &str, _receiver_type: &ast::DataType) -> Option<String> {
+    fn get_method_name(&self, method_name: &str, _receiver_type: &ast::DataType) -> Option<String> {
         if matches!(method_name, "leading_zeros" | "count_ones") {
             Some(method_name.to_owned())
         } else {
@@ -23,6 +24,7 @@ impl Library for UnsignedIntegersLib {
     }
 
     fn method_name_to_signature(
+        &self,
         method_name: &str,
         receiver_type: &ast::DataType,
     ) -> ast::FnSignature {
@@ -62,6 +64,7 @@ impl Library for UnsignedIntegersLib {
     }
 
     fn function_name_to_signature(
+        &self,
         _fn_name: &str,
         _type_parameter: Option<ast::DataType>,
     ) -> ast::FnSignature {
@@ -69,6 +72,7 @@ impl Library for UnsignedIntegersLib {
     }
 
     fn call_method(
+        &self,
         method_name: &str,
         receiver_type: &ast::DataType,
         state: &mut CompilerState,
@@ -86,6 +90,7 @@ impl Library for UnsignedIntegersLib {
     }
 
     fn call_function(
+        &self,
         _fn_name: &str,
         _type_parameter: Option<ast::DataType>,
         _state: &mut CompilerState,
@@ -93,11 +98,12 @@ impl Library for UnsignedIntegersLib {
         panic!("unsigned_integers lib does not contain any functions");
     }
 
-    fn get_graft_function_name(_full_name: &str) -> Option<String> {
+    fn get_graft_function_name(&self, _full_name: &str) -> Option<String> {
         panic!("unsigned_integers lib cannot graft");
     }
 
     fn graft_function(
+        &self,
         _fn_name: &str,
         _args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
     ) -> Option<ast::Expr<super::Annotation>> {

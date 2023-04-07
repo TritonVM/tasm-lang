@@ -6,21 +6,26 @@ use twenty_first::shared_math::{
 use crate::{ast, graft, libraries::Library};
 
 use super::bfe::BfeLibrary;
-
 const XFIELDELEMENT_LIB_INDICATOR: &str = "XFieldElement::";
 
+#[derive(Clone, Debug)]
 pub struct XfeLibrary;
 
 impl Library for XfeLibrary {
-    fn get_function_name(_full_name: &str) -> Option<String> {
+    fn get_function_name(&self, _full_name: &str) -> Option<String> {
         None
     }
 
-    fn get_method_name(_method_name: &str, _receiver_type: &ast::DataType) -> Option<String> {
+    fn get_method_name(
+        &self,
+        _method_name: &str,
+        _receiver_type: &ast::DataType,
+    ) -> Option<String> {
         None
     }
 
     fn method_name_to_signature(
+        &self,
         _fn_name: &str,
         _receiver_type: &ast::DataType,
     ) -> ast::FnSignature {
@@ -28,6 +33,7 @@ impl Library for XfeLibrary {
     }
 
     fn function_name_to_signature(
+        &self,
         _fn_name: &str,
         _type_parameter: Option<ast::DataType>,
     ) -> ast::FnSignature {
@@ -35,6 +41,7 @@ impl Library for XfeLibrary {
     }
 
     fn call_method(
+        &self,
         _method_name: &str,
         _receiver_type: &ast::DataType,
         _state: &mut crate::tasm_code_generator::CompilerState,
@@ -43,6 +50,7 @@ impl Library for XfeLibrary {
     }
 
     fn call_function(
+        &self,
         _fn_name: &str,
         _type_parameter: Option<ast::DataType>,
         _state: &mut crate::tasm_code_generator::CompilerState,
@@ -50,7 +58,7 @@ impl Library for XfeLibrary {
         panic!("No functions implemented for BFE library");
     }
 
-    fn get_graft_function_name(full_name: &str) -> Option<String> {
+    fn get_graft_function_name(&self, full_name: &str) -> Option<String> {
         if !full_name.starts_with(XFIELDELEMENT_LIB_INDICATOR) {
             return None;
         }
@@ -65,6 +73,7 @@ impl Library for XfeLibrary {
     }
 
     fn graft_function(
+        &self,
         fn_name: &str,
         args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
     ) -> Option<ast::Expr<super::Annotation>> {
@@ -99,9 +108,9 @@ impl Library for XfeLibrary {
                                 other => panic!("unsupported: {other:?}"),
                             };
 
-                            if let Some(bfe_fn_name) = BfeLibrary::get_graft_function_name(&name) {
+                            if let Some(bfe_fn_name) = BfeLibrary.get_graft_function_name(&name) {
                                 initializer_exprs
-                                    .push(BfeLibrary::graft_function(&bfe_fn_name, args).unwrap());
+                                    .push(BfeLibrary.graft_function(&bfe_fn_name, args).unwrap());
                             } else {
                                 panic!();
                             }

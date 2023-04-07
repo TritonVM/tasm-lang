@@ -7,10 +7,11 @@ use super::Library;
 
 const VECTOR_LIB_INDICATOR: &str = "Vec::";
 
+#[derive(Clone, Debug)]
 pub struct VectorLib;
 
 impl Library for VectorLib {
-    fn get_function_name(full_name: &str) -> Option<String> {
+    fn get_function_name(&self, full_name: &str) -> Option<String> {
         if full_name.starts_with(VECTOR_LIB_INDICATOR) {
             let stripped_name = &full_name[VECTOR_LIB_INDICATOR.len()..full_name.len()];
             return Some(stripped_name.to_owned());
@@ -19,7 +20,7 @@ impl Library for VectorLib {
         None
     }
 
-    fn get_method_name(method_name: &str, _receiver_type: &ast::DataType) -> Option<String> {
+    fn get_method_name(&self, method_name: &str, _receiver_type: &ast::DataType) -> Option<String> {
         if matches!(method_name, "push" | "pop" | "len") {
             Some(method_name.to_owned())
         } else {
@@ -27,11 +28,16 @@ impl Library for VectorLib {
         }
     }
 
-    fn method_name_to_signature(fn_name: &str, receiver_type: &ast::DataType) -> ast::FnSignature {
-        Self::function_name_to_signature(fn_name, receiver_type.type_parameter())
+    fn method_name_to_signature(
+        &self,
+        fn_name: &str,
+        receiver_type: &ast::DataType,
+    ) -> ast::FnSignature {
+        self.function_name_to_signature(fn_name, receiver_type.type_parameter())
     }
 
     fn function_name_to_signature(
+        &self,
         fn_name: &str,
         type_parameter: Option<ast::DataType>,
     ) -> ast::FnSignature {
@@ -67,6 +73,7 @@ impl Library for VectorLib {
     }
 
     fn call_method(
+        &self,
         method_name: &str,
         receiver_type: &ast::DataType,
         state: &mut CompilerState,
@@ -87,6 +94,7 @@ impl Library for VectorLib {
     }
 
     fn call_function(
+        &self,
         fn_name: &str,
         type_parameter: Option<ast::DataType>,
         state: &mut CompilerState,
@@ -99,11 +107,12 @@ impl Library for VectorLib {
         vec![call(entrypoint)]
     }
 
-    fn get_graft_function_name(_full_name: &str) -> Option<String> {
+    fn get_graft_function_name(&self, _full_name: &str) -> Option<String> {
         None
     }
 
     fn graft_function(
+        &self,
         _fn_name: &str,
         _args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
     ) -> Option<ast::Expr<super::Annotation>> {

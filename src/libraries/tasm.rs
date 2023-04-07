@@ -7,10 +7,11 @@ use super::Library;
 
 const TASM_LIB_INDICATOR: &str = "tasm::";
 
+#[derive(Clone, Debug)]
 pub struct TasmLibrary;
 
 impl Library for TasmLibrary {
-    fn get_function_name(full_name: &str) -> Option<String> {
+    fn get_function_name(&self, full_name: &str) -> Option<String> {
         if full_name.starts_with(TASM_LIB_INDICATOR) {
             let stripped_name = &full_name[TASM_LIB_INDICATOR.len()..full_name.len()];
             return Some(stripped_name.to_owned());
@@ -20,11 +21,16 @@ impl Library for TasmLibrary {
     }
 
     /// tasm-lib contains no methods, only functions
-    fn get_method_name(_method_name: &str, _receiver_type: &ast::DataType) -> Option<String> {
+    fn get_method_name(
+        &self,
+        _method_name: &str,
+        _receiver_type: &ast::DataType,
+    ) -> Option<String> {
         None
     }
 
     fn method_name_to_signature(
+        &self,
         _fn_name: &str,
         _receiver_type: &ast::DataType,
     ) -> ast::FnSignature {
@@ -32,6 +38,7 @@ impl Library for TasmLibrary {
     }
 
     fn function_name_to_signature(
+        &self,
         fn_name: &str,
         _type_parameter: Option<ast::DataType>,
     ) -> ast::FnSignature {
@@ -66,6 +73,7 @@ impl Library for TasmLibrary {
     }
 
     fn call_method(
+        &self,
         _method_name: &str,
         _receiver_type: &ast::DataType,
         _state: &mut CompilerState,
@@ -74,6 +82,7 @@ impl Library for TasmLibrary {
     }
 
     fn call_function(
+        &self,
         fn_name: &str,
         _type_parameter: Option<ast::DataType>,
         state: &mut CompilerState,
@@ -85,11 +94,12 @@ impl Library for TasmLibrary {
         vec![call(entrypoint)]
     }
 
-    fn get_graft_function_name(_full_name: &str) -> Option<String> {
+    fn get_graft_function_name(&self, _full_name: &str) -> Option<String> {
         None
     }
 
     fn graft_function(
+        &self,
         _fn_name: &str,
         _args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
     ) -> Option<ast::Expr<super::Annotation>> {

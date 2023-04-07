@@ -7,18 +7,24 @@ use super::Library;
 
 const BFIELDELEMENT_LIB_INDICATOR: &str = "BFieldElement::";
 
+#[derive(Clone, Debug)]
 pub struct BfeLibrary;
 
 impl Library for BfeLibrary {
-    fn get_function_name(_full_name: &str) -> Option<String> {
+    fn get_function_name(&self, _full_name: &str) -> Option<String> {
         None
     }
 
-    fn get_method_name(_method_name: &str, _receiver_type: &ast::DataType) -> Option<String> {
+    fn get_method_name(
+        &self,
+        _method_name: &str,
+        _receiver_type: &ast::DataType,
+    ) -> Option<String> {
         None
     }
 
     fn method_name_to_signature(
+        &self,
         _fn_name: &str,
         _receiver_type: &ast::DataType,
     ) -> ast::FnSignature {
@@ -26,6 +32,7 @@ impl Library for BfeLibrary {
     }
 
     fn function_name_to_signature(
+        &self,
         _fn_name: &str,
         _type_parameter: Option<ast::DataType>,
     ) -> ast::FnSignature {
@@ -33,6 +40,7 @@ impl Library for BfeLibrary {
     }
 
     fn call_method(
+        &self,
         _method_name: &str,
         _receiver_type: &ast::DataType,
         _state: &mut crate::tasm_code_generator::CompilerState,
@@ -41,6 +49,7 @@ impl Library for BfeLibrary {
     }
 
     fn call_function(
+        &self,
         _fn_name: &str,
         _type_parameter: Option<ast::DataType>,
         _state: &mut crate::tasm_code_generator::CompilerState,
@@ -48,7 +57,7 @@ impl Library for BfeLibrary {
         panic!("No functions implemented for BFE library");
     }
 
-    fn get_graft_function_name(full_name: &str) -> Option<String> {
+    fn get_graft_function_name(&self, full_name: &str) -> Option<String> {
         if !full_name.starts_with(BFIELDELEMENT_LIB_INDICATOR) {
             return None;
         }
@@ -63,6 +72,7 @@ impl Library for BfeLibrary {
     }
 
     fn graft_function(
+        &self,
         fn_name: &str,
         args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
     ) -> Option<ast::Expr<super::Annotation>> {
