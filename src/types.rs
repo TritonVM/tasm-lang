@@ -4,9 +4,10 @@ use twenty_first::shared_math::b_field_element::BFieldElement;
 use twenty_first::shared_math::x_field_element::XFieldElement;
 
 use crate::ast;
-use crate::libraries::tasm;
-use crate::libraries::unsigned_integers;
-use crate::libraries::vector;
+use crate::libraries::tasm::TasmLibrary;
+use crate::libraries::unsigned_integers::UnsignedIntegersLib;
+use crate::libraries::vector::VectorLib;
+use crate::libraries::Library;
 use crate::tasm_code_generator::STACK_SIZE;
 
 #[derive(Debug, Default, Clone, Hash, PartialEq, Eq)]
@@ -419,13 +420,13 @@ fn get_fn_signature(
     type_parameter: &Option<ast::DataType>,
 ) -> ast::FnSignature {
     // all functions from `tasm-lib` are in scope
-    if let Some(snippet_name) = tasm::get_function_name(name) {
-        return tasm::function_name_to_signature(snippet_name);
+    if let Some(snippet_name) = TasmLibrary::get_function_name(name) {
+        return TasmLibrary::function_name_to_signature(&snippet_name, type_parameter.to_owned());
     }
 
     // Functions for lists are in scope
-    if let Some(function_name) = vector::get_function_name(name) {
-        return vector::function_name_to_signature(function_name, type_parameter);
+    if let Some(function_name) = VectorLib::get_function_name(name) {
+        return VectorLib::function_name_to_signature(&function_name, type_parameter.to_owned());
     }
 
     state
@@ -440,19 +441,19 @@ fn get_method_signature(
     _state: &CheckState,
     receiver_type: ast::DataType,
 ) -> ast::FnSignature {
-    if let Some(snippet_name) = tasm::get_method_name(name) {
-        return tasm::function_name_to_signature(snippet_name);
+    if let Some(snippet_name) = TasmLibrary::get_method_name(name, &receiver_type) {
+        return TasmLibrary::method_name_to_signature(&snippet_name, &receiver_type);
     }
 
     // Functions for lists are in scope
     let type_parameter = receiver_type.type_parameter();
-    if let Some(function_name) = vector::get_method_name(name) {
-        return vector::method_name_to_signature(function_name, &type_parameter);
+    if let Some(function_name) = VectorLib::get_method_name(name, &receiver_type) {
+        return VectorLib::method_name_to_signature(&function_name, &receiver_type);
     }
 
     // Arithmetic for unsigned integers
-    if let Some(function_name) = unsigned_integers::get_method_name(name) {
-        return unsigned_integers::method_name_to_signature(function_name, &receiver_type);
+    if let Some(function_name) = UnsignedIntegersLib::get_method_name(name, &receiver_type) {
+        return UnsignedIntegersLib::method_name_to_signature(&function_name, &receiver_type);
     }
 
     panic!("Don't know what type of value '{name}' returns! Type parameter was: {type_parameter:?}")

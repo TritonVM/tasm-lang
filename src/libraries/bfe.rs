@@ -1,47 +1,87 @@
 use itertools::Itertools;
 use twenty_first::shared_math::b_field_element::BFieldElement;
 
-use crate::{ast, graft::graft_expr, types};
+use crate::{ast, graft::graft_expr};
+
+use super::Library;
 
 const BFIELDELEMENT_LIB_INDICATOR: &str = "BFieldElement::";
 
-type Annotation = types::Typing;
+pub struct BfeLibrary;
 
-pub fn graft_function(
-    name: &str,
-    args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
-) -> Option<ast::Expr<Annotation>> {
-    if name != "new" {
-        return None;
+impl Library for BfeLibrary {
+    fn get_function_name(_full_name: &str) -> Option<String> {
+        None
     }
 
-    let args = args.iter().map(graft_expr).collect_vec();
+    fn get_method_name(_method_name: &str, _receiver_type: &ast::DataType) -> Option<String> {
+        None
+    }
 
-    if args.len() == 1 && matches!(args[0], ast::Expr::Lit(_)) {
-        if let ast::Expr::Lit(ast::ExprLit::U64(value)) = args[0] {
-            Some(ast::Expr::Lit(ast::ExprLit::BFE(BFieldElement::new(value))))
-        } else if let ast::Expr::Lit(ast::ExprLit::GenericNum(value, _)) = args[0] {
-            Some(ast::Expr::Lit(ast::ExprLit::BFE(BFieldElement::new(value))))
-        } else {
-            panic!("Can only instantiate BFE with u64-literal. Please use casting for conversion to `BFieldElement`. Got: {:#?}", args[0]);
+    fn method_name_to_signature(
+        _fn_name: &str,
+        _receiver_type: &ast::DataType,
+    ) -> ast::FnSignature {
+        panic!("No methods implemented for BFE library");
+    }
+
+    fn function_name_to_signature(
+        _fn_name: &str,
+        _type_parameter: Option<ast::DataType>,
+    ) -> ast::FnSignature {
+        panic!("No functions implemented for BFE library");
+    }
+
+    fn call_method(
+        _method_name: &str,
+        _receiver_type: &ast::DataType,
+        _state: &mut crate::tasm_code_generator::CompilerState,
+    ) -> Vec<triton_opcodes::instruction::LabelledInstruction> {
+        panic!("No methods implemented for BFE library");
+    }
+
+    fn call_function(
+        _fn_name: &str,
+        _type_parameter: Option<ast::DataType>,
+        _state: &mut crate::tasm_code_generator::CompilerState,
+    ) -> Vec<triton_opcodes::instruction::LabelledInstruction> {
+        panic!("No functions implemented for BFE library");
+    }
+
+    fn get_graft_function_name(full_name: &str) -> Option<String> {
+        if !full_name.starts_with(BFIELDELEMENT_LIB_INDICATOR) {
+            return None;
         }
-    } else {
-        panic!("Unknown initialization expression for BFE");
-    }
-}
 
-/// Return stripped function name iff grafting should be handled by
-/// this library.
-pub fn get_graft_function_name(name: &str) -> Option<&str> {
-    if !name.starts_with(BFIELDELEMENT_LIB_INDICATOR) {
-        return None;
+        let stripped_name = &full_name[BFIELDELEMENT_LIB_INDICATOR.len()..full_name.len()];
+
+        if stripped_name != "new" {
+            return None;
+        }
+
+        Some(stripped_name.to_owned())
     }
 
-    let stripped_name = &name[BFIELDELEMENT_LIB_INDICATOR.len()..name.len()];
+    fn graft_function(
+        fn_name: &str,
+        args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
+    ) -> Option<ast::Expr<super::Annotation>> {
+        if fn_name != "new" {
+            return None;
+        }
 
-    if stripped_name != "new" {
-        return None;
+        let args = args.iter().map(graft_expr).collect_vec();
+
+        if args.len() == 1 && matches!(args[0], ast::Expr::Lit(_)) {
+            if let ast::Expr::Lit(ast::ExprLit::U64(value)) = args[0] {
+                Some(ast::Expr::Lit(ast::ExprLit::BFE(BFieldElement::new(value))))
+            } else if let ast::Expr::Lit(ast::ExprLit::GenericNum(value, _)) = args[0] {
+                Some(ast::Expr::Lit(ast::ExprLit::BFE(BFieldElement::new(value))))
+            } else {
+                panic!("Can only instantiate BFE with u64-literal. Please use casting for conversion to `BFieldElement`. Got: {:#?}", args[0]);
+            }
+        } else {
+            panic!("Unknown initialization expression for BFE");
+        }
     }
-
-    Some(stripped_name)
 }

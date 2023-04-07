@@ -1,8 +1,8 @@
 use itertools::Itertools;
 use std::collections::{HashMap, HashSet};
 use tasm_lib::dyn_malloc::DynMalloc;
-use tasm_lib::library::Library;
 use tasm_lib::snippet::Snippet;
+use tasm_lib::snippet_state::SnippetState;
 use tasm_lib::{arithmetic, hashing};
 use triton_opcodes::instruction::{AnInstruction::*, LabelledInstruction::*};
 use triton_opcodes::ord_n::Ord16;
@@ -12,7 +12,10 @@ use twenty_first::amount::u32s::U32s;
 use twenty_first::shared_math::b_field_element::BFieldElement;
 use twenty_first::util_types::algebraic_hasher::Hashable;
 
-use crate::libraries::{tasm, unsigned_integers, vector};
+use crate::libraries::tasm::TasmLibrary;
+use crate::libraries::unsigned_integers::UnsignedIntegersLib;
+use crate::libraries::vector::VectorLib;
+use crate::libraries::Library;
 use crate::stack::Stack;
 use crate::types::{is_list_type, GetType};
 use crate::{ast, types};
@@ -103,7 +106,7 @@ pub struct CompilerState {
     pub var_addr: VarAddr,
 
     // A library struct to keep check of which snippets are already in the namespace
-    pub library: Library,
+    pub snippet_state: SnippetState,
 
     // A list of call sites for ad-hoc branching
     pub subroutines: Vec<Vec<LabelledInstruction>>,
@@ -147,7 +150,7 @@ impl CompilerState {
         // memory.
         let spilled = if self.spill_required.contains(&address) {
             let spill_address = self
-                .library
+                .snippet_state
                 .kmalloc(data_type.size_of())
                 .try_into()
                 .unwrap();
@@ -165,7 +168,7 @@ impl CompilerState {
     }
 
     pub fn import_snippet(&mut self, snippet: Box<dyn Snippet>) -> String {
-        self.library.import(snippet)
+        self.snippet_state.import(snippet)
     }
 
     pub fn mark_as_spilled(&mut self, value_identifier: &ValueIdentifier) {
@@ -455,7 +458,11 @@ impl CompilerState {
             // In this case, we have to clear more elements from the stack than we can
             // access with dup15/swap15. Our solution is to store the return value in
             // memory, clear the stack, and read it back from memory.
-            let memory_location: u32 = self.library.kmalloc(top_value_size).try_into().unwrap();
+            let memory_location: u32 = self
+                .snippet_state
+                .kmalloc(top_value_size)
+                .try_into()
+                .unwrap();
             let mut code = copy_top_stack_value_to_memory(memory_location, top_value_size);
             code.append(&mut vec![pop(); height_of_affected_stack]);
             code.append(&mut load_from_memory(memory_location, top_value_size));
@@ -597,8 +604,8 @@ pub fn compile(function: &ast::Fn<types::Typing>) -> Vec<LabelledInstruction> {
     );
 
     // TODO: Use this function once triton-opcodes reaches 0.15.0
-    // let dependencies = state.library.all_imports_as_instruction_lists();
-    let dependencies = state.library.all_imports();
+    // let dependencies = state.snippet_state.all_imports_as_instruction_lists();
+    let dependencies = state.snippet_state.all_imports();
     let dependencies = parse(&dependencies)
         .map(|instructions| to_labelled(&instructions))
         .unwrap_or_else(|_| panic!("Must be able to parse dependencies code:\n{dependencies}"));
@@ -620,7 +627,11 @@ pub fn compile(function: &ast::Fn<types::Typing>) -> Vec<LabelledInstruction> {
     // such that dynamically allocated memory does not overwrite statically allocated memory. The `library`
     // field contains the number of words that were statically allocated.
     let dyn_malloc_init_code = DynMalloc::get_initialization_code_as_instructions(
-        state.library.get_next_free_address().try_into().unwrap(),
+        state
+            .snippet_state
+            .get_next_free_address()
+            .try_into()
+            .unwrap(),
     );
 
     let ret = vec![
@@ -882,7 +893,7 @@ fn compile_fn_call(
     state: &mut CompilerState,
 ) -> Vec<LabelledInstruction> {
     let ast::FnCall {
-        mut name,
+        name,
         args,
         annot: _return_type, // unit for statement-level fn calls
         type_parameter,
@@ -898,29 +909,23 @@ fn compile_fn_call(
         })
         .unzip();
 
-    // If function is from tasm-lib, import it
-    if let Some(snippet_name) = tasm::get_function_name(&name) {
-        name = tasm::import_tasm_snippet(snippet_name, state);
-    }
-
-    // If function is from vector-lib, import it
-    if let Some(snippet_name) = vector::get_function_name(&name) {
-        name = vector::import_tasm_snippet(snippet_name, &type_parameter, state);
-    }
-
-    // If function is from unsigned_lib, import it
-    if let Some(snippet_name) = unsigned_integers::get_function_name(&name) {
-        name = unsigned_integers::import_tasm_snippet(snippet_name, &type_parameter, state);
-    }
+    let call_fn_code = if let Some(vector_fn_name) = VectorLib::get_function_name(&name) {
+        VectorLib::call_function(&vector_fn_name, type_parameter, state)
+    } else if let Some(unsigned_fn_name) = UnsignedIntegersLib::get_function_name(&name) {
+        UnsignedIntegersLib::call_function(&unsigned_fn_name, type_parameter, state)
+    } else if let Some(snippet_name) = TasmLibrary::get_function_name(&name) {
+        TasmLibrary::call_function(&snippet_name, type_parameter, state)
+    } else {
+        // Function is not a library function, but type checker has guaranteed that it is in
+        // scope. So we just call it.
+        vec![call(name)]
+    };
 
     for _ in 0..args.len() {
         state.vstack.pop();
     }
 
-    let mut fn_call_code = args_code;
-    fn_call_code.push(vec![call(name.to_string())]);
-
-    fn_call_code.concat()
+    vec![args_code.concat(), call_fn_code].concat()
 }
 
 fn compile_method_call(
@@ -944,17 +949,19 @@ fn compile_method_call(
 
     let mut code = args_code.concat();
 
-    if let Some(vector_fn_name) = vector::get_method_name(&name) {
+    if let Some(vector_fn_name) = VectorLib::get_method_name(&name, &receiver_type) {
         // If method is from vector-lib, ...
-        code.append(&mut vector::call_method(
-            vector_fn_name,
+        code.append(&mut VectorLib::call_method(
+            &vector_fn_name,
             &receiver_type,
             state,
         ));
-    } else if let Some(unsigned_fn_name) = unsigned_integers::get_method_name(&name) {
+    } else if let Some(unsigned_fn_name) =
+        UnsignedIntegersLib::get_method_name(&name, &receiver_type)
+    {
         // If method is from unsigned-lib, ...
-        code.append(&mut unsigned_integers::call_method(
-            unsigned_fn_name,
+        code.append(&mut UnsignedIntegersLib::call_method(
+            &unsigned_fn_name,
             &receiver_type,
             state,
         ));

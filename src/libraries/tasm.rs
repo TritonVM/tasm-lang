@@ -1,59 +1,98 @@
-use tasm_lib::all_snippets::name_to_snippet;
+use triton_opcodes::shortcuts::call;
 
 use crate::ast::{self, FnSignature};
 use crate::tasm_code_generator::CompilerState;
 
+use super::Library;
+
 const TASM_LIB_INDICATOR: &str = "tasm::";
 
-pub fn get_function_name(name: &str) -> Option<&str> {
-    if name.starts_with(TASM_LIB_INDICATOR) {
-        let stripped_name = &name[TASM_LIB_INDICATOR.len()..name.len()];
-        return Some(stripped_name);
+pub struct TasmLibrary;
+
+impl Library for TasmLibrary {
+    fn get_function_name(full_name: &str) -> Option<String> {
+        if full_name.starts_with(TASM_LIB_INDICATOR) {
+            let stripped_name = &full_name[TASM_LIB_INDICATOR.len()..full_name.len()];
+            return Some(stripped_name.to_owned());
+        }
+
+        None
     }
 
-    None
-}
+    /// tasm-lib contains no methods, only functions
+    fn get_method_name(_method_name: &str, _receiver_type: &ast::DataType) -> Option<String> {
+        None
+    }
 
-/// tasm-lib contains no methods, only functions
-pub fn get_method_name(_name: &str) -> Option<&str> {
-    None
-}
+    fn method_name_to_signature(
+        _fn_name: &str,
+        _receiver_type: &ast::DataType,
+    ) -> ast::FnSignature {
+        panic!("TASM lib only contains functions, no methods")
+    }
 
-pub fn import_tasm_snippet(tasm_fn_name: &str, state: &mut CompilerState) -> String {
-    let snippet = name_to_snippet(tasm_fn_name);
-    let entrypoint = snippet.entrypoint();
-    state.import_snippet(snippet);
+    fn function_name_to_signature(
+        fn_name: &str,
+        _type_parameter: Option<ast::DataType>,
+    ) -> ast::FnSignature {
+        let snippet = tasm_lib::all_snippets::name_to_snippet(fn_name);
 
-    entrypoint
-}
+        let input_types_lib = snippet.input_types();
+        let output_types_lib = snippet.output_types();
+        let name = snippet.entrypoint();
+        let mut args: Vec<ast::FnArg> = vec![];
+        for (i, itl) in input_types_lib.into_iter().enumerate() {
+            let fn_arg = ast::FnArg {
+                name: format!("input_{i}"),
+                data_type: itl.into(),
+                // The tasm snippet input arguments are all considered mutable
+                mutable: true,
+            };
+            args.push(fn_arg);
+        }
 
-pub fn function_name_to_signature(tasm_fn_name: &str) -> ast::FnSignature {
-    let snippet = name_to_snippet(tasm_fn_name);
+        let mut output_types: Vec<ast::DataType> = vec![];
+        for otl in output_types_lib {
+            output_types.push(otl.into());
+        }
 
-    let input_types_lib = snippet.input_types();
-    let output_types_lib = snippet.output_types();
-    let name = snippet.entrypoint();
-    let mut args: Vec<ast::FnArg> = vec![];
-    for (i, itl) in input_types_lib.into_iter().enumerate() {
-        let fn_arg = ast::FnArg {
-            name: format!("input_{i}"),
-            data_type: itl.into(),
-            // The tasm snippet input arguments are all considered mutable
-            mutable: true,
+        let output = match output_types.len() {
+            1 => output_types[0].clone(),
+            0 => ast::DataType::Tuple(vec![]),
+            _ => ast::DataType::Tuple(output_types),
         };
-        args.push(fn_arg);
+
+        FnSignature { name, args, output }
     }
 
-    let mut output_types: Vec<ast::DataType> = vec![];
-    for otl in output_types_lib {
-        output_types.push(otl.into());
+    fn call_method(
+        _method_name: &str,
+        _receiver_type: &ast::DataType,
+        _state: &mut CompilerState,
+    ) -> Vec<triton_opcodes::instruction::LabelledInstruction> {
+        panic!("TASM lib only contains functions, no methods")
     }
 
-    let output = match output_types.len() {
-        1 => output_types[0].clone(),
-        0 => ast::DataType::Tuple(vec![]),
-        _ => ast::DataType::Tuple(output_types),
-    };
+    fn call_function(
+        fn_name: &str,
+        _type_parameter: Option<ast::DataType>,
+        state: &mut CompilerState,
+    ) -> Vec<triton_opcodes::instruction::LabelledInstruction> {
+        let snippet = tasm_lib::all_snippets::name_to_snippet(fn_name);
+        let entrypoint = snippet.entrypoint();
+        state.import_snippet(snippet);
 
-    FnSignature { name, args, output }
+        vec![call(entrypoint)]
+    }
+
+    fn get_graft_function_name(_full_name: &str) -> Option<String> {
+        None
+    }
+
+    fn graft_function(
+        _fn_name: &str,
+        _args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
+    ) -> Option<ast::Expr<super::Annotation>> {
+        panic!("No grafting is handled by TASM lib")
+    }
 }

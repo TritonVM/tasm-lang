@@ -3,7 +3,9 @@ use syn::parse_quote;
 
 use crate::ast;
 use crate::ast::AssertStmt;
-use crate::libraries::{bfe, xfe};
+use crate::libraries::bfe::BfeLibrary;
+use crate::libraries::xfe::XfeLibrary;
+use crate::libraries::Library;
 use crate::types;
 
 type Annotation = types::Typing;
@@ -209,12 +211,12 @@ fn graft_call_exp(
     };
 
     // Check if grafting should be handled by a library
-    if let Some(bfe_fn_name) = bfe::get_graft_function_name(&name) {
-        return bfe::graft_function(bfe_fn_name, args).unwrap();
+    if let Some(bfe_fn_name) = BfeLibrary::get_graft_function_name(&name) {
+        return BfeLibrary::graft_function(&bfe_fn_name, args).unwrap();
     }
 
-    if let Some(xfe_fn_name) = xfe::get_graft_function_name(&name) {
-        return xfe::graft_function(xfe_fn_name, args).unwrap();
+    if let Some(xfe_fn_name) = XfeLibrary::get_graft_function_name(&name) {
+        return XfeLibrary::graft_function(&xfe_fn_name, args).unwrap();
     }
 
     // Grafting was not handled by library. Treat function call as a regular

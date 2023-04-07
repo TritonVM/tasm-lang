@@ -5,7 +5,105 @@ use triton_opcodes::shortcuts::*;
 
 use crate::{ast, tasm_code_generator::CompilerState};
 
-use super::CompiledFunction;
+use super::{CompiledFunction, Library};
+
+pub struct UnsignedIntegersLib;
+
+impl Library for UnsignedIntegersLib {
+    fn get_function_name(_full_name: &str) -> Option<String> {
+        None
+    }
+
+    fn get_method_name(method_name: &str, _receiver_type: &ast::DataType) -> Option<String> {
+        if matches!(method_name, "leading_zeros" | "count_ones") {
+            Some(method_name.to_owned())
+        } else {
+            None
+        }
+    }
+
+    fn method_name_to_signature(
+        method_name: &str,
+        receiver_type: &ast::DataType,
+    ) -> ast::FnSignature {
+        if method_name == "count_ones" && *receiver_type == ast::DataType::U32 {
+            return get_count_ones_u32_method().signature;
+        }
+
+        let snippet = name_to_tasm_lib_snippet(method_name, receiver_type)
+            .unwrap_or_else(|| panic!("Unknown function name {method_name}"));
+
+        let input_types_lib = snippet.input_types();
+        let output_types_lib = snippet.output_types();
+        let name = snippet.entrypoint();
+        let mut args: Vec<ast::FnArg> = vec![];
+        for (i, itl) in input_types_lib.into_iter().enumerate() {
+            let fn_arg = ast::FnArg {
+                name: format!("input_{i}"),
+                data_type: itl.into(),
+                // The tasm snippet input arguments are all considered mutable
+                mutable: true,
+            };
+            args.push(fn_arg);
+        }
+
+        let mut output_types: Vec<ast::DataType> = vec![];
+        for otl in output_types_lib {
+            output_types.push(otl.into());
+        }
+
+        let output = match output_types.len() {
+            1 => output_types[0].clone(),
+            0 => ast::DataType::Tuple(vec![]),
+            _ => ast::DataType::Tuple(output_types),
+        };
+
+        ast::FnSignature { name, args, output }
+    }
+
+    fn function_name_to_signature(
+        _fn_name: &str,
+        _type_parameter: Option<ast::DataType>,
+    ) -> ast::FnSignature {
+        panic!("unsigned_integers lib does not contain any functions");
+    }
+
+    fn call_method(
+        method_name: &str,
+        receiver_type: &ast::DataType,
+        state: &mut CompilerState,
+    ) -> Vec<LabelledInstruction> {
+        if method_name == "count_ones" && ast::DataType::U32 == *receiver_type {
+            return get_count_ones_u32_method().body;
+        }
+
+        let snippet = name_to_tasm_lib_snippet(method_name, receiver_type)
+            .unwrap_or_else(|| panic!("Unknown function name {method_name}"));
+        let entrypoint = snippet.entrypoint();
+        state.import_snippet(snippet);
+
+        vec![call(entrypoint)]
+    }
+
+    fn call_function(
+        _fn_name: &str,
+        _type_parameter: Option<ast::DataType>,
+        _state: &mut CompilerState,
+    ) -> Vec<LabelledInstruction> {
+        panic!("unsigned_integers lib does not contain any functions");
+    }
+
+    fn get_graft_function_name(_full_name: &str) -> Option<String> {
+        panic!("unsigned_integers lib cannot graft");
+    }
+
+    fn graft_function(
+        _fn_name: &str,
+        _args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
+    ) -> Option<ast::Expr<super::Annotation>> {
+        None
+    }
+}
 
 fn get_count_ones_u32_method() -> CompiledFunction {
     let fn_signature = ast::FnSignature {
@@ -22,24 +120,6 @@ fn get_count_ones_u32_method() -> CompiledFunction {
         signature: fn_signature,
         body: vec![Instruction(PopCount)],
     }
-}
-
-/// Import the required snippet and return the code to call it
-pub fn call_method(
-    method_name: &str,
-    receiver_type: &ast::DataType,
-    state: &mut CompilerState,
-) -> Vec<LabelledInstruction> {
-    if method_name == "count_ones" && ast::DataType::U32 == *receiver_type {
-        return get_count_ones_u32_method().body;
-    }
-
-    let snippet = name_to_tasm_lib_snippet(method_name, receiver_type)
-        .unwrap_or_else(|| panic!("Unknown function name {method_name}"));
-    let entrypoint = snippet.entrypoint();
-    state.import_snippet(snippet);
-
-    vec![call(entrypoint)]
 }
 
 /// Map list-function or method name to the TASM lib snippet type
@@ -65,73 +145,4 @@ fn name_to_tasm_lib_snippet(
         },
         _ => None,
     }
-}
-
-pub fn get_function_name(_name: &str) -> Option<&str> {
-    None
-}
-
-pub fn get_method_name(name: &str) -> Option<&str> {
-    if matches!(name, "leading_zeros" | "count_ones") {
-        Some(name)
-    } else {
-        None
-    }
-}
-
-pub fn import_tasm_snippet(
-    vector_fn_name: &str,
-    receiver_type: &Option<ast::DataType>,
-    state: &mut CompilerState,
-) -> String {
-    let receiver_type = receiver_type.clone().unwrap();
-    let snippet = name_to_tasm_lib_snippet(vector_fn_name, &receiver_type)
-        .unwrap_or_else(|| panic!("Unknown function name {vector_fn_name}"));
-    let entrypoint = snippet.entrypoint();
-    state.import_snippet(snippet);
-
-    entrypoint
-}
-
-pub fn function_name_to_signature(
-    fn_name: &str,
-    receiver_type: &ast::DataType,
-) -> ast::FnSignature {
-    if fn_name == "count_ones" && *receiver_type == ast::DataType::U32 {
-        return get_count_ones_u32_method().signature;
-    }
-
-    let snippet = name_to_tasm_lib_snippet(fn_name, receiver_type)
-        .unwrap_or_else(|| panic!("Unknown function name {fn_name}"));
-
-    let input_types_lib = snippet.input_types();
-    let output_types_lib = snippet.output_types();
-    let name = snippet.entrypoint();
-    let mut args: Vec<ast::FnArg> = vec![];
-    for (i, itl) in input_types_lib.into_iter().enumerate() {
-        let fn_arg = ast::FnArg {
-            name: format!("input_{i}"),
-            data_type: itl.into(),
-            // The tasm snippet input arguments are all considered mutable
-            mutable: true,
-        };
-        args.push(fn_arg);
-    }
-
-    let mut output_types: Vec<ast::DataType> = vec![];
-    for otl in output_types_lib {
-        output_types.push(otl.into());
-    }
-
-    let output = match output_types.len() {
-        1 => output_types[0].clone(),
-        0 => ast::DataType::Tuple(vec![]),
-        _ => ast::DataType::Tuple(output_types),
-    };
-
-    ast::FnSignature { name, args, output }
-}
-
-pub fn method_name_to_signature(fn_name: &str, receiver_type: &ast::DataType) -> ast::FnSignature {
-    function_name_to_signature(fn_name, receiver_type)
 }
