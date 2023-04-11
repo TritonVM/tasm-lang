@@ -308,7 +308,7 @@ mod run_tests {
             ],
         );
         multiple_compare_prop_with_stack(
-            &lift_and_return_rast(),
+            &lift_assign_and_return_rast(),
             vec![
                 InputOutputTestCase::new(
                     vec![bfe_lit(forty_two_as_bfe)],

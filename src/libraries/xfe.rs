@@ -1,3 +1,4 @@
+use triton_opcodes::shortcuts::*;
 use twenty_first::shared_math::{
     b_field_element::BFieldElement,
     x_field_element::{XFieldElement, EXTENSION_DEGREE},
@@ -5,7 +6,7 @@ use twenty_first::shared_math::{
 
 use crate::{ast, graft, libraries::Library};
 
-use super::bfe::BfeLibrary;
+use super::{bfe::BfeLibrary, CompiledFunction};
 const XFIELDELEMENT_LIB_INDICATOR: &str = "XFieldElement::";
 
 #[derive(Clone, Debug)]
@@ -16,20 +17,24 @@ impl Library for XfeLibrary {
         None
     }
 
-    fn get_method_name(
-        &self,
-        _method_name: &str,
-        _receiver_type: &ast::DataType,
-    ) -> Option<String> {
-        None
+    fn get_method_name(&self, method_name: &str, _receiver_type: &ast::DataType) -> Option<String> {
+        if method_name == "unlift" {
+            Some(method_name.to_owned())
+        } else {
+            None
+        }
     }
 
     fn method_name_to_signature(
         &self,
-        _fn_name: &str,
+        method_name: &str,
         _receiver_type: &ast::DataType,
     ) -> ast::FnSignature {
-        panic!("No methods implemented for BFE library");
+        if method_name == "unlift" {
+            get_xfe_unlift_method().signature
+        } else {
+            panic!("Unknown method in XFE library. Got: {method_name}");
+        }
     }
 
     fn function_name_to_signature(
@@ -37,16 +42,20 @@ impl Library for XfeLibrary {
         _fn_name: &str,
         _type_parameter: Option<ast::DataType>,
     ) -> ast::FnSignature {
-        panic!("No functions implemented for BFE library");
+        panic!("No functions implemented for XFE library");
     }
 
     fn call_method(
         &self,
-        _method_name: &str,
+        method_name: &str,
         _receiver_type: &ast::DataType,
         _state: &mut crate::tasm_code_generator::CompilerState,
     ) -> Vec<triton_opcodes::instruction::LabelledInstruction> {
-        panic!("No methods implemented for BFE library");
+        if method_name == "unlift" {
+            get_xfe_unlift_method().body
+        } else {
+            panic!("Unknown method in XFE library. Got: {method_name}");
+        }
     }
 
     fn call_function(
@@ -55,7 +64,7 @@ impl Library for XfeLibrary {
         _type_parameter: Option<ast::DataType>,
         _state: &mut crate::tasm_code_generator::CompilerState,
     ) -> Vec<triton_opcodes::instruction::LabelledInstruction> {
-        panic!("No functions implemented for BFE library");
+        panic!("No functions implemented for XFE library");
     }
 
     fn get_graft_function_name(&self, full_name: &str) -> Option<String> {
@@ -139,5 +148,22 @@ impl Library for XfeLibrary {
             }
             _ => panic!("XFE instantiation must happen with an array"),
         }
+    }
+}
+
+fn get_xfe_unlift_method() -> CompiledFunction {
+    let fn_signature = ast::FnSignature {
+        name: "unlift".to_owned(),
+        args: vec![ast::FnArg {
+            name: "value".to_owned(),
+            data_type: ast::DataType::XFE,
+            mutable: false,
+        }],
+        output: ast::DataType::BFE,
+    };
+
+    CompiledFunction {
+        signature: fn_signature,
+        body: vec![swap(2), push(0), eq(), assert_(), push(0), eq(), assert_()],
     }
 }

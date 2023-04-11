@@ -87,6 +87,15 @@ pub fn eq_xfe_rast() -> syn::ItemFn {
     })
 }
 
+#[allow(dead_code)]
+pub fn unlift_xfe_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn unlift_xfe(input: XFieldElement) -> BFieldElement {
+            return input.unlift().unwrap();
+        }
+    })
+}
+
 /// Always returns (0, [6,7,9], b)
 #[allow(dead_code)]
 pub fn long_expression_1_rast() -> syn::ItemFn {
@@ -249,6 +258,7 @@ mod compile_and_typecheck_tests {
 #[cfg(test)]
 mod run_tests {
     use num::{One, Zero};
+    use rand::random;
     use twenty_first::shared_math::{
         b_field_element::BFieldElement,
         other::random_elements,
@@ -453,6 +463,20 @@ mod run_tests {
                 xfe_lit(XFieldElement::zero()),
             ],
             vec![bool_lit(false), bool_lit(true)],
+        );
+    }
+
+    #[test]
+    fn unlift_xfe_test() {
+        let random_bfe: BFieldElement = random();
+        let lifted_to_xfe = random_bfe.lift();
+
+        multiple_compare_prop_with_stack(
+            &unlift_xfe_rast(),
+            vec![InputOutputTestCase::new(
+                vec![xfe_lit(lifted_to_xfe)],
+                vec![bfe_lit(random_bfe)],
+            )],
         );
     }
 

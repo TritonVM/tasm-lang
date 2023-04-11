@@ -290,14 +290,29 @@ fn graft_method_call(rust_method_call: &syn::ExprMethodCall) -> ast::MethodCall<
                 annot,
             }
         }
+        // Handle the method calls that are followed by an `unwrap` to get rid of the `Option` type
+        // wrapper.
+        // TODO: This handling of `.pop().unwrap()`, for lists, and `.unlift().unwrap()` should
+        // probably be handled by the `vector` and `xfe` libraries, respectively. For this, the
+        // `Library` trait needs to be expanded with a function to graft method calls.
         syn::Expr::MethodCall(rust_inner_method_call) => {
+            let outer_method_call_name = rust_method_call.method.to_string();
             let inner_method_call = graft_method_call(rust_inner_method_call);
             let identifier = match &inner_method_call.args[0] {
                 ast::Expr::Var(ident) => ident.to_owned(),
                 _ => todo!(),
             };
-            assert_eq!("pop", inner_method_call.method_name, ".pop().unwrap() only");
-            let method_name = "pop".to_string();
+            let method_name = if !(inner_method_call.method_name == "pop"
+                || inner_method_call.method_name == "unlift")
+                || outer_method_call_name != "unwrap"
+            {
+                panic!(
+                    "`.pop().unwrap()` or `.unlift().unwrap()` only. Got: {}",
+                    inner_method_call.method_name
+                );
+            } else {
+                inner_method_call.method_name
+            };
             let mut args = vec![ast::Expr::Var(identifier)];
             args.append(
                 &mut rust_inner_method_call
