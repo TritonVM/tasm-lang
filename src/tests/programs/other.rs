@@ -74,6 +74,16 @@ pub fn inferred_literals() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
+pub fn tasm_argument_evaluation_order_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn tasm_argument_evaluation_order() -> u64 {
+            let five: u64 = tasm::tasm_arithmetic_u64_sub(2, 7);
+            return five;
+        }
+    })
+}
+
+#[allow(dead_code)]
 pub fn nop_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn nop_nop() {
@@ -460,6 +470,14 @@ mod run_tests {
         ast::{self, DataType},
         tests::shared_test::*,
     };
+
+    #[test]
+    fn tasm_argument_evaluation_order_test() {
+        multiple_compare_prop_with_stack(
+            &tasm_argument_evaluation_order_rast(),
+            vec![InputOutputTestCase::new(vec![], vec![u64_lit(5)])],
+        );
+    }
 
     #[test]
     fn simple_while_loop_run_test() {
