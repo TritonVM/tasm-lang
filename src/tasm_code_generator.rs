@@ -900,10 +900,12 @@ fn compile_fn_call(
         type_parameter,
     } = fn_call.clone();
 
-    // Compile arguments left-to-right
+    // TODO: Is it a good idea to evaluate arguments right-to-left?
+    // Compile arguments right-to-left
     let (_args_idents, args_code): (Vec<ValueIdentifier>, Vec<Vec<LabelledInstruction>>) = args
         .iter()
         .enumerate()
+        .rev()
         .map(|(arg_pos, arg_expr)| {
             let context = format!("_{name}_arg_{arg_pos}");
             compile_expr(arg_expr, &context, &arg_expr.get_type(), state)

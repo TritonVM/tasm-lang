@@ -1,4 +1,5 @@
 pub mod arithmetic;
+pub mod hashing;
 pub mod io;
 pub mod mmr;
 pub mod other;
