@@ -424,6 +424,7 @@ impl CompilerState {
             words_to_remove: usize,
         ) -> Vec<LabelledInstruction> {
             match (top_value_size, words_to_remove) {
+                (3, 2) => vec![swap(2), swap(4), pop(), swap(2), pop()],
                 (4, 2) => vec![swap(1), swap(3), swap(5), pop(), swap(1), swap(3), pop()],
                 (6, 2) => vec![swap(2), swap(4), swap(6), pop(), swap(2), swap(4), swap(6), pop()],
                 (n, 1) => {
@@ -480,19 +481,6 @@ impl CompilerState {
             code.append(&mut vec![pop(); height_of_affected_stack]);
             code.append(&mut load_from_memory(memory_location, top_value_size));
 
-            // let mut words_to_remove = words_to_remove;
-            // let mut code = vec![];
-            // while words_to_remove > 0 {
-            //     let swap_arg = if words_to_remove >= STACK_SIZE {
-            //         STACK_SIZE as u64 - 1
-            //     } else {
-            //         words_to_remove as u64
-            //     };
-            //     let swap_instruction = swap(swap_arg);
-            //     code.append(&mut vec![vec![swap_instruction, pop()]; top_value_size].concat());
-            //     code.append(&mut vec![pop(); words_to_remove - top_value_size]);
-            //     words_to_remove -= swap_arg as usize;
-            // }
             code
         } else if words_to_remove != 0 {
             // Here, the number of words under the top element is less than the size of

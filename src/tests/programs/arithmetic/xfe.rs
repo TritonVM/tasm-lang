@@ -70,6 +70,15 @@ pub fn mul_xfe_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
+pub fn mul_lifted_xfes_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn mul_lifted_xfes(lhs: BFieldElement, rhs: BFieldElement) -> XFieldElement {
+            return lhs.lift() * rhs.lift();
+        }
+    })
+}
+
+#[allow(dead_code)]
 pub fn div_xfe_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn div_xfe(numerator: XFieldElement, denominator: XFieldElement) ->  XFieldElement {
@@ -257,6 +266,7 @@ mod compile_and_typecheck_tests {
 
 #[cfg(test)]
 mod run_tests {
+    use itertools::Itertools;
     use num::{One, Zero};
     use rand::random;
     use twenty_first::shared_math::{
@@ -370,6 +380,24 @@ mod run_tests {
                 vec![expected],
             );
         }
+    }
+
+    #[test]
+    fn mul_lifted_xfes_test() {
+        let test_iterations = 20;
+        let lhss: Vec<BFieldElement> = random_elements(test_iterations);
+        let rhss: Vec<BFieldElement> = random_elements(test_iterations);
+        let test_cases = lhss
+            .into_iter()
+            .zip_eq(rhss.into_iter())
+            .map(|(lhs, rhs)| {
+                InputOutputTestCase::new(
+                    vec![bfe_lit(lhs), bfe_lit(rhs)],
+                    vec![xfe_lit((lhs * rhs).lift())],
+                )
+            })
+            .collect_vec();
+        multiple_compare_prop_with_stack(&mul_lifted_xfes_rast(), test_cases);
     }
 
     #[test]
