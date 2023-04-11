@@ -428,7 +428,7 @@ impl CompilerState {
                 (6, 2) => vec![swap(2), swap(4), swap(6), pop(), swap(2), swap(4), swap(6), pop()],
                 (n, 1) => {
                     let mut swaps = vec![];
-                    for i in 1..n {
+                    for i in 1..=n {
                         swaps.push(swap(i as u64));
                     }
 
