@@ -71,66 +71,85 @@ fn cast_from_bool_rast() -> syn::ItemFn {
 #[allow(dead_code)]
 fn long_bfe_expr_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
-        fn long_bfe_expr(
-            input_0: BFieldElement,
-            input_1: BFieldElement,
-            input_2: BFieldElement,
-            input_3: BFieldElement,
-            input_4: BFieldElement,
-            input_5: BFieldElement,
-        ) -> (BFieldElement, BFieldElement, BFieldElement) {
-            let val0: u64 = 0;
-            let val1: BFieldElement = BFieldElement::new(0u64);
-            let val2: BFieldElement = BFieldElement::new(0u64);
-            let mut res0: BFieldElement = input_0 * BFieldElement::new(2u64)
-                + (input_1 * BFieldElement::new(2u64)
-                    + (input_2 * BFieldElement::new(2u64)
-                        + (input_3 * BFieldElement::new(2u64)
-                            + (input_4 * BFieldElement::new(2u64) + input_5 * BFieldElement::new(2u64)))))
-                + BFieldElement::new(2u64) * input_1
-                + BFieldElement::new(2u64) * input_1
-                + BFieldElement::new(2u64) * input_1
-                + BFieldElement::new(2u64) * input_1
-                + BFieldElement::new(2u64) * input_1
-                + BFieldElement::new(2u64) * input_1
-                + BFieldElement::new(2u64) * input_1
-                + BFieldElement::new(2u64) * input_1
-                + BFieldElement::new(2u64) * input_1
-                + BFieldElement::new(2u64) * input_1
-                + BFieldElement::new(2u64) * input_1
-                + BFieldElement::new(2u64) * input_1
-                + BFieldElement::new(2u64) * input_1
-                + BFieldElement::new(2u64) * input_1
-                + (true || false) as BFieldElement;
-            let res1: BFieldElement = res0;
-            let val3: BFieldElement = BFieldElement::new(0u64);
-            let val4: BFieldElement = BFieldElement::new(0u64);
-            let val5: BFieldElement = BFieldElement::new(0u64);
-            let val6: BFieldElement = BFieldElement::new(0u64);
-            let val7: BFieldElement = BFieldElement::new(0u64);
-            let val8: BFieldElement = BFieldElement::new(0u64);
-            let val9: BFieldElement = BFieldElement::new(0u64);
-            let val10: BFieldElement = BFieldElement::new(0u64);
-            let val11: BFieldElement = BFieldElement::new(0u64);
-            let val12: BFieldElement = BFieldElement::new(0u64);
-            let val13: BFieldElement = BFieldElement::new(0u64);
-            let val14: BFieldElement = BFieldElement::new(0u64);
-            let val15: BFieldElement = BFieldElement::new(0u64);
-            let val16: BFieldElement = BFieldElement::new(0u64);
-            let val17: BFieldElement = BFieldElement::new(0u64);
-            let val18: BFieldElement = BFieldElement::new(0u64);
-            res0 = res0 + input_0 + input_1 + input_2 + input_3 + input_4 + input_5 + res0;
-            res0 = res0 * BFieldElement::new(2u64)
-                + input_0 * BFieldElement::new(2u64)
-                + ((input_1 * BFieldElement::new(2u64) + input_2 * BFieldElement::new(2u64)))
-                + (input_3 * BFieldElement::new(2u64) + input_4 * BFieldElement::new(2u64) + input_5 * BFieldElement::new(2u64))
-                    * BFieldElement::new(2u64)
-                + input_0
-                + input_1
-                + input_2;
-            let res2: BFieldElement = res0 * res0 + 2;
+    fn long_bfe_expr(
+        input_0: BFieldElement,
+        input_1: BFieldElement,
+        input_2: BFieldElement,
+        input_3: BFieldElement,
+        input_4: BFieldElement,
+        input_5: BFieldElement,
+    ) -> (BFieldElement, BFieldElement, BFieldElement) {
+        let val0: u64 = 0;
+        let val1: BFieldElement = BFieldElement::new(0u64);
+        let val2: BFieldElement = BFieldElement::new(0u64);
+        let mut res0: BFieldElement = input_0 * BFieldElement::new(2u64)
+            + (input_1 * BFieldElement::new(2u64)
+                + (input_2 * BFieldElement::new(2u64)
+                    + (input_3 * BFieldElement::new(2u64)
+                        + (input_4 * BFieldElement::new(2u64) + input_5 * BFieldElement::new(2u64)))))
+            + BFieldElement::new(2u64) * input_1
+            + BFieldElement::new(2u64) * input_1
+            + BFieldElement::new(2u64) * input_1
+            + BFieldElement::new(2u64) * input_1
+            + BFieldElement::new(2u64) * input_1
+            + BFieldElement::new(2u64) * input_1
+            + BFieldElement::new(2u64) * input_1
+            + BFieldElement::new(2u64) * input_1
+            + BFieldElement::new(2u64) * input_1
+            + BFieldElement::new(2u64) * input_1
+            + BFieldElement::new(2u64) * input_1
+            + BFieldElement::new(2u64) * input_1
+            + BFieldElement::new(2u64) * input_1
+            + BFieldElement::new(2u64) * input_1
+            + (true || false) as BFieldElement;
+        let res1: BFieldElement = res0;
+        let val3: BFieldElement = BFieldElement::new(0u64);
+        let val4: BFieldElement = BFieldElement::new(0u64);
+        let val5: BFieldElement = BFieldElement::new(0u64);
+        let val6: BFieldElement = BFieldElement::new(0u64);
+        let val7: BFieldElement = BFieldElement::new(0u64);
+        let val8: BFieldElement = BFieldElement::new(0u64);
+        let val9: BFieldElement = BFieldElement::new(0u64);
+        let val10: BFieldElement = BFieldElement::new(0u64);
+        let val11: BFieldElement = BFieldElement::new(0u64);
+        let val12: BFieldElement = BFieldElement::new(0u64);
+        let val13: BFieldElement = BFieldElement::new(0u64);
+        let val14: BFieldElement = BFieldElement::new(0u64);
+        let val15: BFieldElement = BFieldElement::new(0u64);
+        let val16: BFieldElement = BFieldElement::new(0u64);
+        let val17: BFieldElement = BFieldElement::new(0u64);
+        let val18: BFieldElement = BFieldElement::new(0u64);
+        res0 = res0 + input_0 + input_1 + input_2 + input_3 + input_4 + input_5 + res0;
+        res0 = res0 * BFieldElement::new(2u64)
+            + input_0 * BFieldElement::new(2u64)
+            + ((input_1 * BFieldElement::new(2u64) + input_2 * BFieldElement::new(2u64)))
+            + (input_3 * BFieldElement::new(2u64) + input_4 * BFieldElement::new(2u64) + input_5 * BFieldElement::new(2u64))
+                * BFieldElement::new(2u64)
+            + input_0
+            + input_1
+            + input_2;
+        let res2: BFieldElement = res0 * res0 + 2;
 
-            return (res0, res1, res2);
+        return (res0, res1, res2);
+
+    }})
+}
+
+#[allow(dead_code)]
+fn lift_and_return_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn lift_and_return(input: BFieldElement) -> XFieldElement {
+            return input.lift();
+        }
+    })
+}
+
+#[allow(dead_code)]
+fn lift_assign_and_return_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn lift_and_return(input: BFieldElement) -> XFieldElement {
+            let ret: XFieldElement = input.lift();
+            return ret;
         }
     })
 }
@@ -148,6 +167,7 @@ mod compile_and_typecheck_tests {
 
 #[cfg(test)]
 mod run_tests {
+    use rand::random;
     use twenty_first::shared_math::{b_field_element::BFieldElement, other::random_elements};
 
     use super::*;
@@ -265,6 +285,39 @@ mod run_tests {
                 bfe_lit(902u64.into()),
                 bfe_lit(179u64.into()),
                 bfe_lit(813606u64.into()),
+            ],
+        )
+    }
+
+    #[test]
+    fn lift_test() {
+        let forty_two_as_bfe: BFieldElement = 42u64.into();
+        let forty_two_as_xfe = forty_two_as_bfe.lift();
+        let random_bfe: BFieldElement = random();
+        multiple_compare_prop_with_stack(
+            &lift_and_return_rast(),
+            vec![
+                InputOutputTestCase::new(
+                    vec![bfe_lit(forty_two_as_bfe)],
+                    vec![xfe_lit(forty_two_as_xfe)],
+                ),
+                InputOutputTestCase::new(
+                    vec![bfe_lit(random_bfe)],
+                    vec![xfe_lit(random_bfe.lift())],
+                ),
+            ],
+        );
+        multiple_compare_prop_with_stack(
+            &lift_and_return_rast(),
+            vec![
+                InputOutputTestCase::new(
+                    vec![bfe_lit(forty_two_as_bfe)],
+                    vec![xfe_lit(forty_two_as_xfe)],
+                ),
+                InputOutputTestCase::new(
+                    vec![bfe_lit(random_bfe)],
+                    vec![xfe_lit(random_bfe.lift())],
+                ),
             ],
         );
     }

@@ -1,9 +1,10 @@
 use itertools::Itertools;
+use triton_opcodes::shortcuts::*;
 use twenty_first::shared_math::b_field_element::BFieldElement;
 
 use crate::{ast, graft::graft_expr};
 
-use super::Library;
+use super::{CompiledFunction, Library};
 
 const BFIELDELEMENT_LIB_INDICATOR: &str = "BFieldElement::";
 
@@ -15,20 +16,24 @@ impl Library for BfeLibrary {
         None
     }
 
-    fn get_method_name(
-        &self,
-        _method_name: &str,
-        _receiver_type: &ast::DataType,
-    ) -> Option<String> {
-        None
+    fn get_method_name(&self, method_name: &str, _receiver_type: &ast::DataType) -> Option<String> {
+        if matches!(method_name, "lift") {
+            Some(method_name.to_owned())
+        } else {
+            None
+        }
     }
 
     fn method_name_to_signature(
         &self,
-        _fn_name: &str,
+        method_name: &str,
         _receiver_type: &ast::DataType,
     ) -> ast::FnSignature {
-        panic!("No methods implemented for BFE library");
+        if method_name != "lift" {
+            panic!("Unknown method {method_name} for BFE");
+        }
+
+        get_bfe_lift_method().signature
     }
 
     fn function_name_to_signature(
@@ -41,11 +46,15 @@ impl Library for BfeLibrary {
 
     fn call_method(
         &self,
-        _method_name: &str,
+        method_name: &str,
         _receiver_type: &ast::DataType,
         _state: &mut crate::tasm_code_generator::CompilerState,
     ) -> Vec<triton_opcodes::instruction::LabelledInstruction> {
-        panic!("No methods implemented for BFE library");
+        if method_name != "lift" {
+            panic!("Unknown method {method_name} for BFE");
+        }
+
+        get_bfe_lift_method().body
     }
 
     fn call_function(
@@ -93,5 +102,22 @@ impl Library for BfeLibrary {
         } else {
             panic!("Unknown initialization expression for BFE");
         }
+    }
+}
+
+fn get_bfe_lift_method() -> CompiledFunction {
+    let fn_signature = ast::FnSignature {
+        name: "lift".to_owned(),
+        args: vec![ast::FnArg {
+            name: "value".to_owned(),
+            data_type: ast::DataType::BFE,
+            mutable: false,
+        }],
+        output: ast::DataType::XFE,
+    };
+
+    CompiledFunction {
+        signature: fn_signature,
+        body: vec![push(0), push(0), swap(2)],
     }
 }

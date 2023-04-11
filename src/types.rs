@@ -3,10 +3,6 @@ use std::collections::HashMap;
 use twenty_first::shared_math::b_field_element::BFieldElement;
 use twenty_first::shared_math::x_field_element::XFieldElement;
 
-use crate::libraries::tasm::TasmLibrary;
-use crate::libraries::unsigned_integers::UnsignedIntegersLib;
-use crate::libraries::vector::VectorLib;
-use crate::libraries::Library;
 use crate::tasm_code_generator::STACK_SIZE;
 use crate::{ast, libraries};
 
@@ -419,7 +415,7 @@ fn get_fn_signature(
     state: &CheckState,
     type_parameter: &Option<ast::DataType>,
 ) -> ast::FnSignature {
-    // all functions from `tasm-lib` are in scope
+    // Function from libraries are in scope
     for lib in libraries::all_libraries() {
         if let Some(fn_name) = lib.get_function_name(name) {
             return lib.function_name_to_signature(&fn_name, type_parameter.to_owned());
@@ -438,22 +434,16 @@ fn get_method_signature(
     _state: &CheckState,
     receiver_type: ast::DataType,
 ) -> ast::FnSignature {
-    if let Some(snippet_name) = TasmLibrary.get_method_name(name, &receiver_type) {
-        return TasmLibrary.method_name_to_signature(&snippet_name, &receiver_type);
+    // Only methods from libraries are in scope. New methods cannot be declared.
+    for lib in libraries::all_libraries() {
+        if let Some(method_name) = lib.get_method_name(name, &receiver_type) {
+            return lib.method_name_to_signature(&method_name, &receiver_type);
+        }
     }
 
-    // Functions for lists are in scope
-    let type_parameter = receiver_type.type_parameter();
-    if let Some(function_name) = VectorLib.get_method_name(name, &receiver_type) {
-        return VectorLib.method_name_to_signature(&function_name, &receiver_type);
-    }
-
-    // Arithmetic for unsigned integers
-    if let Some(function_name) = UnsignedIntegersLib.get_method_name(name, &receiver_type) {
-        return UnsignedIntegersLib.method_name_to_signature(&function_name, &receiver_type);
-    }
-
-    panic!("Don't know what type of value '{name}' returns! Type parameter was: {type_parameter:?}")
+    panic!(
+        "Don't know what type of value '{name}' returns! Receiver parameter was: {receiver_type:?}"
+    )
 }
 
 fn derive_annotate_fn_call_args(
