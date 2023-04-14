@@ -7,6 +7,7 @@ use std::fmt::Debug;
 use triton_opcodes::instruction::LabelledInstruction;
 
 pub mod bfe;
+pub mod hasher;
 pub mod tasm;
 pub mod unsigned_integers;
 pub mod vector;
@@ -22,6 +23,7 @@ pub struct CompiledFunction {
 pub fn all_libraries() -> Vec<Box<dyn Library>> {
     vec![
         Box::new(bfe::BfeLibrary),
+        Box::new(hasher::HasherLib),
         Box::new(tasm::TasmLibrary),
         Box::new(unsigned_integers::UnsignedIntegersLib),
         Box::new(vector::VectorLib),

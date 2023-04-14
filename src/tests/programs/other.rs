@@ -83,6 +83,32 @@ pub fn nop_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
+pub fn simple_recursive_pow_rast() -> syn::ItemFn {
+    // A simple, recursive function that is *not* symmetric in it's input arguments.
+    // In other words: it gives a difference result if the input arguments are flipped.
+    // This test is added to ensure consistency in the order of input arguments.
+    item_fn(parse_quote! {
+        fn simple_recursive_pow(a: u64, b: u64) -> u64 {
+            return if b == 0u64 {
+                1u64
+            } else {
+                a * simple_recursive_pow(a, b - 1u64)
+            };
+        }
+    })
+}
+
+#[allow(dead_code)]
+pub fn tasm_argument_evaluation_order_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn tasm_argument_evaluation_order() -> u64 {
+            let five: u64 = tasm::tasm_arithmetic_u64_sub(2, 7);
+            return five;
+        }
+    })
+}
+
+#[allow(dead_code)]
 pub fn simple_while_loop() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn simple_while_loop() -> u32 {
@@ -460,6 +486,36 @@ mod run_tests {
         ast::{self, DataType},
         tests::shared_test::*,
     };
+
+    #[test]
+    fn tasm_argument_evaluation_order_test() {
+        multiple_compare_prop_with_stack(
+            &tasm_argument_evaluation_order_rast(),
+            vec![InputOutputTestCase::new(vec![], vec![u64_lit(5)])],
+        );
+    }
+
+    #[test]
+    fn simple_recursive_pow_test() {
+        multiple_compare_prop_with_stack(
+            &simple_recursive_pow_rast(),
+            vec![
+                // There's a significant amount of explosives in the trash receptacle next to you
+                InputOutputTestCase::new(vec![u64_lit(7), u64_lit(1)], vec![u64_lit(7)]),
+                InputOutputTestCase::new(vec![u64_lit(7), u64_lit(2)], vec![u64_lit(49)]),
+                // Shut up, McClane, I'm good at this
+                InputOutputTestCase::new(vec![u64_lit(7), u64_lit(3)], vec![u64_lit(343)]),
+                InputOutputTestCase::new(vec![u64_lit(7), u64_lit(4)], vec![u64_lit(2401)]),
+                InputOutputTestCase::new(vec![u64_lit(1), u64_lit(1)], vec![u64_lit(1)]),
+                InputOutputTestCase::new(
+                    vec![u64_lit(1000), u64_lit(6)],
+                    vec![u64_lit(1_000_000_000_000_000_000)],
+                ),
+                InputOutputTestCase::new(vec![u64_lit(2), u64_lit(3)], vec![u64_lit(8)]),
+                InputOutputTestCase::new(vec![u64_lit(3), u64_lit(2)], vec![u64_lit(9)]),
+            ],
+        );
+    }
 
     #[test]
     fn simple_while_loop_run_test() {

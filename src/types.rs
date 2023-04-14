@@ -258,6 +258,7 @@ fn annotate_stmt(
             args,
             annot,
             type_parameter,
+            arg_evaluation_order,
         }) => {
             let fn_signature = get_fn_signature(name, state, type_parameter);
             assert!(
@@ -267,6 +268,7 @@ fn annotate_stmt(
 
             derive_annotate_fn_call_args(&fn_signature, args, state);
 
+            *arg_evaluation_order = fn_signature.arg_evaluation_order;
             *annot = Typing::KnownType(fn_signature.output);
         }
 
@@ -552,6 +554,7 @@ fn derive_annotate_expr_type(
             args,
             annot,
             type_parameter,
+            arg_evaluation_order,
         }) => {
             let fn_signature = get_fn_signature(name, state, type_parameter);
             assert!(
@@ -561,6 +564,7 @@ fn derive_annotate_expr_type(
 
             derive_annotate_fn_call_args(&fn_signature, args, state);
             *annot = Typing::KnownType(fn_signature.output.clone());
+            *arg_evaluation_order = fn_signature.arg_evaluation_order;
 
             fn_signature.output
         }

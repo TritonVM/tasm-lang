@@ -60,7 +60,12 @@ impl Library for UnsignedIntegersLib {
             _ => ast::DataType::Tuple(output_types),
         };
 
-        ast::FnSignature { name, args, output }
+        ast::FnSignature {
+            name,
+            args,
+            output,
+            arg_evaluation_order: Default::default(),
+        }
     }
 
     fn function_name_to_signature(
@@ -120,6 +125,7 @@ fn get_count_ones_u32_method() -> CompiledFunction {
             mutable: false,
         }],
         output: ast::DataType::U32,
+        arg_evaluation_order: Default::default(),
     };
 
     CompiledFunction {

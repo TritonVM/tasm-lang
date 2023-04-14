@@ -160,6 +160,7 @@ fn get_xfe_unlift_method() -> CompiledFunction {
             mutable: false,
         }],
         output: ast::DataType::BFE,
+        arg_evaluation_order: Default::default(),
     };
 
     CompiledFunction {

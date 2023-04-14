@@ -69,7 +69,12 @@ impl Library for TasmLibrary {
             _ => ast::DataType::Tuple(output_types),
         };
 
-        FnSignature { name, args, output }
+        FnSignature {
+            name,
+            args,
+            output,
+            arg_evaluation_order: Default::default(),
+        }
     }
 
     fn call_method(

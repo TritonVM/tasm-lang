@@ -15,7 +15,12 @@ pub fn graft(input: &syn::ItemFn) -> ast::Fn<Annotation> {
 
     ast::Fn {
         body,
-        fn_signature: ast::FnSignature { name, args, output },
+        fn_signature: ast::FnSignature {
+            name,
+            args,
+            output,
+            arg_evaluation_order: Default::default(),
+        },
     }
 }
 
@@ -198,7 +203,6 @@ fn graft_call_exp(
         args,
     }: &syn::ExprCall,
 ) -> ast::Expr<Annotation> {
-    // fn graft_call_exp(expr_call: &syn::ExprCall) -> ast::Expr<Annotation> {
     let (full_name, type_parameter) = match func.as_ref() {
         syn::Expr::Path(path) => (
             path_to_ident(&path.path),
@@ -224,6 +228,7 @@ fn graft_call_exp(
         args,
         annot,
         type_parameter,
+        arg_evaluation_order: Default::default(),
     })
 }
 

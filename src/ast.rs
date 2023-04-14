@@ -14,6 +14,14 @@ pub struct FnSignature {
     pub name: String,
     pub args: Vec<FnArg>,
     pub output: DataType,
+    pub arg_evaluation_order: ArgEvaluationOrder,
+}
+
+#[derive(Debug, Default, Clone, Hash, PartialEq, Eq)]
+pub enum ArgEvaluationOrder {
+    #[default]
+    LeftToRight,
+    RightToLeft,
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
@@ -334,6 +342,7 @@ pub struct FnCall<T> {
     pub name: String,
     pub args: Vec<Expr<T>>,
     pub type_parameter: Option<DataType>,
+    pub arg_evaluation_order: ArgEvaluationOrder,
     pub annot: T,
 }
 
