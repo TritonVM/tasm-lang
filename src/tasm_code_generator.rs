@@ -1,4 +1,4 @@
-use itertools::Itertools;
+use itertools::{Either, Itertools};
 use std::collections::{HashMap, HashSet};
 use tasm_lib::dyn_malloc::DynMalloc;
 use tasm_lib::snippet::Snippet;
@@ -898,19 +898,24 @@ fn compile_fn_call(
         args,
         annot: _return_type, // unit for statement-level fn calls
         type_parameter,
+        arg_evaluation_order,
     } = fn_call.clone();
 
-    // TODO: Is it a good idea to evaluate arguments right-to-left?
-    // Compile arguments right-to-left
-    let (_args_idents, args_code): (Vec<ValueIdentifier>, Vec<Vec<LabelledInstruction>>) = args
-        .iter()
-        .enumerate()
-        .rev()
-        .map(|(arg_pos, arg_expr)| {
-            let context = format!("_{name}_arg_{arg_pos}");
-            compile_expr(arg_expr, &context, &arg_expr.get_type(), state)
-        })
-        .unzip();
+    // Compile function arguments either left-to-right or right-to-left depending
+    // on definition in function.
+    let args_iter = if arg_evaluation_order == ast::ArgEvaluationOrder::LeftToRight {
+        Either::Left(args.iter().enumerate())
+    } else {
+        Either::Right(args.iter().enumerate().rev())
+    };
+
+    let (_args_idents, args_code): (Vec<ValueIdentifier>, Vec<Vec<LabelledInstruction>>) =
+        args_iter
+            .map(|(arg_pos, arg_expr)| {
+                let context = format!("_{name}_arg_{arg_pos}");
+                compile_expr(arg_expr, &context, &arg_expr.get_type(), state)
+            })
+            .unzip();
 
     let mut call_fn_code = vec![];
     for lib in libraries::all_libraries() {

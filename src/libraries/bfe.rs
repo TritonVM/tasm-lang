@@ -114,6 +114,7 @@ fn get_bfe_lift_method() -> CompiledFunction {
             mutable: false,
         }],
         output: ast::DataType::XFE,
+        arg_evaluation_order: Default::default(),
     };
 
     CompiledFunction {

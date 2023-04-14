@@ -99,6 +99,9 @@ fn get_hash_pair_function() -> CompiledFunction {
             },
         ],
         output: ast::DataType::Digest,
+        // If the definition of Tip5's `hash_pair` was changed, this could
+        // be left-to-right instead
+        arg_evaluation_order: ast::ArgEvaluationOrder::RightToLeft,
     };
 
     CompiledFunction {

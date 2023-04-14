@@ -69,7 +69,12 @@ impl Library for VectorLib {
             _ => ast::DataType::Tuple(output_types),
         };
 
-        ast::FnSignature { name, args, output }
+        ast::FnSignature {
+            name,
+            args,
+            output,
+            arg_evaluation_order: Default::default(),
+        }
     }
 
     fn call_method(
