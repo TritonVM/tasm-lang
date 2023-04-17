@@ -138,9 +138,24 @@ pub fn right_lineage_length_and_own_height_rast() -> syn::ItemFn {
     })
 }
 
+#[allow(dead_code)]
+fn right_lineage_length_from_leaf_index_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+    pub fn right_lineage_length_from_leaf_index(leaf_index: u64) -> u32 {
+        // Identify the last (least significant) nonzero bit
+        let pow2: u64 = (leaf_index + 1) & !leaf_index;
+
+        // Get the index of that bit, counting from least significant bit
+        return 64 - pow2.leading_zeros() - 1;
+    }
+    })
+}
+
 #[cfg(test)]
 mod run_tests {
+    use itertools::Itertools;
     use rand::{thread_rng, RngCore};
+    use twenty_first::{shared_math::other::random_elements, util_types::mmr};
 
     use super::*;
     use crate::tests::shared_test::*;
@@ -268,13 +283,31 @@ mod run_tests {
             ),
         ];
 
-        for test_case in test_cases {
-            compare_prop_with_stack(
-                &right_lineage_length_and_own_height_rast(),
-                test_case.input_args,
-                test_case.expected_outputs,
-            );
-        }
+        multiple_compare_prop_with_stack(&right_lineage_length_and_own_height_rast(), test_cases);
+    }
+
+    #[test]
+    fn right_lineage_length_from_leaf_index_test() {
+        let inputs: Vec<u64> = random_elements(40);
+        let mut test_cases = inputs
+            .into_iter()
+            .map(|input| {
+                InputOutputTestCase::new(
+                    vec![u64_lit(input)],
+                    vec![u32_lit(
+                        mmr::shared_basic::right_lineage_length_from_leaf_index(input),
+                    )],
+                )
+            })
+            .collect_vec();
+        test_cases.push(InputOutputTestCase::new(vec![u64_lit(0)], vec![u32_lit(0)]));
+        test_cases.push(InputOutputTestCase::new(vec![u64_lit(1)], vec![u32_lit(1)]));
+        test_cases.push(InputOutputTestCase::new(vec![u64_lit(2)], vec![u32_lit(0)]));
+        test_cases.push(InputOutputTestCase::new(
+            vec![u64_lit((1u64 << 54) - 1)],
+            vec![u32_lit(54)],
+        ));
+        multiple_compare_prop_with_stack(&right_lineage_length_from_leaf_index_rast(), test_cases);
     }
 
     #[test]
@@ -425,5 +458,10 @@ mod compile_and_typecheck_tests {
     #[test]
     fn leaf_index_to_mt_index_and_peak_index_test() {
         graft_check_compile_prop(&leaf_index_to_mt_index_and_peak_index_rast_loops_reduced());
+    }
+
+    #[test]
+    fn right_lineage_length_from_leaf_index_test() {
+        graft_check_compile_prop(&right_lineage_length_from_leaf_index_rast());
     }
 }
