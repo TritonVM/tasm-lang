@@ -199,6 +199,25 @@ pub fn count_ones_u32_rast() -> syn::ItemFn {
     })
 }
 
+#[allow(dead_code)]
+pub fn bitwise_not_return_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn bitwise_not(value: u32) -> u32 {
+            return !value;
+        }
+    })
+}
+
+#[allow(dead_code)]
+pub fn bitwise_not_assign_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn bitwise_not(value: u32) -> u32 {
+            let ret: u32 = !value;
+            return ret;
+        }
+    })
+}
+
 #[cfg(test)]
 mod run_tests {
     use itertools::Itertools;
@@ -454,6 +473,25 @@ mod run_tests {
             ));
         }
         multiple_compare_prop_with_stack(&count_ones_u32_rast(), test_cases);
+    }
+
+    #[test]
+    fn bitwise_not_u32_test() {
+        let values: Vec<u32> = random_elements(10);
+        let mut test_cases = values
+            .iter()
+            .map(|value| InputOutputTestCase::new(vec![u32_lit(*value)], vec![u32_lit(!value)]))
+            .collect_vec();
+        test_cases.push(InputOutputTestCase::new(
+            vec![u32_lit(0)],
+            vec![u32_lit(u32::MAX)],
+        ));
+        test_cases.push(InputOutputTestCase::new(
+            vec![u32_lit(u32::MAX)],
+            vec![u32_lit(0)],
+        ));
+        multiple_compare_prop_with_stack(&bitwise_not_return_rast(), test_cases.clone());
+        multiple_compare_prop_with_stack(&bitwise_not_assign_rast(), test_cases);
     }
 }
 

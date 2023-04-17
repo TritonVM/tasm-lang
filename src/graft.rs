@@ -467,7 +467,10 @@ pub fn graft_expr(rust_exp: &syn::Expr) -> ast::Expr<Annotation> {
             ast::Expr::Cast(Box::new(ast_expr), as_type)
         }
         syn::Expr::Unary(syn::ExprUnary { attrs: _, op, expr }) => match op {
-            syn::UnOp::Not(_) => todo!(),
+            syn::UnOp::Not(_) => {
+                let ast_expr = graft_expr(&(*expr).to_owned());
+                ast::Expr::Unary(ast::UnaryOp::Not, Box::new(ast_expr), Default::default())
+            }
             syn::UnOp::Neg(_) => {
                 let ast_expr = graft_expr(&(*expr).to_owned());
                 ast::Expr::Unary(ast::UnaryOp::Neg, Box::new(ast_expr), Default::default())

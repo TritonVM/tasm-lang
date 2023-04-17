@@ -189,6 +189,25 @@ pub fn rightshift_u64_rast() -> syn::ItemFn {
     })
 }
 
+#[allow(dead_code)]
+pub fn bitwise_not_return_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn bitwise_not(value: u64) -> u64 {
+            return !value;
+        }
+    })
+}
+
+#[allow(dead_code)]
+pub fn bitwise_not_assign_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn bitwise_not(value: u64) -> u64 {
+            let ret: u64 = !value;
+            return ret;
+        }
+    })
+}
+
 #[cfg(test)]
 mod run_tests {
     use itertools::Itertools;
@@ -620,6 +639,29 @@ mod run_tests {
             vec![],
             vec![u64_lit(94)],
         );
+    }
+
+    #[test]
+    fn bitwise_not_u64_test() {
+        let values: Vec<u64> = random_elements(10);
+        let mut test_cases = values
+            .iter()
+            .map(|value| InputOutputTestCase::new(vec![u64_lit(*value)], vec![u64_lit(!value)]))
+            .collect_vec();
+        test_cases.push(InputOutputTestCase::new(
+            vec![u64_lit(0)],
+            vec![u64_lit(u64::MAX)],
+        ));
+        test_cases.push(InputOutputTestCase::new(
+            vec![u64_lit(u64::MAX)],
+            vec![u64_lit(0)],
+        ));
+        test_cases.push(InputOutputTestCase::new(
+            vec![u64_lit(u32::MAX as u64)],
+            vec![u64_lit(u64::MAX ^ u32::MAX as u64)],
+        ));
+        multiple_compare_prop_with_stack(&bitwise_not_return_rast(), test_cases.clone());
+        multiple_compare_prop_with_stack(&bitwise_not_assign_rast(), test_cases);
     }
 }
 

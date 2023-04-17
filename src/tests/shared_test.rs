@@ -13,6 +13,7 @@ use crate::tasm_code_generator::compile;
 use crate::types::{self, annotate_fn, GetType, Typing};
 
 #[allow(dead_code)]
+#[derive(Debug, Clone)]
 pub struct InputOutputTestCase {
     pub input_args: Vec<ast::ExprLit<Typing>>,
     pub expected_outputs: Vec<ast::ExprLit<Typing>>,

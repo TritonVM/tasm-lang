@@ -598,12 +598,19 @@ fn derive_annotate_expr_type(
 
         ast::Expr::Unary(unaryop, inner_expr, unaryop_type) => {
             use ast::UnaryOp::*;
+            let inner_expr_type = derive_annotate_expr_type(inner_expr, hint, state);
             match unaryop {
                 Neg => {
-                    let inner_expr_type = derive_annotate_expr_type(inner_expr, hint, state);
-
                     assert!(
                         is_negatable_type(&inner_expr_type),
+                        "Cannot negate type '{inner_expr_type}'",
+                    );
+                    *unaryop_type = Typing::KnownType(inner_expr_type.clone());
+                    inner_expr_type
+                }
+                Not => {
+                    assert!(
+                        is_not_compatible_type(&inner_expr_type),
                         "Cannot negate type '{inner_expr_type}'",
                     );
                     *unaryop_type = Typing::KnownType(inner_expr_type.clone());
@@ -896,6 +903,12 @@ pub fn is_arithmetic_type(data_type: &ast::DataType) -> bool {
 pub fn is_negatable_type(data_type: &ast::DataType) -> bool {
     use ast::DataType::*;
     matches!(data_type, BFE | XFE)
+}
+
+/// A type from which expressions such as `!value` can be formed
+pub fn is_not_compatible_type(data_type: &ast::DataType) -> bool {
+    use ast::DataType::*;
+    matches!(data_type, Bool | U32 | U64)
 }
 
 /// A type that is implemented in terms of `U32` values.

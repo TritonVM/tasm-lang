@@ -1179,6 +1179,19 @@ fn compile_expr(
                     ast::DataType::XFE => vec![push(NEG_1), xbmul()],
                     _ => panic!("Unsupported negation of type {inner_type}"),
                 },
+                ast::UnaryOp::Not => match inner_type {
+                    ast::DataType::Bool => vec![push(0), eq()],
+                    ast::DataType::U32 => vec![push(u32::MAX as u64), xor()],
+                    ast::DataType::U64 => vec![
+                        swap(1),
+                        push(u32::MAX as u64),
+                        xor(),
+                        swap(1),
+                        push(u32::MAX as u64),
+                        xor(),
+                    ],
+                    _ => panic!("Unsupported not of type {inner_type}"),
+                },
             };
 
             state.vstack.pop();
