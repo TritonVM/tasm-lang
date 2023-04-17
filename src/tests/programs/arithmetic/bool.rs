@@ -116,7 +116,7 @@ mod run_tests {
             InputOutputTestCase::new(vec![bool_lit(true), bool_lit(false)], vec![bool_lit(true)]),
             InputOutputTestCase::new(vec![bool_lit(true), bool_lit(true)], vec![bool_lit(true)]),
         ];
-        multiple_compare_prop_with_stack(&not_bool_in_expression_rast(), test_cases.clone());
+        multiple_compare_prop_with_stack(&not_bool_in_expression_rast(), test_cases);
     }
 
     #[test]
