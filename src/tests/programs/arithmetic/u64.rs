@@ -368,35 +368,26 @@ mod run_tests {
 
     #[test]
     fn divmoddi4_u64_run_test() {
-        compare_prop_with_stack(
-            &divmoddi4_u64_rast(),
-            vec![u64_lit(51), u64_lit(7)],
-            vec![u64_lit(7), u64_lit(2)],
-        );
-        compare_prop_with_stack(
-            &divmoddi4_u64_rast(),
-            vec![u64_lit(14), u64_lit(2)],
-            vec![u64_lit(7), u64_lit(0)],
-        );
-        compare_prop_with_stack(
-            &divmoddi4_u64_rast(),
-            vec![u64_lit(100), u64_lit(10)],
-            vec![u64_lit(10), u64_lit(0)],
-        );
-        compare_prop_with_stack(
-            &divmoddi4_u64_rast(),
-            vec![u64_lit(100), u64_lit(3)],
-            vec![u64_lit(33), u64_lit(1)],
-        );
-        compare_prop_with_stack(
-            &divmoddi4_u64_rast(),
-            vec![u64_lit(1u64 << 46), u64_lit(1u64 << 4)],
-            vec![u64_lit(1u64 << 42), u64_lit(0)],
-        );
-        compare_prop_with_stack(
-            &divmoddi4_u64_rast(),
-            vec![u64_lit(9075814844808036352), u64_lit(1675951742761566208)],
-            vec![u64_lit(5), u64_lit(696056131000205312)],
+        fn add_test(
+            (quotient, remainder): (u64, u64),
+            (numerator, divisor): (u64, u64),
+            test_cases: &mut Vec<InputOutputTestCase>,
+        ) {
+            let inputs = vec![u64_lit(numerator), u64_lit(divisor)];
+            let outputs = vec![u64_lit(quotient), u64_lit(remainder)];
+            test_cases.push(InputOutputTestCase::new(inputs, outputs));
+        }
+
+        let mut test_cases = vec![];
+        add_test((7, 2), (51, 7), &mut test_cases);
+        add_test((7, 0), (14, 2), &mut test_cases);
+        add_test((10, 0), (100, 10), &mut test_cases);
+        add_test((33, 1), (100, 3), &mut test_cases);
+        add_test((1u64 << 42, 0), (1u64 << 46, 1u64 << 4), &mut test_cases);
+        add_test(
+            (5, 696056131000205312),
+            (9075814844808036352, 1675951742761566208),
+            &mut test_cases,
         );
 
         // Test with small divisors
@@ -404,24 +395,27 @@ mod run_tests {
         for _ in 0..4 {
             let numerator: u64 = rng.next_u64();
             let divisor: u64 = rng.gen_range(0..(1 << 12));
-            compare_prop_with_stack(
-                &divmoddi4_u64_rast(),
-                vec![u64_lit(numerator), u64_lit(divisor)],
-                vec![u64_lit(numerator / divisor), u64_lit(numerator % divisor)],
-            );
+            add_test(
+                (numerator / divisor, numerator % divisor),
+                (numerator, divisor),
+                &mut test_cases,
+            )
         }
 
+        // Test with biggest divisors
         for j in 0..33 {
             for _ in 0..2 {
                 let numerator: u64 = rng.next_u64();
                 let divisor: u64 = rng.next_u32() as u64 + (1u64 << (31 + j));
-                compare_prop_with_stack(
-                    &divmoddi4_u64_rast(),
-                    vec![u64_lit(numerator), u64_lit(divisor)],
-                    vec![u64_lit(numerator / divisor), u64_lit(numerator % divisor)],
-                );
+                add_test(
+                    (numerator / divisor, numerator % divisor),
+                    (numerator, divisor),
+                    &mut test_cases,
+                )
             }
         }
+
+        multiple_compare_prop_with_stack(&divmoddi4_u64_rast(), test_cases);
     }
 
     #[test]

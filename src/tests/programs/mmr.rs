@@ -248,13 +248,7 @@ mod run_tests {
             InputOutputTestCase::new(vec![u64_lit(16)], vec![u64_lit(31), u32_lit(4)]),
         ];
 
-        for test_case in test_cases {
-            compare_prop_with_stack(
-                &leftmost_ancestor_rast(),
-                test_case.input_args,
-                test_case.expected_outputs,
-            );
-        }
+        multiple_compare_prop_with_stack(&leftmost_ancestor_rast(), test_cases);
     }
 
     #[test]
@@ -312,114 +306,115 @@ mod run_tests {
 
     #[test]
     fn leaf_index_to_mt_index_run_test() {
-        fn check((out1, out2): (u64, u32), (leaf_count, leaf_index): (u64, u64)) {
+        fn add_test(
+            (out1, out2): (u64, u32),
+            (leaf_count, leaf_index): (u64, u64),
+            test_cases: &mut Vec<InputOutputTestCase>,
+        ) {
             let inputs = vec![u64_lit(leaf_count), u64_lit(leaf_index)];
             let outputs = vec![u64_lit(out1), u32_lit(out2)];
-            compare_prop_with_stack(
-                &leaf_index_to_mt_index_and_peak_index_rast_loops_reduced(),
-                inputs,
-                outputs,
-            );
+            test_cases.push(InputOutputTestCase::new(inputs, outputs));
         }
 
         // Leaf count = 1
-        check((1, 0), (0, 1));
+        let mut test_cases = vec![];
+        add_test((1, 0), (0, 1), &mut test_cases);
 
         // Leaf count = 2
-        check((2, 0), (0, 2));
-        check((2, 0), (0, 2));
-        check((3, 0), (1, 2));
+        add_test((2, 0), (0, 2), &mut test_cases);
+        add_test((2, 0), (0, 2), &mut test_cases);
+        add_test((3, 0), (1, 2), &mut test_cases);
 
         // Leaf count = 3
-        check((2, 0), (0, 3));
-        check((3, 0), (1, 3));
-        check((1, 1), (2, 3));
+        add_test((2, 0), (0, 3), &mut test_cases);
+        add_test((3, 0), (1, 3), &mut test_cases);
+        add_test((1, 1), (2, 3), &mut test_cases);
 
         // Leaf count = 4
-        check((4, 0), (0, 4));
-        check((5, 0), (1, 4));
-        check((6, 0), (2, 4));
-        check((7, 0), (3, 4));
+        add_test((4, 0), (0, 4), &mut test_cases);
+        add_test((5, 0), (1, 4), &mut test_cases);
+        add_test((6, 0), (2, 4), &mut test_cases);
+        add_test((7, 0), (3, 4), &mut test_cases);
 
         // Leaf count = 14
-        check((8, 0), (0, 14));
-        check((9, 0), (1, 14));
-        check((10, 0), (2, 14));
-        check((11, 0), (3, 14));
-        check((12, 0), (4, 14));
-        check((13, 0), (5, 14));
-        check((14, 0), (6, 14));
-        check((15, 0), (7, 14));
-        check((4, 1), (8, 14));
-        check((5, 1), (9, 14));
-        check((6, 1), (10, 14));
-        check((7, 1), (11, 14));
-        check((7, 1), (11, 14));
+        add_test((8, 0), (0, 14), &mut test_cases);
+        add_test((9, 0), (1, 14), &mut test_cases);
+        add_test((10, 0), (2, 14), &mut test_cases);
+        add_test((11, 0), (3, 14), &mut test_cases);
+        add_test((12, 0), (4, 14), &mut test_cases);
+        add_test((13, 0), (5, 14), &mut test_cases);
+        add_test((14, 0), (6, 14), &mut test_cases);
+        add_test((15, 0), (7, 14), &mut test_cases);
+        add_test((4, 1), (8, 14), &mut test_cases);
+        add_test((5, 1), (9, 14), &mut test_cases);
+        add_test((6, 1), (10, 14), &mut test_cases);
+        add_test((7, 1), (11, 14), &mut test_cases);
+        add_test((7, 1), (11, 14), &mut test_cases);
 
         // Leaf count = 22
-        check((16, 0), (0, 23));
-        check((17, 0), (1, 23));
-        check((18, 0), (2, 23));
-        check((19, 0), (3, 23));
-        check((30, 0), (14, 23));
-        check((31, 0), (15, 23));
-        check((4, 1), (16, 23));
-        check((5, 1), (17, 23));
-        check((6, 1), (18, 23));
-        check((7, 1), (19, 23));
-        check((2, 2), (20, 23));
-        check((3, 2), (21, 23));
-        check((1, 3), (22, 23));
+        add_test((16, 0), (0, 23), &mut test_cases);
+        add_test((17, 0), (1, 23), &mut test_cases);
+        add_test((18, 0), (2, 23), &mut test_cases);
+        add_test((19, 0), (3, 23), &mut test_cases);
+        add_test((30, 0), (14, 23), &mut test_cases);
+        add_test((31, 0), (15, 23), &mut test_cases);
+        add_test((4, 1), (16, 23), &mut test_cases);
+        add_test((5, 1), (17, 23), &mut test_cases);
+        add_test((6, 1), (18, 23), &mut test_cases);
+        add_test((7, 1), (19, 23), &mut test_cases);
+        add_test((2, 2), (20, 23), &mut test_cases);
+        add_test((3, 2), (21, 23), &mut test_cases);
+        add_test((1, 3), (22, 23), &mut test_cases);
 
         // Leaf count = 32
         for i in 0..32 {
-            check((32 + i, 0), (i, 32));
+            add_test((32 + i, 0), (i, 32), &mut test_cases);
         }
 
         // Leaf count = 33
         for i in 0..32 {
-            check((32 + i, 0), (i, 33));
+            add_test((32 + i, 0), (i, 33), &mut test_cases);
         }
-        check((1, 1), (32, 33));
+        add_test((1, 1), (32, 33), &mut test_cases);
 
         // Leaf count = 34
         for i in 0..32 {
-            check((32 + i, 0), (i, 34));
+            add_test((32 + i, 0), (i, 34), &mut test_cases);
         }
-        check((2, 1), (32, 34));
-        check((3, 1), (33, 34));
+        add_test((2, 1), (32, 34), &mut test_cases);
+        add_test((3, 1), (33, 34), &mut test_cases);
 
         // Leaf count = 35
         for i in 0..32 {
-            check((32 + i, 0), (i, 35));
+            add_test((32 + i, 0), (i, 35), &mut test_cases);
         }
-        check((2, 1), (32, 35));
-        check((3, 1), (33, 35));
-        check((1, 2), (34, 35));
+        add_test((2, 1), (32, 35), &mut test_cases);
+        add_test((3, 1), (33, 35), &mut test_cases);
+        add_test((1, 2), (34, 35), &mut test_cases);
 
         // Leaf count = 36
         for i in 0..32 {
-            check((32 + i, 0), (i, 36));
+            add_test((32 + i, 0), (i, 36), &mut test_cases);
         }
-        check((4, 1), (32, 36));
-        check((5, 1), (33, 36));
-        check((6, 1), (34, 36));
-        check((7, 1), (35, 36));
+        add_test((4, 1), (32, 36), &mut test_cases);
+        add_test((5, 1), (33, 36), &mut test_cases);
+        add_test((6, 1), (34, 36), &mut test_cases);
+        add_test((7, 1), (35, 36), &mut test_cases);
 
         // Leaf count = 37
         for i in 0..32 {
-            check((32 + i, 0), (i, 37));
+            add_test((32 + i, 0), (i, 37), &mut test_cases);
         }
-        check((4, 1), (32, 37));
-        check((5, 1), (33, 37));
-        check((6, 1), (34, 37));
-        check((7, 1), (35, 37));
-        check((1, 2), (36, 37));
+        add_test((4, 1), (32, 37), &mut test_cases);
+        add_test((5, 1), (33, 37), &mut test_cases);
+        add_test((6, 1), (34, 37), &mut test_cases);
+        add_test((7, 1), (35, 37), &mut test_cases);
+        add_test((1, 2), (36, 37), &mut test_cases);
 
         for i in 10..63 {
-            check((14 + (1 << i), 0), (14, 1 << i));
-            check((3, 2), ((1 << i) + 9, (1 << i) + 11));
-            check((1, 3), ((1 << i) + 10, (1 << i) + 11));
+            add_test((14 + (1 << i), 0), (14, 1 << i), &mut test_cases);
+            add_test((3, 2), ((1 << i) + 9, (1 << i) + 11), &mut test_cases);
+            add_test((1, 3), ((1 << i) + 10, (1 << i) + 11), &mut test_cases);
         }
     }
 }
