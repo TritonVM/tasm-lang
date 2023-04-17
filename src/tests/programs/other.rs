@@ -705,7 +705,8 @@ mod run_tests {
             vec![],
             vec![],
             DataType::List(Box::new(DataType::U32)).size_of() as isize,
-        );
+        )
+        .unwrap();
         let mut list_pointer = exec_result.final_stack.last().unwrap();
         let mut expected_list = (0..16).map(u32_lit).collect_vec();
         assert_list_equal(expected_list, *list_pointer, &vm_memory);
@@ -718,7 +719,8 @@ mod run_tests {
             vec![],
             vec![],
             DataType::List(Box::new(DataType::U64)).size_of() as isize,
-        );
+        )
+        .unwrap();
         list_pointer = exec_result.final_stack.last().unwrap();
         expected_list = (0..16).map(u64_lit).collect_vec();
         assert_list_equal(expected_list, *list_pointer, &vm_memory)

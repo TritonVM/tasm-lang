@@ -151,14 +151,53 @@ fn right_lineage_length_from_leaf_index_rast() -> syn::ItemFn {
     })
 }
 
+#[allow(dead_code)]
+fn calculate_new_peaks_from_append_inlined_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn calculate_new_peaks_from_append(
+            old_leaf_count: u64,
+            old_peaks: Vec<Digest>,
+            new_leaf: Digest,
+        ) -> (Vec<Digest>, Vec<Digest>) {
+            let mut peaks: Vec<Digest> = old_peaks;
+            peaks.push(new_leaf);
+            let pow2: u64 = (old_leaf_count + 1) & !old_leaf_count;
+            let mut right_lineage_count: u32 = 64 - pow2.leading_zeros() - 1;
+
+            let mut auth_path: Vec<Digest> = Vec::<Digest>::with_capacity(right_lineage_count as usize);
+            while right_lineage_count != 0u32 {
+                let new_hash: Digest = peaks.pop().unwrap();
+                let previous_peak: Digest = peaks.pop().unwrap();
+                auth_path.push(previous_peak);
+                peaks.push(H::hash_pair(previous_peak, new_hash));
+                right_lineage_count -= 1;
+            }
+
+            return (peaks, auth_path);
+        }
+    })
+}
+
 #[cfg(test)]
 mod run_tests {
+    use std::collections::HashMap;
+
     use itertools::Itertools;
-    use rand::{thread_rng, RngCore};
-    use twenty_first::{shared_math::other::random_elements, util_types::mmr};
+    use num::One;
+    use rand::{random, thread_rng, RngCore};
+    use tasm_lib::rust_shadowing_helper_functions;
+    use triton_opcodes::program::Program;
+    use twenty_first::{
+        shared_math::{
+            b_field_element::BFieldElement,
+            other::random_elements,
+            tip5::{Digest, Tip5},
+        },
+        util_types::mmr::{self, mmr_trait::Mmr},
+    };
 
     use super::*;
-    use crate::tests::shared_test::*;
+    use crate::{tasm_code_generator::compile, tests::shared_test::*};
 
     #[test]
     fn right_child_run_test() {
@@ -416,6 +455,93 @@ mod run_tests {
             add_test((3, 2), ((1 << i) + 9, (1 << i) + 11), &mut test_cases);
             add_test((1, 3), ((1 << i) + 10, (1 << i) + 11), &mut test_cases);
         }
+
+        multiple_compare_prop_with_stack(
+            &leaf_index_to_mt_index_and_peak_index_rast_loops_reduced(),
+            test_cases,
+        );
+    }
+
+    #[test]
+    fn calculate_new_peaks_from_append_test() {
+        for size in 0..20 {
+            let digests: Vec<Digest> = random_elements(size);
+            let msa: mmr::mmr_accumulator::MmrAccumulator<Tip5> =
+                mmr::mmr_accumulator::MmrAccumulator::new(digests.clone());
+            let mut memory = HashMap::default();
+            let list_pointer: BFieldElement = 10000u64.into();
+            rust_shadowing_helper_functions::safe_list::safe_list_insert(
+                list_pointer,
+                2000,
+                msa.get_peaks(),
+                &mut memory,
+            );
+            let old_peaks = msa.get_peaks();
+            let new_leaf: Digest = random();
+            let inputs = vec![
+                u64_lit(msa.count_leaves()),
+                bfe_lit(list_pointer),
+                digest_lit(new_leaf),
+            ];
+            let res = execute_with_stack_memory_and_ins(
+                &calculate_new_peaks_from_append_inlined_rast(),
+                inputs,
+                &mut memory,
+                vec![],
+                vec![],
+                -6,
+            );
+            println!("res = {res:#?}");
+            assert!(res.is_ok());
+
+            let (new_peaks, mp) = mmr::shared_basic::calculate_new_peaks_from_append::<Tip5>(
+                msa.count_leaves(),
+                msa.get_peaks(),
+                new_leaf,
+            );
+
+            assert_list_equal(
+                new_peaks.iter().map(|x| digest_lit(*x)).collect_vec(),
+                list_pointer,
+                &memory,
+            );
+
+            assert_list_equal(
+                mp.authentication_path
+                    .iter()
+                    .map(|x| digest_lit(*x))
+                    .collect_vec(),
+                BFieldElement::one(),
+                &memory,
+            );
+        }
+
+        // fn calculate_new_peaks_from_append(
+        //     old_leaf_count: u64,
+        //     old_peaks: Vec<Digest>,
+        //     new_leaf: Digest,
+        // ) -> (Vec<Digest>, Vec<Digest>) {
+        //     let mut peaks: Vec<Digest> = old_peaks;
+        //     peaks.push(new_leaf);
+        //     let pow2: u64 = (old_leaf_count + 1) & !old_leaf_count;
+        //     let mut right_lineage_count: u32 = 64 - pow2.leading_zeros() - 1;
+
+        //     let mut auth_path: Vec<Digest> = Vec::<Digest>::with_capacity(right_lineage_count as usize);
+        //     while right_lineage_count != 0u32 {
+        //         let new_hash: Digest = peaks.pop().unwrap();
+        //         let previous_peak: Digest = peaks.pop().unwrap();
+        //         auth_path.push(previous_peak);
+        //         peaks.push(H::hash_pair(previous_peak, new_hash));
+        //         right_lineage_count -= 1;
+        //     }
+
+        //     return (peaks, auth_path);
+        // }
+
+        // let (vm_states, _, error) = triton_vm::vm::debug(&program, vec![], vec![]);
+        // assert!(error.is_none(), "VM execution must succeed. Got: {error:?}",);
+        // let end_state = vm_states.last().unwrap().op_stack.clone();
+        // println!("end_state = {end_state:?}");
     }
 }
 
@@ -458,5 +584,10 @@ mod compile_and_typecheck_tests {
     #[test]
     fn right_lineage_length_from_leaf_index_test() {
         graft_check_compile_prop(&right_lineage_length_from_leaf_index_rast());
+    }
+
+    #[test]
+    fn calculate_new_peaks_from_append_test() {
+        graft_check_compile_prop(&calculate_new_peaks_from_append_inlined_rast());
     }
 }

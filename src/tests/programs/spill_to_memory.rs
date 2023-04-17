@@ -803,7 +803,8 @@ mod run_tests {
             vec![],
             vec![],
             DataType::List(Box::new(DataType::U64)).size_of() as isize,
-        );
+        )
+        .unwrap();
 
         let list_pointer = exec_result.final_stack.last().unwrap();
         println!("list_pointer: {list_pointer}");
@@ -821,7 +822,8 @@ mod run_tests {
             vec![],
             vec![],
             DataType::List(Box::new(DataType::U64)).size_of() as isize,
-        );
+        )
+        .unwrap();
 
         let list_pointer = exec_result.final_stack.last().unwrap();
         let expected_list = (0..16).map(|i| u32_lit(200 + i)).collect_vec();
@@ -838,7 +840,8 @@ mod run_tests {
             vec![],
             vec![],
             DataType::List(Box::new(DataType::U64)).size_of() as isize,
-        );
+        )
+        .unwrap();
 
         let list_pointer = exec_result.final_stack.last().unwrap();
         let expected_list = (0..16).map(|i| u32_lit(200 + i)).collect_vec();
@@ -857,7 +860,8 @@ mod run_tests {
             vec![],
             vec![],
             DataType::List(Box::new(DataType::U64)).size_of() as isize + 2,
-        );
+        )
+        .unwrap();
 
         let list_pointer = exec_result.final_stack[exec_result.final_stack.len() - 3];
 
@@ -885,7 +889,8 @@ mod run_tests {
             vec![],
             vec![],
             12,
-        );
+        )
+        .unwrap();
 
         let list_pointer_b = exec_result.final_stack[exec_result.final_stack.len() - 12];
         let list_pointer_a = exec_result.final_stack[exec_result.final_stack.len() - 1];
