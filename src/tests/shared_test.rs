@@ -283,6 +283,16 @@ pub fn multiple_compare_prop_with_stack(
     }
 }
 
+#[allow(dead_code)]
+pub fn show_memory(memory: &HashMap<BFieldElement, BFieldElement>) {
+    let mut memory = memory.iter().collect_vec();
+    memory.sort_unstable_by(|&a, &b| a.0.value().partial_cmp(&b.0.value()).unwrap());
+
+    for (k, v) in memory {
+        println!("{} => {}", k, v);
+    }
+}
+
 /// Panic if expected list does not match list on specific memory address
 /// Assumes that the "safe list" implementation is used.
 #[allow(dead_code)]

@@ -164,7 +164,8 @@ fn calculate_new_peaks_from_append_inlined_rast() -> syn::ItemFn {
             let pow2: u64 = (old_leaf_count + 1) & !old_leaf_count;
             let mut right_lineage_count: u32 = 64 - pow2.leading_zeros() - 1;
 
-            let mut auth_path: Vec<Digest> = Vec::<Digest>::with_capacity(right_lineage_count as usize);
+            // 64 = MAX_MMR_HEIGHT
+            let mut auth_path: Vec<Digest> = Vec::<Digest>::with_capacity(64usize);
             while right_lineage_count != 0u32 {
                 let new_hash: Digest = peaks.pop().unwrap();
                 let previous_peak: Digest = peaks.pop().unwrap();
@@ -513,6 +514,19 @@ mod run_tests {
                     .collect_vec(),
                 BFieldElement::one(),
                 &memory,
+            );
+
+            show_memory(&memory);
+            println!(
+                "new_peaks = {}",
+                new_peaks.iter().map(|x| x.to_string()).join(", ")
+            );
+            println!(
+                "ap = {}",
+                mp.authentication_path
+                    .iter()
+                    .map(|x| x.to_string())
+                    .join(", ")
             );
         }
 
