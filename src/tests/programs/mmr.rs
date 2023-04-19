@@ -248,6 +248,51 @@ fn calculate_new_peaks_from_leaf_mutation_inlined_rast() -> syn::ItemFn {
     })
 }
 
+#[allow(dead_code)]
+fn verify_authentication_path_inlined() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn verify_authentication_path(
+            peaks: Vec<Digest>,
+            leaf_count: u64,
+            auth_path: Vec<Digest>,
+            leaf_index: u64,
+            leaf_hash: Digest,
+        ) -> bool {
+            // Find the mt_index in constant time
+            let discrepancies: u64 = leaf_index ^ leaf_count;
+            let local_mt_height: u32 = tasm::tasm_arithmetic_u64_log_2_floor(discrepancies);
+            let local_mt_leaf_count: u64 = tasm::tasm_arithmetic_u64_pow2(local_mt_height);
+            let remainder_bitmask: u64 = local_mt_leaf_count - 1u64;
+            let local_leaf_index: u64 = remainder_bitmask & leaf_index;
+            let mut mt_index: u64 = local_leaf_index + local_mt_leaf_count;
+
+            // b) Find the peak_index (in constant time)
+            let all_the_ones: u32 = leaf_count.count_ones();
+            let ones_to_subtract: u32 = (leaf_count & remainder_bitmask).count_ones();
+            let peak_index: u32 = all_the_ones - ones_to_subtract - 1;
+
+            let mut acc_hash: Digest = leaf_hash;
+            let mut i: usize = 0;
+            while mt_index != 1u64 {
+                let ap_element: Digest = auth_path[i];
+                if mt_index % 2u64 == 1u64 {
+                    // Node with `acc_hash` is a right child
+                    acc_hash = H::hash_pair(ap_element, acc_hash);
+                } else {
+                    // Node with `acc_hash` is a left child
+                    acc_hash = H::hash_pair(acc_hash, ap_element);
+                }
+
+                mt_index /= 2;
+                i = i + 1;
+            }
+
+            let expected_peak: Digest = peaks[peak_index as usize];
+            return expected_peak == acc_hash;
+        }
+    })
+}
+
 #[cfg(test)]
 mod run_tests {
     use std::collections::HashMap;
@@ -263,7 +308,7 @@ mod run_tests {
             tip5::{Digest, Tip5},
         },
         test_shared::mmr::get_rustyleveldb_ammr_from_digests,
-        util_types::mmr::{self, mmr_trait::Mmr},
+        util_types::mmr::{self, mmr_membership_proof::MmrMembershipProof, mmr_trait::Mmr},
     };
 
     use super::*;
@@ -590,7 +635,7 @@ mod run_tests {
 
     #[test]
     fn calculate_new_peaks_from_leaf_mutatation_test() {
-        for size in 1..35 {
+        for size in 1..90 {
             let digests: Vec<Digest> = random_elements(size);
             let mut ammr = get_rustyleveldb_ammr_from_digests(digests.clone());
 
@@ -654,6 +699,97 @@ mod run_tests {
             );
         }
     }
+
+    #[test]
+    fn verify_authentication_path_inlined_test() {
+        type H = Tip5;
+
+        for size in 1..35 {
+            let digests: Vec<Digest> = random_elements(size);
+            let mut ammr = get_rustyleveldb_ammr_from_digests(digests.clone());
+            let leaf_index = random::<u64>() % size as u64;
+
+            let mut memory = HashMap::default();
+            let peaks_pointer: BFieldElement = 10000u64.into();
+            let peaks = ammr.get_peaks();
+            let capacity = 2000;
+            rust_shadowing_helper_functions::safe_list::safe_list_insert(
+                peaks_pointer,
+                capacity,
+                peaks.clone(),
+                &mut memory,
+            );
+            let ap_pointer: BFieldElement = 20000u64.into();
+            let mp: MmrMembershipProof<H> = ammr.prove_membership(leaf_index).0;
+            rust_shadowing_helper_functions::safe_list::safe_list_insert(
+                ap_pointer,
+                capacity,
+                mp.authentication_path.clone(),
+                &mut memory,
+            );
+
+            let own_leaf = digests[leaf_index as usize];
+            let good_inputs = vec![
+                bfe_lit(peaks_pointer),
+                u64_lit(ammr.count_leaves()),
+                bfe_lit(ap_pointer),
+                u64_lit(leaf_index),
+                digest_lit(own_leaf),
+            ];
+
+            // Positive test
+            let vm_res = match execute_with_stack_memory_and_ins(
+                &verify_authentication_path_inlined(),
+                good_inputs,
+                &mut memory,
+                vec![],
+                vec![],
+                -10,
+            ) {
+                Ok(vm_res) => vm_res,
+                Err(err) => panic!("VM execution must succeed. Got: {err}"),
+            };
+
+            let expected_result = mp.verify(&peaks, &own_leaf, ammr.count_leaves()).0;
+            let vm_result: bool = vm_res.final_stack.last().unwrap().value() == 1;
+            assert_eq!(
+                expected_result, vm_result,
+                "VM result must agree with Rust result"
+            );
+            assert!(vm_result, "VM verdict must be positive in positive test");
+
+            // Negative test
+            let bad_leaf: Digest = random();
+            let bad_inputs = vec![
+                bfe_lit(peaks_pointer),
+                u64_lit(ammr.count_leaves()),
+                bfe_lit(ap_pointer),
+                u64_lit(leaf_index),
+                digest_lit(bad_leaf),
+            ];
+            let vm_res_negative = match execute_with_stack_memory_and_ins(
+                &verify_authentication_path_inlined(),
+                bad_inputs,
+                &mut memory,
+                vec![],
+                vec![],
+                -10,
+            ) {
+                Ok(vm_res) => vm_res,
+                Err(err) => panic!("VM execution must succeed. Got: {err}"),
+            };
+            let expected_result_neg = mp.verify(&peaks, &bad_leaf, ammr.count_leaves()).0;
+            let vm_result_neg: bool = vm_res_negative.final_stack.last().unwrap().value() == 1;
+            assert_eq!(
+                expected_result_neg, vm_result_neg,
+                "VM result must agree with Rust result"
+            );
+            assert!(
+                !vm_result_neg,
+                "VM verdict in negative test must be negative"
+            );
+        }
+    }
 }
 
 #[cfg(test)]
@@ -710,5 +846,10 @@ mod compile_and_typecheck_tests {
     #[test]
     fn calculate_new_peaks_from_leaf_mutation_inlined_test() {
         graft_check_compile_prop(&calculate_new_peaks_from_leaf_mutation_inlined_rast());
+    }
+
+    #[test]
+    fn verify_authentication_path_inlined_test() {
+        graft_check_compile_prop(&verify_authentication_path_inlined());
     }
 }
