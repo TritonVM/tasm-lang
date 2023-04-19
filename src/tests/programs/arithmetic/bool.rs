@@ -3,7 +3,7 @@ use syn::parse_quote;
 use crate::graft::item_fn;
 
 #[allow(dead_code)]
-pub fn and_bool_rast() -> syn::ItemFn {
+fn and_bool_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn boolean_and_bool(lhs: bool, rhs: bool) -> bool {
             let c: bool = lhs && rhs;
@@ -13,7 +13,7 @@ pub fn and_bool_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn or_bool_rast() -> syn::ItemFn {
+fn or_bool_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn boolean_and_bool(lhs: bool, rhs: bool) -> bool {
             let c: bool = lhs || rhs;
@@ -23,7 +23,7 @@ pub fn or_bool_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn assert_bool_rast() -> syn::ItemFn {
+fn assert_bool_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn boolean_and_bool(lhs: bool) {
             assert!(lhs);

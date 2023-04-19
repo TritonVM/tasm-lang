@@ -3,7 +3,7 @@ use syn::parse_quote;
 use crate::graft::item_fn;
 
 #[allow(dead_code)]
-pub fn left_child_rast() -> syn::ItemFn {
+fn left_child_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn left_child(node_index: u64, height: u32) -> u64 {
             return node_index - (1 << height);
@@ -12,7 +12,7 @@ pub fn left_child_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn right_child_rast() -> syn::ItemFn {
+fn right_child_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn right_child(node_index: u64) -> u64 {
             return node_index - 1;
@@ -21,7 +21,7 @@ pub fn right_child_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn leftmost_ancestor_rast() -> syn::ItemFn {
+fn leftmost_ancestor_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn leftmost_ancestor(node_index: u64) -> (u64, u32) {
             let h: u32 = tasm::tasm_arithmetic_u64_log_2_floor(node_index);
@@ -33,7 +33,7 @@ pub fn leftmost_ancestor_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn old_leaf_index_to_mt_index_and_peak_index_rast_loops_reduced() -> syn::ItemFn {
+fn old_leaf_index_to_mt_index_and_peak_index_rast_loops_reduced() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn old_leaf_index_to_mt_index_and_peak_index(leaf_index: u64, leaf_count: u64) -> (u64, u32) {
 
@@ -71,7 +71,7 @@ pub fn old_leaf_index_to_mt_index_and_peak_index_rast_loops_reduced() -> syn::It
 }
 
 #[allow(dead_code)]
-pub fn leaf_index_to_mt_index_and_peak_index_rast() -> syn::ItemFn {
+fn leaf_index_to_mt_index_and_peak_index_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn leaf_index_to_mt_index_and_peak_index(leaf_index: u64, leaf_count: u64) -> (u64, u32) {
             assert!(leaf_index < leaf_count);
@@ -93,9 +93,9 @@ pub fn leaf_index_to_mt_index_and_peak_index_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn right_lineage_length_stmt_rast() -> syn::ItemFn {
+fn right_lineage_length_stmt_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
-        pub fn right_lineage_length(node_index: u64) -> u32 {
+         fn right_lineage_length(node_index: u64) -> u32 {
             let bit_width: u32 = tasm::tasm_arithmetic_u64_log_2_floor(node_index) + 1u32;
             let npo2: u64 = 1u64 << bit_width;
             let dist: u64 = npo2 - node_index;
@@ -113,7 +113,7 @@ pub fn right_lineage_length_stmt_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn right_lineage_length_expr_rast() -> syn::ItemFn {
+fn right_lineage_length_expr_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn right_lineage_length(node_index: u64) -> u32 {
             let bit_width: u32 = tasm::tasm_arithmetic_u64_log_2_floor(node_index) + 1u32;
@@ -134,7 +134,7 @@ pub fn right_lineage_length_expr_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn right_lineage_length_and_own_height_rast() -> syn::ItemFn {
+fn right_lineage_length_and_own_height_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn right_lineage_length_and_own_height(node_index: u64) -> (u32, u32) {
             let mut candidate_and_candidate_height: (u64, u32) = tasm::tasm_mmr_leftmost_ancestor(node_index);
@@ -163,7 +163,7 @@ pub fn right_lineage_length_and_own_height_rast() -> syn::ItemFn {
 #[allow(dead_code)]
 fn right_lineage_length_from_leaf_index_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
-    pub fn right_lineage_length_from_leaf_index(leaf_index: u64) -> u32 {
+     fn right_lineage_length_from_leaf_index(leaf_index: u64) -> u32 {
         // Identify the last (least significant) nonzero bit
         let pow2: u64 = (leaf_index + 1) & !leaf_index;
 

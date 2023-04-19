@@ -23,7 +23,7 @@ fn add_bfe_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn sub_bfe_rast() -> syn::ItemFn {
+fn sub_bfe_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn sub_bfe(lhs: BFieldElement, rhs: BFieldElement) -> BFieldElement {
             let c: BFieldElement = lhs - rhs;
@@ -33,7 +33,7 @@ pub fn sub_bfe_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn negate_bfe_rast() -> syn::ItemFn {
+fn negate_bfe_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn negate_bfe(value: BFieldElement) -> BFieldElement {
             return -value;
@@ -51,7 +51,7 @@ fn mul_bfe_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn div_bfe_rast() -> syn::ItemFn {
+fn div_bfe_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn div_bfe(numerator: BFieldElement, divisor: BFieldElement) ->  BFieldElement {
             return numerator / divisor;

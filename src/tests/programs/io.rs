@@ -3,7 +3,7 @@ use syn::parse_quote;
 use crate::graft::item_fn;
 
 #[allow(dead_code)]
-pub fn stdin_rast() -> syn::ItemFn {
+fn stdin_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn stdin() -> BFieldElement {
             let from_stdin: BFieldElement = tasm::tasm_io_read_stdin_bfe();
@@ -13,7 +13,7 @@ pub fn stdin_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn stdin_rast_pair() -> syn::ItemFn {
+fn stdin_rast_pair() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn stdin() -> (BFieldElement, BFieldElement) {
             let res1: BFieldElement = tasm::tasm_io_read_stdin_bfe();
@@ -24,7 +24,7 @@ pub fn stdin_rast_pair() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn secretin_rast() -> syn::ItemFn {
+fn secretin_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn secretin() -> BFieldElement {
             let res: BFieldElement = tasm::tasm_io_read_secret_bfe();
@@ -34,7 +34,7 @@ pub fn secretin_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn secretin_rast_10() -> syn::ItemFn {
+fn secretin_rast_10() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn secretin() -> (BFieldElement, BFieldElement, BFieldElement, BFieldElement, BFieldElement, BFieldElement, BFieldElement, BFieldElement) {
             let r0: BFieldElement = tasm::tasm_io_read_secret_bfe();
@@ -51,7 +51,7 @@ pub fn secretin_rast_10() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn stdin_rast_most_types() -> syn::ItemFn {
+fn stdin_rast_most_types() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn mosttypes() -> (bool, u32, u64, BFieldElement, XFieldElement) {
             let s0: bool = tasm::tasm_io_read_stdin_bool();
@@ -65,7 +65,7 @@ pub fn stdin_rast_most_types() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn stdin_rast_all_types() -> syn::ItemFn {
+fn stdin_rast_all_types() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn all_types() -> (bool, u32, u64, BFieldElement, XFieldElement, Digest) {
             let s0: bool = tasm::tasm_io_read_stdin_bool();
@@ -80,7 +80,7 @@ pub fn stdin_rast_all_types() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn stdin_rast_all_types_one_liner() -> syn::ItemFn {
+fn stdin_rast_all_types_one_liner() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn all_types_one_liner() -> (bool, u32, u64, BFieldElement, XFieldElement, Digest) {
             return (
@@ -96,7 +96,7 @@ pub fn stdin_rast_all_types_one_liner() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn secret_rast_all_types_one_liner() -> syn::ItemFn {
+fn secret_rast_all_types_one_liner() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn all_types_one_liner() -> (bool, u32, u64, BFieldElement, XFieldElement, Digest) {
             return (
@@ -112,7 +112,7 @@ pub fn secret_rast_all_types_one_liner() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn stdin_rast_digest() -> syn::ItemFn {
+fn stdin_rast_digest() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn get_digest() -> Digest {
             let s: Digest = tasm::tasm_io_read_stdin_digest();
@@ -122,7 +122,7 @@ pub fn stdin_rast_digest() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn secretin_rast_most_types() -> syn::ItemFn {
+fn secretin_rast_most_types() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn most_types() -> (bool, u32, u64, BFieldElement, XFieldElement) {
             let r0: bool = tasm::tasm_io_read_secret_bool();
@@ -136,7 +136,7 @@ pub fn secretin_rast_most_types() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn secretin_rast_digest() -> syn::ItemFn {
+fn secretin_rast_digest() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn get_digest() -> Digest {
             let s: Digest = tasm::tasm_io_read_secret_digest();
