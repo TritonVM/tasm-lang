@@ -3,7 +3,7 @@ use syn::parse_quote;
 use crate::graft::item_fn;
 
 #[allow(dead_code)]
-pub fn declare_u32_max_rast() -> syn::ItemFn {
+fn declare_u32_max_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn declare_u32_max() {
             let a: u32 = u32::MAX;
@@ -13,7 +13,7 @@ pub fn declare_u32_max_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn add_u32_rast() -> syn::ItemFn {
+fn add_u32_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn add_u32(lhs: u32, rhs: u32) -> u32 {
             let c: u32 = lhs + rhs;
@@ -23,7 +23,7 @@ pub fn add_u32_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn add_u32_overwrite_rast() -> syn::ItemFn {
+fn add_u32_overwrite_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn add_u32_overwrite(lhs: u32, rhs: u32) -> u32 {
             let mut c: u32 = lhs + rhs;
@@ -34,7 +34,7 @@ pub fn add_u32_overwrite_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn simple_sub_u32() -> syn::ItemFn {
+fn simple_sub_u32() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn simple_sub(a: u32, b: u32) -> u32 {
             return a - b;
@@ -43,7 +43,7 @@ pub fn simple_sub_u32() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn sub_u32_rast_1() -> syn::ItemFn {
+fn sub_u32_rast_1() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn sub_u32(lhs: u32, rhs: u32) -> u32 {
             let c: u32 = lhs - rhs;
@@ -53,7 +53,7 @@ pub fn sub_u32_rast_1() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn sub_u32_rast_2() -> syn::ItemFn {
+fn sub_u32_rast_2() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn sub_u32(rhs: u32, lhs: u32) -> u32 {
             let c: u32 = lhs - rhs;
@@ -63,7 +63,7 @@ pub fn sub_u32_rast_2() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn mul_u32_rast() -> syn::ItemFn {
+fn mul_u32_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn mul_u32(rhs: u32, lhs: u32) -> u32 {
             return rhs * lhs;
@@ -72,7 +72,7 @@ pub fn mul_u32_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn rem_u32_rast() -> syn::ItemFn {
+fn rem_u32_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn rem_u32(rhs: u32, lhs: u32) -> u32 {
             return rhs % lhs;
@@ -81,7 +81,7 @@ pub fn rem_u32_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn div_u32_rast() -> syn::ItemFn {
+fn div_u32_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn rem_u32(rhs: u32, lhs: u32) -> u32 {
             return rhs / lhs;
@@ -90,7 +90,7 @@ pub fn div_u32_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn bitwise_and_u32_rast() -> syn::ItemFn {
+fn bitwise_and_u32_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn bitwise_and_u32(lhs: u32, rhs: u32) -> u32 {
             let c: u32 = lhs & rhs;
@@ -100,7 +100,7 @@ pub fn bitwise_and_u32_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn operator_evaluation_ordering_with_div_u32() -> syn::ItemFn {
+fn operator_evaluation_ordering_with_div_u32() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn complicated_expression_with_div() -> u32 {
             return 100u32 - 14u32 / 2u32 + 1u32;
@@ -109,7 +109,7 @@ pub fn operator_evaluation_ordering_with_div_u32() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn operator_evaluation_ordering_with_mul() -> syn::ItemFn {
+fn operator_evaluation_ordering_with_mul() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn complicated_expression_with_mul() -> u32 {
             return 380u32 - 14u32 * 2u32 * 10u32 + 1u32 - 41u32 * 1u32;
@@ -118,7 +118,7 @@ pub fn operator_evaluation_ordering_with_mul() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn lt_u32_dynamic_rast() -> syn::ItemFn {
+fn lt_u32_dynamic_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn lt_u32_dynamic(lhs: u32, rhs: u32) -> bool {
             return lhs < rhs;
@@ -127,7 +127,7 @@ pub fn lt_u32_dynamic_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn gt_u32_dynamic_rast() -> syn::ItemFn {
+fn gt_u32_dynamic_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn gt_u32_dynamic(lhs: u32, rhs: u32) -> bool {
             return lhs > rhs;
@@ -136,7 +136,7 @@ pub fn gt_u32_dynamic_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn lt_u32_static() -> syn::ItemFn {
+fn lt_u32_static() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn lt_u32_static() -> bool {
             let a: u32 = 14u32;
@@ -152,7 +152,7 @@ pub fn lt_u32_static() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn leftshift_u32_rast() -> syn::ItemFn {
+fn leftshift_u32_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn leftshift_u32(lhs: u32, rhs: u32) -> u32 {
             let c: u32 = lhs << rhs;
@@ -162,7 +162,7 @@ pub fn leftshift_u32_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn rightshift_u32_rast() -> syn::ItemFn {
+fn rightshift_u32_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn rightshift_u32(lhs: u32, rhs: u32) -> u32 {
             let c: u32 = lhs >> rhs;
@@ -172,7 +172,7 @@ pub fn rightshift_u32_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn usize_as_alias_for_u32_rast() -> syn::ItemFn {
+fn usize_as_alias_for_u32_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn usize_as_alias_for_u32(lhs: usize, rhs: u32) -> usize {
             let c: u32 = lhs + rhs;
@@ -182,7 +182,7 @@ pub fn usize_as_alias_for_u32_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn leading_zeros_u32_rast() -> syn::ItemFn {
+fn leading_zeros_u32_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn leading_zeros_u32(value: u32) -> u32 {
             return value.leading_zeros();
@@ -191,7 +191,7 @@ pub fn leading_zeros_u32_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn count_ones_u32_rast() -> syn::ItemFn {
+fn count_ones_u32_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn count_ones_u32(value: u32) -> u32 {
             return value.count_ones();
@@ -200,7 +200,7 @@ pub fn count_ones_u32_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn bitwise_not_return_rast() -> syn::ItemFn {
+fn bitwise_not_return_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn bitwise_not(value: u32) -> u32 {
             return !value;
@@ -209,7 +209,7 @@ pub fn bitwise_not_return_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn bitwise_not_assign_rast() -> syn::ItemFn {
+fn bitwise_not_assign_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn bitwise_not(value: u32) -> u32 {
             let ret: u32 = !value;

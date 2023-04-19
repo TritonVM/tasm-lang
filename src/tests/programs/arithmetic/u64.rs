@@ -3,7 +3,7 @@ use syn::parse_quote;
 use crate::graft::item_fn;
 
 #[allow(dead_code)]
-pub fn add_u64_rast() -> syn::ItemFn {
+fn add_u64_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         // using `add_u64` as function name here would create a name-clash
         // between a dependency and the function we are compiling.
@@ -15,7 +15,7 @@ pub fn add_u64_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn sub_u64_rast_1() -> syn::ItemFn {
+fn sub_u64_rast_1() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn sub_u64_test(lhs: u64, rhs: u64) -> u64 {
             let c: u64 = lhs - rhs;
@@ -25,7 +25,7 @@ pub fn sub_u64_rast_1() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn sub_u64_rast_2() -> syn::ItemFn {
+fn sub_u64_rast_2() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn sub_u64_test(rhs: u64, lhs: u64) -> u64 {
             let c: u64 = lhs - rhs;
@@ -35,7 +35,7 @@ pub fn sub_u64_rast_2() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn mul_u64_rast() -> syn::ItemFn {
+fn mul_u64_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn mul_u64(rhs: u64, lhs: u64) -> u64 {
             return rhs * lhs;
@@ -44,7 +44,7 @@ pub fn mul_u64_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn div_u64_rast() -> syn::ItemFn {
+fn div_u64_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn div_u64(numerator: u64, divisor: u64) -> u64 {
             return numerator / divisor;
@@ -53,7 +53,7 @@ pub fn div_u64_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn rem_u64_rast() -> syn::ItemFn {
+fn rem_u64_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn rem_u64(numerator: u64, divisor: u64) -> u64 {
             return numerator % divisor;
@@ -62,7 +62,7 @@ pub fn rem_u64_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn lt_u64_dynamic_rast() -> syn::ItemFn {
+fn lt_u64_dynamic_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn lt_u64_dynamic(lhs: u64, rhs: u64) -> bool {
             return lhs < rhs;
@@ -71,7 +71,7 @@ pub fn lt_u64_dynamic_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn gt_u64_dynamic_rast() -> syn::ItemFn {
+fn gt_u64_dynamic_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn gt_u64_dynamic(lhs: u64, rhs: u64) -> bool {
             return lhs > rhs;
@@ -80,7 +80,7 @@ pub fn gt_u64_dynamic_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn leading_zeros_u64_rast() -> syn::ItemFn {
+fn leading_zeros_u64_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn leading_zeros_u64(value: u64) -> u32 {
             return value.leading_zeros();
@@ -89,7 +89,7 @@ pub fn leading_zeros_u64_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn count_ones_u64_rast() -> syn::ItemFn {
+fn count_ones_u64_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn count_ones_u64(value: u64) -> u32 {
             return value.count_ones();
@@ -98,7 +98,7 @@ pub fn count_ones_u64_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn divmoddi4_u64_rast() -> syn::ItemFn {
+fn divmoddi4_u64_rast() -> syn::ItemFn {
     // This code shows how to do u64 div-mod using only u32 div-mod primitives.
     // So the TASM code that this function compiles to can be used for the u64
     // div-mod snippet for this compiler.
@@ -151,7 +151,7 @@ pub fn divmoddi4_u64_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn bitwise_and_u64_rast() -> syn::ItemFn {
+fn bitwise_and_u64_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn bitwise_and_u64(lhs: u64, rhs: u64) -> u64 {
             let c: u64 = lhs & rhs;
@@ -161,7 +161,7 @@ pub fn bitwise_and_u64_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn operator_evaluation_ordering_with_div_u64() -> syn::ItemFn {
+fn operator_evaluation_ordering_with_div_u64() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn complicated_expression_with_div() -> u64 {
             return 100u64 - 14u64 / 2u64 + 1u64;
@@ -170,7 +170,7 @@ pub fn operator_evaluation_ordering_with_div_u64() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn leftshift_u64_rast() -> syn::ItemFn {
+fn leftshift_u64_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn leftshift_u64(lhs: u64, rhs: u32) -> u64 {
             let c: u64 = lhs << rhs;
@@ -180,7 +180,7 @@ pub fn leftshift_u64_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn rightshift_u64_rast() -> syn::ItemFn {
+fn rightshift_u64_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn rightshift_u64(lhs: u64, rhs: u32) -> u64 {
             let c: u64 = lhs >> rhs;
@@ -190,7 +190,7 @@ pub fn rightshift_u64_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn bitwise_not_return_rast() -> syn::ItemFn {
+fn bitwise_not_return_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn bitwise_not(value: u64) -> u64 {
             return !value;
@@ -199,7 +199,7 @@ pub fn bitwise_not_return_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn bitwise_not_assign_rast() -> syn::ItemFn {
+fn bitwise_not_assign_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn bitwise_not(value: u64) -> u64 {
             let ret: u64 = !value;

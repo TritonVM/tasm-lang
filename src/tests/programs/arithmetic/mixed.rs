@@ -3,7 +3,7 @@ use syn::parse_quote;
 use crate::graft::item_fn;
 
 #[allow(dead_code)]
-pub fn powers_of_two_with_bit_shifting() -> syn::ItemFn {
+fn powers_of_two_with_bit_shifting() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn powers_of_two_with_bit_shifting() -> u64 {
             let a: u64 = 1 << 40;

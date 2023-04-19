@@ -3,7 +3,7 @@ use syn::parse_quote;
 use crate::graft::item_fn;
 
 #[allow(dead_code)]
-pub fn inferred_literals() -> syn::ItemFn {
+fn inferred_literals() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn main() {
             // infer from let context
@@ -74,7 +74,7 @@ pub fn inferred_literals() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn nop_rast() -> syn::ItemFn {
+fn nop_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn nop_nop() {
             return;
@@ -83,7 +83,7 @@ pub fn nop_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn simple_recursive_pow_rast() -> syn::ItemFn {
+fn simple_recursive_pow_rast() -> syn::ItemFn {
     // A simple, recursive function that is *not* symmetric in it's input arguments.
     // In other words: it gives a difference result if the input arguments are flipped.
     // This test is added to ensure consistency in the order of input arguments.
@@ -99,7 +99,7 @@ pub fn simple_recursive_pow_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn tasm_argument_evaluation_order_rast() -> syn::ItemFn {
+fn tasm_argument_evaluation_order_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn tasm_argument_evaluation_order() -> u64 {
             let five: u64 = tasm::tasm_arithmetic_u64_sub(2, 7);
@@ -109,7 +109,7 @@ pub fn tasm_argument_evaluation_order_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn simple_while_loop() -> syn::ItemFn {
+fn simple_while_loop() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn simple_while_loop() -> u32 {
             let mut acc: u32 = 0u32;
@@ -125,7 +125,7 @@ pub fn simple_while_loop() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn longer_while_loop() -> syn::ItemFn {
+fn longer_while_loop() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn longer_while_loop(a: u32) -> u64 {
             // Should return `1641 + a`
@@ -149,7 +149,7 @@ pub fn longer_while_loop() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn while_loop_with_declarations() -> syn::ItemFn {
+fn while_loop_with_declarations() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn while_loop_with_declarations(a: u32) -> u64 {
             // Should return `1641 + a`
@@ -174,7 +174,7 @@ pub fn while_loop_with_declarations() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn code_block() -> syn::ItemFn {
+fn code_block() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn code_block(a: u64) -> u32 {
             let b: u64 = a + 2u64;
@@ -190,7 +190,7 @@ pub fn code_block() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn simple_list_support() -> syn::ItemFn {
+fn simple_list_support() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn make_short_list() -> (Vec<u64>, u32, u64, u64) {
             let mut a: Vec<u64> = Vec::<u64>::with_capacity(17);
@@ -210,7 +210,7 @@ pub fn simple_list_support() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn tuple_support() -> syn::ItemFn {
+fn tuple_support() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn return_many() -> (bool, u32, u64) {
             let a: bool = true;
@@ -223,7 +223,7 @@ pub fn tuple_support() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn return_tuple_element_0() -> syn::ItemFn {
+fn return_tuple_element_0() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn return_tuple_element() -> bool {
             let tuple: (bool, u32, u64, u64, u32) = (true, 42u32, 10000000000u64, 60000000000u64, 20000u32);
@@ -233,7 +233,7 @@ pub fn return_tuple_element_0() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn return_tuple_element_1() -> syn::ItemFn {
+fn return_tuple_element_1() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn return_tuple_element() -> u32 {
             let tuple: (bool, u32, u64, u64, u32) = (true, 42u32, 10000000000u64, 60000000000u64, 20000u32);
@@ -243,7 +243,7 @@ pub fn return_tuple_element_1() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn return_tuple_element_2() -> syn::ItemFn {
+fn return_tuple_element_2() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn return_tuple_element() -> u64 {
             let tuple: (bool, u32, u64, u64, u32) = (true, 42u32, 10000000000u64, 60000000000u64, 20000u32);
@@ -253,7 +253,7 @@ pub fn return_tuple_element_2() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn return_tuple_element_3() -> syn::ItemFn {
+fn return_tuple_element_3() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn return_tuple_element() -> u64 {
             let tuple: (bool, u32, u64, u64, u32) = (true, 42u32, 10000000000u64, 60000000000u64, 20000u32);
@@ -263,7 +263,7 @@ pub fn return_tuple_element_3() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn return_tuple_element_4() -> syn::ItemFn {
+fn return_tuple_element_4() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn return_tuple_element() -> u32 {
             let tuple: (bool, u32, u64, u64, u32) = (true, 42u32, 10000000000u64, 60000000000u64, 20000u32);
@@ -273,7 +273,7 @@ pub fn return_tuple_element_4() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn mut_list_argument() -> syn::ItemFn {
+fn mut_list_argument() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn foo(values: &mut Vec<u64>) {
             let mut i: u64 = 0u64;
@@ -288,7 +288,7 @@ pub fn mut_list_argument() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn missing_mut_keyword() -> syn::ItemFn {
+fn missing_mut_keyword() -> syn::ItemFn {
     item_fn(parse_quote!(
         fn missing_mut() {
             let a = 5000u64;
@@ -298,7 +298,7 @@ pub fn missing_mut_keyword() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn allow_mutable_tuple_rast() -> syn::ItemFn {
+fn allow_mutable_tuple_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn allow_mutable_tuple() -> (u64, u64) {
             let mut tuple: (u64, u64) = (1u64, 2u64);
@@ -314,7 +314,7 @@ pub fn allow_mutable_tuple_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn allow_mutable_triplet_rast() -> syn::ItemFn {
+fn allow_mutable_triplet_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn allow_mutable_triplet() -> (u64, u64, u32) {
             let mut tuple: (u64, u64, u32) = (1u64, 2u64, 3u32);
@@ -328,7 +328,7 @@ pub fn allow_mutable_triplet_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn overwrite_values_rast() -> syn::ItemFn {
+fn overwrite_values_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn overwrite_values() -> (u32, u32) {
             let mut a: u32 = 100;
@@ -343,7 +343,7 @@ pub fn overwrite_values_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn allow_mutable_tuple_complicated_rast() -> syn::ItemFn {
+fn allow_mutable_tuple_complicated_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn allow_mutable_tuple_complicated() -> (u64, u64) {
             let a: u64 = 1u64;
@@ -360,7 +360,7 @@ pub fn allow_mutable_tuple_complicated_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn polymorphic_vectors_rast() -> syn::ItemFn {
+fn polymorphic_vectors_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn polymorphic_vectors() -> (Vec<u32>, u32, Vec<u64>, u32) {
             let mut a: Vec<u32> = Vec::<u32>::with_capacity(16);
@@ -377,7 +377,7 @@ pub fn polymorphic_vectors_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn build_u32_vector_in_while_loop_rast() -> syn::ItemFn {
+fn build_u32_vector_in_while_loop_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn build_vector_in_while_loop() -> Vec<u32> {
             let mut a: Vec<u32> = Vec::<u32>::with_capacity(16);
@@ -394,7 +394,7 @@ pub fn build_u32_vector_in_while_loop_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn build_u64_vector_in_while_loop_rast() -> syn::ItemFn {
+fn build_u64_vector_in_while_loop_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn build_vector_in_while_loop() -> Vec<u64> {
             let mut a: Vec<u64> = Vec::<u64>::with_capacity(16);
@@ -705,7 +705,8 @@ mod run_tests {
             vec![],
             vec![],
             DataType::List(Box::new(DataType::U32)).size_of() as isize,
-        );
+        )
+        .unwrap();
         let mut list_pointer = exec_result.final_stack.last().unwrap();
         let mut expected_list = (0..16).map(u32_lit).collect_vec();
         assert_list_equal(expected_list, *list_pointer, &vm_memory);
@@ -718,7 +719,8 @@ mod run_tests {
             vec![],
             vec![],
             DataType::List(Box::new(DataType::U64)).size_of() as isize,
-        );
+        )
+        .unwrap();
         list_pointer = exec_result.final_stack.last().unwrap();
         expected_list = (0..16).map(u64_lit).collect_vec();
         assert_list_equal(expected_list, *list_pointer, &vm_memory)

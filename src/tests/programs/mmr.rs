@@ -3,7 +3,7 @@ use syn::parse_quote;
 use crate::graft::item_fn;
 
 #[allow(dead_code)]
-pub fn left_child_rast() -> syn::ItemFn {
+fn left_child_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn left_child(node_index: u64, height: u32) -> u64 {
             return node_index - (1 << height);
@@ -12,7 +12,7 @@ pub fn left_child_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn right_child_rast() -> syn::ItemFn {
+fn right_child_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn right_child(node_index: u64) -> u64 {
             return node_index - 1;
@@ -21,7 +21,7 @@ pub fn right_child_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn leftmost_ancestor_rast() -> syn::ItemFn {
+fn leftmost_ancestor_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn leftmost_ancestor(node_index: u64) -> (u64, u32) {
             let h: u32 = tasm::tasm_arithmetic_u64_log_2_floor(node_index);
@@ -33,9 +33,9 @@ pub fn leftmost_ancestor_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn leaf_index_to_mt_index_and_peak_index_rast_loops_reduced() -> syn::ItemFn {
+fn old_leaf_index_to_mt_index_and_peak_index_rast_loops_reduced() -> syn::ItemFn {
     item_fn(parse_quote! {
-        fn leaf_index_to_mt_index_and_peak_index(leaf_index: u64, leaf_count: u64) -> (u64, u32) {
+        fn old_leaf_index_to_mt_index_and_peak_index(leaf_index: u64, leaf_count: u64) -> (u64, u32) {
 
             // a) Get the index as if this was a Merkle tree
             let local_mt_height_u32: u32 = tasm::tasm_arithmetic_u64_log_2_floor(leaf_index ^ leaf_count);
@@ -71,9 +71,31 @@ pub fn leaf_index_to_mt_index_and_peak_index_rast_loops_reduced() -> syn::ItemFn
 }
 
 #[allow(dead_code)]
-pub fn right_lineage_length_stmt_rast() -> syn::ItemFn {
+fn leaf_index_to_mt_index_and_peak_index_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
-        pub fn right_lineage_length(node_index: u64) -> u32 {
+        fn leaf_index_to_mt_index_and_peak_index(leaf_index: u64, leaf_count: u64) -> (u64, u32) {
+            assert!(leaf_index < leaf_count);
+
+            // a) Get the index as if this was a Merkle tree
+            let local_mt_height_u32: u32 = tasm::tasm_arithmetic_u64_log_2_floor(leaf_index ^ leaf_count);
+            let local_mt_leaf_count: u64 = tasm::tasm_arithmetic_u64_pow2(local_mt_height_u32);
+            let remainder_bitmask: u64 = local_mt_leaf_count - 1;
+            let mt_index: u64 = (remainder_bitmask & leaf_index) as u64 + local_mt_leaf_count;
+
+            // b) Find the peak_index (in constant time)
+            let all_the_ones: u32 = leaf_count.count_ones();
+            let ones_to_subtract: u32 = (leaf_count & remainder_bitmask).count_ones();
+            let peak_index: u32 = all_the_ones - ones_to_subtract - 1;
+
+            return (mt_index, peak_index);
+        }
+    })
+}
+
+#[allow(dead_code)]
+fn right_lineage_length_stmt_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+         fn right_lineage_length(node_index: u64) -> u32 {
             let bit_width: u32 = tasm::tasm_arithmetic_u64_log_2_floor(node_index) + 1u32;
             let npo2: u64 = 1u64 << bit_width;
             let dist: u64 = npo2 - node_index;
@@ -91,7 +113,7 @@ pub fn right_lineage_length_stmt_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn right_lineage_length_expr_rast() -> syn::ItemFn {
+fn right_lineage_length_expr_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn right_lineage_length(node_index: u64) -> u32 {
             let bit_width: u32 = tasm::tasm_arithmetic_u64_log_2_floor(node_index) + 1u32;
@@ -112,7 +134,7 @@ pub fn right_lineage_length_expr_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn right_lineage_length_and_own_height_rast() -> syn::ItemFn {
+fn right_lineage_length_and_own_height_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn right_lineage_length_and_own_height(node_index: u64) -> (u32, u32) {
             let mut candidate_and_candidate_height: (u64, u32) = tasm::tasm_mmr_leftmost_ancestor(node_index);
@@ -141,7 +163,7 @@ pub fn right_lineage_length_and_own_height_rast() -> syn::ItemFn {
 #[allow(dead_code)]
 fn right_lineage_length_from_leaf_index_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
-    pub fn right_lineage_length_from_leaf_index(leaf_index: u64) -> u32 {
+     fn right_lineage_length_from_leaf_index(leaf_index: u64) -> u32 {
         // Identify the last (least significant) nonzero bit
         let pow2: u64 = (leaf_index + 1) & !leaf_index;
 
@@ -151,11 +173,143 @@ fn right_lineage_length_from_leaf_index_rast() -> syn::ItemFn {
     })
 }
 
+#[allow(dead_code)]
+fn calculate_new_peaks_from_append_inlined_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn calculate_new_peaks_from_append(
+            old_leaf_count: u64,
+            old_peaks: Vec<Digest>,
+            new_leaf: Digest,
+        ) -> (Vec<Digest>, Vec<Digest>) {
+            let mut peaks: Vec<Digest> = old_peaks;
+            peaks.push(new_leaf);
+            let pow2: u64 = (old_leaf_count + 1) & !old_leaf_count;
+            let mut right_lineage_count: u32 = 64 - pow2.leading_zeros() - 1;
+
+            // 64 = MAX_MMR_HEIGHT
+            let mut auth_path: Vec<Digest> = Vec::<Digest>::with_capacity(64usize);
+            while right_lineage_count != 0u32 {
+                let new_hash: Digest = peaks.pop().unwrap();
+                let previous_peak: Digest = peaks.pop().unwrap();
+                auth_path.push(previous_peak);
+                peaks.push(H::hash_pair(previous_peak, new_hash));
+                right_lineage_count -= 1;
+            }
+
+            return (peaks, auth_path);
+        }
+    })
+}
+
+#[allow(dead_code)]
+fn calculate_new_peaks_from_leaf_mutation_inlined_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+    fn calculate_new_peaks_from_leaf_mutation(
+        old_peaks: Vec<Digest>,
+        new_leaf: Digest,
+        leaf_count: u64,
+        authentication_path: Vec<Digest>,
+        leaf_index: u64,
+    ) -> Vec<Digest> {
+
+        let discrepancies: u64 = leaf_index ^ leaf_count;
+        let local_mt_height: u32 = tasm::tasm_arithmetic_u64_log_2_floor(discrepancies);
+        let local_mt_leaf_count: u64 = tasm::tasm_arithmetic_u64_pow2(local_mt_height);
+        let remainder_bitmask: u64 = local_mt_leaf_count - 1u64;
+        let local_leaf_index: u64 = remainder_bitmask & leaf_index;
+        let mut mt_index: u64 = local_leaf_index + local_mt_leaf_count;
+
+        // b) Find the peak_index (in constant time)
+        let all_the_ones: u32 = leaf_count.count_ones();
+        let ones_to_subtract: u32 = (leaf_count & remainder_bitmask).count_ones();
+        let peak_index: u32 = all_the_ones - ones_to_subtract - 1;
+
+        let mut acc_hash: Digest = new_leaf;
+        let mut i: usize = 0;
+        while mt_index != 1u64 {
+            let ap_element: Digest = authentication_path[i];
+            if mt_index % 2u64 == 1u64 {
+                // Node with `acc_hash` is a right child
+                acc_hash = H::hash_pair(ap_element, acc_hash);
+            } else {
+                // Node with `acc_hash` is a left child
+                acc_hash = H::hash_pair(acc_hash, ap_element);
+            }
+
+            mt_index /= 2;
+            i = i + 1;
+        }
+
+        let mut calculated_peaks: Vec<Digest> = old_peaks;
+        calculated_peaks[peak_index as usize] = acc_hash;
+
+        return calculated_peaks;
+    }
+    })
+}
+
+#[allow(dead_code)]
+fn verify_authentication_path_inlined() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn verify_authentication_path(
+            peaks: Vec<Digest>,
+            leaf_count: u64,
+            auth_path: Vec<Digest>,
+            leaf_index: u64,
+            leaf_hash: Digest,
+        ) -> bool {
+            // Find the mt_index in constant time
+            let discrepancies: u64 = leaf_index ^ leaf_count;
+            let local_mt_height: u32 = tasm::tasm_arithmetic_u64_log_2_floor(discrepancies);
+            let local_mt_leaf_count: u64 = tasm::tasm_arithmetic_u64_pow2(local_mt_height);
+            let remainder_bitmask: u64 = local_mt_leaf_count - 1u64;
+            let local_leaf_index: u64 = remainder_bitmask & leaf_index;
+            let mut mt_index: u64 = local_leaf_index + local_mt_leaf_count;
+
+            // b) Find the peak_index (in constant time)
+            let all_the_ones: u32 = leaf_count.count_ones();
+            let ones_to_subtract: u32 = (leaf_count & remainder_bitmask).count_ones();
+            let peak_index: u32 = all_the_ones - ones_to_subtract - 1;
+
+            let mut acc_hash: Digest = leaf_hash;
+            let mut i: usize = 0;
+            while mt_index != 1u64 {
+                let ap_element: Digest = auth_path[i];
+                if mt_index % 2u64 == 1u64 {
+                    // Node with `acc_hash` is a right child
+                    acc_hash = H::hash_pair(ap_element, acc_hash);
+                } else {
+                    // Node with `acc_hash` is a left child
+                    acc_hash = H::hash_pair(acc_hash, ap_element);
+                }
+
+                mt_index /= 2;
+                i = i + 1;
+            }
+
+            let expected_peak: Digest = peaks[peak_index as usize];
+            return expected_peak == acc_hash;
+        }
+    })
+}
+
 #[cfg(test)]
 mod run_tests {
+    use std::collections::HashMap;
+
     use itertools::Itertools;
-    use rand::{thread_rng, RngCore};
-    use twenty_first::{shared_math::other::random_elements, util_types::mmr};
+    use num::One;
+    use rand::{random, thread_rng, RngCore};
+    use tasm_lib::rust_shadowing_helper_functions;
+    use twenty_first::{
+        shared_math::{
+            b_field_element::BFieldElement,
+            other::random_elements,
+            tip5::{Digest, Tip5},
+        },
+        test_shared::mmr::get_rustyleveldb_ammr_from_digests,
+        util_types::mmr::{self, mmr_membership_proof::MmrMembershipProof, mmr_trait::Mmr},
+    };
 
     use super::*;
     use crate::tests::shared_test::*;
@@ -416,6 +570,225 @@ mod run_tests {
             add_test((3, 2), ((1 << i) + 9, (1 << i) + 11), &mut test_cases);
             add_test((1, 3), ((1 << i) + 10, (1 << i) + 11), &mut test_cases);
         }
+
+        multiple_compare_prop_with_stack(
+            &old_leaf_index_to_mt_index_and_peak_index_rast_loops_reduced(),
+            test_cases.clone(),
+        );
+        multiple_compare_prop_with_stack(&leaf_index_to_mt_index_and_peak_index_rast(), test_cases);
+    }
+
+    #[test]
+    fn calculate_new_peaks_from_append_test() {
+        for size in 0..20 {
+            let digests: Vec<Digest> = random_elements(size);
+            let msa: mmr::mmr_accumulator::MmrAccumulator<Tip5> =
+                mmr::mmr_accumulator::MmrAccumulator::new(digests.clone());
+            let mut memory = HashMap::default();
+            let list_pointer: BFieldElement = 10000u64.into();
+            rust_shadowing_helper_functions::safe_list::safe_list_insert(
+                list_pointer,
+                2000,
+                msa.get_peaks(),
+                &mut memory,
+            );
+            let new_leaf: Digest = random();
+            let inputs = vec![
+                u64_lit(msa.count_leaves()),
+                bfe_lit(list_pointer),
+                digest_lit(new_leaf),
+            ];
+            let res = execute_with_stack_memory_and_ins(
+                &calculate_new_peaks_from_append_inlined_rast(),
+                inputs,
+                &mut memory,
+                vec![],
+                vec![],
+                -6,
+            );
+            assert!(res.is_ok(), "VM execution must succeed");
+
+            let (new_peaks, mp) = mmr::shared_basic::calculate_new_peaks_from_append::<Tip5>(
+                msa.count_leaves(),
+                msa.get_peaks(),
+                new_leaf,
+            );
+
+            // Verify that the new peaks calculated in the VM match those calculated in Rust
+            assert_list_equal(
+                new_peaks.iter().map(|x| digest_lit(*x)).collect_vec(),
+                list_pointer,
+                &memory,
+            );
+
+            // Verify that the authentication path calculated in the VM match that calculated in Rust
+            assert_list_equal(
+                mp.authentication_path
+                    .iter()
+                    .map(|x| digest_lit(*x))
+                    .collect_vec(),
+                BFieldElement::one(),
+                &memory,
+            );
+        }
+    }
+
+    #[test]
+    fn calculate_new_peaks_from_leaf_mutatation_test() {
+        for size in 1..90 {
+            let digests: Vec<Digest> = random_elements(size);
+            let mut ammr = get_rustyleveldb_ammr_from_digests(digests.clone());
+
+            let mut memory = HashMap::default();
+            let old_peaks_pointer: BFieldElement = 10000u64.into();
+            let old_peaks = ammr.get_peaks();
+            let capacity = 2000;
+            let leaf_index = random::<u64>() % size as u64;
+            rust_shadowing_helper_functions::safe_list::safe_list_insert(
+                old_peaks_pointer,
+                capacity,
+                old_peaks.clone(),
+                &mut memory,
+            );
+            let ap_pointer: BFieldElement = 20000u64.into();
+            let old_mp = ammr.prove_membership(leaf_index).0;
+            rust_shadowing_helper_functions::safe_list::safe_list_insert(
+                ap_pointer,
+                capacity,
+                old_mp.authentication_path.clone(),
+                &mut memory,
+            );
+            let new_leaf: Digest = random();
+            let inputs = vec![
+                bfe_lit(old_peaks_pointer),
+                digest_lit(new_leaf),
+                u64_lit(ammr.count_leaves()),
+                bfe_lit(ap_pointer),
+                u64_lit(leaf_index),
+            ];
+            let res = execute_with_stack_memory_and_ins(
+                &calculate_new_peaks_from_leaf_mutation_inlined_rast(),
+                inputs,
+                &mut memory,
+                vec![],
+                vec![],
+                -10,
+            );
+            assert!(res.is_ok(), "VM execution must succeed");
+
+            let expected_new_peaks = mmr::shared_basic::calculate_new_peaks_from_leaf_mutation::<
+                Tip5,
+            >(
+                &old_peaks, &new_leaf, ammr.count_leaves(), &old_mp
+            );
+
+            // Verify that the new peaks calculated in the VM match those calculated in Rust
+            assert_list_equal(
+                expected_new_peaks
+                    .iter()
+                    .map(|x| digest_lit(*x))
+                    .collect_vec(),
+                old_peaks_pointer,
+                &memory,
+            );
+
+            // Sanity check
+            assert_ne!(
+                expected_new_peaks, old_peaks,
+                "Mutating a leaf must mutate peaks list"
+            );
+        }
+    }
+
+    #[test]
+    fn verify_authentication_path_inlined_test() {
+        type H = Tip5;
+
+        for size in 1..35 {
+            let digests: Vec<Digest> = random_elements(size);
+            let mut ammr = get_rustyleveldb_ammr_from_digests(digests.clone());
+            let leaf_index = random::<u64>() % size as u64;
+
+            let mut memory = HashMap::default();
+            let peaks_pointer: BFieldElement = 10000u64.into();
+            let peaks = ammr.get_peaks();
+            let capacity = 2000;
+            rust_shadowing_helper_functions::safe_list::safe_list_insert(
+                peaks_pointer,
+                capacity,
+                peaks.clone(),
+                &mut memory,
+            );
+            let ap_pointer: BFieldElement = 20000u64.into();
+            let mp: MmrMembershipProof<H> = ammr.prove_membership(leaf_index).0;
+            rust_shadowing_helper_functions::safe_list::safe_list_insert(
+                ap_pointer,
+                capacity,
+                mp.authentication_path.clone(),
+                &mut memory,
+            );
+
+            let own_leaf = digests[leaf_index as usize];
+            let good_inputs = vec![
+                bfe_lit(peaks_pointer),
+                u64_lit(ammr.count_leaves()),
+                bfe_lit(ap_pointer),
+                u64_lit(leaf_index),
+                digest_lit(own_leaf),
+            ];
+
+            // Positive test
+            let vm_res = match execute_with_stack_memory_and_ins(
+                &verify_authentication_path_inlined(),
+                good_inputs,
+                &mut memory,
+                vec![],
+                vec![],
+                -10,
+            ) {
+                Ok(vm_res) => vm_res,
+                Err(err) => panic!("VM execution must succeed. Got: {err}"),
+            };
+
+            let expected_result = mp.verify(&peaks, &own_leaf, ammr.count_leaves()).0;
+            let vm_result: bool = vm_res.final_stack.last().unwrap().value() == 1;
+            assert_eq!(
+                expected_result, vm_result,
+                "VM result must agree with Rust result"
+            );
+            assert!(vm_result, "VM verdict must be positive in positive test");
+
+            // Negative test
+            let bad_leaf: Digest = random();
+            let bad_inputs = vec![
+                bfe_lit(peaks_pointer),
+                u64_lit(ammr.count_leaves()),
+                bfe_lit(ap_pointer),
+                u64_lit(leaf_index),
+                digest_lit(bad_leaf),
+            ];
+            let vm_res_negative = match execute_with_stack_memory_and_ins(
+                &verify_authentication_path_inlined(),
+                bad_inputs,
+                &mut memory,
+                vec![],
+                vec![],
+                -10,
+            ) {
+                Ok(vm_res) => vm_res,
+                Err(err) => panic!("VM execution must succeed. Got: {err}"),
+            };
+            let expected_result_neg = mp.verify(&peaks, &bad_leaf, ammr.count_leaves()).0;
+            let vm_result_neg: bool = vm_res_negative.final_stack.last().unwrap().value() == 1;
+            assert_eq!(
+                expected_result_neg, vm_result_neg,
+                "VM result must agree with Rust result"
+            );
+            assert!(
+                !vm_result_neg,
+                "VM verdict in negative test must be negative"
+            );
+        }
     }
 }
 
@@ -451,12 +824,32 @@ mod compile_and_typecheck_tests {
     }
 
     #[test]
+    fn old_leaf_index_to_mt_index_and_peak_index_test() {
+        graft_check_compile_prop(&old_leaf_index_to_mt_index_and_peak_index_rast_loops_reduced());
+    }
+
+    #[test]
     fn leaf_index_to_mt_index_and_peak_index_test() {
-        graft_check_compile_prop(&leaf_index_to_mt_index_and_peak_index_rast_loops_reduced());
+        graft_check_compile_prop(&leaf_index_to_mt_index_and_peak_index_rast());
     }
 
     #[test]
     fn right_lineage_length_from_leaf_index_test() {
         graft_check_compile_prop(&right_lineage_length_from_leaf_index_rast());
+    }
+
+    #[test]
+    fn calculate_new_peaks_from_append_test() {
+        graft_check_compile_prop(&calculate_new_peaks_from_append_inlined_rast());
+    }
+
+    #[test]
+    fn calculate_new_peaks_from_leaf_mutation_inlined_test() {
+        graft_check_compile_prop(&calculate_new_peaks_from_leaf_mutation_inlined_rast());
+    }
+
+    #[test]
+    fn verify_authentication_path_inlined_test() {
+        graft_check_compile_prop(&verify_authentication_path_inlined());
     }
 }

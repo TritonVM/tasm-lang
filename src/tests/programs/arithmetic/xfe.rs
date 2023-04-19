@@ -32,7 +32,7 @@ fn instantiate_xfe_with_literal_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn add_xfe_rast() -> syn::ItemFn {
+fn add_xfe_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn add_xfe(lhs: XFieldElement, rhs: XFieldElement) -> XFieldElement {
             let c: XFieldElement = lhs + rhs;
@@ -42,7 +42,7 @@ pub fn add_xfe_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn sub_xfe_rast() -> syn::ItemFn {
+fn sub_xfe_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn sub_xfe(lhs: XFieldElement, rhs: XFieldElement) -> XFieldElement {
             let c: XFieldElement = lhs - rhs;
@@ -52,7 +52,7 @@ pub fn sub_xfe_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn negate_xfe_rast() -> syn::ItemFn {
+fn negate_xfe_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn negate_xfe(value: XFieldElement) -> XFieldElement {
             return -value;
@@ -61,7 +61,7 @@ pub fn negate_xfe_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn mul_xfe_rast() -> syn::ItemFn {
+fn mul_xfe_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn mul_xfe(lhs: XFieldElement, rhs: XFieldElement) ->  XFieldElement {
             return lhs * rhs;
@@ -70,7 +70,7 @@ pub fn mul_xfe_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn mul_lifted_xfes_rast() -> syn::ItemFn {
+fn mul_lifted_xfes_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn mul_lifted_xfes(lhs: BFieldElement, rhs: BFieldElement) -> XFieldElement {
             return lhs.lift() * rhs.lift();
@@ -79,7 +79,7 @@ pub fn mul_lifted_xfes_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn div_xfe_rast() -> syn::ItemFn {
+fn div_xfe_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn div_xfe(numerator: XFieldElement, denominator: XFieldElement) ->  XFieldElement {
             return numerator / denominator;
@@ -88,7 +88,7 @@ pub fn div_xfe_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn eq_xfe_rast() -> syn::ItemFn {
+fn eq_xfe_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn eq_xfe(lhs: XFieldElement, rhs: XFieldElement) -> (bool, bool) {
             return (lhs == rhs, lhs != rhs);
@@ -97,7 +97,7 @@ pub fn eq_xfe_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn unlift_xfe_rast() -> syn::ItemFn {
+fn unlift_xfe_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn unlift_xfe(input: XFieldElement) -> BFieldElement {
             return input.unlift().unwrap();
@@ -107,7 +107,7 @@ pub fn unlift_xfe_rast() -> syn::ItemFn {
 
 /// Always returns (0, [6,7,9], b)
 #[allow(dead_code)]
-pub fn long_expression_1_rast() -> syn::ItemFn {
+fn long_expression_1_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn long_expression_1(
             a: XFieldElement,
@@ -154,7 +154,7 @@ pub fn long_expression_1_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn long_expression_2_rast() -> syn::ItemFn {
+fn long_expression_2_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn long_expression_2(
             a: XFieldElement,
@@ -201,7 +201,7 @@ pub fn long_expression_2_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn long_expression_3_rast() -> syn::ItemFn {
+fn long_expression_3_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn long_expression_3(
             a: XFieldElement,

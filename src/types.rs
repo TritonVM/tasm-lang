@@ -574,12 +574,8 @@ fn derive_annotate_expr_type(
             args,
             annot,
         }) => {
-            let receiver = if let ast::Expr::Var(rec) = &mut args[0] {
-                rec
-            } else {
-                panic!("Receiver must be an identifier")
-            };
-            let (receiver_type, _mutable) = annotate_identifier_type(receiver, state);
+            let receiver = &mut args[0];
+            let receiver_type = derive_annotate_expr_type(receiver, None, state);
             let method_signature: ast::FnSignature =
                 get_method_signature(method_name, state, receiver_type);
             assert!(
@@ -587,7 +583,8 @@ fn derive_annotate_expr_type(
                 "Method calls in expressions cannot return the unit type"
             );
 
-            // TODO: Do more type-checking here if we need
+            // We don't need to check receiver type here since that is done by
+            // `derive_annotate_fn_call_args` below.
 
             derive_annotate_fn_call_args(&method_signature, args, state);
 

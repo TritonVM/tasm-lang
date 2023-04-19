@@ -72,7 +72,7 @@ fn execute_compiled_with_stack_memory_and_ins(
     std_in: Vec<BFieldElement>,
     secret_in: Vec<BFieldElement>,
     expected_stack_diff: isize,
-) -> tasm_lib::ExecutionResult {
+) -> anyhow::Result<tasm_lib::ExecutionResult> {
     let mut stack = get_init_tvm_stack();
     for input_arg in input_args {
         let input_arg_seq = input_arg.to_sequence();
@@ -102,7 +102,7 @@ pub fn execute_with_stack_memory_and_ins(
     std_in: Vec<BFieldElement>,
     secret_in: Vec<BFieldElement>,
     expected_stack_diff: isize,
-) -> tasm_lib::ExecutionResult {
+) -> anyhow::Result<tasm_lib::ExecutionResult> {
     // Compile
     let (code, _fn_name) = compile_for_run_test(item_fn);
 
@@ -147,7 +147,8 @@ pub fn compare_compiled_prop_with_stack_and_memory_and_ins(
         std_in,
         secret_in,
         expected_final_stack.len() as isize - init_stack_length as isize,
-    );
+    )
+    .unwrap();
 
     // Assert stack matches expected stack
     assert_eq!(
@@ -279,6 +280,16 @@ pub fn multiple_compare_prop_with_stack(
             vec![],
             vec![],
         )
+    }
+}
+
+#[allow(dead_code)]
+pub fn show_memory(memory: &HashMap<BFieldElement, BFieldElement>) {
+    let mut memory = memory.iter().collect_vec();
+    memory.sort_unstable_by(|&a, &b| a.0.value().partial_cmp(&b.0.value()).unwrap());
+
+    for (k, v) in memory {
+        println!("{} => {}", k, v);
     }
 }
 

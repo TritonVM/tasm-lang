@@ -151,7 +151,7 @@ fn spill_many_types() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn spill_to_memory_overwrite_values() -> syn::ItemFn {
+fn spill_to_memory_overwrite_values() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn overwrite_values() -> (u32, u32) {
             let mut a: u32 = 100;
@@ -397,7 +397,7 @@ fn big_branches_spill_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
-pub fn ensure_dyn_malloc_and_static_malloc_do_not_interfere_1_rast() -> syn::ItemFn {
+fn ensure_dyn_malloc_and_static_malloc_do_not_interfere_1_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn ensure_dyn_malloc_and_static_malloc_do_not_interfere() -> Vec<u32> {
             // Write code that spills into memory which constitutes static memory allocation.
@@ -422,7 +422,7 @@ pub fn ensure_dyn_malloc_and_static_malloc_do_not_interfere_1_rast() -> syn::Ite
 }
 
 #[allow(dead_code)]
-pub fn ensure_dyn_malloc_and_static_malloc_do_not_interfere_2_rast() -> syn::ItemFn {
+fn ensure_dyn_malloc_and_static_malloc_do_not_interfere_2_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn ensure_dyn_malloc_and_static_malloc_do_not_interfere() -> Vec<u32> {
             let val0: (u64, u64, u64, u64, u64) = (10420u64, 10421u64, 10422u64, 10423u64, 10424u64);
@@ -442,7 +442,7 @@ pub fn ensure_dyn_malloc_and_static_malloc_do_not_interfere_2_rast() -> syn::Ite
 }
 
 #[allow(dead_code)]
-pub fn ensure_dyn_malloc_and_static_malloc_do_not_interfere_3_rast() -> syn::ItemFn {
+fn ensure_dyn_malloc_and_static_malloc_do_not_interfere_3_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn ensure_dyn_malloc_and_static_malloc_do_not_interfere() -> Vec<u32> {
             let mut b: Vec<u32> = Vec::<u32>::with_capacity(16);
@@ -460,7 +460,7 @@ pub fn ensure_dyn_malloc_and_static_malloc_do_not_interfere_3_rast() -> syn::Ite
 }
 
 #[allow(dead_code)]
-pub fn ensure_dyn_malloc_and_static_malloc_do_not_interfere_4_rast() -> syn::ItemFn {
+fn ensure_dyn_malloc_and_static_malloc_do_not_interfere_4_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn ensure_dyn_malloc_and_static_malloc_do_not_interfere() -> (Vec<u32>, u64) {
             // Write code that spills into memory which constitutes static memory allocation.
@@ -485,7 +485,7 @@ pub fn ensure_dyn_malloc_and_static_malloc_do_not_interfere_4_rast() -> syn::Ite
 }
 
 #[allow(dead_code)]
-pub fn ensure_dyn_malloc_and_static_malloc_do_not_interfere_5_rast() -> syn::ItemFn {
+fn ensure_dyn_malloc_and_static_malloc_do_not_interfere_5_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
             fn ensure_dyn_malloc_and_static_malloc_do_not_interfere() -> (Vec<u32>, u64, u64, u64, u64, u64, Vec<Digest>) {
             // Write code that spills into memory which constitutes static memory allocation.
@@ -803,7 +803,8 @@ mod run_tests {
             vec![],
             vec![],
             DataType::List(Box::new(DataType::U64)).size_of() as isize,
-        );
+        )
+        .unwrap();
 
         let list_pointer = exec_result.final_stack.last().unwrap();
         println!("list_pointer: {list_pointer}");
@@ -821,7 +822,8 @@ mod run_tests {
             vec![],
             vec![],
             DataType::List(Box::new(DataType::U64)).size_of() as isize,
-        );
+        )
+        .unwrap();
 
         let list_pointer = exec_result.final_stack.last().unwrap();
         let expected_list = (0..16).map(|i| u32_lit(200 + i)).collect_vec();
@@ -838,7 +840,8 @@ mod run_tests {
             vec![],
             vec![],
             DataType::List(Box::new(DataType::U64)).size_of() as isize,
-        );
+        )
+        .unwrap();
 
         let list_pointer = exec_result.final_stack.last().unwrap();
         let expected_list = (0..16).map(|i| u32_lit(200 + i)).collect_vec();
@@ -857,7 +860,8 @@ mod run_tests {
             vec![],
             vec![],
             DataType::List(Box::new(DataType::U64)).size_of() as isize + 2,
-        );
+        )
+        .unwrap();
 
         let list_pointer = exec_result.final_stack[exec_result.final_stack.len() - 3];
 
@@ -885,7 +889,8 @@ mod run_tests {
             vec![],
             vec![],
             12,
-        );
+        )
+        .unwrap();
 
         let list_pointer_b = exec_result.final_stack[exec_result.final_stack.len() - 12];
         let list_pointer_a = exec_result.final_stack[exec_result.final_stack.len() - 1];
