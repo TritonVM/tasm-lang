@@ -698,7 +698,10 @@ fn compile_function_inner(
 
 pub fn compile_function(function: &ast::Fn<types::Typing>) -> Vec<LabelledInstruction> {
     let mut state = CompilerState::default();
-    let compiled_function = compile_function_inner(function, &mut state.global_compiler_state);
+    let mut compiled_function = compile_function_inner(function, &mut state.global_compiler_state);
+
+    // Sue me
+    compiled_function.remove(0);
 
     // TODO: Use this function once triton-opcodes reaches 0.15.0
     // let dependencies = state.execution_state.snippet_state.all_imports_as_instruction_lists();
@@ -722,7 +725,13 @@ pub fn compile_function(function: &ast::Fn<types::Typing>) -> Vec<LabelledInstru
             .unwrap(),
     );
 
-    let ret = vec![dyn_malloc_init_code, compiled_function, dependencies].concat();
+    let ret = vec![
+        vec![Label(function.fn_signature.name.to_owned())],
+        dyn_malloc_init_code,
+        compiled_function,
+        dependencies,
+    ]
+    .concat();
 
     // Check that no label-duplicates are present. This could happen if a dependency
     // and the compiled function shared name. We do this by assembling the code and
