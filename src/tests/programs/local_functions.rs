@@ -112,6 +112,7 @@ mod run_tests {
     fn recursive_sum_test() {
         // Adding this local function here, because the function is a bit
         // hard to reason about. It calculates f(n) = \Sum_{i=0}^n{\Sum_{j=0}^i(j)}
+        #[allow(clippy::needless_return)]
         fn recursive_sum(n: u32) -> u64 {
             fn inner_sum(n: u32, acc: u64) -> u64 {
                 return if n == 0u32 {

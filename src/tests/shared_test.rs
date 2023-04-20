@@ -9,7 +9,7 @@ use twenty_first::util_types::algebraic_hasher::Hashable;
 
 use crate::ast;
 use crate::graft::graft_fn_decl;
-use crate::tasm_code_generator::{compile_function, GlobalCompilerState};
+use crate::tasm_code_generator::compile_function;
 use crate::types::{self, annotate_fn, GetType, Typing};
 
 #[allow(dead_code)]

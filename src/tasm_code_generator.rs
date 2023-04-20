@@ -12,7 +12,7 @@ use twenty_first::amount::u32s::U32s;
 use twenty_first::shared_math::b_field_element::BFieldElement;
 use twenty_first::util_types::algebraic_hasher::Hashable;
 
-use crate::libraries::{self, Library};
+use crate::libraries::{self};
 use crate::stack::Stack;
 use crate::types::{is_list_type, GetType};
 use crate::{ast, types};
@@ -86,7 +86,7 @@ impl VStack {
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug, Default)]
 
 struct FunctionState {
     vstack: VStack,
@@ -95,48 +95,19 @@ struct FunctionState {
     subroutines: Vec<Vec<LabelledInstruction>>,
 }
 
-impl Default for FunctionState {
-    fn default() -> Self {
-        Self {
-            vstack: Default::default(),
-            var_addr: Default::default(),
-            spill_required: Default::default(),
-            subroutines: Default::default(),
-        }
-    }
-}
-
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct GlobalCompilerState {
     counter: usize,
     snippet_state: SnippetState,
 }
 
-impl Default for GlobalCompilerState {
-    fn default() -> Self {
-        Self {
-            counter: Default::default(),
-            snippet_state: Default::default(),
-        }
-    }
-}
-
-#[derive(Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct CompilerState {
     // The part of the compiler state that applies across function calls to locally defined
     global_compiler_state: GlobalCompilerState,
 
     // The part of the compiler state that only applies within a function
     function_state: FunctionState,
-}
-
-impl Default for CompilerState {
-    fn default() -> Self {
-        Self {
-            global_compiler_state: Default::default(),
-            function_state: Default::default(),
-        }
-    }
 }
 
 // TODO: Use this value from Triton-VM
@@ -682,25 +653,24 @@ fn compile_function_inner(
         "Each subroutine must begin with a label, contain a return and end with a return or a recurse"
     );
 
-    // Update global compiler state
+    // Update global compiler state to propagate this to caller
     *global_compiler_state = state.global_compiler_state.to_owned();
 
-    let ret = vec![
+    vec![
         vec![Label(fn_name.to_owned())],
         fn_body_code,
         vec![Instruction(Return)],
         state.function_state.subroutines.concat(),
     ]
-    .concat();
-
-    ret
+    .concat()
 }
 
 pub fn compile_function(function: &ast::Fn<types::Typing>) -> Vec<LabelledInstruction> {
     let mut state = CompilerState::default();
     let mut compiled_function = compile_function_inner(function, &mut state.global_compiler_state);
 
-    // Sue me
+    // This is done to ensure that the code wrapping this function in a `call <fn_name>, halt` logic still
+    // sets the dynamic allocator initial value. It's ugly and inefficient but it works. Sue me.
     compiled_function.remove(0);
 
     // TODO: Use this function once triton-opcodes reaches 0.15.0
