@@ -58,7 +58,7 @@ pub fn graft_check_compile_prop(item_fn: &syn::ItemFn) -> String {
     // println!("{function:#?}");
 
     // compile
-    let tasm = compile_function(&function, &mut GlobalCompilerState::default());
+    let tasm = compile_function(&function);
     let tasm_string: String = tasm.iter().map(|instr| instr.to_string()).join("\n");
     // println!("{tasm_string}");
     tasm_string

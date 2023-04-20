@@ -130,6 +130,15 @@ pub struct CompilerState {
     function_state: FunctionState,
 }
 
+impl Default for CompilerState {
+    fn default() -> Self {
+        Self {
+            global_compiler_state: Default::default(),
+            function_state: Default::default(),
+        }
+    }
+}
+
 // TODO: Use this value from Triton-VM
 pub const STACK_SIZE: usize = 16;
 
@@ -570,9 +579,9 @@ impl CompilerState {
     }
 }
 
-pub fn compile_function(
+fn compile_function_inner(
     function: &ast::Fn<types::Typing>,
-    execution_state: &mut GlobalCompilerState,
+    global_compiler_state: &mut GlobalCompilerState,
 ) -> Vec<LabelledInstruction> {
     const FN_ARG_NAME_PREFIX: &str = "fn_arg";
     let fn_name = &function.fn_signature.name;
@@ -586,7 +595,7 @@ pub fn compile_function(
 
     // Run the compilation 1st time to learn which values need to be spilled to memory
     let mut state = CompilerState {
-        global_compiler_state: execution_state.to_owned(),
+        global_compiler_state: global_compiler_state.to_owned(),
         function_state: FunctionState::default(),
     };
 
@@ -613,10 +622,11 @@ pub fn compile_function(
     println!("\n\n\nRunning compiler again\n\n\n");
     let spill_required = state.function_state.spill_required;
     let mut state = CompilerState {
-        global_compiler_state: execution_state.to_owned(),
+        global_compiler_state: global_compiler_state.to_owned(),
         function_state: FunctionState::default(),
     };
     state.function_state.spill_required = spill_required;
+
     let mut fn_arg_spilling = vec![];
     for arg in function.fn_signature.args.iter() {
         let (fn_arg_addr, spill) = state.new_value_identifier(FN_ARG_NAME_PREFIX, &arg.data_type);
@@ -654,13 +664,6 @@ pub fn compile_function(
             .concat(),
     );
 
-    // TODO: Use this function once triton-opcodes reaches 0.15.0
-    // let dependencies = state.execution_state.snippet_state.all_imports_as_instruction_lists();
-    let dependencies = state.global_compiler_state.snippet_state.all_imports();
-    let dependencies = parse(&dependencies)
-        .map(|instructions| to_labelled(&instructions))
-        .unwrap_or_else(|_| panic!("Must be able to parse dependencies code:\n{dependencies}"));
-
     // Sanity check: Assert that all subroutines start with a label and end with a return
     let mut all_subroutines: HashSet<String> = HashSet::default();
     assert!(
@@ -679,6 +682,33 @@ pub fn compile_function(
         "Each subroutine must begin with a label, contain a return and end with a return or a recurse"
     );
 
+    // Update global compiler state
+    *global_compiler_state = state.global_compiler_state.to_owned();
+
+    let ret = vec![
+        vec![Label(fn_name.to_owned())],
+        fn_body_code,
+        vec![Instruction(Return)],
+        state.function_state.subroutines.concat(),
+    ]
+    .concat();
+
+    ret
+}
+
+pub fn compile_function(function: &ast::Fn<types::Typing>) -> Vec<LabelledInstruction> {
+    let mut state = CompilerState::default();
+    let compiled_function = compile_function_inner(function, &mut state.global_compiler_state);
+
+    // TODO: Use this function once triton-opcodes reaches 0.15.0
+    // let dependencies = state.execution_state.snippet_state.all_imports_as_instruction_lists();
+    let external_dependencies = state.global_compiler_state.snippet_state.all_imports();
+    let dependencies = parse(&external_dependencies)
+        .map(|instructions| to_labelled(&instructions))
+        .unwrap_or_else(|_| {
+            panic!("Must be able to parse external dependencies code:\n{external_dependencies}")
+        });
+
     // After the spilling has been done, and after all dependencies have been loaded, the `library` field
     // in the `state` now contains the information about how to initialize the dynamic memory allocator
     // such that dynamically allocated memory does not overwrite statically allocated memory. The `library`
@@ -692,17 +722,7 @@ pub fn compile_function(
             .unwrap(),
     );
 
-    let ret = vec![
-        vec![Label(fn_name.to_owned())],
-        vec![dyn_malloc_init_code, fn_body_code].concat(),
-        vec![Instruction(Return)],
-        state.function_state.subroutines.concat(),
-        dependencies,
-    ]
-    .concat();
-
-    // Update execution state
-    *execution_state = state.global_compiler_state.to_owned();
+    let ret = vec![dyn_malloc_init_code, compiled_function, dependencies].concat();
 
     // Check that no label-duplicates are present. This could happen if a dependency
     // and the compiled function shared name. We do this by assembling the code and
@@ -957,12 +977,14 @@ fn compile_stmt(
             vec![assert_expr_code, vec![assert_()]].concat()
         }
         ast::Stmt::FnDeclaration(function) => {
-            // TODO: Implement
-            let compiled_fn = compile_function(function, &mut state.global_compiler_state);
+            let compiled_fn = compile_function_inner(function, &mut state.global_compiler_state);
+            println!(
+                "compiled_fn: {}",
+                compiled_fn.iter().map(|x| x.to_string()).join("\n")
+            );
+            state.function_state.subroutines.push(compiled_fn);
 
-            todo!()
-            // panic!("function: {function:#?}")
-            // todo!();
+            vec![]
         }
     }
 }
