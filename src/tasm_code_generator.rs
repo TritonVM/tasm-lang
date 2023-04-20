@@ -87,42 +87,47 @@ impl VStack {
 }
 
 #[derive(Debug)]
-pub struct CompilerState {
-    pub counter: usize,
 
-    // Where on stack is the variable placed?
-    pub vstack: VStack,
-
-    // TODO: `VStack` might be able to handle this `spilled_values` info.
-    // Variables that have been spilled to memory.
-    // Mapping from value identifier to memory location.
-    // pub spilled_values: HashMap<ValueIdentifier, u32>,
-    pub spill_required: HashSet<ValueIdentifier>,
-
-    // Mapping from variable name to its internal identifier
-    pub var_addr: VarAddr,
-
-    // A library struct to keep check of which snippets are already in the namespace
-    pub snippet_state: SnippetState,
-
-    // A list of call sites for ad-hoc branching
-    pub subroutines: Vec<Vec<LabelledInstruction>>,
-
-    pub available_libraries: Vec<Box<dyn Library>>,
+struct FunctionState {
+    vstack: VStack,
+    var_addr: VarAddr,
+    spill_required: HashSet<ValueIdentifier>,
+    subroutines: Vec<Vec<LabelledInstruction>>,
 }
 
-impl Default for CompilerState {
+impl Default for FunctionState {
+    fn default() -> Self {
+        Self {
+            vstack: Default::default(),
+            var_addr: Default::default(),
+            spill_required: Default::default(),
+            subroutines: Default::default(),
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct GlobalCompilerState {
+    counter: usize,
+    snippet_state: SnippetState,
+}
+
+impl Default for GlobalCompilerState {
     fn default() -> Self {
         Self {
             counter: Default::default(),
-            vstack: Default::default(),
-            spill_required: Default::default(),
-            var_addr: Default::default(),
             snippet_state: Default::default(),
-            subroutines: Default::default(),
-            available_libraries: libraries::all_libraries(),
         }
     }
+}
+
+#[derive(Debug)]
+pub struct CompilerState {
+    // The part of the compiler state that applies across function calls to locally defined
+    global_compiler_state: GlobalCompilerState,
+
+    // The part of the compiler state that only applies within a function
+    function_state: FunctionState,
 }
 
 // TODO: Use this value from Triton-VM
@@ -143,7 +148,12 @@ impl std::fmt::Display for ValueIdentifier {
 
 impl CompilerState {
     fn get_binding_name(&self, value_identifier: &ValueIdentifier) -> String {
-        match self.var_addr.iter().find(|x| x.1 == value_identifier) {
+        match self
+            .function_state
+            .var_addr
+            .iter()
+            .find(|x| x.1 == value_identifier)
+        {
             Some(binding) => binding.0.to_owned(),
             None => "Unbound value".to_string(),
         }
@@ -156,13 +166,17 @@ impl CompilerState {
         prefix: &str,
         data_type: &ast::DataType,
     ) -> (ValueIdentifier, Option<u32>) {
-        let name = format!("_{}_{}_{}", prefix, data_type, self.counter);
+        let name = format!(
+            "_{}_{}_{}",
+            prefix, data_type, self.global_compiler_state.counter
+        );
         let address = ValueIdentifier { name };
 
         // Get a statically known memory address if value needs to be spilled to
         // memory.
-        let spilled = if self.spill_required.contains(&address) {
+        let spilled = if self.function_state.spill_required.contains(&address) {
             let spill_address = self
+                .global_compiler_state
                 .snippet_state
                 .kmalloc(data_type.size_of())
                 .try_into()
@@ -173,15 +187,16 @@ impl CompilerState {
             None
         };
 
-        self.vstack
+        self.function_state
+            .vstack
             .push((address.clone(), (data_type.clone(), spilled)));
-        self.counter += 1;
+        self.global_compiler_state.counter += 1;
 
         (address, spilled)
     }
 
     pub fn import_snippet(&mut self, snippet: Box<dyn Snippet>) -> String {
-        self.snippet_state.import(snippet)
+        self.global_compiler_state.snippet_state.import(snippet)
     }
 
     pub fn mark_as_spilled(&mut self, value_identifier: &ValueIdentifier) {
@@ -189,7 +204,9 @@ impl CompilerState {
             "Warning: Marking {value_identifier} as spilled. Binding: {}",
             self.get_binding_name(value_identifier)
         );
-        self.spill_required.insert(value_identifier.to_owned());
+        self.function_state
+            .spill_required
+            .insert(value_identifier.to_owned());
     }
 
     fn verify_same_ordering_of_bindings(
@@ -210,11 +227,13 @@ impl CompilerState {
 
         // make a list of tuples (binding name, stack position, spilled_value) as the stack looks now
         let bindings_end: HashMap<String, (usize, Option<u32>)> = self
+            .function_state
             .var_addr
             .iter()
             .map(|(k, v)| {
                 let binding_name = k.to_string();
-                let (previous_stack_depth, _data_type, spilled) = self.vstack.find_stack_value(v);
+                let (previous_stack_depth, _data_type, spilled) =
+                    self.function_state.vstack.find_stack_value(v);
                 (binding_name, (previous_stack_depth, spilled))
             })
             .collect();
@@ -256,8 +275,10 @@ impl CompilerState {
         &mut self,
         value_identifier_to_remove: &ValueIdentifier,
     ) -> Vec<LabelledInstruction> {
-        let (stack_position_of_value_to_remove, type_to_remove, old_value_spilled) =
-            self.vstack.find_stack_value(value_identifier_to_remove);
+        let (stack_position_of_value_to_remove, type_to_remove, old_value_spilled) = self
+            .function_state
+            .vstack
+            .find_stack_value(value_identifier_to_remove);
 
         // If value is not marked as a spilled value and it's inacessible through swap(n)/dup(n),
         // this value must be marked as a value to be spilled, and the compiler must be run again.
@@ -266,8 +287,11 @@ impl CompilerState {
             self.mark_as_spilled(value_identifier_to_remove);
         }
 
-        let (_top_element_id, (top_element_type, _new_value_spilled)) =
-            self.vstack.pop().expect("vstack cannot be empty");
+        let (_top_element_id, (top_element_type, _new_value_spilled)) = self
+            .function_state
+            .vstack
+            .pop()
+            .expect("vstack cannot be empty");
 
         assert_eq!(
             top_element_type, type_to_remove,
@@ -307,16 +331,21 @@ impl CompilerState {
         tuple_index: usize,
     ) -> Vec<LabelledInstruction> {
         // This function assumes that the last element of the tuple is placed on top of the stack
-        let (stack_position_of_tuple, tuple_type, tuple_spilled) =
-            self.vstack.find_stack_value(tuple_identifier);
+        let (stack_position_of_tuple, tuple_type, tuple_spilled) = self
+            .function_state
+            .vstack
+            .find_stack_value(tuple_identifier);
         let element_types = if let ast::DataType::Tuple(ets) = &tuple_type {
             ets
         } else {
             panic!("Original value must have type tuple")
         };
 
-        let (_top_element_id, (_top_element_type, _)) =
-            self.vstack.pop().expect("vstack cannot be empty");
+        let (_top_element_id, (_top_element_type, _)) = self
+            .function_state
+            .vstack
+            .pop()
+            .expect("vstack cannot be empty");
 
         // Last element of tuple is on top of stack. How many machine
         // words deep is the value we want to replace?
@@ -376,8 +405,9 @@ impl CompilerState {
         let mut code = vec![];
         self.show_vstack_values();
         loop {
-            let (addr, (dt, spilled)) = self.vstack.peek().unwrap().to_owned();
+            let (addr, (dt, spilled)) = self.function_state.vstack.peek().unwrap().to_owned();
             let binding_name = self
+                .function_state
                 .var_addr
                 .iter()
                 .find(|(_var_name, ident)| **ident == addr)
@@ -395,9 +425,9 @@ impl CompilerState {
                 break;
             } else {
                 code.append(&mut vec![pop(); dt.size_of()]);
-                self.vstack.pop();
+                self.function_state.vstack.pop();
                 if let Some(binding) = binding_name {
-                    let removed = self.var_addr.remove(&binding);
+                    let removed = self.function_state.var_addr.remove(&binding);
                     assert!(removed.is_some());
                 }
             }
@@ -439,9 +469,11 @@ impl CompilerState {
             }
         }
 
-        let height_of_affected_stack: usize = self.vstack.get_stack_height() - height;
+        let height_of_affected_stack: usize =
+            self.function_state.vstack.get_stack_height() - height;
 
         let top_element = self
+            .function_state
             .vstack
             .pop()
             .expect("Cannot remove all but top element from an empty stack");
@@ -473,6 +505,7 @@ impl CompilerState {
             // access with dup15/swap15. Our solution is to store the return value in
             // memory, clear the stack, and read it back from memory.
             let memory_location: u32 = self
+                .global_compiler_state
                 .snippet_state
                 .kmalloc(top_value_size)
                 .try_into()
@@ -494,18 +527,18 @@ impl CompilerState {
         };
 
         // Clean up vstack
-        while self.vstack.get_stack_height() > height {
-            self.vstack.pop();
+        while self.function_state.vstack.get_stack_height() > height {
+            self.function_state.vstack.pop();
         }
 
         // Sanity check that input argument was aligned with a value
         assert_eq!(
             height,
-            self.vstack.get_stack_height(),
+            self.function_state.vstack.get_stack_height(),
             "Cannot clear stack to position that is not alligned with a value"
         );
 
-        self.vstack.push(top_element);
+        self.function_state.vstack.push(top_element);
 
         code
     }
@@ -514,8 +547,9 @@ impl CompilerState {
     #[allow(dead_code)]
     fn show_vstack_values(&self) {
         print!("vstack: ");
-        for (addr, (data_type, spilled)) in self.vstack.inner.iter() {
+        for (addr, (data_type, spilled)) in self.function_state.vstack.inner.iter() {
             let var_names = self
+                .function_state
                 .var_addr
                 .iter()
                 .filter(|(_k, v)| **v == *addr)
@@ -536,7 +570,10 @@ impl CompilerState {
     }
 }
 
-pub fn compile(function: &ast::Fn<types::Typing>) -> Vec<LabelledInstruction> {
+pub fn compile_function(
+    function: &ast::Fn<types::Typing>,
+    execution_state: &mut GlobalCompilerState,
+) -> Vec<LabelledInstruction> {
     const FN_ARG_NAME_PREFIX: &str = "fn_arg";
     let fn_name = &function.fn_signature.name;
     let _fn_stack_input_sig = function
@@ -548,11 +585,17 @@ pub fn compile(function: &ast::Fn<types::Typing>) -> Vec<LabelledInstruction> {
     let _fn_stack_output_sig = format!("{}", function.fn_signature.output);
 
     // Run the compilation 1st time to learn which values need to be spilled to memory
-    let mut state = CompilerState::default();
+    let mut state = CompilerState {
+        global_compiler_state: execution_state.to_owned(),
+        function_state: FunctionState::default(),
+    };
 
     for arg in function.fn_signature.args.iter() {
         let (fn_arg_addr, spill) = state.new_value_identifier(FN_ARG_NAME_PREFIX, &arg.data_type);
-        state.var_addr.insert(arg.name.clone(), fn_arg_addr);
+        state
+            .function_state
+            .var_addr
+            .insert(arg.name.clone(), fn_arg_addr);
 
         assert!(
             spill.is_none(),
@@ -568,13 +611,19 @@ pub fn compile(function: &ast::Fn<types::Typing>) -> Vec<LabelledInstruction> {
 
     // Run the compilation again know that we know which values to spill
     println!("\n\n\nRunning compiler again\n\n\n");
-    let spill_required = state.spill_required;
-    state = CompilerState::default();
-    state.spill_required = spill_required;
+    let spill_required = state.function_state.spill_required;
+    let mut state = CompilerState {
+        global_compiler_state: execution_state.to_owned(),
+        function_state: FunctionState::default(),
+    };
+    state.function_state.spill_required = spill_required;
     let mut fn_arg_spilling = vec![];
     for arg in function.fn_signature.args.iter() {
         let (fn_arg_addr, spill) = state.new_value_identifier(FN_ARG_NAME_PREFIX, &arg.data_type);
-        state.var_addr.insert(arg.name.clone(), fn_arg_addr.clone());
+        state
+            .function_state
+            .var_addr
+            .insert(arg.name.clone(), fn_arg_addr.clone());
 
         if let Some(_spill_addr) = spill {
             fn_arg_spilling.push(fn_arg_addr);
@@ -586,7 +635,8 @@ pub fn compile(function: &ast::Fn<types::Typing>) -> Vec<LabelledInstruction> {
     // Spill required function arguments to memory
     for value_id in fn_arg_spilling {
         // Get stack depth of value
-        let (stack_depth, data_type, spill_addr) = state.vstack.find_stack_value(&value_id);
+        let (stack_depth, data_type, spill_addr) =
+            state.function_state.vstack.find_stack_value(&value_id);
 
         // Produce the code to spill the function argument
         let top_of_value = stack_depth;
@@ -605,20 +655,26 @@ pub fn compile(function: &ast::Fn<types::Typing>) -> Vec<LabelledInstruction> {
     );
 
     // TODO: Use this function once triton-opcodes reaches 0.15.0
-    // let dependencies = state.snippet_state.all_imports_as_instruction_lists();
-    let dependencies = state.snippet_state.all_imports();
+    // let dependencies = state.execution_state.snippet_state.all_imports_as_instruction_lists();
+    let dependencies = state.global_compiler_state.snippet_state.all_imports();
     let dependencies = parse(&dependencies)
         .map(|instructions| to_labelled(&instructions))
         .unwrap_or_else(|_| panic!("Must be able to parse dependencies code:\n{dependencies}"));
 
     // Sanity check: Assert that all subroutines start with a label and end with a return
+    let mut all_subroutines: HashSet<String> = HashSet::default();
     assert!(
-        state.subroutines.iter().all(|subroutine| {
-            let begins_with_label = matches!(*subroutine.first().unwrap(), Label(_));
+        state.function_state.subroutines.iter().all(|subroutine| {
+            if let Label(subroutine_label) = subroutine.first().unwrap() {
+                assert!(all_subroutines.insert(subroutine_label.to_owned()), "subroutine labels must be unique");
+            } else {
+                panic!("Each subroutine must begin with a label");
+            }
+
             let ends_with_return_or_recurse = *subroutine.last().unwrap() == return_()
                 || *subroutine.last().unwrap() == recurse();
             let contains_return = subroutine.iter().any(|x| *x == return_());
-            begins_with_label && ends_with_return_or_recurse && contains_return
+            ends_with_return_or_recurse && contains_return
         }),
         "Each subroutine must begin with a label, contain a return and end with a return or a recurse"
     );
@@ -629,6 +685,7 @@ pub fn compile(function: &ast::Fn<types::Typing>) -> Vec<LabelledInstruction> {
     // field contains the number of words that were statically allocated.
     let dyn_malloc_init_code = DynMalloc::get_initialization_code_as_instructions(
         state
+            .global_compiler_state
             .snippet_state
             .get_next_free_address()
             .try_into()
@@ -639,10 +696,13 @@ pub fn compile(function: &ast::Fn<types::Typing>) -> Vec<LabelledInstruction> {
         vec![Label(fn_name.to_owned())],
         vec![dyn_malloc_init_code, fn_body_code].concat(),
         vec![Instruction(Return)],
-        state.subroutines.concat(),
+        state.function_state.subroutines.concat(),
         dependencies,
     ]
     .concat();
+
+    // Update execution state
+    *execution_state = state.global_compiler_state.to_owned();
 
     // Check that no label-duplicates are present. This could happen if a dependency
     // and the compiled function shared name. We do this by assembling the code and
@@ -669,7 +729,10 @@ fn compile_stmt(
             mutable: _,
         }) => {
             let (expr_addr, expr_code) = compile_expr(expr, var_name, data_type, state);
-            state.var_addr.insert(var_name.clone(), expr_addr);
+            state
+                .function_state
+                .var_addr
+                .insert(var_name.clone(), expr_addr);
             expr_code
         }
 
@@ -681,7 +744,7 @@ fn compile_stmt(
             let (_expr_addr, expr_code) = compile_expr(expr, "assign", &data_type, state);
             match identifier {
                 ast::Identifier::String(var_name, _known_type) => {
-                    let value_identifier = state.var_addr[var_name].clone();
+                    let value_identifier = state.function_state.var_addr[var_name].clone();
                     let overwrite_code = state.overwrite_value(&value_identifier);
 
                     vec![expr_code, overwrite_code].concat()
@@ -694,7 +757,7 @@ fn compile_stmt(
                             panic!("Nested tuple expressions not yet supported");
                         };
 
-                    let value_identifier = state.var_addr[&var_name].clone();
+                    let value_identifier = state.function_state.var_addr[&var_name].clone();
 
                     let overwrite_code =
                         state.replace_tuple_element(&value_identifier, *tuple_index);
@@ -712,9 +775,9 @@ fn compile_stmt(
                         compile_expr(&ident_expr, "ident_on_assign", &data_type, state);
                     let (_index_expr, index_code) =
                         compile_expr(index_expr, "index_on_assign", &index_expr.get_type(), state);
-                    state.vstack.pop();
-                    state.vstack.pop();
-                    state.vstack.pop();
+                    state.function_state.vstack.pop();
+                    state.function_state.vstack.pop();
+                    state.function_state.vstack.pop();
 
                     vec![expr_code, ident_code, index_code, vec![call(fn_name)]].concat()
                 }
@@ -724,7 +787,7 @@ fn compile_stmt(
         // 'return;': Clean stack
         ast::Stmt::Return(None) => {
             let mut code = vec![];
-            while let Some((_addr, (data_type, _spilled))) = state.vstack.pop() {
+            while let Some((_addr, (data_type, _spilled))) = state.function_state.vstack.pop() {
                 code.push(vec![pop(); data_type.size_of()]);
             }
 
@@ -738,12 +801,13 @@ fn compile_stmt(
             {
                 // Remove everything above returned value
                 let needle = state
+                    .function_state
                     .var_addr
                     .get(var_name)
                     .expect("Returned value must exist in value/addr map");
                 let mut code = vec![];
                 loop {
-                    let (haystack, (dt, spilled)) = state.vstack.peek().unwrap();
+                    let (haystack, (dt, spilled)) = state.function_state.vstack.peek().unwrap();
                     if *haystack == *needle {
                         match spilled {
                             // If the returned value is a spilled value, we pop everything and
@@ -751,7 +815,13 @@ fn compile_stmt(
                             // value is on top of the stack and then call a helper function
                             // to remove everything below it.
                             Some(spill_addr) => {
-                                code.append(&mut vec![pop(); state.vstack.get_stack_height()]);
+                                code.append(&mut vec![
+                                    pop();
+                                    state
+                                        .function_state
+                                        .vstack
+                                        .get_stack_height()
+                                ]);
                                 code.append(&mut load_from_memory(*spill_addr, dt.size_of()))
                             }
                             None => code
@@ -761,7 +831,7 @@ fn compile_stmt(
                     }
 
                     code.append(&mut vec![pop(); dt.size_of()]);
-                    state.vstack.pop();
+                    state.function_state.vstack.pop();
                 }
 
                 // TODO: Cleanup `var_addr`
@@ -795,7 +865,7 @@ fn compile_stmt(
             let while_loop_subroutine_name = format!("{cond_addr}_while_loop");
 
             // condition evaluation is not visible to loop body, so pop this from vstack
-            state.vstack.pop();
+            state.function_state.vstack.pop();
 
             let loop_body_code = compile_stmt(&ast::Stmt::Block(block.to_owned()), function, state);
             let while_loop_code = vec![
@@ -810,7 +880,7 @@ fn compile_stmt(
             ]
             .concat();
 
-            state.subroutines.push(while_loop_code);
+            state.function_state.subroutines.push(while_loop_code);
 
             vec![call(while_loop_subroutine_name)]
         }
@@ -824,7 +894,7 @@ fn compile_stmt(
                 compile_expr(condition, "if_condition", &condition.get_type(), state);
 
             // Pop condition result from vstack as it's not on the stack inside the branches
-            let _condition_addr = state.vstack.pop();
+            let _condition_addr = state.function_state.vstack.pop();
 
             let then_body_code =
                 compile_stmt(&ast::Stmt::Block(then_branch.to_owned()), function, state);
@@ -858,15 +928,15 @@ fn compile_stmt(
             ]
             .concat();
 
-            state.subroutines.push(then_code);
-            state.subroutines.push(else_code);
+            state.function_state.subroutines.push(then_code);
+            state.function_state.subroutines.push(else_code);
 
             if_code
         }
 
         ast::Stmt::Block(ast::BlockStmt { stmts }) => {
-            let vstack_init = state.vstack.clone();
-            let var_addr_init = state.var_addr.clone();
+            let vstack_init = state.function_state.vstack.clone();
+            let var_addr_init = state.function_state.var_addr.clone();
             let block_body_code = stmts
                 .iter()
                 .map(|stmt| compile_stmt(stmt, function, state))
@@ -882,9 +952,17 @@ fn compile_stmt(
                 compile_expr(expression, "assert-expr", &expression.get_type(), state);
 
             // evaluated expression value is not visible after `assert` instruction has been executed
-            state.vstack.pop();
+            state.function_state.vstack.pop();
 
             vec![assert_expr_code, vec![assert_()]].concat()
+        }
+        ast::Stmt::FnDeclaration(function) => {
+            // TODO: Implement
+            let compiled_fn = compile_function(function, &mut state.global_compiler_state);
+
+            todo!()
+            // panic!("function: {function:#?}")
+            // todo!();
         }
     }
 }
@@ -932,7 +1010,7 @@ fn compile_fn_call(
     }
 
     for _ in 0..args.len() {
-        state.vstack.pop();
+        state.function_state.vstack.pop();
     }
 
     vec![args_code.concat(), call_fn_code].concat()
@@ -970,7 +1048,7 @@ fn compile_method_call(
     // Update vstack to reflect that all input arguments, including receiver
     // were consumed.
     for _ in 0..method_call.args.len() {
-        state.vstack.pop();
+        state.function_state.vstack.pop();
     }
 
     vec![args_code.concat(), call_code].concat()
@@ -1027,11 +1105,13 @@ fn compile_expr(
         ast::Expr::Var(identifier) => match identifier {
             ast::Identifier::String(var_name, _known_type) => {
                 let var_addr = state
+                    .function_state
                     .var_addr
                     .get(var_name)
                     .expect("variable exists")
                     .to_owned();
-                let (position, old_data_type, spilled) = state.vstack.find_stack_value(&var_addr);
+                let (position, old_data_type, spilled) =
+                    state.function_state.vstack.find_stack_value(&var_addr);
 
                 // If value is not marked as a spilled value and it's inacessible through swap(n)/dup(n),
                 // this value must be marked as a value to be spilled, and the compiler must be run again.
@@ -1067,6 +1147,7 @@ fn compile_expr(
                     panic!("Nested tuple references not yet supported");
                 };
                 let var_addr = state
+                    .function_state
                     .var_addr
                     .get(&var_name)
                     .expect("variable exists")
@@ -1075,8 +1156,10 @@ fn compile_expr(
                 // Note that this function returns the address of the *tuple element*, both
                 // on the stack and in memory if spilled. So the stack position/spilled address
                 // should not be shifted with the elements position inside the tuple.
-                let (position, element_type, spilled) =
-                    state.vstack.find_tuple_element(&var_addr, *tuple_index);
+                let (position, element_type, spilled) = state
+                    .function_state
+                    .vstack
+                    .find_tuple_element(&var_addr, *tuple_index);
 
                 // If value is not marked as a spilled value and it's inacessible through swap(n)/dup(n),
                 // this value must be marked as a value to be spilled, and the compiler must be run again.
@@ -1117,11 +1200,13 @@ fn compile_expr(
                     _ => panic!("Nested list indexing not yet supported"),
                 };
                 let var_addr = state
+                    .function_state
                     .var_addr
                     .get(&ident_as_string)
                     .expect("variable exists")
                     .to_owned();
-                let (_position, old_data_type, _spilled) = state.vstack.find_stack_value(&var_addr);
+                let (_position, old_data_type, _spilled) =
+                    state.function_state.vstack.find_stack_value(&var_addr);
                 assert_eq!(
                     ident_type, old_data_type,
                     "Type found on vstack must match expected type"
@@ -1139,8 +1224,8 @@ fn compile_expr(
                     compile_expr(&ident_expr, "ident_on_assign", &ident_type, state);
                 let (_index_expr, index_code) =
                     compile_expr(index_expr, "index_on_assign", &index_expr.get_type(), state);
-                state.vstack.pop();
-                state.vstack.pop();
+                state.function_state.vstack.pop();
+                state.function_state.vstack.pop();
 
                 vec![ident_code, index_code, vec![call(fn_name)]].concat()
             }
@@ -1159,7 +1244,7 @@ fn compile_expr(
 
             // Combine vstack entries into one Tuple entry
             for _ in idents {
-                state.vstack.pop();
+                state.function_state.vstack.pop();
             }
 
             code.concat()
@@ -1194,7 +1279,7 @@ fn compile_expr(
                 },
             };
 
-            state.vstack.pop();
+            state.function_state.vstack.pop();
 
             vec![inner_expr_code, code].concat()
         }
@@ -1232,8 +1317,8 @@ fn compile_expr(
                         _ => panic!("Operator add is not supported for type {result_type}"),
                     };
 
-                    state.vstack.pop();
-                    state.vstack.pop();
+                    state.function_state.vstack.pop();
+                    state.function_state.vstack.pop();
 
                     vec![lhs_expr_code, rhs_expr_code, add_code].concat()
                 }
@@ -1249,8 +1334,8 @@ fn compile_expr(
                         _ => panic!("Logical AND operator is not supported for {result_type}"),
                     };
 
-                    state.vstack.pop();
-                    state.vstack.pop();
+                    state.function_state.vstack.pop();
+                    state.function_state.vstack.pop();
 
                     vec![lhs_expr_code, rhs_expr_code, and_code].concat()
                 }
@@ -1272,8 +1357,8 @@ fn compile_expr(
                         _ => panic!("Logical AND operator is not supported for {result_type}"),
                     };
 
-                    state.vstack.pop();
-                    state.vstack.pop();
+                    state.function_state.vstack.pop();
+                    state.function_state.vstack.pop();
 
                     vec![lhs_expr_code, rhs_expr_code, bitwise_and_code].concat()
                 }
@@ -1298,8 +1383,8 @@ fn compile_expr(
                         _ => panic!("xor on {result_type} is not supported"),
                     };
 
-                    state.vstack.pop();
-                    state.vstack.pop();
+                    state.function_state.vstack.pop();
+                    state.function_state.vstack.pop();
 
                     vec![lhs_expr_code, rhs_expr_code, xor_code].concat()
                 }
@@ -1325,8 +1410,8 @@ fn compile_expr(
                         _ => panic!("bitwise `or` on {result_type} is not supported"),
                     };
 
-                    state.vstack.pop();
-                    state.vstack.pop();
+                    state.function_state.vstack.pop();
+                    state.function_state.vstack.pop();
 
                     vec![lhs_expr_code, rhs_expr_code, bitwise_or_code].concat()
                 }
@@ -1343,8 +1428,8 @@ fn compile_expr(
                                 compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
 
                             // Pop numerator and denominator
-                            state.vstack.pop();
-                            state.vstack.pop();
+                            state.function_state.vstack.pop();
+                            state.function_state.vstack.pop();
 
                             vec![lhs_expr_code, rhs_expr_code, vec![swap(1), div(), pop()]].concat()
                         }
@@ -1359,7 +1444,7 @@ fn compile_expr(
                                     .import_snippet(Box::new(arithmetic::u64::div2_u64::Div2U64));
 
                                 // Pop the numerator that was divided by two
-                                state.vstack.pop();
+                                state.function_state.vstack.pop();
 
                                 vec![lhs_expr_code, vec![call(div2)]].concat()
                             } else {
@@ -1372,8 +1457,8 @@ fn compile_expr(
                                     arithmetic::u64::div_mod_u64::DivModU64,
                                 ));
 
-                                state.vstack.pop();
-                                state.vstack.pop();
+                                state.function_state.vstack.pop();
+                                state.function_state.vstack.pop();
 
                                 // Call the div-mod function and throw away the remainder
                                 vec![
@@ -1397,8 +1482,8 @@ fn compile_expr(
                             ];
 
                             // Pop numerator and denominator
-                            state.vstack.pop();
-                            state.vstack.pop();
+                            state.function_state.vstack.pop();
+                            state.function_state.vstack.pop();
 
                             vec![lhs_expr_code, rhs_expr_code, bfe_div_code].concat()
                         }
@@ -1421,8 +1506,8 @@ fn compile_expr(
                             ];
 
                             // Pop numerator and denominator
-                            state.vstack.pop();
-                            state.vstack.pop();
+                            state.function_state.vstack.pop();
+                            state.function_state.vstack.pop();
 
                             vec![lhs_expr_code, rhs_expr_code, xfe_div_code].concat()
                         }
@@ -1442,8 +1527,8 @@ fn compile_expr(
                                 compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
 
                             // Pop numerator and denominator
-                            state.vstack.pop();
-                            state.vstack.pop();
+                            state.function_state.vstack.pop();
+                            state.function_state.vstack.pop();
 
                             vec![
                                 lhs_expr_code,
@@ -1463,8 +1548,8 @@ fn compile_expr(
                             let div_mod_u64 = state
                                 .import_snippet(Box::new(arithmetic::u64::div_mod_u64::DivModU64));
 
-                            state.vstack.pop();
-                            state.vstack.pop();
+                            state.function_state.vstack.pop();
+                            state.function_state.vstack.pop();
 
                             // Call the div-mod function and throw away the remainder
                             vec![
@@ -1487,8 +1572,8 @@ fn compile_expr(
 
                     let eq_code = compile_eq_code(&lhs_type, state);
 
-                    state.vstack.pop();
-                    state.vstack.pop();
+                    state.function_state.vstack.pop();
+                    state.function_state.vstack.pop();
 
                     vec![lhs_expr_code, rhs_expr_code, eq_code].concat()
                 }
@@ -1502,8 +1587,8 @@ fn compile_expr(
 
                     use ast::DataType::*;
 
-                    state.vstack.pop();
-                    state.vstack.pop();
+                    state.function_state.vstack.pop();
+                    state.function_state.vstack.pop();
 
                     match lhs_type {
                         U32 => vec![lhs_expr_code, rhs_expr_code, vec![swap(1), lt()]].concat(),
@@ -1538,8 +1623,8 @@ fn compile_expr(
                         compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
 
                     use ast::DataType::*;
-                    state.vstack.pop();
-                    state.vstack.pop();
+                    state.function_state.vstack.pop();
+                    state.function_state.vstack.pop();
 
                     match lhs_type {
                         U32 => vec![lhs_expr_code, rhs_expr_code, vec![lt()]].concat(),
@@ -1570,8 +1655,8 @@ fn compile_expr(
 
                     use ast::DataType::*;
 
-                    state.vstack.pop();
-                    state.vstack.pop();
+                    state.function_state.vstack.pop();
+                    state.function_state.vstack.pop();
 
                     match lhs_type {
                         U32 => {
@@ -1607,8 +1692,8 @@ fn compile_expr(
                     let mut neq_code = compile_eq_code(&lhs_type, state);
                     neq_code.append(&mut vec![push(0), eq()]);
 
-                    state.vstack.pop();
-                    state.vstack.pop();
+                    state.function_state.vstack.pop();
+                    state.function_state.vstack.pop();
 
                     vec![lhs_expr_code, rhs_expr_code, neq_code].concat()
                 }
@@ -1628,8 +1713,8 @@ fn compile_expr(
                         eq(),    // _ ((a + b) != 0), or (a ∨ b)
                     ];
 
-                    state.vstack.pop();
-                    state.vstack.pop();
+                    state.function_state.vstack.pop();
+                    state.function_state.vstack.pop();
 
                     vec![lhs_expr_code, rhs_expr_code, or_code].concat()
                 }
@@ -1651,8 +1736,8 @@ fn compile_expr(
                         panic!("Unsupported SHL of type {lhs_type}");
                     };
 
-                    state.vstack.pop();
-                    state.vstack.pop();
+                    state.function_state.vstack.pop();
+                    state.function_state.vstack.pop();
 
                     vec![lhs_expr_code, rhs_expr_code, vec![call(shl)]].concat()
                 }
@@ -1675,8 +1760,8 @@ fn compile_expr(
                         panic!("Unsupported SHL of type {lhs_type}");
                     };
 
-                    state.vstack.pop();
-                    state.vstack.pop();
+                    state.function_state.vstack.pop();
+                    state.function_state.vstack.pop();
 
                     vec![lhs_expr_code, rhs_expr_code, vec![call(shr)]].concat()
                 }
@@ -1730,8 +1815,8 @@ fn compile_expr(
                         _ => panic!("subtraction operator is not supported for {result_type}"),
                     };
 
-                    state.vstack.pop();
-                    state.vstack.pop();
+                    state.function_state.vstack.pop();
+                    state.function_state.vstack.pop();
 
                     vec![lhs_expr_code, rhs_expr_code, sub_code].concat()
                 }
@@ -1748,10 +1833,10 @@ fn compile_expr(
 
             // Condition is handled immediately and it is not on the stack when
             // the `then` or `else` branches are entered.
-            state.vstack.pop();
+            state.function_state.vstack.pop();
 
-            let branch_start_vstack = state.vstack.clone();
-            let branch_start_var_addr = state.var_addr.clone();
+            let branch_start_vstack = state.function_state.vstack.clone();
+            let branch_start_var_addr = state.function_state.var_addr.clone();
             let return_type = then_branch.get_type();
 
             // Compile `then` branch
@@ -1764,9 +1849,9 @@ fn compile_expr(
             let mut then_body_cleanup_code = state
                 .clear_all_but_top_stack_value_above_height(branch_start_vstack.get_stack_height());
             then_body_code.append(&mut then_body_cleanup_code);
-            let _returned_value_from_then_block = state.vstack.pop().unwrap();
+            let _returned_value_from_then_block = state.function_state.vstack.pop().unwrap();
             state.verify_same_ordering_of_bindings(&branch_start_vstack, &branch_start_var_addr);
-            state.var_addr = branch_start_var_addr.clone();
+            state.function_state.var_addr = branch_start_var_addr.clone();
 
             // Compile `else` branch
             let (_else_addr, mut else_body_code) =
@@ -1778,9 +1863,9 @@ fn compile_expr(
             let mut else_body_cleanup_code = state
                 .clear_all_but_top_stack_value_above_height(branch_start_vstack.get_stack_height());
             else_body_code.append(&mut else_body_cleanup_code);
-            let _returned_value_from_else_block = state.vstack.pop().unwrap();
+            let _returned_value_from_else_block = state.function_state.vstack.pop().unwrap();
             state.verify_same_ordering_of_bindings(&branch_start_vstack, &branch_start_var_addr);
-            state.var_addr = branch_start_var_addr;
+            state.function_state.var_addr = branch_start_var_addr;
 
             // Both branches are compiled as subroutines which are called depending on what `cond`
             // evaluates to.
@@ -1810,8 +1895,8 @@ fn compile_expr(
             ]
             .concat();
 
-            state.subroutines.push(then_code);
-            state.subroutines.push(else_code);
+            state.function_state.subroutines.push(then_code);
+            state.function_state.subroutines.push(else_code);
 
             code
         }
@@ -1819,7 +1904,7 @@ fn compile_expr(
         ast::Expr::Cast(expr, _as_type) => {
             let previous_type = expr.get_type();
             let (_expr_addr, expr_code) = compile_expr(expr, "as", &previous_type, state);
-            let (_, (_old_data_type, spilled)) = state.vstack.pop().unwrap();
+            let (_, (_old_data_type, spilled)) = state.function_state.vstack.pop().unwrap();
 
             // I don't think this value *can* be spilled unless maybe if you make a tuple
             // that's longer than 16 words which we probably can't handle anyway

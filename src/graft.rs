@@ -7,7 +7,7 @@ use crate::{ast, libraries};
 
 type Annotation = types::Typing;
 
-pub fn graft(input: &syn::ItemFn) -> ast::Fn<Annotation> {
+pub fn graft_fn_decl(input: &syn::ItemFn) -> ast::Fn<Annotation> {
     let name = input.sig.ident.to_string();
     let args = input.sig.inputs.iter().map(graft_fn_arg).collect_vec();
     let output = graft_return_type(&input.sig.output);
@@ -551,37 +551,38 @@ fn graft_eq_binop(rust_eq_binop: &syn::BinOp) -> ast::BinOp {
 }
 
 pub fn graft_stmt(rust_stmt: &syn::Stmt) -> ast::Stmt<Annotation> {
-    match rust_stmt {
-        syn::Stmt::Local(local) => {
-            // Handle variable declarations
-            let (ident, data_type, mutable): (String, ast::DataType, bool) = match &local.pat {
-                syn::Pat::Type(pat_type) => {
-                    let (dt, mutable): (ast::DataType, bool) = pat_type_to_data_type(pat_type);
-                    let ident: String = pat_to_name(&pat_type.pat);
+    /// Handle declarations
+    fn graft_local_stmt(local: &syn::Local) -> ast::Stmt<Annotation> {
+        let (ident, data_type, mutable): (String, ast::DataType, bool) = match &local.pat {
+            syn::Pat::Type(pat_type) => {
+                let (dt, mutable): (ast::DataType, bool) = pat_type_to_data_type(pat_type);
+                let ident: String = pat_to_name(&pat_type.pat);
 
-                    (ident, dt, mutable)
-                }
-                syn::Pat::Ident(d) => {
-                    // This would indicate that the explicit type is missing
-                    let ident = d.ident.to_string();
-                    panic!("Missing type parameter in declaration of {ident}");
-                }
-                other => panic!("unsupported: {other:?}"),
-            };
+                (ident, dt, mutable)
+            }
+            syn::Pat::Ident(d) => {
+                // This would indicate that the explicit type is missing
+                let ident = d.ident.to_string();
+                panic!("Missing type parameter in declaration of {ident}");
+            }
+            other => panic!("unsupported: {other:?}"),
+        };
 
-            let init = local.init.as_ref().unwrap();
-            let init_expr = init.1.as_ref();
-            let ast_expt = graft_expr(init_expr);
-            let let_stmt = ast::LetStmt {
-                var_name: ident,
-                data_type,
-                expr: ast_expt,
-                mutable
-            };
-            ast::Stmt::Let(let_stmt)
-        }
-        syn::Stmt::Item(_) => todo!(),
-        syn::Stmt::Expr(expr) => match expr {
+        let init = local.init.as_ref().unwrap();
+        let init_expr = init.1.as_ref();
+        let ast_expt = graft_expr(init_expr);
+        let let_stmt = ast::LetStmt {
+            var_name: ident,
+            data_type,
+            expr: ast_expt,
+            mutable,
+        };
+        ast::Stmt::Let(let_stmt)
+    }
+
+    /// Handle expressions
+    fn graft_expr_stmt(expr: &syn::Expr) -> ast::Stmt<Annotation> {
+        match expr {
             syn::Expr::While(while_stmt) => {
                 let expr_while = while_stmt;
                 let while_condition = graft_expr(&expr_while.cond);
@@ -628,8 +629,12 @@ pub fn graft_stmt(rust_stmt: &syn::Stmt) -> ast::Stmt<Annotation> {
                 ast::Stmt::Block(ast::BlockStmt { stmts })
             },
             other => panic!("unsupported expression. make sure to end statements by semi-colon and to explicitly 'return': {other:?}"),
-        },
-        syn::Stmt::Semi(semi, _b) => match semi {
+        }
+    }
+
+    /// Handle things that end with a semi-colon
+    fn graft_semi_stmt(semi: &syn::Expr) -> ast::Stmt<Annotation> {
+        match semi {
             syn::Expr::Return(ret_expr) => {
                 let optional_ret_expr = ret_expr.expr.as_ref().map(|ret_expr| graft_expr(ret_expr));
                 ast::Stmt::Return(optional_ret_expr)
@@ -640,7 +645,7 @@ pub fn graft_stmt(rust_stmt: &syn::Stmt) -> ast::Stmt<Annotation> {
 
                 match ast_fn_call {
                     ast::Expr::FnCall(fncall) => ast::Stmt::FnCall(fncall),
-                    _ => panic!("function call as a statement cannot be a literal")
+                    _ => panic!("function call as a statement cannot be a literal"),
                 }
             }
             syn::Expr::Assign(assign) => {
@@ -654,7 +659,12 @@ pub fn graft_stmt(rust_stmt: &syn::Stmt) -> ast::Stmt<Annotation> {
                 ast::Stmt::Assign(assign_stmt)
             }
             // Handle expressions of the type `i += 1`
-            syn::Expr::AssignOp(syn::ExprAssignOp { attrs: _, left, op, right }) => {
+            syn::Expr::AssignOp(syn::ExprAssignOp {
+                attrs: _,
+                left,
+                op,
+                right,
+            }) => {
                 let identifier_expr = left.as_ref();
                 let identifier = expr_as_identifier(identifier_expr);
                 let assign_expr = graft_binop_eq_expr(left, op, right);
@@ -664,13 +674,16 @@ pub fn graft_stmt(rust_stmt: &syn::Stmt) -> ast::Stmt<Annotation> {
                 };
 
                 ast::Stmt::Assign(assign_stmt)
-            },
+            }
             syn::Expr::MethodCall(method_call_expr) => {
                 ast::Stmt::MethodCall(graft_method_call(method_call_expr))
-            },
+            }
             syn::Expr::Macro(expr_macro) => {
                 let ident = path_to_ident(&expr_macro.mac.path);
-                assert_eq!("assert", ident, "Can currently only handle `assert!` macro. Got: {ident}");
+                assert_eq!(
+                    "assert", ident,
+                    "Can currently only handle `assert!` macro. Got: {ident}"
+                );
 
                 // The macro tokens are interpreted as an expression.
                 // We do not currently allow text associated with an assert statement,
@@ -682,9 +695,27 @@ pub fn graft_stmt(rust_stmt: &syn::Stmt) -> ast::Stmt<Annotation> {
                 ast::Stmt::Assert(AssertStmt {
                     expression: tokens_as_expr,
                 })
-            },
+            }
             other => panic!("unsupported: {other:#?}"),
-        },
+        }
+    }
+
+    fn graft_item_stmt(item: &syn::Item) -> ast::Stmt<Annotation> {
+        match item {
+            syn::Item::Fn(item_fn) => ast::Stmt::FnDeclaration(graft_fn_decl(item_fn)),
+            other => panic!("unsupported: {other:#?}"),
+        }
+    }
+
+    match rust_stmt {
+        // variable declarations
+        syn::Stmt::Local(local) => graft_local_stmt(local),
+        // Expressions
+        syn::Stmt::Expr(expr) => graft_expr_stmt(expr),
+        // Things that end with a semi-colon
+        syn::Stmt::Semi(semi, _b) => graft_semi_stmt(semi),
+        // Handle locally declared functions
+        syn::Stmt::Item(item) => graft_item_stmt(item),
     }
 }
 
@@ -738,7 +769,7 @@ mod tests {
 
         match &tokens {
             syn::Item::Fn(item_fn) => {
-                let _ret = graft(item_fn);
+                let _ret = graft_fn_decl(item_fn);
             }
             _ => panic!("unsupported"),
         }
@@ -760,7 +791,7 @@ mod tests {
 
         match &tokens {
             syn::Item::Fn(item_fn) => {
-                let _ret = graft(item_fn);
+                let _ret = graft_fn_decl(item_fn);
             }
             _ => panic!("unsupported"),
         }
@@ -796,7 +827,7 @@ mod tests {
         match &tokens {
             syn::Item::Fn(item_fn) => {
                 // println!("{item_fn:#?}");
-                let _ret = graft(item_fn);
+                let _ret = graft_fn_decl(item_fn);
                 // println!("{ret:#?}");
             }
             _ => panic!("unsupported"),
@@ -825,7 +856,7 @@ mod tests {
         match &tokens {
             syn::Item::Fn(item_fn) => {
                 // println!("{item_fn:#?}");
-                let _ret = graft(item_fn);
+                let _ret = graft_fn_decl(item_fn);
                 // println!("{ret:#?}");
             }
             _ => panic!("unsupported"),
@@ -847,7 +878,7 @@ mod tests {
         match &tokens {
             syn::Item::Fn(item_fn) => {
                 // println!("{item_fn:#?}");
-                let _ret = graft(item_fn);
+                let _ret = graft_fn_decl(item_fn);
                 // println!("{ret:#?}");
             }
             _ => panic!("unsupported"),
@@ -865,7 +896,7 @@ mod tests {
         match &tokens {
             syn::Item::Fn(item_fn) => {
                 // println!("{item_fn:#?}");
-                let _ret = graft(item_fn);
+                let _ret = graft_fn_decl(item_fn);
                 // println!("{ret:#?}");
             }
             _ => panic!("unsupported"),
@@ -884,7 +915,7 @@ mod tests {
         match &tokens {
             syn::Item::Fn(item_fn) => {
                 // println!("{item_fn:#?}");
-                let _ret = graft(item_fn);
+                let _ret = graft_fn_decl(item_fn);
                 // println!("{ret:#?}");
             }
             _ => panic!("unsupported"),
@@ -906,7 +937,7 @@ mod tests {
         match &tokens {
             syn::Item::Fn(item_fn) => {
                 // println!("{item_fn:#?}");
-                let _ret = graft(item_fn);
+                let _ret = graft_fn_decl(item_fn);
                 // println!("{ret:#?}");
             }
             _ => panic!("unsupported"),
@@ -932,7 +963,7 @@ mod tests {
         match &tokens {
             syn::Item::Fn(item_fn) => {
                 // println!("{item_fn:#?}");
-                let _ret = graft(item_fn);
+                let _ret = graft_fn_decl(item_fn);
                 // println!("{ret:#?}");
             }
             _ => panic!("unsupported"),
@@ -963,7 +994,7 @@ mod tests {
         match &tokens {
             syn::Item::Fn(item_fn) => {
                 // println!("{item_fn:#?}");
-                let _ret = graft(item_fn);
+                let _ret = graft_fn_decl(item_fn);
                 // println!("{ret:#?}");
             }
             _ => panic!("unsupported"),
@@ -987,7 +1018,7 @@ mod tests {
 
         match &tokens {
             syn::Item::Fn(item_fn) => {
-                let _ret = graft(item_fn);
+                let _ret = graft_fn_decl(item_fn);
             }
             _ => panic!("unsupported"),
         }
@@ -1005,7 +1036,7 @@ mod tests {
 
         match &tokens {
             syn::Item::Fn(item_fn) => {
-                let _ret = graft(item_fn);
+                let _ret = graft_fn_decl(item_fn);
             }
             _ => panic!("unsupported"),
         }
@@ -1021,7 +1052,7 @@ mod tests {
 
         match &tokens {
             syn::Item::Fn(item_fn) => {
-                let _ret = graft(item_fn);
+                let _ret = graft_fn_decl(item_fn);
             }
             _ => panic!("unsupported"),
         }
@@ -1039,7 +1070,7 @@ mod tests {
         match &tokens {
             syn::Item::Fn(item_fn) => {
                 // println!("{item_fn:#?}");
-                let _ret = graft(item_fn);
+                let _ret = graft_fn_decl(item_fn);
                 // println!("{ret:#?}");
             }
             _ => panic!("unsupported"),
@@ -1056,7 +1087,7 @@ mod tests {
         match &tokens {
             syn::Item::Fn(item_fn) => {
                 // println!("{item_fn:#?}");
-                let _ret = graft(item_fn);
+                let _ret = graft_fn_decl(item_fn);
                 // println!("{ret:#?}");
             }
             _ => panic!("unsupported"),

@@ -54,6 +54,7 @@ pub enum Stmt<T> {
     If(IfStmt<T>),
     Block(BlockStmt<T>),
     Assert(AssertStmt<T>),
+    FnDeclaration(Fn<T>),
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
