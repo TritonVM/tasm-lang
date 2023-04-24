@@ -8,8 +8,8 @@ use twenty_first::shared_math::x_field_element::XFieldElement;
 use twenty_first::util_types::algebraic_hasher::Hashable;
 
 use crate::ast;
-use crate::graft::graft;
-use crate::tasm_code_generator::compile;
+use crate::graft::graft_fn_decl;
+use crate::tasm_code_generator::compile_function;
 use crate::types::{self, annotate_fn, GetType, Typing};
 
 #[allow(dead_code)]
@@ -50,17 +50,14 @@ fn compile_for_run_test(item_fn: &syn::ItemFn) -> (String, String) {
 #[allow(dead_code)]
 pub fn graft_check_compile_prop(item_fn: &syn::ItemFn) -> String {
     // parse test
-    let mut function = graft(item_fn);
+    let mut function = graft_fn_decl(item_fn);
 
     // type-check and annotate
     annotate_fn(&mut function);
 
-    // println!("{function:#?}");
-
     // compile
-    let tasm = compile(&function);
+    let tasm = compile_function(&function);
     let tasm_string: String = tasm.iter().map(|instr| instr.to_string()).join("\n");
-    // println!("{tasm_string}");
     tasm_string
 }
 
@@ -81,7 +78,6 @@ fn execute_compiled_with_stack_memory_and_ins(
 
     // Run the tasm-lib's execute function without requesting initialization of the dynamic
     // memory allocator, as this is the compiler's responsibility.
-    println!("executing code:\n {code}");
     tasm_lib::execute(
         code,
         &mut stack,
