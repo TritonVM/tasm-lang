@@ -174,6 +174,57 @@ fn right_lineage_length_from_leaf_index_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
+fn right_lineage_length_from_leaf_index_as_local_function() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn right_lineage_lenght_from_leaf_index_outer(leaf_index: u64) -> u32 {
+            fn right_lineage_length_from_leaf_index(leaf_index: u64) -> u32 {
+                // Identify the last (least significant) nonzero bit
+                let pow2: u64 = (leaf_index + 1) & !leaf_index;
+
+                // Get the index of that bit, counting from least significant bit
+                return 64 - pow2.leading_zeros() - 1;
+            }
+
+            return right_lineage_length_from_leaf_index(leaf_index);
+        }
+    })
+}
+
+#[allow(dead_code)]
+fn calculate_new_peaks_from_append_with_local_function_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn calculate_new_peaks_from_append(
+            old_leaf_count: u64,
+            old_peaks: Vec<Digest>,
+            new_leaf: Digest,
+        ) -> (Vec<Digest>, Vec<Digest>) {
+            fn right_lineage_length_from_leaf_index(leaf_index: u64) -> u32 {
+                // Identify the last (least significant) nonzero bit
+                let pow2: u64 = (leaf_index + 1) & !leaf_index;
+
+                // Get the index of that bit, counting from least significant bit
+                return 64 - pow2.leading_zeros() - 1;
+            }
+
+            // 64 = MAX_MMR_HEIGHT
+            let mut peaks: Vec<Digest> = old_peaks;
+            peaks.push(new_leaf);
+            let mut auth_path: Vec<Digest> = Vec::<Digest>::with_capacity(64usize);
+            let mut right_lineage_count: u32 = right_lineage_length_from_leaf_index(old_leaf_count);
+            while right_lineage_count != 0u32 {
+                let new_hash: Digest = peaks.pop().unwrap();
+                let previous_peak: Digest = peaks.pop().unwrap();
+                auth_path.push(previous_peak);
+                peaks.push(H::hash_pair(previous_peak, new_hash));
+                right_lineage_count -= 1;
+            }
+
+            return (peaks, auth_path);
+        }
+    })
+}
+
+#[allow(dead_code)]
 fn calculate_new_peaks_from_append_inlined_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn calculate_new_peaks_from_append(
@@ -455,7 +506,14 @@ mod run_tests {
             vec![u64_lit((1u64 << 54) - 1)],
             vec![u32_lit(54)],
         ));
-        multiple_compare_prop_with_stack(&right_lineage_length_from_leaf_index_rast(), test_cases);
+        multiple_compare_prop_with_stack(
+            &right_lineage_length_from_leaf_index_rast(),
+            test_cases.clone(),
+        );
+        multiple_compare_prop_with_stack(
+            &right_lineage_length_from_leaf_index_as_local_function(),
+            test_cases,
+        );
     }
 
     #[test]
@@ -580,56 +638,61 @@ mod run_tests {
 
     #[test]
     fn calculate_new_peaks_from_append_test() {
-        for size in 0..20 {
-            let digests: Vec<Digest> = random_elements(size);
-            let msa: mmr::mmr_accumulator::MmrAccumulator<Tip5> =
-                mmr::mmr_accumulator::MmrAccumulator::new(digests.clone());
-            let mut memory = HashMap::default();
-            let list_pointer: BFieldElement = 10000u64.into();
-            rust_shadowing_helper_functions::safe_list::safe_list_insert(
-                list_pointer,
-                2000,
-                msa.get_peaks(),
-                &mut memory,
-            );
-            let new_leaf: Digest = random();
-            let inputs = vec![
-                u64_lit(msa.count_leaves()),
-                bfe_lit(list_pointer),
-                digest_lit(new_leaf),
-            ];
-            let res = execute_with_stack_memory_and_ins(
-                &calculate_new_peaks_from_append_inlined_rast(),
-                inputs,
-                &mut memory,
-                vec![],
-                vec![],
-                -6,
-            );
-            assert!(res.is_ok(), "VM execution must succeed");
+        for src in [
+            calculate_new_peaks_from_append_with_local_function_rast(),
+            calculate_new_peaks_from_append_inlined_rast(),
+        ] {
+            for size in 0..20 {
+                let digests: Vec<Digest> = random_elements(size);
+                let msa: mmr::mmr_accumulator::MmrAccumulator<Tip5> =
+                    mmr::mmr_accumulator::MmrAccumulator::new(digests.clone());
+                let mut memory = HashMap::default();
+                let list_pointer: BFieldElement = 10000u64.into();
+                rust_shadowing_helper_functions::safe_list::safe_list_insert(
+                    list_pointer,
+                    2000,
+                    msa.get_peaks(),
+                    &mut memory,
+                );
+                let new_leaf: Digest = random();
+                let inputs = vec![
+                    u64_lit(msa.count_leaves()),
+                    bfe_lit(list_pointer),
+                    digest_lit(new_leaf),
+                ];
+                let res = execute_with_stack_memory_and_ins(
+                    &src,
+                    inputs,
+                    &mut memory,
+                    vec![],
+                    vec![],
+                    -6,
+                );
+                assert!(res.is_ok(), "VM execution must succeed");
 
-            let (new_peaks, mp) = mmr::shared_basic::calculate_new_peaks_from_append::<Tip5>(
-                msa.count_leaves(),
-                msa.get_peaks(),
-                new_leaf,
-            );
+                let (new_peaks, mp) = mmr::shared_basic::calculate_new_peaks_from_append::<Tip5>(
+                    msa.count_leaves(),
+                    msa.get_peaks(),
+                    new_leaf,
+                );
 
-            // Verify that the new peaks calculated in the VM match those calculated in Rust
-            assert_list_equal(
-                new_peaks.iter().map(|x| digest_lit(*x)).collect_vec(),
-                list_pointer,
-                &memory,
-            );
+                // Verify that the new peaks calculated in the VM match those calculated in Rust
+                assert_list_equal(
+                    new_peaks.iter().map(|x| digest_lit(*x)).collect_vec(),
+                    list_pointer,
+                    &memory,
+                );
 
-            // Verify that the authentication path calculated in the VM match that calculated in Rust
-            assert_list_equal(
-                mp.authentication_path
-                    .iter()
-                    .map(|x| digest_lit(*x))
-                    .collect_vec(),
-                BFieldElement::one(),
-                &memory,
-            );
+                // Verify that the authentication path calculated in the VM match that calculated in Rust
+                assert_list_equal(
+                    mp.authentication_path
+                        .iter()
+                        .map(|x| digest_lit(*x))
+                        .collect_vec(),
+                    BFieldElement::one(),
+                    &memory,
+                );
+            }
         }
     }
 
@@ -841,6 +904,11 @@ mod compile_and_typecheck_tests {
     #[test]
     fn calculate_new_peaks_from_append_test() {
         graft_check_compile_prop(&calculate_new_peaks_from_append_inlined_rast());
+    }
+
+    #[test]
+    fn calculate_new_peaks_from_append_local_function_test() {
+        graft_check_compile_prop(&calculate_new_peaks_from_append_with_local_function_rast());
     }
 
     #[test]
