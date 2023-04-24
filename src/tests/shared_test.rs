@@ -55,12 +55,9 @@ pub fn graft_check_compile_prop(item_fn: &syn::ItemFn) -> String {
     // type-check and annotate
     annotate_fn(&mut function);
 
-    // println!("{function:#?}");
-
     // compile
     let tasm = compile_function(&function);
     let tasm_string: String = tasm.iter().map(|instr| instr.to_string()).join("\n");
-    // println!("{tasm_string}");
     tasm_string
 }
 
@@ -81,7 +78,6 @@ fn execute_compiled_with_stack_memory_and_ins(
 
     // Run the tasm-lib's execute function without requesting initialization of the dynamic
     // memory allocator, as this is the compiler's responsibility.
-    println!("executing code:\n {code}");
     tasm_lib::execute(
         code,
         &mut stack,

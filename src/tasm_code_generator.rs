@@ -161,7 +161,7 @@ impl CompilerState {
                 .kmalloc(data_type.size_of())
                 .try_into()
                 .unwrap();
-            println!("Warning: spill required of {address}. Spilling to address: {spill_address}");
+            eprintln!("Warning: spill required of {address}. Spilling to address: {spill_address}");
             Some(spill_address)
         } else {
             None
@@ -180,7 +180,7 @@ impl CompilerState {
     }
 
     pub fn mark_as_spilled(&mut self, value_identifier: &ValueIdentifier) {
-        println!(
+        eprintln!(
             "Warning: Marking {value_identifier} as spilled. Binding: {}",
             self.get_binding_name(value_identifier)
         );
@@ -296,7 +296,7 @@ impl CompilerState {
                     ]
                     .concat()
                 } else if !accessible {
-                    println!("Compiler must run again because of {value_identifier_to_remove}");
+                    eprintln!("Compiler must run again because of {value_identifier_to_remove}");
                     vec![push(0), assert_()]
                 } else {
                     vec![]
@@ -353,7 +353,7 @@ impl CompilerState {
             }
             None => {
                 if !accessible {
-                    println!("Compiler must run again because of {tuple_identifier}");
+                    eprintln!("Compiler must run again because of {tuple_identifier}");
                     vec![push(0), assert_()]
                 } else if stack_position_of_value_to_remove > 0 && accessible {
                     vec![
@@ -708,7 +708,6 @@ pub fn compile_function(function: &ast::Fn<types::Typing>) -> Vec<LabelledInstru
     // then parsing it again. A duplicated label should be caught by the parser.
     // I wanted to add a test for this, but I couldn't find a good way of doing that.
     let assembler = ret.iter().map(|x| x.to_string()).join("\n");
-    // println!("{assembler}");
     parse(&assembler)
         .map(|instructions| to_labelled(&instructions))
         .map_err(|err| anyhow::anyhow!("{}", err))
@@ -957,10 +956,6 @@ fn compile_stmt(
         }
         ast::Stmt::FnDeclaration(function) => {
             let compiled_fn = compile_function_inner(function, &mut state.global_compiler_state);
-            println!(
-                "compiled_fn: {}",
-                compiled_fn.iter().map(|x| x.to_string()).join("\n")
-            );
             state.function_state.subroutines.push(compiled_fn);
 
             vec![]
