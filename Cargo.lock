@@ -232,9 +232,9 @@ dependencies = [
 
 [[package]]
 name = "clap"
-version = "3.2.23"
+version = "3.2.24"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "71655c45cb9845d3270c9d6df84ebe72b4dad3c2ba3f7023ad47c144e4e473a5"
+checksum = "eef2b3ded6a26dfaec672a742c93c8cf6b689220324da509ec5caa20de55dc83"
 dependencies = [
  "bitflags",
  "clap_lex",
@@ -309,7 +309,7 @@ dependencies = [
  "atty",
  "cast",
  "ciborium",
- "clap 3.2.23",
+ "clap 3.2.24",
  "criterion-plot",
  "itertools",
  "lazy_static",
@@ -1531,7 +1531,7 @@ dependencies = [
 [[package]]
 name = "tasm-lib"
 version = "0.1.0"
-source = "git+https://github.com/TritonVM/tasm-lib#27a7394e5eb0a58180a315dbe60aed6c4135f67d"
+source = "git+https://github.com/TritonVM/tasm-lib#14fbb0bd98c2595d5c595d3da5418b290491119c"
 dependencies = [
  "anyhow",
  "itertools",
@@ -1590,9 +1590,9 @@ dependencies = [
 
 [[package]]
 name = "triton-opcodes"
-version = "0.19.0"
+version = "0.20.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "974eace30970e618ddebf6fee581c8ab4564c9a333036239d2cdebeca86b4a0b"
+checksum = "6863b1714b2c9016ae8ac94c0458ae3f4d56af1d66646c0d409b894dcddd4a41"
 dependencies = [
  "anyhow",
  "itertools",
@@ -1606,9 +1606,9 @@ dependencies = [
 
 [[package]]
 name = "triton-profiler"
-version = "0.19.0"
+version = "0.20.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "309c0ebb4907119ec84e115b0b1dcf6f1b9b751ef47d68f0151c3bcb0897b2fc"
+checksum = "9d550ea780a16d46c4fd30ef849189e1c94433a78da4caec34256fcf42fca052"
 dependencies = [
  "colored",
  "criterion",
@@ -1619,9 +1619,9 @@ dependencies = [
 
 [[package]]
 name = "triton-vm"
-version = "0.19.0"
+version = "0.20.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "96f2b27ded57d2fba259b5316b620ac6a7cc69209fb3e5516e0b1ef192f1f112"
+checksum = "b84a906dc868f57840c17f85d66a0e962c0ad5d134afc338785cb2acc65d84bd"
 dependencies = [
  "anyhow",
  "bincode",
