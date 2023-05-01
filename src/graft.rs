@@ -475,6 +475,16 @@ pub fn graft_expr(rust_exp: &syn::Expr) -> ast::Expr<Annotation> {
             }
             syn::UnOp::Deref(deref) => panic!("unsupported: {deref:?}"),
         },
+        syn::Expr::Reference(syn::ExprReference {
+            attrs: _,
+            and_token: _,
+            raw: _,
+            mutability: _,
+            expr,
+        }) => {
+            let ast_expr = graft_expr(&expr);
+            ast_expr
+        }
         other => panic!("unsupported: {other:?}"),
     }
 }
