@@ -8,7 +8,7 @@ use super::shared_test::execute_compiled_with_stack_memory_and_ins;
 
 pub mod mmr;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct BenchmarkInput {
     pub input_args: Vec<ast::ExprLit<Typing>>,
     pub memory: HashMap<BFieldElement, BFieldElement>,
