@@ -2,7 +2,6 @@
 mod benchmark {
     use std::collections::HashMap;
 
-    use rand::random;
     use tasm_lib::{rust_shadowing_helper_functions, Digest};
     use triton_vm::BFieldElement;
     use twenty_first::{
