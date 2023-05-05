@@ -63,7 +63,7 @@ fn not_bool_in_expression_rast() -> syn::ItemFn {
 #[cfg(test)]
 mod compile_and_typecheck_tests {
     use super::*;
-    use crate::tests::shared_test::graft_check_compile_prop;
+    use crate::tests_and_benchmarks::shared_test::graft_check_compile_prop;
 
     #[test]
     fn and_bool_test() {
@@ -74,7 +74,7 @@ mod compile_and_typecheck_tests {
 #[cfg(test)]
 mod run_tests {
     use super::*;
-    use crate::tests::shared_test::*;
+    use crate::tests_and_benchmarks::shared_test::*;
 
     #[test]
     fn and_bool_test() {

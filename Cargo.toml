@@ -9,13 +9,12 @@ default-features = false
 features = ["precommit-hook", "run-cargo-test", "run-cargo-clippy", "run-cargo-fmt"]
 
 [dependencies]
+anyhow = "1"
 tasm-lib = { git = "https://github.com/TritonVM/tasm-lib" }
-# tasm-lib = { path = "../tasm-lib" }
-twenty-first = "0.19.3"
-triton-opcodes = "0.20.0"
-triton-vm = "0.20.0"
 itertools = "0.10"
 num = "0.4"
 rand = "0"
 syn = { version = "1.0", features = ["full", "extra-traits"] }
-anyhow = "1"
+triton-opcodes = "0.20.0"
+triton-vm = "0.20.0"
+twenty-first = "0.19.3"

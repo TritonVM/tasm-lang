@@ -33,7 +33,7 @@ impl InputOutputTestCase {
 }
 
 /// Get the execution code and the name of the compiled function
-fn compile_for_run_test(item_fn: &syn::ItemFn) -> (String, String) {
+pub fn compile_for_run_test(item_fn: &syn::ItemFn) -> (String, String) {
     let function_name = item_fn.sig.ident.to_string();
     let code = graft_check_compile_prop(item_fn);
     let code = format!(
@@ -62,7 +62,7 @@ pub fn graft_check_compile_prop(item_fn: &syn::ItemFn) -> String {
 }
 
 #[allow(dead_code)]
-fn execute_compiled_with_stack_memory_and_ins(
+pub fn execute_compiled_with_stack_memory_and_ins(
     code: &str,
     input_args: Vec<ast::ExprLit<Typing>>,
     memory: &mut HashMap<BFieldElement, BFieldElement>,
