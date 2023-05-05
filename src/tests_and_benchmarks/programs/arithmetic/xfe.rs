@@ -249,7 +249,7 @@ fn long_expression_3_rast() -> syn::ItemFn {
 
 #[cfg(test)]
 mod compile_and_typecheck_tests {
-    use crate::tests::shared_test::graft_check_compile_prop;
+    use crate::tests_and_benchmarks::shared_test::graft_check_compile_prop;
 
     use super::*;
 
@@ -276,7 +276,7 @@ mod run_tests {
     };
 
     use super::*;
-    use crate::tests::shared_test::*;
+    use crate::tests_and_benchmarks::shared_test::*;
 
     #[test]
     fn instantiate_xfe_with_literal_test() {

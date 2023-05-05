@@ -482,8 +482,9 @@ pub fn graft_expr(rust_exp: &syn::Expr) -> ast::Expr<Annotation> {
             mutability: _,
             expr,
         }) => {
-            let ast_expr = graft_expr(&expr);
-            ast_expr
+            // This solution amounts to ignoring the `&` operator
+            // Maybe long-term we want to do something different?
+            graft_expr(expr)
         }
         other => panic!("unsupported: {other:?}"),
     }

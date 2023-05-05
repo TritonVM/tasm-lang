@@ -413,7 +413,7 @@ fn build_u64_vector_in_while_loop_rast() -> syn::ItemFn {
 #[cfg(test)]
 mod compile_and_typecheck_tests {
     use super::*;
-    use crate::tests::shared_test::graft_check_compile_prop;
+    use crate::tests_and_benchmarks::shared_test::graft_check_compile_prop;
 
     #[test]
     fn inferred_literals_test() {
@@ -484,7 +484,7 @@ mod run_tests {
     use super::*;
     use crate::{
         ast::{self, DataType},
-        tests::shared_test::*,
+        tests_and_benchmarks::shared_test::*,
     };
 
     #[test]
