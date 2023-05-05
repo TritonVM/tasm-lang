@@ -18,13 +18,13 @@ mod benchmark {
     };
 
     #[test]
-    fn verify_benchmark() {
+    fn verify_mmr_ap_benchmark() {
         type H = Tip5;
         let rast = programs::mmr::verify_authentication_path_with_local_function();
         let (code, fn_name) = compile_for_run_test(&rast);
-        let digests: Vec<Digest> = random_elements(10);
+        let digests: Vec<Digest> = random_elements(100);
         let mut ammr = get_rustyleveldb_ammr_from_digests(digests.clone());
-        let leaf_index = random::<u64>() % 10;
+        let leaf_index = 1;
 
         let mut memory = HashMap::default();
         let peaks_pointer: BFieldElement = 10000u64.into();
