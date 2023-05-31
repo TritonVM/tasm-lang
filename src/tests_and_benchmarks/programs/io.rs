@@ -151,9 +151,9 @@ mod run_tests {
     use crate::tests_and_benchmarks::shared_test::*;
     use rand::random;
     use std::{collections::HashMap, vec};
-    use triton_vm::bfield_codec::BFieldCodec;
+    use triton_vm::Digest;
     use twenty_first::shared_math::{
-        b_field_element::BFieldElement, rescue_prime_digest::Digest, x_field_element::XFieldElement,
+        b_field_element::BFieldElement, bfield_codec::BFieldCodec, x_field_element::XFieldElement,
     };
 
     #[test]

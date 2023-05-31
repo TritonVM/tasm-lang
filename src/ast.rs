@@ -4,10 +4,10 @@ use std::str::FromStr;
 
 use anyhow::bail;
 use itertools::Itertools;
+use triton_vm::Digest;
 use twenty_first::shared_math::b_field_element::BFieldElement;
-use twenty_first::shared_math::rescue_prime_digest::Digest;
+use twenty_first::shared_math::bfield_codec::BFieldCodec;
 use twenty_first::shared_math::x_field_element::XFieldElement;
-use twenty_first::util_types::algebraic_hasher::Hashable;
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct FnSignature {
@@ -92,19 +92,22 @@ pub enum ExprLit<T> {
     GenericNum(u64, T),
 }
 
-// FIXME: Use u64::to_sequence() after upgrading twenty-first
-impl<T> Hashable for ExprLit<T> {
-    fn to_sequence(&self) -> Vec<BFieldElement> {
+impl<T> BFieldCodec for ExprLit<T> {
+    fn decode(_sequence: &[BFieldElement]) -> anyhow::Result<Box<Self>> {
+        todo!()
+    }
+
+    fn encode(&self) -> Vec<BFieldElement> {
         match self {
             ExprLit::Bool(value) => vec![BFieldElement::new(*value as u64)],
-            ExprLit::U32(value) => value.to_sequence(),
+            ExprLit::U32(value) => value.encode(),
             ExprLit::U64(value) => vec![
                 BFieldElement::new(value & 0xffff_ffff),
                 BFieldElement::new(value >> 32),
             ],
-            ExprLit::BFE(value) => value.to_sequence(),
-            ExprLit::XFE(value) => value.to_sequence(),
-            ExprLit::Digest(value) => value.to_sequence(),
+            ExprLit::BFE(value) => value.encode(),
+            ExprLit::XFE(value) => value.encode(),
+            ExprLit::Digest(value) => value.encode(),
             ExprLit::GenericNum(_, _) => todo!(),
         }
     }

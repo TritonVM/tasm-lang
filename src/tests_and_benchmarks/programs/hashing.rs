@@ -6,8 +6,9 @@ mod run_tests {
     use rand::random;
     use std::vec;
     use syn::parse_quote;
+    use triton_vm::Digest;
     use twenty_first::{
-        shared_math::{other::random_elements, rescue_prime_digest::Digest, tip5::Tip5},
+        shared_math::{other::random_elements, tip5::Tip5},
         util_types::algebraic_hasher::AlgebraicHasher,
     };
 

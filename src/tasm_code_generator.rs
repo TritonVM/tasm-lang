@@ -10,7 +10,7 @@ use triton_opcodes::parser::{parse, to_labelled};
 use triton_opcodes::shortcuts::*;
 use twenty_first::amount::u32s::U32s;
 use twenty_first::shared_math::b_field_element::BFieldElement;
-use twenty_first::util_types::algebraic_hasher::Hashable;
+use twenty_first::shared_math::bfield_codec::BFieldCodec;
 
 use crate::libraries::{self};
 use crate::stack::Stack;
@@ -1070,7 +1070,7 @@ fn compile_expr(
             ast::ExprLit::BFE(value) => vec![Instruction(Push(*value))],
 
             ast::ExprLit::U64(value) => {
-                let as_u32s = U32s::<2>::try_from(*value).unwrap().to_sequence();
+                let as_u32s = U32s::<2>::try_from(*value).unwrap().encode();
                 let stack_serialized: Vec<_> = as_u32s.iter().rev().collect();
 
                 let code = stack_serialized

@@ -811,7 +811,7 @@ mod run_tests {
         ] {
             for size in 1..90 {
                 let digests: Vec<Digest> = random_elements(size);
-                let mut ammr = get_rustyleveldb_ammr_from_digests(digests.clone());
+                let ammr = get_rustyleveldb_ammr_from_digests(digests.clone());
 
                 let mut memory = HashMap::default();
                 let old_peaks_pointer: BFieldElement = 10000u64.into();
@@ -885,7 +885,7 @@ mod run_tests {
         ] {
             for size in 1..35 {
                 let digests: Vec<Digest> = random_elements(size);
-                let mut ammr = get_rustyleveldb_ammr_from_digests(digests.clone());
+                let ammr = get_rustyleveldb_ammr_from_digests(digests.clone());
                 let leaf_index = random::<u64>() % size as u64;
 
                 let mut memory = HashMap::default();

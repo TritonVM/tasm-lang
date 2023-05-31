@@ -514,10 +514,9 @@ mod run_tests {
     use std::collections::HashMap;
 
     use itertools::Itertools;
-    use triton_vm::bfield_codec::BFieldCodec;
     use twenty_first::shared_math::{
-        b_field_element::BFieldElement, other::random_elements, tip5::Digest,
-        x_field_element::XFieldElement,
+        b_field_element::BFieldElement, bfield_codec::BFieldCodec, other::random_elements,
+        tip5::Digest, x_field_element::XFieldElement,
     };
 
     use super::*;

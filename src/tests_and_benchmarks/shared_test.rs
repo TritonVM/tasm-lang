@@ -2,10 +2,10 @@ use itertools::Itertools;
 use std::collections::HashMap;
 use tasm_lib::dyn_malloc::DYN_MALLOC_ADDRESS;
 use tasm_lib::{get_init_tvm_stack, rust_shadowing_helper_functions};
+use triton_vm::Digest;
 use twenty_first::shared_math::b_field_element::{BFieldElement, BFIELD_ONE, BFIELD_ZERO};
-use twenty_first::shared_math::rescue_prime_digest::Digest;
+use twenty_first::shared_math::bfield_codec::BFieldCodec;
 use twenty_first::shared_math::x_field_element::XFieldElement;
-use twenty_first::util_types::algebraic_hasher::Hashable;
 
 use crate::ast;
 use crate::graft::graft_fn_decl;
@@ -72,7 +72,7 @@ pub fn execute_compiled_with_stack_memory_and_ins(
 ) -> anyhow::Result<tasm_lib::ExecutionResult> {
     let mut stack = get_init_tvm_stack();
     for input_arg in input_args {
-        let input_arg_seq = input_arg.to_sequence();
+        let input_arg_seq = input_arg.encode();
         stack.append(&mut input_arg_seq.into_iter().rev().collect());
     }
 
@@ -126,7 +126,7 @@ pub fn compare_compiled_prop_with_stack_and_memory_and_ins(
 ) {
     let mut expected_final_stack = get_init_tvm_stack();
     for output in expected_outputs {
-        let output_seq = output.to_sequence();
+        let output_seq = output.encode();
         expected_final_stack.append(&mut output_seq.into_iter().rev().collect());
     }
 
@@ -334,7 +334,7 @@ pub fn assert_list_equal(
 
     #[allow(clippy::needless_range_loop)]
     for i in 0..expected_list.len() {
-        if expected_list[i].to_sequence()
+        if expected_list[i].encode()
             != rust_shadowing_helper_functions::safe_list::safe_list_read(
                 list_pointer,
                 i,
@@ -353,7 +353,7 @@ pub fn assert_list_equal(
             panic!(
                 "Element number {i} did not match expected value of [{}]. \n Memory was: {}",
                 expected_list[i]
-                    .to_sequence()
+                    .encode()
                     .iter()
                     .map(|x| x.to_string())
                     .join(", "),
