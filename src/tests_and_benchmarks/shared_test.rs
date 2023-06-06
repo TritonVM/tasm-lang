@@ -335,7 +335,7 @@ pub fn assert_list_equal(
     #[allow(clippy::needless_range_loop)]
     for i in 0..expected_list.len() {
         if expected_list[i].encode()
-            != rust_shadowing_helper_functions::safe_list::safe_list_read(
+            != rust_shadowing_helper_functions::safe_list::safe_list_get(
                 list_pointer,
                 i,
                 memory,
