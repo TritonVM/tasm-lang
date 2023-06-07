@@ -1,6 +1,6 @@
 use itertools::Itertools;
 use std::collections::HashMap;
-use tasm_lib::dyn_malloc::DYN_MALLOC_ADDRESS;
+use tasm_lib::memory::dyn_malloc::DYN_MALLOC_ADDRESS;
 use tasm_lib::{get_init_tvm_stack, rust_shadowing_helper_functions};
 use triton_vm::Digest;
 use twenty_first::shared_math::b_field_element::{BFieldElement, BFIELD_ONE, BFIELD_ZERO};

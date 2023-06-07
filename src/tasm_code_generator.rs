@@ -1,6 +1,6 @@
 use itertools::{Either, Itertools};
 use std::collections::{HashMap, HashSet};
-use tasm_lib::dyn_malloc::DynMalloc;
+use tasm_lib::memory::dyn_malloc::DynMalloc;
 use tasm_lib::snippet::Snippet;
 use tasm_lib::snippet_state::SnippetState;
 use tasm_lib::{arithmetic, hashing};
@@ -2075,7 +2075,7 @@ fn compile_eq_code(
 ) -> Vec<LabelledInstruction> {
     use ast::DataType::*;
     match lhs_type {
-        Bool | U32 | BFE => vec![eq()],
+        Bool | U32 | BFE | VoidPointer => vec![eq()],
         U64 => vec![
             // _ a_hi a_lo b_hi b_lo
             swap(3), // _ b_lo a_lo b_hi a_hi

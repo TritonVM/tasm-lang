@@ -194,6 +194,7 @@ pub enum DataType {
     Digest,
     List(Box<DataType>),
     Tuple(Vec<DataType>),
+    VoidPointer,
 }
 
 impl DataType {
@@ -220,6 +221,7 @@ impl DataType {
             Self::Digest => 5,
             Self::List(_list_type) => 1,
             Self::Tuple(tuple_type) => tuple_type.iter().map(Self::size_of).sum(),
+            Self::VoidPointer => 1,
         }
     }
 }
@@ -245,6 +247,7 @@ impl TryFrom<DataType> for tasm_lib::snippet::DataType {
                 Ok(tasm_lib::snippet::DataType::List(Box::new(element_type)))
             },
             DataType::Tuple(_) => Err("Tuple cannot be converted to a tasm_lib type. Try converting its individual elements".to_string()),
+            DataType::VoidPointer => Ok(tasm_lib::snippet::DataType::VoidPointer),
         }
     }
 }
@@ -259,6 +262,10 @@ impl From<tasm_lib::snippet::DataType> for DataType {
             tasm_lib::snippet::DataType::BFE => DataType::BFE,
             tasm_lib::snippet::DataType::XFE => DataType::XFE,
             tasm_lib::snippet::DataType::Digest => DataType::Digest,
+            tasm_lib::snippet::DataType::Pair(left, right) => {
+                DataType::Tuple(vec![(*left).into(), (*right).into()])
+            }
+            tasm_lib::snippet::DataType::VoidPointer => DataType::VoidPointer,
             tasm_lib::snippet::DataType::List(elem_type_snip) => {
                 let element_type: DataType = (*elem_type_snip).into();
                 DataType::List(Box::new(element_type))
@@ -289,21 +296,19 @@ impl FromStr for DataType {
 impl Display for DataType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         use DataType::*;
-        write!(
-            f,
-            "{}",
-            match self {
-                Bool => "bool".to_string(),
-                U32 => "u32".to_string(),
-                U64 => "u64".to_string(),
-                U128 => "u128".to_string(),
-                BFE => "BField".to_string(),
-                XFE => "XField".to_string(),
-                Digest => "Digest".to_string(),
-                List(ty) => format!("List({ty})"),
-                Tuple(tys) => tys.iter().map(|ty| format!("{ty}")).join(" "),
-            }
-        )
+        let str = match self {
+            Bool => "bool".to_string(),
+            U32 => "u32".to_string(),
+            U64 => "u64".to_string(),
+            U128 => "u128".to_string(),
+            BFE => "BField".to_string(),
+            XFE => "XField".to_string(),
+            Digest => "Digest".to_string(),
+            List(ty) => format!("List({ty})"),
+            Tuple(tys) => tys.iter().map(|ty| format!("{ty}")).join(" "),
+            VoidPointer => "void pointer".to_string(),
+        };
+        write!(f, "{str}",)
     }
 }
 

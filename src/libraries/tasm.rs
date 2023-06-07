@@ -42,7 +42,7 @@ impl Library for TasmLibrary {
         fn_name: &str,
         _type_parameter: Option<ast::DataType>,
     ) -> ast::FnSignature {
-        let snippet = tasm_lib::all_snippets::name_to_snippet(fn_name);
+        let snippet = tasm_lib::exported_snippets::name_to_snippet(fn_name);
 
         let input_types_lib = snippet.input_types();
         let output_types_lib = snippet.output_types();
@@ -92,7 +92,7 @@ impl Library for TasmLibrary {
         _type_parameter: Option<ast::DataType>,
         state: &mut CompilerState,
     ) -> Vec<triton_opcodes::instruction::LabelledInstruction> {
-        let snippet = tasm_lib::all_snippets::name_to_snippet(fn_name);
+        let snippet = tasm_lib::exported_snippets::name_to_snippet(fn_name);
         let entrypoint = snippet.entrypoint();
         state.import_snippet(snippet);
 
