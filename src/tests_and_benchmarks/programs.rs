@@ -5,3 +5,4 @@ pub mod local_functions;
 pub mod mmr;
 pub mod other;
 pub mod spill_to_memory;
+pub mod vectors;
