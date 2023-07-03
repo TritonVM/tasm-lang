@@ -12,7 +12,7 @@ use twenty_first::shared_math::x_field_element::XFieldElement;
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct FnSignature {
     pub name: String,
-    pub args: Vec<FnArg>,
+    pub args: Vec<AbstractArgument>,
     pub output: DataType,
     pub arg_evaluation_order: ArgEvaluationOrder,
 }
@@ -31,13 +31,25 @@ pub struct Fn<T> {
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub struct FnArg {
+pub enum AbstractArgument {
+    FunctionArgument(AbstractFunctionArg),
+    ValueArgument(AbstractValueArg),
+}
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub struct AbstractFunctionArg {
+    pub abstract_name: String,
+    pub function_type: FunctionType,
+}
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub struct AbstractValueArg {
     pub name: String,
     pub data_type: DataType,
     pub mutable: bool,
 }
 
-impl Display for FnArg {
+impl Display for AbstractValueArg {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}: {}", self.name, self.data_type)
     }
@@ -199,6 +211,35 @@ pub enum DataType {
     List(Box<DataType>),
     Tuple(Vec<DataType>),
     VoidPointer,
+    Function(Box<FunctionType>),
+}
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub struct FunctionType {
+    pub input_argument: DataType,
+    pub output: DataType,
+}
+
+impl From<&FnSignature> for DataType {
+    fn from(value: &FnSignature) -> Self {
+        let mut input_args = vec![];
+
+        for inp in value.args.iter() {
+            let input = match inp {
+                AbstractArgument::FunctionArgument(_) => todo!(),
+                AbstractArgument::ValueArgument(abs_val) => abs_val.data_type.to_owned(),
+            };
+            input_args.push(input);
+        }
+
+        DataType::Function(Box::new(FunctionType {
+            input_argument: match input_args.len() {
+                1 => input_args[0].to_owned(),
+                _ => DataType::Tuple(input_args),
+            },
+            output: value.output.to_owned(),
+        }))
+    }
 }
 
 impl DataType {
@@ -226,6 +267,7 @@ impl DataType {
             Self::List(_list_type) => 1,
             Self::Tuple(tuple_type) => tuple_type.iter().map(Self::size_of).sum(),
             Self::VoidPointer => 1,
+            Self::Function(_) => todo!(),
         }
     }
 }
@@ -252,6 +294,7 @@ impl TryFrom<DataType> for tasm_lib::snippet::DataType {
             },
             DataType::Tuple(_) => Err("Tuple cannot be converted to a tasm_lib type. Try converting its individual elements".to_string()),
             DataType::VoidPointer => Ok(tasm_lib::snippet::DataType::VoidPointer),
+            DataType::Function(_) => todo!(),
         }
     }
 }
@@ -311,6 +354,11 @@ impl Display for DataType {
             List(ty) => format!("List({ty})"),
             Tuple(tys) => tys.iter().map(|ty| format!("{ty}")).join(" "),
             VoidPointer => "void pointer".to_string(),
+            Function(fn_type) => {
+                let input = fn_type.input_argument.to_string();
+                let output = fn_type.output.to_string();
+                format!("Function: {input} -> {output}")
+            }
         };
         write!(f, "{str}",)
     }

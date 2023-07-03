@@ -34,6 +34,7 @@ impl Library for XfeLibrary {
         &self,
         method_name: &str,
         _receiver_type: &ast::DataType,
+        args: &[ast::Expr<super::Annotation>],
     ) -> ast::FnSignature {
         if method_name == "unlift" {
             get_xfe_unlift_method().signature
@@ -206,11 +207,13 @@ impl Library for XfeLibrary {
 fn get_xfe_unlift_method() -> CompiledFunction {
     let fn_signature = ast::FnSignature {
         name: "unlift".to_owned(),
-        args: vec![ast::FnArg {
-            name: "value".to_owned(),
-            data_type: ast::DataType::XFE,
-            mutable: false,
-        }],
+        args: vec![ast::AbstractArgument::ValueArgument(
+            ast::AbstractValueArg {
+                name: "value".to_owned(),
+                data_type: ast::DataType::XFE,
+                mutable: false,
+            },
+        )],
         output: ast::DataType::BFE,
         arg_evaluation_order: Default::default(),
     };

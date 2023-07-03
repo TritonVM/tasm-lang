@@ -541,12 +541,6 @@ fn compile_function_inner(
 ) -> Vec<LabelledInstruction> {
     const FN_ARG_NAME_PREFIX: &str = "fn_arg";
     let fn_name = &function.fn_signature.name;
-    let _fn_stack_input_sig = function
-        .fn_signature
-        .args
-        .iter()
-        .map(|arg| format!("({arg})"))
-        .join(" ");
     let _fn_stack_output_sig = format!("{}", function.fn_signature.output);
 
     // Run the compilation 1st time to learn which values need to be spilled to memory
@@ -556,16 +550,22 @@ fn compile_function_inner(
     };
 
     for arg in function.fn_signature.args.iter() {
-        let (fn_arg_addr, spill) = state.new_value_identifier(FN_ARG_NAME_PREFIX, &arg.data_type);
-        state
-            .function_state
-            .var_addr
-            .insert(arg.name.clone(), fn_arg_addr);
+        match arg {
+            ast::AbstractArgument::FunctionArgument(_) => todo!(),
+            ast::AbstractArgument::ValueArgument(abstract_value) => {
+                let (fn_arg_addr, spill) =
+                    state.new_value_identifier(FN_ARG_NAME_PREFIX, &abstract_value.data_type);
+                state
+                    .function_state
+                    .var_addr
+                    .insert(abstract_value.name.clone(), fn_arg_addr);
 
-        assert!(
-            spill.is_none(),
-            "Cannot handle spill 1st time code generator runs"
-        );
+                assert!(
+                    spill.is_none(),
+                    "Cannot handle spill 1st time code generator runs"
+                );
+            }
+        }
     }
 
     let _fn_body_code = function
@@ -585,14 +585,20 @@ fn compile_function_inner(
 
     let mut fn_arg_spilling = vec![];
     for arg in function.fn_signature.args.iter() {
-        let (fn_arg_addr, spill) = state.new_value_identifier(FN_ARG_NAME_PREFIX, &arg.data_type);
-        state
-            .function_state
-            .var_addr
-            .insert(arg.name.clone(), fn_arg_addr.clone());
+        match arg {
+            ast::AbstractArgument::FunctionArgument(_) => todo!(),
+            ast::AbstractArgument::ValueArgument(abstract_value) => {
+                let (fn_arg_addr, spill) =
+                    state.new_value_identifier(FN_ARG_NAME_PREFIX, &abstract_value.data_type);
+                state
+                    .function_state
+                    .var_addr
+                    .insert(abstract_value.name.clone(), fn_arg_addr.clone());
 
-        if let Some(_spill_addr) = spill {
-            fn_arg_spilling.push(fn_arg_addr);
+                if let Some(_spill_addr) = spill {
+                    fn_arg_spilling.push(fn_arg_addr);
+                }
+            }
         }
     }
 
@@ -2154,6 +2160,7 @@ fn compile_eq_code(
         }
         List(_) => todo!(),
         Tuple(_) => todo!(),
+        Function(_) => todo!(),
     }
 }
 

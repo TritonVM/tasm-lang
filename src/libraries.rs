@@ -42,6 +42,7 @@ pub trait Library: Debug {
         &self,
         fn_name: &str,
         receiver_type: &ast::DataType,
+        args: &[ast::Expr<Annotation>],
     ) -> ast::FnSignature;
 
     /// Return function signature of function, if function is known.

@@ -32,6 +32,7 @@ impl Library for HasherLib {
         &self,
         _fn_name: &str,
         _receiver_type: &ast::DataType,
+        args: &[ast::Expr<super::Annotation>],
     ) -> ast::FnSignature {
         panic!("HasherLib does not contain any methods")
     }
@@ -94,16 +95,16 @@ fn get_hash_pair_function() -> CompiledFunction {
     let fn_signature = ast::FnSignature {
         name: "hash_pair".to_owned(),
         args: vec![
-            ast::FnArg {
+            ast::AbstractArgument::ValueArgument(ast::AbstractValueArg {
                 name: "left".to_owned(),
                 data_type: ast::DataType::Digest,
                 mutable: false,
-            },
-            ast::FnArg {
+            }),
+            ast::AbstractArgument::ValueArgument(ast::AbstractValueArg {
                 name: "right".to_owned(),
                 data_type: ast::DataType::Digest,
                 mutable: false,
-            },
+            }),
         ],
         output: ast::DataType::Digest,
         // If the definition of Tip5's `hash_pair` was changed, this could

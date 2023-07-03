@@ -4,7 +4,7 @@ use triton_vm::triton_asm;
 
 use crate::{
     ast,
-    graft::{self, graft_expr},
+    graft::{self, graft_expr, Annotation},
     tasm_code_generator::CompilerState,
 };
 
@@ -26,7 +26,7 @@ impl Library for VectorLib {
     }
 
     fn get_method_name(&self, method_name: &str, _receiver_type: &ast::DataType) -> Option<String> {
-        if matches!(method_name, "push" | "pop" | "len") {
+        if matches!(method_name, "push" | "pop" | "len" | "map") {
             Some(method_name.to_owned())
         } else {
             None
@@ -37,7 +37,20 @@ impl Library for VectorLib {
         &self,
         fn_name: &str,
         receiver_type: &ast::DataType,
+        args: &[ast::Expr<super::Annotation>],
     ) -> ast::FnSignature {
+        // // special-case on map as we need the signature of the called function to
+        // // find the type
+        // if fn_name == "map" {
+        //     let inner_function_signature =
+        //     return ast::FnSignature {
+        //         name: String::from("map"),
+        //         args: vec![],
+        //         output: ast::DataType::List(Box::new()),
+        //         arg_evaluation_order: todo!(),
+        //     };
+        // }
+
         self.function_name_to_signature(fn_name, receiver_type.type_parameter())
     }
 
@@ -50,15 +63,14 @@ impl Library for VectorLib {
             .unwrap_or_else(|| panic!("Unknown function name {fn_name}"));
 
         let name = snippet.entrypoint();
-        let mut args: Vec<ast::FnArg> = vec![];
+        let mut args: Vec<ast::AbstractArgument> = vec![];
         for (ty, name) in snippet.inputs().into_iter() {
-            let fn_arg = ast::FnArg {
+            let fn_arg = ast::AbstractValueArg {
                 name,
                 data_type: ty.into(),
-                // The tasm snippet input arguments are all considered mutable
                 mutable: true,
             };
-            args.push(fn_arg);
+            args.push(ast::AbstractArgument::ValueArgument(fn_arg));
         }
 
         let mut output_types: Vec<ast::DataType> = vec![];
@@ -131,46 +143,97 @@ impl Library for VectorLib {
         &self,
         rust_method_call: &syn::ExprMethodCall,
     ) -> Option<ast::MethodCall<super::Annotation>> {
-        // Handle `pop().unwrap()`. Ignore everything else.
-        const UNWRAP_NAME: &str = "unwrap";
         const POP_NAME: &str = "pop";
+        const COLLECT_VEC_NAME: &str = "collect_vec";
+        const UNWRAP_NAME: &str = "unwrap";
+        const INTO_ITER_NAME: &str = "into_iter";
+        const MAP_NAME: &str = "map";
 
         let last_method_name = rust_method_call.method.to_string();
 
-        if last_method_name != UNWRAP_NAME {
-            return None;
-        }
+        match last_method_name.as_str() {
+            UNWRAP_NAME => {
+                match rust_method_call.receiver.as_ref() {
+                    syn::Expr::MethodCall(rust_inner_method_call) => {
+                        let inner_method_call = graft::graft_method_call(rust_inner_method_call);
+                        if inner_method_call.method_name != POP_NAME {
+                            return None;
+                        }
 
-        match rust_method_call.receiver.as_ref() {
-            syn::Expr::MethodCall(rust_inner_method_call) => {
-                let inner_method_call = graft::graft_method_call(rust_inner_method_call);
-                if inner_method_call.method_name != POP_NAME {
-                    return None;
-                }
+                        let identifier = match &inner_method_call.args[0] {
+                            ast::Expr::Var(ident) => ident.to_owned(),
+                            // Maybe cover more cases here?
+                            _ => todo!(),
+                        };
 
-                let identifier = match &inner_method_call.args[0] {
-                    ast::Expr::Var(ident) => ident.to_owned(),
-                    // Maybe cover more cases here?
+                        let mut args = vec![ast::Expr::Var(identifier)];
+                        args.append(
+                            &mut rust_inner_method_call
+                                .args
+                                .iter()
+                                .map(graft_expr)
+                                .collect_vec(),
+                        );
+                        let annot = Default::default();
+
+                        return Some(ast::MethodCall {
+                            method_name: POP_NAME.to_owned(),
+                            args,
+                            annot,
+                        });
+                    }
                     _ => todo!(),
-                };
-
-                let mut args = vec![ast::Expr::Var(identifier)];
-                args.append(
-                    &mut rust_inner_method_call
-                        .args
-                        .iter()
-                        .map(graft_expr)
-                        .collect_vec(),
-                );
-                let annot = Default::default();
-
-                Some(ast::MethodCall {
-                    method_name: POP_NAME.to_owned(),
-                    args,
-                    annot,
-                })
+                }
             }
-            _ => todo!(),
+            COLLECT_VEC_NAME => {
+                match rust_method_call.receiver.as_ref() {
+                    syn::Expr::MethodCall(rust_inner_method_call) => {
+                        let inner_method_call = graft::graft_method_call(rust_inner_method_call);
+                        if inner_method_call.method_name != MAP_NAME {
+                            return None;
+                        }
+
+                        let identifier = match rust_inner_method_call.receiver.as_ref() {
+                            syn::Expr::MethodCall(rust_inner_inner_method_call) => {
+                                let maybe_iter_name =
+                                    rust_inner_inner_method_call.method.to_string();
+                                if maybe_iter_name != INTO_ITER_NAME {
+                                    panic!("Only allowed syntax with `map` is `x.into_iter().map(<function_name>).collect_vec()")
+                                }
+
+                                let inner_inner_method_call =
+                                    graft::graft_method_call(rust_inner_inner_method_call);
+                                let identifier = match &inner_inner_method_call.args[0] {
+                                    ast::Expr::Var(ident) => ident.to_owned(),
+                                    // Maybe cover more cases here?
+                                    _ => todo!(),
+                                };
+
+                                identifier
+                            }
+                            _ => todo!(),
+                        };
+
+                        let mut args = vec![ast::Expr::Var(identifier)];
+                        args.append(
+                            &mut rust_inner_method_call
+                                .args
+                                .iter()
+                                .map(graft_expr)
+                                .collect_vec(),
+                        );
+                        let annot: Annotation = Default::default();
+
+                        return Some(ast::MethodCall {
+                            method_name: MAP_NAME.to_owned(),
+                            args,
+                            annot,
+                        });
+                    }
+                    _ => todo!(),
+                }
+            }
+            _ => None,
         }
     }
 }

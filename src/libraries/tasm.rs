@@ -2,6 +2,7 @@ use triton_vm::triton_asm;
 
 use crate::ast::{self, FnSignature};
 use crate::tasm_code_generator::CompilerState;
+use crate::types::Typing;
 
 use super::Library;
 
@@ -33,6 +34,7 @@ impl Library for TasmLibrary {
         &self,
         _fn_name: &str,
         _receiver_type: &ast::DataType,
+        args: &[ast::Expr<super::Annotation>],
     ) -> ast::FnSignature {
         panic!("TASM lib only contains functions, no methods")
     }
@@ -45,15 +47,15 @@ impl Library for TasmLibrary {
         let snippet = tasm_lib::exported_snippets::name_to_snippet(fn_name);
 
         let name = snippet.entrypoint();
-        let mut args: Vec<ast::FnArg> = vec![];
+        let mut args: Vec<ast::AbstractArgument> = vec![];
         for (ty, name) in snippet.inputs().into_iter() {
-            let fn_arg = ast::FnArg {
+            let fn_arg = ast::AbstractValueArg {
                 name,
                 data_type: ty.into(),
                 // The tasm snippet input arguments are all considered mutable
                 mutable: true,
             };
-            args.push(fn_arg);
+            args.push(ast::AbstractArgument::ValueArgument(fn_arg));
         }
 
         let mut output_types: Vec<ast::DataType> = vec![];
