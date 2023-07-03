@@ -110,4 +110,11 @@ impl Library for TasmLibrary {
     ) -> Option<ast::Expr<super::Annotation>> {
         panic!("No grafting is handled by TASM lib")
     }
+
+    fn graft_method(
+        &self,
+        _rust_method_call: &syn::ExprMethodCall,
+    ) -> Option<ast::MethodCall<super::Annotation>> {
+        None
+    }
 }

@@ -1,7 +1,12 @@
+use itertools::Itertools;
 use tasm_lib::snippet::Snippet;
 use triton_opcodes::{instruction::LabelledInstruction, shortcuts::call};
 
-use crate::{ast, tasm_code_generator::CompilerState};
+use crate::{
+    ast,
+    graft::{self, graft_expr},
+    tasm_code_generator::CompilerState,
+};
 
 use super::Library;
 
@@ -122,6 +127,53 @@ impl Library for VectorLib {
         _args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
     ) -> Option<ast::Expr<super::Annotation>> {
         todo!()
+    }
+
+    fn graft_method(
+        &self,
+        rust_method_call: &syn::ExprMethodCall,
+    ) -> Option<ast::MethodCall<super::Annotation>> {
+        // Handle `pop().unwrap()`. Ignore everything else.
+        const UNWRAP_NAME: &str = "unwrap";
+        const POP_NAME: &str = "pop";
+
+        let last_method_name = rust_method_call.method.to_string();
+
+        if last_method_name != UNWRAP_NAME {
+            return None;
+        }
+
+        match rust_method_call.receiver.as_ref() {
+            syn::Expr::MethodCall(rust_inner_method_call) => {
+                let inner_method_call = graft::graft_method_call(rust_inner_method_call);
+                if inner_method_call.method_name != POP_NAME {
+                    return None;
+                }
+
+                let identifier = match &inner_method_call.args[0] {
+                    ast::Expr::Var(ident) => ident.to_owned(),
+                    // Maybe cover more cases here?
+                    _ => todo!(),
+                };
+
+                let mut args = vec![ast::Expr::Var(identifier)];
+                args.append(
+                    &mut rust_inner_method_call
+                        .args
+                        .iter()
+                        .map(graft_expr)
+                        .collect_vec(),
+                );
+                let annot = Default::default();
+
+                return Some(ast::MethodCall {
+                    method_name: POP_NAME.to_owned(),
+                    args,
+                    annot,
+                });
+            }
+            _ => todo!(),
+        }
     }
 }
 

@@ -81,6 +81,13 @@ impl Library for HasherLib {
     ) -> Option<ast::Expr<super::Annotation>> {
         panic!("HasherLib cannot graft")
     }
+
+    fn graft_method(
+        &self,
+        _rust_method_call: &syn::ExprMethodCall,
+    ) -> Option<ast::MethodCall<super::Annotation>> {
+        None
+    }
 }
 
 fn get_hash_pair_function() -> CompiledFunction {

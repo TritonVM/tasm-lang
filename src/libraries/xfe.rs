@@ -1,10 +1,15 @@
+use itertools::Itertools;
 use triton_opcodes::shortcuts::*;
 use twenty_first::shared_math::{
     b_field_element::BFieldElement,
     x_field_element::{XFieldElement, EXTENSION_DEGREE},
 };
 
-use crate::{ast, graft, libraries::Library};
+use crate::{
+    ast,
+    graft::{self, graft_expr},
+    libraries::Library,
+};
 
 use super::{bfe::BfeLibrary, CompiledFunction};
 const XFIELDELEMENT_LIB_INDICATOR: &str = "XFieldElement::";
@@ -147,6 +152,53 @@ impl Library for XfeLibrary {
                 ))))
             }
             _ => panic!("XFE instantiation must happen with an array"),
+        }
+    }
+
+    fn graft_method(
+        &self,
+        rust_method_call: &syn::ExprMethodCall,
+    ) -> Option<ast::MethodCall<super::Annotation>> {
+        // Handle `unlift().unwrap()`. Ignore everything else.
+        const UNWRAP_NAME: &str = "unwrap";
+        const UNLIFT_NAME: &str = "unlift";
+
+        let last_method_name = rust_method_call.method.to_string();
+
+        if last_method_name != UNWRAP_NAME {
+            return None;
+        }
+
+        match rust_method_call.receiver.as_ref() {
+            syn::Expr::MethodCall(rust_inner_method_call) => {
+                let inner_method_call = graft::graft_method_call(rust_inner_method_call);
+                if inner_method_call.method_name != UNLIFT_NAME {
+                    return None;
+                }
+
+                let identifier = match &inner_method_call.args[0] {
+                    ast::Expr::Var(ident) => ident.to_owned(),
+                    // Maybe cover more cases here?
+                    _ => todo!(),
+                };
+
+                let mut args = vec![ast::Expr::Var(identifier)];
+                args.append(
+                    &mut rust_inner_method_call
+                        .args
+                        .iter()
+                        .map(graft_expr)
+                        .collect_vec(),
+                );
+                let annot = Default::default();
+
+                return Some(ast::MethodCall {
+                    method_name: UNLIFT_NAME.to_owned(),
+                    args,
+                    annot,
+                });
+            }
+            _ => todo!(),
         }
     }
 }

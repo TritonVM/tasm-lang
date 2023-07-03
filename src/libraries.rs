@@ -77,4 +77,9 @@ pub trait Library: Debug {
         fn_name: &str,
         args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
     ) -> Option<ast::Expr<Annotation>>;
+
+    fn graft_method(
+        &self,
+        rust_method_call: &syn::ExprMethodCall,
+    ) -> Option<ast::MethodCall<Annotation>>;
 }

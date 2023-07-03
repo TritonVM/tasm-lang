@@ -5,7 +5,7 @@ use crate::ast::AssertStmt;
 use crate::types;
 use crate::{ast, libraries};
 
-type Annotation = types::Typing;
+pub type Annotation = types::Typing;
 
 pub fn graft_fn_decl(input: &syn::ItemFn) -> ast::Fn<Annotation> {
     let name = input.sig.ident.to_string();
@@ -278,49 +278,17 @@ fn expr_as_identifier(rust_exp: &syn::Expr) -> ast::Identifier<Annotation> {
     }
 }
 
-fn graft_method_call(rust_method_call: &syn::ExprMethodCall) -> ast::MethodCall<Annotation> {
-    // TODO: This code only supports method calls on variable names and not on
-    // list elements or on tuple elements. We definitely want to support this
-    // on tuple elements, though. Expand!
+pub(crate) fn graft_method_call(
+    rust_method_call: &syn::ExprMethodCall,
+) -> ast::MethodCall<Annotation> {
+    for lib in libraries::all_libraries() {
+        if let Some(method_call) = lib.graft_method(rust_method_call) {
+            return method_call;
+        }
+    }
+
     let last_method_name = rust_method_call.method.to_string();
     match rust_method_call.receiver.as_ref() {
-        // Handle the method calls that are followed by an `unwrap` to get rid of the `Option` type
-        // wrapper.
-        // TODO: This handling of `.pop().unwrap()`, for lists, and `.unlift().unwrap()` should
-        // probably be handled by the `vector` and `xfe` libraries, respectively. For this, the
-        // `Library` trait needs to be expanded with a function to graft method calls.
-        syn::Expr::MethodCall(rust_inner_method_call) => {
-            let inner_method_call = graft_method_call(rust_inner_method_call);
-            let identifier = match &inner_method_call.args[0] {
-                ast::Expr::Var(ident) => ident.to_owned(),
-                _ => todo!(),
-            };
-            let method_name = if !(inner_method_call.method_name == "pop"
-                || inner_method_call.method_name == "unlift")
-                || last_method_name != "unwrap"
-            {
-                panic!(
-                    "`.pop().unwrap()` or `.unlift().unwrap()` only. Got: {}",
-                    inner_method_call.method_name
-                );
-            } else {
-                inner_method_call.method_name
-            };
-            let mut args = vec![ast::Expr::Var(identifier)];
-            args.append(
-                &mut rust_inner_method_call
-                    .args
-                    .iter()
-                    .map(graft_expr)
-                    .collect_vec(),
-            );
-            let annot = Default::default();
-            ast::MethodCall {
-                method_name,
-                args,
-                annot,
-            }
-        }
         expr => {
             let receiver_expr = graft_expr(expr);
             let mut args = vec![receiver_expr];
