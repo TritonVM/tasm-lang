@@ -24,7 +24,7 @@ impl Library for UnsignedIntegersLib {
         &self,
         method_name: &str,
         receiver_type: &ast::DataType,
-        args: &[ast::Expr<super::Annotation>],
+        _args: &[ast::Expr<super::Annotation>],
     ) -> ast::FnSignature {
         if method_name == "count_ones" && *receiver_type == ast::DataType::U32 {
             return get_count_ones_u32_method().signature;
@@ -68,6 +68,7 @@ impl Library for UnsignedIntegersLib {
         &self,
         _fn_name: &str,
         _type_parameter: Option<ast::DataType>,
+        _args: &[ast::Expr<super::Annotation>],
     ) -> ast::FnSignature {
         panic!("unsigned_integers lib does not contain any functions");
     }
@@ -76,6 +77,7 @@ impl Library for UnsignedIntegersLib {
         &self,
         method_name: &str,
         receiver_type: &ast::DataType,
+        _args: &[ast::Expr<super::Annotation>],
         state: &mut CompilerState,
     ) -> Vec<triton_vm::instruction::LabelledInstruction> {
         if method_name == "count_ones" && ast::DataType::U32 == *receiver_type {
@@ -94,6 +96,7 @@ impl Library for UnsignedIntegersLib {
         &self,
         _fn_name: &str,
         _type_parameter: Option<ast::DataType>,
+        _args: &[ast::Expr<super::Annotation>],
         _state: &mut CompilerState,
     ) -> Vec<triton_vm::instruction::LabelledInstruction> {
         panic!("unsigned_integers lib does not contain any functions");

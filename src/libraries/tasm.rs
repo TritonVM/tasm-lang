@@ -2,7 +2,6 @@ use triton_vm::triton_asm;
 
 use crate::ast::{self, FnSignature};
 use crate::tasm_code_generator::CompilerState;
-use crate::types::Typing;
 
 use super::Library;
 
@@ -34,7 +33,7 @@ impl Library for TasmLibrary {
         &self,
         _fn_name: &str,
         _receiver_type: &ast::DataType,
-        args: &[ast::Expr<super::Annotation>],
+        _args: &[ast::Expr<super::Annotation>],
     ) -> ast::FnSignature {
         panic!("TASM lib only contains functions, no methods")
     }
@@ -43,6 +42,7 @@ impl Library for TasmLibrary {
         &self,
         fn_name: &str,
         _type_parameter: Option<ast::DataType>,
+        _args: &[ast::Expr<super::Annotation>],
     ) -> ast::FnSignature {
         let snippet = tasm_lib::exported_snippets::name_to_snippet(fn_name);
 
@@ -81,6 +81,7 @@ impl Library for TasmLibrary {
         &self,
         _method_name: &str,
         _receiver_type: &ast::DataType,
+        _args: &[ast::Expr<super::Annotation>],
         _state: &mut CompilerState,
     ) -> Vec<triton_vm::instruction::LabelledInstruction> {
         panic!("TASM lib only contains functions, no methods")
@@ -90,6 +91,7 @@ impl Library for TasmLibrary {
         &self,
         fn_name: &str,
         _type_parameter: Option<ast::DataType>,
+        _args: &[ast::Expr<super::Annotation>],
         state: &mut CompilerState,
     ) -> Vec<triton_vm::instruction::LabelledInstruction> {
         let snippet = tasm_lib::exported_snippets::name_to_snippet(fn_name);

@@ -1,11 +1,12 @@
 use itertools::Itertools;
-use tasm_lib::snippet::BasicSnippet;
+use tasm_lib::{list::ListType, snippet::BasicSnippet};
 use triton_vm::triton_asm;
 
 use crate::{
     ast,
     graft::{self, graft_expr, Annotation},
     tasm_code_generator::CompilerState,
+    types::GetType,
 };
 
 use super::Library;
@@ -39,27 +40,16 @@ impl Library for VectorLib {
         receiver_type: &ast::DataType,
         args: &[ast::Expr<super::Annotation>],
     ) -> ast::FnSignature {
-        // // special-case on map as we need the signature of the called function to
-        // // find the type
-        // if fn_name == "map" {
-        //     let inner_function_signature =
-        //     return ast::FnSignature {
-        //         name: String::from("map"),
-        //         args: vec![],
-        //         output: ast::DataType::List(Box::new()),
-        //         arg_evaluation_order: todo!(),
-        //     };
-        // }
-
-        self.function_name_to_signature(fn_name, receiver_type.type_parameter())
+        self.function_name_to_signature(fn_name, receiver_type.type_parameter(), args)
     }
 
     fn function_name_to_signature(
         &self,
         fn_name: &str,
         type_parameter: Option<ast::DataType>,
+        args: &[ast::Expr<super::Annotation>],
     ) -> ast::FnSignature {
-        let snippet = name_to_tasm_lib_snippet(fn_name, &type_parameter)
+        let snippet = name_to_tasm_lib_snippet(fn_name, &type_parameter, args)
             .unwrap_or_else(|| panic!("Unknown function name {fn_name}"));
 
         let name = snippet.entrypoint();
@@ -96,6 +86,7 @@ impl Library for VectorLib {
         &self,
         method_name: &str,
         receiver_type: &ast::DataType,
+        args: &[ast::Expr<super::Annotation>],
         state: &mut CompilerState,
     ) -> Vec<triton_vm::instruction::LabelledInstruction> {
         let type_param: ast::DataType = if let ast::DataType::List(type_param) = receiver_type {
@@ -105,7 +96,8 @@ impl Library for VectorLib {
                 "Cannot call vector method without type param. Got receiver_type: {receiver_type}"
             )
         };
-        let snippet = name_to_tasm_lib_snippet(method_name, &Some(type_param))
+        // find inner function if needed
+        let snippet = name_to_tasm_lib_snippet(method_name, &Some(type_param), args)
             .unwrap_or_else(|| panic!("Unknown function name {method_name}"));
         let entrypoint = snippet.entrypoint();
         state.import_snippet(snippet);
@@ -117,9 +109,10 @@ impl Library for VectorLib {
         &self,
         fn_name: &str,
         type_parameter: Option<ast::DataType>,
+        args: &[ast::Expr<super::Annotation>],
         state: &mut CompilerState,
     ) -> Vec<triton_vm::instruction::LabelledInstruction> {
-        let snippet = name_to_tasm_lib_snippet(fn_name, &type_parameter)
+        let snippet = name_to_tasm_lib_snippet(fn_name, &type_parameter, args)
             .unwrap_or_else(|| panic!("Unknown function name {fn_name}"));
         let entrypoint = snippet.entrypoint();
         state.import_snippet(snippet);
@@ -176,11 +169,11 @@ impl Library for VectorLib {
                         );
                         let annot = Default::default();
 
-                        return Some(ast::MethodCall {
+                        Some(ast::MethodCall {
                             method_name: POP_NAME.to_owned(),
                             args,
                             annot,
-                        });
+                        })
                     }
                     _ => todo!(),
                 }
@@ -203,13 +196,12 @@ impl Library for VectorLib {
 
                                 let inner_inner_method_call =
                                     graft::graft_method_call(rust_inner_inner_method_call);
-                                let identifier = match &inner_inner_method_call.args[0] {
+
+                                match &inner_inner_method_call.args[0] {
                                     ast::Expr::Var(ident) => ident.to_owned(),
                                     // Maybe cover more cases here?
                                     _ => todo!(),
-                                };
-
-                                identifier
+                                }
                             }
                             _ => todo!(),
                         };
@@ -224,11 +216,11 @@ impl Library for VectorLib {
                         );
                         let annot: Annotation = Default::default();
 
-                        return Some(ast::MethodCall {
+                        Some(ast::MethodCall {
                             method_name: MAP_NAME.to_owned(),
                             args,
                             annot,
-                        });
+                        })
                     }
                     _ => todo!(),
                 }
@@ -242,6 +234,7 @@ impl Library for VectorLib {
 fn name_to_tasm_lib_snippet(
     public_name: &str,
     type_parameter: &Option<ast::DataType>,
+    args: &[ast::Expr<super::Annotation>],
 ) -> Option<Box<dyn BasicSnippet>> {
     let tasm_type: Option<tasm_lib::snippet::DataType> =
         type_parameter.clone().map(|x| x.try_into().unwrap());
@@ -259,6 +252,31 @@ fn name_to_tasm_lib_snippet(
         "len" => Some(Box::new(tasm_lib::list::safe_u32::length::SafeLength(
             tasm_type.unwrap(),
         ))),
+        "map" => {
+            let inner_function_type = if let ast::DataType::Function(fun_type) = args[1].get_type()
+            {
+                fun_type
+            } else {
+                panic!()
+            };
+            let inner_function_name = if let ast::Expr::Var(ident) = &args[1] {
+                ident
+            } else {
+                panic!()
+            };
+
+            let lnat = tasm_lib::list::higher_order::inner_function::NoFunctionBody {
+                label_name: inner_function_name.to_string(),
+                input_types: vec![inner_function_type.input_argument.try_into().unwrap()],
+                output_types: vec![inner_function_type.output.try_into().unwrap()],
+            };
+            Some(Box::new(tasm_lib::list::higher_order::map::Map {
+                list_type: ListType::Safe,
+                f: tasm_lib::list::higher_order::inner_function::InnerFunction::NoFunctionBody(
+                    lnat,
+                ),
+            }))
+        }
         _ => None,
     }
 }

@@ -665,13 +665,6 @@ pub fn compile_function(function: &ast::Fn<types::Typing>) -> Vec<LabelledInstru
     // sets the dynamic allocator initial value. It's ugly and inefficient but it works. Sue me.
     compiled_function.remove(0);
 
-    // TODO: Use this function once triton-opcodes reaches 0.15.0
-    // let dependencies = state.execution_state.snippet_state.all_imports_as_instruction_lists();
-    let external_dependencies = state.global_compiler_state.snippet_state.all_imports();
-
-    // Verify that program parses
-    let _external_dependencies_as_program = Program::new(&external_dependencies);
-
     // After the spilling has been done, and after all dependencies have been loaded, the `library` field
     // in the `state` now contains the information about how to initialize the dynamic memory allocator
     // such that dynamically allocated memory does not overwrite statically allocated memory. The `library`
@@ -685,6 +678,7 @@ pub fn compile_function(function: &ast::Fn<types::Typing>) -> Vec<LabelledInstru
             .unwrap(),
     );
 
+    let external_dependencies = state.global_compiler_state.snippet_state.all_imports();
     let ret = triton_asm!(
         {function.fn_signature.name}:
             {&dyn_malloc_init_code}
@@ -692,13 +686,8 @@ pub fn compile_function(function: &ast::Fn<types::Typing>) -> Vec<LabelledInstru
             {&external_dependencies}
     );
 
-    // Check that no label-duplicates are present. This could happen if a dependency
-    // and the compiled function shared name. We do this by assembling the code and
-    // then parsing it again. A duplicated label should be caught by the parser.
-    // I wanted to add a test for this, but I couldn't find a good way of doing that.
-    // Verify that program parses
-    let assembler = ret.iter().map(|x| x.to_string()).join("\n");
-    let _program = Program::from_code(&assembler);
+    // Verify that code parses by wrapping it in a program
+    let _program = Program::new(&ret);
 
     ret
 }
@@ -984,7 +973,7 @@ fn compile_fn_call(
     let mut call_fn_code = vec![];
     for lib in libraries::all_libraries() {
         if let Some(fn_name) = lib.get_function_name(&name) {
-            call_fn_code.append(&mut lib.call_function(&fn_name, type_parameter, state));
+            call_fn_code.append(&mut lib.call_function(&fn_name, type_parameter, &args, state));
             break;
         }
     }
@@ -1024,7 +1013,12 @@ fn compile_method_call(
     let mut call_code = vec![];
     for lib in libraries::all_libraries() {
         if let Some(fn_name) = lib.get_method_name(&method_name, &receiver_type) {
-            call_code.append(&mut lib.call_method(&fn_name, &receiver_type, state));
+            call_code.append(&mut lib.call_method(
+                &fn_name,
+                &receiver_type,
+                &method_call.args,
+                state,
+            ));
             break;
         }
     }
@@ -1088,40 +1082,45 @@ fn compile_expr(
 
         ast::Expr::Var(identifier) => match identifier {
             ast::Identifier::String(var_name, _known_type) => {
-                let var_addr = state
-                    .function_state
-                    .var_addr
-                    .get(var_name)
-                    .expect("variable exists")
-                    .to_owned();
-                let (position, old_data_type, spilled) =
-                    state.function_state.vstack.find_stack_value(&var_addr);
+                let var_addr = state.function_state.var_addr.get(var_name).cloned();
+                match &var_addr {
+                    Some(var_addr) => {
+                        // Identifier is a value that must be living on the stack
+                        let (position, old_data_type, spilled) =
+                            state.function_state.vstack.find_stack_value(var_addr);
 
-                // If value is not marked as a spilled value and it's inacessible through swap(n)/dup(n),
-                // this value must be marked as a value to be spilled, and the compiler must be run again.
-                let bottom_position = position + result_type.size_of() - 1;
-                let accessible = bottom_position < STACK_SIZE;
-                if spilled.is_none() && !accessible {
-                    state.mark_as_spilled(&var_addr);
-                }
+                        // If value is not marked as a spilled value and it's inacessible through swap(n)/dup(n),
+                        // this value must be marked as a value to be spilled, and the compiler must be run again.
+                        let bottom_position = position + result_type.size_of() - 1;
+                        let accessible = bottom_position < STACK_SIZE;
+                        if spilled.is_none() && !accessible {
+                            state.mark_as_spilled(var_addr);
+                        }
 
-                // sanity check
-                assert_eq!(old_data_type, result_type, "type must match expected type");
+                        // sanity check
+                        assert_eq!(old_data_type, result_type, "type must match expected type");
 
-                match spilled {
-                    Some(spill_address) => {
-                        // The value has been spilled to memory. Get it from there.
-                        load_from_memory(spill_address, result_type.size_of())
-                    }
-                    None => {
-                        if !accessible {
-                            // The compiler needs to run again. Produce unusable code.
-                            triton_asm!(push 0 assert)
-                        } else {
-                            // The value is accessible on the stack. Copy it from there.
-                            dup_value_from_stack_code(position.try_into().unwrap(), &result_type)
+                        match spilled {
+                            Some(spill_address) => {
+                                // The value has been spilled to memory. Get it from there.
+                                load_from_memory(spill_address, result_type.size_of())
+                            }
+                            None => {
+                                if !accessible {
+                                    // The compiler needs to run again. Produce unusable code.
+                                    triton_asm!(push 0 assert)
+                                } else {
+                                    // The value is accessible on the stack. Copy it from there.
+                                    dup_value_from_stack_code(
+                                        position.try_into().unwrap(),
+                                        &result_type,
+                                    )
+                                }
+                            }
                         }
                     }
+                    // Identifier is a function and must be in scope since typechecker was passed
+                    None => vec![],
                 }
             }
             ast::Identifier::TupleIndex(ident, tuple_index) => {

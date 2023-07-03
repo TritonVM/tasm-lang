@@ -1,5 +1,5 @@
 use itertools::Itertools;
-use syn::{parse_quote, FnArg};
+use syn::parse_quote;
 
 use crate::ast::AssertStmt;
 use crate::types;
@@ -12,7 +12,7 @@ pub fn graft_fn_decl(input: &syn::ItemFn) -> ast::Fn<Annotation> {
     let args = input.sig.inputs.iter().map(graft_fn_arg).collect_vec();
     let args = args
         .into_iter()
-        .map(|x| ast::AbstractArgument::ValueArgument(x))
+        .map(ast::AbstractArgument::ValueArgument)
         .collect_vec();
     let output = graft_return_type(&input.sig.output);
     let body = input.block.stmts.iter().map(graft_stmt).collect_vec();

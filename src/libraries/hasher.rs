@@ -32,7 +32,7 @@ impl Library for HasherLib {
         &self,
         _fn_name: &str,
         _receiver_type: &ast::DataType,
-        args: &[ast::Expr<super::Annotation>],
+        _args: &[ast::Expr<super::Annotation>],
     ) -> ast::FnSignature {
         panic!("HasherLib does not contain any methods")
     }
@@ -41,6 +41,7 @@ impl Library for HasherLib {
         &self,
         fn_name: &str,
         _type_parameter: Option<ast::DataType>,
+        _args: &[ast::Expr<super::Annotation>],
     ) -> ast::FnSignature {
         if fn_name == "hash_pair" {
             get_hash_pair_function().signature
@@ -53,6 +54,7 @@ impl Library for HasherLib {
         &self,
         _method_name: &str,
         _receiver_type: &ast::DataType,
+        _args: &[ast::Expr<super::Annotation>],
         _state: &mut CompilerState,
     ) -> Vec<triton_vm::instruction::LabelledInstruction> {
         panic!("HasherLib does not contain any methods")
@@ -62,6 +64,7 @@ impl Library for HasherLib {
         &self,
         fn_name: &str,
         _type_parameter: Option<ast::DataType>,
+        _args: &[ast::Expr<super::Annotation>],
         _state: &mut CompilerState,
     ) -> Vec<triton_vm::instruction::LabelledInstruction> {
         if fn_name == "hash_pair" {

@@ -50,6 +50,7 @@ pub trait Library: Debug {
         &self,
         fn_name: &str,
         type_parameter: Option<ast::DataType>,
+        args: &[ast::Expr<Annotation>],
     ) -> ast::FnSignature;
 
     /// Return the instructions to call the method, and imports snippets into `state` if needed.
@@ -57,6 +58,7 @@ pub trait Library: Debug {
         &self,
         method_name: &str,
         receiver_type: &ast::DataType,
+        args: &[ast::Expr<Annotation>],
         state: &mut CompilerState,
     ) -> Vec<triton_vm::instruction::LabelledInstruction>;
 
@@ -65,6 +67,7 @@ pub trait Library: Debug {
         &self,
         fn_name: &str,
         type_parameter: Option<ast::DataType>,
+        args: &[ast::Expr<Annotation>],
         state: &mut CompilerState,
     ) -> Vec<triton_vm::instruction::LabelledInstruction>;
 

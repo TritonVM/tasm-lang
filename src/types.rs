@@ -267,7 +267,7 @@ fn annotate_stmt(
             arg_evaluation_order,
         }) => {
             println!("args: {args:?}");
-            let fn_signature = get_fn_signature(name, state, type_parameter);
+            let fn_signature = get_fn_signature(name, state, type_parameter, args);
             assert!(
                 is_void_type(&fn_signature.output),
                 "Function call '{name}' at statement-level must return the unit type."
@@ -378,6 +378,7 @@ pub fn annotate_identifier_type(
             }
             None => match state.ftable.get(var_name) {
                 Some(function) => {
+                    *var_type = Typing::KnownType(function.into());
                     let function_datatype: ast::DataType = function.into();
                     (function_datatype, false)
                 }
@@ -431,11 +432,12 @@ fn get_fn_signature(
     name: &str,
     state: &CheckState,
     type_parameter: &Option<ast::DataType>,
+    args: &[ast::Expr<Typing>],
 ) -> ast::FnSignature {
     // Function from libraries are in scope
     for lib in libraries::all_libraries() {
         if let Some(fn_name) = lib.get_function_name(name) {
-            return lib.function_name_to_signature(&fn_name, type_parameter.to_owned());
+            return lib.function_name_to_signature(&fn_name, type_parameter.to_owned(), args);
         }
     }
 
@@ -527,17 +529,8 @@ fn derive_annotate_fn_call_args(
             ast::AbstractArgument::FunctionArgument(abstract_function) => {
                 // arg_expr must evaluate to a FnCall here
 
-                // TODO: Might be wrong as input arg might have to be wrapped in `List<>`
-                println!("abstract_function: {abstract_function:?}");
                 let arg_hint = Some(&abstract_function.function_type.input_argument);
-                println!("arg_hint: {arg_hint:?}");
-                let arg_type = derive_annotate_expr_type(arg_expr, arg_hint, state);
-                // println!("arg_type: {arg_type:?}");
-                // ast::DataType::Function(Box::new(FunctionType {
-                //     input_argument: arg_type,
-                //     output: abstract_function.function_type.output.to_owned(),
-                // }))
-                arg_type
+                derive_annotate_expr_type(arg_expr, arg_hint, state)
             }
             ast::AbstractArgument::ValueArgument(abstract_value) => {
                 let arg_hint = Some(&abstract_value.data_type);
@@ -652,7 +645,7 @@ fn derive_annotate_expr_type(
             arg_evaluation_order,
         }) => {
             println!("args: {args:?}");
-            let fn_signature = get_fn_signature(name, state, type_parameter);
+            let fn_signature = get_fn_signature(name, state, type_parameter, args);
             assert!(
                 !is_void_type(&fn_signature.output),
                 "Function calls in expressions cannot return the unit type"

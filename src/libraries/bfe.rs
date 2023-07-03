@@ -28,7 +28,7 @@ impl Library for BfeLibrary {
         &self,
         method_name: &str,
         _receiver_type: &ast::DataType,
-        args: &[ast::Expr<super::Annotation>],
+        _args: &[ast::Expr<super::Annotation>],
     ) -> ast::FnSignature {
         if method_name != "lift" {
             panic!("Unknown method {method_name} for BFE");
@@ -41,6 +41,7 @@ impl Library for BfeLibrary {
         &self,
         _fn_name: &str,
         _type_parameter: Option<ast::DataType>,
+        _args: &[ast::Expr<super::Annotation>],
     ) -> ast::FnSignature {
         panic!("No functions implemented for BFE library");
     }
@@ -49,6 +50,7 @@ impl Library for BfeLibrary {
         &self,
         method_name: &str,
         _receiver_type: &ast::DataType,
+        _args: &[ast::Expr<super::Annotation>],
         _state: &mut crate::tasm_code_generator::CompilerState,
     ) -> Vec<triton_vm::instruction::LabelledInstruction> {
         if method_name != "lift" {
@@ -62,6 +64,7 @@ impl Library for BfeLibrary {
         &self,
         _fn_name: &str,
         _type_parameter: Option<ast::DataType>,
+        _args: &[ast::Expr<super::Annotation>],
         _state: &mut crate::tasm_code_generator::CompilerState,
     ) -> Vec<triton_vm::instruction::LabelledInstruction> {
         panic!("No functions implemented for BFE library");
