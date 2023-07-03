@@ -62,7 +62,7 @@ pub fn graft_check_compile_prop(item_fn: &syn::ItemFn) -> String {
 }
 
 #[allow(dead_code)]
-pub fn execute_compiled_with_stack_memory_and_ins(
+pub fn execute_compiled_with_stack_memory_and_ins_for_bench(
     code: &str,
     input_args: Vec<ast::ExprLit<Typing>>,
     memory: &mut HashMap<BFieldElement, BFieldElement>,
@@ -78,7 +78,35 @@ pub fn execute_compiled_with_stack_memory_and_ins(
 
     // Run the tasm-lib's execute function without requesting initialization of the dynamic
     // memory allocator, as this is the compiler's responsibility.
-    tasm_lib::execute(
+    tasm_lib::execute_bench(
+        code,
+        &mut stack,
+        expected_stack_diff,
+        std_in,
+        secret_in,
+        memory,
+        None,
+    )
+}
+
+#[allow(dead_code)]
+pub fn execute_compiled_with_stack_memory_and_ins_for_test(
+    code: &str,
+    input_args: Vec<ast::ExprLit<Typing>>,
+    memory: &mut HashMap<BFieldElement, BFieldElement>,
+    std_in: Vec<BFieldElement>,
+    secret_in: Vec<BFieldElement>,
+    expected_stack_diff: isize,
+) -> anyhow::Result<tasm_lib::VmOutputState> {
+    let mut stack = get_init_tvm_stack();
+    for input_arg in input_args {
+        let input_arg_seq = input_arg.encode();
+        stack.append(&mut input_arg_seq.into_iter().rev().collect());
+    }
+
+    // Run the tasm-lib's execute function without requesting initialization of the dynamic
+    // memory allocator, as this is the compiler's responsibility.
+    tasm_lib::execute_test(
         code,
         &mut stack,
         expected_stack_diff,
@@ -98,12 +126,12 @@ pub fn execute_with_stack_memory_and_ins(
     std_in: Vec<BFieldElement>,
     secret_in: Vec<BFieldElement>,
     expected_stack_diff: isize,
-) -> anyhow::Result<tasm_lib::ExecutionResult> {
+) -> anyhow::Result<tasm_lib::VmOutputState> {
     // Compile
     let (code, _fn_name) = compile_for_run_test(item_fn);
 
     // Run and compare
-    execute_compiled_with_stack_memory_and_ins(
+    execute_compiled_with_stack_memory_and_ins_for_test(
         &code,
         input_args,
         memory,
@@ -136,7 +164,7 @@ pub fn compare_compiled_prop_with_stack_and_memory_and_ins(
             .map(|arg| arg.get_type().size_of())
             .sum::<usize>();
     let mut actual_memory = init_memory;
-    let exec_result = execute_compiled_with_stack_memory_and_ins(
+    let exec_result = execute_compiled_with_stack_memory_and_ins_for_test(
         code,
         input_args,
         &mut actual_memory,

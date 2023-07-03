@@ -111,6 +111,10 @@ impl<T> BFieldCodec for ExprLit<T> {
             ExprLit::GenericNum(_, _) => todo!(),
         }
     }
+
+    fn static_length() -> Option<usize> {
+        None
+    }
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]

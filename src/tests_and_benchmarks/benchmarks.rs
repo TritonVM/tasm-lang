@@ -4,7 +4,7 @@ use triton_vm::BFieldElement;
 
 use crate::{ast, types::Typing};
 
-use super::shared_test::execute_compiled_with_stack_memory_and_ins;
+use super::shared_test::execute_compiled_with_stack_memory_and_ins_for_bench;
 
 pub mod mmr;
 
@@ -25,7 +25,7 @@ fn benchmark_code(
     case: BenchmarkCase,
 ) -> BenchmarkResult {
     let mut memory = benchmark_input.memory;
-    let execution_result = execute_compiled_with_stack_memory_and_ins(
+    let execution_result = execute_compiled_with_stack_memory_and_ins_for_bench(
         code,
         benchmark_input.input_args,
         &mut memory,
