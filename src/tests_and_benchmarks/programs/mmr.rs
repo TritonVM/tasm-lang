@@ -767,14 +767,7 @@ mod run_tests {
                     bfe_lit(list_pointer),
                     digest_lit(new_leaf),
                 ];
-                let res = execute_with_stack_memory_and_ins(
-                    &src,
-                    inputs,
-                    &mut memory,
-                    vec![],
-                    vec![],
-                    -6,
-                );
+                let res = execute_with_stack_and_memory(&src, inputs, &mut memory, -6);
                 assert!(res.is_ok(), "VM execution must succeed");
 
                 let (new_peaks, mp) = mmr::shared_basic::calculate_new_peaks_from_append::<Tip5>(
@@ -840,14 +833,7 @@ mod run_tests {
                     bfe_lit(ap_pointer),
                     u64_lit(leaf_index),
                 ];
-                let res = execute_with_stack_memory_and_ins(
-                    &src(),
-                    inputs,
-                    &mut memory,
-                    vec![],
-                    vec![],
-                    -10,
-                );
+                let res = execute_with_stack_and_memory(&src(), inputs, &mut memory, -10);
                 assert!(res.is_ok(), "VM execution must succeed");
 
                 let expected_new_peaks = mmr::shared_basic::calculate_new_peaks_from_leaf_mutation::<
@@ -917,17 +903,11 @@ mod run_tests {
                 ];
 
                 // Positive test
-                let vm_res = match execute_with_stack_memory_and_ins(
-                    &src(),
-                    good_inputs,
-                    &mut memory,
-                    vec![],
-                    vec![],
-                    -10,
-                ) {
-                    Ok(vm_res) => vm_res,
-                    Err(err) => panic!("VM execution must succeed. Got: {err}"),
-                };
+                let vm_res =
+                    match execute_with_stack_and_memory(&src(), good_inputs, &mut memory, -10) {
+                        Ok(vm_res) => vm_res,
+                        Err(err) => panic!("VM execution must succeed. Got: {err}"),
+                    };
 
                 let expected_result = mp.verify(&peaks, &own_leaf, ammr.count_leaves()).0;
                 let vm_result: bool = vm_res.final_stack.last().unwrap().value() == 1;
@@ -946,17 +926,11 @@ mod run_tests {
                     u64_lit(leaf_index),
                     digest_lit(bad_leaf),
                 ];
-                let vm_res_negative = match execute_with_stack_memory_and_ins(
-                    &src(),
-                    bad_inputs,
-                    &mut memory,
-                    vec![],
-                    vec![],
-                    -10,
-                ) {
-                    Ok(vm_res) => vm_res,
-                    Err(err) => panic!("VM execution must succeed. Got: {err}"),
-                };
+                let vm_res_negative =
+                    match execute_with_stack_and_memory(&src(), bad_inputs, &mut memory, -10) {
+                        Ok(vm_res) => vm_res,
+                        Err(err) => panic!("VM execution must succeed. Got: {err}"),
+                    };
                 let expected_result_neg = mp.verify(&peaks, &bad_leaf, ammr.count_leaves()).0;
                 let vm_result_neg: bool = vm_res_negative.final_stack.last().unwrap().value() == 1;
                 assert_eq!(

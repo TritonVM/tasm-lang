@@ -1,6 +1,6 @@
 use itertools::Itertools;
-use tasm_lib::snippet::Snippet;
-use triton_opcodes::{instruction::LabelledInstruction, shortcuts::call};
+use tasm_lib::snippet::BasicSnippet;
+use triton_vm::triton_asm;
 
 use crate::{
     ast,
@@ -49,14 +49,12 @@ impl Library for VectorLib {
         let snippet = name_to_tasm_lib_snippet(fn_name, &type_parameter)
             .unwrap_or_else(|| panic!("Unknown function name {fn_name}"));
 
-        let input_types_lib = snippet.input_types();
-        let output_types_lib = snippet.output_types();
         let name = snippet.entrypoint();
         let mut args: Vec<ast::FnArg> = vec![];
-        for (i, itl) in input_types_lib.into_iter().enumerate() {
+        for (ty, name) in snippet.inputs().into_iter() {
             let fn_arg = ast::FnArg {
-                name: format!("input_{i}"),
-                data_type: itl.into(),
+                name,
+                data_type: ty.into(),
                 // The tasm snippet input arguments are all considered mutable
                 mutable: true,
             };
@@ -64,8 +62,8 @@ impl Library for VectorLib {
         }
 
         let mut output_types: Vec<ast::DataType> = vec![];
-        for otl in output_types_lib {
-            output_types.push(otl.into());
+        for (ty, _name) in snippet.outputs() {
+            output_types.push(ty.into());
         }
 
         let output = match output_types.len() {
@@ -87,7 +85,7 @@ impl Library for VectorLib {
         method_name: &str,
         receiver_type: &ast::DataType,
         state: &mut CompilerState,
-    ) -> Vec<LabelledInstruction> {
+    ) -> Vec<triton_vm::instruction::LabelledInstruction> {
         let type_param: ast::DataType = if let ast::DataType::List(type_param) = receiver_type {
             *type_param.to_owned()
         } else {
@@ -100,7 +98,7 @@ impl Library for VectorLib {
         let entrypoint = snippet.entrypoint();
         state.import_snippet(snippet);
 
-        vec![call(entrypoint)]
+        triton_asm!(call { entrypoint })
     }
 
     fn call_function(
@@ -108,13 +106,13 @@ impl Library for VectorLib {
         fn_name: &str,
         type_parameter: Option<ast::DataType>,
         state: &mut CompilerState,
-    ) -> Vec<LabelledInstruction> {
+    ) -> Vec<triton_vm::instruction::LabelledInstruction> {
         let snippet = name_to_tasm_lib_snippet(fn_name, &type_parameter)
             .unwrap_or_else(|| panic!("Unknown function name {fn_name}"));
         let entrypoint = snippet.entrypoint();
         state.import_snippet(snippet);
 
-        vec![call(entrypoint)]
+        triton_asm!(call { entrypoint })
     }
 
     fn get_graft_function_name(&self, _full_name: &str) -> Option<String> {
@@ -181,7 +179,7 @@ impl Library for VectorLib {
 fn name_to_tasm_lib_snippet(
     public_name: &str,
     type_parameter: &Option<ast::DataType>,
-) -> Option<Box<dyn Snippet>> {
+) -> Option<Box<dyn BasicSnippet>> {
     let tasm_type: Option<tasm_lib::snippet::DataType> =
         type_parameter.clone().map(|x| x.try_into().unwrap());
     match public_name {

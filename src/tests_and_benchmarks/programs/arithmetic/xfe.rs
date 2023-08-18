@@ -88,6 +88,17 @@ fn div_xfe_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
+fn eq_xfe_with_assignment_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn eq_xfe(lhs: XFieldElement, rhs: XFieldElement) -> (bool, bool) {
+            let equal = lhs == rhs;
+            let not_equal = lhs != rhs;
+            return (equal, not_equal);
+        }
+    })
+}
+
+#[allow(dead_code)]
 fn eq_xfe_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn eq_xfe(lhs: XFieldElement, rhs: XFieldElement) -> (bool, bool) {

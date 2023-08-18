@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use tasm_lib::snippet_bencher::{write_benchmarks, BenchmarkCase, BenchmarkResult};
-use triton_vm::BFieldElement;
+use triton_vm::{instruction::LabelledInstruction, BFieldElement, NonDeterminism};
 
 use crate::{ast, types::Typing};
 
@@ -13,24 +13,24 @@ pub struct BenchmarkInput {
     pub input_args: Vec<ast::ExprLit<Typing>>,
     pub memory: HashMap<BFieldElement, BFieldElement>,
     pub std_in: Vec<BFieldElement>,
-    pub secret_in: Vec<BFieldElement>,
+    pub non_determinism: NonDeterminism<BFieldElement>,
 }
 
 #[allow(dead_code)]
 fn benchmark_code(
     function_name: String,
-    code: &str,
+    code: Vec<LabelledInstruction>,
     benchmark_input: BenchmarkInput,
     expected_stack_diff: isize,
     case: BenchmarkCase,
 ) -> BenchmarkResult {
     let mut memory = benchmark_input.memory;
     let execution_result = execute_compiled_with_stack_memory_and_ins_for_bench(
-        code,
+        &code,
         benchmark_input.input_args,
         &mut memory,
         benchmark_input.std_in,
-        benchmark_input.secret_in,
+        benchmark_input.non_determinism,
         expected_stack_diff,
     )
     .expect("Execution for benchmarking must succeed");
@@ -47,14 +47,14 @@ fn benchmark_code(
 #[allow(dead_code)]
 pub fn execute_and_write_benchmark(
     function_name: String,
-    code: &str,
+    code: Vec<LabelledInstruction>,
     common_case: BenchmarkInput,
     worst_case: BenchmarkInput,
     expected_stack_diff: isize,
 ) {
     let benchmark_result_common = benchmark_code(
         function_name.clone(),
-        code,
+        code.clone(),
         common_case,
         expected_stack_diff,
         BenchmarkCase::CommonCase,

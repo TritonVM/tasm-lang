@@ -1,4 +1,4 @@
-use triton_opcodes::shortcuts::call;
+use triton_vm::triton_asm;
 
 use crate::ast::{self, FnSignature};
 use crate::tasm_code_generator::CompilerState;
@@ -44,14 +44,12 @@ impl Library for TasmLibrary {
     ) -> ast::FnSignature {
         let snippet = tasm_lib::exported_snippets::name_to_snippet(fn_name);
 
-        let input_types_lib = snippet.input_types();
-        let output_types_lib = snippet.output_types();
         let name = snippet.entrypoint();
         let mut args: Vec<ast::FnArg> = vec![];
-        for (i, itl) in input_types_lib.into_iter().enumerate() {
+        for (ty, name) in snippet.inputs().into_iter() {
             let fn_arg = ast::FnArg {
-                name: format!("input_{i}"),
-                data_type: itl.into(),
+                name,
+                data_type: ty.into(),
                 // The tasm snippet input arguments are all considered mutable
                 mutable: true,
             };
@@ -59,7 +57,7 @@ impl Library for TasmLibrary {
         }
 
         let mut output_types: Vec<ast::DataType> = vec![];
-        for otl in output_types_lib {
+        for (otl, _name) in snippet.outputs() {
             output_types.push(otl.into());
         }
 
@@ -82,7 +80,7 @@ impl Library for TasmLibrary {
         _method_name: &str,
         _receiver_type: &ast::DataType,
         _state: &mut CompilerState,
-    ) -> Vec<triton_opcodes::instruction::LabelledInstruction> {
+    ) -> Vec<triton_vm::instruction::LabelledInstruction> {
         panic!("TASM lib only contains functions, no methods")
     }
 
@@ -91,12 +89,12 @@ impl Library for TasmLibrary {
         fn_name: &str,
         _type_parameter: Option<ast::DataType>,
         state: &mut CompilerState,
-    ) -> Vec<triton_opcodes::instruction::LabelledInstruction> {
+    ) -> Vec<triton_vm::instruction::LabelledInstruction> {
         let snippet = tasm_lib::exported_snippets::name_to_snippet(fn_name);
         let entrypoint = snippet.entrypoint();
         state.import_snippet(snippet);
 
-        vec![call(entrypoint)]
+        triton_asm!(call { entrypoint })
     }
 
     fn get_graft_function_name(&self, _full_name: &str) -> Option<String> {

@@ -103,6 +103,7 @@ mod compile_and_typecheck_tests {
 
     pub mod run_tests {
         use itertools::Itertools;
+        use triton_vm::NonDeterminism;
 
         use crate::ast::DataType;
 
@@ -195,7 +196,7 @@ mod compile_and_typecheck_tests {
                 vec![],
                 &mut vm_memory,
                 vec![],
-                vec![],
+                NonDeterminism::new(vec![]),
                 DataType::List(Box::new(DataType::U32)).size_of() as isize,
             )
             .unwrap();
@@ -209,7 +210,7 @@ mod compile_and_typecheck_tests {
                 vec![],
                 &mut vm_memory,
                 vec![],
-                vec![],
+                NonDeterminism::new(vec![]),
                 DataType::List(Box::new(DataType::U64)).size_of() as isize,
             )
             .unwrap();

@@ -1,7 +1,5 @@
-use tasm_lib::snippet::Snippet;
-use triton_opcodes::instruction::LabelledInstruction;
-use triton_opcodes::instruction::{AnInstruction::*, LabelledInstruction::*};
-use triton_opcodes::shortcuts::*;
+use tasm_lib::snippet::BasicSnippet;
+use triton_vm::triton_asm;
 
 use crate::{ast, tasm_code_generator::CompilerState};
 
@@ -35,14 +33,12 @@ impl Library for UnsignedIntegersLib {
         let snippet = name_to_tasm_lib_snippet(method_name, receiver_type)
             .unwrap_or_else(|| panic!("Unknown function name {method_name}"));
 
-        let input_types_lib = snippet.input_types();
-        let output_types_lib = snippet.output_types();
         let name = snippet.entrypoint();
         let mut args: Vec<ast::FnArg> = vec![];
-        for (i, itl) in input_types_lib.into_iter().enumerate() {
+        for (ty, name) in snippet.inputs().into_iter() {
             let fn_arg = ast::FnArg {
-                name: format!("input_{i}"),
-                data_type: itl.into(),
+                name,
+                data_type: ty.into(),
                 // The tasm snippet input arguments are all considered mutable
                 mutable: true,
             };
@@ -50,8 +46,8 @@ impl Library for UnsignedIntegersLib {
         }
 
         let mut output_types: Vec<ast::DataType> = vec![];
-        for otl in output_types_lib {
-            output_types.push(otl.into());
+        for (ty, _name) in snippet.outputs() {
+            output_types.push(ty.into());
         }
 
         let output = match output_types.len() {
@@ -81,7 +77,7 @@ impl Library for UnsignedIntegersLib {
         method_name: &str,
         receiver_type: &ast::DataType,
         state: &mut CompilerState,
-    ) -> Vec<LabelledInstruction> {
+    ) -> Vec<triton_vm::instruction::LabelledInstruction> {
         if method_name == "count_ones" && ast::DataType::U32 == *receiver_type {
             return get_count_ones_u32_method().body;
         }
@@ -91,7 +87,7 @@ impl Library for UnsignedIntegersLib {
         let entrypoint = snippet.entrypoint();
         state.import_snippet(snippet);
 
-        vec![call(entrypoint)]
+        triton_asm!(call { entrypoint })
     }
 
     fn call_function(
@@ -99,7 +95,7 @@ impl Library for UnsignedIntegersLib {
         _fn_name: &str,
         _type_parameter: Option<ast::DataType>,
         _state: &mut CompilerState,
-    ) -> Vec<LabelledInstruction> {
+    ) -> Vec<triton_vm::instruction::LabelledInstruction> {
         panic!("unsigned_integers lib does not contain any functions");
     }
 
@@ -137,7 +133,7 @@ fn get_count_ones_u32_method() -> CompiledFunction {
 
     CompiledFunction {
         signature: fn_signature,
-        body: vec![Instruction(PopCount)],
+        body: triton_asm!(pop_count),
     }
 }
 
@@ -145,7 +141,7 @@ fn get_count_ones_u32_method() -> CompiledFunction {
 fn name_to_tasm_lib_snippet(
     public_name: &str,
     receiver_type: &ast::DataType,
-) -> Option<Box<dyn Snippet>> {
+) -> Option<Box<dyn BasicSnippet>> {
     match public_name {
         "leading_zeros" => match receiver_type {
             ast::DataType::U32 => Some(Box::new(

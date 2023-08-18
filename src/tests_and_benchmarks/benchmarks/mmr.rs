@@ -4,7 +4,7 @@ mod benchmark {
 
     use rand::random;
     use tasm_lib::{rust_shadowing_helper_functions, Digest};
-    use triton_vm::BFieldElement;
+    use triton_vm::{BFieldElement, NonDeterminism};
     use twenty_first::{
         shared_math::{other::random_elements, tip5::Tip5},
         util_types::mmr::{mmr_accumulator::MmrAccumulator, mmr_trait::Mmr},
@@ -60,7 +60,7 @@ mod benchmark {
                 input_args: good_inputs,
                 memory,
                 std_in: vec![],
-                secret_in: vec![],
+                non_determinism: NonDeterminism::new(vec![]),
             }
         }
 
@@ -70,6 +70,6 @@ mod benchmark {
         let common_case = prepare_benchmark_case(31);
         let worst_case = prepare_benchmark_case(63);
 
-        execute_and_write_benchmark(fn_name, &code, common_case, worst_case, -10)
+        execute_and_write_benchmark(fn_name, code, common_case, worst_case, -10)
     }
 }

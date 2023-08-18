@@ -24,7 +24,7 @@ fn add_annotations(cfg: &mut ControlFlowGraph) {
 
         // visit members of active set
         for member_index in active_set {
-            let mut member = &mut cfg.nodes[member_index];
+            let member = &mut cfg.nodes[member_index];
             let free_variables = member.free_variables();
             let defined_variables = member.defined_variables();
 

@@ -1,1 +1,4 @@
 /target
+
+# Directory specified in Makefile
+/makefile-target

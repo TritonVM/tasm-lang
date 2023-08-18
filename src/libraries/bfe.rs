@@ -1,5 +1,5 @@
 use itertools::Itertools;
-use triton_opcodes::shortcuts::*;
+use triton_vm::triton_asm;
 use twenty_first::shared_math::b_field_element::BFieldElement;
 
 use crate::{ast, graft::graft_expr};
@@ -49,7 +49,7 @@ impl Library for BfeLibrary {
         method_name: &str,
         _receiver_type: &ast::DataType,
         _state: &mut crate::tasm_code_generator::CompilerState,
-    ) -> Vec<triton_opcodes::instruction::LabelledInstruction> {
+    ) -> Vec<triton_vm::instruction::LabelledInstruction> {
         if method_name != "lift" {
             panic!("Unknown method {method_name} for BFE");
         }
@@ -62,7 +62,7 @@ impl Library for BfeLibrary {
         _fn_name: &str,
         _type_parameter: Option<ast::DataType>,
         _state: &mut crate::tasm_code_generator::CompilerState,
-    ) -> Vec<triton_opcodes::instruction::LabelledInstruction> {
+    ) -> Vec<triton_vm::instruction::LabelledInstruction> {
         panic!("No functions implemented for BFE library");
     }
 
@@ -126,6 +126,6 @@ fn get_bfe_lift_method() -> CompiledFunction {
 
     CompiledFunction {
         signature: fn_signature,
-        body: vec![push(0), push(0), swap(2)],
+        body: triton_asm!(push 0 push 0 swap 2),
     }
 }

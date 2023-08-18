@@ -1,13 +1,12 @@
 use itertools::{Either, Itertools};
 use std::collections::{HashMap, HashSet};
+use tasm_lib::library::Library as SnippetState;
 use tasm_lib::memory::dyn_malloc::DynMalloc;
-use tasm_lib::snippet::Snippet;
-use tasm_lib::snippet_state::SnippetState;
+use tasm_lib::snippet::BasicSnippet;
 use tasm_lib::{arithmetic, hashing};
-use triton_opcodes::instruction::{AnInstruction::*, LabelledInstruction::*};
-use triton_opcodes::ord_n::Ord16;
-use triton_opcodes::parser::{parse, to_labelled};
-use triton_opcodes::shortcuts::*;
+use triton_vm::instruction::LabelledInstruction;
+use triton_vm::op_stack::OpStackElement;
+use triton_vm::{triton_asm, triton_instr, Program};
 use twenty_first::amount::u32s::U32s;
 use twenty_first::shared_math::b_field_element::BFieldElement;
 use twenty_first::shared_math::bfield_codec::BFieldCodec;
@@ -118,8 +117,6 @@ pub struct ValueIdentifier {
     pub name: String,
 }
 
-use triton_opcodes::instruction::LabelledInstruction;
-
 impl std::fmt::Display for ValueIdentifier {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.name)
@@ -175,7 +172,7 @@ impl CompilerState {
         (address, spilled)
     }
 
-    pub fn import_snippet(&mut self, snippet: Box<dyn Snippet>) -> String {
+    pub fn import_snippet(&mut self, snippet: Box<dyn BasicSnippet>) -> String {
         self.global_compiler_state.snippet_state.import(snippet)
     }
 
@@ -285,19 +282,13 @@ impl CompilerState {
             Some(spill_addr) => move_top_stack_value_to_memory(spill_addr, value_size),
             None => {
                 if stack_position_of_value_to_remove > 0 && accessible {
-                    vec![
-                        vec![
-                            Instruction(Swap(
-                                stack_position_of_value_to_remove.try_into().unwrap()
-                            )),
-                            pop()
-                        ];
-                        value_size
-                    ]
-                    .concat()
+                    let swap_pop_instructions =
+                        format!("swap {stack_position_of_value_to_remove} pop\n")
+                            .repeat(value_size);
+                    triton_asm!({ swap_pop_instructions })
                 } else if !accessible {
                     eprintln!("Compiler must run again because of {value_identifier_to_remove}");
-                    vec![push(0), assert_()]
+                    triton_asm!(push 0 assert)
                 } else {
                     vec![]
                 }
@@ -354,18 +345,12 @@ impl CompilerState {
             None => {
                 if !accessible {
                     eprintln!("Compiler must run again because of {tuple_identifier}");
-                    vec![push(0), assert_()]
+                    triton_asm!(push 0 assert)
                 } else if stack_position_of_value_to_remove > 0 && accessible {
-                    vec![
-                        vec![
-                            Instruction(Swap(
-                                stack_position_of_value_to_remove.try_into().unwrap()
-                            )),
-                            pop()
-                        ];
-                        value_size
-                    ]
-                    .concat()
+                    let swap_pop_instructions =
+                        format!("swap {stack_position_of_value_to_remove} pop\n")
+                            .repeat(value_size);
+                    triton_asm!({ swap_pop_instructions })
                 } else {
                     vec![]
                 }
@@ -404,7 +389,7 @@ impl CompilerState {
             {
                 break;
             } else {
-                code.append(&mut vec![pop(); dt.size_of()]);
+                code.append(&mut triton_asm![pop; dt.size_of()]);
                 self.function_state.vstack.pop();
                 if let Some(binding) = binding_name {
                     let removed = self.function_state.var_addr.remove(&binding);
@@ -434,16 +419,16 @@ impl CompilerState {
             words_to_remove: usize,
         ) -> Vec<LabelledInstruction> {
             match (top_value_size, words_to_remove) {
-                (3, 2) => vec![swap(2), swap(4), pop(), swap(2), pop()],
-                (4, 2) => vec![swap(1), swap(3), swap(5), pop(), swap(1), swap(3), pop()],
-                (6, 2) => vec![swap(2), swap(4), swap(6), pop(), swap(2), swap(4), swap(6), pop()],
+                (3, 2) => triton_asm!(swap 2 swap 4 pop swap 2 pop),
+                (4, 2) => triton_asm!(swap 1 swap 3 swap 5 pop swap 1 swap 3 pop),
+                (6, 2) => triton_asm!(swap 2 swap 4 swap 6 pop swap 2 swap 4 swap 6 pop),
                 (n, 1) => {
                     let mut swaps = vec![];
                     for i in 1..=n {
-                        swaps.push(swap(i as u64));
+                        swaps.append(&mut triton_asm!(swap {i}));
                     }
 
-                    vec![swaps, vec![pop()]].concat()
+                    triton_asm!({&swaps} pop)
                 }
                 _ => panic!("Unsupported. Please cover more special cases. Got: {top_value_size}, {words_to_remove}"),
             }
@@ -467,8 +452,7 @@ impl CompilerState {
         {
             // If we can handle the stack clearing by just swapping the top value
             // lower onto the stack and removing everything above, we do that.
-            let swap_instruction = Instruction(Swap(words_to_remove.try_into().unwrap()));
-            let mut code = vec![vec![swap_instruction, pop()]; top_value_size].concat();
+            let mut code = vec![triton_asm!(swap {words_to_remove} pop); top_value_size].concat();
 
             // Generate code to remove any remaining values from the requested stack range
             let remaining_pops = if words_to_remove > top_value_size {
@@ -477,7 +461,7 @@ impl CompilerState {
                 0
             };
 
-            code.append(&mut vec![pop(); remaining_pops]);
+            code.append(&mut triton_asm![pop; remaining_pops]);
 
             code
         } else if words_to_remove >= STACK_SIZE {
@@ -491,7 +475,7 @@ impl CompilerState {
                 .try_into()
                 .unwrap();
             let mut code = copy_top_stack_value_to_memory(memory_location, top_value_size);
-            code.append(&mut vec![pop(); height_of_affected_stack]);
+            code.append(&mut triton_asm![pop; height_of_affected_stack]);
             code.append(&mut load_from_memory(memory_location, top_value_size));
 
             code
@@ -638,16 +622,17 @@ fn compile_function_inner(
     // Sanity check: Assert that all subroutines start with a label and end with a return
     let mut all_subroutines: HashSet<String> = HashSet::default();
     assert!(
-        state.function_state.subroutines.iter().all(|subroutine| {
-            if let Label(subroutine_label) = subroutine.first().unwrap() {
+            state.function_state.subroutines.iter().all(|subroutine| {
+            if let LabelledInstruction::Label(subroutine_label) = subroutine.first().unwrap() {
                 assert!(all_subroutines.insert(subroutine_label.to_owned()), "subroutine labels must be unique");
             } else {
                 panic!("Each subroutine must begin with a label");
             }
 
-            let ends_with_return_or_recurse = *subroutine.last().unwrap() == return_()
-                || *subroutine.last().unwrap() == recurse();
-            let contains_return = subroutine.iter().any(|x| *x == return_());
+            let last_instruction = subroutine.last().unwrap().clone();
+            let ends_with_return_or_recurse
+                = last_instruction == triton_instr!(return) || last_instruction == triton_instr!(recurse);
+            let contains_return = subroutine.iter().any(|x| *x == triton_instr!(return));
             ends_with_return_or_recurse && contains_return
         }),
         "Each subroutine must begin with a label, contain a return and end with a return or a recurse"
@@ -656,13 +641,13 @@ fn compile_function_inner(
     // Update global compiler state to propagate this to caller
     *global_compiler_state = state.global_compiler_state.to_owned();
 
-    vec![
-        vec![Label(fn_name.to_owned())],
-        fn_body_code,
-        vec![Instruction(Return)],
-        state.function_state.subroutines.concat(),
-    ]
-    .concat()
+    triton_asm!(
+        {fn_name}:
+            {&fn_body_code}
+            return
+
+        {&state.function_state.subroutines.concat()}
+    )
 }
 
 pub fn compile_function(function: &ast::Fn<types::Typing>) -> Vec<LabelledInstruction> {
@@ -676,17 +661,15 @@ pub fn compile_function(function: &ast::Fn<types::Typing>) -> Vec<LabelledInstru
     // TODO: Use this function once triton-opcodes reaches 0.15.0
     // let dependencies = state.execution_state.snippet_state.all_imports_as_instruction_lists();
     let external_dependencies = state.global_compiler_state.snippet_state.all_imports();
-    let dependencies = parse(&external_dependencies)
-        .map(|instructions| to_labelled(&instructions))
-        .unwrap_or_else(|_| {
-            panic!("Must be able to parse external dependencies code:\n{external_dependencies}")
-        });
+
+    // Verify that program parses
+    let _external_dependencies_as_program = Program::new(&external_dependencies);
 
     // After the spilling has been done, and after all dependencies have been loaded, the `library` field
     // in the `state` now contains the information about how to initialize the dynamic memory allocator
     // such that dynamically allocated memory does not overwrite statically allocated memory. The `library`
     // field contains the number of words that were statically allocated.
-    let dyn_malloc_init_code = DynMalloc::get_initialization_code_as_instructions(
+    let dyn_malloc_init_code = DynMalloc::get_initialization_code(
         state
             .global_compiler_state
             .snippet_state
@@ -695,23 +678,22 @@ pub fn compile_function(function: &ast::Fn<types::Typing>) -> Vec<LabelledInstru
             .unwrap(),
     );
 
-    let ret = vec![
-        vec![Label(function.fn_signature.name.to_owned())],
-        dyn_malloc_init_code,
-        compiled_function,
-        dependencies,
-    ]
-    .concat();
+    let ret = triton_asm!(
+        {function.fn_signature.name}:
+            {&dyn_malloc_init_code}
+            {&compiled_function}
+            {&external_dependencies}
+    );
 
     // Check that no label-duplicates are present. This could happen if a dependency
     // and the compiled function shared name. We do this by assembling the code and
     // then parsing it again. A duplicated label should be caught by the parser.
     // I wanted to add a test for this, but I couldn't find a good way of doing that.
+    // Verify that program parses
     let assembler = ret.iter().map(|x| x.to_string()).join("\n");
-    parse(&assembler)
-        .map(|instructions| to_labelled(&instructions))
-        .map_err(|err| anyhow::anyhow!("{}", err))
-        .expect("Produced code must parse")
+    let _program = Program::from_code(&assembler);
+
+    ret
 }
 
 fn compile_stmt(
@@ -777,7 +759,13 @@ fn compile_stmt(
                     state.function_state.vstack.pop();
                     state.function_state.vstack.pop();
 
-                    vec![expr_code, ident_code, index_code, vec![call(fn_name)]].concat()
+                    vec![
+                        expr_code,
+                        ident_code,
+                        index_code,
+                        triton_asm!(call { fn_name }),
+                    ]
+                    .concat()
                 }
             }
         }
@@ -786,7 +774,7 @@ fn compile_stmt(
         ast::Stmt::Return(None) => {
             let mut code = vec![];
             while let Some((_addr, (data_type, _spilled))) = state.function_state.vstack.pop() {
-                code.push(vec![pop(); data_type.size_of()]);
+                code.push(triton_asm![pop; data_type.size_of()])
             }
 
             code.concat()
@@ -813,13 +801,7 @@ fn compile_stmt(
                             // value is on top of the stack and then call a helper function
                             // to remove everything below it.
                             Some(spill_addr) => {
-                                code.append(&mut vec![
-                                    pop();
-                                    state
-                                        .function_state
-                                        .vstack
-                                        .get_stack_height()
-                                ]);
+                                code.append(&mut triton_asm![pop; state.function_state.vstack.get_stack_height()]);
                                 code.append(&mut load_from_memory(*spill_addr, dt.size_of()))
                             }
                             None => code
@@ -828,7 +810,7 @@ fn compile_stmt(
                         break;
                     }
 
-                    code.append(&mut vec![pop(); dt.size_of()]);
+                    code.append(&mut triton_asm![pop; dt.size_of()]);
                     state.function_state.vstack.pop();
                 }
 
@@ -857,7 +839,7 @@ fn compile_stmt(
         ast::Stmt::While(ast::WhileStmt { condition, block }) => {
             // The code generated here is a subroutine that contains the while loop code
             // and then just a call to this subroutine.
-            let (cond_addr, cond_code) =
+            let (cond_addr, cond_evaluation_code) =
                 compile_expr(condition, "while_condition", &condition.get_type(), state);
 
             let while_loop_subroutine_name = format!("{cond_addr}_while_loop");
@@ -866,21 +848,19 @@ fn compile_stmt(
             state.function_state.vstack.pop();
 
             let loop_body_code = compile_stmt(&ast::Stmt::Block(block.to_owned()), function, state);
-            let while_loop_code = vec![
-                vec![Label(while_loop_subroutine_name.clone())],
-                // condition
-                cond_code,
-                vec![push(0), eq(), skiz(), return_()],
-                // body
-                loop_body_code,
-                // loop back (goto)
-                vec![recurse()],
-            ]
-            .concat();
+            let while_loop_code = triton_asm!(
+                    {while_loop_subroutine_name}:
+                        {&cond_evaluation_code}
+                        push 0 eq skiz return
+                        {&loop_body_code}
+                        recurse
+            );
 
             state.function_state.subroutines.push(while_loop_code);
 
-            vec![call(while_loop_subroutine_name)]
+            triton_asm!(call {
+                while_loop_subroutine_name
+            })
         }
 
         ast::Stmt::If(ast::IfStmt {
@@ -902,29 +882,29 @@ fn compile_stmt(
 
             let then_subroutine_name = format!("{cond_addr}_then");
             let else_subroutine_name = format!("{cond_addr}_else");
-            let mut if_code = cond_code;
-            if_code.append(&mut vec![
-                push(1),                            // _ cond 1
-                swap(1),                            // _ 1 cond
-                skiz(),                             // _ 1
-                call(then_subroutine_name.clone()), // _ [then_branch_value] 0|1
-                skiz(),                             // _ [then_branch_value]
-                call(else_subroutine_name.clone()), // _ then_branch_value|else_branch_value
-            ]);
+            let if_code = triton_asm!(
+                {&cond_code}
+                push 1
+                swap 1
+                skiz
+                call {then_subroutine_name}
+                skiz
+                call {else_subroutine_name}
+            );
 
-            let then_code = vec![
-                vec![Label(then_subroutine_name), pop()],
-                then_body_code,
-                vec![push(0), return_()],
-            ]
-            .concat();
+            let then_code = triton_asm!(
+                {then_subroutine_name}:
+                    pop
+                    {&then_body_code}
+                    push 0
+                    return
+            );
 
-            let else_code = vec![
-                vec![Label(else_subroutine_name)],
-                else_body_code,
-                vec![return_()],
-            ]
-            .concat();
+            let else_code = triton_asm!(
+                {else_subroutine_name}:
+                    {&else_body_code}
+                    return
+            );
 
             state.function_state.subroutines.push(then_code);
             state.function_state.subroutines.push(else_code);
@@ -952,7 +932,10 @@ fn compile_stmt(
             // evaluated expression value is not visible after `assert` instruction has been executed
             state.function_state.vstack.pop();
 
-            vec![assert_expr_code, vec![assert_()]].concat()
+            triton_asm!(
+                {&assert_expr_code}
+                assert
+            )
         }
         ast::Stmt::FnDeclaration(function) => {
             let compiled_fn = compile_function_inner(function, &mut state.global_compiler_state);
@@ -1002,7 +985,7 @@ fn compile_fn_call(
     if call_fn_code.is_empty() {
         // Function is not a library function, but type checker has guaranteed that it is in
         // scope. So we just call it.
-        call_fn_code.push(call(name));
+        call_fn_code.append(&mut triton_asm!(call { name }));
     }
 
     for _ in 0..args.len() {
@@ -1060,14 +1043,14 @@ fn compile_expr(
     let code = match expr {
         ast::Expr::Lit(expr_lit) => match expr_lit {
             ast::ExprLit::Bool(value) => {
-                vec![Instruction(Push(BFieldElement::new(*value as u64)))]
+                triton_asm!(push {*value as u64})
             }
 
             ast::ExprLit::U32(value) => {
-                vec![Instruction(Push(BFieldElement::new(*value as u64)))]
+                triton_asm!(push {*value as u64})
             }
 
-            ast::ExprLit::BFE(value) => vec![Instruction(Push(*value))],
+            ast::ExprLit::BFE(value) => triton_asm!(push {*value }),
 
             ast::ExprLit::U64(value) => {
                 let as_u32s = U32s::<2>::try_from(*value).unwrap().encode();
@@ -1075,7 +1058,7 @@ fn compile_expr(
 
                 let code = stack_serialized
                     .iter()
-                    .map(|bfe| Instruction(Push(**bfe)))
+                    .flat_map(|bfe| triton_asm!(push {**bfe}))
                     .collect_vec();
 
                 code
@@ -1084,13 +1067,11 @@ fn compile_expr(
             ast::ExprLit::XFE(value) => {
                 // In the VM, the 1st element of the array is expected to be on top of the stack.
                 // So the elements must be pushed onto the stack in reversed order.
-                let code = vec![
-                    Instruction(Push(value.coefficients[2])),
-                    Instruction(Push(value.coefficients[1])),
-                    Instruction(Push(value.coefficients[0])),
-                ];
-
-                code
+                triton_asm!(
+                    push {value.coefficients[2]}
+                    push {value.coefficients[1]}
+                    push {value.coefficients[0]}
+                )
             }
             ast::ExprLit::Digest(_) => todo!(),
             ast::ExprLit::GenericNum(n, _) => {
@@ -1128,7 +1109,7 @@ fn compile_expr(
                     None => {
                         if !accessible {
                             // The compiler needs to run again. Produce unusable code.
-                            vec![push(0), assert_()]
+                            triton_asm!(push 0 assert)
                         } else {
                             // The value is accessible on the stack. Copy it from there.
                             dup_value_from_stack_code(position.try_into().unwrap(), &result_type)
@@ -1173,7 +1154,7 @@ fn compile_expr(
                     None => {
                         if !accessible {
                             // The compiler needs to run again. Produce unusable code.
-                            vec![push(0), assert_()]
+                            triton_asm!(push 0 assert)
                         } else {
                             // The value is accessible on the stack. Copy it from there.
                             dup_value_from_stack_code(position.try_into().unwrap(), &element_type)
@@ -1223,7 +1204,11 @@ fn compile_expr(
                 state.function_state.vstack.pop();
                 state.function_state.vstack.pop();
 
-                vec![ident_code, index_code, vec![call(fn_name)]].concat()
+                triton_asm!(
+                    {&ident_code}
+                    {&index_code}
+                    call {fn_name}
+                )
             }
         },
 
@@ -1256,21 +1241,21 @@ fn compile_expr(
                 compile_expr(inner_expr, "_binop_lhs", &inner_type, state);
             let code = match unaryop {
                 ast::UnaryOp::Neg => match inner_type {
-                    ast::DataType::BFE => vec![push(NEG_1), mul()],
-                    ast::DataType::XFE => vec![push(NEG_1), xbmul()],
+                    ast::DataType::BFE => triton_asm!(push {NEG_1} mul),
+                    ast::DataType::XFE => triton_asm!(push {NEG_1} xbmul),
                     _ => panic!("Unsupported negation of type {inner_type}"),
                 },
                 ast::UnaryOp::Not => match inner_type {
-                    ast::DataType::Bool => vec![push(0), eq()],
-                    ast::DataType::U32 => vec![push(u32::MAX as u64), xor()],
-                    ast::DataType::U64 => vec![
-                        swap(1),
-                        push(u32::MAX as u64),
-                        xor(),
-                        swap(1),
-                        push(u32::MAX as u64),
-                        xor(),
-                    ],
+                    ast::DataType::Bool => triton_asm!(push 0 eq),
+                    ast::DataType::U32 => triton_asm!(push {u32::MAX as u64} xor),
+                    ast::DataType::U64 => triton_asm!(
+                        swap 1
+                        push {u32::MAX as u64}
+                        xor
+                        swap 1
+                        push {u32::MAX as u64}
+                        xor
+                    ),
                     _ => panic!("Unsupported not of type {inner_type}"),
                 },
             };
@@ -1297,18 +1282,18 @@ fn compile_expr(
                             // We use the safe, overflow-checking, add code as default
                             let safe_add_u32 =
                                 state.import_snippet(Box::new(arithmetic::u32::safe_add::SafeAdd));
-                            vec![call(safe_add_u32)]
+                            triton_asm!(call { safe_add_u32 })
                         }
                         ast::DataType::U64 => {
                             // We use the safe, overflow-checking, add code as default
                             let add_u64 =
                                 state.import_snippet(Box::new(arithmetic::u64::add_u64::AddU64));
 
-                            vec![call(add_u64)]
+                            triton_asm!(call { add_u64 })
                         }
-                        ast::DataType::BFE => vec![add()],
+                        ast::DataType::BFE => triton_asm!(add),
                         ast::DataType::XFE => {
-                            vec![xxadd(), swap(3), pop(), swap(3), pop(), swap(3), pop()]
+                            triton_asm!(xxadd swap 3 pop swap 3 pop swap 3 pop)
                         }
                         _ => panic!("Operator add is not supported for type {result_type}"),
                     };
@@ -1326,7 +1311,7 @@ fn compile_expr(
                         compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
 
                     let and_code = match result_type {
-                        ast::DataType::Bool => vec![add(), push(2), eq()],
+                        ast::DataType::Bool => triton_asm!(add push 2 eq),
                         _ => panic!("Logical AND operator is not supported for {result_type}"),
                     };
 
@@ -1344,11 +1329,11 @@ fn compile_expr(
                         compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
 
                     let bitwise_and_code = match result_type {
-                        ast::DataType::U32 => vec![and()],
+                        ast::DataType::U32 => triton_asm!(and),
                         ast::DataType::U64 => {
                             let and_u64 =
                                 state.import_snippet(Box::new(arithmetic::u64::and_u64::AndU64));
-                            vec![call(and_u64)]
+                            triton_asm!(call { and_u64 })
                         }
                         _ => panic!("Logical AND operator is not supported for {result_type}"),
                     };
@@ -1368,14 +1353,13 @@ fn compile_expr(
 
                     use ast::DataType::*;
                     let xor_code = match result_type {
-                        U32 => vec![xor()],
-                        U64 => vec![
-                            // a_hi a_lo b_hi b_lo
-                            swap(3), // b_lo a_lo b_hi a_hi
-                            xor(),   // b_lo a_lo (b_hi ⊻ a_hi)
-                            swap(2), // (b_hi ⊻ a_hi) b_lo a_lo
-                            xor(),   // (b_hi ⊻ a_hi) (b_lo ⊻ a_lo)
-                        ],
+                        U32 => triton_asm!(xor),
+                        U64 => triton_asm!(
+                            swap 3
+                            xor
+                            swap 2
+                            xor
+                        ),
                         _ => panic!("xor on {result_type} is not supported"),
                     };
 
@@ -1396,12 +1380,12 @@ fn compile_expr(
                     let bitwise_or_code = match result_type {
                         U32 => {
                             let or_u32 = state.import_snippet(Box::new(arithmetic::u32::or::OrU32));
-                            vec![call(or_u32)]
+                            triton_asm!(call { or_u32 })
                         }
                         U64 => {
                             let or_u64 =
                                 state.import_snippet(Box::new(arithmetic::u64::or_u64::OrU64));
-                            vec![call(or_u64)]
+                            triton_asm!(call { or_u64 })
                         }
                         _ => panic!("bitwise `or` on {result_type} is not supported"),
                     };
@@ -1427,7 +1411,13 @@ fn compile_expr(
                             state.function_state.vstack.pop();
                             state.function_state.vstack.pop();
 
-                            vec![lhs_expr_code, rhs_expr_code, vec![swap(1), div(), pop()]].concat()
+                            triton_asm!(
+                                {&lhs_expr_code}
+                                {&rhs_expr_code}
+                                swap 1
+                                div
+                                pop
+                            )
                         }
                         U64 => {
                             // Division is very expensive in the general case!
@@ -1442,7 +1432,10 @@ fn compile_expr(
                                 // Pop the numerator that was divided by two
                                 state.function_state.vstack.pop();
 
-                                vec![lhs_expr_code, vec![call(div2)]].concat()
+                                triton_asm!(
+                                    {&lhs_expr_code}
+                                    call {div2}
+                                )
                             } else {
                                 let (_lhs_expr_addr, lhs_expr_code) =
                                     compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
@@ -1457,12 +1450,13 @@ fn compile_expr(
                                 state.function_state.vstack.pop();
 
                                 // Call the div-mod function and throw away the remainder
-                                vec![
-                                    lhs_expr_code,
-                                    rhs_expr_code,
-                                    vec![call(div_mod_u64), pop(), pop()],
-                                ]
-                                .concat()
+                                triton_asm!(
+                                    {&lhs_expr_code}
+                                    {&rhs_expr_code}
+                                    call {div_mod_u64}
+                                    pop
+                                    pop
+                                )
                             }
                         }
                         BFE => {
@@ -1471,17 +1465,17 @@ fn compile_expr(
                             let (_rhs_expr_addr, rhs_expr_code) =
                                 compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
 
-                            // div num
-                            let bfe_div_code = vec![
-                                invert(), // _ num (1/div)
-                                mul(),    // _ num·(1/div), or (num/div)
-                            ];
-
                             // Pop numerator and denominator
                             state.function_state.vstack.pop();
                             state.function_state.vstack.pop();
 
-                            vec![lhs_expr_code, rhs_expr_code, bfe_div_code].concat()
+                            // vec![lhs_expr_code, rhs_expr_code, bfe_div_code].concat()
+                            triton_asm!(
+                                {&lhs_expr_code}
+                                {&rhs_expr_code}
+                                invert
+                                mul
+                            )
                         }
                         XFE => {
                             let (_lhs_expr_addr, lhs_expr_code) =
@@ -1489,23 +1483,22 @@ fn compile_expr(
                             let (_rhs_expr_addr, rhs_expr_code) =
                                 compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
 
-                            // div_2 div_1 div_0 num_2 num_1 num_0
-                            let xfe_div_code = vec![
-                                xinvert(), // num_2 num_1 num_0 (1/div)_2 (1/div)_1 (1/div)_0
-                                xxmul(),   // num_2 num_1 num_0 (num/div)_2 (num/div)_1 (num/div)_0
-                                swap(3),   // num_2 num_1 (num/div)_0 (num/div)_2 (num/div)_1 num_0
-                                pop(),     // num_2 num_1 (num/div)_0 (num/div)_2 (num/div)_1
-                                swap(3),   // num_2 (num/div)_1 (num/div)_0 (num/div)_2 num_1
-                                pop(),     // num_2 (num/div)_1 (num/div)_0 (num/div)_2
-                                swap(3),   // (num/div)_2 (num/div)_1 (num/div)_0 num_2
-                                pop(),     // (num/div)_2 (num/div)_1 (num/div)_0
-                            ];
-
                             // Pop numerator and denominator
                             state.function_state.vstack.pop();
                             state.function_state.vstack.pop();
 
-                            vec![lhs_expr_code, rhs_expr_code, xfe_div_code].concat()
+                            triton_asm!(
+                                {&lhs_expr_code}
+                                {&rhs_expr_code}
+                                xinvert
+                                xxmul
+                                swap 3
+                                pop
+                                swap 3
+                                pop
+                                swap 3
+                                pop
+                            )
                         }
                         _ => panic!("Unsupported div for type {result_type}"),
                     }
@@ -1526,12 +1519,14 @@ fn compile_expr(
                             state.function_state.vstack.pop();
                             state.function_state.vstack.pop();
 
-                            vec![
-                                lhs_expr_code,
-                                rhs_expr_code,
-                                vec![swap(1), div(), swap(1), pop()],
-                            ]
-                            .concat()
+                            triton_asm!(
+                                {&lhs_expr_code}
+                                {&rhs_expr_code}
+                                swap 1
+                                div
+                                swap 1
+                                pop
+                            )
                         }
                         U64 => {
                             // divsion and remainder are very expensive in the general case!
@@ -1547,13 +1542,16 @@ fn compile_expr(
                             state.function_state.vstack.pop();
                             state.function_state.vstack.pop();
 
-                            // Call the div-mod function and throw away the remainder
-                            vec![
-                                lhs_expr_code,
-                                rhs_expr_code,
-                                vec![call(div_mod_u64), swap(2), pop(), swap(2), pop()],
-                            ]
-                            .concat()
+                            // Call the div-mod function and throw away the quotient
+                            triton_asm!(
+                                {&lhs_expr_code}
+                                {&rhs_expr_code}
+                                call {div_mod_u64}
+                                swap 2
+                                pop
+                                swap 2
+                                pop
+                            )
                         }
                         _ => panic!("Unsupported remainder of type {lhs_type}"),
                     }
@@ -1562,9 +1560,11 @@ fn compile_expr(
                 ast::BinOp::Eq => {
                     let (_lhs_expr_addr, lhs_expr_code) =
                         compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
+                    println!("LHS expression: {}", lhs_expr_code.iter().join(" "));
 
                     let (_rhs_expr_addr, rhs_expr_code) =
                         compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
+                    println!("RHS expression: {}", lhs_expr_code.iter().join(" "));
 
                     let eq_code = compile_eq_code(&lhs_type, state);
 
@@ -1587,25 +1587,26 @@ fn compile_expr(
                     state.function_state.vstack.pop();
 
                     match lhs_type {
-                        U32 => vec![lhs_expr_code, rhs_expr_code, vec![swap(1), lt()]].concat(),
+                        U32 => triton_asm!(
+                            {&lhs_expr_code}
+                            {&rhs_expr_code}
+                            swap 1
+                            lt
+                        ),
 
                         U64 => {
                             let lt_u64 = state
                                 .import_snippet(Box::new(arithmetic::u64::lt_u64::LtStandardU64));
-
-                            vec![
-                                lhs_expr_code,
-                                rhs_expr_code,
-                                vec![
-                                    // _ lhs_hi lhs_lo rhs_hi rhs_lo
-                                    swap(3),      // _ rhs_lo lhs_lo rhs_hi lhs_hi
-                                    swap(1),      // _ rhs_lo lhs_lo lhs_hi rhs_hi
-                                    swap(3),      // _ rhs_hi lhs_lo lhs_hi rhs_lo
-                                    swap(2),      // _ rhs_hi rhs_lo lhs_hi lhs_lo
-                                    call(lt_u64), // _ (lhs < rhs)
-                                ],
-                            ]
-                            .concat()
+                            triton_asm!(
+                                {&lhs_expr_code}
+                                {&rhs_expr_code}
+                                // _ lhs_hi lhs_lo rhs_hi rhs_lo
+                                swap 3
+                                swap 1
+                                swap 3
+                                swap 2
+                                call {lt_u64}
+                            )
                         }
                         _ => panic!("Unsupported < for type {lhs_type}"),
                     }
@@ -1623,21 +1624,21 @@ fn compile_expr(
                     state.function_state.vstack.pop();
 
                     match lhs_type {
-                        U32 => vec![lhs_expr_code, rhs_expr_code, vec![lt()]].concat(),
-
+                        U32 => triton_asm!(
+                            {&lhs_expr_code}
+                            {&rhs_expr_code}
+                            lt
+                        ),
                         U64 => {
                             let lt_u64 = state
                                 .import_snippet(Box::new(arithmetic::u64::lt_u64::LtStandardU64));
 
-                            vec![
-                                lhs_expr_code,
-                                rhs_expr_code,
-                                vec![
-                                    // _ lhs_hi lhs_lo rhs_hi rhs_lo
-                                    call(lt_u64), // _ (lhs < rhs)
-                                ],
-                            ]
-                            .concat()
+                            triton_asm!(
+                                {&lhs_expr_code}
+                                {&rhs_expr_code}
+                                // _ lhs_hi lhs_lo rhs_hi rhs_lo
+                                call {lt_u64}
+                            )
                         }
                         _ => panic!("Unsupported < for type {lhs_type}"),
                     }
@@ -1659,22 +1660,39 @@ fn compile_expr(
                             let fn_name =
                                 state.import_snippet(Box::new(arithmetic::u32::safe_mul::SafeMul));
 
-                            vec![lhs_expr_code, rhs_expr_code, vec![call(fn_name)]].concat()
+                            triton_asm!(
+                                {&lhs_expr_code}
+                                {&rhs_expr_code}
+                                call {fn_name}
+                            )
                         }
                         U64 => {
                             let fn_name = state.import_snippet(Box::new(
                                 arithmetic::u64::safe_mul_u64::SafeMulU64,
                             ));
 
-                            vec![lhs_expr_code, rhs_expr_code, vec![call(fn_name)]].concat()
+                            triton_asm!(
+                                {&lhs_expr_code}
+                                {&rhs_expr_code}
+                                call {fn_name}
+                            )
                         }
-                        BFE => vec![lhs_expr_code, rhs_expr_code, vec![mul()]].concat(),
-                        XFE => vec![
-                            lhs_expr_code,
-                            rhs_expr_code,
-                            vec![xxmul(), swap(3), pop(), swap(3), pop(), swap(3), pop()],
-                        ]
-                        .concat(),
+                        BFE => triton_asm!(
+                            {&lhs_expr_code}
+                            {&rhs_expr_code}
+                            mul
+                        ),
+                        XFE => triton_asm!(
+                            {&lhs_expr_code}
+                            {&rhs_expr_code}
+                            xxmul
+                            swap 3
+                            pop
+                            swap 3
+                            pop
+                            swap 3
+                            pop
+                        ),
                         _ => panic!("Unsupported MUL for type {lhs_type}"),
                     }
                 }
@@ -1685,13 +1703,18 @@ fn compile_expr(
                     let (_rhs_expr_addr, rhs_expr_code) =
                         compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
 
-                    let mut neq_code = compile_eq_code(&lhs_type, state);
-                    neq_code.append(&mut vec![push(0), eq()]);
+                    let eq_code = compile_eq_code(&lhs_type, state);
 
                     state.function_state.vstack.pop();
                     state.function_state.vstack.pop();
 
-                    vec![lhs_expr_code, rhs_expr_code, neq_code].concat()
+                    triton_asm!(
+                        {&lhs_expr_code}
+                        {&rhs_expr_code}
+                        {&eq_code}
+                        push 0
+                        eq
+                    )
                 }
 
                 ast::BinOp::Or => {
@@ -1701,18 +1724,18 @@ fn compile_expr(
                     let (_rhs_expr_addr, rhs_expr_code) =
                         compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
 
-                    let or_code = vec![
-                        add(),   // _ (a + b)
-                        push(0), // _ (a + b) 0
-                        eq(),    // _ ((a + b) == 0)
-                        push(0), // _ ((a + b) == 0) 0
-                        eq(),    // _ ((a + b) != 0), or (a ∨ b)
-                    ];
-
                     state.function_state.vstack.pop();
                     state.function_state.vstack.pop();
 
-                    vec![lhs_expr_code, rhs_expr_code, or_code].concat()
+                    triton_asm!(
+                        {&lhs_expr_code}
+                        {&rhs_expr_code}
+                        add
+                        push 0
+                        eq
+                        push 0
+                        eq
+                    )
                 }
 
                 ast::BinOp::Shl => {
@@ -1735,7 +1758,11 @@ fn compile_expr(
                     state.function_state.vstack.pop();
                     state.function_state.vstack.pop();
 
-                    vec![lhs_expr_code, rhs_expr_code, vec![call(shl)]].concat()
+                    triton_asm!(
+                        {&lhs_expr_code}
+                        {&rhs_expr_code}
+                        call {shl}
+                    )
                 }
 
                 ast::BinOp::Shr => {
@@ -1759,7 +1786,11 @@ fn compile_expr(
                     state.function_state.vstack.pop();
                     state.function_state.vstack.pop();
 
-                    vec![lhs_expr_code, rhs_expr_code, vec![call(shr)]].concat()
+                    triton_asm!(
+                        {&lhs_expr_code}
+                        {&rhs_expr_code}
+                        call {shr}
+                    )
                 }
 
                 ast::BinOp::Sub => {
@@ -1774,39 +1805,46 @@ fn compile_expr(
                             // As standard, we use safe arithmetic that crashes on overflow
                             let safe_sub_u32 =
                                 state.import_snippet(Box::new(arithmetic::u32::safe_sub::SafeSub));
-                            vec![swap(1), call(safe_sub_u32)]
+                            triton_asm!(
+                                swap 1
+                                call {safe_sub_u32}
+                            )
                         }
                         ast::DataType::U64 => {
                             // As standard, we use safe arithmetic that crashes on overflow
                             let sub_u64 =
                                 state.import_snippet(Box::new(arithmetic::u64::sub_u64::SubU64));
-                            vec![
-                                // _ lhs_hi lhs_lo rhs_hi rhs_lo
-                                swap(3),       // _ rhs_lo lhs_lo rhs_hi lhs_hi
-                                swap(1),       // _ rhs_lo lhs_lo lhs_hi rhs_hi
-                                swap(3),       // _ rhs_hi lhs_lo lhs_hi rhs_lo
-                                swap(2),       // _ rhs_hi rhs_lo lhs_hi lhs_lo
-                                call(sub_u64), // _ (lhs - rhs)_hi (lhs - rhs)_lo
-                            ]
+                            triton_asm!(
+                                //     // _ lhs_hi lhs_lo rhs_hi rhs_lo
+                                swap 3
+                                swap 1
+                                swap 3
+                                swap 2
+                                call {sub_u64}
+                            )
                         }
                         ast::DataType::BFE => {
-                            vec![push(NEG_1), mul(), add()]
+                            triton_asm!(
+                                push {NEG_1}
+                                mul
+                                add
+                            )
                         }
                         ast::DataType::XFE => {
-                            vec![
-                                // multiply top element with -1
-                                push(NEG_1),
-                                xbmul(),
+                            triton_asm!(
+                                  // multiply top element with -1
+                                push {NEG_1}
+                                xbmul
                                 // Perform (lhs - rhs)
-                                xxadd(),
+                                xxadd
                                 // Get rid of the lhs, only leaving the result
-                                swap(3),
-                                pop(),
-                                swap(3),
-                                pop(),
-                                swap(3),
-                                pop(),
-                            ]
+                                swap 3
+                                pop
+                                swap 3
+                                pop
+                                swap 3
+                                pop
+                            )
                         }
                         _ => panic!("subtraction operator is not supported for {result_type}"),
                     };
@@ -1814,7 +1852,11 @@ fn compile_expr(
                     state.function_state.vstack.pop();
                     state.function_state.vstack.pop();
 
-                    vec![lhs_expr_code, rhs_expr_code, sub_code].concat()
+                    triton_asm!(
+                        {&lhs_expr_code}
+                        {&rhs_expr_code}
+                        {&sub_code}
+                    )
                 }
             }
         }
@@ -1867,29 +1909,30 @@ fn compile_expr(
             // evaluates to.
             let then_subroutine_name = format!("{then_addr}_then");
             let else_subroutine_name = format!("{then_addr}_else");
-            let mut code = cond_code;
-            code.append(&mut vec![
-                push(1),                            // _ cond 1
-                swap(1),                            // _ 1 cond
-                skiz(),                             // _ 1
-                call(then_subroutine_name.clone()), // _ [then_branch_value] 0|1
-                skiz(),                             // _ [then_branch_value]
-                call(else_subroutine_name.clone()), // _ then_branch_value|else_branch_value
-            ]);
 
-            let then_code = vec![
-                vec![Label(then_subroutine_name), pop()],
-                then_body_code,
-                vec![push(0), return_()],
-            ]
-            .concat();
+            let code = triton_asm!(
+                {&cond_code}
+                push 1
+                swap 1
+                skiz
+                call {then_subroutine_name}
+                skiz
+                call {else_subroutine_name}
+            );
 
-            let else_code = vec![
-                vec![Label(else_subroutine_name)],
-                else_body_code,
-                vec![return_()],
-            ]
-            .concat();
+            let then_code = triton_asm!(
+                {then_subroutine_name}:
+                    pop
+                    {&then_body_code}
+                    push 0
+                    return
+            );
+
+            let else_code = triton_asm!(
+                {else_subroutine_name}:
+                    {&else_body_code}
+                    return
+            );
 
             state.function_state.subroutines.push(then_code);
             state.function_state.subroutines.push(else_code);
@@ -1911,17 +1954,29 @@ fn compile_expr(
 
             match (&previous_type, &result_type) {
                 (ast::DataType::U64, ast::DataType::U32) => {
-                    vec![expr_code, vec![swap(1), pop()]].concat()
+                    triton_asm!(
+                        {&expr_code}
+                        swap 1
+                        pop
+                    )
                 }
                 (ast::DataType::U32, ast::DataType::U64) => {
-                    vec![expr_code, vec![push(0), swap(1)]].concat()
+                    triton_asm!(
+                        {&expr_code}
+                        push 0
+                        swap 1
+                    )
                 }
                 // Allow identity-casting since we might need this to make the types
                 // agree with code compiled by rustc.
                 (ast::DataType::U32, ast::DataType::U32) => expr_code,
                 (ast::DataType::U64, ast::DataType::U64) => expr_code,
                 (ast::DataType::Bool, ast::DataType::U64) => {
-                    vec![expr_code, vec![push(0), swap(1)]].concat()
+                    triton_asm!(
+                        {&expr_code}
+                        push 0
+                        swap 1
+                    )
                 }
                 (ast::DataType::Bool, ast::DataType::U32) => expr_code,
                 (ast::DataType::Bool, ast::DataType::BFE) => expr_code,
@@ -1947,25 +2002,24 @@ fn store_value_in_memory(
     // A stack value of the form `_ val2 val1 val0`, with `val0` being on the top of the stack
     // is stored in memory as: `val0 val1 val2`, where `val0` is stored on the `memory_location`
     // address.
-    let mut ret = vec![];
-    ret.push(push(memory_location as u64));
+    let mut ret = triton_asm!(push {memory_location as u64});
 
     for i in 0..value_size {
-        ret.push(dup(1 + i as u64 + stack_location_for_top_of_value as u64));
+        // ret.push(dup(1 + i as u64 + stack_location_for_top_of_value as u64));
+        ret.append(&mut triton_asm!(dup {1 + i as u64 + stack_location_for_top_of_value as u64}));
         // _ [elements] mem_address element
 
-        ret.push(write_mem());
+        ret.push(triton_instr!(write_mem));
         // _ [elements] mem_address
 
         if i != value_size - 1 {
-            ret.push(push(1));
-            ret.push(add());
+            ret.append(&mut triton_asm!(push 1 add));
             // _ (mem_address + 1)
         }
     }
 
     // remove memory address from top of stack
-    ret.push(pop());
+    ret.push(triton_instr!(pop));
 
     ret
 }
@@ -1979,25 +2033,25 @@ fn move_top_stack_value_to_memory(
     // A stack value of the form `_ val2 val1 val0`, with `val0` being on the top of the stack
     // is stored in memory as: `val0 val1 val2`, where `val0` is stored on the `memory_location`
     // address.
-    let mut ret = vec![];
-    ret.push(push(memory_location as u64));
+    // let mut ret = vec![];
+    // ret.push(push(memory_location as u64));
+    let mut ret = triton_asm!(push {memory_location as u64});
 
     for i in 0..top_value_size {
-        ret.push(swap(1));
+        ret.push(triton_instr!(swap 1));
         // _ mem_address element
 
-        ret.push(write_mem());
+        ret.push(triton_instr!(write_mem));
         // _ mem_address
 
         if i != top_value_size - 1 {
-            ret.push(push(1));
-            ret.push(add());
+            ret.append(&mut triton_asm!(push 1 add));
             // _ (mem_address + 1)
         }
     }
 
     // remove memory address from top of stack
-    ret.push(pop());
+    ret.push(triton_instr!(pop));
 
     // TODO: Needs to pop from vstack!
 
@@ -2013,25 +2067,23 @@ fn copy_top_stack_value_to_memory(
     // A stack value of the form `_ val2 val1 val0`, with `val0` being on the top of the stack
     // is stored in memory as: `val0 val1 val2`, where `val0` is stored on the `memory_location`
     // address.
-    let mut ret = vec![];
-    ret.push(push(memory_location as u64));
+    let mut ret = triton_asm!(push {memory_location as u64});
 
     for i in 0..top_value_size {
-        ret.push(dup(1 + i as u64));
+        ret.append(&mut triton_asm!(dup {1 + i as u64}));
         // _ [elements] mem_address element
 
-        ret.push(write_mem());
+        ret.push(triton_instr!(write_mem));
         // _ [elements] mem_address
 
         if i != top_value_size - 1 {
-            ret.push(push(1));
-            ret.push(add());
+            ret.append(&mut triton_asm!(push 1 add));
             // _ (mem_address + 1)
         }
     }
 
     // remove memory address from top of stack
-    ret.push(pop());
+    ret.push(triton_instr!(pop));
 
     ret
 }
@@ -2042,27 +2094,25 @@ fn load_from_memory(memory_location: u32, top_value_size: usize) -> Vec<Labelled
     // address. So we read the value at the highes memory location first.
     // TODO: Consider making subroutines out of this in
     // order to get shorter programs.
-    let mut ret = vec![];
-    ret.push(push(memory_location as u64 + top_value_size as u64 - 1));
+    let mut ret = triton_asm!(push {memory_location as u64 + top_value_size as u64 - 1});
 
     for i in 0..top_value_size {
         // Stack: _ memory_address
 
-        ret.push(read_mem());
+        ret.push(triton_instr!(read_mem));
         // Stack: _ memory_address value
 
-        ret.push(swap(1));
+        ret.push(triton_instr!(swap 1));
 
         // Decrement memory address to prepare for next loop iteration
         if i != top_value_size - 1 {
-            ret.push(push(BFieldElement::MAX));
-            ret.push(add());
+            ret.append(&mut triton_asm!(push {BFieldElement::MAX} add))
             // Stack: _ (memory_address - 1)
         }
     }
 
     // Remove memory address from top of stack
-    ret.push(pop());
+    ret.push(triton_instr!(pop));
 
     // Stack: _ element_N element_{N - 1} ... element_0
 
@@ -2075,31 +2125,31 @@ fn compile_eq_code(
 ) -> Vec<LabelledInstruction> {
     use ast::DataType::*;
     match lhs_type {
-        Bool | U32 | BFE | VoidPointer => vec![eq()],
-        U64 => vec![
+        Bool | U32 | BFE | VoidPointer => triton_asm!(eq),
+        U64 => triton_asm!(
             // _ a_hi a_lo b_hi b_lo
-            swap(3), // _ b_lo a_lo b_hi a_hi
-            eq(),    // _ b_lo a_lo (b_hi == a_hi)
-            swap(2), // _ (b_hi == a_hi) a_lo b_lo
-            eq(),    // _ (b_hi == a_hi) (a_lo == b_lo)
-            mul(),   // _ (b_hi == a_hi && a_lo == b_lo)
-        ],
+            swap 3
+            eq
+            swap 2
+            eq
+            mul
+        ),
         U128 => todo!(),
 
-        XFE => vec![
-            // _ a_2 a_1 a_0 b_2 b_1 b_0
-            swap(4), // _ a_2 b_0 a_0 b_2 b_1 a_1
-            eq(),    // _ a_2 b_0 a_0 b_2 (b_1 == a_1)
-            swap(4), // _ (b_1 == a_1) b_0 a_0 b_2 a_2
-            eq(),    // _ (b_1 == a_1) b_0 a_0 (b_2 == a_2)
-            swap(2), // _ (b_1 == a_1) (b_2 == a_2) a_0 b_0
-            eq(),    // _ (b_1 == a_1) (b_2 == a_2) (a_0 == b_0)
-            mul(),   // _ (b_1 == a_1) ((b_2 == a_2)·(a_0 == b_0))
-            mul(),   // _ ((b_1 == a_1)·(b_2 == a_2)·(a_0 == b_0))
-        ],
+        XFE => triton_asm!(
+             // _ a_2 a_1 a_0 b_2 b_1 b_0
+            swap 4 // _ a_2 b_0 a_0 b_2 b_1 a_1
+            eq     // _ a_2 b_0 a_0 b_2 (b_1 == a_1)
+            swap 4 // _ (b_1 == a_1) b_0 a_0 b_2 a_2
+            eq     // _ (b_1 == a_1) b_0 a_0 (b_2 == a_2)
+            swap 2 // _ (b_1 == a_1) (b_2 == a_2) a_0 b_0
+            eq     // _ (b_1 == a_1) (b_2 == a_2) (a_0 == b_0)
+            mul    // _ (b_1 == a_1) ((b_2 == a_2)·(a_0 == b_0))
+            mul    // _ ((b_1 == a_1)·(b_2 == a_2)·(a_0 == b_0))
+        ),
         Digest => {
             let eq_digest = state.import_snippet(Box::new(hashing::eq_digest::EqDigest));
-            vec![call(eq_digest)]
+            triton_asm!(call { eq_digest })
         }
         List(_) => todo!(),
         Tuple(_) => todo!(),
@@ -2108,7 +2158,7 @@ fn compile_eq_code(
 
 /// Copy a value at a position on the stack to the top
 fn dup_value_from_stack_code(
-    position: Ord16,
+    position: OpStackElement,
     data_type: &ast::DataType,
 ) -> Vec<LabelledInstruction> {
     let elem_size = data_type.size_of();
@@ -2116,5 +2166,8 @@ fn dup_value_from_stack_code(
     // the position of the deepest element of the value.
     let n: usize = Into::<usize>::into(position) + elem_size - 1;
 
-    vec![Instruction(Dup(n.try_into().unwrap())); elem_size]
+    let instrs_as_str = format!("dup {}\n", n);
+    let instrs_as_str = instrs_as_str.repeat(elem_size);
+
+    triton_asm!({ instrs_as_str })
 }

@@ -514,6 +514,7 @@ mod run_tests {
     use std::collections::HashMap;
 
     use itertools::Itertools;
+    use triton_vm::NonDeterminism;
     use twenty_first::shared_math::{
         b_field_element::BFieldElement, bfield_codec::BFieldCodec, other::random_elements,
         tip5::Digest, x_field_element::XFieldElement,
@@ -590,7 +591,7 @@ mod run_tests {
             HashMap::default(),
             None,
             vec![reversed_digest].concat(),
-            vec![],
+            NonDeterminism::new(vec![]),
         );
     }
 
@@ -720,7 +721,7 @@ mod run_tests {
                 reversed_digest,
             ]
             .concat(),
-            vec![],
+            NonDeterminism::new(vec![]),
         )
     }
 
@@ -795,12 +796,10 @@ mod run_tests {
     #[test]
     fn ensure_dyn_malloc_and_static_malloc_do_not_interfere_test_1() {
         let mut vm_memory = HashMap::default();
-        let exec_result = execute_with_stack_memory_and_ins(
+        let exec_result = execute_with_stack_and_memory(
             &ensure_dyn_malloc_and_static_malloc_do_not_interfere_1_rast(),
             vec![],
             &mut vm_memory,
-            vec![],
-            vec![],
             DataType::List(Box::new(DataType::U64)).size_of() as isize,
         )
         .unwrap();
@@ -814,12 +813,10 @@ mod run_tests {
     #[test]
     fn ensure_dyn_malloc_and_static_malloc_do_not_interfere_test_2() {
         let mut vm_memory = HashMap::default();
-        let exec_result = execute_with_stack_memory_and_ins(
+        let exec_result = execute_with_stack_and_memory(
             &ensure_dyn_malloc_and_static_malloc_do_not_interfere_2_rast(),
             vec![],
             &mut vm_memory,
-            vec![],
-            vec![],
             DataType::List(Box::new(DataType::U64)).size_of() as isize,
         )
         .unwrap();
@@ -832,12 +829,10 @@ mod run_tests {
     #[test]
     fn ensure_dyn_malloc_and_static_malloc_do_not_interfere_test_3() {
         let mut vm_memory = HashMap::default();
-        let exec_result = execute_with_stack_memory_and_ins(
+        let exec_result = execute_with_stack_and_memory(
             &ensure_dyn_malloc_and_static_malloc_do_not_interfere_3_rast(),
             vec![],
             &mut vm_memory,
-            vec![],
-            vec![],
             DataType::List(Box::new(DataType::U64)).size_of() as isize,
         )
         .unwrap();
@@ -852,12 +847,10 @@ mod run_tests {
         // First run the program to get the list's pointer that is stored as the third-to-last
         // output.
         let mut vm_memory = HashMap::default();
-        let exec_result = execute_with_stack_memory_and_ins(
+        let exec_result = execute_with_stack_and_memory(
             &ensure_dyn_malloc_and_static_malloc_do_not_interfere_4_rast(),
             vec![],
             &mut vm_memory,
-            vec![],
-            vec![],
             DataType::List(Box::new(DataType::U64)).size_of() as isize + 2,
         )
         .unwrap();
@@ -881,12 +874,10 @@ mod run_tests {
         // First run the program to get the list's pointer that is stored as the 11th-to-last
         // output.
         let mut vm_memory = HashMap::default();
-        let exec_result = execute_with_stack_memory_and_ins(
+        let exec_result = execute_with_stack_and_memory(
             &ensure_dyn_malloc_and_static_malloc_do_not_interfere_5_rast(),
             vec![],
             &mut vm_memory,
-            vec![],
-            vec![],
             12,
         )
         .unwrap();

@@ -1,8 +1,9 @@
 use itertools::Itertools;
 use std::collections::HashMap;
 use tasm_lib::memory::dyn_malloc::DYN_MALLOC_ADDRESS;
-use tasm_lib::{get_init_tvm_stack, rust_shadowing_helper_functions};
-use triton_vm::Digest;
+use tasm_lib::{get_init_tvm_stack, rust_shadowing_helper_functions, DIGEST_LENGTH};
+use triton_vm::instruction::LabelledInstruction;
+use triton_vm::{triton_asm, Digest, NonDeterminism};
 use twenty_first::shared_math::b_field_element::{BFieldElement, BFIELD_ONE, BFIELD_ZERO};
 use twenty_first::shared_math::bfield_codec::BFieldCodec;
 use twenty_first::shared_math::x_field_element::XFieldElement;
@@ -33,15 +34,14 @@ impl InputOutputTestCase {
 }
 
 /// Get the execution code and the name of the compiled function
-pub fn compile_for_run_test(item_fn: &syn::ItemFn) -> (String, String) {
+pub fn compile_for_run_test(item_fn: &syn::ItemFn) -> (Vec<LabelledInstruction>, String) {
     let function_name = item_fn.sig.ident.to_string();
     let code = graft_check_compile_prop(item_fn);
-    let code = format!(
-        "
+    let code = triton_asm!(
         call {function_name}
         halt
 
-        {code}"
+        {code}
     );
 
     (code, function_name)
@@ -63,11 +63,11 @@ pub fn graft_check_compile_prop(item_fn: &syn::ItemFn) -> String {
 
 #[allow(dead_code)]
 pub fn execute_compiled_with_stack_memory_and_ins_for_bench(
-    code: &str,
+    code: &[LabelledInstruction],
     input_args: Vec<ast::ExprLit<Typing>>,
     memory: &mut HashMap<BFieldElement, BFieldElement>,
     std_in: Vec<BFieldElement>,
-    secret_in: Vec<BFieldElement>,
+    non_determinism: NonDeterminism<BFieldElement>,
     expected_stack_diff: isize,
 ) -> anyhow::Result<tasm_lib::ExecutionResult> {
     let mut stack = get_init_tvm_stack();
@@ -78,12 +78,12 @@ pub fn execute_compiled_with_stack_memory_and_ins_for_bench(
 
     // Run the tasm-lib's execute function without requesting initialization of the dynamic
     // memory allocator, as this is the compiler's responsibility.
-    tasm_lib::execute_bench(
+    tasm_lib::execute_bench_deprecated(
         code,
         &mut stack,
         expected_stack_diff,
         std_in,
-        secret_in,
+        non_determinism,
         memory,
         None,
     )
@@ -91,11 +91,11 @@ pub fn execute_compiled_with_stack_memory_and_ins_for_bench(
 
 #[allow(dead_code)]
 pub fn execute_compiled_with_stack_memory_and_ins_for_test(
-    code: &str,
+    code: &[LabelledInstruction],
     input_args: Vec<ast::ExprLit<Typing>>,
     memory: &mut HashMap<BFieldElement, BFieldElement>,
     std_in: Vec<BFieldElement>,
-    secret_in: Vec<BFieldElement>,
+    non_determinism: NonDeterminism<BFieldElement>,
     expected_stack_diff: isize,
 ) -> anyhow::Result<tasm_lib::VmOutputState> {
     let mut stack = get_init_tvm_stack();
@@ -111,9 +111,31 @@ pub fn execute_compiled_with_stack_memory_and_ins_for_test(
         &mut stack,
         expected_stack_diff,
         std_in,
-        secret_in,
+        &non_determinism,
         memory,
         None,
+    )
+}
+
+#[allow(dead_code)]
+/// Execute a function with provided input and initial memory
+pub fn execute_with_stack_and_memory(
+    item_fn: &syn::ItemFn,
+    input_args: Vec<ast::ExprLit<Typing>>,
+    memory: &mut HashMap<BFieldElement, BFieldElement>,
+    expected_stack_diff: isize,
+) -> anyhow::Result<tasm_lib::VmOutputState> {
+    // Compile
+    let (code, _fn_name) = compile_for_run_test(item_fn);
+
+    // Run and compare
+    execute_compiled_with_stack_memory_and_ins_for_test(
+        &code,
+        input_args,
+        memory,
+        vec![],
+        NonDeterminism::new(vec![]),
+        expected_stack_diff,
     )
 }
 
@@ -124,7 +146,7 @@ pub fn execute_with_stack_memory_and_ins(
     input_args: Vec<ast::ExprLit<Typing>>,
     memory: &mut HashMap<BFieldElement, BFieldElement>,
     std_in: Vec<BFieldElement>,
-    secret_in: Vec<BFieldElement>,
+    non_determinism: NonDeterminism<BFieldElement>,
     expected_stack_diff: isize,
 ) -> anyhow::Result<tasm_lib::VmOutputState> {
     // Compile
@@ -136,21 +158,21 @@ pub fn execute_with_stack_memory_and_ins(
         input_args,
         memory,
         std_in,
-        secret_in,
+        non_determinism,
         expected_stack_diff,
     )
 }
 
 #[allow(clippy::too_many_arguments)]
 pub fn compare_compiled_prop_with_stack_and_memory_and_ins(
-    code: &str,
+    code: &[LabelledInstruction],
     function_name: &str,
     input_args: Vec<ast::ExprLit<Typing>>,
     expected_outputs: Vec<ast::ExprLit<Typing>>,
     init_memory: HashMap<BFieldElement, BFieldElement>,
     expected_final_memory: Option<HashMap<BFieldElement, BFieldElement>>,
     std_in: Vec<BFieldElement>,
-    secret_in: Vec<BFieldElement>,
+    non_determinism: NonDeterminism<BFieldElement>,
 ) {
     let mut expected_final_stack = get_init_tvm_stack();
     for output in expected_outputs {
@@ -169,15 +191,24 @@ pub fn compare_compiled_prop_with_stack_and_memory_and_ins(
         input_args,
         &mut actual_memory,
         std_in,
-        secret_in,
+        non_determinism,
         expected_final_stack.len() as isize - init_stack_length as isize,
     )
     .unwrap();
 
     // Assert stack matches expected stack
     assert_eq!(
-        expected_final_stack,
-        exec_result.final_stack,
+        expected_final_stack
+            .iter()
+            .skip(DIGEST_LENGTH)
+            .cloned()
+            .collect_vec(),
+        exec_result
+            .final_stack
+            .iter()
+            .skip(DIGEST_LENGTH)
+            .cloned()
+            .collect_vec(),
         "Code execution must produce expected stack `{}`. \n\nTVM:\n{}\n\nExpected:\n{}\n",
         function_name,
         exec_result
@@ -236,9 +267,13 @@ pub fn compare_prop_with_stack_and_memory_and_ins(
     init_memory: HashMap<BFieldElement, BFieldElement>,
     expected_final_memory: Option<HashMap<BFieldElement, BFieldElement>>,
     std_in: Vec<BFieldElement>,
-    secret_in: Vec<BFieldElement>,
+    non_determinism: NonDeterminism<BFieldElement>,
 ) {
     let (code, function_name) = compile_for_run_test(item_fn);
+    println!(
+        "***code***\n{}",
+        code.iter().map(|x| x.to_string()).collect_vec().join("\n")
+    );
     compare_compiled_prop_with_stack_and_memory_and_ins(
         &code,
         &function_name,
@@ -247,7 +282,7 @@ pub fn compare_prop_with_stack_and_memory_and_ins(
         init_memory,
         expected_final_memory,
         std_in,
-        secret_in,
+        non_determinism,
     )
 }
 
@@ -266,7 +301,7 @@ pub fn compare_prop_with_stack_and_memory(
         init_memory,
         expected_final_memory,
         vec![],
-        vec![],
+        NonDeterminism::new(vec![]),
     )
 }
 
@@ -302,7 +337,7 @@ pub fn multiple_compare_prop_with_stack(
             HashMap::default(),
             None,
             vec![],
-            vec![],
+            NonDeterminism::new(vec![]),
         )
     }
 }

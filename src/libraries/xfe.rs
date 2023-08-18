@@ -1,5 +1,5 @@
 use itertools::Itertools;
-use triton_opcodes::shortcuts::*;
+use triton_vm::triton_asm;
 use twenty_first::shared_math::{
     b_field_element::BFieldElement,
     x_field_element::{XFieldElement, EXTENSION_DEGREE},
@@ -55,7 +55,7 @@ impl Library for XfeLibrary {
         method_name: &str,
         _receiver_type: &ast::DataType,
         _state: &mut crate::tasm_code_generator::CompilerState,
-    ) -> Vec<triton_opcodes::instruction::LabelledInstruction> {
+    ) -> Vec<triton_vm::instruction::LabelledInstruction> {
         if method_name == "unlift" {
             get_xfe_unlift_method().body
         } else {
@@ -68,7 +68,7 @@ impl Library for XfeLibrary {
         _fn_name: &str,
         _type_parameter: Option<ast::DataType>,
         _state: &mut crate::tasm_code_generator::CompilerState,
-    ) -> Vec<triton_opcodes::instruction::LabelledInstruction> {
+    ) -> Vec<triton_vm::instruction::LabelledInstruction> {
         panic!("No functions implemented for XFE library");
     }
 
@@ -217,6 +217,6 @@ fn get_xfe_unlift_method() -> CompiledFunction {
 
     CompiledFunction {
         signature: fn_signature,
-        body: vec![swap(2), push(0), eq(), assert_(), push(0), eq(), assert_()],
+        body: triton_asm!(swap 2 push 0 eq assert push 0 eq assert),
     }
 }

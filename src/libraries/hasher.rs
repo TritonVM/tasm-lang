@@ -1,4 +1,4 @@
-use triton_opcodes::{instruction::LabelledInstruction, shortcuts::*};
+use triton_vm::triton_asm;
 
 use crate::{ast, tasm_code_generator::CompilerState};
 
@@ -53,7 +53,7 @@ impl Library for HasherLib {
         _method_name: &str,
         _receiver_type: &ast::DataType,
         _state: &mut CompilerState,
-    ) -> Vec<LabelledInstruction> {
+    ) -> Vec<triton_vm::instruction::LabelledInstruction> {
         panic!("HasherLib does not contain any methods")
     }
 
@@ -62,7 +62,7 @@ impl Library for HasherLib {
         fn_name: &str,
         _type_parameter: Option<ast::DataType>,
         _state: &mut CompilerState,
-    ) -> Vec<LabelledInstruction> {
+    ) -> Vec<triton_vm::instruction::LabelledInstruction> {
         if fn_name == "hash_pair" {
             get_hash_pair_function().body
         } else {
@@ -113,6 +113,6 @@ fn get_hash_pair_function() -> CompiledFunction {
 
     CompiledFunction {
         signature: fn_signature,
-        body: vec![hash(), pop(), pop(), pop(), pop(), pop()],
+        body: triton_asm!(hash pop pop pop pop pop),
     }
 }

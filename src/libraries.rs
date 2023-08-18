@@ -4,7 +4,6 @@ use crate::{
     types,
 };
 use std::fmt::Debug;
-use triton_opcodes::instruction::LabelledInstruction;
 
 pub mod bfe;
 pub mod hasher;
@@ -17,7 +16,7 @@ type Annotation = types::Typing;
 
 pub struct CompiledFunction {
     signature: FnSignature,
-    body: Vec<LabelledInstruction>,
+    body: Vec<triton_vm::instruction::LabelledInstruction>,
 }
 
 pub fn all_libraries() -> Vec<Box<dyn Library>> {
@@ -58,7 +57,7 @@ pub trait Library: Debug {
         method_name: &str,
         receiver_type: &ast::DataType,
         state: &mut CompilerState,
-    ) -> Vec<LabelledInstruction>;
+    ) -> Vec<triton_vm::instruction::LabelledInstruction>;
 
     /// Return the instructions to call the function, and imports snippets into `state` if needed.
     fn call_function(
@@ -66,7 +65,7 @@ pub trait Library: Debug {
         fn_name: &str,
         type_parameter: Option<ast::DataType>,
         state: &mut CompilerState,
-    ) -> Vec<LabelledInstruction>;
+    ) -> Vec<triton_vm::instruction::LabelledInstruction>;
 
     /// Return stripped function name iff grafting should be handled by
     /// library and not the generic grafter.

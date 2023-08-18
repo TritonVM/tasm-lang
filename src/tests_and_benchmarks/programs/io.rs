@@ -151,7 +151,7 @@ mod run_tests {
     use crate::tests_and_benchmarks::shared_test::*;
     use rand::random;
     use std::{collections::HashMap, vec};
-    use triton_vm::Digest;
+    use triton_vm::{Digest, NonDeterminism};
     use twenty_first::shared_math::{
         b_field_element::BFieldElement, bfield_codec::BFieldCodec, x_field_element::XFieldElement,
     };
@@ -166,7 +166,7 @@ mod run_tests {
             HashMap::default(),
             Some(HashMap::default()),
             vec![my_bfe],
-            vec![],
+            NonDeterminism::new(vec![]),
         )
     }
 
@@ -181,7 +181,7 @@ mod run_tests {
             HashMap::default(),
             Some(HashMap::default()),
             vec![my_bfe, my_bfe34],
-            vec![],
+            NonDeterminism::new(vec![]),
         )
     }
 
@@ -195,7 +195,7 @@ mod run_tests {
             HashMap::default(),
             Some(HashMap::default()),
             vec![],
-            vec![my_bfe],
+            NonDeterminism::new(vec![my_bfe]),
         )
     }
 
@@ -219,9 +219,9 @@ mod run_tests {
             HashMap::default(),
             None,
             vec![],
-            vec![
+            NonDeterminism::new(vec![
                 my_bfe, my_bfe, my_bfe, my_bfe, my_bfe, my_bfe, my_bfe, my_bfe999,
-            ],
+            ]),
         )
     }
 
@@ -263,7 +263,7 @@ mod run_tests {
                 reversed_digest,
             ]
             .concat(),
-            vec![],
+            NonDeterminism::new(vec![]),
         )
     }
 
@@ -305,7 +305,7 @@ mod run_tests {
                 reversed_digest,
             ]
             .concat(),
-            vec![],
+            NonDeterminism::new(vec![]),
         )
     }
 
@@ -339,15 +339,17 @@ mod run_tests {
             HashMap::default(),
             Some(HashMap::default()),
             vec![],
-            vec![
-                vec![bool_to_bfe(my_bool)],
-                vec![my_u32.into()],
-                split(my_u64),
-                vec![my_bfe],
-                reversed_xfe,
-                reversed_digest,
-            ]
-            .concat(),
+            NonDeterminism::new(
+                vec![
+                    vec![bool_to_bfe(my_bool)],
+                    vec![my_u32.into()],
+                    split(my_u64),
+                    vec![my_bfe],
+                    reversed_xfe,
+                    reversed_digest,
+                ]
+                .concat(),
+            ),
         )
     }
 
@@ -378,7 +380,7 @@ mod run_tests {
                 my_xfe.encode(),
             ]
             .concat(),
-            vec![],
+            NonDeterminism::new(vec![]),
         )
     }
 
@@ -402,14 +404,16 @@ mod run_tests {
             HashMap::default(),
             None,
             vec![],
-            vec![
-                vec![bool_to_bfe(my_bool)],
-                vec![my_u32.into()],
-                split(my_u64),
-                vec![my_bfe],
-                my_xfe.encode(),
-            ]
-            .concat(),
+            NonDeterminism::new(
+                vec![
+                    vec![bool_to_bfe(my_bool)],
+                    vec![my_u32.into()],
+                    split(my_u64),
+                    vec![my_bfe],
+                    my_xfe.encode(),
+                ]
+                .concat(),
+            ),
         )
     }
 
@@ -424,7 +428,7 @@ mod run_tests {
             HashMap::default(),
             Some(HashMap::default()),
             my_digest.encode(),
-            vec![],
+            NonDeterminism::new(vec![]),
         )
     }
 
@@ -439,7 +443,7 @@ mod run_tests {
             HashMap::default(),
             Some(HashMap::default()),
             vec![],
-            my_digest.encode(),
+            NonDeterminism::new(my_digest.encode()),
         )
     }
 }
