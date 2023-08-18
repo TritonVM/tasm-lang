@@ -288,18 +288,15 @@ pub(crate) fn graft_method_call(
     }
 
     let last_method_name = rust_method_call.method.to_string();
-    match rust_method_call.receiver.as_ref() {
-        expr => {
-            let receiver_expr = graft_expr(expr);
-            let mut args = vec![receiver_expr];
-            args.append(&mut rust_method_call.args.iter().map(graft_expr).collect_vec());
-            let annot = Default::default();
-            ast::MethodCall {
-                method_name: last_method_name,
-                args,
-                annot,
-            }
-        }
+    let expr = rust_method_call.receiver.as_ref();
+    let receiver_expr = graft_expr(expr);
+    let mut args = vec![receiver_expr];
+    args.append(&mut rust_method_call.args.iter().map(graft_expr).collect_vec());
+    let annot = Default::default();
+    ast::MethodCall {
+        method_name: last_method_name,
+        args,
+        annot,
     }
 }
 

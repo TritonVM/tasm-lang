@@ -164,11 +164,11 @@ impl Library for VectorLib {
                 );
                 let annot = Default::default();
 
-                return Some(ast::MethodCall {
+                Some(ast::MethodCall {
                     method_name: POP_NAME.to_owned(),
                     args,
                     annot,
-                });
+                })
             }
             _ => todo!(),
         }

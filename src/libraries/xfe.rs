@@ -192,11 +192,11 @@ impl Library for XfeLibrary {
                 );
                 let annot = Default::default();
 
-                return Some(ast::MethodCall {
+                Some(ast::MethodCall {
                     method_name: UNLIFT_NAME.to_owned(),
                     args,
                     annot,
-                });
+                })
             }
             _ => todo!(),
         }
