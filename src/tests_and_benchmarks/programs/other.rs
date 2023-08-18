@@ -83,6 +83,29 @@ fn nop_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
+fn nested_if_expressions_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn if_expressions(input0: bool, input1: bool) -> u32 {
+            let ret: u32 = if input0 {
+                if input1 {
+                    3u32
+                } else {
+                    2u32
+                }
+            } else {
+                if input1 {
+                    1u32
+                } else {
+                    0u32
+                }
+            };
+
+            return ret;
+        }
+    })
+}
+
+#[allow(dead_code)]
 fn simple_recursive_pow_rast() -> syn::ItemFn {
     // A simple, recursive function that is *not* symmetric in it's input arguments.
     // In other words: it gives a difference result if the input arguments are flipped.
@@ -388,6 +411,19 @@ mod run_tests {
         multiple_compare_prop_with_stack(
             &tasm_argument_evaluation_order_rast(),
             vec![InputOutputTestCase::new(vec![], vec![u64_lit(5)])],
+        );
+    }
+
+    #[test]
+    fn nested_if_expressions_test() {
+        multiple_compare_prop_with_stack(
+            &nested_if_expressions_rast(),
+            vec![
+                InputOutputTestCase::new(vec![bool_lit(false), bool_lit(false)], vec![u32_lit(0)]),
+                InputOutputTestCase::new(vec![bool_lit(false), bool_lit(true)], vec![u32_lit(1)]),
+                InputOutputTestCase::new(vec![bool_lit(true), bool_lit(false)], vec![u32_lit(2)]),
+                InputOutputTestCase::new(vec![bool_lit(true), bool_lit(true)], vec![u32_lit(3)]),
+            ],
         );
     }
 
