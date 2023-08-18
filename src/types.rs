@@ -521,18 +521,18 @@ fn derive_annotate_expr_type(
                     U32
                 }
                 Some(&U64) => {
-                    *expr = ast::Expr::Lit(ast::ExprLit::U64(*n));
+                    *expr = ast::Expr::Lit(ast::ExprLit::U64(TryInto::<u64>::try_into(*n).unwrap()));
                     U64
                 }
                 Some(&BFE) => {
-                    assert!(*n <= BFieldElement::MAX);
-                    let n = BFieldElement::new(*n);
+                    assert!(*n <= BFieldElement::MAX as u128);
+                    let n = BFieldElement::new(TryInto::<u64>::try_into(*n).unwrap());
                     *expr = ast::Expr::Lit(ast::ExprLit::BFE(n));
                     BFE
                 }
                 Some(&XFE) => {
-                    assert!(*n <= BFieldElement::MAX);
-                    let n = BFieldElement::new(*n);
+                    assert!(*n <= BFieldElement::MAX as u128);
+                    let n = BFieldElement::new(TryInto::<u64>::try_into(*n).unwrap());
                     let n = XFieldElement::new_const(n);
                     *expr = ast::Expr::Lit(ast::ExprLit::XFE(n));
                     XFE

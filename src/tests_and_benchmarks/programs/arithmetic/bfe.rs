@@ -5,9 +5,12 @@ use crate::graft::item_fn;
 #[allow(dead_code)]
 fn instantiate_bfe_with_literal() -> syn::ItemFn {
     item_fn(parse_quote! {
-            fn instantiate_bfe() -> (BFieldElement, BFieldElement) {
+            fn instantiate_bfe() -> (BFieldElement, BFieldElement, BFieldElement, BFieldElement, BFieldElement, BFieldElement) {
                 let a: BFieldElement = BFieldElement::new(400u64);
-                return (a, BFieldElement::new(500u64));
+                let b: BFieldElement = BFieldElement::new(BFieldElement::MAX);
+                let c: BFieldElement = BFieldElement::new(0xffff_fffe_ffff_ffff); // `BFieldElement::MAX - 1`
+                let d: BFieldElement = BFieldElement::new(0xffff_fffe_ffff_fffe); // `BFieldElement::MAX - 2`
+                return (a, BFieldElement::new(500u64), b, c, d, BFieldElement::new(0xffff_fffe_ffff_fffd));
             }
     })
 }
@@ -178,7 +181,14 @@ mod run_tests {
         compare_prop_with_stack(
             &instantiate_bfe_with_literal(),
             vec![],
-            vec![bfe_lit(400u64.into()), bfe_lit(500u64.into())],
+            vec![
+                bfe_lit(400u64.into()),
+                bfe_lit(500u64.into()),
+                bfe_lit(BFieldElement::MAX.into()),
+                bfe_lit((BFieldElement::MAX - 1).into()),
+                bfe_lit((BFieldElement::MAX - 2).into()),
+                bfe_lit((BFieldElement::MAX - 3).into()),
+            ],
         );
     }
 

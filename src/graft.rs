@@ -461,29 +461,33 @@ fn graft_lit(rust_val: &syn::Lit) -> ast::ExprLit<Annotation> {
     match rust_val {
         syn::Lit::Bool(b) => Bool(b.value),
         syn::Lit::Int(int_lit) => {
-            let int_lit = int_lit.token().to_string();
-            if let Some(int_lit) = int_lit.strip_suffix("u32") {
-                if let Ok(int_u32) = int_lit.parse::<u32>() {
+            let int_lit_str = int_lit.token().to_string();
+
+            // Despite its name `base10_parse` can handle hex. Don't ask me why.
+            if let Some(_int_lit_stripped) = int_lit_str.strip_suffix("u32") {
+                if let Ok(int_u32) = int_lit.base10_parse::<u32>() {
                     return ast::ExprLit::U32(int_u32);
                 }
             }
 
             // `usize` is just an alias for `u32` in this compiler
-            if let Some(int_lit) = int_lit.strip_suffix("usize") {
-                if let Ok(int_u32) = int_lit.parse::<u32>() {
+            if let Some(_int_lit_stripped) = int_lit_str.strip_suffix("usize") {
+                if let Ok(int_u32) = int_lit.base10_parse::<u32>() {
                     return ast::ExprLit::U32(int_u32);
                 }
             }
 
-            if let Some(int_lit) = int_lit.strip_suffix("u64") {
-                if let Ok(int_u64) = int_lit.parse::<u64>() {
+            if let Some(_int_lit_stripped) = int_lit_str.strip_suffix("u64") {
+                if let Ok(int_u64) = int_lit.base10_parse::<u64>() {
                     return ast::ExprLit::U64(int_u64);
                 }
             }
 
-            let literal_err = format!("unsupported integer literal: {int_lit}");
-            let literal: u64 = int_lit.parse::<u64>().expect(&literal_err);
-            ast::ExprLit::GenericNum(literal, Default::default())
+            if let Ok(int_u128) = int_lit.base10_parse::<u128>() {
+                return ast::ExprLit::GenericNum(int_u128, Default::default());
+            }
+
+            panic!("unsupported integer literal: {int_lit_str}");
         }
         other => panic!("unsupported: {other:?}"),
     }

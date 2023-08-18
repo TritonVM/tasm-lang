@@ -89,7 +89,7 @@ pub enum ExprLit<T> {
     BFE(BFieldElement),
     XFE(XFieldElement),
     Digest(Digest),
-    GenericNum(u64, T),
+    GenericNum(u128, T),
 }
 
 impl<T> BFieldCodec for ExprLit<T> {

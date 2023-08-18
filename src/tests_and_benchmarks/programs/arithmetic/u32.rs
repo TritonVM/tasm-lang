@@ -13,6 +13,18 @@ fn declare_u32_max_rast() -> syn::ItemFn {
 }
 
 #[allow(dead_code)]
+fn declare_u32s_as_lits_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn declare_u32s_as_lits() -> (u32, u32, u32) {
+            let a: u32 = 123_321u32;
+            let b: u32 = 123456789u32;
+            let c: u32 = 0xcafe_babeu32;
+            return (a, b, c);
+        }
+    })
+}
+
+#[allow(dead_code)]
 fn add_u32_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn add_u32(lhs: u32, rhs: u32) -> u32 {
@@ -233,6 +245,19 @@ mod run_tests {
             &simple_sub_u32(),
             vec![u32_lit(100), u32_lit(51)],
             vec![u32_lit(49)],
+        );
+    }
+
+    #[test]
+    fn declare_u32_test() {
+        compare_prop_with_stack(
+            &declare_u32s_as_lits_rast(),
+            vec![],
+            vec![
+                u32_lit(123_321u32),
+                u32_lit(123456789u32),
+                u32_lit(0xcafe_babeu32),
+            ],
         );
     }
 

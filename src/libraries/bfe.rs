@@ -91,16 +91,38 @@ impl Library for BfeLibrary {
 
         let args = args.iter().map(graft_expr).collect_vec();
 
-        if args.len() == 1 && matches!(args[0], ast::Expr::Lit(_)) {
-            if let ast::Expr::Lit(ast::ExprLit::U64(value)) = args[0] {
-                Some(ast::Expr::Lit(ast::ExprLit::BFE(BFieldElement::new(value))))
-            } else if let ast::Expr::Lit(ast::ExprLit::GenericNum(value, _)) = args[0] {
-                Some(ast::Expr::Lit(ast::ExprLit::BFE(BFieldElement::new(value))))
-            } else {
-                panic!("Can only instantiate BFE with u64-literal. Please use casting for conversion to `BFieldElement`. Got: {:#?}", args[0]);
-            }
-        } else {
-            panic!("Unknown initialization expression for BFE");
+        if args.len() != 1 {
+            panic!("BFE must be initialized with only one argument. Got: {args:#?}");
+        }
+
+        let init_arg = &args[0];
+        match init_arg {
+            ast::Expr::Lit(lit) => match lit {
+                ast::ExprLit::U64(value) => Some(ast::Expr::Lit(ast::ExprLit::BFE(
+                    BFieldElement::new(*value),
+                ))),
+                ast::ExprLit::GenericNum(value, _) => Some(ast::Expr::Lit(ast::ExprLit::BFE(
+                    BFieldElement::new(TryInto::<u64>::try_into(*value).unwrap()),
+                ))),
+                _ => panic!("Cannot initialize BFieldElement with expression {init_arg:#?}"),
+            },
+            ast::Expr::Var(var) => match var {
+                ast::Identifier::String(constant, _) => {
+                    if constant == "BFieldElement::MAX" {
+                        Some(ast::Expr::Lit(ast::ExprLit::BFE(BFieldElement::new(
+                            BFieldElement::MAX,
+                        ))))
+                    } else {
+                        panic!("Invalid initialization of BFieldElement. Got {init_arg:#?}");
+                    }
+                }
+                ast::Identifier::TupleIndex(_, _) => todo!(),
+                ast::Identifier::ListIndex(_, _) => todo!(),
+            },
+            // TODO: To handle more advanced expressions here (like BFieldElement::MAX - 1),
+            // we might have to implement constant folding on ast::Expr?
+            // Unsure how to handle that.
+            _ => panic!("Invalid initialization of BFieldElement. Got {init_arg:#?}"),
         }
     }
 
