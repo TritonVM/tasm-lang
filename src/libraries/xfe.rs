@@ -34,6 +34,7 @@ impl Library for XfeLibrary {
         &self,
         method_name: &str,
         _receiver_type: &ast::DataType,
+        _args: &[ast::Expr<super::Annotation>],
     ) -> ast::FnSignature {
         if method_name == "unlift" {
             get_xfe_unlift_method().signature
@@ -46,6 +47,7 @@ impl Library for XfeLibrary {
         &self,
         _fn_name: &str,
         _type_parameter: Option<ast::DataType>,
+        _args: &[ast::Expr<super::Annotation>],
     ) -> ast::FnSignature {
         panic!("No functions implemented for XFE library");
     }
@@ -54,6 +56,7 @@ impl Library for XfeLibrary {
         &self,
         method_name: &str,
         _receiver_type: &ast::DataType,
+        _args: &[ast::Expr<super::Annotation>],
         _state: &mut crate::tasm_code_generator::CompilerState,
     ) -> Vec<triton_vm::instruction::LabelledInstruction> {
         if method_name == "unlift" {
@@ -67,6 +70,7 @@ impl Library for XfeLibrary {
         &self,
         _fn_name: &str,
         _type_parameter: Option<ast::DataType>,
+        _args: &[ast::Expr<super::Annotation>],
         _state: &mut crate::tasm_code_generator::CompilerState,
     ) -> Vec<triton_vm::instruction::LabelledInstruction> {
         panic!("No functions implemented for XFE library");
@@ -206,11 +210,13 @@ impl Library for XfeLibrary {
 fn get_xfe_unlift_method() -> CompiledFunction {
     let fn_signature = ast::FnSignature {
         name: "unlift".to_owned(),
-        args: vec![ast::FnArg {
-            name: "value".to_owned(),
-            data_type: ast::DataType::XFE,
-            mutable: false,
-        }],
+        args: vec![ast::AbstractArgument::ValueArgument(
+            ast::AbstractValueArg {
+                name: "value".to_owned(),
+                data_type: ast::DataType::XFE,
+                mutable: false,
+            },
+        )],
         output: ast::DataType::BFE,
         arg_evaluation_order: Default::default(),
     };

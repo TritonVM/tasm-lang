@@ -10,6 +10,10 @@ pub type Annotation = types::Typing;
 pub fn graft_fn_decl(input: &syn::ItemFn) -> ast::Fn<Annotation> {
     let name = input.sig.ident.to_string();
     let args = input.sig.inputs.iter().map(graft_fn_arg).collect_vec();
+    let args = args
+        .into_iter()
+        .map(ast::AbstractArgument::ValueArgument)
+        .collect_vec();
     let output = graft_return_type(&input.sig.output);
     let body = input.block.stmts.iter().map(graft_stmt).collect_vec();
 
@@ -105,7 +109,7 @@ pub fn path_to_ident(path: &syn::Path) -> String {
     identifiers.join("::")
 }
 
-fn graft_fn_arg(rust_fn_arg: &syn::FnArg) -> ast::FnArg {
+fn graft_fn_arg(rust_fn_arg: &syn::FnArg) -> ast::AbstractValueArg {
     match rust_fn_arg {
         syn::FnArg::Typed(pat_type) => {
             let name = pat_to_name(&pat_type.pat);
@@ -136,7 +140,7 @@ fn graft_fn_arg(rust_fn_arg: &syn::FnArg) -> ast::FnArg {
                 other => panic!("unsupported: {other:?}"),
             };
 
-            ast::FnArg {
+            ast::AbstractValueArg {
                 name,
                 data_type,
                 mutable,

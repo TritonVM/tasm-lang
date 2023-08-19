@@ -1,11 +1,12 @@
 use itertools::Itertools;
-use tasm_lib::snippet::BasicSnippet;
+use tasm_lib::{list::ListType, snippet::BasicSnippet};
 use triton_vm::triton_asm;
 
 use crate::{
     ast,
-    graft::{self, graft_expr},
+    graft::{self, graft_expr, Annotation},
     tasm_code_generator::CompilerState,
+    types::GetType,
 };
 
 use super::Library;
@@ -26,7 +27,7 @@ impl Library for VectorLib {
     }
 
     fn get_method_name(&self, method_name: &str, _receiver_type: &ast::DataType) -> Option<String> {
-        if matches!(method_name, "push" | "pop" | "len") {
+        if matches!(method_name, "push" | "pop" | "len" | "map") {
             Some(method_name.to_owned())
         } else {
             None
@@ -37,28 +38,29 @@ impl Library for VectorLib {
         &self,
         fn_name: &str,
         receiver_type: &ast::DataType,
+        args: &[ast::Expr<super::Annotation>],
     ) -> ast::FnSignature {
-        self.function_name_to_signature(fn_name, receiver_type.type_parameter())
+        self.function_name_to_signature(fn_name, receiver_type.type_parameter(), args)
     }
 
     fn function_name_to_signature(
         &self,
         fn_name: &str,
         type_parameter: Option<ast::DataType>,
+        args: &[ast::Expr<super::Annotation>],
     ) -> ast::FnSignature {
-        let snippet = name_to_tasm_lib_snippet(fn_name, &type_parameter)
+        let snippet = name_to_tasm_lib_snippet(fn_name, &type_parameter, args)
             .unwrap_or_else(|| panic!("Unknown function name {fn_name}"));
 
         let name = snippet.entrypoint();
-        let mut args: Vec<ast::FnArg> = vec![];
+        let mut args: Vec<ast::AbstractArgument> = vec![];
         for (ty, name) in snippet.inputs().into_iter() {
-            let fn_arg = ast::FnArg {
+            let fn_arg = ast::AbstractValueArg {
                 name,
                 data_type: ty.into(),
-                // The tasm snippet input arguments are all considered mutable
                 mutable: true,
             };
-            args.push(fn_arg);
+            args.push(ast::AbstractArgument::ValueArgument(fn_arg));
         }
 
         let mut output_types: Vec<ast::DataType> = vec![];
@@ -84,6 +86,7 @@ impl Library for VectorLib {
         &self,
         method_name: &str,
         receiver_type: &ast::DataType,
+        args: &[ast::Expr<super::Annotation>],
         state: &mut CompilerState,
     ) -> Vec<triton_vm::instruction::LabelledInstruction> {
         let type_param: ast::DataType = if let ast::DataType::List(type_param) = receiver_type {
@@ -93,7 +96,8 @@ impl Library for VectorLib {
                 "Cannot call vector method without type param. Got receiver_type: {receiver_type}"
             )
         };
-        let snippet = name_to_tasm_lib_snippet(method_name, &Some(type_param))
+        // find inner function if needed
+        let snippet = name_to_tasm_lib_snippet(method_name, &Some(type_param), args)
             .unwrap_or_else(|| panic!("Unknown function name {method_name}"));
         let entrypoint = snippet.entrypoint();
         state.import_snippet(snippet);
@@ -105,9 +109,10 @@ impl Library for VectorLib {
         &self,
         fn_name: &str,
         type_parameter: Option<ast::DataType>,
+        args: &[ast::Expr<super::Annotation>],
         state: &mut CompilerState,
     ) -> Vec<triton_vm::instruction::LabelledInstruction> {
-        let snippet = name_to_tasm_lib_snippet(fn_name, &type_parameter)
+        let snippet = name_to_tasm_lib_snippet(fn_name, &type_parameter, args)
             .unwrap_or_else(|| panic!("Unknown function name {fn_name}"));
         let entrypoint = snippet.entrypoint();
         state.import_snippet(snippet);
@@ -131,46 +136,96 @@ impl Library for VectorLib {
         &self,
         rust_method_call: &syn::ExprMethodCall,
     ) -> Option<ast::MethodCall<super::Annotation>> {
-        // Handle `pop().unwrap()`. Ignore everything else.
-        const UNWRAP_NAME: &str = "unwrap";
         const POP_NAME: &str = "pop";
+        const COLLECT_VEC_NAME: &str = "collect_vec";
+        const UNWRAP_NAME: &str = "unwrap";
+        const INTO_ITER_NAME: &str = "into_iter";
+        const MAP_NAME: &str = "map";
 
         let last_method_name = rust_method_call.method.to_string();
 
-        if last_method_name != UNWRAP_NAME {
-            return None;
-        }
+        match last_method_name.as_str() {
+            UNWRAP_NAME => {
+                match rust_method_call.receiver.as_ref() {
+                    syn::Expr::MethodCall(rust_inner_method_call) => {
+                        let inner_method_call = graft::graft_method_call(rust_inner_method_call);
+                        if inner_method_call.method_name != POP_NAME {
+                            return None;
+                        }
 
-        match rust_method_call.receiver.as_ref() {
-            syn::Expr::MethodCall(rust_inner_method_call) => {
-                let inner_method_call = graft::graft_method_call(rust_inner_method_call);
-                if inner_method_call.method_name != POP_NAME {
-                    return None;
-                }
+                        let identifier = match &inner_method_call.args[0] {
+                            ast::Expr::Var(ident) => ident.to_owned(),
+                            // Maybe cover more cases here?
+                            _ => todo!(),
+                        };
 
-                let identifier = match &inner_method_call.args[0] {
-                    ast::Expr::Var(ident) => ident.to_owned(),
-                    // Maybe cover more cases here?
+                        let mut args = vec![ast::Expr::Var(identifier)];
+                        args.append(
+                            &mut rust_inner_method_call
+                                .args
+                                .iter()
+                                .map(graft_expr)
+                                .collect_vec(),
+                        );
+                        let annot = Default::default();
+
+                        Some(ast::MethodCall {
+                            method_name: POP_NAME.to_owned(),
+                            args,
+                            annot,
+                        })
+                    }
                     _ => todo!(),
-                };
-
-                let mut args = vec![ast::Expr::Var(identifier)];
-                args.append(
-                    &mut rust_inner_method_call
-                        .args
-                        .iter()
-                        .map(graft_expr)
-                        .collect_vec(),
-                );
-                let annot = Default::default();
-
-                Some(ast::MethodCall {
-                    method_name: POP_NAME.to_owned(),
-                    args,
-                    annot,
-                })
+                }
             }
-            _ => todo!(),
+            COLLECT_VEC_NAME => {
+                match rust_method_call.receiver.as_ref() {
+                    syn::Expr::MethodCall(rust_inner_method_call) => {
+                        let inner_method_call = graft::graft_method_call(rust_inner_method_call);
+                        if inner_method_call.method_name != MAP_NAME {
+                            return None;
+                        }
+
+                        let identifier = match rust_inner_method_call.receiver.as_ref() {
+                            syn::Expr::MethodCall(rust_inner_inner_method_call) => {
+                                let maybe_iter_name =
+                                    rust_inner_inner_method_call.method.to_string();
+                                if maybe_iter_name != INTO_ITER_NAME {
+                                    panic!("Only allowed syntax with `map` is `x.into_iter().map(<function_name>).collect_vec()")
+                                }
+
+                                let inner_inner_method_call =
+                                    graft::graft_method_call(rust_inner_inner_method_call);
+
+                                match &inner_inner_method_call.args[0] {
+                                    ast::Expr::Var(ident) => ident.to_owned(),
+                                    // Maybe cover more cases here?
+                                    _ => todo!(),
+                                }
+                            }
+                            _ => todo!(),
+                        };
+
+                        let mut args = vec![ast::Expr::Var(identifier)];
+                        args.append(
+                            &mut rust_inner_method_call
+                                .args
+                                .iter()
+                                .map(graft_expr)
+                                .collect_vec(),
+                        );
+                        let annot: Annotation = Default::default();
+
+                        Some(ast::MethodCall {
+                            method_name: MAP_NAME.to_owned(),
+                            args,
+                            annot,
+                        })
+                    }
+                    _ => todo!(),
+                }
+            }
+            _ => None,
         }
     }
 }
@@ -179,6 +234,7 @@ impl Library for VectorLib {
 fn name_to_tasm_lib_snippet(
     public_name: &str,
     type_parameter: &Option<ast::DataType>,
+    args: &[ast::Expr<super::Annotation>],
 ) -> Option<Box<dyn BasicSnippet>> {
     let tasm_type: Option<tasm_lib::snippet::DataType> =
         type_parameter.clone().map(|x| x.try_into().unwrap());
@@ -196,6 +252,31 @@ fn name_to_tasm_lib_snippet(
         "len" => Some(Box::new(tasm_lib::list::safe_u32::length::SafeLength(
             tasm_type.unwrap(),
         ))),
+        "map" => {
+            let inner_function_type = if let ast::DataType::Function(fun_type) = args[1].get_type()
+            {
+                fun_type
+            } else {
+                panic!()
+            };
+            let inner_function_name = if let ast::Expr::Var(ident) = &args[1] {
+                ident
+            } else {
+                panic!()
+            };
+
+            let lnat = tasm_lib::list::higher_order::inner_function::NoFunctionBody {
+                label_name: inner_function_name.to_string(),
+                input_types: vec![inner_function_type.input_argument.try_into().unwrap()],
+                output_types: vec![inner_function_type.output.try_into().unwrap()],
+            };
+            Some(Box::new(tasm_lib::list::higher_order::map::Map {
+                list_type: ListType::Safe,
+                f: tasm_lib::list::higher_order::inner_function::InnerFunction::NoFunctionBody(
+                    lnat,
+                ),
+            }))
+        }
         _ => None,
     }
 }

@@ -1,9 +1,8 @@
 use tasm_lib::snippet::BasicSnippet;
 use triton_vm::triton_asm;
 
-use crate::{ast, tasm_code_generator::CompilerState};
-
 use super::{CompiledFunction, Library};
+use crate::{ast, tasm_code_generator::CompilerState};
 
 #[derive(Clone, Debug)]
 pub struct UnsignedIntegersLib;
@@ -25,6 +24,7 @@ impl Library for UnsignedIntegersLib {
         &self,
         method_name: &str,
         receiver_type: &ast::DataType,
+        _args: &[ast::Expr<super::Annotation>],
     ) -> ast::FnSignature {
         if method_name == "count_ones" && *receiver_type == ast::DataType::U32 {
             return get_count_ones_u32_method().signature;
@@ -34,15 +34,15 @@ impl Library for UnsignedIntegersLib {
             .unwrap_or_else(|| panic!("Unknown function name {method_name}"));
 
         let name = snippet.entrypoint();
-        let mut args: Vec<ast::FnArg> = vec![];
+
+        let mut args: Vec<ast::AbstractArgument> = vec![];
         for (ty, name) in snippet.inputs().into_iter() {
-            let fn_arg = ast::FnArg {
+            let fn_arg = ast::AbstractValueArg {
                 name,
                 data_type: ty.into(),
-                // The tasm snippet input arguments are all considered mutable
                 mutable: true,
             };
-            args.push(fn_arg);
+            args.push(ast::AbstractArgument::ValueArgument(fn_arg));
         }
 
         let mut output_types: Vec<ast::DataType> = vec![];
@@ -68,6 +68,7 @@ impl Library for UnsignedIntegersLib {
         &self,
         _fn_name: &str,
         _type_parameter: Option<ast::DataType>,
+        _args: &[ast::Expr<super::Annotation>],
     ) -> ast::FnSignature {
         panic!("unsigned_integers lib does not contain any functions");
     }
@@ -76,6 +77,7 @@ impl Library for UnsignedIntegersLib {
         &self,
         method_name: &str,
         receiver_type: &ast::DataType,
+        _args: &[ast::Expr<super::Annotation>],
         state: &mut CompilerState,
     ) -> Vec<triton_vm::instruction::LabelledInstruction> {
         if method_name == "count_ones" && ast::DataType::U32 == *receiver_type {
@@ -94,6 +96,7 @@ impl Library for UnsignedIntegersLib {
         &self,
         _fn_name: &str,
         _type_parameter: Option<ast::DataType>,
+        _args: &[ast::Expr<super::Annotation>],
         _state: &mut CompilerState,
     ) -> Vec<triton_vm::instruction::LabelledInstruction> {
         panic!("unsigned_integers lib does not contain any functions");
@@ -122,11 +125,13 @@ impl Library for UnsignedIntegersLib {
 fn get_count_ones_u32_method() -> CompiledFunction {
     let fn_signature = ast::FnSignature {
         name: "count_ones".to_owned(),
-        args: vec![ast::FnArg {
-            name: "value".to_owned(),
-            data_type: ast::DataType::U32,
-            mutable: false,
-        }],
+        args: vec![ast::AbstractArgument::ValueArgument(
+            ast::AbstractValueArg {
+                name: "value".to_owned(),
+                data_type: ast::DataType::U32,
+                mutable: false,
+            },
+        )],
         output: ast::DataType::U32,
         arg_evaluation_order: Default::default(),
     };

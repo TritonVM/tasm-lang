@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use twenty_first::shared_math::b_field_element::BFieldElement;
 use twenty_first::shared_math::x_field_element::XFieldElement;
 
+use crate::ast::{AbstractFunctionArg, AbstractValueArg, FunctionType};
 use crate::tasm_code_generator::STACK_SIZE;
 use crate::{ast, libraries};
 
@@ -122,8 +123,8 @@ pub struct DataTypeAndMutability {
     pub mutable: bool,
 }
 
-impl From<ast::FnArg> for DataTypeAndMutability {
-    fn from(value: ast::FnArg) -> Self {
+impl From<ast::AbstractValueArg> for DataTypeAndMutability {
+    fn from(value: ast::AbstractValueArg) -> Self {
         Self {
             data_type: value.data_type,
             mutable: value.mutable,
@@ -154,12 +155,17 @@ pub fn annotate_fn(function: &mut ast::Fn<Typing>) {
 
     // Populate vtable with function arguments
     for arg in function.fn_signature.args.iter() {
-        let duplicate_fn_arg = state
-            .vtable
-            .insert(arg.name.clone(), arg.to_owned().into())
-            .is_some();
-        if duplicate_fn_arg {
-            panic!("Duplicate function argument {}", arg.name);
+        match arg {
+            ast::AbstractArgument::FunctionArgument(_) => todo!(),
+            ast::AbstractArgument::ValueArgument(value_fn_arg) => {
+                let duplicate_fn_arg = state
+                    .vtable
+                    .insert(value_fn_arg.name.clone(), value_fn_arg.to_owned().into())
+                    .is_some();
+                if duplicate_fn_arg {
+                    panic!("Duplicate function argument {}", value_fn_arg.name);
+                }
+            }
         }
     }
 
@@ -260,7 +266,8 @@ fn annotate_stmt(
             type_parameter,
             arg_evaluation_order,
         }) => {
-            let fn_signature = get_fn_signature(name, state, type_parameter);
+            println!("args: {args:?}");
+            let fn_signature = get_fn_signature(name, state, type_parameter, args);
             assert!(
                 is_void_type(&fn_signature.output),
                 "Function call '{name}' at statement-level must return the unit type."
@@ -277,18 +284,14 @@ fn annotate_stmt(
             args,
             annot,
         }) => {
-            let receiver = if let ast::Expr::Var(rec) = &mut args[0] {
-                rec
-            } else {
-                panic!("Receiver must be an identifier")
-            };
-            let (receiver_type, _mutable) = annotate_identifier_type(receiver, state);
+            derive_annotate_expr_type(&mut args[0], None, state);
+            let receiver_type = args[0].get_type();
 
             let method_signature: ast::FnSignature =
-                get_method_signature(method_name, state, receiver_type);
+                get_method_signature(method_name, state, receiver_type.clone(), args);
             assert!(
                 is_void_type(&method_signature.output),
-                "Method call {receiver}.'{method_name}' at statement-level must return the unit type."
+                "Method call {receiver_type}.'{method_name}' at statement-level must return the unit type."
             );
 
             // TODO: Check that receiver_type corresponds to method's FnSignature
@@ -362,20 +365,26 @@ pub fn assert_type_equals(derived_type: &ast::DataType, data_type: &ast::DataTyp
 }
 
 /// Set type and return type and whether the identifier was declared as mutable
-fn annotate_identifier_type(
+pub fn annotate_identifier_type(
     identifier: &mut ast::Identifier<Typing>,
     state: &mut CheckState,
 ) -> (ast::DataType, bool) {
     match identifier {
         // x
-        ast::Identifier::String(var_name, var_type) => {
-            let found_type = state
-                .vtable
-                .get(var_name)
-                .unwrap_or_else(|| panic!("variable {var_name} must have known type"));
-            *var_type = Typing::KnownType(found_type.data_type.clone());
-            (found_type.data_type.clone(), found_type.mutable)
-        }
+        ast::Identifier::String(var_name, var_type) => match state.vtable.get(var_name) {
+            Some(found_type) => {
+                *var_type = Typing::KnownType(found_type.data_type.clone());
+                (found_type.data_type.clone(), found_type.mutable)
+            }
+            None => match state.ftable.get(var_name) {
+                Some(function) => {
+                    *var_type = Typing::KnownType(function.into());
+                    let function_datatype: ast::DataType = function.into();
+                    (function_datatype, false)
+                }
+                None => panic!("variable {var_name} must have known type"),
+            },
+        },
 
         // x.0
         ast::Identifier::TupleIndex(tuple_identifier, index) => {
@@ -423,11 +432,12 @@ fn get_fn_signature(
     name: &str,
     state: &CheckState,
     type_parameter: &Option<ast::DataType>,
+    args: &[ast::Expr<Typing>],
 ) -> ast::FnSignature {
     // Function from libraries are in scope
     for lib in libraries::all_libraries() {
         if let Some(fn_name) = lib.get_function_name(name) {
-            return lib.function_name_to_signature(&fn_name, type_parameter.to_owned());
+            return lib.function_name_to_signature(&fn_name, type_parameter.to_owned(), args);
         }
     }
 
@@ -442,11 +452,52 @@ fn get_method_signature(
     name: &str,
     _state: &CheckState,
     receiver_type: ast::DataType,
+    args: &mut [ast::Expr<Typing>],
 ) -> ast::FnSignature {
+    // Special-case on `map`
+    if name == "map" {
+        let inner_fn_name = match &args[1] {
+            ast::Expr::Var(inner_fn_name) => inner_fn_name.to_string(),
+            _ => panic!("unsupported"),
+        };
+        let inner_fn_signature = _state
+            .ftable
+            .get(inner_fn_name.as_str())
+            .unwrap()
+            .to_owned();
+        // TODO: Expand to handle more arguments
+        let inner_output = inner_fn_signature.output;
+        let inner_input = match &inner_fn_signature.args[0] {
+            ast::AbstractArgument::FunctionArgument(_) => todo!(),
+            ast::AbstractArgument::ValueArgument(value_arg) => value_arg.data_type.to_owned(),
+        };
+        let derived_inner_function_as_function_arg =
+            ast::AbstractArgument::FunctionArgument(AbstractFunctionArg {
+                abstract_name: String::from("map_inner_function"),
+                function_type: FunctionType {
+                    input_argument: inner_input,
+                    output: inner_output.clone(),
+                },
+            });
+
+        let vector_as_arg = ast::AbstractArgument::ValueArgument(AbstractValueArg {
+            name: "element_arg_0".to_owned(),
+            data_type: receiver_type,
+            mutable: false,
+        });
+        return ast::FnSignature {
+            name: String::from("map"),
+            // TODO: Use List<inner_fn_signature-args> here instead for betetr type checking
+            args: vec![vector_as_arg, derived_inner_function_as_function_arg],
+            output: ast::DataType::List(Box::new(inner_output)),
+            arg_evaluation_order: Default::default(),
+        };
+    }
+
     // Only methods from libraries are in scope. New methods cannot be declared.
     for lib in libraries::all_libraries() {
         if let Some(method_name) = lib.get_method_name(name, &receiver_type) {
-            return lib.method_name_to_signature(&method_name, &receiver_type);
+            return lib.method_name_to_signature(&method_name, &receiver_type, args);
         }
     }
 
@@ -469,31 +520,61 @@ fn derive_annotate_fn_call_args(
         fn_signature.args.len(),
         args.len(),
     );
-    let arg_types: Vec<ast::DataType> = args
+
+    // Get list of concrete arguments used in function call
+    let concrete_arguments: Vec<ast::DataType> = args
         .iter_mut()
         .zip_eq(fn_signature.args.iter())
-        .map(|(arg_expr, fn_arg)| {
-            let arg_hint = Some(&fn_arg.data_type);
-            derive_annotate_expr_type(arg_expr, arg_hint, state)
+        .map(|(arg_expr, fn_arg)| match fn_arg {
+            ast::AbstractArgument::FunctionArgument(abstract_function) => {
+                // arg_expr must evaluate to a FnCall here
+
+                let arg_hint = Some(&abstract_function.function_type.input_argument);
+                derive_annotate_expr_type(arg_expr, arg_hint, state)
+            }
+            ast::AbstractArgument::ValueArgument(abstract_value) => {
+                let arg_hint = Some(&abstract_value.data_type);
+                derive_annotate_expr_type(arg_expr, arg_hint, state)
+            }
         })
         .collect();
 
+    // Compare list of concrete arguments with function signature, i.e. expected arguments
     for (arg_pos, (fn_arg, expr_type)) in fn_signature
         .args
         .iter()
-        .zip_eq(arg_types.iter())
+        .zip_eq(concrete_arguments.iter())
         .enumerate()
     {
-        let arg_pos = arg_pos + 1;
-        let ast::FnArg {
-            name: arg_name,
-            data_type: arg_type,
-            mutable: _mutable,
-        } = fn_arg;
-        assert_eq!(
-        arg_type, expr_type,
-        "Wrong type of function argument {arg_pos} '{arg_name}' in '{fn_name}'; expected {arg_type}, got {expr_type}.",
-    )
+        println!("arg_pos: {arg_pos}");
+        println!("fn_arg: {arg_pos:?}");
+        println!("expr_type: {expr_type}");
+        match fn_arg {
+            ast::AbstractArgument::FunctionArgument(ast::AbstractFunctionArg {
+                abstract_name,
+                function_type,
+            }) => {
+                println!("abstract_name: {abstract_name}");
+                println!("function_type: {function_type:?}");
+                println!("expr_type : {expr_type:?}");
+                assert_type_equals(
+                    &ast::DataType::Function(Box::new(function_type.to_owned())),
+                    expr_type,
+                    "Function argument",
+                )
+            }
+            ast::AbstractArgument::ValueArgument(ast::AbstractValueArg {
+                name: arg_name,
+                data_type: arg_type,
+                mutable: _mutable,
+            }) => {
+                let arg_pos = arg_pos + 1;
+                assert_eq!(
+                arg_type, expr_type,
+                "Wrong type of function argument {arg_pos} '{arg_name}' in '{fn_name}'; expected {arg_type}, got {expr_type}.",
+            );
+            }
+        }
     }
 }
 
@@ -563,7 +644,8 @@ fn derive_annotate_expr_type(
             type_parameter,
             arg_evaluation_order,
         }) => {
-            let fn_signature = get_fn_signature(name, state, type_parameter);
+            println!("args: {args:?}");
+            let fn_signature = get_fn_signature(name, state, type_parameter, args);
             assert!(
                 !is_void_type(&fn_signature.output),
                 "Function calls in expressions cannot return the unit type"
@@ -581,10 +663,10 @@ fn derive_annotate_expr_type(
             args,
             annot,
         }) => {
-            let receiver = &mut args[0];
-            let receiver_type = derive_annotate_expr_type(receiver, None, state);
+            derive_annotate_expr_type(&mut args[0], None, state);
+            let receiver_type = args[0].get_type();
             let method_signature: ast::FnSignature =
-                get_method_signature(method_name, state, receiver_type);
+                get_method_signature(method_name, state, receiver_type, args);
             assert!(
                 !is_void_type(&method_signature.output),
                 "Method calls in expressions cannot return the unit type"
