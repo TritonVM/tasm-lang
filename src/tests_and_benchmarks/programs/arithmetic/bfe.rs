@@ -162,13 +162,9 @@ mod compile_and_typecheck_tests {
 #[cfg(test)]
 mod run_tests {
     use rand::random;
-    use triton_vm::NonDeterminism;
     use twenty_first::shared_math::{b_field_element::BFieldElement, other::random_elements};
 
-    use crate::tests_and_benchmarks::{
-        ozk_programs,
-        test_helpers::{io_native, ozk_parsing, shared_test::*},
-    };
+    use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 
     use super::*;
 
@@ -195,26 +191,6 @@ mod run_tests {
             vec![bfe_lit(1000u64.into()), bfe_lit(BFieldElement::MAX.into())],
             vec![bfe_lit(999u64.into())],
         );
-    }
-
-    #[test]
-    fn add_bfe_ozk_test() {
-        // Test function on host machine
-        let input = vec![];
-        let non_determinism = NonDeterminism::new(vec![]);
-        let expected_output = vec![BFieldElement::new(29)];
-        let native_output = io_native::wrap_main_with_io(&ozk_programs::bfe_add::main)(
-            input.clone(),
-            non_determinism.clone(),
-        );
-        assert_eq!(native_output, expected_output);
-
-        // Test function in Triton VM
-        let parsed = ozk_parsing::parse_main("bfe_add");
-        let expected_stack_diff = 0;
-        let stack_start = vec![];
-        let vm_output = execute_with_stack(&parsed, stack_start, expected_stack_diff).unwrap();
-        assert_eq!(expected_output, vm_output.output);
     }
 
     #[test]
@@ -346,5 +322,33 @@ mod run_tests {
                 ),
             ],
         );
+    }
+}
+
+mod ozk_tests {
+    use crate::tests_and_benchmarks::{
+        ozk_programs,
+        test_helpers::{shared_test::*, *},
+    };
+    use triton_vm::{BFieldElement, NonDeterminism};
+
+    #[test]
+    fn add_bfe_ozk_test() {
+        // Test function on host machine
+        let input = vec![];
+        let non_determinism = NonDeterminism::new(vec![]);
+        let expected_output = vec![BFieldElement::new(29)];
+        let native_output = io_native::wrap_main_with_io(&ozk_programs::bfe_add::main)(
+            input.clone(),
+            non_determinism.clone(),
+        );
+        assert_eq!(native_output, expected_output);
+
+        // Test function in Triton VM
+        let parsed = ozk_parsing::parse_main("bfe_add");
+        let expected_stack_diff = 0;
+        let stack_start = vec![];
+        let vm_output = execute_with_stack(&parsed, stack_start, expected_stack_diff).unwrap();
+        assert_eq!(expected_output, vm_output.output);
     }
 }
