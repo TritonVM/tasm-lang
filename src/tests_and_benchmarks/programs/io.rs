@@ -1,163 +1,145 @@
-use syn::parse_quote;
-
-use crate::graft::item_fn;
-
-#[allow(dead_code)]
-fn stdin_rast() -> syn::ItemFn {
-    item_fn(parse_quote! {
-        fn stdin() -> BFieldElement {
-            let from_stdin: BFieldElement = tasm::tasm_io_read_stdin_bfe();
-            return from_stdin;
-        }
-    })
-}
-
-#[allow(dead_code)]
-fn stdin_rast_pair() -> syn::ItemFn {
-    item_fn(parse_quote! {
-        fn stdin() -> (BFieldElement, BFieldElement) {
-            let res1: BFieldElement = tasm::tasm_io_read_stdin_bfe();
-            let res2: BFieldElement = tasm::tasm_io_read_stdin_bfe();
-            return (res1, res2);
-        }
-    })
-}
-
-#[allow(dead_code)]
-fn secretin_rast() -> syn::ItemFn {
-    item_fn(parse_quote! {
-        fn secretin() -> BFieldElement {
-            let res: BFieldElement = tasm::tasm_io_read_secret_bfe();
-            return res;
-        }
-    })
-}
-
-#[allow(dead_code)]
-fn secretin_rast_10() -> syn::ItemFn {
-    item_fn(parse_quote! {
-        fn secretin() -> (BFieldElement, BFieldElement, BFieldElement, BFieldElement, BFieldElement, BFieldElement, BFieldElement, BFieldElement) {
-            let r0: BFieldElement = tasm::tasm_io_read_secret_bfe();
-            let r1: BFieldElement = tasm::tasm_io_read_secret_bfe();
-            let r2: BFieldElement = tasm::tasm_io_read_secret_bfe();
-            let r3: BFieldElement = tasm::tasm_io_read_secret_bfe();
-            let r4: BFieldElement = tasm::tasm_io_read_secret_bfe();
-            let r5: BFieldElement = tasm::tasm_io_read_secret_bfe();
-            let r6: BFieldElement = tasm::tasm_io_read_secret_bfe();
-            let r7: BFieldElement = tasm::tasm_io_read_secret_bfe();
-            return (r0,r1,r2,r3,r4,r5,r6,r7);
-        }
-    })
-}
-
-#[allow(dead_code)]
-fn stdin_rast_most_types() -> syn::ItemFn {
-    item_fn(parse_quote! {
-        fn mosttypes() -> (bool, u32, u64, BFieldElement, XFieldElement) {
-            let s0: bool = tasm::tasm_io_read_stdin_bool();
-            let s1: u32 = tasm::tasm_io_read_stdin_u32();
-            let s2: u64 = tasm::tasm_io_read_stdin_u64();
-            let s3: BFieldElement = tasm::tasm_io_read_stdin_bfe();
-            let s4: XFieldElement = tasm::tasm_io_read_stdin_xfe();
-            return (s0,s1,s2,s3,s4);
-        }
-    })
-}
-
-#[allow(dead_code)]
-fn stdin_rast_all_types() -> syn::ItemFn {
-    item_fn(parse_quote! {
-        fn all_types() -> (bool, u32, u64, BFieldElement, XFieldElement, Digest) {
-            let s0: bool = tasm::tasm_io_read_stdin_bool();
-            let s1: u32 = tasm::tasm_io_read_stdin_u32();
-            let s2: u64 = tasm::tasm_io_read_stdin_u64();
-            let s3: BFieldElement = tasm::tasm_io_read_stdin_bfe();
-            let s4: XFieldElement = tasm::tasm_io_read_stdin_xfe();
-            let s5: Digest = tasm::tasm_io_read_stdin_digest();
-            return (s0,s1,s2,s3,s4, s5);
-        }
-    })
-}
-
-#[allow(dead_code)]
-fn stdin_rast_all_types_one_liner() -> syn::ItemFn {
-    item_fn(parse_quote! {
-        fn all_types_one_liner() -> (bool, u32, u64, BFieldElement, XFieldElement, Digest) {
-            return (
-                tasm::tasm_io_read_stdin_bool(),
-                tasm::tasm_io_read_stdin_u32(),
-                tasm::tasm_io_read_stdin_u64(),
-                tasm::tasm_io_read_stdin_bfe(),
-                tasm::tasm_io_read_stdin_xfe(),
-                tasm::tasm_io_read_stdin_digest()
-            );
-        }
-    })
-}
-
-#[allow(dead_code)]
-fn secret_rast_all_types_one_liner() -> syn::ItemFn {
-    item_fn(parse_quote! {
-        fn all_types_one_liner() -> (bool, u32, u64, BFieldElement, XFieldElement, Digest) {
-            return (
-                tasm::tasm_io_read_secret_bool(),
-                tasm::tasm_io_read_secret_u32(),
-                tasm::tasm_io_read_secret_u64(),
-                tasm::tasm_io_read_secret_bfe(),
-                tasm::tasm_io_read_secret_xfe(),
-                tasm::tasm_io_read_secret_digest()
-            );
-        }
-    })
-}
-
-#[allow(dead_code)]
-fn stdin_rast_digest() -> syn::ItemFn {
-    item_fn(parse_quote! {
-        fn get_digest() -> Digest {
-            let s: Digest = tasm::tasm_io_read_stdin_digest();
-            return s;
-        }
-    })
-}
-
-#[allow(dead_code)]
-fn secretin_rast_most_types() -> syn::ItemFn {
-    item_fn(parse_quote! {
-        fn most_types() -> (bool, u32, u64, BFieldElement, XFieldElement) {
-            let r0: bool = tasm::tasm_io_read_secret_bool();
-            let r1: u32 = tasm::tasm_io_read_secret_u32();
-            let r2: u64 = tasm::tasm_io_read_secret_u64();
-            let r3: BFieldElement = tasm::tasm_io_read_secret_bfe();
-            let r4: XFieldElement = tasm::tasm_io_read_secret_xfe();
-            return (r0,r1,r2,r3,r4);
-        }
-    })
-}
-
-#[allow(dead_code)]
-fn secretin_rast_digest() -> syn::ItemFn {
-    item_fn(parse_quote! {
-        fn get_digest() -> Digest {
-            let s: Digest = tasm::tasm_io_read_secret_digest();
-            return s;
-        }
-    })
-}
-
-#[cfg(test)]
 mod run_tests {
-    use super::*;
-    use crate::tests_and_benchmarks::{
-        ozk_programs,
-        test_helpers::{io_native, ozk_parsing, shared_test::*},
-    };
+    use crate::graft::item_fn;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::*;
     use rand::random;
     use std::{collections::HashMap, vec};
+    use syn::parse_quote;
     use triton_vm::{Digest, NonDeterminism};
     use twenty_first::shared_math::{
         b_field_element::BFieldElement, bfield_codec::BFieldCodec, x_field_element::XFieldElement,
     };
+
+    fn stdin_rast() -> syn::ItemFn {
+        item_fn(parse_quote! {
+            fn stdin() -> BFieldElement {
+                let from_stdin: BFieldElement = tasm::tasm_io_read_stdin_bfe();
+                return from_stdin;
+            }
+        })
+    }
+
+    fn stdin_rast_pair() -> syn::ItemFn {
+        item_fn(parse_quote! {
+            fn stdin() -> (BFieldElement, BFieldElement) {
+                let res1: BFieldElement = tasm::tasm_io_read_stdin_bfe();
+                let res2: BFieldElement = tasm::tasm_io_read_stdin_bfe();
+                return (res1, res2);
+            }
+        })
+    }
+
+    fn secretin_rast() -> syn::ItemFn {
+        item_fn(parse_quote! {
+            fn secretin() -> BFieldElement {
+                let res: BFieldElement = tasm::tasm_io_read_secret_bfe();
+                return res;
+            }
+        })
+    }
+
+    fn secretin_rast_10() -> syn::ItemFn {
+        item_fn(parse_quote! {
+            fn secretin() -> (BFieldElement, BFieldElement, BFieldElement, BFieldElement, BFieldElement, BFieldElement, BFieldElement, BFieldElement) {
+                let r0: BFieldElement = tasm::tasm_io_read_secret_bfe();
+                let r1: BFieldElement = tasm::tasm_io_read_secret_bfe();
+                let r2: BFieldElement = tasm::tasm_io_read_secret_bfe();
+                let r3: BFieldElement = tasm::tasm_io_read_secret_bfe();
+                let r4: BFieldElement = tasm::tasm_io_read_secret_bfe();
+                let r5: BFieldElement = tasm::tasm_io_read_secret_bfe();
+                let r6: BFieldElement = tasm::tasm_io_read_secret_bfe();
+                let r7: BFieldElement = tasm::tasm_io_read_secret_bfe();
+                return (r0,r1,r2,r3,r4,r5,r6,r7);
+            }
+        })
+    }
+
+    fn stdin_rast_most_types() -> syn::ItemFn {
+        item_fn(parse_quote! {
+            fn mosttypes() -> (bool, u32, u64, BFieldElement, XFieldElement) {
+                let s0: bool = tasm::tasm_io_read_stdin_bool();
+                let s1: u32 = tasm::tasm_io_read_stdin_u32();
+                let s2: u64 = tasm::tasm_io_read_stdin_u64();
+                let s3: BFieldElement = tasm::tasm_io_read_stdin_bfe();
+                let s4: XFieldElement = tasm::tasm_io_read_stdin_xfe();
+                return (s0,s1,s2,s3,s4);
+            }
+        })
+    }
+
+    fn stdin_rast_all_types() -> syn::ItemFn {
+        item_fn(parse_quote! {
+            fn all_types() -> (bool, u32, u64, BFieldElement, XFieldElement, Digest) {
+                let s0: bool = tasm::tasm_io_read_stdin_bool();
+                let s1: u32 = tasm::tasm_io_read_stdin_u32();
+                let s2: u64 = tasm::tasm_io_read_stdin_u64();
+                let s3: BFieldElement = tasm::tasm_io_read_stdin_bfe();
+                let s4: XFieldElement = tasm::tasm_io_read_stdin_xfe();
+                let s5: Digest = tasm::tasm_io_read_stdin_digest();
+                return (s0,s1,s2,s3,s4, s5);
+            }
+        })
+    }
+
+    fn stdin_rast_all_types_one_liner() -> syn::ItemFn {
+        item_fn(parse_quote! {
+            fn all_types_one_liner() -> (bool, u32, u64, BFieldElement, XFieldElement, Digest) {
+                return (
+                    tasm::tasm_io_read_stdin_bool(),
+                    tasm::tasm_io_read_stdin_u32(),
+                    tasm::tasm_io_read_stdin_u64(),
+                    tasm::tasm_io_read_stdin_bfe(),
+                    tasm::tasm_io_read_stdin_xfe(),
+                    tasm::tasm_io_read_stdin_digest()
+                );
+            }
+        })
+    }
+
+    fn secret_rast_all_types_one_liner() -> syn::ItemFn {
+        item_fn(parse_quote! {
+            fn all_types_one_liner() -> (bool, u32, u64, BFieldElement, XFieldElement, Digest) {
+                return (
+                    tasm::tasm_io_read_secret_bool(),
+                    tasm::tasm_io_read_secret_u32(),
+                    tasm::tasm_io_read_secret_u64(),
+                    tasm::tasm_io_read_secret_bfe(),
+                    tasm::tasm_io_read_secret_xfe(),
+                    tasm::tasm_io_read_secret_digest()
+                );
+            }
+        })
+    }
+
+    fn stdin_rast_digest() -> syn::ItemFn {
+        item_fn(parse_quote! {
+            fn get_digest() -> Digest {
+                let s: Digest = tasm::tasm_io_read_stdin_digest();
+                return s;
+            }
+        })
+    }
+
+    fn secretin_rast_most_types() -> syn::ItemFn {
+        item_fn(parse_quote! {
+            fn most_types() -> (bool, u32, u64, BFieldElement, XFieldElement) {
+                let r0: bool = tasm::tasm_io_read_secret_bool();
+                let r1: u32 = tasm::tasm_io_read_secret_u32();
+                let r2: u64 = tasm::tasm_io_read_secret_u64();
+                let r3: BFieldElement = tasm::tasm_io_read_secret_bfe();
+                let r4: XFieldElement = tasm::tasm_io_read_secret_xfe();
+                return (r0,r1,r2,r3,r4);
+            }
+        })
+    }
+
+    fn secretin_rast_digest() -> syn::ItemFn {
+        item_fn(parse_quote! {
+            fn get_digest() -> Digest {
+                let s: Digest = tasm::tasm_io_read_secret_digest();
+                return s;
+            }
+        })
+    }
 
     #[test]
     fn stdin_test() {

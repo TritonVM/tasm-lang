@@ -2,7 +2,6 @@ use syn::parse_quote;
 
 use crate::graft::item_fn;
 
-#[allow(dead_code)]
 fn left_child_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn left_child(node_index: u64, height: u32) -> u64 {
@@ -11,7 +10,6 @@ fn left_child_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn right_child_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn right_child(node_index: u64) -> u64 {
@@ -20,7 +18,6 @@ fn right_child_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn leftmost_ancestor_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn leftmost_ancestor(node_index: u64) -> (u64, u32) {
@@ -32,7 +29,6 @@ fn leftmost_ancestor_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn old_leaf_index_to_mt_index_and_peak_index_rast_loops_reduced() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn old_leaf_index_to_mt_index_and_peak_index(leaf_index: u64, leaf_count: u64) -> (u64, u32) {
@@ -70,7 +66,6 @@ fn old_leaf_index_to_mt_index_and_peak_index_rast_loops_reduced() -> syn::ItemFn
     })
 }
 
-#[allow(dead_code)]
 fn leaf_index_to_mt_index_and_peak_index_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn leaf_index_to_mt_index_and_peak_index(leaf_index: u64, leaf_count: u64) -> (u64, u32) {
@@ -92,7 +87,6 @@ fn leaf_index_to_mt_index_and_peak_index_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn right_lineage_length_stmt_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
          fn right_lineage_length(node_index: u64) -> u32 {
@@ -112,7 +106,6 @@ fn right_lineage_length_stmt_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn right_lineage_length_expr_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn right_lineage_length(node_index: u64) -> u32 {
@@ -133,7 +126,6 @@ fn right_lineage_length_expr_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn right_lineage_length_and_own_height_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn right_lineage_length_and_own_height(node_index: u64) -> (u32, u32) {
@@ -160,7 +152,6 @@ fn right_lineage_length_and_own_height_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn right_lineage_length_from_leaf_index_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
      fn right_lineage_length_from_leaf_index(leaf_index: u64) -> u32 {
@@ -173,7 +164,6 @@ fn right_lineage_length_from_leaf_index_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn right_lineage_length_from_leaf_index_as_local_function() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn right_lineage_lenght_from_leaf_index_outer(leaf_index: u64) -> u32 {
@@ -190,7 +180,6 @@ fn right_lineage_length_from_leaf_index_as_local_function() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn calculate_new_peaks_from_append_with_local_function_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn calculate_new_peaks_from_append(
@@ -224,7 +213,6 @@ fn calculate_new_peaks_from_append_with_local_function_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn calculate_new_peaks_from_append_inlined_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn calculate_new_peaks_from_append(
@@ -252,7 +240,6 @@ fn calculate_new_peaks_from_append_inlined_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn calculate_new_peaks_from_leaf_mutation_with_local_function_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn calculate_new_peaks_from_leaf_mutation(
@@ -306,7 +293,6 @@ fn calculate_new_peaks_from_leaf_mutation_with_local_function_rast() -> syn::Ite
     })
 }
 
-#[allow(dead_code)]
 fn calculate_new_peaks_from_leaf_mutation_inlined_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
     fn calculate_new_peaks_from_leaf_mutation(
@@ -353,7 +339,6 @@ fn calculate_new_peaks_from_leaf_mutation_inlined_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn verify_authentication_path_inlined() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn verify_authentication_path(
@@ -398,7 +383,6 @@ fn verify_authentication_path_inlined() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 pub fn verify_authentication_path_with_local_function() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn verify_authentication_path(
@@ -470,10 +454,7 @@ mod run_tests {
     };
 
     use super::*;
-    use crate::tests_and_benchmarks::{
-        ozk_programs,
-        test_helpers::{io_native, ozk_parsing, shared_test::*},
-    };
+    use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 
     #[test]
     fn right_child_run_test() {
@@ -952,10 +933,7 @@ mod run_tests {
 #[cfg(test)]
 mod compile_and_typecheck_tests {
     use super::*;
-    use crate::tests_and_benchmarks::{
-        ozk_programs,
-        test_helpers::{io_native, ozk_parsing, shared_test::*},
-    };
+    use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 
     #[test]
     fn right_child_test() {

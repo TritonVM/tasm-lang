@@ -13,7 +13,6 @@ use crate::graft::graft_fn_decl;
 use crate::tasm_code_generator::compile_function;
 use crate::types::{self, annotate_fn, GetType, Typing};
 
-#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct InputOutputTestCase {
     pub input_args: Vec<ast::ExprLit<Typing>>,
@@ -21,7 +20,6 @@ pub struct InputOutputTestCase {
 }
 
 impl InputOutputTestCase {
-    #[allow(dead_code)]
     pub fn new(
         input_args: Vec<ast::ExprLit<Typing>>,
         expected_outputs: Vec<ast::ExprLit<Typing>>,
@@ -47,7 +45,6 @@ pub fn compile_for_run_test(item_fn: &syn::ItemFn) -> (Vec<LabelledInstruction>,
     (code, function_name)
 }
 
-#[allow(dead_code)]
 pub fn graft_check_compile_prop(item_fn: &syn::ItemFn) -> String {
     // parse test
     let mut function = graft_fn_decl(item_fn);
@@ -61,7 +58,6 @@ pub fn graft_check_compile_prop(item_fn: &syn::ItemFn) -> String {
     tasm_string
 }
 
-#[allow(dead_code)]
 pub fn execute_compiled_with_stack_memory_and_ins_for_bench(
     code: &[LabelledInstruction],
     input_args: Vec<ast::ExprLit<Typing>>,
@@ -89,7 +85,6 @@ pub fn execute_compiled_with_stack_memory_and_ins_for_bench(
     )
 }
 
-#[allow(dead_code)]
 pub fn execute_compiled_with_stack_memory_and_ins_for_test(
     code: &[LabelledInstruction],
     input_args: Vec<ast::ExprLit<Typing>>,
@@ -117,7 +112,6 @@ pub fn execute_compiled_with_stack_memory_and_ins_for_test(
     )
 }
 
-#[allow(dead_code)]
 pub fn execute_with_stack(
     item_fn: &syn::ItemFn,
     stack_start: Vec<ast::ExprLit<Typing>>,
@@ -136,7 +130,6 @@ pub fn execute_with_stack(
     )
 }
 
-#[allow(dead_code)]
 /// Execute a function with provided input and initial memory
 pub fn execute_with_stack_and_memory(
     item_fn: &syn::ItemFn,
@@ -158,7 +151,6 @@ pub fn execute_with_stack_and_memory(
     )
 }
 
-#[allow(dead_code)]
 /// Execute a function with provided input and initial memory
 pub fn execute_with_stack_memory_and_ins(
     item_fn: &syn::ItemFn,
@@ -278,7 +270,6 @@ pub fn compare_compiled_prop_with_stack_and_memory_and_ins(
     }
 }
 
-#[allow(dead_code)]
 pub fn compare_prop_with_stack_and_memory_and_ins(
     item_fn: &syn::ItemFn,
     input_args: Vec<ast::ExprLit<Typing>>,
@@ -305,7 +296,6 @@ pub fn compare_prop_with_stack_and_memory_and_ins(
     )
 }
 
-#[allow(dead_code)]
 pub fn compare_prop_with_stack_and_memory(
     item_fn: &syn::ItemFn,
     input_args: Vec<ast::ExprLit<Typing>>,
@@ -324,7 +314,6 @@ pub fn compare_prop_with_stack_and_memory(
     )
 }
 
-#[allow(dead_code)]
 pub fn compare_prop_with_stack(
     item_fn: &syn::ItemFn,
     input_args: Vec<ast::ExprLit<Typing>>,
@@ -339,7 +328,6 @@ pub fn compare_prop_with_stack(
     )
 }
 
-#[allow(dead_code)]
 pub fn multiple_compare_prop_with_stack(
     item_fn: &syn::ItemFn,
     test_cases: Vec<InputOutputTestCase>,
@@ -373,7 +361,6 @@ pub fn show_memory(memory: &HashMap<BFieldElement, BFieldElement>) {
 
 /// Panic if expected list does not match list on specific memory address
 /// Assumes that the "safe list" implementation is used.
-#[allow(dead_code)]
 pub fn assert_list_equal(
     expected_list: Vec<ast::ExprLit<types::Typing>>,
     list_pointer: BFieldElement,
@@ -445,37 +432,30 @@ pub fn assert_list_equal(
     }
 }
 
-#[allow(dead_code)]
 pub fn bool_lit(value: bool) -> ast::ExprLit<types::Typing> {
     ast::ExprLit::Bool(value)
 }
 
-#[allow(dead_code)]
 pub fn u32_lit(value: u32) -> ast::ExprLit<types::Typing> {
     ast::ExprLit::U32(value)
 }
 
-#[allow(dead_code)]
 pub fn u64_lit(value: u64) -> ast::ExprLit<types::Typing> {
     ast::ExprLit::U64(value)
 }
 
-#[allow(dead_code)]
 pub fn bfe_lit(value: BFieldElement) -> ast::ExprLit<types::Typing> {
     ast::ExprLit::BFE(value)
 }
 
-#[allow(dead_code)]
 pub fn xfe_lit(value: XFieldElement) -> ast::ExprLit<types::Typing> {
     ast::ExprLit::XFE(value)
 }
 
-#[allow(dead_code)]
 pub fn digest_lit(value: Digest) -> ast::ExprLit<types::Typing> {
     ast::ExprLit::Digest(value)
 }
 
-#[allow(dead_code)]
 pub fn bool_to_bfe(b: bool) -> BFieldElement {
     if b {
         BFIELD_ONE
@@ -484,7 +464,6 @@ pub fn bool_to_bfe(b: bool) -> BFieldElement {
     }
 }
 
-#[allow(dead_code)]
 pub fn split(value: u64) -> Vec<BFieldElement> {
     vec![((value >> 32) as u32).into(), (value as u32).into()]
 }

@@ -2,7 +2,6 @@ use syn::parse_quote;
 
 use crate::graft::item_fn;
 
-#[allow(dead_code)]
 fn declare_u32_max_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn declare_u32_max() {
@@ -12,7 +11,6 @@ fn declare_u32_max_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn declare_u32s_as_lits_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn declare_u32s_as_lits() -> (u32, u32, u32) {
@@ -24,7 +22,6 @@ fn declare_u32s_as_lits_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn add_u32_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn add_u32(lhs: u32, rhs: u32) -> u32 {
@@ -34,7 +31,6 @@ fn add_u32_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn add_u32_overwrite_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn add_u32_overwrite(lhs: u32, rhs: u32) -> u32 {
@@ -45,7 +41,6 @@ fn add_u32_overwrite_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn simple_sub_u32() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn simple_sub(a: u32, b: u32) -> u32 {
@@ -54,7 +49,6 @@ fn simple_sub_u32() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn sub_u32_rast_1() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn sub_u32(lhs: u32, rhs: u32) -> u32 {
@@ -64,7 +58,6 @@ fn sub_u32_rast_1() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn sub_u32_rast_2() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn sub_u32(rhs: u32, lhs: u32) -> u32 {
@@ -74,7 +67,6 @@ fn sub_u32_rast_2() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn mul_u32_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn mul_u32(rhs: u32, lhs: u32) -> u32 {
@@ -83,7 +75,6 @@ fn mul_u32_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn rem_u32_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn rem_u32(rhs: u32, lhs: u32) -> u32 {
@@ -92,7 +83,6 @@ fn rem_u32_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn div_u32_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn rem_u32(rhs: u32, lhs: u32) -> u32 {
@@ -101,7 +91,6 @@ fn div_u32_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn bitwise_and_u32_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn bitwise_and_u32(lhs: u32, rhs: u32) -> u32 {
@@ -111,7 +100,6 @@ fn bitwise_and_u32_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn operator_evaluation_ordering_with_div_u32() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn complicated_expression_with_div() -> u32 {
@@ -120,7 +108,6 @@ fn operator_evaluation_ordering_with_div_u32() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn operator_evaluation_ordering_with_mul() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn complicated_expression_with_mul() -> u32 {
@@ -129,7 +116,6 @@ fn operator_evaluation_ordering_with_mul() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn lt_u32_dynamic_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn lt_u32_dynamic(lhs: u32, rhs: u32) -> bool {
@@ -138,7 +124,6 @@ fn lt_u32_dynamic_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn gt_u32_dynamic_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn gt_u32_dynamic(lhs: u32, rhs: u32) -> bool {
@@ -147,7 +132,6 @@ fn gt_u32_dynamic_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn lt_u32_static() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn lt_u32_static() -> bool {
@@ -163,7 +147,6 @@ fn lt_u32_static() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn leftshift_u32_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn leftshift_u32(lhs: u32, rhs: u32) -> u32 {
@@ -173,7 +156,6 @@ fn leftshift_u32_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn rightshift_u32_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn rightshift_u32(lhs: u32, rhs: u32) -> u32 {
@@ -183,7 +165,6 @@ fn rightshift_u32_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn usize_as_alias_for_u32_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn usize_as_alias_for_u32(lhs: usize, rhs: u32) -> usize {
@@ -193,7 +174,6 @@ fn usize_as_alias_for_u32_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn leading_zeros_u32_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn leading_zeros_u32(value: u32) -> u32 {
@@ -202,7 +182,6 @@ fn leading_zeros_u32_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn count_ones_u32_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn count_ones_u32(value: u32) -> u32 {
@@ -211,7 +190,6 @@ fn count_ones_u32_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn bitwise_not_return_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn bitwise_not(value: u32) -> u32 {
@@ -220,7 +198,6 @@ fn bitwise_not_return_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn bitwise_not_assign_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn bitwise_not(value: u32) -> u32 {
@@ -237,10 +214,7 @@ mod run_tests {
     use twenty_first::shared_math::other::random_elements;
 
     use super::*;
-    use crate::tests_and_benchmarks::{
-        ozk_programs,
-        test_helpers::{io_native, ozk_parsing, shared_test::*},
-    };
+    use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 
     #[test]
     fn simple_sub_test() {
@@ -525,10 +499,7 @@ mod run_tests {
 
 #[cfg(test)]
 mod compile_and_typecheck_tests {
-    use crate::tests_and_benchmarks::{
-        ozk_programs,
-        test_helpers::{io_native, ozk_parsing, shared_test::*},
-    };
+    use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 
     use super::*;
 

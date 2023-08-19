@@ -2,7 +2,6 @@ use syn::parse_quote;
 
 use crate::graft::item_fn;
 
-#[allow(dead_code)]
 fn and_bool_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn boolean_and_bool(lhs: bool, rhs: bool) -> bool {
@@ -12,7 +11,6 @@ fn and_bool_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn or_bool_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn boolean_and_bool(lhs: bool, rhs: bool) -> bool {
@@ -22,7 +20,6 @@ fn or_bool_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn assert_bool_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn boolean_and_bool(lhs: bool) {
@@ -32,7 +29,6 @@ fn assert_bool_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn not_bool_assign_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn boolean_not(value: bool) -> bool {
@@ -42,7 +38,6 @@ fn not_bool_assign_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn not_bool_return_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn boolean_not(value: bool) -> bool {
@@ -51,7 +46,6 @@ fn not_bool_return_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn not_bool_in_expression_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn boolean_not(a: bool, b: bool) -> bool {
@@ -63,10 +57,7 @@ fn not_bool_in_expression_rast() -> syn::ItemFn {
 #[cfg(test)]
 mod compile_and_typecheck_tests {
     use super::*;
-    use crate::tests_and_benchmarks::{
-        ozk_programs,
-        test_helpers::{io_native, ozk_parsing, shared_test::*},
-    };
+    use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 
     #[test]
     fn and_bool_test() {
@@ -77,10 +68,7 @@ mod compile_and_typecheck_tests {
 #[cfg(test)]
 mod run_tests {
     use super::*;
-    use crate::tests_and_benchmarks::{
-        ozk_programs,
-        test_helpers::{io_native, ozk_parsing, shared_test::*},
-    };
+    use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 
     #[test]
     fn and_bool_test() {

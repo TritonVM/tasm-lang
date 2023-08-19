@@ -2,7 +2,6 @@ use syn::parse_quote;
 
 use crate::graft::item_fn;
 
-#[allow(dead_code)]
 fn inferred_literals() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn main() {
@@ -73,7 +72,6 @@ fn inferred_literals() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn nop_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn nop_nop() {
@@ -82,7 +80,6 @@ fn nop_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn nested_if_expressions_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn if_expressions(input0: bool, input1: bool) -> u32 {
@@ -105,7 +102,6 @@ fn nested_if_expressions_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn simple_recursive_pow_rast() -> syn::ItemFn {
     // A simple, recursive function that is *not* symmetric in it's input arguments.
     // In other words: it gives a difference result if the input arguments are flipped.
@@ -121,7 +117,6 @@ fn simple_recursive_pow_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn tasm_argument_evaluation_order_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn tasm_argument_evaluation_order() -> u64 {
@@ -131,7 +126,6 @@ fn tasm_argument_evaluation_order_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn simple_while_loop() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn simple_while_loop() -> u32 {
@@ -147,7 +141,6 @@ fn simple_while_loop() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn longer_while_loop() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn longer_while_loop(a: u32) -> u64 {
@@ -171,7 +164,6 @@ fn longer_while_loop() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn while_loop_with_declarations() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn while_loop_with_declarations(a: u32) -> u64 {
@@ -196,7 +188,6 @@ fn while_loop_with_declarations() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn code_block() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn code_block(a: u64) -> u32 {
@@ -212,7 +203,6 @@ fn code_block() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn tuple_support() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn return_many() -> (bool, u32, u64) {
@@ -225,7 +215,6 @@ fn tuple_support() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn return_tuple_element_0() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn return_tuple_element() -> bool {
@@ -235,7 +224,6 @@ fn return_tuple_element_0() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn return_tuple_element_1() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn return_tuple_element() -> u32 {
@@ -245,7 +233,6 @@ fn return_tuple_element_1() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn return_tuple_element_2() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn return_tuple_element() -> u64 {
@@ -255,7 +242,6 @@ fn return_tuple_element_2() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn return_tuple_element_3() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn return_tuple_element() -> u64 {
@@ -265,7 +251,6 @@ fn return_tuple_element_3() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn return_tuple_element_4() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn return_tuple_element() -> u32 {
@@ -275,7 +260,6 @@ fn return_tuple_element_4() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn missing_mut_keyword() -> syn::ItemFn {
     item_fn(parse_quote!(
         fn missing_mut() {
@@ -285,7 +269,6 @@ fn missing_mut_keyword() -> syn::ItemFn {
     ))
 }
 
-#[allow(dead_code)]
 fn allow_mutable_tuple_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn allow_mutable_tuple() -> (u64, u64) {
@@ -301,7 +284,6 @@ fn allow_mutable_tuple_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn allow_mutable_triplet_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn allow_mutable_triplet() -> (u64, u64, u32) {
@@ -315,7 +297,6 @@ fn allow_mutable_triplet_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn overwrite_values_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn overwrite_values() -> (u32, u32) {
@@ -330,7 +311,6 @@ fn overwrite_values_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn allow_mutable_tuple_complicated_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn allow_mutable_tuple_complicated() -> (u64, u64) {
@@ -350,10 +330,7 @@ fn allow_mutable_tuple_complicated_rast() -> syn::ItemFn {
 #[cfg(test)]
 mod compile_and_typecheck_tests {
     use super::*;
-    use crate::tests_and_benchmarks::{
-        ozk_programs,
-        test_helpers::{io_native, ozk_parsing, shared_test::*},
-    };
+    use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 
     #[test]
     fn inferred_literals_test() {
@@ -407,10 +384,7 @@ mod run_tests {
     use rand::{thread_rng, Rng};
 
     use super::*;
-    use crate::tests_and_benchmarks::{
-        ozk_programs,
-        test_helpers::{io_native, ozk_parsing, shared_test::*},
-    };
+    use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 
     #[test]
     fn tasm_argument_evaluation_order_test() {

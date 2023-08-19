@@ -2,7 +2,6 @@ use syn::parse_quote;
 
 use crate::graft::item_fn;
 
-#[allow(dead_code)]
 fn trivial_local_function_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn simple_local_function() {
@@ -14,7 +13,6 @@ fn trivial_local_function_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn local_function_type_error_in_fn_decl() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn simple_local_function() {
@@ -26,7 +24,6 @@ fn local_function_type_error_in_fn_decl() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn local_function_type_error_in_fn_call() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn simple_local_function() -> u32 {
@@ -39,7 +36,6 @@ fn local_function_type_error_in_fn_call() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn local_function_with_return_value_bool() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn simple_local_function() -> bool {
@@ -52,7 +48,6 @@ fn local_function_with_return_value_bool() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn add_with_inner_mul_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn quad_sum(a: u32, b: u32) -> u32 {
@@ -65,7 +60,6 @@ fn add_with_inner_mul_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn factorial_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
     fn factorial(n: u64) -> u64 {
@@ -81,7 +75,6 @@ fn factorial_rast() -> syn::ItemFn {
     }})
 }
 
-#[allow(dead_code)]
 fn recursive_sum_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         /// f(n) = \Sum_{i=0}^n{\Sum_{j=0}^i(j)}
@@ -106,10 +99,7 @@ fn recursive_sum_rast() -> syn::ItemFn {
 #[cfg(test)]
 mod run_tests {
     use super::*;
-    use crate::tests_and_benchmarks::{
-        ozk_programs,
-        test_helpers::{io_native, ozk_parsing, shared_test::*},
-    };
+    use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 
     #[test]
     fn recursive_sum_test() {
@@ -183,13 +173,9 @@ mod run_tests {
     }
 }
 
-#[cfg(test)]
 mod compile_and_typecheck_tests {
     use super::*;
-    use crate::tests_and_benchmarks::{
-        ozk_programs,
-        test_helpers::{io_native, ozk_parsing, shared_test::*},
-    };
+    use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 
     #[test]
     fn trivial_local_function_test() {

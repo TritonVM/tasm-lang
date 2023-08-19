@@ -2,7 +2,6 @@ use syn::parse_quote;
 
 use crate::graft::item_fn;
 
-#[allow(dead_code)]
 fn instantiate_bfe_with_literal() -> syn::ItemFn {
     item_fn(parse_quote! {
             fn instantiate_bfe() -> (BFieldElement, BFieldElement, BFieldElement, BFieldElement, BFieldElement, BFieldElement) {
@@ -15,7 +14,6 @@ fn instantiate_bfe_with_literal() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn add_bfe_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn add_bfe(lhs: BFieldElement, rhs: BFieldElement) -> BFieldElement {
@@ -25,7 +23,6 @@ fn add_bfe_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn sub_bfe_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn sub_bfe(lhs: BFieldElement, rhs: BFieldElement) -> BFieldElement {
@@ -35,7 +32,6 @@ fn sub_bfe_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn negate_bfe_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn negate_bfe(value: BFieldElement) -> BFieldElement {
@@ -44,7 +40,6 @@ fn negate_bfe_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn mul_bfe_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn add_bfe(lhs: BFieldElement, rhs: BFieldElement) -> BFieldElement {
@@ -53,7 +48,6 @@ fn mul_bfe_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn div_bfe_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn div_bfe(numerator: BFieldElement, divisor: BFieldElement) ->  BFieldElement {
@@ -62,7 +56,6 @@ fn div_bfe_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn cast_from_bool_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn cast_from_bool(input: bool) -> BFieldElement {
@@ -71,7 +64,6 @@ fn cast_from_bool_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn long_bfe_expr_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
     fn long_bfe_expr(
@@ -138,7 +130,6 @@ fn long_bfe_expr_rast() -> syn::ItemFn {
     }})
 }
 
-#[allow(dead_code)]
 fn lift_and_return_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn lift_and_return(input: BFieldElement) -> XFieldElement {
@@ -147,7 +138,6 @@ fn lift_and_return_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn lift_assign_and_return_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn lift_and_return(input: BFieldElement) -> XFieldElement {

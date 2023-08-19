@@ -1566,11 +1566,9 @@ fn compile_expr(
                 ast::BinOp::Eq => {
                     let (_lhs_expr_addr, lhs_expr_code) =
                         compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
-                    println!("LHS expression: {}", lhs_expr_code.iter().join(" "));
 
                     let (_rhs_expr_addr, rhs_expr_code) =
                         compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
-                    println!("RHS expression: {}", lhs_expr_code.iter().join(" "));
 
                     let eq_code = compile_eq_code(&lhs_type, state);
 

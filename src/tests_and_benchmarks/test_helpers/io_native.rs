@@ -48,6 +48,7 @@ pub fn get_pub_output() -> Vec<BFieldElement> {
     PUB_OUTPUT.with(|v| v.borrow().clone())
 }
 
+#[allow(dead_code)]
 pub(crate) fn pub_input() -> BFieldElement {
     #[allow(clippy::unwrap_used)]
     PUB_INPUT.with(|v| v.borrow_mut().pop().unwrap())
@@ -57,14 +58,10 @@ pub(crate) fn pub_output(x: BFieldElement) {
     PUB_OUTPUT.with(|v| v.borrow_mut().push(x));
 }
 
+#[allow(dead_code)]
 pub(crate) fn divine() -> BFieldElement {
     #[allow(clippy::unwrap_used)]
     ND_INDIVIDUAL_TOKEN.with(|v| v.borrow_mut().pop().unwrap())
-}
-
-pub(crate) fn nd_digest() -> Digest {
-    #[allow(clippy::unwrap_used)]
-    ND_DIGESTS.with(|v| v.borrow_mut().pop().unwrap())
 }
 
 #[allow(clippy::type_complexity)]

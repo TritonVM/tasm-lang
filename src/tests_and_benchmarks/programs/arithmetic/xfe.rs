@@ -2,7 +2,6 @@ use syn::parse_quote;
 
 use crate::graft::item_fn;
 
-#[allow(dead_code)]
 fn instantiate_xfe_with_literal_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn instantiate_cfe() -> (XFieldElement, XFieldElement, XFieldElement, XFieldElement) {
@@ -31,7 +30,6 @@ fn instantiate_xfe_with_literal_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn add_xfe_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn add_xfe(lhs: XFieldElement, rhs: XFieldElement) -> XFieldElement {
@@ -41,7 +39,6 @@ fn add_xfe_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn sub_xfe_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn sub_xfe(lhs: XFieldElement, rhs: XFieldElement) -> XFieldElement {
@@ -51,7 +48,6 @@ fn sub_xfe_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn negate_xfe_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn negate_xfe(value: XFieldElement) -> XFieldElement {
@@ -60,7 +56,6 @@ fn negate_xfe_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn mul_xfe_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn mul_xfe(lhs: XFieldElement, rhs: XFieldElement) ->  XFieldElement {
@@ -69,7 +64,6 @@ fn mul_xfe_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn mul_lifted_xfes_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn mul_lifted_xfes(lhs: BFieldElement, rhs: BFieldElement) -> XFieldElement {
@@ -78,7 +72,6 @@ fn mul_lifted_xfes_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn div_xfe_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn div_xfe(numerator: XFieldElement, denominator: XFieldElement) ->  XFieldElement {
@@ -87,18 +80,16 @@ fn div_xfe_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn eq_xfe_with_assignment_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn eq_xfe(lhs: XFieldElement, rhs: XFieldElement) -> (bool, bool) {
-            let equal = lhs == rhs;
-            let not_equal = lhs != rhs;
+            let equal: bool = lhs == rhs;
+            let not_equal: bool = lhs != rhs;
             return (equal, not_equal);
         }
     })
 }
 
-#[allow(dead_code)]
 fn eq_xfe_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn eq_xfe(lhs: XFieldElement, rhs: XFieldElement) -> (bool, bool) {
@@ -107,7 +98,6 @@ fn eq_xfe_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn unlift_xfe_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn unlift_xfe(input: XFieldElement) -> BFieldElement {
@@ -117,7 +107,6 @@ fn unlift_xfe_rast() -> syn::ItemFn {
 }
 
 /// Always returns (0, [6,7,9], b)
-#[allow(dead_code)]
 fn long_expression_1_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn long_expression_1(
@@ -164,7 +153,6 @@ fn long_expression_1_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn long_expression_2_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn long_expression_2(
@@ -211,7 +199,6 @@ fn long_expression_2_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn long_expression_3_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn long_expression_3(
@@ -260,10 +247,7 @@ fn long_expression_3_rast() -> syn::ItemFn {
 
 #[cfg(test)]
 mod compile_and_typecheck_tests {
-    use crate::tests_and_benchmarks::{
-        ozk_programs,
-        test_helpers::{io_native, ozk_parsing, shared_test::*},
-    };
+    use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 
     use super::*;
 
@@ -290,10 +274,7 @@ mod run_tests {
     };
 
     use super::*;
-    use crate::tests_and_benchmarks::{
-        ozk_programs,
-        test_helpers::{io_native, ozk_parsing, shared_test::*},
-    };
+    use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 
     #[test]
     fn instantiate_xfe_with_literal_test() {
@@ -451,11 +432,21 @@ mod run_tests {
             compare_prop_with_stack(
                 &eq_xfe_rast(),
                 vec![xfe_lit(lhs[i]), xfe_lit(rhs[i])],
+                expected.clone(),
+            );
+            compare_prop_with_stack(
+                &eq_xfe_with_assignment_rast(),
+                vec![xfe_lit(lhs[i]), xfe_lit(rhs[i])],
                 expected,
             );
 
             compare_prop_with_stack(
                 &eq_xfe_rast(),
+                vec![xfe_lit(lhs[i]), xfe_lit(lhs[i])],
+                vec![bool_lit(true), bool_lit(false)],
+            );
+            compare_prop_with_stack(
+                &eq_xfe_with_assignment_rast(),
                 vec![xfe_lit(lhs[i]), xfe_lit(lhs[i])],
                 vec![bool_lit(true), bool_lit(false)],
             );
@@ -470,7 +461,17 @@ mod run_tests {
                     vec![bool_lit(false), bool_lit(true)],
                 );
                 compare_prop_with_stack(
+                    &eq_xfe_with_assignment_rast(),
+                    vec![xfe_lit(new_lhs), xfe_lit(lhs[i])],
+                    vec![bool_lit(false), bool_lit(true)],
+                );
+                compare_prop_with_stack(
                     &eq_xfe_rast(),
+                    vec![xfe_lit(lhs[i]), xfe_lit(new_lhs)],
+                    vec![bool_lit(false), bool_lit(true)],
+                );
+                compare_prop_with_stack(
+                    &eq_xfe_with_assignment_rast(),
                     vec![xfe_lit(lhs[i]), xfe_lit(new_lhs)],
                     vec![bool_lit(false), bool_lit(true)],
                 );
@@ -485,9 +486,22 @@ mod run_tests {
             ],
             vec![bool_lit(true), bool_lit(false)],
         );
+        compare_prop_with_stack(
+            &eq_xfe_with_assignment_rast(),
+            vec![
+                xfe_lit(XFieldElement::zero()),
+                xfe_lit(XFieldElement::zero()),
+            ],
+            vec![bool_lit(true), bool_lit(false)],
+        );
 
         compare_prop_with_stack(
             &eq_xfe_rast(),
+            vec![xfe_lit(XFieldElement::one()), xfe_lit(XFieldElement::one())],
+            vec![bool_lit(true), bool_lit(false)],
+        );
+        compare_prop_with_stack(
+            &eq_xfe_with_assignment_rast(),
             vec![xfe_lit(XFieldElement::one()), xfe_lit(XFieldElement::one())],
             vec![bool_lit(true), bool_lit(false)],
         );
@@ -500,9 +514,25 @@ mod run_tests {
             ],
             vec![bool_lit(false), bool_lit(true)],
         );
+        compare_prop_with_stack(
+            &eq_xfe_with_assignment_rast(),
+            vec![
+                xfe_lit(XFieldElement::zero()),
+                xfe_lit(XFieldElement::one()),
+            ],
+            vec![bool_lit(false), bool_lit(true)],
+        );
 
         compare_prop_with_stack(
             &eq_xfe_rast(),
+            vec![
+                xfe_lit(XFieldElement::one()),
+                xfe_lit(XFieldElement::zero()),
+            ],
+            vec![bool_lit(false), bool_lit(true)],
+        );
+        compare_prop_with_stack(
+            &eq_xfe_with_assignment_rast(),
             vec![
                 xfe_lit(XFieldElement::one()),
                 xfe_lit(XFieldElement::zero()),

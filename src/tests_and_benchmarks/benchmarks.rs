@@ -15,7 +15,6 @@ pub struct BenchmarkInput {
     pub non_determinism: NonDeterminism<BFieldElement>,
 }
 
-#[allow(dead_code)]
 fn benchmark_code(
     function_name: String,
     code: Vec<LabelledInstruction>,
@@ -43,7 +42,6 @@ fn benchmark_code(
     }
 }
 
-#[allow(dead_code)]
 pub fn execute_and_write_benchmark(
     function_name: String,
     code: Vec<LabelledInstruction>,

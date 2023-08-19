@@ -2,7 +2,6 @@ use syn::parse_quote;
 
 use crate::graft::item_fn;
 
-#[allow(dead_code)]
 fn spill_u64_values_to_memory_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn spill_u64_values_to_memory() -> (u64, u64, u64) {
@@ -23,7 +22,6 @@ fn spill_u64_values_to_memory_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn spill_u32_values_to_memory_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn spill_u32_values_to_memory() -> (u32, u32, u32, u32, u32) {
@@ -62,7 +60,6 @@ fn spill_u32_values_to_memory_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn long_expression_that_must_spill_1_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn long_expression_that_must_spill_1(input: u64) -> (u64, u32, u64, u64, u64, u64) {
@@ -103,7 +100,6 @@ fn long_expression_that_must_spill_1_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn long_expression_that_must_spill_2_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn long_expression_that_must_spill_2(a: u64, b: u32, c: u64, d: u64) -> u32 {
@@ -126,7 +122,6 @@ fn long_expression_that_must_spill_2_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn spill_many_types() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn all_types() -> (bool, u32, u64, BFieldElement, XFieldElement, Digest, u32) {
@@ -150,7 +145,6 @@ fn spill_many_types() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn spill_to_memory_overwrite_values() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn overwrite_values() -> (u32, u32) {
@@ -166,7 +160,6 @@ fn spill_to_memory_overwrite_values() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn spill_to_memory_in_branch_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn spill_to_memory_in_branch(a: u64, b: u64, c: u64, d: u64, e: u64, f: u64) -> (u64, u64) {
@@ -204,7 +197,6 @@ fn spill_to_memory_in_branch_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn spill_tuple_to_memory_index_0_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn spill_tuple_to_memory_index_0(a: u64) -> (u64, u32, u64, BFieldElement) {
@@ -229,7 +221,6 @@ fn spill_tuple_to_memory_index_0_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn spill_tuple_to_memory_index_1_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn spill_tuple_to_memory_index_1(a: u32) -> (u64, u32, u64, BFieldElement) {
@@ -254,7 +245,6 @@ fn spill_tuple_to_memory_index_1_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn spill_tuple_to_memory_index_2_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn spill_tuple_to_memory_index_2(a: u64) -> (u64, u32, u64, BFieldElement) {
@@ -279,7 +269,6 @@ fn spill_tuple_to_memory_index_2_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn spill_tuple_to_memory_index_3_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn spill_tuple_to_memory_index_3(a: BFieldElement) -> (u64, u32, u64, BFieldElement) {
@@ -304,7 +293,6 @@ fn spill_tuple_to_memory_index_3_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn spill_many_bindings_to_memory_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn spill_many_bindings_to_memory(a: u64, b: u64, c: u64, d: u64, e: u64, f: u64) -> u64 {
@@ -328,7 +316,6 @@ fn spill_many_bindings_to_memory_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn big_branches_spill_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn big_branches_spill(a: u64, b: u64, c: u64, d: u64, e: u64, f: u64) -> (u64, u64) {
@@ -396,7 +383,6 @@ fn big_branches_spill_rast() -> syn::ItemFn {
     })
 }
 
-#[allow(dead_code)]
 fn ensure_dyn_malloc_and_static_malloc_do_not_interfere_1_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn ensure_dyn_malloc_and_static_malloc_do_not_interfere() -> Vec<u32> {
@@ -421,7 +407,6 @@ fn ensure_dyn_malloc_and_static_malloc_do_not_interfere_1_rast() -> syn::ItemFn 
     })
 }
 
-#[allow(dead_code)]
 fn ensure_dyn_malloc_and_static_malloc_do_not_interfere_2_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn ensure_dyn_malloc_and_static_malloc_do_not_interfere() -> Vec<u32> {
@@ -441,7 +426,6 @@ fn ensure_dyn_malloc_and_static_malloc_do_not_interfere_2_rast() -> syn::ItemFn 
     })
 }
 
-#[allow(dead_code)]
 fn ensure_dyn_malloc_and_static_malloc_do_not_interfere_3_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn ensure_dyn_malloc_and_static_malloc_do_not_interfere() -> Vec<u32> {
@@ -459,7 +443,6 @@ fn ensure_dyn_malloc_and_static_malloc_do_not_interfere_3_rast() -> syn::ItemFn 
     })
 }
 
-#[allow(dead_code)]
 fn ensure_dyn_malloc_and_static_malloc_do_not_interfere_4_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn ensure_dyn_malloc_and_static_malloc_do_not_interfere() -> (Vec<u32>, u64) {
@@ -484,7 +467,6 @@ fn ensure_dyn_malloc_and_static_malloc_do_not_interfere_4_rast() -> syn::ItemFn 
     })
 }
 
-#[allow(dead_code)]
 fn ensure_dyn_malloc_and_static_malloc_do_not_interfere_5_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
             fn ensure_dyn_malloc_and_static_malloc_do_not_interfere() -> (Vec<u32>, u64, u64, u64, u64, u64, Vec<Digest>) {
@@ -521,13 +503,7 @@ mod run_tests {
     };
 
     use super::*;
-    use crate::{
-        ast::DataType,
-        tests_and_benchmarks::{
-            ozk_programs,
-            test_helpers::{io_native, ozk_parsing, shared_test::*},
-        },
-    };
+    use crate::{ast::DataType, tests_and_benchmarks::test_helpers::shared_test::*};
 
     #[test]
     fn spill_u64_values_to_memory_test() {

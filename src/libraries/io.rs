@@ -1,12 +1,10 @@
-use itertools::Itertools;
 use triton_vm::triton_asm;
 
+use super::{CompiledFunction, Library};
 use crate::{
     ast::{self, FnSignature},
     tasm_code_generator::CompilerState,
 };
-
-use super::{CompiledFunction, Library};
 
 #[derive(Clone, Debug)]
 pub struct IO;
