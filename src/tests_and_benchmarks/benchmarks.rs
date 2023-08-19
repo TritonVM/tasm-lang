@@ -2,9 +2,8 @@ use std::collections::HashMap;
 use tasm_lib::snippet_bencher::{write_benchmarks, BenchmarkCase, BenchmarkResult};
 use triton_vm::{instruction::LabelledInstruction, BFieldElement, NonDeterminism};
 
+use super::test_helpers::shared_test::execute_compiled_with_stack_memory_and_ins_for_bench;
 use crate::{ast, types::Typing};
-
-use super::shared_test::execute_compiled_with_stack_memory_and_ins_for_bench;
 
 pub mod mmr;
 

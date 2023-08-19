@@ -521,7 +521,13 @@ mod run_tests {
     };
 
     use super::*;
-    use crate::{ast::DataType, tests_and_benchmarks::shared_test::*};
+    use crate::{
+        ast::DataType,
+        tests_and_benchmarks::{
+            ozk_programs,
+            test_helpers::{io_native, ozk_parsing, shared_test::*},
+        },
+    };
 
     #[test]
     fn spill_u64_values_to_memory_test() {

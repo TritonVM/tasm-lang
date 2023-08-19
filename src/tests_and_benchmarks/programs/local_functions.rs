@@ -106,7 +106,10 @@ fn recursive_sum_rast() -> syn::ItemFn {
 #[cfg(test)]
 mod run_tests {
     use super::*;
-    use crate::tests_and_benchmarks::shared_test::*;
+    use crate::tests_and_benchmarks::{
+        ozk_programs,
+        test_helpers::{io_native, ozk_parsing, shared_test::*},
+    };
 
     #[test]
     fn recursive_sum_test() {
@@ -183,7 +186,10 @@ mod run_tests {
 #[cfg(test)]
 mod compile_and_typecheck_tests {
     use super::*;
-    use crate::tests_and_benchmarks::shared_test::*;
+    use crate::tests_and_benchmarks::{
+        ozk_programs,
+        test_helpers::{io_native, ozk_parsing, shared_test::*},
+    };
 
     #[test]
     fn trivial_local_function_test() {

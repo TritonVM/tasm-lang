@@ -21,8 +21,10 @@ mod tests {
         use itertools::Itertools;
 
         use super::*;
-        use crate::tests_and_benchmarks::shared_test::graft_check_compile_prop;
-
+        use crate::tests_and_benchmarks::{
+            ozk_programs,
+            test_helpers::{io_native, ozk_parsing, shared_test::*},
+        };
         #[test]
         fn simple_map_mul_by_2_test() {
             fn local_function_verify(input: u64) -> u64 {
@@ -43,8 +45,10 @@ mod tests {
         use twenty_first::shared_math::other::random_elements;
 
         use super::*;
-
-        use crate::tests_and_benchmarks::shared_test::*;
+        use crate::tests_and_benchmarks::{
+            ozk_programs,
+            test_helpers::{io_native, ozk_parsing, shared_test::*},
+        };
 
         #[test]
         fn simple_map_mul_by_2_test() {

@@ -13,7 +13,7 @@ mod benchmark {
     use crate::tests_and_benchmarks::{
         benchmarks::{execute_and_write_benchmark, BenchmarkInput},
         programs,
-        shared_test::*,
+        test_helpers::shared_test::*,
     };
 
     #[test]

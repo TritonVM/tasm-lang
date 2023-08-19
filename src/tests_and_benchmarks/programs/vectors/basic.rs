@@ -5,7 +5,13 @@ mod compile_and_typecheck_tests {
     use syn::parse_quote;
     use triton_vm::BFieldElement;
 
-    use crate::{ast, graft::item_fn, tests_and_benchmarks::shared_test::*};
+    use crate::{
+        graft::item_fn,
+        tests_and_benchmarks::{
+            ozk_programs,
+            test_helpers::{io_native, ozk_parsing, shared_test::*},
+        },
+    };
 
     fn simple_list_support() -> syn::ItemFn {
         item_fn(parse_quote! {
@@ -105,7 +111,7 @@ mod compile_and_typecheck_tests {
         use itertools::Itertools;
         use triton_vm::NonDeterminism;
 
-        use crate::ast::DataType;
+        use crate::ast::{self, DataType};
 
         use super::*;
 

@@ -350,7 +350,10 @@ fn allow_mutable_tuple_complicated_rast() -> syn::ItemFn {
 #[cfg(test)]
 mod compile_and_typecheck_tests {
     use super::*;
-    use crate::tests_and_benchmarks::shared_test::graft_check_compile_prop;
+    use crate::tests_and_benchmarks::{
+        ozk_programs,
+        test_helpers::{io_native, ozk_parsing, shared_test::*},
+    };
 
     #[test]
     fn inferred_literals_test() {
@@ -404,7 +407,10 @@ mod run_tests {
     use rand::{thread_rng, Rng};
 
     use super::*;
-    use crate::tests_and_benchmarks::shared_test::*;
+    use crate::tests_and_benchmarks::{
+        ozk_programs,
+        test_helpers::{io_native, ozk_parsing, shared_test::*},
+    };
 
     #[test]
     fn tasm_argument_evaluation_order_test() {

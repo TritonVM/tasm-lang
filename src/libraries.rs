@@ -7,6 +7,7 @@ use std::fmt::Debug;
 
 pub mod bfe;
 pub mod hasher;
+pub mod io;
 pub mod tasm;
 pub mod unsigned_integers;
 pub mod vector;
@@ -23,6 +24,7 @@ pub fn all_libraries() -> Vec<Box<dyn Library>> {
     vec![
         Box::new(bfe::BfeLibrary),
         Box::new(hasher::HasherLib),
+        Box::new(io::IO),
         Box::new(tasm::TasmLibrary),
         Box::new(unsigned_integers::UnsignedIntegersLib),
         Box::new(vector::VectorLib),

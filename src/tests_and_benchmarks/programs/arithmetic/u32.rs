@@ -237,7 +237,10 @@ mod run_tests {
     use twenty_first::shared_math::other::random_elements;
 
     use super::*;
-    use crate::tests_and_benchmarks::shared_test::*;
+    use crate::tests_and_benchmarks::{
+        ozk_programs,
+        test_helpers::{io_native, ozk_parsing, shared_test::*},
+    };
 
     #[test]
     fn simple_sub_test() {
@@ -522,7 +525,10 @@ mod run_tests {
 
 #[cfg(test)]
 mod compile_and_typecheck_tests {
-    use crate::tests_and_benchmarks::shared_test::graft_check_compile_prop;
+    use crate::tests_and_benchmarks::{
+        ozk_programs,
+        test_helpers::{io_native, ozk_parsing, shared_test::*},
+    };
 
     use super::*;
 

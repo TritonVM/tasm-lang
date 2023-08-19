@@ -1,3 +1,4 @@
 mod benchmarks;
+pub mod ozk_programs;
 mod programs;
-mod shared_test;
+mod test_helpers;

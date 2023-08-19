@@ -118,6 +118,25 @@ pub fn execute_compiled_with_stack_memory_and_ins_for_test(
 }
 
 #[allow(dead_code)]
+pub fn execute_with_stack(
+    item_fn: &syn::ItemFn,
+    stack_start: Vec<ast::ExprLit<Typing>>,
+    expected_stack_diff: isize,
+) -> anyhow::Result<tasm_lib::VmOutputState> {
+    let (code, _fn_name) = compile_for_run_test(item_fn);
+
+    // Run and return final VM state
+    execute_compiled_with_stack_memory_and_ins_for_test(
+        &code,
+        stack_start,
+        &mut HashMap::default(),
+        vec![],
+        NonDeterminism::new(vec![]),
+        expected_stack_diff,
+    )
+}
+
+#[allow(dead_code)]
 /// Execute a function with provided input and initial memory
 pub fn execute_with_stack_and_memory(
     item_fn: &syn::ItemFn,
@@ -128,7 +147,7 @@ pub fn execute_with_stack_and_memory(
     // Compile
     let (code, _fn_name) = compile_for_run_test(item_fn);
 
-    // Run and compare
+    // Run and return final VM state
     execute_compiled_with_stack_memory_and_ins_for_test(
         &code,
         input_args,

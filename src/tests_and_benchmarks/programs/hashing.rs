@@ -1,7 +1,10 @@
 #[cfg(test)]
 mod run_tests {
     use crate::graft::item_fn;
-    use crate::tests_and_benchmarks::shared_test::*;
+    use crate::tests_and_benchmarks::{
+        ozk_programs,
+        test_helpers::{io_native, ozk_parsing, shared_test::*},
+    };
     use itertools::Itertools;
     use rand::random;
     use std::vec;
