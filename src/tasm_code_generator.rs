@@ -1,3 +1,5 @@
+pub mod subroutine;
+
 use itertools::{Either, Itertools};
 use std::collections::{HashMap, HashSet};
 use tasm_lib::library::Library as SnippetState;
@@ -15,6 +17,8 @@ use crate::libraries::{self};
 use crate::stack::Stack;
 use crate::types::{is_list_type, GetType};
 use crate::{ast, types};
+
+use self::subroutine::SubRoutine;
 
 // the compiler's view of the stack, including information about whether value has been spilled to memory
 type VStack = Stack<(ValueIdentifier, (ast::DataType, Option<u32>))>;
@@ -41,8 +45,6 @@ impl VStack {
 
             // By asserting after `+= data_type.size_of()`, we check that the deepest part
             // of the sought value is addressable, not just the top part of the value.
-            // TODO: REMOVE THIS ASSERT!
-            // assert!(position < STACK_SIZE, "Addressing beyond the {STACK_SIZE}'th stack element requires spilling and register-allocation.");
         }
 
         panic!("Cannot find {seek_addr} on vstack")
@@ -91,7 +93,7 @@ struct FunctionState {
     vstack: VStack,
     var_addr: VarAddr,
     spill_required: HashSet<ValueIdentifier>,
-    subroutines: Vec<Vec<LabelledInstruction>>,
+    subroutines: Vec<SubRoutine>,
 }
 
 #[derive(Clone, Debug, Default)]
@@ -627,22 +629,13 @@ fn compile_function_inner(
     );
 
     // Sanity check: Assert that all subroutines start with a label and end with a return
-    let mut all_subroutines: HashSet<String> = HashSet::default();
     assert!(
-            state.function_state.subroutines.iter().all(|subroutine| {
-            if let LabelledInstruction::Label(subroutine_label) = subroutine.first().unwrap() {
-                assert!(all_subroutines.insert(subroutine_label.to_owned()), "subroutine labels must be unique");
-            } else {
-                panic!("Each subroutine must begin with a label");
-            }
-
-            let last_instruction = subroutine.last().unwrap().clone();
-            let ends_with_return_or_recurse
-                = last_instruction == triton_instr!(return) || last_instruction == triton_instr!(recurse);
-            let contains_return = subroutine.iter().any(|x| *x == triton_instr!(return));
-            ends_with_return_or_recurse && contains_return
-        }),
-        "Each subroutine must begin with a label, contain a return and end with a return or a recurse"
+        state
+            .function_state
+            .subroutines
+            .iter()
+            .all(|sub| sub.has_valid_structure()),
+        "All subroutines must have a valid structure"
     );
 
     // Update global compiler state to propagate this to caller
@@ -653,7 +646,7 @@ fn compile_function_inner(
             {&fn_body_code}
             return
 
-        {&state.function_state.subroutines.concat()}
+        {&state.function_state.subroutines.iter().flat_map(|sub| sub.get_code()).collect_vec()}
     )
 }
 
@@ -852,7 +845,10 @@ fn compile_stmt(
                         recurse
             );
 
-            state.function_state.subroutines.push(while_loop_code);
+            state
+                .function_state
+                .subroutines
+                .push(while_loop_code.into());
 
             triton_asm!(call {
                 while_loop_subroutine_name
@@ -902,8 +898,8 @@ fn compile_stmt(
                     return
             );
 
-            state.function_state.subroutines.push(then_code);
-            state.function_state.subroutines.push(else_code);
+            state.function_state.subroutines.push(then_code.into());
+            state.function_state.subroutines.push(else_code.into());
 
             if_code
         }
@@ -935,7 +931,7 @@ fn compile_stmt(
         }
         ast::Stmt::FnDeclaration(function) => {
             let compiled_fn = compile_function_inner(function, &mut state.global_compiler_state);
-            state.function_state.subroutines.push(compiled_fn);
+            state.function_state.subroutines.push(compiled_fn.into());
 
             vec![]
         }
@@ -1938,8 +1934,8 @@ fn compile_expr(
                     return
             );
 
-            state.function_state.subroutines.push(then_code);
-            state.function_state.subroutines.push(else_code);
+            state.function_state.subroutines.push(then_code.into());
+            state.function_state.subroutines.push(else_code.into());
 
             code
         }
