@@ -106,16 +106,13 @@ fn divmoddi4_u64_rast() -> syn::ItemFn {
             } else {
                 if div_hi == 0u32 && divisor == 1u64 || div_hi == 0u32 && num_hi == 0u32 {
                     if divisor == 1u64 {
-                        // return (numerator, 0);
                         ret = (numerator, 0u64);
                     } else {
                         if num_hi == 0u32 {
-                            // return ((num_lo / div_lo) as u64, (num_lo % div_lo) as u64);
                             ret = ((num_lo / div_lo) as u64, (num_lo % div_lo) as u64);
                         }
                     }
                 } else {
-                    // assert!(0u64 != divisor, "Cannot divide by zero");
                     assert!(0u64 != divisor);
                     let mut bits: u32 = divisor.leading_zeros() - numerator.leading_zeros() + 1u32;
                     let mut rem: u64 = numerator >> bits;
