@@ -161,6 +161,7 @@ mod compile_and_typecheck_tests {
 
 #[cfg(test)]
 mod run_tests {
+    use itertools::Itertools;
     use rand::random;
     use twenty_first::shared_math::{b_field_element::BFieldElement, other::random_elements};
 
@@ -195,19 +196,15 @@ mod run_tests {
 
     #[test]
     fn sub_bfe_test() {
-        // TODO: Increase test iterations when we can compare multiple test cases without
-        // compiling multiply times
-        let test_iterations = 2;
-        let lhs: Vec<BFieldElement> = random_elements(test_iterations);
-        let rhs: Vec<BFieldElement> = random_elements(test_iterations);
-        for i in 0..test_iterations {
-            let expected = bfe_lit(lhs[i] - rhs[i]);
-            compare_prop_with_stack(
-                &sub_bfe_rast(),
-                vec![bfe_lit(lhs[i]), bfe_lit(rhs[i])],
-                vec![expected],
-            );
-        }
+        let test_iterations = 10;
+        let test_cases = random_elements::<BFieldElement>(test_iterations)
+            .into_iter()
+            .zip_eq(random_elements::<BFieldElement>(test_iterations).into_iter())
+            .map(|(lhs, rhs)| {
+                InputOutputTestCase::new(vec![bfe_lit(lhs), bfe_lit(rhs)], vec![bfe_lit(lhs - rhs)])
+            })
+            .collect_vec();
+        multiple_compare_prop_with_stack(&sub_bfe_rast(), test_cases);
     }
 
     #[test]
