@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
 use crate::tests_and_benchmarks::{
-    ozk,
-    test_helpers::{shared_test::*, *},
+    ozk::{self, ozk_parsing, rust_shadows},
+    test_helpers::shared_test::*,
 };
 use itertools::Itertools;
 use triton_vm::{BFieldElement, NonDeterminism};
@@ -18,7 +18,7 @@ fn simple_map_on_bfe_test() {
     ];
     let non_determinism = NonDeterminism::new(vec![]);
     let expected_output = input[1..].iter().map(|x| *x + *x).collect_vec();
-    let native_output = io_native::wrap_main_with_io(&ozk::programs::simple_map_on_bfe::main)(
+    let native_output = rust_shadows::wrap_main_with_io(&ozk::programs::simple_map_on_bfe::main)(
         input.clone(),
         non_determinism.clone(),
     );

@@ -1,6 +1,6 @@
 use crate::tests_and_benchmarks::{
-    ozk,
-    test_helpers::{shared_test::*, *},
+    ozk::{self, ozk_parsing, rust_shadows},
+    test_helpers::shared_test::*,
 };
 use triton_vm::{BFieldElement, NonDeterminism};
 
@@ -10,7 +10,7 @@ fn add_bfe_ozk_test() {
     let input = vec![];
     let non_determinism = NonDeterminism::new(vec![]);
     let expected_output = vec![BFieldElement::new(29)];
-    let native_output = io_native::wrap_main_with_io(&ozk::programs::bfe_add::main)(
+    let native_output = rust_shadows::wrap_main_with_io(&ozk::programs::bfe_add::main)(
         input.clone(),
         non_determinism.clone(),
     );

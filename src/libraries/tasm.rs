@@ -40,11 +40,14 @@ impl Library for TasmLibrary {
 
     fn function_name_to_signature(
         &self,
-        fn_name: &str,
+        stripped_name: &str,
         _type_parameter: Option<ast::DataType>,
         _args: &[ast::Expr<super::Annotation>],
     ) -> ast::FnSignature {
-        let snippet = tasm_lib::exported_snippets::name_to_snippet(fn_name);
+        // TODO:
+        // Note that this function expects `fn_name` to be stripped of `tasm::`
+        // Maybe that behavior should be changed though?
+        let snippet = tasm_lib::exported_snippets::name_to_snippet(stripped_name);
 
         let name = snippet.entrypoint();
         let mut args: Vec<ast::AbstractArgument> = vec![];
@@ -89,12 +92,15 @@ impl Library for TasmLibrary {
 
     fn call_function(
         &self,
-        fn_name: &str,
+        stripped_name: &str,
         _type_parameter: Option<ast::DataType>,
         _args: &[ast::Expr<super::Annotation>],
         state: &mut CompilerState,
     ) -> Vec<triton_vm::instruction::LabelledInstruction> {
-        let snippet = tasm_lib::exported_snippets::name_to_snippet(fn_name);
+        // TODO:
+        // Note that this function expects `fn_name` to be stripped of `tasm::`
+        // Maybe that behavior should be changed though?
+        let snippet = tasm_lib::exported_snippets::name_to_snippet(stripped_name);
         let entrypoint = snippet.entrypoint();
         state.import_snippet(snippet);
 

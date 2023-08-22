@@ -48,14 +48,24 @@ pub fn get_pub_output() -> Vec<BFieldElement> {
     PUB_OUTPUT.with(|v| v.borrow().clone())
 }
 
-#[allow(dead_code)]
-pub(crate) fn pub_input() -> BFieldElement {
+pub(crate) fn tasm_io_read_stdin_bfe() -> BFieldElement {
     #[allow(clippy::unwrap_used)]
     PUB_INPUT.with(|v| v.borrow_mut().pop().unwrap())
 }
 
-pub(crate) fn pub_output(x: BFieldElement) {
+pub(crate) fn tasm_io_write_to_stdout_bfe(x: BFieldElement) {
     PUB_OUTPUT.with(|v| v.borrow_mut().push(x));
+}
+
+pub(crate) fn tasm_io_read_stdin_digest() -> Digest {
+    #[allow(clippy::unwrap_used)]
+    // ND_DIGESTS.with(|v| v.borrow_mut().pop().unwrap())
+    let e4 = PUB_INPUT.with(|v| v.borrow_mut().pop().unwrap());
+    let e3 = PUB_INPUT.with(|v| v.borrow_mut().pop().unwrap());
+    let e2 = PUB_INPUT.with(|v| v.borrow_mut().pop().unwrap());
+    let e1 = PUB_INPUT.with(|v| v.borrow_mut().pop().unwrap());
+    let e0 = PUB_INPUT.with(|v| v.borrow_mut().pop().unwrap());
+    Digest::new([e0, e1, e2, e3, e4])
 }
 
 #[allow(dead_code)]
