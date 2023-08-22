@@ -14,6 +14,7 @@ use twenty_first::shared_math::b_field_element::BFieldElement;
 use twenty_first::shared_math::bfield_codec::BFieldCodec;
 
 use self::subroutine::SubRoutine;
+use crate::ast::AbstractArgument;
 use crate::compiled_tasm::CompiledTasm;
 use crate::libraries::{self};
 use crate::stack::Stack;
@@ -83,6 +84,24 @@ impl VStack {
             .map(|(_, (data_type, _))| data_type.size_of())
             .sum()
     }
+
+    fn get_code_to_spill_to_memory(
+        &self,
+        values_to_spill: &[ValueIdentifier],
+    ) -> Vec<LabelledInstruction> {
+        let mut code = vec![];
+        for value_to_spill in values_to_spill {
+            let (stack_position, data_type, memory_spill_address) =
+                self.find_stack_value(value_to_spill);
+            let memory_spill_address = memory_spill_address.unwrap();
+            let top_of_value = stack_position;
+            let mut spill_code =
+                copy_value_to_memory(memory_spill_address, data_type.size_of(), top_of_value);
+            code.append(&mut spill_code);
+        }
+
+        code
+    }
 }
 
 #[derive(Clone, Debug, Default)]
@@ -121,6 +140,7 @@ pub struct CompilerState {
 }
 
 impl CompilerState {
+    /// Construct a new compiler state with no known values that must be spilled.
     fn new(global_compiler_state: &GlobalCompilerState) -> Self {
         Self {
             global_compiler_state: global_compiler_state.to_owned(),
@@ -128,6 +148,8 @@ impl CompilerState {
         }
     }
 
+    /// Construct a new compiler state with a defined set of values that should be stored in memory,
+    /// rather than on the stack, i.e. "spilled".
     fn with_known_spills(
         global_compiler_state: &GlobalCompilerState,
         required_spills: HashSet<ValueIdentifier>,
@@ -143,12 +165,45 @@ impl CompilerState {
         }
     }
 
+    /// At the beginning of a function call, the caller will have placed all arguments
+    /// on top of the stack. This must be reflected in the vstack.
+    /// Returns a list of values that must be spilled to memory such that the code
+    /// generator can start the function with the spilling of these values.
+    fn add_input_arguments_to_vstack_and_return_spilled_fn_args(
+        &mut self,
+        input_arguments: &[AbstractArgument],
+    ) -> Vec<ValueIdentifier> {
+        const FN_ARG_NAME_PREFIX: &str = "fn_arg";
+
+        let mut fn_arg_spilling = vec![];
+        for input_arg in input_arguments {
+            match input_arg {
+                AbstractArgument::FunctionArgument(_) => todo!(),
+                AbstractArgument::ValueArgument(abstract_input) => {
+                    let (fn_arg_addr, spill) =
+                        self.new_value_identifier(FN_ARG_NAME_PREFIX, &abstract_input.data_type);
+                    self.function_state
+                        .var_addr
+                        .insert(abstract_input.name.clone(), fn_arg_addr.clone());
+
+                    if let Some(_spill_addr) = spill {
+                        fn_arg_spilling.push(fn_arg_addr);
+                    }
+                }
+            }
+        }
+
+        fn_arg_spilling
+    }
+
+    /// Return the set of values that the compiler has determined must be spilled to memory.
     fn get_required_spills(&self) -> HashSet<ValueIdentifier> {
         self.function_state.spill_required.to_owned()
     }
 
-    /// Return code for a function, without including its external dependencies, as these should only
-    /// be included once, by the outer function.
+    /// Return code for a function, without including its external dependencies and without
+    /// initialization of the dynamic memory allocator, as these pieces of code should be
+    /// included only once, by the outer function.
     fn compose_code_for_inner_function(
         &self,
         fn_name: &str,
@@ -636,78 +691,41 @@ fn compile_function_inner(
     function: &ast::Fn<types::Typing>,
     global_compiler_state: &mut GlobalCompilerState,
 ) -> CompiledTasm {
-    const FN_ARG_NAME_PREFIX: &str = "fn_arg";
     let fn_name = &function.fn_signature.name;
     let _fn_stack_output_sig = format!("{}", function.fn_signature.output);
 
     // Run the compilation 1st time to learn which values need to be spilled to memory
     let mut state = CompilerState::new(global_compiler_state);
-    for arg in function.fn_signature.args.iter() {
-        match arg {
-            ast::AbstractArgument::FunctionArgument(_) => todo!(),
-            ast::AbstractArgument::ValueArgument(abstract_value) => {
-                let (fn_arg_addr, spill) =
-                    state.new_value_identifier(FN_ARG_NAME_PREFIX, &abstract_value.data_type);
-                state
-                    .function_state
-                    .var_addr
-                    .insert(abstract_value.name.clone(), fn_arg_addr);
+    let fn_arg_spilling =
+        state.add_input_arguments_to_vstack_and_return_spilled_fn_args(&function.fn_signature.args);
+    assert!(
+        fn_arg_spilling.is_empty(),
+        "Cannot memory-spill function arguments first time the code generator runs"
+    );
 
-                assert!(
-                    spill.is_none(),
-                    "Cannot handle spill 1st time code generator runs"
-                );
-            }
-        }
-    }
-
+    // Compiling the function body allows us to learn which values need to be spilled to memory
     let _fn_body_code = function
         .body
         .iter()
         .map(|stmt| compile_stmt(stmt, function, &mut state))
         .concat();
 
-    // Run the compilation again know that we know which values to spill
+    // Run the compilation again now that we know which values to spill
     println!("\n\n\nRunning compiler again\n\n\n");
     let mut state =
         CompilerState::with_known_spills(global_compiler_state, state.get_required_spills());
 
     // Add function arguments to the compiler's view of the stack.
-    let mut fn_arg_spilling = vec![];
-    for arg in function.fn_signature.args.iter() {
-        match arg {
-            ast::AbstractArgument::FunctionArgument(_) => todo!(),
-            ast::AbstractArgument::ValueArgument(abstract_value) => {
-                let (fn_arg_addr, spill) =
-                    state.new_value_identifier(FN_ARG_NAME_PREFIX, &abstract_value.data_type);
-                state
-                    .function_state
-                    .var_addr
-                    .insert(abstract_value.name.clone(), fn_arg_addr.clone());
-
-                if let Some(_spill_addr) = spill {
-                    fn_arg_spilling.push(fn_arg_addr);
-                }
-            }
-        }
-    }
-
-    let mut fn_body_code = vec![];
+    let fn_arg_spilling =
+        state.add_input_arguments_to_vstack_and_return_spilled_fn_args(&function.fn_signature.args);
 
     // Create code to spill required function arguments to memory
-    for value_id in fn_arg_spilling {
-        // Get stack depth of value
-        let (stack_depth, data_type, spill_addr) =
-            state.function_state.vstack.find_stack_value(&value_id);
+    let mut fn_body_code = state
+        .function_state
+        .vstack
+        .get_code_to_spill_to_memory(&fn_arg_spilling);
 
-        // Produce the code to spill the function argument
-        let top_of_value = stack_depth;
-        let mut spill_code =
-            store_value_in_memory(spill_addr.unwrap(), data_type.size_of(), top_of_value);
-
-        fn_body_code.append(&mut spill_code);
-    }
-
+    // Append the code for the function body
     fn_body_code.append(
         &mut function
             .body
@@ -719,8 +737,8 @@ fn compile_function_inner(
     // Sanity check: Assert that all subroutines start with a label and end with a return
     state.function_state.assert_subroutines_look_sane();
 
-    // Update global compiler state to propagate this to caller, such that dependencies
-    // that were loaded here don't have to be reloaded as they're already accessible.
+    // Update global compiler state to propagate this to caller, such that external
+    // dependencies that were loaded here will not be loaded again.
     *global_compiler_state = state.global_compiler_state.to_owned();
 
     state.compose_code_for_inner_function(fn_name, fn_body_code)
@@ -2044,7 +2062,7 @@ fn compile_expr(
 }
 
 /// Return the code to store a stack-value in memory
-fn store_value_in_memory(
+fn copy_value_to_memory(
     memory_location: u32,
     value_size: usize,
     stack_location_for_top_of_value: usize,
@@ -2083,8 +2101,6 @@ fn move_top_stack_value_to_memory(
     // A stack value of the form `_ val2 val1 val0`, with `val0` being on the top of the stack
     // is stored in memory as: `val0 val1 val2`, where `val0` is stored on the `memory_location`
     // address.
-    // let mut ret = vec![];
-    // ret.push(push(memory_location as u64));
     let mut ret = triton_asm!(push {memory_location as u64});
 
     for i in 0..top_value_size {
