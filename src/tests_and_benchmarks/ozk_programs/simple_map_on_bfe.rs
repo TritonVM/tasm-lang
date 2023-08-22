@@ -9,8 +9,7 @@ pub(crate) fn main() {
     }
     let mut input_values: Vec<BFieldElement> = Vec::<BFieldElement>::with_capacity(200);
 
-    // TODO: Read length indication from input
-    let length_indication: usize = 3;
+    let length_indication: usize = pub_input().value() as usize;
     let mut i: usize = 0;
     while i < length_indication {
         input_values.push(pub_input());

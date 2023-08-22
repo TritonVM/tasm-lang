@@ -17,7 +17,7 @@ fn add_bfe_ozk_test() {
     assert_eq!(native_output, expected_output);
 
     // Test function in Triton VM
-    let parsed = ozk_parsing::parse_main("bfe_add");
+    let (parsed, _) = ozk_parsing::parse_main("bfe_add");
     let expected_stack_diff = 0;
     let stack_start = vec![];
     let vm_output = execute_with_stack(&parsed, stack_start, expected_stack_diff).unwrap();

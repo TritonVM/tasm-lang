@@ -11,7 +11,7 @@ fn extract_main(parsed_file: syn::File) -> Option<syn::ItemFn> {
     None
 }
 
-pub fn parse_main(module_name: &str) -> syn::ItemFn {
+pub fn parse_main(module_name: &str) -> (syn::ItemFn, String) {
     let path = format!(
         "{}/src/tests_and_benchmarks/ozk_programs/{module_name}.rs",
         env!("CARGO_MANIFEST_DIR"),
@@ -20,7 +20,7 @@ pub fn parse_main(module_name: &str) -> syn::ItemFn {
     let parsed_file: syn::File = syn::parse_str(&content).expect("Unable to parse rust code");
     let parsed = extract_main(parsed_file);
     match parsed {
-        Some(parsed) => parsed,
+        Some(parsed) => (parsed, module_name.to_owned()),
         None => panic!("Failed to parse file {path}"),
     }
 }

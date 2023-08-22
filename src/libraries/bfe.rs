@@ -17,7 +17,7 @@ impl Library for BfeLibrary {
     }
 
     fn get_method_name(&self, method_name: &str, _receiver_type: &ast::DataType) -> Option<String> {
-        if matches!(method_name, "lift") {
+        if method_name == "lift" || method_name == "value" {
             Some(method_name.to_owned())
         } else {
             None
@@ -30,11 +30,15 @@ impl Library for BfeLibrary {
         _receiver_type: &ast::DataType,
         _args: &[ast::Expr<super::Annotation>],
     ) -> ast::FnSignature {
-        if method_name != "lift" {
-            panic!("Unknown method {method_name} for BFE");
+        if method_name == "lift" {
+            return bfe_lift_method().signature;
         }
 
-        get_bfe_lift_method().signature
+        if method_name == "value" {
+            return bfe_value_method().signature;
+        }
+
+        panic!("Unknown method {method_name} for BFE");
     }
 
     fn function_name_to_signature(
@@ -53,11 +57,15 @@ impl Library for BfeLibrary {
         _args: &[ast::Expr<super::Annotation>],
         _state: &mut crate::tasm_code_generator::CompilerState,
     ) -> Vec<triton_vm::instruction::LabelledInstruction> {
-        if method_name != "lift" {
-            panic!("Unknown method {method_name} for BFE");
+        if method_name == "lift" {
+            return bfe_lift_method().body;
         }
 
-        get_bfe_lift_method().body
+        if method_name == "value" {
+            return bfe_value_method().body;
+        }
+
+        panic!("Unknown method {method_name} for BFE");
     }
 
     fn call_function(
@@ -138,7 +146,7 @@ impl Library for BfeLibrary {
     }
 }
 
-fn get_bfe_lift_method() -> CompiledFunction {
+fn bfe_lift_method() -> CompiledFunction {
     let fn_signature = ast::FnSignature {
         name: "lift".to_owned(),
         args: vec![ast::AbstractArgument::ValueArgument(
@@ -155,5 +163,25 @@ fn get_bfe_lift_method() -> CompiledFunction {
     CompiledFunction {
         signature: fn_signature,
         body: triton_asm!(push 0 push 0 swap 2),
+    }
+}
+
+fn bfe_value_method() -> CompiledFunction {
+    let fn_signature = ast::FnSignature {
+        name: "value".to_owned(),
+        args: vec![ast::AbstractArgument::ValueArgument(
+            ast::AbstractValueArg {
+                name: "bfe_value".to_owned(),
+                data_type: ast::DataType::BFE,
+                mutable: false,
+            },
+        )],
+        output: ast::DataType::U64,
+        arg_evaluation_order: Default::default(),
+    };
+
+    CompiledFunction {
+        signature: fn_signature,
+        body: triton_asm!(split),
     }
 }
