@@ -1,5 +1,6 @@
 pub mod ast;
 pub mod cfg;
+mod compiled_tasm;
 pub mod graft;
 pub mod libraries;
 pub mod ssa;

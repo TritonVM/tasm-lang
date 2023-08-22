@@ -13,12 +13,12 @@ use twenty_first::amount::u32s::U32s;
 use twenty_first::shared_math::b_field_element::BFieldElement;
 use twenty_first::shared_math::bfield_codec::BFieldCodec;
 
+use self::subroutine::SubRoutine;
+use crate::compiled_tasm::CompiledTasm;
 use crate::libraries::{self};
 use crate::stack::Stack;
 use crate::types::{is_list_type, GetType};
 use crate::{ast, types};
-
-use self::subroutine::SubRoutine;
 
 // the compiler's view of the stack, including information about whether value has been spilled to memory
 type VStack = Stack<(ValueIdentifier, (ast::DataType, Option<u32>))>;
@@ -86,6 +86,7 @@ impl VStack {
 }
 
 #[derive(Clone, Debug, Default)]
+/// State for managing the compilation of a single function
 
 struct FunctionState {
     vstack: VStack,
@@ -94,6 +95,16 @@ struct FunctionState {
     subroutines: Vec<SubRoutine>,
 }
 
+impl FunctionState {
+    fn assert_subroutines_look_sane(&self) {
+        assert!(
+            self.subroutines.iter().all(|sub| sub.has_valid_structure()),
+            "All subroutines must have a valid structure"
+        );
+    }
+}
+
+/// State that is preserved across the compilation of functions
 #[derive(Clone, Debug, Default)]
 pub struct GlobalCompilerState {
     counter: usize,
@@ -102,15 +113,101 @@ pub struct GlobalCompilerState {
 
 #[derive(Clone, Debug, Default)]
 pub struct CompilerState {
-    // The part of the compiler state that applies across function calls to locally defined
+    /// The part of the compiler state that applies across function calls to locally defined
     global_compiler_state: GlobalCompilerState,
 
-    // The part of the compiler state that only applies within a function
+    /// The part of the compiler state that only applies within a function
     function_state: FunctionState,
 }
 
-// TODO: Use this value from Triton-VM
-pub const STACK_SIZE: usize = 16;
+impl CompilerState {
+    fn new(global_compiler_state: &GlobalCompilerState) -> Self {
+        Self {
+            global_compiler_state: global_compiler_state.to_owned(),
+            function_state: FunctionState::default(),
+        }
+    }
+
+    fn with_known_spills(
+        global_compiler_state: &GlobalCompilerState,
+        required_spills: HashSet<ValueIdentifier>,
+    ) -> Self {
+        Self {
+            global_compiler_state: global_compiler_state.to_owned(),
+            function_state: FunctionState {
+                vstack: Default::default(),
+                var_addr: VarAddr::default(),
+                spill_required: required_spills,
+                subroutines: Vec::default(),
+            },
+        }
+    }
+
+    fn get_required_spills(&self) -> HashSet<ValueIdentifier> {
+        self.function_state.spill_required.to_owned()
+    }
+
+    /// Return code for a function, without including its external dependencies, as these should only
+    /// be included once, by the outer function.
+    fn compose_code_for_inner_function(
+        &self,
+        fn_name: &str,
+        call_depth_zero_code: Vec<LabelledInstruction>,
+    ) -> CompiledTasm {
+        triton_asm!(
+            {fn_name}:
+                {&call_depth_zero_code}
+                return
+
+            {&self.function_state.subroutines.iter().flat_map(|sub| sub.get_code()).collect_vec()}
+        )
+        .into()
+    }
+
+    /// Return code including those compilation steps that should only be performed once per compilation:
+    /// - initialization of dynamic memory allocator
+    /// - importing of all external dependencies
+    fn compose_code_for_outer_function(
+        &self,
+        fn_name: &str,
+        call_depth_zero_code: CompiledTasm,
+    ) -> CompiledTasm {
+        // Remove the first label.
+        // This is done to ensure that the code wrapping this function in a `call <fn_name>, halt` logic still
+        // sets the dynamic allocator initial value. Otherwise, the dynamic memory allocation would not be
+        // included in the code executed with this wrapper code. If this code is *not* run through tests,
+        // this rearrangement is inconsequential as it just moves the initialization to after a label, which is
+        // removed later by the linker. It's not super elegant but it works. Sue me.
+        let call_depth_zero_code = call_depth_zero_code.remove_own_name();
+
+        // After the spilling has been done, and after all dependencies have been loaded, the `library` field
+        // in the `state` now contains the information about how to initialize the dynamic memory allocator
+        // such that dynamically allocated memory does not overwrite statically allocated memory. The `library`
+        // field contains the number of words that were statically allocated.
+        let dyn_malloc_init_code = DynMalloc::get_initialization_code(
+            self.global_compiler_state
+                .snippet_state
+                .get_next_free_address()
+                .try_into()
+                .unwrap(),
+        );
+
+        let external_dependencies = self.global_compiler_state.snippet_state.all_imports();
+        let ret = triton_asm!(
+            {fn_name}:
+                {&dyn_malloc_init_code}
+                {&call_depth_zero_code}
+                {&external_dependencies}
+        );
+
+        // Verify that code parses by wrapping it in a program
+        let _program = Program::new(&ret);
+
+        ret.into()
+    }
+}
+
+pub const MIN_STACK_SIZE: usize = triton_vm::op_stack::NUM_OP_STACK_REGISTERS;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ValueIdentifier {
@@ -259,7 +356,7 @@ impl CompilerState {
 
         // If value is not marked as a spilled value and it's inacessible through swap(n)/dup(n),
         // this value must be marked as a value to be spilled, and the compiler must be run again.
-        let accessible = stack_position_of_value_to_remove < STACK_SIZE;
+        let accessible = stack_position_of_value_to_remove < MIN_STACK_SIZE;
         if old_value_spilled.is_none() && !accessible {
             self.mark_as_spilled(value_identifier_to_remove);
         }
@@ -330,7 +427,7 @@ impl CompilerState {
         // If value is not marked as a spilled value and it's inacessible through swap(n)/dup(n),
         // this value must be marked as a value to be spilled, and the compiler must be run again.
         let stack_position_of_value_to_remove = stack_position_of_tuple + tuple_depth;
-        let accessible = stack_position_of_value_to_remove < STACK_SIZE;
+        let accessible = stack_position_of_value_to_remove < MIN_STACK_SIZE;
         if tuple_spilled.is_none() && !accessible {
             self.mark_as_spilled(tuple_identifier);
         }
@@ -449,7 +546,7 @@ impl CompilerState {
         let words_to_remove = height_of_affected_stack - top_value_size;
         let code = if words_to_remove != 0
             && top_value_size <= words_to_remove
-            && words_to_remove < STACK_SIZE
+            && words_to_remove < MIN_STACK_SIZE
         {
             // If we can handle the stack clearing by just swapping the top value
             // lower onto the stack and removing everything above, we do that.
@@ -465,7 +562,7 @@ impl CompilerState {
             code.append(&mut triton_asm![pop; remaining_pops]);
 
             code
-        } else if words_to_remove >= STACK_SIZE {
+        } else if words_to_remove >= MIN_STACK_SIZE {
             // In this case, we have to clear more elements from the stack than we can
             // access with dup15/swap15. Our solution is to store the return value in
             // memory, clear the stack, and read it back from memory.
@@ -538,17 +635,13 @@ impl CompilerState {
 fn compile_function_inner(
     function: &ast::Fn<types::Typing>,
     global_compiler_state: &mut GlobalCompilerState,
-) -> Vec<LabelledInstruction> {
+) -> CompiledTasm {
     const FN_ARG_NAME_PREFIX: &str = "fn_arg";
     let fn_name = &function.fn_signature.name;
     let _fn_stack_output_sig = format!("{}", function.fn_signature.output);
 
     // Run the compilation 1st time to learn which values need to be spilled to memory
-    let mut state = CompilerState {
-        global_compiler_state: global_compiler_state.to_owned(),
-        function_state: FunctionState::default(),
-    };
-
+    let mut state = CompilerState::new(global_compiler_state);
     for arg in function.fn_signature.args.iter() {
         match arg {
             ast::AbstractArgument::FunctionArgument(_) => todo!(),
@@ -576,13 +669,10 @@ fn compile_function_inner(
 
     // Run the compilation again know that we know which values to spill
     println!("\n\n\nRunning compiler again\n\n\n");
-    let spill_required = state.function_state.spill_required;
-    let mut state = CompilerState {
-        global_compiler_state: global_compiler_state.to_owned(),
-        function_state: FunctionState::default(),
-    };
-    state.function_state.spill_required = spill_required;
+    let mut state =
+        CompilerState::with_known_spills(global_compiler_state, state.get_required_spills());
 
+    // Add function arguments to the compiler's view of the stack.
     let mut fn_arg_spilling = vec![];
     for arg in function.fn_signature.args.iter() {
         match arg {
@@ -604,7 +694,7 @@ fn compile_function_inner(
 
     let mut fn_body_code = vec![];
 
-    // Spill required function arguments to memory
+    // Create code to spill required function arguments to memory
     for value_id in fn_arg_spilling {
         // Get stack depth of value
         let (stack_depth, data_type, spill_addr) =
@@ -627,60 +717,22 @@ fn compile_function_inner(
     );
 
     // Sanity check: Assert that all subroutines start with a label and end with a return
-    assert!(
-        state
-            .function_state
-            .subroutines
-            .iter()
-            .all(|sub| sub.has_valid_structure()),
-        "All subroutines must have a valid structure"
-    );
+    state.function_state.assert_subroutines_look_sane();
 
-    // Update global compiler state to propagate this to caller
+    // Update global compiler state to propagate this to caller, such that dependencies
+    // that were loaded here don't have to be reloaded as they're already accessible.
     *global_compiler_state = state.global_compiler_state.to_owned();
 
-    triton_asm!(
-        {fn_name}:
-            {&fn_body_code}
-            return
-
-        {&state.function_state.subroutines.iter().flat_map(|sub| sub.get_code()).collect_vec()}
-    )
+    state.compose_code_for_inner_function(fn_name, fn_body_code)
 }
 
-pub fn compile_function(function: &ast::Fn<types::Typing>) -> Vec<LabelledInstruction> {
+// TODO: Remove this attribute once we have a sane `main` function that uses this step
+#[allow(dead_code)]
+pub(crate) fn compile_function(function: &ast::Fn<types::Typing>) -> CompiledTasm {
     let mut state = CompilerState::default();
-    let mut compiled_function = compile_function_inner(function, &mut state.global_compiler_state);
+    let compiled_function = compile_function_inner(function, &mut state.global_compiler_state);
 
-    // This is done to ensure that the code wrapping this function in a `call <fn_name>, halt` logic still
-    // sets the dynamic allocator initial value. It's ugly and inefficient but it works. Sue me.
-    compiled_function.remove(0);
-
-    // After the spilling has been done, and after all dependencies have been loaded, the `library` field
-    // in the `state` now contains the information about how to initialize the dynamic memory allocator
-    // such that dynamically allocated memory does not overwrite statically allocated memory. The `library`
-    // field contains the number of words that were statically allocated.
-    let dyn_malloc_init_code = DynMalloc::get_initialization_code(
-        state
-            .global_compiler_state
-            .snippet_state
-            .get_next_free_address()
-            .try_into()
-            .unwrap(),
-    );
-
-    let external_dependencies = state.global_compiler_state.snippet_state.all_imports();
-    let ret = triton_asm!(
-        {function.fn_signature.name}:
-            {&dyn_malloc_init_code}
-            {&compiled_function}
-            {&external_dependencies}
-    );
-
-    // Verify that code parses by wrapping it in a program
-    let _program = Program::new(&ret);
-
-    ret
+    state.compose_code_for_outer_function(&function.fn_signature.name, compiled_function)
 }
 
 fn compile_stmt(
@@ -1086,7 +1138,7 @@ fn compile_expr(
                         // If value is not marked as a spilled value and it's inacessible through swap(n)/dup(n),
                         // this value must be marked as a value to be spilled, and the compiler must be run again.
                         let bottom_position = position + result_type.size_of() - 1;
-                        let accessible = bottom_position < STACK_SIZE;
+                        let accessible = bottom_position < MIN_STACK_SIZE;
                         if spilled.is_none() && !accessible {
                             state.mark_as_spilled(var_addr);
                         }
@@ -1141,7 +1193,7 @@ fn compile_expr(
                 // If value is not marked as a spilled value and it's inacessible through swap(n)/dup(n),
                 // this value must be marked as a value to be spilled, and the compiler must be run again.
                 let bottom_position = position + element_type.size_of() - 1;
-                let accessible = bottom_position < STACK_SIZE;
+                let accessible = bottom_position < MIN_STACK_SIZE;
                 if spilled.is_none() && !accessible {
                     state.mark_as_spilled(&var_addr);
                 }

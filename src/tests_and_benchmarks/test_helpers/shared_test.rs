@@ -54,7 +54,11 @@ pub fn graft_check_compile_prop(item_fn: &syn::ItemFn) -> String {
 
     // compile
     let tasm = compile_function(&function);
-    let tasm_string: String = tasm.iter().map(|instr| instr.to_string()).join("\n");
+    let tasm_string: String = tasm
+        .get_code()
+        .iter()
+        .map(|instr| instr.to_string())
+        .join("\n");
     tasm_string
 }
 
