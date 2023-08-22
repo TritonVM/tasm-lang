@@ -4,7 +4,7 @@ use twenty_first::shared_math::b_field_element::BFieldElement;
 use twenty_first::shared_math::x_field_element::XFieldElement;
 
 use crate::ast::{AbstractFunctionArg, AbstractValueArg, FunctionType};
-use crate::tasm_code_generator::MIN_STACK_SIZE;
+use crate::tasm_code_generator::SIZE_OF_ACCESSIBLE_STACK;
 use crate::{ast, libraries};
 
 #[derive(Debug, Default, Clone, Hash, PartialEq, Eq)]
@@ -176,10 +176,10 @@ pub fn annotate_fn(function: &mut ast::Fn<Typing>) {
             .values()
             .map(|x| x.data_type.size_of())
             .sum::<usize>()
-            < MIN_STACK_SIZE,
+            < SIZE_OF_ACCESSIBLE_STACK,
         "{}: Cannot handle function signatures with input size exceeding {} words",
         function.fn_signature.name,
-        MIN_STACK_SIZE - 1
+        SIZE_OF_ACCESSIBLE_STACK - 1
     );
 
     // Verify that last statememnt of function exists, and that it is a `return` statement

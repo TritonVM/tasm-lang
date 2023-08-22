@@ -262,7 +262,7 @@ impl CompilerState {
     }
 }
 
-pub const MIN_STACK_SIZE: usize = triton_vm::op_stack::NUM_OP_STACK_REGISTERS;
+pub const SIZE_OF_ACCESSIBLE_STACK: usize = triton_vm::op_stack::NUM_OP_STACK_REGISTERS;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ValueIdentifier {
@@ -289,7 +289,8 @@ impl CompilerState {
     }
 
     /// Get a new, guaranteed unique, identifier for a value. Returns an address to
-    /// spill the value to, iff spilling of this value is required.
+    /// spill the value to, iff spilling of this value is required. A previous run
+    /// of the compiler will have determined whether spilling is required.
     pub fn new_value_identifier(
         &mut self,
         prefix: &str,
@@ -411,7 +412,7 @@ impl CompilerState {
 
         // If value is not marked as a spilled value and it's inacessible through swap(n)/dup(n),
         // this value must be marked as a value to be spilled, and the compiler must be run again.
-        let accessible = stack_position_of_value_to_remove < MIN_STACK_SIZE;
+        let accessible = stack_position_of_value_to_remove < SIZE_OF_ACCESSIBLE_STACK;
         if old_value_spilled.is_none() && !accessible {
             self.mark_as_spilled(value_identifier_to_remove);
         }
@@ -482,7 +483,7 @@ impl CompilerState {
         // If value is not marked as a spilled value and it's inacessible through swap(n)/dup(n),
         // this value must be marked as a value to be spilled, and the compiler must be run again.
         let stack_position_of_value_to_remove = stack_position_of_tuple + tuple_depth;
-        let accessible = stack_position_of_value_to_remove < MIN_STACK_SIZE;
+        let accessible = stack_position_of_value_to_remove < SIZE_OF_ACCESSIBLE_STACK;
         if tuple_spilled.is_none() && !accessible {
             self.mark_as_spilled(tuple_identifier);
         }
@@ -595,13 +596,23 @@ impl CompilerState {
             .vstack
             .pop()
             .expect("Cannot remove all but top element from an empty stack");
-        let top_value_size = top_element.1 .0.size_of();
+        let (_top_elem_ident, (top_element_type, top_element_spilled)) = top_element.clone();
+
+        // Verify that top element is not spilled -- as we haven't covered that case yet
+        // TODO: Fix this case. That should be quite easy, I think. Not sure this can ever
+        // happen though... Please write a test demonstrating this case, before fixing it.
+        assert!(
+            top_element_spilled.is_none(),
+            "Cannot handle spilled value as top element in stack clearing yet"
+        );
+
+        let top_value_size = top_element_type.size_of();
 
         // Generate code to move value to the bottom of the requested stack range
         let words_to_remove = height_of_affected_stack - top_value_size;
         let code = if words_to_remove != 0
             && top_value_size <= words_to_remove
-            && words_to_remove < MIN_STACK_SIZE
+            && words_to_remove < SIZE_OF_ACCESSIBLE_STACK
         {
             // If we can handle the stack clearing by just swapping the top value
             // lower onto the stack and removing everything above, we do that.
@@ -617,7 +628,7 @@ impl CompilerState {
             code.append(&mut triton_asm![pop; remaining_pops]);
 
             code
-        } else if words_to_remove >= MIN_STACK_SIZE {
+        } else if words_to_remove >= SIZE_OF_ACCESSIBLE_STACK {
             // In this case, we have to clear more elements from the stack than we can
             // access with dup15/swap15. Our solution is to store the return value in
             // memory, clear the stack, and read it back from memory.
@@ -635,7 +646,7 @@ impl CompilerState {
         } else if words_to_remove != 0 {
             // Here, the number of words under the top element is less than the size of
             // the top element. We special-case this as the order on the stack
-            // must be preserverved, which is non-trivial.
+            // must be preserved, which is non-trivial.
             clear_bottom_of_stack(top_value_size, words_to_remove)
         } else {
             // The case where nothing has to be done since there is nothing below the
@@ -687,6 +698,8 @@ impl CompilerState {
     }
 }
 
+/// Compile a function, returning the code for the function body. Inherits the `global_compiler_state`
+/// from the caller but starts with an empty virtual stack and an empty variable mapping.
 fn compile_function_inner(
     function: &ast::Fn<types::Typing>,
     global_compiler_state: &mut GlobalCompilerState,
@@ -842,6 +855,8 @@ fn compile_stmt(
             let expr_code = if let ast::Expr::Var(ast::Identifier::String(var_name, _known_type)) =
                 ret_expr
             {
+                // Case: Returning a bound variable
+
                 // Remove everything above returned value
                 let needle = state
                     .function_state
@@ -849,20 +864,31 @@ fn compile_stmt(
                     .get(var_name)
                     .expect("Returned value must exist in value/addr map");
                 let mut code = vec![];
+
+                // If the returned value is a spilled value, we pop everything and
+                // load the value from memory.
+                // If the returned value is not spilled, we pop until the sought
+                // value is on top of the stack and then call a helper function
+                // to remove everything below it.
                 loop {
+                    // This loop pops values from the stack until the value we want to return.
+                    // Then the below if-expression takes over when the value is found.
                     let (haystack, (dt, spilled)) = state.function_state.vstack.peek().unwrap();
                     if *haystack == *needle {
                         match spilled {
-                            // If the returned value is a spilled value, we pop everything and
-                            // load the value from memory. Otherwise, we pop until the sought
-                            // value is on top of the stack and then call a helper function
-                            // to remove everything below it.
                             Some(spill_addr) => {
+                                // Value is spilled, so we load it from memory and clear that stack.
                                 code.append(&mut triton_asm![pop; state.function_state.vstack.get_stack_height()]);
                                 code.append(&mut load_from_memory(*spill_addr, dt.size_of()))
                             }
-                            None => code
-                                .append(&mut state.clear_all_but_top_stack_value_above_height(0)),
+
+                            None => {
+                                // Value is not spilled and is on top of the stack now. Remove everything
+                                // below it.
+                                code.append(
+                                    &mut state.clear_all_but_top_stack_value_above_height(0),
+                                );
+                            }
                         }
                         break;
                     }
@@ -871,20 +897,21 @@ fn compile_stmt(
                     state.function_state.vstack.pop();
                 }
 
-                // TODO: Cleanup `var_addr`
-
                 code
             } else {
+                // Case: Returning an expression that must be computed
                 let code =
                     compile_expr(ret_expr, "ret_expr", &function.fn_signature.output, state).1;
 
                 // Remove all but top value from stack
                 let cleanup_code = state.clear_all_but_top_stack_value_above_height(0);
 
-                // TODO: Cleanup `var_addr`
-
                 vec![code, cleanup_code].concat()
             };
+
+            // We don't need to clear `var_addr` here since we are either done with the code generation
+            // (if this is an outer function return) or we're returning from a local function that does
+            // not share `vstack` or `var_addr` with the caller.
 
             expr_code
         }
@@ -1048,6 +1075,7 @@ fn compile_fn_call(
         call_fn_code.append(&mut triton_asm!(call { name }));
     }
 
+    // Remove function arguments from vstack since they're not visible after the function call
     for _ in 0..args.len() {
         state.function_state.vstack.pop();
     }
@@ -1156,7 +1184,7 @@ fn compile_expr(
                         // If value is not marked as a spilled value and it's inacessible through swap(n)/dup(n),
                         // this value must be marked as a value to be spilled, and the compiler must be run again.
                         let bottom_position = position + result_type.size_of() - 1;
-                        let accessible = bottom_position < MIN_STACK_SIZE;
+                        let accessible = bottom_position < SIZE_OF_ACCESSIBLE_STACK;
                         if spilled.is_none() && !accessible {
                             state.mark_as_spilled(var_addr);
                         }
@@ -1211,7 +1239,7 @@ fn compile_expr(
                 // If value is not marked as a spilled value and it's inacessible through swap(n)/dup(n),
                 // this value must be marked as a value to be spilled, and the compiler must be run again.
                 let bottom_position = position + element_type.size_of() - 1;
-                let accessible = bottom_position < MIN_STACK_SIZE;
+                let accessible = bottom_position < SIZE_OF_ACCESSIBLE_STACK;
                 if spilled.is_none() && !accessible {
                     state.mark_as_spilled(&var_addr);
                 }
