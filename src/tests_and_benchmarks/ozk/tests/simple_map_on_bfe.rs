@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use crate::tests_and_benchmarks::{
-    ozk_programs,
+    ozk,
     test_helpers::{shared_test::*, *},
 };
 use itertools::Itertools;
@@ -18,7 +18,7 @@ fn simple_map_on_bfe_test() {
     ];
     let non_determinism = NonDeterminism::new(vec![]);
     let expected_output = input[1..].iter().map(|x| *x + *x).collect_vec();
-    let native_output = io_native::wrap_main_with_io(&ozk_programs::simple_map_on_bfe::main)(
+    let native_output = io_native::wrap_main_with_io(&ozk::programs::simple_map_on_bfe::main)(
         input.clone(),
         non_determinism.clone(),
     );

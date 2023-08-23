@@ -14,6 +14,7 @@ use twenty_first::shared_math::b_field_element::BFieldElement;
 use twenty_first::shared_math::bfield_codec::BFieldCodec;
 
 use self::subroutine::SubRoutine;
+use crate::ast::AbstractArgument;
 use crate::libraries::{self};
 use crate::stack::Stack;
 use crate::types::{is_list_type, GetType};
@@ -81,6 +82,24 @@ impl VStack {
             .iter()
             .map(|(_, (data_type, _))| data_type.size_of())
             .sum()
+    }
+
+    fn get_code_to_spill_to_memory(
+        &self,
+        values_to_spill: &[ValueIdentifier],
+    ) -> Vec<LabelledInstruction> {
+        let mut code = vec![];
+        for value_to_spill in values_to_spill {
+            let (stack_position, data_type, memory_spill_address) =
+                self.find_stack_value(value_to_spill);
+            let memory_spill_address = memory_spill_address.unwrap();
+            let top_of_value = stack_position;
+            let mut spill_code =
+                copy_value_to_memory(memory_spill_address, data_type.size_of(), top_of_value);
+            code.append(&mut spill_code);
+        }
+
+        code
     }
 }
 
@@ -196,6 +215,7 @@ pub struct CompilerState {
 }
 
 impl CompilerState {
+    /// Construct a new compiler state with no known values that must be spilled.
     fn new(global_compiler_state: &GlobalCompilerState) -> Self {
         Self {
             global_compiler_state: global_compiler_state.to_owned(),
@@ -203,6 +223,8 @@ impl CompilerState {
         }
     }
 
+    /// Construct a new compiler state with a defined set of values that should be stored in memory,
+    /// rather than on the stack, i.e. "spilled".
     fn with_known_spills(
         global_compiler_state: &GlobalCompilerState,
         required_spills: HashSet<ValueIdentifier>,
@@ -218,12 +240,45 @@ impl CompilerState {
         }
     }
 
+    /// At the beginning of a function call, the caller will have placed all arguments
+    /// on top of the stack. This must be reflected in the vstack.
+    /// Returns a list of values that must be spilled to memory such that the code
+    /// generator can start the function with the spilling of these values.
+    fn add_input_arguments_to_vstack_and_return_spilled_fn_args(
+        &mut self,
+        input_arguments: &[AbstractArgument],
+    ) -> Vec<ValueIdentifier> {
+        const FN_ARG_NAME_PREFIX: &str = "fn_arg";
+
+        let mut fn_arg_spilling = vec![];
+        for input_arg in input_arguments {
+            match input_arg {
+                AbstractArgument::FunctionArgument(_) => todo!(),
+                AbstractArgument::ValueArgument(abstract_input) => {
+                    let (fn_arg_addr, spill) =
+                        self.new_value_identifier(FN_ARG_NAME_PREFIX, &abstract_input.data_type);
+                    self.function_state
+                        .var_addr
+                        .insert(abstract_input.name.clone(), fn_arg_addr.clone());
+
+                    if let Some(_spill_addr) = spill {
+                        fn_arg_spilling.push(fn_arg_addr);
+                    }
+                }
+            }
+        }
+
+        fn_arg_spilling
+    }
+
+    /// Return the set of values that the compiler has determined must be spilled to memory.
     fn get_required_spills(&self) -> HashSet<ValueIdentifier> {
         self.function_state.spill_required.to_owned()
     }
 
-    /// Return code for a function, without including its external dependencies, as these should only
-    /// be included once, by the outer function.
+    /// Return code for a function, without including its external dependencies and without
+    /// initialization of the dynamic memory allocator, as these pieces of code should be
+    /// included only once, by the outer function.
     fn compose_code_for_inner_function(
         &self,
         fn_name: &str,
@@ -275,7 +330,7 @@ impl CompilerState {
     }
 }
 
-pub const MIN_STACK_SIZE: usize = triton_vm::op_stack::NUM_OP_STACK_REGISTERS;
+pub const SIZE_OF_ACCESSIBLE_STACK: usize = triton_vm::op_stack::NUM_OP_STACK_REGISTERS;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ValueIdentifier {
@@ -302,7 +357,8 @@ impl CompilerState {
     }
 
     /// Get a new, guaranteed unique, identifier for a value. Returns an address to
-    /// spill the value to, iff spilling of this value is required.
+    /// spill the value to, iff spilling of this value is required. A previous run
+    /// of the compiler will have determined whether spilling is required.
     pub fn new_value_identifier(
         &mut self,
         prefix: &str,
@@ -424,7 +480,7 @@ impl CompilerState {
 
         // If value is not marked as a spilled value and it's inacessible through swap(n)/dup(n),
         // this value must be marked as a value to be spilled, and the compiler must be run again.
-        let accessible = stack_position_of_value_to_remove < MIN_STACK_SIZE;
+        let accessible = stack_position_of_value_to_remove < SIZE_OF_ACCESSIBLE_STACK;
         if old_value_spilled.is_none() && !accessible {
             self.mark_as_spilled(value_identifier_to_remove);
         }
@@ -495,7 +551,7 @@ impl CompilerState {
         // If value is not marked as a spilled value and it's inacessible through swap(n)/dup(n),
         // this value must be marked as a value to be spilled, and the compiler must be run again.
         let stack_position_of_value_to_remove = stack_position_of_tuple + tuple_depth;
-        let accessible = stack_position_of_value_to_remove < MIN_STACK_SIZE;
+        let accessible = stack_position_of_value_to_remove < SIZE_OF_ACCESSIBLE_STACK;
         if tuple_spilled.is_none() && !accessible {
             self.mark_as_spilled(tuple_identifier);
         }
@@ -608,13 +664,23 @@ impl CompilerState {
             .vstack
             .pop()
             .expect("Cannot remove all but top element from an empty stack");
-        let top_value_size = top_element.1 .0.size_of();
+        let (_top_elem_ident, (top_element_type, top_element_spilled)) = top_element.clone();
+
+        // Verify that top element is not spilled -- as we haven't covered that case yet
+        // TODO: Fix this case. That should be quite easy, I think. Not sure this can ever
+        // happen though... Please write a test demonstrating this case, before fixing it.
+        assert!(
+            top_element_spilled.is_none(),
+            "Cannot handle spilled value as top element in stack clearing yet"
+        );
+
+        let top_value_size = top_element_type.size_of();
 
         // Generate code to move value to the bottom of the requested stack range
         let words_to_remove = height_of_affected_stack - top_value_size;
         let code = if words_to_remove != 0
             && top_value_size <= words_to_remove
-            && words_to_remove < MIN_STACK_SIZE
+            && words_to_remove < SIZE_OF_ACCESSIBLE_STACK
         {
             // If we can handle the stack clearing by just swapping the top value
             // lower onto the stack and removing everything above, we do that.
@@ -630,7 +696,7 @@ impl CompilerState {
             code.append(&mut triton_asm![pop; remaining_pops]);
 
             code
-        } else if words_to_remove >= MIN_STACK_SIZE {
+        } else if words_to_remove >= SIZE_OF_ACCESSIBLE_STACK {
             // In this case, we have to clear more elements from the stack than we can
             // access with dup15/swap15. Our solution is to store the return value in
             // memory, clear the stack, and read it back from memory.
@@ -648,7 +714,7 @@ impl CompilerState {
         } else if words_to_remove != 0 {
             // Here, the number of words under the top element is less than the size of
             // the top element. We special-case this as the order on the stack
-            // must be preserverved, which is non-trivial.
+            // must be preserved, which is non-trivial.
             clear_bottom_of_stack(top_value_size, words_to_remove)
         } else {
             // The case where nothing has to be done since there is nothing below the
@@ -700,82 +766,47 @@ impl CompilerState {
     }
 }
 
+/// Compile a function, returning the code for the function body. Inherits the `global_compiler_state`
+/// from the caller but starts with an empty virtual stack and an empty variable mapping.
 fn compile_function_inner(
     function: &ast::Fn<types::Typing>,
     global_compiler_state: &mut GlobalCompilerState,
 ) -> InnerFunctionTasmCode {
-    const FN_ARG_NAME_PREFIX: &str = "fn_arg";
     let fn_name = &function.fn_signature.name;
     let _fn_stack_output_sig = format!("{}", function.fn_signature.output);
 
     // Run the compilation 1st time to learn which values need to be spilled to memory
     let mut state = CompilerState::new(global_compiler_state);
-    for arg in function.fn_signature.args.iter() {
-        match arg {
-            ast::AbstractArgument::FunctionArgument(_) => todo!(),
-            ast::AbstractArgument::ValueArgument(abstract_value) => {
-                let (fn_arg_addr, spill) =
-                    state.new_value_identifier(FN_ARG_NAME_PREFIX, &abstract_value.data_type);
-                state
-                    .function_state
-                    .var_addr
-                    .insert(abstract_value.name.clone(), fn_arg_addr);
+    let fn_arg_spilling =
+        state.add_input_arguments_to_vstack_and_return_spilled_fn_args(&function.fn_signature.args);
+    assert!(
+        fn_arg_spilling.is_empty(),
+        "Cannot memory-spill function arguments first time the code generator runs"
+    );
 
-                assert!(
-                    spill.is_none(),
-                    "Cannot handle spill 1st time code generator runs"
-                );
-            }
-        }
-    }
-
+    // Compiling the function body allows us to learn which values need to be spilled to memory
     let _fn_body_code = function
         .body
         .iter()
         .map(|stmt| compile_stmt(stmt, function, &mut state))
         .concat();
 
-    // Run the compilation again know that we know which values to spill
+    // Run the compilation again now that we know which values to spill
     println!("\n\n\nRunning compiler again\n\n\n");
     let mut state =
         CompilerState::with_known_spills(global_compiler_state, state.get_required_spills());
 
     // Add function arguments to the compiler's view of the stack.
-    let mut fn_arg_spilling = vec![];
-    for arg in function.fn_signature.args.iter() {
-        match arg {
-            ast::AbstractArgument::FunctionArgument(_) => todo!(),
-            ast::AbstractArgument::ValueArgument(abstract_value) => {
-                let (fn_arg_addr, spill) =
-                    state.new_value_identifier(FN_ARG_NAME_PREFIX, &abstract_value.data_type);
-                state
-                    .function_state
-                    .var_addr
-                    .insert(abstract_value.name.clone(), fn_arg_addr.clone());
-
-                if let Some(_spill_addr) = spill {
-                    fn_arg_spilling.push(fn_arg_addr);
-                }
-            }
-        }
-    }
-
-    let mut fn_body_code = vec![];
+    let fn_arg_spilling =
+        state.add_input_arguments_to_vstack_and_return_spilled_fn_args(&function.fn_signature.args);
 
     // Create code to spill required function arguments to memory
-    for value_id in fn_arg_spilling {
-        // Get stack depth of value
-        let (stack_depth, data_type, spill_addr) =
-            state.function_state.vstack.find_stack_value(&value_id);
+    let mut fn_body_code = state
+        .function_state
+        .vstack
+        .get_code_to_spill_to_memory(&fn_arg_spilling);
 
-        // Produce the code to spill the function argument
-        let top_of_value = stack_depth;
-        let mut spill_code =
-            store_value_in_memory(spill_addr.unwrap(), data_type.size_of(), top_of_value);
-
-        fn_body_code.append(&mut spill_code);
-    }
-
+    // Append the code for the function body
     fn_body_code.append(
         &mut function
             .body
@@ -787,8 +818,8 @@ fn compile_function_inner(
     // Sanity check: Assert that all subroutines start with a label and end with a return
     state.function_state.assert_subroutines_look_sane();
 
-    // Update global compiler state to propagate this to caller, such that dependencies
-    // that were loaded here don't have to be reloaded as they're already accessible.
+    // Update global compiler state to propagate this to caller, such that external
+    // dependencies that were loaded here will not be loaded again.
     *global_compiler_state = state.global_compiler_state.to_owned();
 
     state.compose_code_for_inner_function(fn_name, fn_body_code)
@@ -892,6 +923,8 @@ fn compile_stmt(
             let expr_code = if let ast::Expr::Var(ast::Identifier::String(var_name, _known_type)) =
                 ret_expr
             {
+                // Case: Returning a bound variable
+
                 // Remove everything above returned value
                 let needle = state
                     .function_state
@@ -899,20 +932,31 @@ fn compile_stmt(
                     .get(var_name)
                     .expect("Returned value must exist in value/addr map");
                 let mut code = vec![];
+
+                // If the returned value is a spilled value, we pop everything and
+                // load the value from memory.
+                // If the returned value is not spilled, we pop until the sought
+                // value is on top of the stack and then call a helper function
+                // to remove everything below it.
                 loop {
+                    // This loop pops values from the stack until the value we want to return.
+                    // Then the below if-expression takes over when the value is found.
                     let (haystack, (dt, spilled)) = state.function_state.vstack.peek().unwrap();
                     if *haystack == *needle {
                         match spilled {
-                            // If the returned value is a spilled value, we pop everything and
-                            // load the value from memory. Otherwise, we pop until the sought
-                            // value is on top of the stack and then call a helper function
-                            // to remove everything below it.
                             Some(spill_addr) => {
+                                // Value is spilled, so we load it from memory and clear that stack.
                                 code.append(&mut triton_asm![pop; state.function_state.vstack.get_stack_height()]);
                                 code.append(&mut load_from_memory(*spill_addr, dt.size_of()))
                             }
-                            None => code
-                                .append(&mut state.clear_all_but_top_stack_value_above_height(0)),
+
+                            None => {
+                                // Value is not spilled and is on top of the stack now. Remove everything
+                                // below it.
+                                code.append(
+                                    &mut state.clear_all_but_top_stack_value_above_height(0),
+                                );
+                            }
                         }
                         break;
                     }
@@ -921,20 +965,21 @@ fn compile_stmt(
                     state.function_state.vstack.pop();
                 }
 
-                // TODO: Cleanup `var_addr`
-
                 code
             } else {
+                // Case: Returning an expression that must be computed
                 let code =
                     compile_expr(ret_expr, "ret_expr", &function.fn_signature.output, state).1;
 
                 // Remove all but top value from stack
                 let cleanup_code = state.clear_all_but_top_stack_value_above_height(0);
 
-                // TODO: Cleanup `var_addr`
-
                 vec![code, cleanup_code].concat()
             };
+
+            // We don't need to clear `var_addr` here since we are either done with the code generation
+            // (if this is an outer function return) or we're returning from a local function that does
+            // not share `vstack` or `var_addr` with the caller.
 
             expr_code
         }
@@ -1100,6 +1145,7 @@ fn compile_fn_call(
         call_fn_code.append(&mut triton_asm!(call { name }));
     }
 
+    // Remove function arguments from vstack since they're not visible after the function call
     for _ in 0..args.len() {
         state.function_state.vstack.pop();
     }
@@ -1208,7 +1254,7 @@ fn compile_expr(
                         // If value is not marked as a spilled value and it's inacessible through swap(n)/dup(n),
                         // this value must be marked as a value to be spilled, and the compiler must be run again.
                         let bottom_position = position + result_type.size_of() - 1;
-                        let accessible = bottom_position < MIN_STACK_SIZE;
+                        let accessible = bottom_position < SIZE_OF_ACCESSIBLE_STACK;
                         if spilled.is_none() && !accessible {
                             state.mark_as_spilled(var_addr);
                         }
@@ -1263,7 +1309,7 @@ fn compile_expr(
                 // If value is not marked as a spilled value and it's inacessible through swap(n)/dup(n),
                 // this value must be marked as a value to be spilled, and the compiler must be run again.
                 let bottom_position = position + element_type.size_of() - 1;
-                let accessible = bottom_position < MIN_STACK_SIZE;
+                let accessible = bottom_position < SIZE_OF_ACCESSIBLE_STACK;
                 if spilled.is_none() && !accessible {
                     state.mark_as_spilled(&var_addr);
                 }
@@ -2114,7 +2160,7 @@ fn compile_expr(
 }
 
 /// Return the code to store a stack-value in memory
-fn store_value_in_memory(
+fn copy_value_to_memory(
     memory_location: u32,
     value_size: usize,
     stack_location_for_top_of_value: usize,
@@ -2153,8 +2199,6 @@ fn move_top_stack_value_to_memory(
     // A stack value of the form `_ val2 val1 val0`, with `val0` being on the top of the stack
     // is stored in memory as: `val0 val1 val2`, where `val0` is stored on the `memory_location`
     // address.
-    // let mut ret = vec![];
-    // ret.push(push(memory_location as u64));
     let mut ret = triton_asm!(push {memory_location as u64});
 
     for i in 0..top_value_size {

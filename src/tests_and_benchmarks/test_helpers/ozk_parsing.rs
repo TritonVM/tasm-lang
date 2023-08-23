@@ -13,7 +13,7 @@ fn extract_main(parsed_file: syn::File) -> Option<syn::ItemFn> {
 
 pub fn parse_main(module_name: &str) -> (syn::ItemFn, String) {
     let path = format!(
-        "{}/src/tests_and_benchmarks/ozk_programs/{module_name}.rs",
+        "{}/src/tests_and_benchmarks/ozk/programs/{module_name}.rs",
         env!("CARGO_MANIFEST_DIR"),
     );
     let content = fs::read_to_string(&path).expect("Unable to read file {path}");
