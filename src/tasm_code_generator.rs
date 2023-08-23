@@ -14,7 +14,6 @@ use twenty_first::shared_math::b_field_element::BFieldElement;
 use twenty_first::shared_math::bfield_codec::BFieldCodec;
 
 use self::subroutine::SubRoutine;
-use crate::compiled_tasm::CompiledTasm;
 use crate::libraries::{self};
 use crate::stack::Stack;
 use crate::types::{is_list_type, GetType};
@@ -102,6 +101,82 @@ impl FunctionState {
             "All subroutines must have a valid structure"
         );
     }
+
+    /// Add a compiled function and its subroutines to the list of subroutines, without
+    /// concatenating instructions needlessly which would delete information
+    fn add_compiled_fn_to_subroutines(&mut self, mut function: InnerFunctionTasmCode) {
+        self.subroutines.append(&mut function.sub_routines);
+        println!(
+            "bare_inner is: {}",
+            function.call_depth_zero_code.iter().join("\n")
+        );
+        self.subroutines.push(function.call_depth_zero_code.into());
+    }
+}
+
+struct InnerFunctionTasmCode {
+    name: String,
+    call_depth_zero_code: Vec<LabelledInstruction>,
+    sub_routines: Vec<SubRoutine>,
+}
+
+impl InnerFunctionTasmCode {
+    pub fn remove_own_name(&self) -> Vec<LabelledInstruction> {
+        assert!(
+            matches!(
+                self.call_depth_zero_code.first().unwrap(),
+                LabelledInstruction::Label(_)
+            ),
+            "1st line must be a label when removing it"
+        );
+        self.call_depth_zero_code[1..].to_vec()
+    }
+}
+
+pub struct OuterFunctionTasmCode {
+    function_data: InnerFunctionTasmCode,
+    external_dependencies: Vec<SubRoutine>,
+    dyn_malloc_init_code: Vec<LabelledInstruction>,
+}
+
+impl OuterFunctionTasmCode {
+    pub fn compose(&self) -> Vec<LabelledInstruction> {
+        // Remove the first label.
+        // This is done to ensure that the code wrapping this function in a `call <fn_name>, halt` logic still
+        // sets the dynamic allocator initial value. Otherwise, the dynamic memory allocation would not be
+        // included in the code executed with this wrapper code. If this code is *not* run through tests,
+        // this rearrangement is inconsequential as it just moves the initialization to after a label, which is
+        // removed later by the linker. It's not super elegant but it works. Sue me.
+        let call_depth_zero_code = self.function_data.remove_own_name();
+
+        let name = &self.function_data.name;
+        let dyn_malloc_init = self.dyn_malloc_init_code.clone();
+        let external_dependencies_code = self
+            .external_dependencies
+            .iter()
+            .map(|x| x.get_code())
+            .concat();
+        let subroutines = self
+            .function_data
+            .sub_routines
+            .iter()
+            .map(|sr| sr.get_code())
+            .concat();
+
+        let ret = triton_asm!(
+            {name}:
+                {&dyn_malloc_init}
+                {&call_depth_zero_code}
+                {&subroutines}
+                {&external_dependencies_code}
+        );
+
+        // Verify that code parses by wrapping it in a program, panics
+        // if assembly is invalid.
+        let _program = Program::new(&ret);
+
+        ret
+    }
 }
 
 /// State that is preserved across the compilation of functions
@@ -153,15 +228,16 @@ impl CompilerState {
         &self,
         fn_name: &str,
         call_depth_zero_code: Vec<LabelledInstruction>,
-    ) -> CompiledTasm {
-        triton_asm!(
+    ) -> InnerFunctionTasmCode {
+        let with_own_label = triton_asm!(
             {fn_name}:
                 {&call_depth_zero_code}
-                return
-
-            {&self.function_state.subroutines.iter().flat_map(|sub| sub.get_code()).collect_vec()}
-        )
-        .into()
+                return);
+        InnerFunctionTasmCode {
+            name: fn_name.to_owned(),
+            call_depth_zero_code: with_own_label,
+            sub_routines: self.function_state.subroutines.clone(),
+        }
     }
 
     /// Return code including those compilation steps that should only be performed once per compilation:
@@ -169,17 +245,8 @@ impl CompilerState {
     /// - importing of all external dependencies
     fn compose_code_for_outer_function(
         &self,
-        fn_name: &str,
-        call_depth_zero_code: CompiledTasm,
-    ) -> CompiledTasm {
-        // Remove the first label.
-        // This is done to ensure that the code wrapping this function in a `call <fn_name>, halt` logic still
-        // sets the dynamic allocator initial value. Otherwise, the dynamic memory allocation would not be
-        // included in the code executed with this wrapper code. If this code is *not* run through tests,
-        // this rearrangement is inconsequential as it just moves the initialization to after a label, which is
-        // removed later by the linker. It's not super elegant but it works. Sue me.
-        let call_depth_zero_code = call_depth_zero_code.remove_own_name();
-
+        inner_function: InnerFunctionTasmCode,
+    ) -> OuterFunctionTasmCode {
         // After the spilling has been done, and after all dependencies have been loaded, the `library` field
         // in the `state` now contains the information about how to initialize the dynamic memory allocator
         // such that dynamically allocated memory does not overwrite statically allocated memory. The `library`
@@ -192,18 +259,19 @@ impl CompilerState {
                 .unwrap(),
         );
 
-        let external_dependencies = self.global_compiler_state.snippet_state.all_imports();
-        let ret = triton_asm!(
-            {fn_name}:
-                {&dyn_malloc_init_code}
-                {&call_depth_zero_code}
-                {&external_dependencies}
-        );
+        let external_dependencies: Vec<SubRoutine> = self
+            .global_compiler_state
+            .snippet_state
+            .all_external_dependencies()
+            .into_iter()
+            .map(|x| x.into())
+            .collect_vec();
 
-        // Verify that code parses by wrapping it in a program
-        let _program = Program::new(&ret);
-
-        ret.into()
+        OuterFunctionTasmCode {
+            function_data: inner_function,
+            external_dependencies,
+            dyn_malloc_init_code,
+        }
     }
 }
 
@@ -635,7 +703,7 @@ impl CompilerState {
 fn compile_function_inner(
     function: &ast::Fn<types::Typing>,
     global_compiler_state: &mut GlobalCompilerState,
-) -> CompiledTasm {
+) -> InnerFunctionTasmCode {
     const FN_ARG_NAME_PREFIX: &str = "fn_arg";
     let fn_name = &function.fn_signature.name;
     let _fn_stack_output_sig = format!("{}", function.fn_signature.output);
@@ -728,11 +796,11 @@ fn compile_function_inner(
 
 // TODO: Remove this attribute once we have a sane `main` function that uses this step
 #[allow(dead_code)]
-pub(crate) fn compile_function(function: &ast::Fn<types::Typing>) -> CompiledTasm {
+pub(crate) fn compile_function(function: &ast::Fn<types::Typing>) -> OuterFunctionTasmCode {
     let mut state = CompilerState::default();
     let compiled_function = compile_function_inner(function, &mut state.global_compiler_state);
 
-    state.compose_code_for_outer_function(&function.fn_signature.name, compiled_function)
+    state.compose_code_for_outer_function(compiled_function)
 }
 
 fn compile_stmt(
@@ -981,7 +1049,9 @@ fn compile_stmt(
         }
         ast::Stmt::FnDeclaration(function) => {
             let compiled_fn = compile_function_inner(function, &mut state.global_compiler_state);
-            state.function_state.subroutines.push(compiled_fn.into());
+            state
+                .function_state
+                .add_compiled_fn_to_subroutines(compiled_fn);
 
             vec![]
         }

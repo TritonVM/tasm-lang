@@ -1,7 +1,5 @@
 use triton_vm::{instruction::LabelledInstruction, triton_instr};
 
-use crate::compiled_tasm::CompiledTasm;
-
 #[derive(Clone, Debug)]
 pub(crate) struct SubRoutine(Vec<LabelledInstruction>);
 
@@ -30,11 +28,5 @@ impl SubRoutine {
 impl From<Vec<LabelledInstruction>> for SubRoutine {
     fn from(value: Vec<LabelledInstruction>) -> Self {
         Self(value)
-    }
-}
-
-impl From<CompiledTasm> for SubRoutine {
-    fn from(value: CompiledTasm) -> Self {
-        Self(value.get_code())
     }
 }

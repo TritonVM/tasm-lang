@@ -39,13 +39,13 @@ pub fn compile_for_run_test(item_fn: &syn::ItemFn) -> (Vec<LabelledInstruction>,
         call {function_name}
         halt
 
-        {code}
+        {&code}
     );
 
     (code, function_name)
 }
 
-pub fn graft_check_compile_prop(item_fn: &syn::ItemFn) -> String {
+pub fn graft_check_compile_prop(item_fn: &syn::ItemFn) -> Vec<LabelledInstruction> {
     // parse test
     let mut function = graft_fn_decl(item_fn);
 
@@ -54,12 +54,7 @@ pub fn graft_check_compile_prop(item_fn: &syn::ItemFn) -> String {
 
     // compile
     let tasm = compile_function(&function);
-    let tasm_string: String = tasm
-        .get_code()
-        .iter()
-        .map(|instr| instr.to_string())
-        .join("\n");
-    tasm_string
+    tasm.compose()
 }
 
 pub fn execute_compiled_with_stack_memory_and_ins_for_bench(
