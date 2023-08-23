@@ -267,8 +267,8 @@ fn name_to_tasm_lib_snippet(
 
             let lnat = tasm_lib::list::higher_order::inner_function::NoFunctionBody {
                 label_name: inner_function_name.to_string(),
-                input_types: vec![inner_function_type.input_argument.try_into().unwrap()],
-                output_types: vec![inner_function_type.output.try_into().unwrap()],
+                input_type: inner_function_type.input_argument.try_into().unwrap(),
+                output_type: inner_function_type.output.try_into().unwrap(),
             };
             Some(Box::new(tasm_lib::list::higher_order::map::Map {
                 list_type: ListType::Safe,

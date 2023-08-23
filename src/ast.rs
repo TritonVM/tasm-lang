@@ -309,8 +309,10 @@ impl From<tasm_lib::snippet::DataType> for DataType {
             tasm_lib::snippet::DataType::BFE => DataType::BFE,
             tasm_lib::snippet::DataType::XFE => DataType::XFE,
             tasm_lib::snippet::DataType::Digest => DataType::Digest,
-            tasm_lib::snippet::DataType::Pair(left, right) => {
-                DataType::Tuple(vec![(*left).into(), (*right).into()])
+            tasm_lib::snippet::DataType::Tuple(tasm_types) => {
+                let element_types: Vec<DataType> =
+                    tasm_types.into_iter().map(|t| t.into()).collect();
+                DataType::Tuple(element_types)
             }
             tasm_lib::snippet::DataType::VoidPointer => DataType::VoidPointer,
             tasm_lib::snippet::DataType::List(elem_type_snip) => {
