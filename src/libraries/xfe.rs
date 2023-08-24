@@ -202,7 +202,7 @@ impl Library for XfeLibrary {
                     annot,
                 })
             }
-            _ => todo!(),
+            _ => None,
         }
     }
 }

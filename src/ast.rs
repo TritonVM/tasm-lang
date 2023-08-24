@@ -10,6 +10,12 @@ use twenty_first::shared_math::bfield_codec::BFieldCodec;
 use twenty_first::shared_math::x_field_element::XFieldElement;
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub struct Fn<T> {
+    pub fn_signature: FnSignature,
+    pub body: Vec<Stmt<T>>,
+}
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct FnSignature {
     pub name: String,
     pub args: Vec<AbstractArgument>,
@@ -22,12 +28,6 @@ pub enum ArgEvaluationOrder {
     #[default]
     LeftToRight,
     RightToLeft,
-}
-
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub struct Fn<T> {
-    pub fn_signature: FnSignature,
-    pub body: Vec<Stmt<T>>,
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
@@ -166,6 +166,7 @@ pub enum Expr<T> {
     Unary(UnaryOp, Box<Expr<T>>, T),
     If(ExprIf<T>),
     Cast(Box<Expr<T>>, DataType),
+    Field(Box<Expr<T>>, String),
     // Index(Box<Expr<T>>, Box<Expr<T>>), // a_expr[i_expr]    (a + 5)[3]
     // TODO: VM-specific intrinsics (hash, absorb, squeeze, etc.)
 }
@@ -184,6 +185,7 @@ impl<T> Display for Expr<T> {
             Expr::If(_) => "if_else".to_owned(),
             Expr::Cast(_, dt) => format!("cast_{dt}"),
             Expr::Unary(unaryop, _, _) => format!("unaryop_{unaryop:?}"),
+            Expr::Field(expr, field) => format!("field expression:{expr}.{field}"),
         };
 
         write!(f, "{str}")
@@ -212,6 +214,28 @@ pub enum DataType {
     Tuple(Vec<DataType>),
     VoidPointer,
     Function(Box<FunctionType>),
+    Struct(StructType),
+    Unresolved(String),
+}
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub struct StructType {
+    pub name: String,
+    pub fields: Vec<(String, DataType)>,
+}
+
+impl Display for StructType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}: {}",
+            self.name,
+            self.fields
+                .iter()
+                .map(|(k, v)| format!("{k} => {v}"))
+                .join(",")
+        )
+    }
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
@@ -268,6 +292,8 @@ impl DataType {
             Self::Tuple(tuple_type) => tuple_type.iter().map(Self::size_of).sum(),
             Self::VoidPointer => 1,
             Self::Function(_) => todo!(),
+            Self::Struct(_) => 1, // a pointer to a struct in memory
+            Self::Unresolved(name) => panic!("cannot get size of unresolved type {name}"),
         }
     }
 }
@@ -295,6 +321,8 @@ impl TryFrom<DataType> for tasm_lib::snippet::DataType {
             DataType::Tuple(_) => Err("Tuple cannot be converted to a tasm_lib type. Try converting its individual elements".to_string()),
             DataType::VoidPointer => Ok(tasm_lib::snippet::DataType::VoidPointer),
             DataType::Function(_) => todo!(),
+            DataType::Struct(_) => todo!(),
+            DataType::Unresolved(name) => panic!("cannot convert unresolved type {name}"),
         }
     }
 }
@@ -361,6 +389,8 @@ impl Display for DataType {
                 let output = fn_type.output.to_string();
                 format!("Function: {input} -> {output}")
             }
+            Struct(struct_type) => format!("struct_type: {struct_type}"),
+            Unresolved(name) => format!("unresolved type {name}"),
         };
         write!(f, "{str}",)
     }

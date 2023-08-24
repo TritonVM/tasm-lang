@@ -2149,6 +2149,10 @@ fn compile_expr(
                 _ => todo!(),
             }
         }
+        ast::Expr::Field(_, _) => {
+            // TODO: Construct this code
+            todo!()
+        }
     };
 
     let (addr, spill) = state.new_value_identifier(&format!("{expr}_{result_type}"), &result_type);
@@ -2318,6 +2322,8 @@ fn compile_eq_code(
         List(_) => todo!(),
         Tuple(_) => todo!(),
         Function(_) => todo!(),
+        Struct(_) => todo!(),
+        Unresolved(name) => panic!("Cannot compare unresolved type {name}"),
     }
 }
 

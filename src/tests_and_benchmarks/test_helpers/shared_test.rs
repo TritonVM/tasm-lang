@@ -50,7 +50,7 @@ pub fn graft_check_compile_prop(item_fn: &syn::ItemFn) -> Vec<LabelledInstructio
     let mut function = graft_fn_decl(item_fn);
 
     // type-check and annotate
-    annotate_fn(&mut function);
+    annotate_fn(&mut function, HashMap::default());
 
     // compile
     let tasm = compile_function(&function);

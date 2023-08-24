@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use itertools::Itertools;
 use syn::parse_quote;
 
@@ -6,6 +8,39 @@ use crate::types;
 use crate::{ast, libraries};
 
 pub type Annotation = types::Typing;
+
+pub fn graft_structs(structs: Vec<syn::ItemStruct>) -> HashMap<String, ast::StructType> {
+    let mut ret = HashMap::default();
+    for struct_ in structs {
+        let syn::ItemStruct {
+            attrs: _,
+            vis: _,
+            struct_token: _,
+            ident,
+            generics: _,
+            fields,
+            semi_token: _,
+        } = struct_;
+        let name = ident.to_string();
+        let mut ast_fields: Vec<(String, ast::DataType)> = vec![];
+
+        for field in fields.into_iter() {
+            let field_name = field.ident.unwrap().to_string();
+            let datatype = rust_type_to_data_type(&field.ty);
+            ast_fields.push((field_name, datatype));
+        }
+
+        ret.insert(
+            name.clone(),
+            ast::StructType {
+                name,
+                fields: ast_fields,
+            },
+        );
+    }
+
+    ret
+}
 
 pub fn graft_fn_decl(input: &syn::ItemFn) -> ast::Fn<Annotation> {
     let name = input.sig.ident.to_string();
@@ -46,7 +81,7 @@ fn rust_type_path_to_data_type(rust_type_path: &syn::TypePath) -> ast::DataType 
         return rust_vec_to_data_type(&rust_type_path.path.segments[0].arguments);
     }
 
-    panic!("Unsupported type {rust_type_as_string:#?}");
+    ast::DataType::Unresolved(rust_type_as_string)
 }
 
 fn rust_vec_to_data_type(path_args: &syn::PathArguments) -> ast::DataType {
@@ -342,6 +377,7 @@ pub fn graft_expr(rust_exp: &syn::Expr) -> ast::Expr<Annotation> {
 
             // TODO: Maybe not so elegant to handle this here...
             // Should be handled on a different level
+            // TODO: Put this into `unsigned` library
             if ident == "u32::MAX" {
                 ast::Expr::Lit(ast::ExprLit::U32(u32::MAX))
             } else if ident == "u64::MAX" {
@@ -399,15 +435,21 @@ pub fn graft_expr(rust_exp: &syn::Expr) -> ast::Expr<Annotation> {
                 Some(ident) => ident,
                 None => panic!("unsupported: {field_expr:?}"),
             };
-            let tuple_index = match &field_expr.member {
-                syn::Member::Named(_) => panic!("unsupported: {field_expr:?}"),
-                syn::Member::Unnamed(tuple_index) => tuple_index,
-            };
-
-            ast::Expr::Var(ast::Identifier::TupleIndex(
-                Box::new(ast::Identifier::String(ident, Default::default())),
-                tuple_index.index as usize,
-            ))
+            match &field_expr.member {
+                // named field `foo.bar`
+                syn::Member::Named(field_name) => ast::Expr::Field(
+                    Box::new(ast::Expr::Var(ast::Identifier::String(
+                        ident,
+                        Default::default(),
+                    ))),
+                    field_name.to_string(),
+                ),
+                // unnamed field `tuple.2`
+                syn::Member::Unnamed(tuple_index) => ast::Expr::Var(ast::Identifier::TupleIndex(
+                    Box::new(ast::Identifier::String(ident, Default::default())),
+                    tuple_index.index as usize,
+                )),
+            }
         }
         syn::Expr::Index(index_expr) => {
             let expr = graft_expr(&index_expr.expr);
@@ -442,7 +484,11 @@ pub fn graft_expr(rust_exp: &syn::Expr) -> ast::Expr<Annotation> {
                 let ast_expr = graft_expr(&(*expr).to_owned());
                 ast::Expr::Unary(ast::UnaryOp::Neg, Box::new(ast_expr), Default::default())
             }
-            syn::UnOp::Deref(deref) => panic!("unsupported: {deref:?}"),
+            syn::UnOp::Deref(_deref) => {
+                // For now, * (dereference) has no impact on the grafter/compiler
+                let ast_expr = graft_expr(&(*expr).to_owned());
+                ast_expr
+            }
         },
         syn::Expr::Reference(syn::ExprReference {
             attrs: _,

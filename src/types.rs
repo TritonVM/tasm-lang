@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use twenty_first::shared_math::b_field_element::BFieldElement;
 use twenty_first::shared_math::x_field_element::XFieldElement;
 
-use crate::ast::{AbstractFunctionArg, AbstractValueArg, FunctionType};
+use crate::ast::{AbstractFunctionArg, AbstractValueArg, FunctionType, StructType};
 use crate::tasm_code_generator::SIZE_OF_ACCESSIBLE_STACK;
 use crate::{ast, libraries};
 
@@ -60,6 +60,20 @@ impl<T: GetType> GetType for ast::Expr<T> {
             ast::Expr::If(if_expr) => if_expr.get_type(),
             ast::Expr::Cast(_expr, t) => t.to_owned(),
             ast::Expr::Unary(_unaryop, inner_expr, _) => inner_expr.get_type(),
+            ast::Expr::Field(expr, requested_field_name) => {
+                let expr_type = expr.get_type();
+                if let ast::DataType::Struct(StructType { name, fields }) = expr.get_type() {
+                    match fields
+                        .iter()
+                        .find_position(|&field| field.0 == *requested_field_name)
+                    {
+                        Some((_, item)) => item.1.to_owned(),
+                        None => panic!("Struct {name} has no field of name {requested_field_name}"),
+                    }
+                } else {
+                    panic!("Field getter can only operate on type of struct. Attempted to access field {requested_field_name} on type {expr_type}")
+                }
+            }
         }
     }
 }
@@ -115,6 +129,8 @@ pub struct CheckState {
     ///
     /// This is used for determining the type of function calls in expressions.
     pub ftable: HashMap<String, ast::FnSignature>,
+
+    pub declared_structs: HashMap<String, ast::StructType>,
 }
 
 #[derive(Clone, Debug)]
@@ -141,7 +157,10 @@ impl DataTypeAndMutability {
     }
 }
 
-pub fn annotate_fn(function: &mut ast::Fn<Typing>) {
+pub fn annotate_fn(
+    function: &mut ast::Fn<Typing>,
+    declared_structs: HashMap<String, ast::StructType>,
+) {
     // Initialize `CheckState`
     let vtable: HashMap<String, DataTypeAndMutability> =
         HashMap::with_capacity(function.fn_signature.args.len());
@@ -151,7 +170,11 @@ pub fn annotate_fn(function: &mut ast::Fn<Typing>) {
         function.fn_signature.name.clone(),
         function.fn_signature.clone(),
     );
-    let mut state = CheckState { vtable, ftable };
+    let mut state = CheckState {
+        vtable,
+        ftable,
+        declared_structs,
+    };
 
     // Populate vtable with function arguments
     for arg in function.fn_signature.args.iter() {
@@ -333,7 +356,7 @@ fn annotate_stmt(
             assert_type_equals(&expr_type, &ast::DataType::Bool, "assert expression");
         }
         ast::Stmt::FnDeclaration(function) => {
-            annotate_fn(function);
+            annotate_fn(function, HashMap::default());
             state.ftable.insert(
                 function.fn_signature.name.clone(),
                 function.fn_signature.clone(),
@@ -635,6 +658,11 @@ fn derive_annotate_expr_type(
                 .map(|expr| derive_annotate_expr_type(expr, no_hint, state))
                 .collect();
             ast::DataType::Tuple(tuple_types)
+        }
+        ast::Expr::Field(expr, field_name) => {
+            println!("expr: {expr:?}");
+            println!("field_name: {field_name:?}");
+            todo!()
         }
 
         ast::Expr::FnCall(ast::FnCall {

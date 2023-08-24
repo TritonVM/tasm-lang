@@ -175,7 +175,7 @@ impl Library for VectorLib {
                             annot,
                         })
                     }
-                    _ => todo!(),
+                    _ => return None,
                 }
             }
             COLLECT_VEC_NAME => {

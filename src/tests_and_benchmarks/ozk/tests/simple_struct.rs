@@ -1,9 +1,10 @@
-use std::collections::HashMap;
-
-use crate::tests_and_benchmarks::{
-    ozk::{self, ozk_parsing, programs::simple_struct::TestStruct, rust_shadows},
-    test_helpers::shared_test::*,
+use crate::graft::{graft_fn_decl, graft_structs};
+use crate::tasm_code_generator::compile_function;
+use crate::tests_and_benchmarks::ozk::{
+    self, ozk_parsing, programs::simple_struct::TestStruct, rust_shadows,
 };
+use crate::types::annotate_fn;
+
 use triton_vm::{BFieldElement, NonDeterminism};
 use twenty_first::shared_math::bfield_codec::BFieldCodec;
 
@@ -34,16 +35,16 @@ fn simple_struct_ozk_test() {
     assert_eq!(native_output, expected_output);
 
     // Test function in Triton VM
-    let (parsed, _, _) = ozk_parsing::parse_main_and_structs("simple_struct");
-    println!("parsed: {parsed:?}");
-    let expected_stack_diff = 0;
-    let _vm_output = execute_with_stack_memory_and_ins(
-        &parsed,
-        vec![],
-        &mut HashMap::default(),
-        input,
-        non_determinism,
-        expected_stack_diff,
-    )
-    .unwrap();
+    let (parsed_main, parsed_structs, _) = ozk_parsing::parse_main_and_structs("simple_struct");
+    println!("parsed_main: {parsed_main:?}");
+
+    // parse test
+    let mut function = graft_fn_decl(&parsed_main);
+    let structs = graft_structs(parsed_structs);
+
+    // type-check and annotate
+    annotate_fn(&mut function, structs);
+
+    // compile
+    let tasm = compile_function(&function);
 }
