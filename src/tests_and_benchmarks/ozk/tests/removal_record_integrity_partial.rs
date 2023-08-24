@@ -21,7 +21,7 @@ fn removal_record_integrity_partial_test() {
     assert_eq!(native_output, expected_output);
 
     // Test function in Triton VM
-    let (parsed, _) = ozk_parsing::parse_main("removal_record_integrity_partial");
+    let (parsed, _, _) = ozk_parsing::parse_main_and_structs("removal_record_integrity_partial");
     let expected_stack_diff = 0;
     let vm_output = execute_with_stack_memory_and_ins(
         &parsed,

@@ -25,7 +25,7 @@ fn simple_map_on_bfe_test() {
     assert_eq!(native_output, expected_output);
 
     // Test function in Triton VM
-    let (parsed, _) = ozk_parsing::parse_main("simple_map_on_bfe");
+    let (parsed, _, _) = ozk_parsing::parse_main_and_structs("simple_map_on_bfe");
     let expected_stack_diff = 0;
     let vm_output = execute_with_stack_memory_and_ins(
         &parsed,
@@ -64,7 +64,8 @@ mod bench {
             non_determinism: NonDeterminism::new(vec![]),
         };
 
-        let (parsed_code, module_name) = ozk_parsing::parse_main("simple_map_on_bfe");
+        let (parsed_code, _, module_name) =
+            ozk_parsing::parse_main_and_structs("simple_map_on_bfe");
         let (code, _fn_name) = compile_for_run_test(&parsed_code);
         execute_and_write_benchmark(module_name, code, common_case, worst_case, 0)
     }

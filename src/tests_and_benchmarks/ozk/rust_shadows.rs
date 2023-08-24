@@ -1,3 +1,4 @@
+use num::Zero;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::thread_local;
@@ -21,6 +22,26 @@ thread_local! {
     static ND_MEMORY: RefCell<HashMap<BFieldElement, BFieldElement>> = RefCell::new(HashMap::default());
 }
 
+pub fn load_from_memory() -> Vec<BFieldElement> {
+    // Loads everything from address 1 an upwards
+    // TODO: We probably want to be able to set the
+    // starting address of the memory we want to load
+    let mut sorted_key_values = ND_MEMORY.with(|v| {
+        let mut ret = vec![];
+        for (k, v) in v.borrow().iter() {
+            ret.push((*k, *v));
+        }
+        ret
+    });
+    sorted_key_values.sort_unstable_by_key(|x| x.0.value());
+    let sorted_values = sorted_key_values
+        .iter()
+        .filter(|(k, _v)| !k.is_zero())
+        .map(|x| x.1)
+        .collect();
+    sorted_values
+}
+
 pub fn init_io(pub_input: Vec<BFieldElement>, non_determinism: NonDeterminism<BFieldElement>) {
     let mut pub_input_reversed = pub_input;
     pub_input_reversed.reverse();
@@ -38,6 +59,9 @@ pub fn init_io(pub_input: Vec<BFieldElement>, non_determinism: NonDeterminism<BF
     });
     ND_DIGESTS.with(|v| {
         *v.borrow_mut() = digests_reversed;
+    });
+    ND_MEMORY.with(|v| {
+        *v.borrow_mut() = non_determinism.ram;
     });
     PUB_OUTPUT.with(|v| {
         *v.borrow_mut() = vec![];
