@@ -22,7 +22,7 @@ thread_local! {
     static ND_MEMORY: RefCell<HashMap<BFieldElement, BFieldElement>> = RefCell::new(HashMap::default());
 }
 
-pub fn load_from_memory() -> Vec<BFieldElement> {
+pub fn load_from_memory(start_address: BFieldElement) -> Vec<BFieldElement> {
     // Loads everything from address 1 an upwards
     // TODO: We probably want to be able to set the
     // starting address of the memory we want to load
@@ -36,7 +36,7 @@ pub fn load_from_memory() -> Vec<BFieldElement> {
     sorted_key_values.sort_unstable_by_key(|x| x.0.value());
     let sorted_values = sorted_key_values
         .iter()
-        .filter(|(k, _v)| !k.is_zero())
+        .filter(|(k, _v)| k.value() >= start_address.value())
         .map(|x| x.1)
         .collect();
     sorted_values

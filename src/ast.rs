@@ -101,6 +101,7 @@ pub enum ExprLit<T> {
     BFE(BFieldElement),
     XFE(XFieldElement),
     Digest(Digest),
+    Struct(String, BFieldElement), // Do we need type here as well?
     GenericNum(u128, T),
 }
 
@@ -121,6 +122,7 @@ impl<T> BFieldCodec for ExprLit<T> {
             ExprLit::XFE(value) => value.encode(),
             ExprLit::Digest(value) => value.encode(),
             ExprLit::GenericNum(_, _) => todo!(),
+            ExprLit::Struct(_, _) => todo!(),
         }
     }
 

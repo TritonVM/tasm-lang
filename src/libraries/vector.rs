@@ -135,7 +135,7 @@ impl Library for VectorLib {
     fn graft_method(
         &self,
         rust_method_call: &syn::ExprMethodCall,
-    ) -> Option<ast::MethodCall<super::Annotation>> {
+    ) -> Option<ast::Expr<super::Annotation>> {
         const POP_NAME: &str = "pop";
         const COLLECT_VEC_NAME: &str = "collect_vec";
         const UNWRAP_NAME: &str = "unwrap";
@@ -149,6 +149,10 @@ impl Library for VectorLib {
                 match rust_method_call.receiver.as_ref() {
                     syn::Expr::MethodCall(rust_inner_method_call) => {
                         let inner_method_call = graft::graft_method_call(rust_inner_method_call);
+                        let inner_method_call = match inner_method_call {
+                            ast::Expr::MethodCall(mc) => mc,
+                            _ => return None,
+                        };
                         if inner_method_call.method_name != POP_NAME {
                             return None;
                         }
@@ -169,11 +173,11 @@ impl Library for VectorLib {
                         );
                         let annot = Default::default();
 
-                        Some(ast::MethodCall {
+                        Some(ast::Expr::MethodCall(ast::MethodCall {
                             method_name: POP_NAME.to_owned(),
                             args,
                             annot,
-                        })
+                        }))
                     }
                     _ => return None,
                 }
@@ -182,6 +186,10 @@ impl Library for VectorLib {
                 match rust_method_call.receiver.as_ref() {
                     syn::Expr::MethodCall(rust_inner_method_call) => {
                         let inner_method_call = graft::graft_method_call(rust_inner_method_call);
+                        let inner_method_call = match inner_method_call {
+                            ast::Expr::MethodCall(mc) => mc,
+                            _ => return None,
+                        };
                         if inner_method_call.method_name != MAP_NAME {
                             return None;
                         }
@@ -196,6 +204,10 @@ impl Library for VectorLib {
 
                                 let inner_inner_method_call =
                                     graft::graft_method_call(rust_inner_inner_method_call);
+                                let inner_inner_method_call = match inner_inner_method_call {
+                                    ast::Expr::MethodCall(mc) => mc,
+                                    _ => return None,
+                                };
 
                                 match &inner_inner_method_call.args[0] {
                                     ast::Expr::Var(ident) => ident.to_owned(),
@@ -216,11 +228,11 @@ impl Library for VectorLib {
                         );
                         let annot: Annotation = Default::default();
 
-                        Some(ast::MethodCall {
+                        Some(ast::Expr::MethodCall(ast::MethodCall {
                             method_name: MAP_NAME.to_owned(),
                             args,
                             annot,
-                        })
+                        }))
                     }
                     _ => todo!(),
                 }

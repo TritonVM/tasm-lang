@@ -1240,6 +1240,7 @@ fn compile_expr(
             ast::ExprLit::GenericNum(n, _) => {
                 panic!("Type of number literal {n} not resolved")
             }
+            ast::ExprLit::Struct(_type, pointer) => triton_asm!(push { pointer }),
         },
 
         ast::Expr::Var(identifier) => match identifier {

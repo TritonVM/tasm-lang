@@ -42,6 +42,7 @@ impl<T: GetType> GetType for ast::ExprLit<T> {
             ast::ExprLit::XFE(_) => ast::DataType::XFE,
             ast::ExprLit::Digest(_) => ast::DataType::Digest,
             ast::ExprLit::GenericNum(_, t) => t.get_type(),
+            ast::ExprLit::Struct(type_name, _) => ast::DataType::Unresolved(type_name.to_owned()),
         }
     }
 }
@@ -614,6 +615,13 @@ fn derive_annotate_expr_type(
         ast::Expr::Lit(ast::ExprLit::BFE(_)) => ast::DataType::BFE,
         ast::Expr::Lit(ast::ExprLit::XFE(_)) => ast::DataType::XFE,
         ast::Expr::Lit(ast::ExprLit::Digest(_)) => ast::DataType::Digest,
+        ast::Expr::Lit(ast::ExprLit::Struct(type_name, _)) => {
+            let resolved_type = state
+                .declared_structs
+                .get(type_name)
+                .expect("{type_name} not known to type checker");
+            ast::DataType::Struct(resolved_type.to_owned())
+        }
         ast::Expr::Lit(ast::ExprLit::GenericNum(n, _t)) => {
             use ast::DataType::*;
 

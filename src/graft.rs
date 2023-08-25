@@ -234,7 +234,7 @@ pub fn path_to_type_parameter(path: &syn::Path) -> Option<ast::DataType> {
     type_parameter
 }
 
-fn graft_call_exp(
+pub(crate) fn graft_call_exp(
     syn::ExprCall {
         attrs: _,
         func,
@@ -317,9 +317,7 @@ fn expr_as_identifier(rust_exp: &syn::Expr) -> ast::Identifier<Annotation> {
     }
 }
 
-pub(crate) fn graft_method_call(
-    rust_method_call: &syn::ExprMethodCall,
-) -> ast::MethodCall<Annotation> {
+pub(crate) fn graft_method_call(rust_method_call: &syn::ExprMethodCall) -> ast::Expr<Annotation> {
     for lib in libraries::all_libraries() {
         if let Some(method_call) = lib.graft_method(rust_method_call) {
             return method_call;
@@ -332,11 +330,11 @@ pub(crate) fn graft_method_call(
     let mut args = vec![receiver_expr];
     args.append(&mut rust_method_call.args.iter().map(graft_expr).collect_vec());
     let annot = Default::default();
-    ast::MethodCall {
+    ast::Expr::MethodCall(ast::MethodCall {
         method_name: last_method_name,
         args,
         annot,
-    }
+    })
 }
 
 /// Handle Rust expressions of the type i += 1
@@ -424,9 +422,7 @@ pub fn graft_expr(rust_exp: &syn::Expr) -> ast::Expr<Annotation> {
                 else_branch: Box::new(else_branch),
             })
         }
-        syn::Expr::MethodCall(method_call_expr) => {
-            ast::Expr::MethodCall(graft_method_call(method_call_expr))
-        }
+        syn::Expr::MethodCall(method_call_expr) => graft_method_call(method_call_expr),
         syn::Expr::Field(field_expr) => {
             // This branch is for tuple support.
             // Nested tuples are not supported, and that's probably preferable
@@ -706,7 +702,11 @@ pub fn graft_stmt(rust_stmt: &syn::Stmt) -> ast::Stmt<Annotation> {
                 ast::Stmt::Assign(assign_stmt)
             }
             syn::Expr::MethodCall(method_call_expr) => {
-                ast::Stmt::MethodCall(graft_method_call(method_call_expr))
+                let grafted = graft_method_call(method_call_expr);
+                match grafted {
+                    ast::Expr::MethodCall(mc) => ast::Stmt::MethodCall(mc),
+                    _ => panic!("Statement method call must graft to method call"),
+                }
             }
             syn::Expr::Macro(expr_macro) => {
                 let ident = path_to_ident(&expr_macro.mac.path);

@@ -6,6 +6,7 @@ use crate::{
 use std::fmt::Debug;
 
 pub mod bfe;
+pub mod bfield_codec;
 pub mod hasher;
 pub mod tasm;
 pub mod unsigned_integers;
@@ -22,6 +23,7 @@ pub struct CompiledFunction {
 pub fn all_libraries() -> Vec<Box<dyn Library>> {
     vec![
         Box::new(bfe::BfeLibrary),
+        Box::new(bfield_codec::BFieldCodecLib),
         Box::new(hasher::HasherLib),
         Box::new(tasm::TasmLibrary),
         Box::new(unsigned_integers::UnsignedIntegersLib),
@@ -81,8 +83,6 @@ pub trait Library: Debug {
         args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
     ) -> Option<ast::Expr<Annotation>>;
 
-    fn graft_method(
-        &self,
-        rust_method_call: &syn::ExprMethodCall,
-    ) -> Option<ast::MethodCall<Annotation>>;
+    fn graft_method(&self, rust_method_call: &syn::ExprMethodCall)
+        -> Option<ast::Expr<Annotation>>;
 }

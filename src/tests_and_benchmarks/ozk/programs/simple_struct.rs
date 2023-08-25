@@ -11,7 +11,8 @@ pub(crate) struct TestStruct {
 }
 
 pub(crate) fn main() {
-    let test_struct: TestStruct = *TestStruct::decode(&mut tasm::load_from_memory()).unwrap();
+    let test_struct: TestStruct =
+        *TestStruct::decode(&mut tasm::load_from_memory(BFieldElement::new(1))).unwrap();
     let a: BFieldElement = test_struct.a;
     tasm::tasm_io_write_to_stdout_bfe(a);
     tasm::tasm_io_write_to_stdout_bfe(test_struct.b);

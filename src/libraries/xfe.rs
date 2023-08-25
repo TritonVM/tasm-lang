@@ -162,7 +162,7 @@ impl Library for XfeLibrary {
     fn graft_method(
         &self,
         rust_method_call: &syn::ExprMethodCall,
-    ) -> Option<ast::MethodCall<super::Annotation>> {
+    ) -> Option<ast::Expr<super::Annotation>> {
         // Handle `unlift().unwrap()`. Ignore everything else.
         const UNWRAP_NAME: &str = "unwrap";
         const UNLIFT_NAME: &str = "unlift";
@@ -176,6 +176,10 @@ impl Library for XfeLibrary {
         match rust_method_call.receiver.as_ref() {
             syn::Expr::MethodCall(rust_inner_method_call) => {
                 let inner_method_call = graft::graft_method_call(rust_inner_method_call);
+                let inner_method_call = match inner_method_call {
+                    ast::Expr::MethodCall(mc) => mc,
+                    _ => return None,
+                };
                 if inner_method_call.method_name != UNLIFT_NAME {
                     return None;
                 }
@@ -196,11 +200,11 @@ impl Library for XfeLibrary {
                 );
                 let annot = Default::default();
 
-                Some(ast::MethodCall {
+                Some(ast::Expr::MethodCall(ast::MethodCall {
                     method_name: UNLIFT_NAME.to_owned(),
                     args,
                     annot,
-                })
+                }))
             }
             _ => None,
         }

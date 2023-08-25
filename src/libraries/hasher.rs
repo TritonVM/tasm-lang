@@ -89,7 +89,7 @@ impl Library for HasherLib {
     fn graft_method(
         &self,
         _rust_method_call: &syn::ExprMethodCall,
-    ) -> Option<ast::MethodCall<super::Annotation>> {
+    ) -> Option<ast::Expr<super::Annotation>> {
         None
     }
 }
