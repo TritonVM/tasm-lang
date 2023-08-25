@@ -245,6 +245,15 @@ fn annotate_stmt(
                 panic!("let-assign cannot shadow existing variable '{var_name}'!");
             }
 
+            // Lookup type if declaration is of a non-primitive type
+            if let ast::DataType::Unresolved(unresolved_type_name) = data_type {
+                *data_type = state
+                    .declared_structs
+                    .get(unresolved_type_name)
+                    .unwrap_or_else(|| panic!("Unknown type name: {unresolved_type_name}"))
+                    .into();
+            }
+
             let let_expr_hint: Option<&ast::DataType> = Some(data_type);
             let derived_type = derive_annotate_expr_type(expr, let_expr_hint, state);
             assert_type_equals(&derived_type, data_type, "let-statement");
@@ -668,9 +677,18 @@ fn derive_annotate_expr_type(
             ast::DataType::Tuple(tuple_types)
         }
         ast::Expr::Field(expr, field_name) => {
-            println!("expr: {expr:?}");
-            println!("field_name: {field_name:?}");
-            todo!()
+            // Get the receiver type (the type of the left-hand side of the `.`)
+            let receiver_type = derive_annotate_expr_type(expr, None, state);
+
+            // Only structs have fields, so receiver_type must be a struct
+            if let ast::DataType::Struct(StructType { name, fields }) = receiver_type {
+                match fields.iter().find(|&field| field.0 == *field_name) {
+                    Some((_, item)) => item.to_owned(),
+                    None => panic!("Struct {name} has no field of name {field_name}"),
+                }
+            } else {
+                panic!("Field getter can only operate on type of struct. Attempted to access field {field_name} on type {receiver_type}")
+            }
         }
 
         ast::Expr::FnCall(ast::FnCall {

@@ -226,6 +226,18 @@ pub struct StructType {
     pub fields: Vec<(String, DataType)>,
 }
 
+impl From<StructType> for DataType {
+    fn from(value: StructType) -> Self {
+        DataType::Struct(value)
+    }
+}
+
+impl From<&StructType> for DataType {
+    fn from(value: &StructType) -> Self {
+        value.to_owned().into()
+    }
+}
+
 impl Display for StructType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(

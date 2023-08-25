@@ -2150,7 +2150,9 @@ fn compile_expr(
                 _ => todo!(),
             }
         }
-        ast::Expr::Field(_, _) => {
+        ast::Expr::Field(expr, field_name) => {
+            println!("expr = {:#?}", expr);
+            panic!("field_name = {field_name}");
             // TODO: Construct this code
             todo!()
         }
