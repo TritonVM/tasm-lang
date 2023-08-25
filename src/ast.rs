@@ -217,6 +217,7 @@ pub enum DataType {
     VoidPointer,
     Function(Box<FunctionType>),
     Struct(StructType),
+    MemPointer(Box<DataType>),
     Unresolved(String),
 }
 
@@ -308,6 +309,7 @@ impl DataType {
             Self::Function(_) => todo!(),
             Self::Struct(_) => 1, // a pointer to a struct in memory
             Self::Unresolved(name) => panic!("cannot get size of unresolved type {name}"),
+            Self::MemPointer(_) => 1,
         }
     }
 }
@@ -337,6 +339,12 @@ impl TryFrom<DataType> for tasm_lib::snippet::DataType {
             DataType::Function(_) => todo!(),
             DataType::Struct(_) => todo!(),
             DataType::Unresolved(name) => panic!("cannot convert unresolved type {name}"),
+            DataType::MemPointer(value) => match *value {
+                // A MemPointer to a list is just a list (an unsafe list, actually)
+                DataType::List(_) => (*value).try_into(),
+                DataType::Unresolved(_) => todo!(),
+                _ => Ok(tasm_lib::snippet::DataType::VoidPointer),
+            }
         }
     }
 }
@@ -405,6 +413,7 @@ impl Display for DataType {
             }
             Struct(struct_type) => format!("struct_type: {struct_type}"),
             Unresolved(name) => format!("unresolved type {name}"),
+            MemPointer(ty) => format!("mempoint({ty})"),
         };
         write!(f, "{str}",)
     }

@@ -2326,6 +2326,7 @@ fn compile_eq_code(
         Tuple(_) => todo!(),
         Function(_) => todo!(),
         Struct(_) => todo!(),
+        MemPointer(_) => todo!("Comparison of MemPointer not supported yet"),
         Unresolved(name) => panic!("Cannot compare unresolved type {name}"),
     }
 }

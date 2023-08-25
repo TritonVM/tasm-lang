@@ -683,7 +683,17 @@ fn derive_annotate_expr_type(
             // Only structs have fields, so receiver_type must be a struct
             if let ast::DataType::Struct(StructType { name, fields }) = receiver_type {
                 match fields.iter().find(|&field| field.0 == *field_name) {
-                    Some((_, item)) => item.to_owned(),
+                    // Type of the field is either another struct, or a pointer to a primitive
+                    // type living in memory. In case of a pointer to a list, that is the same
+                    // as a list. An unsafe one, though, so we keep the list wrapped in a
+                    // MemPointer for now.
+                    // TODO: Once #38 is implemented, we can remove the MemPointer here and
+                    // use unsafe list type here.
+                    Some((_, item)) => match item {
+                        ast::DataType::Struct(_) => item.to_owned(),
+                        // ast::DataType::List(_) => item.to_owned(),
+                        _ => ast::DataType::MemPointer(Box::new(item.clone())),
+                    },
                     None => panic!("Struct {name} has no field of name {field_name}"),
                 }
             } else {

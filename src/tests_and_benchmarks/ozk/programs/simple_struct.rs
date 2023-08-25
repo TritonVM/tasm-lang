@@ -13,8 +13,8 @@ pub(crate) struct TestStruct {
 pub(crate) fn main() {
     let test_struct: TestStruct =
         *TestStruct::decode(&mut tasm::load_from_memory(BFieldElement::new(1))).unwrap();
-    let a: BFieldElement = test_struct.a;
-    tasm::tasm_io_write_to_stdout_bfe(a);
+    let a: &BFieldElement = &test_struct.a; // Use 1 `&`, ignore the 2nd `&`.
+    tasm::tasm_io_write_to_stdout_bfe(*a); // Implement both `*` and method `to_owned` to mean put this onto the stack. We might need exceptions for list though.
     tasm::tasm_io_write_to_stdout_bfe(test_struct.b);
     return;
 }
