@@ -4,7 +4,9 @@ use std::str::FromStr;
 
 use anyhow::bail;
 use itertools::Itertools;
-use triton_vm::Digest;
+use num::Zero;
+use triton_vm::instruction::LabelledInstruction;
+use triton_vm::{triton_asm, Digest};
 use twenty_first::shared_math::b_field_element::BFieldElement;
 use twenty_first::shared_math::bfield_codec::BFieldCodec;
 use twenty_first::shared_math::x_field_element::XFieldElement;
@@ -101,8 +103,14 @@ pub enum ExprLit<T> {
     BFE(BFieldElement),
     XFE(XFieldElement),
     Digest(Digest),
-    Struct(String, BFieldElement), // Do we need type here as well?
+    MemPointer(MemPointerLiteral),
     GenericNum(u128, T),
+}
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub struct MemPointerLiteral {
+    pub mem_pointer_address: BFieldElement,
+    pub struct_name: String,
 }
 
 impl<T> BFieldCodec for ExprLit<T> {
@@ -122,7 +130,7 @@ impl<T> BFieldCodec for ExprLit<T> {
             ExprLit::XFE(value) => value.encode(),
             ExprLit::Digest(value) => value.encode(),
             ExprLit::GenericNum(_, _) => todo!(),
-            ExprLit::Struct(_, _) => todo!(),
+            ExprLit::MemPointer(_) => todo!(),
         }
     }
 
@@ -155,6 +163,7 @@ pub enum BinOp {
 pub enum UnaryOp {
     Neg,
     Not,
+    Deref,
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
@@ -239,6 +248,27 @@ impl From<&StructType> for DataType {
     }
 }
 
+impl StructType {
+    pub fn get_field_type(&self, field_name: &str) -> DataType {
+        match self.fields.iter().find(|&field| field.0 == *field_name) {
+            // Type of the field is either another struct, or a pointer to a primitive
+            // type living in memory. In case of a pointer to a list, that is the same
+            // as a list. An unsafe one, though, so we keep the list wrapped in a
+            // MemPointer for now.
+            // TODO: Once #38 is implemented, we can remove the MemPointer here and
+            // use unsafe list type here.
+            // Some((_field_name, field_type)) => match field_type {
+            //     DataType::Struct(_) => field_type.to_owned(),
+            //     // ast::DataType::List(_) => item.to_owned(),
+            //     // _ => DataType::MemPointer(Box::new(field_type.clone())),
+            Some((_field_name, field_type)) => field_type.to_owned(),
+
+            // },
+            None => panic!("Struct {} has no field of name {field_name}", self.name),
+        }
+    }
+}
+
 impl Display for StructType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
@@ -290,11 +320,41 @@ impl DataType {
         }
     }
 
+    // Notice that this implementation must match that derived by `BFieldCodec`
+    pub fn bfield_codec_length(&self) -> Option<usize> {
+        match self {
+            DataType::Bool => Some(1),
+            DataType::U32 => Some(1),
+            DataType::U64 => Some(2),
+            DataType::U128 => Some(4),
+            DataType::BFE => Some(1),
+            DataType::XFE => Some(3),
+            DataType::Digest => Some(5),
+            DataType::Tuple(inner_types) => inner_types
+                .iter()
+                .map(|x| x.bfield_codec_length())
+                .fold(Some(0), |acc, x| acc.and_then(|a| x.map(|v| a + v))),
+            DataType::List(_) => None,
+            DataType::Struct(struct_type) => {
+                struct_type
+                    .fields
+                    .iter()
+                    .fold(Some(0), |acc, (_, field_type)| {
+                        acc.and_then(|a| field_type.bfield_codec_length().map(|v| a + v))
+                    })
+            }
+            DataType::MemPointer(inner_type) => inner_type.bfield_codec_length(),
+            DataType::VoidPointer => todo!(),
+            DataType::Function(_) => todo!(),
+            DataType::Unresolved(_) => todo!(),
+        }
+    }
+
     pub fn unit() -> Self {
         Self::Tuple(vec![])
     }
 
-    pub fn size_of(&self) -> usize {
+    pub fn stack_size(&self) -> usize {
         match self {
             Self::Bool => 1,
             Self::U32 => 1,
@@ -304,12 +364,86 @@ impl DataType {
             Self::XFE => 3,
             Self::Digest => 5,
             Self::List(_list_type) => 1,
-            Self::Tuple(tuple_type) => tuple_type.iter().map(Self::size_of).sum(),
+            Self::Tuple(tuple_type) => tuple_type.iter().map(Self::stack_size).sum(),
             Self::VoidPointer => 1,
             Self::Function(_) => todo!(),
             Self::Struct(_) => 1, // a pointer to a struct in memory
             Self::Unresolved(name) => panic!("cannot get size of unresolved type {name}"),
             Self::MemPointer(_) => 1,
+        }
+    }
+
+    /// Returns true iff any of the contained types have to be resolved through types associated with the program
+    pub fn is_unresolved(&self) -> bool {
+        match self {
+            DataType::Unresolved(_) => true,
+            DataType::MemPointer(inner) => inner.is_unresolved(),
+            DataType::Tuple(inners) => inners.iter().any(|inner| inner.is_unresolved()),
+            DataType::List(element) => element.is_unresolved(),
+            DataType::Struct(StructType { name: _, fields }) => fields
+                .iter()
+                .any(|(_field_name, field_type)| field_type.is_unresolved()),
+            DataType::Function(function_type) => {
+                function_type.input_argument.is_unresolved() || function_type.output.is_unresolved()
+            }
+            _ => false,
+        }
+    }
+
+    pub fn resolve_types(&self, declared_structs: &HashMap<String, StructType>) -> Self {
+        match self {
+            DataType::Unresolved(unresolved_type) => {
+                let outer_resolved = declared_structs
+                    .get(unresolved_type)
+                    .expect("Failed to resolve type {unresolved_type}. Does not know this type.");
+                let resolved_fields = outer_resolved
+                    .fields
+                    .iter()
+                    .map(|(field_name, field_type)| {
+                        (
+                            field_name.to_owned(),
+                            field_type.resolve_types(declared_structs),
+                        )
+                    })
+                    .collect_vec();
+                DataType::Struct(StructType {
+                    name: outer_resolved.name.clone(),
+                    fields: resolved_fields,
+                })
+            }
+            DataType::List(inner) => {
+                DataType::List(Box::new(inner.resolve_types(declared_structs)))
+            }
+            DataType::Tuple(inners) => DataType::Tuple(
+                inners
+                    .iter()
+                    .map(|inner_type| inner_type.resolve_types(declared_structs))
+                    .collect_vec(),
+            ),
+            DataType::Function(function_type) => DataType::Function(Box::new(FunctionType {
+                input_argument: function_type.input_argument.resolve_types(declared_structs),
+                output: function_type.output.resolve_types(declared_structs),
+            })),
+            DataType::MemPointer(inner) => {
+                DataType::MemPointer(Box::new(inner.resolve_types(declared_structs)))
+            }
+            DataType::Struct(struct_type) => {
+                let resolved_fields = struct_type
+                    .fields
+                    .iter()
+                    .map(|(field_name, field_type)| {
+                        (
+                            field_name.to_owned(),
+                            field_type.resolve_types(declared_structs),
+                        )
+                    })
+                    .collect_vec();
+                DataType::Struct(StructType {
+                    name: struct_type.name.clone(),
+                    fields: resolved_fields,
+                })
+            }
+            _ => self.clone(),
         }
     }
 }

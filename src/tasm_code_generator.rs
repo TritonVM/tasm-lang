@@ -1,6 +1,7 @@
 pub mod subroutine;
 
 use itertools::{Either, Itertools};
+use num::{One, Zero};
 use std::collections::{HashMap, HashSet};
 use tasm_lib::library::Library as SnippetState;
 use tasm_lib::memory::dyn_malloc::DynMalloc;
@@ -39,7 +40,7 @@ impl VStack {
                 return (position, data_type.to_owned(), spilled.to_owned());
             }
 
-            position += data_type.size_of();
+            position += data_type.stack_size();
 
             // By asserting after `+= data_type.size_of()`, we check that the deepest part
             // of the sought value is addressable, not just the top part of the value.
@@ -67,7 +68,7 @@ impl VStack {
             .iter()
             .enumerate()
             .filter(|(i, _x)| *i > tuple_index)
-            .map(|(_i, x)| x.size_of())
+            .map(|(_i, x)| x.stack_size())
             .sum::<usize>();
 
         (
@@ -80,7 +81,7 @@ impl VStack {
     fn get_stack_height(&self) -> usize {
         self.inner
             .iter()
-            .map(|(_, (data_type, _))| data_type.size_of())
+            .map(|(_, (data_type, _))| data_type.stack_size())
             .sum()
     }
 
@@ -95,7 +96,7 @@ impl VStack {
             let memory_spill_address = memory_spill_address.unwrap();
             let top_of_value = stack_position;
             let mut spill_code =
-                copy_value_to_memory(memory_spill_address, data_type.size_of(), top_of_value);
+                copy_value_to_memory(memory_spill_address, data_type.stack_size(), top_of_value);
             code.append(&mut spill_code);
         }
 
@@ -125,10 +126,6 @@ impl FunctionState {
     /// concatenating instructions needlessly which would delete information
     fn add_compiled_fn_to_subroutines(&mut self, mut function: InnerFunctionTasmCode) {
         self.subroutines.append(&mut function.sub_routines);
-        println!(
-            "bare_inner is: {}",
-            function.call_depth_zero_code.iter().join("\n")
-        );
         self.subroutines.push(function.call_depth_zero_code.into());
     }
 }
@@ -160,6 +157,9 @@ pub struct OuterFunctionTasmCode {
 
 impl OuterFunctionTasmCode {
     pub fn compose(&self) -> Vec<LabelledInstruction> {
+        // TODO: Should we end this function with a `halt` such that it works as
+        // a standalone program?
+
         // Remove the first label.
         // This is done to ensure that the code wrapping this function in a `call <fn_name>, halt` logic still
         // sets the dynamic allocator initial value. Otherwise, the dynamic memory allocation would not be
@@ -376,7 +376,7 @@ impl CompilerState {
             let spill_address = self
                 .global_compiler_state
                 .snippet_state
-                .kmalloc(data_type.size_of())
+                .kmalloc(data_type.stack_size())
                 .try_into()
                 .unwrap();
             eprintln!("Warning: spill required of {address}. Spilling to address: {spill_address}");
@@ -497,7 +497,7 @@ impl CompilerState {
         );
 
         // Overwrite the value, whether it lives on stack or in memory
-        let value_size = type_to_remove.size_of();
+        let value_size = type_to_remove.stack_size();
 
         match old_value_spilled {
             Some(spill_addr) => move_top_stack_value_to_memory(spill_addr, value_size),
@@ -545,7 +545,7 @@ impl CompilerState {
             .iter()
             .enumerate()
             .filter(|(i, _x)| *i > tuple_index)
-            .map(|(_i, x)| x.size_of())
+            .map(|(_i, x)| x.stack_size())
             .sum::<usize>();
 
         // If value is not marked as a spilled value and it's inacessible through swap(n)/dup(n),
@@ -557,7 +557,7 @@ impl CompilerState {
         }
 
         // Replace the overwritten value on stack, or in memory
-        let value_size = element_types[tuple_index].size_of();
+        let value_size = element_types[tuple_index].stack_size();
         match tuple_spilled {
             Some(spill_addr) => {
                 let element_address = spill_addr + tuple_depth as u32;
@@ -610,7 +610,7 @@ impl CompilerState {
             {
                 break;
             } else {
-                code.append(&mut triton_asm![pop; dt.size_of()]);
+                code.append(&mut triton_asm![pop; dt.stack_size()]);
                 self.function_state.vstack.pop();
                 if let Some(binding) = binding_name {
                     let removed = self.function_state.var_addr.remove(&binding);
@@ -674,7 +674,7 @@ impl CompilerState {
             "Cannot handle spilled value as top element in stack clearing yet"
         );
 
-        let top_value_size = top_element_type.size_of();
+        let top_value_size = top_element_type.stack_size();
 
         // Generate code to move value to the bottom of the requested stack range
         let words_to_remove = height_of_affected_stack - top_value_size;
@@ -708,7 +708,7 @@ impl CompilerState {
                 .unwrap();
             let mut code = copy_top_stack_value_to_memory(memory_location, top_value_size);
             code.append(&mut triton_asm![pop; height_of_affected_stack]);
-            code.append(&mut load_from_memory(memory_location, top_value_size));
+            code.append(&mut load_from_memory(Some(memory_location), top_value_size));
 
             code
         } else if words_to_remove != 0 {
@@ -912,7 +912,7 @@ fn compile_stmt(
         ast::Stmt::Return(None) => {
             let mut code = vec![];
             while let Some((_addr, (data_type, _spilled))) = state.function_state.vstack.pop() {
-                code.push(triton_asm![pop; data_type.size_of()])
+                code.push(triton_asm![pop; data_type.stack_size()])
             }
 
             code.concat()
@@ -947,7 +947,10 @@ fn compile_stmt(
                             Some(spill_addr) => {
                                 // Value is spilled, so we load it from memory and clear that stack.
                                 code.append(&mut triton_asm![pop; state.function_state.vstack.get_stack_height()]);
-                                code.append(&mut load_from_memory(*spill_addr, dt.size_of()))
+                                code.append(&mut load_from_memory(
+                                    Some(*spill_addr),
+                                    dt.stack_size(),
+                                ))
                             }
 
                             None => {
@@ -961,7 +964,7 @@ fn compile_stmt(
                         break;
                     }
 
-                    code.append(&mut triton_asm![pop; dt.size_of()]);
+                    code.append(&mut triton_asm![pop; dt.stack_size()]);
                     state.function_state.vstack.pop();
                 }
 
@@ -1240,7 +1243,12 @@ fn compile_expr(
             ast::ExprLit::GenericNum(n, _) => {
                 panic!("Type of number literal {n} not resolved")
             }
-            ast::ExprLit::Struct(_type, pointer) => triton_asm!(push { pointer }),
+            ast::ExprLit::MemPointer(ast::MemPointerLiteral {
+                mem_pointer_address,
+                struct_name: _,
+            }) => triton_asm!(push {
+                mem_pointer_address
+            }),
         },
 
         ast::Expr::Var(identifier) => match identifier {
@@ -1254,7 +1262,7 @@ fn compile_expr(
 
                         // If value is not marked as a spilled value and it's inacessible through swap(n)/dup(n),
                         // this value must be marked as a value to be spilled, and the compiler must be run again.
-                        let bottom_position = position + result_type.size_of() - 1;
+                        let bottom_position = position + result_type.stack_size() - 1;
                         let accessible = bottom_position < SIZE_OF_ACCESSIBLE_STACK;
                         if spilled.is_none() && !accessible {
                             state.mark_as_spilled(var_addr);
@@ -1266,7 +1274,7 @@ fn compile_expr(
                         match spilled {
                             Some(spill_address) => {
                                 // The value has been spilled to memory. Get it from there.
-                                load_from_memory(spill_address, result_type.size_of())
+                                load_from_memory(Some(spill_address), result_type.stack_size())
                             }
                             None => {
                                 if !accessible {
@@ -1309,7 +1317,7 @@ fn compile_expr(
 
                 // If value is not marked as a spilled value and it's inacessible through swap(n)/dup(n),
                 // this value must be marked as a value to be spilled, and the compiler must be run again.
-                let bottom_position = position + element_type.size_of() - 1;
+                let bottom_position = position + element_type.stack_size() - 1;
                 let accessible = bottom_position < SIZE_OF_ACCESSIBLE_STACK;
                 if spilled.is_none() && !accessible {
                     state.mark_as_spilled(&var_addr);
@@ -1318,7 +1326,7 @@ fn compile_expr(
                 match spilled {
                     Some(spill_address) => {
                         // The value has been spilled to memory. Get it from there.
-                        load_from_memory(spill_address, element_type.size_of())
+                        load_from_memory(Some(spill_address), element_type.stack_size())
                     }
                     None => {
                         if !accessible {
@@ -1427,6 +1435,14 @@ fn compile_expr(
                     ),
                     _ => panic!("Unsupported not of type {inner_type}"),
                 },
+                ast::UnaryOp::Deref => {
+                    let size_of_value = inner_type.stack_size();
+                    // Push `size_of_value` many words from memory onto stack.
+                    // We probably have a function for loading from memory!
+                    // Use that.
+                    // todo!()
+                    load_from_memory(None, size_of_value)
+                }
             };
 
             state.function_state.vstack.pop();
@@ -2151,16 +2167,26 @@ fn compile_expr(
             }
         }
         ast::Expr::Field(expr, field_name) => {
-            println!("expr = {:#?}", expr);
-            panic!("field_name = {field_name}");
-            // TODO: Construct this code
-            todo!()
+            // Here, `receiver_type` *must* be of type `Struct` or of type `mempoint(Struct)`,
+            // where the Struct is known. We should handle those cases separately.
+            let receiver_type = expr.get_type();
+
+            match receiver_type {
+                ast::DataType::MemPointer(inner_type) => match *inner_type {
+                    ast::DataType::Struct(inner_struct) => {
+                        let ret = inner_struct.get_field_accessor_code(field_name);
+                        ret
+                    }
+                    _ => todo!(),
+                },
+                _ => todo!(),
+            }
         }
     };
 
     let (addr, spill) = state.new_value_identifier(&format!("{expr}_{result_type}"), &result_type);
     let spill_code = spill
-        .map(|x| copy_top_stack_value_to_memory(x, result_type.size_of()))
+        .map(|x| copy_top_stack_value_to_memory(x, result_type.stack_size()))
         .unwrap_or_default();
 
     (addr, vec![code, spill_code].concat())
@@ -2259,13 +2285,28 @@ fn copy_top_stack_value_to_memory(
     ret
 }
 
-fn load_from_memory(memory_location: u32, top_value_size: usize) -> Vec<LabelledInstruction> {
+/// Return the code to load a value from memory. If memory location is not provided, the memory
+/// address is assumed to be on top of the stack. Leaves the stack unchanged in either case.
+fn load_from_memory(
+    memory_location: Option<u32>,
+    top_value_size: usize,
+) -> Vec<LabelledInstruction> {
     // A stack value of the form `_ val2 val1 val0`, with `val0` being on the top of the stack
     // is stored in memory as: `val0 val1 val2`, where `val0` is stored on the `memory_location`
     // address. So we read the value at the highes memory location first.
     // TODO: Consider making subroutines out of this in
     // order to get shorter programs.
-    let mut ret = triton_asm!(push {memory_location as u64 + top_value_size as u64 - 1});
+    // let mut ret = triton_asm!(push {memory_location as u64 + top_value_size as u64 - 1});
+    let mut ret = match memory_location {
+        Some(mem_location) => triton_asm!(push {mem_location as u64 + top_value_size as u64 - 1}),
+        None => {
+            if top_value_size.is_one() {
+                triton_asm!(dup 0)
+            } else {
+                triton_asm!(dup 0 push {top_value_size as u64 - 1} add)
+            }
+        }
+    };
 
     for i in 0..top_value_size {
         // Stack: _ memory_address
@@ -2336,7 +2377,7 @@ fn dup_value_from_stack_code(
     position: OpStackElement,
     data_type: &ast::DataType,
 ) -> Vec<LabelledInstruction> {
-    let elem_size = data_type.size_of();
+    let elem_size = data_type.stack_size();
 
     // the position of the deepest element of the value.
     let n: usize = Into::<usize>::into(position) + elem_size - 1;
@@ -2345,4 +2386,44 @@ fn dup_value_from_stack_code(
     let instrs_as_str = instrs_as_str.repeat(elem_size);
 
     triton_asm!({ instrs_as_str })
+}
+
+impl ast::StructType {
+    /// Assuming the stack top points to the start of the struct, returns the code
+    /// that modifies the top stack value to point to the indicated field.
+    pub fn get_field_accessor_code(&self, field_name: &str) -> Vec<LabelledInstruction> {
+        // This implementation must match `BFieldCodec` for the equivalent Rust types
+        let mut instructions = vec![];
+        let mut static_pointer_addition = 0;
+        let needle = field_name;
+        for (haystack_field_name, haystack_type) in self.fields.iter() {
+            if haystack_field_name == needle {
+                // If we've found the field the accumulators are in the right state.
+                // return them.
+                break;
+            } else {
+                // We have not reached the field yet. If the field has a statically
+                // known size, we can just add that number to the accumulator. Otherwise,
+                // we have to read the size of the field from RAM, and add that value
+                // to the pointer
+                match haystack_type.bfield_codec_length() {
+                    Some(static_length) => static_pointer_addition += static_length,
+                    None => {
+                        if !static_pointer_addition.is_zero() {
+                            instructions
+                                .append(&mut triton_asm!(push {static_pointer_addition} add));
+                        }
+                        instructions.append(&mut triton_asm!(read_mem add push 1 add));
+                        static_pointer_addition = 0;
+                    }
+                }
+            }
+        }
+
+        if !static_pointer_addition.is_zero() {
+            instructions.append(&mut triton_asm!(push {static_pointer_addition} add));
+        }
+
+        instructions
+    }
 }

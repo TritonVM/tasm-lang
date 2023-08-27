@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use itertools::Itertools;
-use syn::parse_quote;
+use syn::{parse_quote, AngleBracketedGenericArguments, PatType};
 
 use crate::ast::AssertStmt;
 use crate::types;
@@ -77,8 +77,28 @@ fn rust_type_path_to_data_type(rust_type_path: &syn::TypePath) -> ast::DataType 
     }
 
     // Type is not primitive. Is it a vector?
+    // TODO: Can we move this to the Vector library?
     if rust_type_as_string == "Vec" {
         return rust_vec_to_data_type(&rust_type_path.path.segments[0].arguments);
+    }
+
+    // Handling `Box<T>`. It would be cool if this could be handled same place as
+    // the handling of `&`.
+    if rust_type_as_string == "Box" {
+        let inner_type = if let syn::PathArguments::AngleBracketed(ab) =
+            &rust_type_path.path.segments[0].arguments
+        {
+            assert_eq!(1, ab.args.len(), "Must be Vec<T> for *one* generic T.");
+            match &ab.args[0] {
+                syn::GenericArgument::Type(syn::Type::Path(path)) => {
+                    rust_type_path_to_data_type(path)
+                }
+                other => panic!("Unsupported type {other:#?}"),
+            }
+        } else {
+            panic!("Box must be followed by `<T>`");
+        };
+        return ast::DataType::MemPointer(Box::new(inner_type));
     }
 
     ast::DataType::Unresolved(rust_type_as_string)
@@ -107,7 +127,33 @@ fn rust_type_to_data_type(x: &syn::Type) -> ast::DataType {
 }
 
 // Extract type and mutability from syn::PatType
-fn pat_type_to_data_type(rust_type_path: &syn::PatType) -> (ast::DataType, bool) {
+fn pat_type_to_data_type_and_mutability(rust_type_path: &syn::PatType) -> (ast::DataType, bool) {
+    fn pat_type_to_ast_type(pat_type: &syn::Type) -> ast::DataType {
+        match pat_type {
+            syn::Type::Path(path) => rust_type_path_to_data_type(path),
+            syn::Type::Tuple(tuple) => {
+                let types = tuple.elems.iter().map(rust_type_to_data_type).collect_vec();
+
+                // I think this is the correct handling interpretation of mutability as long
+                // as we don't allow destructuring for tuple definitions.
+                ast::DataType::Tuple(types)
+            }
+            syn::Type::Reference(syn::TypeReference {
+                and_token: _,
+                lifetime: _,
+                mutability: _,
+                elem,
+            }) => match *elem.to_owned() {
+                syn::Type::Path(type_path) => {
+                    let inner_type = rust_type_path_to_data_type(&type_path);
+                    return ast::DataType::MemPointer(Box::new(inner_type));
+                }
+                _ => todo!(),
+            },
+            other_type => panic!("Unsupported {other_type:#?}"),
+        }
+    }
+
     let mutable = match *rust_type_path.pat.to_owned() {
         syn::Pat::Ident(syn::PatIdent {
             attrs: _,
@@ -118,17 +164,9 @@ fn pat_type_to_data_type(rust_type_path: &syn::PatType) -> (ast::DataType, bool)
         }) => mutability.is_some(),
         other_type => panic!("Unsupported {other_type:#?}"),
     };
-    match rust_type_path.ty.as_ref() {
-        syn::Type::Path(path) => (rust_type_path_to_data_type(path), mutable),
-        syn::Type::Tuple(tuple) => {
-            let types = tuple.elems.iter().map(rust_type_to_data_type).collect_vec();
+    let ast_type = pat_type_to_ast_type(rust_type_path.ty.as_ref());
 
-            // I think this is the correct handling interpretation of mutability as long
-            // as we don't allow destructuring for tuple definitions.
-            (ast::DataType::Tuple(types), mutable)
-        }
-        other_type => panic!("Unsupported {other_type:#?}"),
-    }
+    (ast_type, mutable)
 }
 
 fn pat_to_name(pat: &syn::Pat) -> String {
@@ -471,21 +509,15 @@ pub fn graft_expr(rust_exp: &syn::Expr) -> ast::Expr<Annotation> {
             let ast_expr = graft_expr(&(*expr).to_owned());
             ast::Expr::Cast(Box::new(ast_expr), as_type)
         }
-        syn::Expr::Unary(syn::ExprUnary { attrs: _, op, expr }) => match op {
-            syn::UnOp::Not(_) => {
-                let ast_expr = graft_expr(&(*expr).to_owned());
-                ast::Expr::Unary(ast::UnaryOp::Not, Box::new(ast_expr), Default::default())
-            }
-            syn::UnOp::Neg(_) => {
-                let ast_expr = graft_expr(&(*expr).to_owned());
-                ast::Expr::Unary(ast::UnaryOp::Neg, Box::new(ast_expr), Default::default())
-            }
-            syn::UnOp::Deref(_deref) => {
-                // For now, * (dereference) has no impact on the grafter/compiler
-                let ast_expr = graft_expr(&(*expr).to_owned());
-                ast_expr
-            }
-        },
+        syn::Expr::Unary(syn::ExprUnary { attrs: _, op, expr }) => {
+            let inner_expr = graft_expr(&(*expr).to_owned());
+            let ast_op = match op {
+                syn::UnOp::Not(_) => ast::UnaryOp::Not,
+                syn::UnOp::Neg(_) => ast::UnaryOp::Neg,
+                syn::UnOp::Deref(_deref) => ast::UnaryOp::Deref,
+            };
+            ast::Expr::Unary(ast_op, Box::new(inner_expr), Default::default())
+        }
         syn::Expr::Reference(syn::ExprReference {
             attrs: _,
             and_token: _,
@@ -581,7 +613,8 @@ pub fn graft_stmt(rust_stmt: &syn::Stmt) -> ast::Stmt<Annotation> {
     fn graft_local_stmt(local: &syn::Local) -> ast::Stmt<Annotation> {
         let (ident, data_type, mutable): (String, ast::DataType, bool) = match &local.pat {
             syn::Pat::Type(pat_type) => {
-                let (dt, mutable): (ast::DataType, bool) = pat_type_to_data_type(pat_type);
+                let (dt, mutable): (ast::DataType, bool) =
+                    pat_type_to_data_type_and_mutability(pat_type);
                 let ident: String = pat_to_name(&pat_type.pat);
 
                 (ident, dt, mutable)
@@ -856,9 +889,7 @@ mod tests {
 
         match &tokens {
             syn::Item::Fn(item_fn) => {
-                // println!("{item_fn:#?}");
                 let _ret = graft_fn_decl(item_fn);
-                // println!("{ret:#?}");
             }
             _ => panic!("unsupported"),
         }
@@ -885,9 +916,7 @@ mod tests {
 
         match &tokens {
             syn::Item::Fn(item_fn) => {
-                // println!("{item_fn:#?}");
                 let _ret = graft_fn_decl(item_fn);
-                // println!("{ret:#?}");
             }
             _ => panic!("unsupported"),
         }
@@ -907,9 +936,7 @@ mod tests {
 
         match &tokens {
             syn::Item::Fn(item_fn) => {
-                // println!("{item_fn:#?}");
                 let _ret = graft_fn_decl(item_fn);
-                // println!("{ret:#?}");
             }
             _ => panic!("unsupported"),
         }
@@ -925,9 +952,7 @@ mod tests {
 
         match &tokens {
             syn::Item::Fn(item_fn) => {
-                // println!("{item_fn:#?}");
                 let _ret = graft_fn_decl(item_fn);
-                // println!("{ret:#?}");
             }
             _ => panic!("unsupported"),
         }
@@ -944,9 +969,7 @@ mod tests {
 
         match &tokens {
             syn::Item::Fn(item_fn) => {
-                // println!("{item_fn:#?}");
                 let _ret = graft_fn_decl(item_fn);
-                // println!("{ret:#?}");
             }
             _ => panic!("unsupported"),
         }
@@ -966,9 +989,7 @@ mod tests {
 
         match &tokens {
             syn::Item::Fn(item_fn) => {
-                // println!("{item_fn:#?}");
                 let _ret = graft_fn_decl(item_fn);
-                // println!("{ret:#?}");
             }
             _ => panic!("unsupported"),
         }
@@ -992,9 +1013,7 @@ mod tests {
 
         match &tokens {
             syn::Item::Fn(item_fn) => {
-                // println!("{item_fn:#?}");
                 let _ret = graft_fn_decl(item_fn);
-                // println!("{ret:#?}");
             }
             _ => panic!("unsupported"),
         }
@@ -1023,9 +1042,7 @@ mod tests {
 
         match &tokens {
             syn::Item::Fn(item_fn) => {
-                // println!("{item_fn:#?}");
                 let _ret = graft_fn_decl(item_fn);
-                // println!("{ret:#?}");
             }
             _ => panic!("unsupported"),
         }
@@ -1099,9 +1116,7 @@ mod tests {
 
         match &tokens {
             syn::Item::Fn(item_fn) => {
-                // println!("{item_fn:#?}");
                 let _ret = graft_fn_decl(item_fn);
-                // println!("{ret:#?}");
             }
             _ => panic!("unsupported"),
         }
@@ -1116,9 +1131,7 @@ mod tests {
         };
         match &tokens {
             syn::Item::Fn(item_fn) => {
-                // println!("{item_fn:#?}");
                 let _ret = graft_fn_decl(item_fn);
-                // println!("{ret:#?}");
             }
             _ => panic!("unsupported"),
         }

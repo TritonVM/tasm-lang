@@ -42,7 +42,12 @@ impl<T: GetType> GetType for ast::ExprLit<T> {
             ast::ExprLit::XFE(_) => ast::DataType::XFE,
             ast::ExprLit::Digest(_) => ast::DataType::Digest,
             ast::ExprLit::GenericNum(_, t) => t.get_type(),
-            ast::ExprLit::Struct(type_name, _) => ast::DataType::Unresolved(type_name.to_owned()),
+            ast::ExprLit::MemPointer(ast::MemPointerLiteral {
+                mem_pointer_address: _,
+                struct_name,
+            }) => ast::DataType::MemPointer(Box::new(ast::DataType::Unresolved(
+                struct_name.to_owned(),
+            ))),
         }
     }
 }
@@ -61,18 +66,20 @@ impl<T: GetType> GetType for ast::Expr<T> {
             ast::Expr::If(if_expr) => if_expr.get_type(),
             ast::Expr::Cast(_expr, t) => t.to_owned(),
             ast::Expr::Unary(_unaryop, inner_expr, _) => inner_expr.get_type(),
-            ast::Expr::Field(expr, requested_field_name) => {
+            ast::Expr::Field(expr, field_name) => {
                 let expr_type = expr.get_type();
-                if let ast::DataType::Struct(StructType { name, fields }) = expr.get_type() {
-                    match fields
-                        .iter()
-                        .find_position(|&field| field.0 == *requested_field_name)
-                    {
-                        Some((_, item)) => item.1.to_owned(),
-                        None => panic!("Struct {name} has no field of name {requested_field_name}"),
+                match &expr.get_type() {
+                    ast::DataType::Struct(struct_type) => struct_type.get_field_type(field_name),
+                    ast::DataType::MemPointer(inner_type) => {
+                        if let ast::DataType::Struct(struct_type) = *inner_type.to_owned() {
+                            ast::DataType::MemPointer(Box::new(
+                                struct_type.get_field_type(field_name),
+                            ))
+                        } else {
+                            panic!("Field getter can only operate on type of struct or point to it. Attempted to access field {field_name} on type {expr_type}")
+                        }
                     }
-                } else {
-                    panic!("Field getter can only operate on type of struct. Attempted to access field {requested_field_name} on type {expr_type}")
+                    _ => panic!("Field getter can only operate on type of struct or point to it. Attempted to access field {field_name} on type {expr_type}")
                 }
             }
         }
@@ -198,7 +205,7 @@ pub fn annotate_fn(
         state
             .vtable
             .values()
-            .map(|x| x.data_type.size_of())
+            .map(|x| x.data_type.stack_size())
             .sum::<usize>()
             < SIZE_OF_ACCESSIBLE_STACK,
         "{}: Cannot handle function signatures with input size exceeding {} words",
@@ -245,14 +252,8 @@ fn annotate_stmt(
                 panic!("let-assign cannot shadow existing variable '{var_name}'!");
             }
 
-            // Lookup type if declaration is of a non-primitive type
-            if let ast::DataType::Unresolved(unresolved_type_name) = data_type {
-                *data_type = state
-                    .declared_structs
-                    .get(unresolved_type_name)
-                    .unwrap_or_else(|| panic!("Unknown type name: {unresolved_type_name}"))
-                    .into();
-            }
+            // Map types to those declared in program, i.e. resolve local `struct` declarations
+            *data_type = data_type.resolve_types(&state.declared_structs);
 
             let let_expr_hint: Option<&ast::DataType> = Some(data_type);
             let derived_type = derive_annotate_expr_type(expr, let_expr_hint, state);
@@ -299,7 +300,6 @@ fn annotate_stmt(
             type_parameter,
             arg_evaluation_order,
         }) => {
-            println!("args: {args:?}");
             let fn_signature = get_fn_signature(name, state, type_parameter, args);
             assert!(
                 is_void_type(&fn_signature.output),
@@ -579,23 +579,15 @@ fn derive_annotate_fn_call_args(
         .zip_eq(concrete_arguments.iter())
         .enumerate()
     {
-        println!("arg_pos: {arg_pos}");
-        println!("fn_arg: {arg_pos:?}");
-        println!("expr_type: {expr_type}");
         match fn_arg {
             ast::AbstractArgument::FunctionArgument(ast::AbstractFunctionArg {
-                abstract_name,
+                abstract_name: _,
                 function_type,
-            }) => {
-                println!("abstract_name: {abstract_name}");
-                println!("function_type: {function_type:?}");
-                println!("expr_type : {expr_type:?}");
-                assert_type_equals(
-                    &ast::DataType::Function(Box::new(function_type.to_owned())),
-                    expr_type,
-                    "Function argument",
-                )
-            }
+            }) => assert_type_equals(
+                &ast::DataType::Function(Box::new(function_type.to_owned())),
+                expr_type,
+                "Function argument",
+            ),
             ast::AbstractArgument::ValueArgument(ast::AbstractValueArg {
                 name: arg_name,
                 data_type: arg_type,
@@ -616,7 +608,6 @@ fn derive_annotate_expr_type(
     hint: Option<&ast::DataType>,
     state: &mut CheckState,
 ) -> ast::DataType {
-    // println!("derive_annotate_expr_type({expr:?}, hint: {hint:?})");
     match expr {
         ast::Expr::Lit(ast::ExprLit::Bool(_)) => ast::DataType::Bool,
         ast::Expr::Lit(ast::ExprLit::U32(_)) => ast::DataType::U32,
@@ -624,12 +615,17 @@ fn derive_annotate_expr_type(
         ast::Expr::Lit(ast::ExprLit::BFE(_)) => ast::DataType::BFE,
         ast::Expr::Lit(ast::ExprLit::XFE(_)) => ast::DataType::XFE,
         ast::Expr::Lit(ast::ExprLit::Digest(_)) => ast::DataType::Digest,
-        ast::Expr::Lit(ast::ExprLit::Struct(type_name, _)) => {
-            let resolved_type = state
+        ast::Expr::Lit(ast::ExprLit::MemPointer(ast::MemPointerLiteral {
+            mem_pointer_address: _,
+            struct_name,
+        })) => {
+            let resolved_inner_type = state
                 .declared_structs
-                .get(type_name)
+                .get(struct_name)
                 .expect("{type_name} not known to type checker");
-            ast::DataType::Struct(resolved_type.to_owned())
+            ast::DataType::MemPointer(Box::new(ast::DataType::Struct(
+                resolved_inner_type.to_owned(),
+            )))
         }
         ast::Expr::Lit(ast::ExprLit::GenericNum(n, _t)) => {
             use ast::DataType::*;
@@ -680,24 +676,17 @@ fn derive_annotate_expr_type(
             // Get the receiver type (the type of the left-hand side of the `.`)
             let receiver_type = derive_annotate_expr_type(expr, None, state);
 
-            // Only structs have fields, so receiver_type must be a struct
-            if let ast::DataType::Struct(StructType { name, fields }) = receiver_type {
-                match fields.iter().find(|&field| field.0 == *field_name) {
-                    // Type of the field is either another struct, or a pointer to a primitive
-                    // type living in memory. In case of a pointer to a list, that is the same
-                    // as a list. An unsafe one, though, so we keep the list wrapped in a
-                    // MemPointer for now.
-                    // TODO: Once #38 is implemented, we can remove the MemPointer here and
-                    // use unsafe list type here.
-                    Some((_, item)) => match item {
-                        ast::DataType::Struct(_) => item.to_owned(),
-                        // ast::DataType::List(_) => item.to_owned(),
-                        _ => ast::DataType::MemPointer(Box::new(item.clone())),
-                    },
-                    None => panic!("Struct {name} has no field of name {field_name}"),
-                }
-            } else {
-                panic!("Field getter can only operate on type of struct. Attempted to access field {field_name} on type {receiver_type}")
+            // Only structs have fields, so receiver_type must be a struct, or a pointer to a struct.
+            match &receiver_type {
+                ast::DataType::MemPointer(inner_type) => {
+                    if let ast::DataType::Struct(inner_struct_type) = *inner_type.to_owned() {
+                        ast::DataType::MemPointer(Box::new(inner_struct_type.get_field_type(field_name)))
+                    } else {
+                        panic!("Field getter can only operate on type of struct or pointer to struct. Attempted to access field `{field_name}` on type `{receiver_type}`")
+                    }
+                },
+                ast::DataType::Struct(struct_type) => struct_type.get_field_type(field_name),
+                _ => panic!("Field getter can only operate on type of struct or pointer to struct. Attempted to access field `{field_name}` on type `{receiver_type}`")
             }
         }
 
@@ -708,7 +697,6 @@ fn derive_annotate_expr_type(
             type_parameter,
             arg_evaluation_order,
         }) => {
-            println!("args: {args:?}");
             let fn_signature = get_fn_signature(name, state, type_parameter, args);
             assert!(
                 !is_void_type(&fn_signature.output),
@@ -765,6 +753,15 @@ fn derive_annotate_expr_type(
                     );
                     *unaryop_type = Typing::KnownType(inner_expr_type.clone());
                     inner_expr_type
+                }
+                Deref => {
+                    match inner_expr_type {
+                        ast::DataType::MemPointer(inner_inner_type) => {
+                            *unaryop_type = Typing::KnownType(*inner_inner_type.clone());
+                            *inner_inner_type
+                        },
+                        _ =>  panic!("Cannot dereference type of `{inner_expr_type}` as this expression has:\n{inner_expr:#?}")
+                    }
                 }
             }
         }

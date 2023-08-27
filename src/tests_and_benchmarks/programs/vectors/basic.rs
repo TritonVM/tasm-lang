@@ -144,7 +144,7 @@ mod compile_and_typecheck_tests {
             let elem_2 = vec![BFieldElement::new(4000), BFieldElement::new(0)];
             safe_list_push(list_pointer, elem_2.clone(), &mut memory, elem_2.len());
 
-            safe_list_pop(list_pointer, &mut memory, ast::DataType::U64.size_of());
+            safe_list_pop(list_pointer, &mut memory, ast::DataType::U64.stack_size());
 
             let input_memory = HashMap::default();
             compare_prop_with_stack_and_memory(
@@ -197,7 +197,7 @@ mod compile_and_typecheck_tests {
                 &mut vm_memory,
                 vec![],
                 NonDeterminism::new(vec![]),
-                DataType::List(Box::new(DataType::U32)).size_of() as isize,
+                DataType::List(Box::new(DataType::U32)).stack_size() as isize,
             )
             .unwrap();
             let mut list_pointer = exec_result.final_stack.last().unwrap();
@@ -211,7 +211,7 @@ mod compile_and_typecheck_tests {
                 &mut vm_memory,
                 vec![],
                 NonDeterminism::new(vec![]),
-                DataType::List(Box::new(DataType::U64)).size_of() as isize,
+                DataType::List(Box::new(DataType::U64)).stack_size() as isize,
             )
             .unwrap();
             list_pointer = exec_result.final_stack.last().unwrap();

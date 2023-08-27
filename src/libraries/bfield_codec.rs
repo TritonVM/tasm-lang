@@ -91,9 +91,15 @@ impl Library for BFieldCodecLib {
         // Maybe we can just return the pointer/struct?
         // For that we would have to fish out the argument tp `load_from_memory`
         // TODO: Maybe `address` can be an expression and doesn't have to be a literal?
-        println!("args\n{args:#?}");
+        // println!("args\n{args:#?}");
+        // let ret: ast::Expr<super::Annotation> =
+        //     ast::Expr::Lit(ast::ExprLit::Struct(return_type, BFieldElement::new(1)));
         let ret: ast::Expr<super::Annotation> =
-            ast::Expr::Lit(ast::ExprLit::Struct(return_type, BFieldElement::new(1)));
+            ast::Expr::Lit(ast::ExprLit::MemPointer(ast::MemPointerLiteral {
+                // TODO: mem_pointer_address shouldn't be hardcoded here!
+                mem_pointer_address: BFieldElement::new(1),
+                struct_name: return_type,
+            }));
         Some(ret)
     }
 
@@ -101,7 +107,7 @@ impl Library for BFieldCodecLib {
         &self,
         rust_method_call: &syn::ExprMethodCall,
     ) -> Option<ast::Expr<super::Annotation>> {
-        println!("bfcgm:\nrust_method_call\n{rust_method_call:#?}");
+        // println!("bfcgm:\nrust_method_call\n{rust_method_call:#?}");
         const UNWRAP_NAME: &str = "unwrap";
 
         // Remove `unwrap` if method call is `T::decode(...).unwrap()`
@@ -116,17 +122,16 @@ impl Library for BFieldCodecLib {
                 let preceding_function_call = graft::graft_call_exp(ca);
                 if matches!(
                     preceding_function_call,
-                    ast::Expr::Lit(ast::ExprLit::Struct(_, _))
+                    // ast::Expr::Lit(ast::ExprLit::Struct(_, _))
+                    ast::Expr::Lit(ast::ExprLit::MemPointer(_))
                 ) {
-                    return Some(preceding_function_call);
+                    Some(preceding_function_call)
                 } else {
-                    return None;
+                    None
                 }
             }
-            _ => return None,
+            _ => None,
         }
-
-        None
     }
 }
 

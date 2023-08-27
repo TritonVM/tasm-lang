@@ -193,7 +193,7 @@ pub fn compare_compiled_prop_with_stack_and_memory_and_ins(
     let init_stack_length: usize = get_init_tvm_stack().len()
         + input_args
             .iter()
-            .map(|arg| arg.get_type().size_of())
+            .map(|arg| arg.get_type().stack_size())
             .sum::<usize>();
     let mut actual_memory = init_memory;
     let exec_result = execute_compiled_with_stack_memory_and_ins_for_test(
@@ -407,7 +407,7 @@ pub fn assert_list_equal(
                 list_pointer,
                 i,
                 memory,
-                element_type.as_ref().unwrap().size_of(),
+                element_type.as_ref().unwrap().stack_size(),
             )
         {
             let mut actual_memory = memory.iter().collect_vec();
