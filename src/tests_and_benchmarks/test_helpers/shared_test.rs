@@ -31,6 +31,20 @@ impl InputOutputTestCase {
     }
 }
 
+pub fn init_memory_from<T: BFieldCodec>(
+    data_struct: T,
+    memory_address: BFieldElement,
+) -> NonDeterminism<BFieldElement> {
+    NonDeterminism::new(vec![]).with_ram(
+        data_struct
+            .encode()
+            .into_iter()
+            .zip(memory_address.value()..)
+            .map(|(v, k)| (k.into(), v))
+            .collect(),
+    )
+}
+
 /// Get the execution code and the name of the compiled function
 pub fn compile_for_run_test(item_fn: &syn::ItemFn) -> (Vec<LabelledInstruction>, String) {
     let function_name = item_fn.sig.ident.to_string();

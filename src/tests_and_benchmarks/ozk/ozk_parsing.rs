@@ -1,5 +1,13 @@
 use std::fs;
 
+use triton_vm::{instruction::LabelledInstruction, triton_asm};
+
+use crate::{
+    graft::{graft_fn_decl, graft_structs},
+    tasm_code_generator::compile_function,
+    types::annotate_fn,
+};
+
 fn extract_types_and_main(parsed_file: syn::File) -> (Vec<syn::ItemStruct>, Option<syn::ItemFn>) {
     let mut main_func: Option<syn::ItemFn> = None;
     let mut structs: Vec<syn::ItemStruct> = vec![];
@@ -17,7 +25,9 @@ fn extract_types_and_main(parsed_file: syn::File) -> (Vec<syn::ItemStruct>, Opti
     (structs, main_func)
 }
 
-pub fn parse_main_and_structs(module_name: &str) -> (syn::ItemFn, Vec<syn::ItemStruct>, String) {
+pub(super) fn parse_main_and_structs(
+    module_name: &str,
+) -> (syn::ItemFn, Vec<syn::ItemStruct>, String) {
     let path = format!(
         "{}/src/tests_and_benchmarks/ozk/programs/{module_name}.rs",
         env!("CARGO_MANIFEST_DIR"),
@@ -29,4 +39,35 @@ pub fn parse_main_and_structs(module_name: &str) -> (syn::ItemFn, Vec<syn::ItemS
         Some(main) => (main, structs, module_name.to_owned()),
         None => panic!("Failed to parse file {path}"),
     }
+}
+
+pub(crate) fn compile_for_test(module_name: &str) -> Vec<LabelledInstruction> {
+    let (parsed_main, parsed_structs, _) = parse_main_and_structs(module_name);
+
+    // parse test
+    let mut function = graft_fn_decl(&parsed_main);
+    let structs = graft_structs(parsed_structs);
+
+    // type-check and annotate
+    annotate_fn(&mut function, structs);
+
+    // compile
+    let tasm = compile_function(&function);
+
+    // compose
+    let instructions = tasm.compose();
+
+    let function_name = if let LabelledInstruction::Label(fn_name) = instructions.first().unwrap() {
+        fn_name.to_owned()
+    } else {
+        panic!("First instruction of compiled instructions must be a label")
+    };
+
+    // Wrap compiled function in a function call followed by a `halt`.
+    triton_asm!(
+        call {function_name}
+        halt
+
+        {&instructions}
+    )
 }
