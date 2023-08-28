@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use anyhow::bail;
 use itertools::Itertools;
 use triton_vm::{instruction::LabelledInstruction, triton_asm, triton_instr};
@@ -10,6 +12,12 @@ use crate::libraries::LibraryFunction;
 /// underflow.
 #[derive(Clone, Debug)]
 pub(crate) struct SubRoutine(Vec<LabelledInstruction>);
+
+impl Display for SubRoutine {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0.iter().join("\n"))
+    }
+}
 
 impl SubRoutine {
     /// Returns true iff subroutine starts with a label, ends with a return or a
@@ -28,8 +36,39 @@ impl SubRoutine {
         ends_with_return_or_recurse && contains_return
     }
 
-    pub(crate) fn get_code(&self) -> Vec<LabelledInstruction> {
+    /// Returns code, including label and any `return`s
+    pub(crate) fn get_whole_function(&self) -> Vec<LabelledInstruction> {
         self.0.clone()
+    }
+
+    /// Returns true *iff* function starts with a label, ends with a return, contains only *one*
+    /// return and no `recurse`. These conditions means that if can be inlined.
+    pub(crate) fn can_be_inlined(&self) -> bool {
+        let _label = self.get_label();
+
+        let recurse_count = self
+            .0
+            .iter()
+            .filter(|x| **x == triton_instr!(recurse))
+            .count();
+        let return_count = self
+            .0
+            .iter()
+            .filter(|x| **x == triton_instr!(return))
+            .count();
+
+        let last_instruction = self.0.last().unwrap();
+
+        *last_instruction == triton_instr!(return) && return_count == 1 && recurse_count == 0
+    }
+
+    /// Iff subroutine may be inlined, returns `Some(function body)`. Otherwise returns `None`
+    pub(crate) fn get_function_body_for_inlining(&self) -> Option<Vec<LabelledInstruction>> {
+        if !self.can_be_inlined() {
+            None
+        } else {
+            Some(self.0[1..self.0.len() - 1].to_vec())
+        }
     }
 
     pub(crate) fn get_label(&self) -> String {

@@ -126,21 +126,8 @@ impl FunctionState {
 
 struct InnerFunctionTasmCode {
     name: String,
-    call_depth_zero_code: Vec<LabelledInstruction>,
+    call_depth_zero_code: SubRoutine,
     sub_routines: Vec<SubRoutine>,
-}
-
-impl InnerFunctionTasmCode {
-    pub fn remove_own_name(&self) -> Vec<LabelledInstruction> {
-        assert!(
-            matches!(
-                self.call_depth_zero_code.first().unwrap(),
-                LabelledInstruction::Label(_)
-            ),
-            "1st line must be a label when removing it"
-        );
-        self.call_depth_zero_code[1..].to_vec()
-    }
 }
 
 pub struct OuterFunctionTasmCode {
@@ -154,32 +141,43 @@ impl OuterFunctionTasmCode {
         // TODO: Should we end this function with a `halt` such that it works as
         // a standalone program?
 
-        // Remove the first label.
+        // Remove the first label and the last return.
         // This is done to ensure that the code wrapping this function in a `call <fn_name>, halt` logic still
         // sets the dynamic allocator initial value. Otherwise, the dynamic memory allocation would not be
         // included in the code executed with this wrapper code. If this code is *not* run through tests,
         // this rearrangement is inconsequential as it just moves the initialization to after a label, which is
-        // removed later by the linker. It's not super elegant but it works. Sue me.
-        let call_depth_zero_code = self.function_data.remove_own_name();
+        // removed later by the linker.
+        let inner_body = match self
+            .function_data
+            .call_depth_zero_code
+            .get_function_body_for_inlining()
+        {
+            Some(inner) => inner,
+            None => panic!(
+                "Inner function must conform to: <label>: <body> return.\nGot:\n{}",
+                self.function_data.call_depth_zero_code
+            ),
+        };
 
         let name = &self.function_data.name;
         let dyn_malloc_init = self.dyn_malloc_init_code.clone();
         let external_dependencies_code = self
             .external_dependencies
             .iter()
-            .map(|x| x.get_code())
+            .map(|x| x.get_whole_function())
             .concat();
         let subroutines = self
             .function_data
             .sub_routines
             .iter()
-            .map(|sr| sr.get_code())
+            .map(|sr| sr.get_whole_function())
             .concat();
 
         let ret = triton_asm!(
             {name}:
                 {&dyn_malloc_init}
-                {&call_depth_zero_code}
+                {&inner_body}
+                return // TODO: replace this with `halt`, no?
                 {&subroutines}
                 {&external_dependencies_code}
         );
@@ -212,7 +210,7 @@ impl CompilerState {
     /// Import a dependency in an idempotent manner, ensuring it's only ever imported once
     pub(crate) fn add_library_function(&mut self, subroutine: SubRoutine) {
         let label = subroutine.get_label();
-        let instructions = subroutine.get_code();
+        let instructions = subroutine.get_whole_function();
         self.global_compiler_state
             .snippet_state
             .explicit_import(&label, &instructions);
@@ -293,7 +291,7 @@ impl CompilerState {
                 return);
         InnerFunctionTasmCode {
             name: fn_name.to_owned(),
-            call_depth_zero_code: with_own_label,
+            call_depth_zero_code: with_own_label.try_into().unwrap(),
             sub_routines: self.function_state.subroutines.clone(),
         }
     }
