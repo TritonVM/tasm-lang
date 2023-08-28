@@ -1,6 +1,7 @@
-use triton_vm::BFieldElement;
-
-use crate::{ast, graft};
+use crate::{
+    ast,
+    graft::{self, graft_expr},
+};
 
 use super::Library;
 
@@ -69,38 +70,65 @@ impl Library for BFieldCodecLib {
     fn graft_function(
         &self,
         fn_name: &str,
-        _args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
+        args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
     ) -> Option<crate::ast::Expr<super::Annotation>> {
-        if !fn_name.contains("::decode") {
-            return None;
+        /// Handle the entire T::decode(...) grafting. Does not handle any appended `unwrap`.
+        /// Expects the `decode` expression to be `T::decode(&tasm::load_from_memory(BFieldElement::new(x)))`
+        /// Extracts the `x` from the above expression and returns it as a literal.
+        fn handle_decode(
+            fn_name: &str,
+            args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
+        ) -> crate::ast::Expr<super::Annotation> {
+            // Fetch the returned type
+            let split_fn_name: Vec<_> = fn_name.split("::").collect();
+            assert_eq!(
+                2,
+                split_fn_name.len(),
+                "Can only handle pattern T::decode. Got: {fn_name}"
+            );
+            let return_type = split_fn_name[0].to_owned();
+
+            let decode_arg = match args.len() {
+                1 => args[0].clone(),
+                _ => panic!("Argument list to `decode` function call must have length one. Got args:\n{args:#?}"),
+            };
+
+            let error_msg = format!("Expected T::decode(tasm::load_from_memory(BFieldElement::new(<n>)))). Got: {decode_arg:#?}");
+            let decode_arg = graft_expr(&decode_arg);
+            const LOAD_FROM_MEMORY_FN_NAME: &str = "tasm::load_from_memory";
+            let pointer_to_struct = match decode_arg {
+                ast::Expr::FnCall(ast::FnCall {
+                    name,
+                    args: load_function_args,
+                    type_parameter: _,
+                    arg_evaluation_order: _,
+                    annot: _,
+                }) => {
+                    assert_eq!(LOAD_FROM_MEMORY_FN_NAME, name, "{error_msg}");
+                    assert_eq!(1, load_function_args.len(), "{error_msg}");
+                    match &load_function_args[0] {
+                        // TODO: Maybe `address` can be an expression and doesn't have to be a literal?
+                        // Do we need or want that?
+                        ast::Expr::Lit(ast::ExprLit::BFE(address_value)) => address_value.to_owned(),
+                        _ => panic!("Argument to {LOAD_FROM_MEMORY_FN_NAME} must be known at compile time and must be a BFieldElement"),
+                    }
+                }
+                _ => panic!("{error_msg}"),
+            };
+
+            let ret: ast::Expr<super::Annotation> =
+                ast::Expr::Lit(ast::ExprLit::MemPointer(ast::MemPointerLiteral {
+                    mem_pointer_address: pointer_to_struct,
+                    struct_name: return_type,
+                }));
+            ret
         }
 
-        // Graft function to remove last `unwrap()`.
+        if fn_name.contains("::decode") {
+            return Some(handle_decode(fn_name, args));
+        }
 
-        // Fetch the returned type
-        let split_fn_name: Vec<_> = fn_name.split("::").collect();
-        assert_eq!(
-            2,
-            split_fn_name.len(),
-            "Can only handle pattern <Type>::decode. Got: {fn_name}"
-        );
-        let return_type = split_fn_name[0].to_owned();
-
-        // panic!("fn_name: {fn_name}\nargs: {args:#?}. return_type: {return_type}");
-
-        // Maybe we can just return the pointer/struct?
-        // For that we would have to fish out the argument tp `load_from_memory`
-        // TODO: Maybe `address` can be an expression and doesn't have to be a literal?
-        // println!("args\n{args:#?}");
-        // let ret: ast::Expr<super::Annotation> =
-        //     ast::Expr::Lit(ast::ExprLit::Struct(return_type, BFieldElement::new(1)));
-        let ret: ast::Expr<super::Annotation> =
-            ast::Expr::Lit(ast::ExprLit::MemPointer(ast::MemPointerLiteral {
-                // TODO: mem_pointer_address shouldn't be hardcoded here!
-                mem_pointer_address: BFieldElement::new(1),
-                struct_name: return_type,
-            }));
-        Some(ret)
+        None
     }
 
     fn graft_method(

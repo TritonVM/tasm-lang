@@ -393,7 +393,7 @@ pub fn graft_binop_eq_expr(
     )
 }
 
-pub fn graft_expr(rust_exp: &syn::Expr) -> ast::Expr<Annotation> {
+pub(crate) fn graft_expr(rust_exp: &syn::Expr) -> ast::Expr<Annotation> {
     match rust_exp {
         syn::Expr::Binary(bin_expr) => {
             let left = graft_expr(&bin_expr.left);

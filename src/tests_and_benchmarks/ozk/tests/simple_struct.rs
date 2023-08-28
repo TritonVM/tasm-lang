@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use crate::graft::{graft_fn_decl, graft_structs};
 use crate::tasm_code_generator::compile_function;
+use crate::tests_and_benchmarks::ozk::programs::simple_struct::SIMPLE_STRUCTS_BFIELD_CODEC_START_ADDRESS;
 use crate::tests_and_benchmarks::ozk::{
     self, ozk_parsing, programs::simple_struct::TestStruct, rust_shadows,
 };
@@ -21,13 +22,14 @@ fn simple_struct_ozk_test() {
         b: BFieldElement::new(15),
     };
 
+    let bfield_code_start_address = SIMPLE_STRUCTS_BFIELD_CODEC_START_ADDRESS;
     let non_determinism = NonDeterminism {
         individual_tokens: vec![],
         digests: vec![],
         ram: test_struct
             .encode()
             .into_iter()
-            .zip(1u64..)
+            .zip(bfield_code_start_address..)
             .map(|(v, k)| (k.into(), v))
             .collect(),
     };
