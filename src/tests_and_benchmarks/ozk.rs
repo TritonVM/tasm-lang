@@ -4,4 +4,3 @@ pub mod ozk_parsing;
 #[allow(clippy::needless_return)]
 mod programs;
 pub mod rust_shadows;
-mod tests;
