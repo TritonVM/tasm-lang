@@ -8,7 +8,6 @@ use crate::tests_and_benchmarks::ozk::{
 use crate::tests_and_benchmarks::test_helpers::shared_test::execute_compiled_with_stack_memory_and_ins_for_test;
 use crate::types::annotate_fn;
 
-use itertools::Itertools;
 use triton_vm::instruction::LabelledInstruction;
 use triton_vm::{triton_asm, BFieldElement, NonDeterminism};
 use twenty_first::shared_math::bfield_codec::BFieldCodec;

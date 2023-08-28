@@ -1,4 +1,3 @@
-use num::Zero;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::thread_local;

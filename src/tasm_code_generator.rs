@@ -2174,8 +2174,7 @@ fn compile_expr(
             match receiver_type {
                 ast::DataType::MemPointer(inner_type) => match *inner_type {
                     ast::DataType::Struct(inner_struct) => {
-                        let ret = inner_struct.get_field_accessor_code(field_name);
-                        ret
+                        inner_struct.get_field_accessor_code(field_name)
                     }
                     _ => todo!(),
                 },

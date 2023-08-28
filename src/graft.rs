@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use itertools::Itertools;
-use syn::{parse_quote, AngleBracketedGenericArguments, PatType};
+use syn::parse_quote;
 
 use crate::ast::AssertStmt;
 use crate::types;
@@ -146,7 +146,7 @@ fn pat_type_to_data_type_and_mutability(rust_type_path: &syn::PatType) -> (ast::
             }) => match *elem.to_owned() {
                 syn::Type::Path(type_path) => {
                     let inner_type = rust_type_path_to_data_type(&type_path);
-                    return ast::DataType::MemPointer(Box::new(inner_type));
+                    ast::DataType::MemPointer(Box::new(inner_type))
                 }
                 _ => todo!(),
             },

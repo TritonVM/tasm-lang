@@ -2,58 +2,58 @@ use triton_vm::BFieldElement;
 
 use crate::{ast, graft};
 
-use super::{CompiledFunction, Library};
+use super::Library;
 
 #[derive(Clone, Debug)]
 pub struct BFieldCodecLib;
 
 impl Library for BFieldCodecLib {
-    fn get_function_name(&self, full_name: &str) -> Option<String> {
+    fn get_function_name(&self, _full_name: &str) -> Option<String> {
         None
     }
 
     fn get_method_name(
         &self,
-        method_name: &str,
-        receiver_type: &crate::ast::DataType,
+        _method_name: &str,
+        _receiver_type: &crate::ast::DataType,
     ) -> Option<String> {
         None
     }
 
     fn method_name_to_signature(
         &self,
-        fn_name: &str,
-        receiver_type: &crate::ast::DataType,
-        args: &[crate::ast::Expr<super::Annotation>],
+        _fn_name: &str,
+        _receiver_type: &crate::ast::DataType,
+        _args: &[crate::ast::Expr<super::Annotation>],
     ) -> crate::ast::FnSignature {
         panic!("BFieldCodecLib does not contain any methods")
     }
 
     fn function_name_to_signature(
         &self,
-        fn_name: &str,
-        type_parameter: Option<crate::ast::DataType>,
-        args: &[crate::ast::Expr<super::Annotation>],
+        _fn_name: &str,
+        _type_parameter: Option<crate::ast::DataType>,
+        _args: &[crate::ast::Expr<super::Annotation>],
     ) -> crate::ast::FnSignature {
         todo!()
     }
 
     fn call_method(
         &self,
-        method_name: &str,
-        receiver_type: &crate::ast::DataType,
-        args: &[crate::ast::Expr<super::Annotation>],
-        state: &mut crate::tasm_code_generator::CompilerState,
+        _method_name: &str,
+        _receiver_type: &crate::ast::DataType,
+        _args: &[crate::ast::Expr<super::Annotation>],
+        _state: &mut crate::tasm_code_generator::CompilerState,
     ) -> Vec<triton_vm::instruction::LabelledInstruction> {
         todo!()
     }
 
     fn call_function(
         &self,
-        fn_name: &str,
-        type_parameter: Option<crate::ast::DataType>,
-        args: &[crate::ast::Expr<super::Annotation>],
-        state: &mut crate::tasm_code_generator::CompilerState,
+        _fn_name: &str,
+        _type_parameter: Option<crate::ast::DataType>,
+        _args: &[crate::ast::Expr<super::Annotation>],
+        _state: &mut crate::tasm_code_generator::CompilerState,
     ) -> Vec<triton_vm::instruction::LabelledInstruction> {
         todo!()
     }
@@ -69,7 +69,7 @@ impl Library for BFieldCodecLib {
     fn graft_function(
         &self,
         fn_name: &str,
-        args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
+        _args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
     ) -> Option<crate::ast::Expr<super::Annotation>> {
         if !fn_name.contains("::decode") {
             return None;
@@ -132,21 +132,5 @@ impl Library for BFieldCodecLib {
             }
             _ => None,
         }
-    }
-}
-
-impl BFieldCodecLib {
-    fn functions() -> Vec<CompiledFunction> {
-        let decode = CompiledFunction {
-            signature: ast::FnSignature {
-                name: "decode".to_owned(),
-                args: todo!(),
-                output: todo!(),
-                arg_evaluation_order: todo!(),
-            },
-            body: todo!(),
-        };
-
-        vec![decode]
     }
 }

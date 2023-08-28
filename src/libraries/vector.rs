@@ -179,7 +179,7 @@ impl Library for VectorLib {
                             annot,
                         }))
                     }
-                    _ => return None,
+                    _ => None,
                 }
             }
             COLLECT_VEC_NAME => {

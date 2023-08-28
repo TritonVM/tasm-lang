@@ -4,9 +4,7 @@ use std::str::FromStr;
 
 use anyhow::bail;
 use itertools::Itertools;
-use num::Zero;
-use triton_vm::instruction::LabelledInstruction;
-use triton_vm::{triton_asm, Digest};
+use triton_vm::Digest;
 use twenty_first::shared_math::b_field_element::BFieldElement;
 use twenty_first::shared_math::bfield_codec::BFieldCodec;
 use twenty_first::shared_math::x_field_element::XFieldElement;

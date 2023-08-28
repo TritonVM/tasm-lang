@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use twenty_first::shared_math::b_field_element::BFieldElement;
 use twenty_first::shared_math::x_field_element::XFieldElement;
 
-use crate::ast::{AbstractFunctionArg, AbstractValueArg, FunctionType, StructType};
+use crate::ast::{AbstractFunctionArg, AbstractValueArg, FunctionType};
 use crate::tasm_code_generator::SIZE_OF_ACCESSIBLE_STACK;
 use crate::{ast, libraries};
 
@@ -748,7 +748,7 @@ fn derive_annotate_expr_type(
                 }
                 Not => {
                     assert!(
-                        is_not_compatible_type(&inner_expr_type),
+                        type_compatible_with_not(&inner_expr_type),
                         "Cannot negate type '{inner_expr_type}'",
                     );
                     *unaryop_type = Typing::KnownType(inner_expr_type.clone());
@@ -1053,7 +1053,7 @@ pub fn is_negatable_type(data_type: &ast::DataType) -> bool {
 }
 
 /// A type from which expressions such as `!value` can be formed
-pub fn is_not_compatible_type(data_type: &ast::DataType) -> bool {
+pub fn type_compatible_with_not(data_type: &ast::DataType) -> bool {
     use ast::DataType::*;
     matches!(data_type, Bool | U32 | U64)
 }
