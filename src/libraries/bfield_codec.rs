@@ -135,30 +135,32 @@ impl Library for BFieldCodecLib {
         &self,
         rust_method_call: &syn::ExprMethodCall,
     ) -> Option<ast::Expr<super::Annotation>> {
-        // println!("bfcgm:\nrust_method_call\n{rust_method_call:#?}");
-        const UNWRAP_NAME: &str = "unwrap";
+        fn handle_unwrap(
+            rust_method_call: &syn::ExprMethodCall,
+        ) -> Option<ast::Expr<super::Annotation>> {
+            match rust_method_call.receiver.as_ref() {
+                syn::Expr::Call(ca) => {
+                    let preceding_function_call = graft::graft_call_exp(ca);
+                    if matches!(
+                        preceding_function_call,
+                        ast::Expr::Lit(ast::ExprLit::MemPointer(_))
+                    ) {
+                        Some(preceding_function_call)
+                    } else {
+                        None
+                    }
+                }
+                _ => None,
+            }
+        }
 
         // Remove `unwrap` if method call is `T::decode(...).unwrap()`
+        const UNWRAP_NAME: &str = "unwrap";
         let last_method_name = rust_method_call.method.to_string();
-
-        if last_method_name != UNWRAP_NAME {
-            return None;
+        if last_method_name == UNWRAP_NAME {
+            return handle_unwrap(rust_method_call);
         }
 
-        match rust_method_call.receiver.as_ref() {
-            syn::Expr::Call(ca) => {
-                let preceding_function_call = graft::graft_call_exp(ca);
-                if matches!(
-                    preceding_function_call,
-                    // ast::Expr::Lit(ast::ExprLit::Struct(_, _))
-                    ast::Expr::Lit(ast::ExprLit::MemPointer(_))
-                ) {
-                    Some(preceding_function_call)
-                } else {
-                    None
-                }
-            }
-            _ => None,
-        }
+        None
     }
 }

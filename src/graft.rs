@@ -622,7 +622,7 @@ pub fn graft_stmt(rust_stmt: &syn::Stmt) -> ast::Stmt<Annotation> {
             syn::Pat::Ident(d) => {
                 // This would indicate that the explicit type is missing
                 let ident = d.ident.to_string();
-                panic!("Missing type parameter in declaration of {ident}");
+                panic!("Missing explicit type in declaration of {ident}");
             }
             other => panic!("unsupported: {other:?}"),
         };

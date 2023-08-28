@@ -1,10 +1,14 @@
 use triton_vm::triton_asm;
 
-use crate::{ast, tasm_code_generator::CompilerState};
+use crate::{
+    ast,
+    tasm_code_generator::{subroutine::SubRoutine, CompilerState},
+};
 
-use super::{CompiledFunction, Library};
+use super::{Library, LibraryFunction};
 
 const HASHER_LIB_INDICATOR: &str = "H::";
+const HASH_PAIR_FUNCTION_NAME: &str = "H::hash_pair";
 
 #[derive(Clone, Debug)]
 pub struct HasherLib;
@@ -13,8 +17,7 @@ impl Library for HasherLib {
     fn get_function_name(&self, full_name: &str) -> Option<String> {
         // Any function call that starts with `H::` is assumed to exist in this library
         if full_name.starts_with(HASHER_LIB_INDICATOR) {
-            let stripped_name = &full_name[HASHER_LIB_INDICATOR.len()..full_name.len()];
-            return Some(stripped_name.to_owned());
+            return Some(full_name.to_owned());
         }
 
         None
@@ -43,11 +46,11 @@ impl Library for HasherLib {
         _type_parameter: Option<ast::DataType>,
         _args: &[ast::Expr<super::Annotation>],
     ) -> ast::FnSignature {
-        if fn_name == "hash_pair" {
-            get_hash_pair_function().signature
-        } else {
-            panic!("Unknown function {fn_name}");
+        if fn_name == HASH_PAIR_FUNCTION_NAME {
+            return get_hash_pair_function().signature;
         }
+
+        panic!("Unknown function {fn_name}");
     }
 
     fn call_method(
@@ -65,13 +68,17 @@ impl Library for HasherLib {
         fn_name: &str,
         _type_parameter: Option<ast::DataType>,
         _args: &[ast::Expr<super::Annotation>],
-        _state: &mut CompilerState,
+        state: &mut CompilerState,
     ) -> Vec<triton_vm::instruction::LabelledInstruction> {
-        if fn_name == "hash_pair" {
-            get_hash_pair_function().body
-        } else {
-            panic!("Unknown function {fn_name}");
+        if fn_name == HASH_PAIR_FUNCTION_NAME {
+            let hash_pair: SubRoutine = get_hash_pair_function().try_into().unwrap();
+            let hash_pair_label = hash_pair.get_label();
+            state.add_library_function(hash_pair);
+
+            return triton_asm!(call { hash_pair_label });
         }
+
+        panic!("Unknown function {fn_name}");
     }
 
     fn get_graft_function_name(&self, _full_name: &str) -> Option<String> {
@@ -94,7 +101,7 @@ impl Library for HasherLib {
     }
 }
 
-fn get_hash_pair_function() -> CompiledFunction {
+fn get_hash_pair_function() -> LibraryFunction {
     let fn_signature = ast::FnSignature {
         name: "hash_pair".to_owned(),
         args: vec![
@@ -115,7 +122,7 @@ fn get_hash_pair_function() -> CompiledFunction {
         arg_evaluation_order: ast::ArgEvaluationOrder::RightToLeft,
     };
 
-    CompiledFunction {
+    LibraryFunction {
         signature: fn_signature,
         body: triton_asm!(hash pop pop pop pop pop),
     }

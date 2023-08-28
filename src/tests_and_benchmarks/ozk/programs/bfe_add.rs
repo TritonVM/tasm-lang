@@ -7,6 +7,15 @@ fn main() {
     let b: BFieldElement = BFieldElement::new(15);
     let c: BFieldElement = a + b;
     tasm::tasm_io_write_to_stdout_bfe(c);
+
+    let d: u64 = 1001 + (1u64 << 32);
+    let e: BFieldElement = BFieldElement::new(d);
+    tasm::tasm_io_write_to_stdout_bfe(e);
+
+    let f: u64 = 1001000 + (1u64 << 32);
+    let g: BFieldElement = BFieldElement::new(f);
+    tasm::tasm_io_write_to_stdout_bfe(g);
+
     return;
 }
 
@@ -22,7 +31,11 @@ mod tests {
         // Test function on host machine
         let input = vec![];
         let non_determinism = NonDeterminism::new(vec![]);
-        let expected_output = vec![BFieldElement::new(29)];
+        let expected_output = vec![
+            BFieldElement::new(29),
+            BFieldElement::new(1001 + (1u64 << 32)),
+            BFieldElement::new(1001000 + (1u64 << 32)),
+        ];
         let native_output = rust_shadows::wrap_main_with_io(&ozk::programs::bfe_add::main)(
             input.clone(),
             non_determinism.clone(),

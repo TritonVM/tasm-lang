@@ -115,18 +115,12 @@ struct FunctionState {
 }
 
 impl FunctionState {
-    fn assert_subroutines_look_sane(&self) {
-        assert!(
-            self.subroutines.iter().all(|sub| sub.has_valid_structure()),
-            "All subroutines must have a valid structure"
-        );
-    }
-
     /// Add a compiled function and its subroutines to the list of subroutines, without
     /// concatenating instructions needlessly which would delete information
     fn add_compiled_fn_to_subroutines(&mut self, mut function: InnerFunctionTasmCode) {
         self.subroutines.append(&mut function.sub_routines);
-        self.subroutines.push(function.call_depth_zero_code.into());
+        self.subroutines
+            .push(function.call_depth_zero_code.try_into().unwrap());
     }
 }
 
@@ -215,6 +209,15 @@ pub struct CompilerState {
 }
 
 impl CompilerState {
+    /// Import a dependency in an idempotent manner, ensuring it's only ever imported once
+    pub(crate) fn add_library_function(&mut self, subroutine: SubRoutine) {
+        let label = subroutine.get_label();
+        let instructions = subroutine.get_code();
+        self.global_compiler_state
+            .snippet_state
+            .explicit_import(&label, &instructions);
+    }
+
     /// Construct a new compiler state with no known values that must be spilled.
     fn new(global_compiler_state: &GlobalCompilerState) -> Self {
         Self {
@@ -319,7 +322,7 @@ impl CompilerState {
             .snippet_state
             .all_external_dependencies()
             .into_iter()
-            .map(|x| x.into())
+            .map(|x| x.try_into().unwrap())
             .collect_vec();
 
         OuterFunctionTasmCode {
@@ -815,9 +818,6 @@ fn compile_function_inner(
             .concat(),
     );
 
-    // Sanity check: Assert that all subroutines start with a label and end with a return
-    state.function_state.assert_subroutines_look_sane();
-
     // Update global compiler state to propagate this to caller, such that external
     // dependencies that were loaded here will not be loaded again.
     *global_compiler_state = state.global_compiler_state.to_owned();
@@ -1014,7 +1014,7 @@ fn compile_stmt(
             state
                 .function_state
                 .subroutines
-                .push(while_loop_code.into());
+                .push(while_loop_code.try_into().unwrap());
 
             triton_asm!(call {
                 while_loop_subroutine_name
@@ -1064,8 +1064,14 @@ fn compile_stmt(
                     return
             );
 
-            state.function_state.subroutines.push(then_code.into());
-            state.function_state.subroutines.push(else_code.into());
+            state
+                .function_state
+                .subroutines
+                .push(then_code.try_into().unwrap());
+            state
+                .function_state
+                .subroutines
+                .push(else_code.try_into().unwrap());
 
             if_code
         }
@@ -2117,8 +2123,14 @@ fn compile_expr(
                     return
             );
 
-            state.function_state.subroutines.push(then_code.into());
-            state.function_state.subroutines.push(else_code.into());
+            state
+                .function_state
+                .subroutines
+                .push(then_code.try_into().unwrap());
+            state
+                .function_state
+                .subroutines
+                .push(else_code.try_into().unwrap());
 
             code
         }

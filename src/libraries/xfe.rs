@@ -11,7 +11,7 @@ use crate::{
     libraries::Library,
 };
 
-use super::{bfe::BfeLibrary, CompiledFunction};
+use super::{bfe::BfeLibrary, LibraryFunction};
 const XFIELDELEMENT_LIB_INDICATOR: &str = "XFieldElement::";
 
 #[derive(Clone, Debug)]
@@ -211,7 +211,7 @@ impl Library for XfeLibrary {
     }
 }
 
-fn get_xfe_unlift_method() -> CompiledFunction {
+fn get_xfe_unlift_method() -> LibraryFunction {
     let fn_signature = ast::FnSignature {
         name: "unlift".to_owned(),
         args: vec![ast::AbstractArgument::ValueArgument(
@@ -225,7 +225,7 @@ fn get_xfe_unlift_method() -> CompiledFunction {
         arg_evaluation_order: Default::default(),
     };
 
-    CompiledFunction {
+    LibraryFunction {
         signature: fn_signature,
         body: triton_asm!(swap 2 push 0 eq assert push 0 eq assert),
     }

@@ -1,14 +1,14 @@
 [
   {
     "name": "verify_authentication_path",
-    "clock_cycle_count": 13103,
+    "clock_cycle_count": 13165,
     "hash_table_height": 186,
     "u32_table_height": 3354,
     "case": "CommonCase"
   },
   {
     "name": "verify_authentication_path",
-    "clock_cycle_count": 474534,
+    "clock_cycle_count": 474660,
     "hash_table_height": 378,
     "u32_table_height": 99901,
     "case": "WorstCase"

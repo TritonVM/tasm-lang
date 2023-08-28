@@ -15,9 +15,9 @@ pub mod xfe;
 
 type Annotation = types::Typing;
 
-pub struct CompiledFunction {
-    signature: FnSignature,
-    body: Vec<triton_vm::instruction::LabelledInstruction>,
+pub struct LibraryFunction {
+    pub signature: FnSignature,
+    pub body: Vec<triton_vm::instruction::LabelledInstruction>,
 }
 
 pub fn all_libraries() -> Vec<Box<dyn Library>> {
@@ -33,7 +33,7 @@ pub fn all_libraries() -> Vec<Box<dyn Library>> {
 }
 
 pub trait Library: Debug {
-    /// Return stripped function name iff library knows this function
+    /// Return full function name iff library knows this function
     fn get_function_name(&self, full_name: &str) -> Option<String>;
 
     /// Return method_name iff library knows this method
@@ -73,7 +73,7 @@ pub trait Library: Debug {
         state: &mut CompilerState,
     ) -> Vec<triton_vm::instruction::LabelledInstruction>;
 
-    /// Return stripped function name iff grafting should be handled by
+    /// Return full function name iff grafting should be handled by
     /// library and not the generic grafter.
     fn get_graft_function_name(&self, full_name: &str) -> Option<String>;
 

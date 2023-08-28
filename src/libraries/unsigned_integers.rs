@@ -1,8 +1,8 @@
 use tasm_lib::snippet::BasicSnippet;
 use triton_vm::triton_asm;
 
-use super::{CompiledFunction, Library};
-use crate::{ast, tasm_code_generator::CompilerState};
+use super::{Library, LibraryFunction};
+use crate::{ast, tasm_code_generator::CompilerState, types::is_u32_based_type};
 
 #[derive(Clone, Debug)]
 pub struct UnsignedIntegersLib;
@@ -12,12 +12,16 @@ impl Library for UnsignedIntegersLib {
         None
     }
 
-    fn get_method_name(&self, method_name: &str, _receiver_type: &ast::DataType) -> Option<String> {
-        if matches!(method_name, "leading_zeros" | "count_ones") {
-            Some(method_name.to_owned())
-        } else {
-            None
+    fn get_method_name(&self, method_name: &str, receiver_type: &ast::DataType) -> Option<String> {
+        if is_u32_based_type(receiver_type) {
+            if matches!(method_name, "leading_zeros" | "count_ones") {
+                return Some(method_name.to_owned());
+            }
+
+            return None;
         }
+
+        None
     }
 
     fn method_name_to_signature(
@@ -26,6 +30,10 @@ impl Library for UnsignedIntegersLib {
         receiver_type: &ast::DataType,
         _args: &[ast::Expr<super::Annotation>],
     ) -> ast::FnSignature {
+        if !is_u32_based_type(receiver_type) {
+            panic!("Cannot call unsigned integer method on non-u32 based value. Receiver type was: {receiver_type}");
+        }
+
         if method_name == "count_ones" && *receiver_type == ast::DataType::U32 {
             return get_count_ones_u32_method().signature;
         }
@@ -122,7 +130,7 @@ impl Library for UnsignedIntegersLib {
     }
 }
 
-fn get_count_ones_u32_method() -> CompiledFunction {
+fn get_count_ones_u32_method() -> LibraryFunction {
     let fn_signature = ast::FnSignature {
         name: "count_ones".to_owned(),
         args: vec![ast::AbstractArgument::ValueArgument(
@@ -136,7 +144,7 @@ fn get_count_ones_u32_method() -> CompiledFunction {
         arg_evaluation_order: Default::default(),
     };
 
-    CompiledFunction {
+    LibraryFunction {
         signature: fn_signature,
         body: triton_asm!(pop_count),
     }

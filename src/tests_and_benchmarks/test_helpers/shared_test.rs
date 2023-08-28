@@ -32,7 +32,7 @@ impl InputOutputTestCase {
 }
 
 pub fn init_memory_from<T: BFieldCodec>(
-    data_struct: T,
+    data_struct: &T,
     memory_address: BFieldElement,
 ) -> NonDeterminism<BFieldElement> {
     NonDeterminism::new(vec![]).with_ram(
