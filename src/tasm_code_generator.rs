@@ -141,12 +141,9 @@ impl OuterFunctionTasmCode {
         // TODO: Should we end this function with a `halt` such that it works as
         // a standalone program?
 
-        // Remove the first label and the last return.
-        // This is done to ensure that the code wrapping this function in a `call <fn_name>, halt` logic still
-        // sets the dynamic allocator initial value. Otherwise, the dynamic memory allocation would not be
-        // included in the code executed with this wrapper code. If this code is *not* run through tests,
-        // this rearrangement is inconsequential as it just moves the initialization to after a label, which is
-        // removed later by the linker.
+        // Remove the first label and the last return such that we can insert
+        // dynamic memory initialization code and replace the last `return` with
+        // a `halt`.
         let inner_body = match self
             .function_data
             .call_depth_zero_code
@@ -173,13 +170,16 @@ impl OuterFunctionTasmCode {
             .map(|sr| sr.get_whole_function())
             .concat();
 
+        // Wrap entire execution in a call such that `recurse` can be used on the outermost layer, i.e. in `inner_body`.
         let ret = triton_asm!(
+            {&dyn_malloc_init}
+            call {name}
+            halt
             {name}:
-                {&dyn_malloc_init}
                 {&inner_body}
-                return // TODO: replace this with `halt`, no?
-                {&subroutines}
-                {&external_dependencies_code}
+                return
+            {&subroutines}
+            {&external_dependencies_code}
         );
 
         // Verify that code parses by wrapping it in a program, panics

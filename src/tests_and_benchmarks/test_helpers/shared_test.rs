@@ -49,12 +49,6 @@ pub fn init_memory_from<T: BFieldCodec>(
 pub fn compile_for_run_test(item_fn: &syn::ItemFn) -> (Vec<LabelledInstruction>, String) {
     let function_name = item_fn.sig.ident.to_string();
     let code = graft_check_compile_prop(item_fn);
-    let code = triton_asm!(
-        call {function_name}
-        halt
-
-        {&code}
-    );
 
     (code, function_name)
 }

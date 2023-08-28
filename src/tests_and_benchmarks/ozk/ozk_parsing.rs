@@ -55,19 +55,5 @@ pub(crate) fn compile_for_test(module_name: &str) -> Vec<LabelledInstruction> {
     let tasm = compile_function(&function);
 
     // compose
-    let instructions = tasm.compose();
-
-    let function_name = if let LabelledInstruction::Label(fn_name) = instructions.first().unwrap() {
-        fn_name.to_owned()
-    } else {
-        panic!("First instruction of compiled instructions must be a label")
-    };
-
-    // Wrap compiled function in a function call followed by a `halt`.
-    triton_asm!(
-        call {function_name}
-        halt
-
-        {&instructions}
-    )
+    tasm.compose()
 }
