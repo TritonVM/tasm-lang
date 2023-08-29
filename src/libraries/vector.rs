@@ -53,9 +53,6 @@ impl Library for VectorLib {
         type_parameter: Option<ast_types::DataType>,
         args: &[ast::Expr<super::Annotation>],
     ) -> ast::FnSignature {
-        println!("fn_name: {fn_name}");
-        println!("type_parameter: {type_parameter:?}");
-        println!("args: {args:?}");
         let snippet = name_to_tasm_lib_snippet(fn_name, &type_parameter, args)
             .unwrap_or_else(|| panic!("Unknown function name {fn_name}"));
 
@@ -256,10 +253,8 @@ fn name_to_tasm_lib_snippet(
     type_parameter: &Option<ast_types::DataType>,
     args: &[ast::Expr<super::Annotation>],
 ) -> Option<Box<dyn BasicSnippet>> {
-    println!("type_parameter: {type_parameter:?}");
     let tasm_type: Option<tasm_lib::snippet::DataType> =
         type_parameter.clone().map(|x| x.try_into().unwrap());
-    println!("tasm_type: {tasm_type:?}");
     match public_name {
         "default" => panic!("Change `Vec::default()` to `Vec::with_capacity(n)`."),
         "with_capacity" => Some(Box::new(tasm_lib::list::safe_u32::new::SafeNew(

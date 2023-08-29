@@ -119,8 +119,7 @@ impl FunctionState {
     /// concatenating instructions needlessly which would delete information
     fn add_compiled_fn_to_subroutines(&mut self, mut function: InnerFunctionTasmCode) {
         self.subroutines.append(&mut function.sub_routines);
-        self.subroutines
-            .push(function.call_depth_zero_code.try_into().unwrap());
+        self.subroutines.push(function.call_depth_zero_code);
     }
 }
 
@@ -1440,11 +1439,7 @@ fn compile_expr(
                     ),
                     _ => panic!("Unsupported not of type {inner_type}"),
                 },
-                ast::UnaryOp::Deref => {
-                    let size_of_value = inner_type.stack_size();
-                    // Push `size_of_value` many words from memory onto stack.
-                    load_from_memory(None, size_of_value)
-                }
+                ast::UnaryOp::Deref => dereference(&inner_type),
             };
 
             // Pops the operand from the compiler's view of the stack since
@@ -2184,7 +2179,7 @@ fn compile_expr(
                 compile_expr(expr, "field_access_receiver", &receiver_type, state);
 
             // stack: _ struct_pointer
-            let get_field_from_struct_pointer = match receiver_type {
+            let get_field_pointer_from_struct_pointer = match receiver_type {
                 ast_types::DataType::MemPointer(inner_type) => match *inner_type {
                     ast_types::DataType::Struct(inner_struct) => {
                         inner_struct.get_field_accessor_code(field_name)
@@ -2196,14 +2191,14 @@ fn compile_expr(
 
             // stack: _ field_pointer
 
-            let load_from_memory = load_from_memory(None, resulting_type.get_type().stack_size());
+            let dereference_from_memory = dereference(&resulting_type.get_type());
             let (_, (_old_data_type, _spilled)) = state.function_state.vstack.pop().unwrap();
 
             // stack _ [value]
             triton_asm!(
                 {&expr_get_struct_pointer}
-                {&get_field_from_struct_pointer}
-                {&load_from_memory}
+                {&get_field_pointer_from_struct_pointer}
+                {&dereference_from_memory}
             )
         }
     };
@@ -2307,6 +2302,25 @@ fn copy_top_stack_value_to_memory(
     ret.push(triton_instr!(pop));
 
     ret
+}
+
+/// Returns the code to convert a `MemPointer<data_type>` into a `data_type` on the stack. Consumes the
+/// address (`MemPointer<data_type>`) that is on top of the stack.
+fn dereference(data_type: &ast_types::DataType) -> Vec<LabelledInstruction> {
+    match data_type {
+        // From the TASM perspective, a mempointer to a list is the same as a list
+        ast_types::DataType::List(_) => triton_asm!(),
+
+        // No idea how to handle these yet
+        ast_types::DataType::MemPointer(_) => todo!(),
+        ast_types::DataType::VoidPointer => todo!(),
+        ast_types::DataType::Function(_) => todo!(),
+        ast_types::DataType::Struct(_) => todo!(),
+        ast_types::DataType::Unresolved(_) => todo!(),
+
+        // Simple data types are simple read from memory and placed on the stack
+        _ => load_from_memory(None, data_type.stack_size()),
+    }
 }
 
 /// Return the code to load a value from memory. Leaves the stack with the read value on top.
@@ -2418,16 +2432,19 @@ impl ast_types::StructType {
     /// Assuming the stack top points to the start of the struct, returns the code
     /// that modifies the top stack value to point to the indicated field. So the top
     /// stack element is consumed and the returned value is a pointer to the requested
-    /// field in the struct.
+    /// field in the struct. Note that the top of the stack is where the field begins,
+    /// not the size indication of that field.
     pub fn get_field_accessor_code(&self, field_name: &str) -> Vec<LabelledInstruction> {
         // This implementation must match `BFieldCodec` for the equivalent Rust types
         let mut instructions = vec![];
         let mut static_pointer_addition = 0;
-        let needle = field_name;
+        let needle_name = field_name;
+        let mut needle_type: Option<ast_types::DataType> = None;
         for (haystack_field_name, haystack_type) in self.fields.iter() {
-            if haystack_field_name == needle {
+            if haystack_field_name == needle_name {
                 // If we've found the field the accumulators are in the right state.
                 // return them.
+                needle_type = Some(haystack_type.to_owned());
                 break;
             } else {
                 // We have not reached the field yet. If the field has a statically
@@ -2446,6 +2463,13 @@ impl ast_types::StructType {
                     }
                 }
             }
+        }
+
+        // If the requested field is dynamically sized, add one to address, to point to start
+        // of the field instead of the size of the field.
+        match needle_type.unwrap().bfield_codec_length() {
+            Some(_) => (),
+            None => static_pointer_addition += 1,
         }
 
         if !static_pointer_addition.is_zero() {

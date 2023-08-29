@@ -182,7 +182,7 @@ impl Library for BfeLibrary {
             return Some(handle_bfe_new(args));
         }
 
-        return None;
+        None
     }
 
     fn graft_method(

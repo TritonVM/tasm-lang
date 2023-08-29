@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use tasm_lib::memory::dyn_malloc::DYN_MALLOC_ADDRESS;
 use tasm_lib::{get_init_tvm_stack, rust_shadowing_helper_functions, DIGEST_LENGTH};
 use triton_vm::instruction::LabelledInstruction;
-use triton_vm::{triton_asm, Digest, NonDeterminism};
+use triton_vm::{Digest, NonDeterminism};
 use twenty_first::shared_math::b_field_element::{BFieldElement, BFIELD_ONE, BFIELD_ZERO};
 use twenty_first::shared_math::bfield_codec::BFieldCodec;
 use twenty_first::shared_math::x_field_element::XFieldElement;

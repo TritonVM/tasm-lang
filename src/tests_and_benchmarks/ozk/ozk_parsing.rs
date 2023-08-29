@@ -1,6 +1,6 @@
 use std::fs;
 
-use triton_vm::{instruction::LabelledInstruction, triton_asm};
+use triton_vm::instruction::LabelledInstruction;
 
 use crate::{
     graft::{graft_fn_decl, graft_structs},

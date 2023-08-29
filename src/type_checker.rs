@@ -243,7 +243,11 @@ fn annotate_stmt(
 
             let let_expr_hint: Option<&ast_types::DataType> = Some(data_type);
             let derived_type = derive_annotate_expr_type(expr, let_expr_hint, state);
-            assert_type_equals(&derived_type, data_type, "let-statement");
+            assert_type_equals(
+                &derived_type,
+                data_type,
+                &format!("let-statement of {var_name}"),
+            );
             state.vtable.insert(
                 var_name.clone(),
                 DataTypeAndMutability::new(data_type, *mutable),
@@ -676,7 +680,7 @@ fn derive_annotate_expr_type(
             let receiver_type = derive_annotate_expr_type(expr, None, state);
 
             // Only structs have fields, so receiver_type must be a struct, or a pointer to a struct.
-            let ret = receiver_type.field_access_returned_type(&field_name);
+            let ret = receiver_type.field_access_returned_type(field_name);
             *annot = Typing::KnownType(ret.clone());
 
             ret
