@@ -1,7 +1,8 @@
 use crate::{
     ast::{self, FnSignature},
+    ast_types,
     tasm_code_generator::CompilerState,
-    types,
+    type_checker,
 };
 use std::fmt::Debug;
 
@@ -13,7 +14,7 @@ pub mod unsigned_integers;
 pub mod vector;
 pub mod xfe;
 
-type Annotation = types::Typing;
+type Annotation = type_checker::Typing;
 
 pub struct LibraryFunction {
     pub signature: FnSignature,
@@ -37,13 +38,17 @@ pub trait Library: Debug {
     fn get_function_name(&self, full_name: &str) -> Option<String>;
 
     /// Return method_name iff library knows this method
-    fn get_method_name(&self, method_name: &str, receiver_type: &ast::DataType) -> Option<String>;
+    fn get_method_name(
+        &self,
+        method_name: &str,
+        receiver_type: &ast_types::DataType,
+    ) -> Option<String>;
 
     /// Return function signature of method, if method is known.
     fn method_name_to_signature(
         &self,
         fn_name: &str,
-        receiver_type: &ast::DataType,
+        receiver_type: &ast_types::DataType,
         args: &[ast::Expr<Annotation>],
     ) -> ast::FnSignature;
 
@@ -51,7 +56,7 @@ pub trait Library: Debug {
     fn function_name_to_signature(
         &self,
         fn_name: &str,
-        type_parameter: Option<ast::DataType>,
+        type_parameter: Option<ast_types::DataType>,
         args: &[ast::Expr<Annotation>],
     ) -> ast::FnSignature;
 
@@ -59,7 +64,7 @@ pub trait Library: Debug {
     fn call_method(
         &self,
         method_name: &str,
-        receiver_type: &ast::DataType,
+        receiver_type: &ast_types::DataType,
         args: &[ast::Expr<Annotation>],
         state: &mut CompilerState,
     ) -> Vec<triton_vm::instruction::LabelledInstruction>;
@@ -68,7 +73,7 @@ pub trait Library: Debug {
     fn call_function(
         &self,
         fn_name: &str,
-        type_parameter: Option<ast::DataType>,
+        type_parameter: Option<ast_types::DataType>,
         args: &[ast::Expr<Annotation>],
         state: &mut CompilerState,
     ) -> Vec<triton_vm::instruction::LabelledInstruction>;

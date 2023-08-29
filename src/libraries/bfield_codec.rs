@@ -16,7 +16,7 @@ impl Library for BFieldCodecLib {
     fn get_method_name(
         &self,
         _method_name: &str,
-        _receiver_type: &crate::ast::DataType,
+        _receiver_type: &crate::ast_types::DataType,
     ) -> Option<String> {
         None
     }
@@ -24,7 +24,7 @@ impl Library for BFieldCodecLib {
     fn method_name_to_signature(
         &self,
         _fn_name: &str,
-        _receiver_type: &crate::ast::DataType,
+        _receiver_type: &crate::ast_types::DataType,
         _args: &[crate::ast::Expr<super::Annotation>],
     ) -> crate::ast::FnSignature {
         panic!("BFieldCodecLib does not contain any methods")
@@ -33,7 +33,7 @@ impl Library for BFieldCodecLib {
     fn function_name_to_signature(
         &self,
         _fn_name: &str,
-        _type_parameter: Option<crate::ast::DataType>,
+        _type_parameter: Option<crate::ast_types::DataType>,
         _args: &[crate::ast::Expr<super::Annotation>],
     ) -> crate::ast::FnSignature {
         todo!()
@@ -42,7 +42,7 @@ impl Library for BFieldCodecLib {
     fn call_method(
         &self,
         _method_name: &str,
-        _receiver_type: &crate::ast::DataType,
+        _receiver_type: &crate::ast_types::DataType,
         _args: &[crate::ast::Expr<super::Annotation>],
         _state: &mut crate::tasm_code_generator::CompilerState,
     ) -> Vec<triton_vm::instruction::LabelledInstruction> {
@@ -52,7 +52,7 @@ impl Library for BFieldCodecLib {
     fn call_function(
         &self,
         _fn_name: &str,
-        _type_parameter: Option<crate::ast::DataType>,
+        _type_parameter: Option<crate::ast_types::DataType>,
         _args: &[crate::ast::Expr<super::Annotation>],
         _state: &mut crate::tasm_code_generator::CompilerState,
     ) -> Vec<triton_vm::instruction::LabelledInstruction> {
@@ -120,6 +120,8 @@ impl Library for BFieldCodecLib {
                 ast::Expr::Lit(ast::ExprLit::MemPointer(ast::MemPointerLiteral {
                     mem_pointer_address: pointer_to_struct,
                     struct_name: return_type,
+                    // `resolved_type` is to be filled out by the type checker
+                    resolved_type: Default::default(),
                 }));
             ret
         }

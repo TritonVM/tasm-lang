@@ -2,7 +2,7 @@ use itertools::Itertools;
 use triton_vm::triton_asm;
 use twenty_first::shared_math::b_field_element::BFieldElement;
 
-use crate::{ast, graft::graft_expr, tasm_code_generator::subroutine::SubRoutine};
+use crate::{ast, ast_types, graft::graft_expr, tasm_code_generator::subroutine::SubRoutine};
 
 use super::{Library, LibraryFunction};
 
@@ -21,9 +21,13 @@ impl Library for BfeLibrary {
         None
     }
 
-    fn get_method_name(&self, method_name: &str, receiver_type: &ast::DataType) -> Option<String> {
+    fn get_method_name(
+        &self,
+        method_name: &str,
+        receiver_type: &ast_types::DataType,
+    ) -> Option<String> {
         match receiver_type {
-            ast::DataType::BFE => {
+            ast_types::DataType::BFE => {
                 if method_name == "lift" || method_name == "value" {
                     Some(method_name.to_owned())
                 } else {
@@ -37,10 +41,10 @@ impl Library for BfeLibrary {
     fn method_name_to_signature(
         &self,
         method_name: &str,
-        receiver_type: &ast::DataType,
+        receiver_type: &ast_types::DataType,
         _args: &[ast::Expr<super::Annotation>],
     ) -> ast::FnSignature {
-        if matches!(receiver_type, ast::DataType::BFE) {
+        if matches!(receiver_type, ast_types::DataType::BFE) {
             if method_name == "lift" {
                 return bfe_lift_method().signature;
             }
@@ -56,7 +60,7 @@ impl Library for BfeLibrary {
     fn function_name_to_signature(
         &self,
         fn_name: &str,
-        _type_parameter: Option<ast::DataType>,
+        _type_parameter: Option<ast_types::DataType>,
         _args: &[ast::Expr<super::Annotation>],
     ) -> ast::FnSignature {
         if fn_name == FUNCTION_NAME_NEW_BFE {
@@ -69,11 +73,11 @@ impl Library for BfeLibrary {
     fn call_method(
         &self,
         method_name: &str,
-        receiver_type: &ast::DataType,
+        receiver_type: &ast_types::DataType,
         _args: &[ast::Expr<super::Annotation>],
         _state: &mut crate::tasm_code_generator::CompilerState,
     ) -> Vec<triton_vm::instruction::LabelledInstruction> {
-        if matches!(receiver_type, ast::DataType::BFE) {
+        if matches!(receiver_type, ast_types::DataType::BFE) {
             // TODO: Instead of inlining this, we could add the subroutine to the
             // compiler state and the call that subroutine. And then let the inline
             // handle whatever needs to be inlined.
@@ -92,7 +96,7 @@ impl Library for BfeLibrary {
     fn call_function(
         &self,
         fn_name: &str,
-        _type_parameter: Option<ast::DataType>,
+        _type_parameter: Option<ast_types::DataType>,
         _args: &[ast::Expr<super::Annotation>],
         state: &mut crate::tasm_code_generator::CompilerState,
     ) -> Vec<triton_vm::instruction::LabelledInstruction> {
@@ -140,36 +144,37 @@ impl Library for BfeLibrary {
                     ast::ExprLit::GenericNum(value, _) => ast::Expr::Lit(ast::ExprLit::BFE(
                         BFieldElement::new(TryInto::<u64>::try_into(*value).unwrap()),
                     )),
-                    _ => panic!("Cannot initialize BFieldElement with expression {init_arg:#?}"),
-                },
-                ast::Expr::Var(var) => match var {
-                    ast::Identifier::String(constant, _) => {
-                        if constant == "BFieldElement::MAX" {
-                            ast::Expr::Lit(ast::ExprLit::BFE(BFieldElement::new(
-                                BFieldElement::MAX,
-                            )))
-                        } else {
-                            // Here, we want an expression for a method call or function call on
-                            // a `u64` that returns a `BFieldElement`.
-                            let bfe_new_function = bfe_new_function();
-                            ast::Expr::FnCall(ast::FnCall {
-                                name: "BFieldElement::new".to_string(),
-                                args: vec![init_arg.to_owned()],
-                                type_parameter: None,
-                                arg_evaluation_order: bfe_new_function
-                                    .signature
-                                    .arg_evaluation_order,
-                                annot: Default::default(),
-                            })
-                        }
+                    _ => {
+                        panic!("Cannot initialize BFieldElement with {lit:?} from {init_arg:#?}")
                     }
-                    ast::Identifier::TupleIndex(_, _) => todo!(),
-                    ast::Identifier::ListIndex(_, _) => todo!(),
                 },
                 // TODO: To handle more advanced expressions here (like BFieldElement::MAX - 1),
                 // we might have to implement constant folding on ast::Expr?
                 // Unsure how to handle that.
-                _ => panic!("Invalid initialization of BFieldElement. Got {init_arg:#?}"),
+                ast::Expr::Var(ast::Identifier::String(constant, _)) => {
+                    if constant == "BFieldElement::MAX" {
+                        ast::Expr::Lit(ast::ExprLit::BFE(BFieldElement::new(BFieldElement::MAX)))
+                    } else {
+                        let bfe_new_function = bfe_new_function();
+                        ast::Expr::FnCall(ast::FnCall {
+                            name: "BFieldElement::new".to_string(),
+                            args: vec![init_arg.to_owned()],
+                            type_parameter: None,
+                            arg_evaluation_order: bfe_new_function.signature.arg_evaluation_order,
+                            annot: Default::default(),
+                        })
+                    }
+                }
+                _ => {
+                    let bfe_new_function = bfe_new_function();
+                    ast::Expr::FnCall(ast::FnCall {
+                        name: "BFieldElement::new".to_string(),
+                        args: vec![init_arg.to_owned()],
+                        type_parameter: None,
+                        arg_evaluation_order: bfe_new_function.signature.arg_evaluation_order,
+                        annot: Default::default(),
+                    })
+                }
             }
         }
 
@@ -191,14 +196,14 @@ impl Library for BfeLibrary {
 fn bfe_lift_method() -> LibraryFunction {
     let fn_signature = ast::FnSignature {
         name: "lift".to_owned(),
-        args: vec![ast::AbstractArgument::ValueArgument(
-            ast::AbstractValueArg {
+        args: vec![ast_types::AbstractArgument::ValueArgument(
+            ast_types::AbstractValueArg {
                 name: "value".to_owned(),
-                data_type: ast::DataType::BFE,
+                data_type: ast_types::DataType::BFE,
                 mutable: false,
             },
         )],
-        output: ast::DataType::XFE,
+        output: ast_types::DataType::XFE,
         arg_evaluation_order: Default::default(),
     };
 
@@ -211,14 +216,14 @@ fn bfe_lift_method() -> LibraryFunction {
 fn bfe_value_method() -> LibraryFunction {
     let fn_signature = ast::FnSignature {
         name: "value".to_owned(),
-        args: vec![ast::AbstractArgument::ValueArgument(
-            ast::AbstractValueArg {
+        args: vec![ast_types::AbstractArgument::ValueArgument(
+            ast_types::AbstractValueArg {
                 name: "bfe_value".to_owned(),
-                data_type: ast::DataType::BFE,
+                data_type: ast_types::DataType::BFE,
                 mutable: false,
             },
         )],
-        output: ast::DataType::U64,
+        output: ast_types::DataType::U64,
         arg_evaluation_order: Default::default(),
     };
 
@@ -231,14 +236,14 @@ fn bfe_value_method() -> LibraryFunction {
 fn bfe_new_function() -> LibraryFunction {
     let fn_signature = ast::FnSignature {
         name: "bfe_new_from_u64".to_owned(),
-        args: vec![ast::AbstractArgument::ValueArgument(
-            ast::AbstractValueArg {
+        args: vec![ast_types::AbstractArgument::ValueArgument(
+            ast_types::AbstractValueArg {
                 name: "u64_value".to_owned(),
-                data_type: ast::DataType::U64,
+                data_type: ast_types::DataType::U64,
                 mutable: false,
             },
         )],
-        output: ast::DataType::BFE,
+        output: ast_types::DataType::BFE,
         arg_evaluation_order: Default::default(),
     };
 

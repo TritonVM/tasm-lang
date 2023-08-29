@@ -1,6 +1,7 @@
 use triton_vm::triton_asm;
 
 use crate::ast::{self, FnSignature};
+use crate::ast_types;
 use crate::tasm_code_generator::CompilerState;
 
 use super::Library;
@@ -24,7 +25,7 @@ impl Library for TasmLibrary {
     fn get_method_name(
         &self,
         _method_name: &str,
-        _receiver_type: &ast::DataType,
+        _receiver_type: &ast_types::DataType,
     ) -> Option<String> {
         None
     }
@@ -32,7 +33,7 @@ impl Library for TasmLibrary {
     fn method_name_to_signature(
         &self,
         _fn_name: &str,
-        _receiver_type: &ast::DataType,
+        _receiver_type: &ast_types::DataType,
         _args: &[ast::Expr<super::Annotation>],
     ) -> ast::FnSignature {
         panic!("TASM lib only contains functions, no methods")
@@ -41,7 +42,7 @@ impl Library for TasmLibrary {
     fn function_name_to_signature(
         &self,
         stripped_name: &str,
-        _type_parameter: Option<ast::DataType>,
+        _type_parameter: Option<ast_types::DataType>,
         _args: &[ast::Expr<super::Annotation>],
     ) -> ast::FnSignature {
         // TODO:
@@ -50,26 +51,26 @@ impl Library for TasmLibrary {
         let snippet = tasm_lib::exported_snippets::name_to_snippet(stripped_name);
 
         let name = snippet.entrypoint();
-        let mut args: Vec<ast::AbstractArgument> = vec![];
+        let mut args: Vec<ast_types::AbstractArgument> = vec![];
         for (ty, name) in snippet.inputs().into_iter() {
-            let fn_arg = ast::AbstractValueArg {
+            let fn_arg = ast_types::AbstractValueArg {
                 name,
                 data_type: ty.into(),
                 // The tasm snippet input arguments are all considered mutable
                 mutable: true,
             };
-            args.push(ast::AbstractArgument::ValueArgument(fn_arg));
+            args.push(ast_types::AbstractArgument::ValueArgument(fn_arg));
         }
 
-        let mut output_types: Vec<ast::DataType> = vec![];
+        let mut output_types: Vec<ast_types::DataType> = vec![];
         for (otl, _name) in snippet.outputs() {
             output_types.push(otl.into());
         }
 
         let output = match output_types.len() {
             1 => output_types[0].clone(),
-            0 => ast::DataType::Tuple(vec![]),
-            _ => ast::DataType::Tuple(output_types),
+            0 => ast_types::DataType::Tuple(vec![]),
+            _ => ast_types::DataType::Tuple(output_types),
         };
 
         FnSignature {
@@ -83,7 +84,7 @@ impl Library for TasmLibrary {
     fn call_method(
         &self,
         _method_name: &str,
-        _receiver_type: &ast::DataType,
+        _receiver_type: &ast_types::DataType,
         _args: &[ast::Expr<super::Annotation>],
         _state: &mut CompilerState,
     ) -> Vec<triton_vm::instruction::LabelledInstruction> {
@@ -93,7 +94,7 @@ impl Library for TasmLibrary {
     fn call_function(
         &self,
         stripped_name: &str,
-        _type_parameter: Option<ast::DataType>,
+        _type_parameter: Option<ast_types::DataType>,
         _args: &[ast::Expr<super::Annotation>],
         state: &mut CompilerState,
     ) -> Vec<triton_vm::instruction::LabelledInstruction> {

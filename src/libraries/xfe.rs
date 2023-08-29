@@ -6,7 +6,7 @@ use twenty_first::shared_math::{
 };
 
 use crate::{
-    ast,
+    ast, ast_types,
     graft::{self, graft_expr},
     libraries::Library,
 };
@@ -22,7 +22,11 @@ impl Library for XfeLibrary {
         None
     }
 
-    fn get_method_name(&self, method_name: &str, _receiver_type: &ast::DataType) -> Option<String> {
+    fn get_method_name(
+        &self,
+        method_name: &str,
+        _receiver_type: &ast_types::DataType,
+    ) -> Option<String> {
         if method_name == "unlift" {
             Some(method_name.to_owned())
         } else {
@@ -33,7 +37,7 @@ impl Library for XfeLibrary {
     fn method_name_to_signature(
         &self,
         method_name: &str,
-        _receiver_type: &ast::DataType,
+        _receiver_type: &ast_types::DataType,
         _args: &[ast::Expr<super::Annotation>],
     ) -> ast::FnSignature {
         if method_name == "unlift" {
@@ -46,7 +50,7 @@ impl Library for XfeLibrary {
     fn function_name_to_signature(
         &self,
         _fn_name: &str,
-        _type_parameter: Option<ast::DataType>,
+        _type_parameter: Option<ast_types::DataType>,
         _args: &[ast::Expr<super::Annotation>],
     ) -> ast::FnSignature {
         panic!("No functions implemented for XFE library");
@@ -55,7 +59,7 @@ impl Library for XfeLibrary {
     fn call_method(
         &self,
         method_name: &str,
-        _receiver_type: &ast::DataType,
+        _receiver_type: &ast_types::DataType,
         _args: &[ast::Expr<super::Annotation>],
         _state: &mut crate::tasm_code_generator::CompilerState,
     ) -> Vec<triton_vm::instruction::LabelledInstruction> {
@@ -69,7 +73,7 @@ impl Library for XfeLibrary {
     fn call_function(
         &self,
         _fn_name: &str,
-        _type_parameter: Option<ast::DataType>,
+        _type_parameter: Option<ast_types::DataType>,
         _args: &[ast::Expr<super::Annotation>],
         _state: &mut crate::tasm_code_generator::CompilerState,
     ) -> Vec<triton_vm::instruction::LabelledInstruction> {
@@ -214,14 +218,14 @@ impl Library for XfeLibrary {
 fn get_xfe_unlift_method() -> LibraryFunction {
     let fn_signature = ast::FnSignature {
         name: "unlift".to_owned(),
-        args: vec![ast::AbstractArgument::ValueArgument(
-            ast::AbstractValueArg {
+        args: vec![ast_types::AbstractArgument::ValueArgument(
+            ast_types::AbstractValueArg {
                 name: "value".to_owned(),
-                data_type: ast::DataType::XFE,
+                data_type: ast_types::DataType::XFE,
                 mutable: false,
             },
         )],
-        output: ast::DataType::BFE,
+        output: ast_types::DataType::BFE,
         arg_evaluation_order: Default::default(),
     };
 

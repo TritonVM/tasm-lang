@@ -3,10 +3,10 @@ use tasm_lib::{list::ListType, snippet::BasicSnippet};
 use triton_vm::triton_asm;
 
 use crate::{
-    ast,
+    ast, ast_types,
     graft::{self, graft_expr, Annotation},
     tasm_code_generator::CompilerState,
-    types::GetType,
+    type_checker::GetType,
 };
 
 use super::Library;
@@ -26,7 +26,11 @@ impl Library for VectorLib {
         None
     }
 
-    fn get_method_name(&self, method_name: &str, _receiver_type: &ast::DataType) -> Option<String> {
+    fn get_method_name(
+        &self,
+        method_name: &str,
+        _receiver_type: &ast_types::DataType,
+    ) -> Option<String> {
         if matches!(method_name, "push" | "pop" | "len" | "map") {
             Some(method_name.to_owned())
         } else {
@@ -37,7 +41,7 @@ impl Library for VectorLib {
     fn method_name_to_signature(
         &self,
         fn_name: &str,
-        receiver_type: &ast::DataType,
+        receiver_type: &ast_types::DataType,
         args: &[ast::Expr<super::Annotation>],
     ) -> ast::FnSignature {
         self.function_name_to_signature(fn_name, receiver_type.type_parameter(), args)
@@ -46,32 +50,35 @@ impl Library for VectorLib {
     fn function_name_to_signature(
         &self,
         fn_name: &str,
-        type_parameter: Option<ast::DataType>,
+        type_parameter: Option<ast_types::DataType>,
         args: &[ast::Expr<super::Annotation>],
     ) -> ast::FnSignature {
+        println!("fn_name: {fn_name}");
+        println!("type_parameter: {type_parameter:?}");
+        println!("args: {args:?}");
         let snippet = name_to_tasm_lib_snippet(fn_name, &type_parameter, args)
             .unwrap_or_else(|| panic!("Unknown function name {fn_name}"));
 
         let name = snippet.entrypoint();
-        let mut args: Vec<ast::AbstractArgument> = vec![];
+        let mut args: Vec<ast_types::AbstractArgument> = vec![];
         for (ty, name) in snippet.inputs().into_iter() {
-            let fn_arg = ast::AbstractValueArg {
+            let fn_arg = ast_types::AbstractValueArg {
                 name,
                 data_type: ty.into(),
                 mutable: true,
             };
-            args.push(ast::AbstractArgument::ValueArgument(fn_arg));
+            args.push(ast_types::AbstractArgument::ValueArgument(fn_arg));
         }
 
-        let mut output_types: Vec<ast::DataType> = vec![];
+        let mut output_types: Vec<ast_types::DataType> = vec![];
         for (ty, _name) in snippet.outputs() {
             output_types.push(ty.into());
         }
 
         let output = match output_types.len() {
             1 => output_types[0].clone(),
-            0 => ast::DataType::Tuple(vec![]),
-            _ => ast::DataType::Tuple(output_types),
+            0 => ast_types::DataType::Tuple(vec![]),
+            _ => ast_types::DataType::Tuple(output_types),
         };
 
         ast::FnSignature {
@@ -85,17 +92,18 @@ impl Library for VectorLib {
     fn call_method(
         &self,
         method_name: &str,
-        receiver_type: &ast::DataType,
+        receiver_type: &ast_types::DataType,
         args: &[ast::Expr<super::Annotation>],
         state: &mut CompilerState,
     ) -> Vec<triton_vm::instruction::LabelledInstruction> {
-        let type_param: ast::DataType = if let ast::DataType::List(type_param) = receiver_type {
-            *type_param.to_owned()
-        } else {
-            panic!(
+        let type_param: ast_types::DataType =
+            if let ast_types::DataType::List(type_param) = receiver_type {
+                *type_param.to_owned()
+            } else {
+                panic!(
                 "Cannot call vector method without type param. Got receiver_type: {receiver_type}"
             )
-        };
+            };
         // find inner function if needed
         let snippet = name_to_tasm_lib_snippet(method_name, &Some(type_param), args)
             .unwrap_or_else(|| panic!("Unknown function name {method_name}"));
@@ -108,7 +116,7 @@ impl Library for VectorLib {
     fn call_function(
         &self,
         fn_name: &str,
-        type_parameter: Option<ast::DataType>,
+        type_parameter: Option<ast_types::DataType>,
         args: &[ast::Expr<super::Annotation>],
         state: &mut CompilerState,
     ) -> Vec<triton_vm::instruction::LabelledInstruction> {
@@ -245,11 +253,13 @@ impl Library for VectorLib {
 /// Map list-function or method name to the TASM lib snippet type
 fn name_to_tasm_lib_snippet(
     public_name: &str,
-    type_parameter: &Option<ast::DataType>,
+    type_parameter: &Option<ast_types::DataType>,
     args: &[ast::Expr<super::Annotation>],
 ) -> Option<Box<dyn BasicSnippet>> {
+    println!("type_parameter: {type_parameter:?}");
     let tasm_type: Option<tasm_lib::snippet::DataType> =
         type_parameter.clone().map(|x| x.try_into().unwrap());
+    println!("tasm_type: {tasm_type:?}");
     match public_name {
         "default" => panic!("Change `Vec::default()` to `Vec::with_capacity(n)`."),
         "with_capacity" => Some(Box::new(tasm_lib::list::safe_u32::new::SafeNew(
@@ -265,12 +275,12 @@ fn name_to_tasm_lib_snippet(
             tasm_type.unwrap(),
         ))),
         "map" => {
-            let inner_function_type = if let ast::DataType::Function(fun_type) = args[1].get_type()
-            {
-                fun_type
-            } else {
-                panic!()
-            };
+            let inner_function_type =
+                if let ast_types::DataType::Function(fun_type) = args[1].get_type() {
+                    fun_type
+                } else {
+                    panic!()
+                };
             let inner_function_name = if let ast::Expr::Var(ident) = &args[1] {
                 ident
             } else {

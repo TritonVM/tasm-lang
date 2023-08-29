@@ -2,29 +2,44 @@
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 use tasm_lib::structure::tasm_object::TasmObject;
 use triton_vm::BFieldElement;
-use twenty_first::shared_math::bfield_codec::BFieldCodec;
+use triton_vm::Digest;
+use twenty_first::shared_math::{bfield_codec::BFieldCodec, x_field_element::XFieldElement};
 
 const SIMPLE_STRUCTS_BFIELD_CODEC_START_ADDRESS: u64 = 84;
 
 #[derive(TasmObject, BFieldCodec)]
 struct TestStruct {
-    pub a: BFieldElement,
-    pub b: BFieldElement,
+    a: BFieldElement,
+    b: BFieldElement,
+    c: XFieldElement,
+    d: Digest,
+    e: bool,
+    f: u32,
+    g: u64,
+    h: u128,
 }
 
 fn main() {
     let test_struct: Box<TestStruct> =
         TestStruct::decode(&tasm::load_from_memory(BFieldElement::new(84))).unwrap();
-    let a: &BFieldElement = &test_struct.a; // Use 1 `&`, ignore the 2nd `&`.
-    tasm::tasm_io_write_to_stdout_bfe(*a); // Implement both `*` and method `to_owned` to mean put this onto the stack. We might need exceptions for list though.
+    let a: BFieldElement = test_struct.a; // Use 1 `&`, ignore the 2nd `&`.
+    tasm::tasm_io_write_to_stdout_u128(test_struct.h);
+    tasm::tasm_io_write_to_stdout_bfe(a); // Implement both `*` and method `to_owned` to mean put this onto the stack. We might need exceptions for list though.
 
-    let b: &BFieldElement = &test_struct.b;
-    tasm::tasm_io_write_to_stdout_bfe(*b);
+    tasm::tasm_io_write_to_stdout_bool(test_struct.e);
+    let b: BFieldElement = test_struct.b;
+    tasm::tasm_io_write_to_stdout_u64(test_struct.g);
+    tasm::tasm_io_write_to_stdout_bfe(b);
+    tasm::tasm_io_write_to_stdout_digest(test_struct.d);
+    tasm::tasm_io_write_to_stdout_xfe(test_struct.c);
+    tasm::tasm_io_write_to_stdout_u32(test_struct.f);
     return;
 }
 
 mod tests {
     use super::*;
+    use itertools::Itertools;
+    use rand::random;
     use std::collections::HashMap;
     use triton_vm::BFieldElement;
 
@@ -39,13 +54,29 @@ mod tests {
         // Test function on host machine
         let bfield_code_start_address = SIMPLE_STRUCTS_BFIELD_CODEC_START_ADDRESS;
         let test_struct = TestStruct {
-            a: BFieldElement::new(14),
-            b: BFieldElement::new(15),
+            a: random(),
+            b: random(),
+            c: random(),
+            d: random(),
+            e: random(),
+            f: random(),
+            g: random(),
+            h: random(),
         };
         let non_determinism =
             init_memory_from(&test_struct, BFieldElement::new(bfield_code_start_address));
 
-        let expected_output = vec![test_struct.a, test_struct.b];
+        let expected_output = vec![
+            test_struct.h.encode(),
+            vec![test_struct.a],
+            test_struct.e.encode(),
+            test_struct.g.encode(),
+            vec![test_struct.b],
+            test_struct.d.values().to_vec(),
+            test_struct.c.coefficients.to_vec(),
+            test_struct.f.encode(),
+        ]
+        .concat();
         let input = vec![];
 
         // Run test on host machine
@@ -55,6 +86,7 @@ mod tests {
 
         // Run test on Triton-VM
         let test_program = ozk_parsing::compile_for_test("simple_struct");
+        println!("test_program is:\n{}", test_program.iter().join("\n"));
         let vm_output = execute_compiled_with_stack_memory_and_ins_for_test(
             &test_program,
             vec![],
@@ -65,5 +97,7 @@ mod tests {
         )
         .unwrap();
         assert_eq!(expected_output, vm_output.output);
+
+        println!("Final stack is: {}", vm_output.final_stack.iter().join(","));
     }
 }

@@ -1,7 +1,7 @@
 use triton_vm::triton_asm;
 
 use crate::{
-    ast,
+    ast, ast_types,
     tasm_code_generator::{subroutine::SubRoutine, CompilerState},
 };
 
@@ -26,7 +26,7 @@ impl Library for HasherLib {
     fn get_method_name(
         &self,
         _method_name: &str,
-        _receiver_type: &ast::DataType,
+        _receiver_type: &ast_types::DataType,
     ) -> Option<String> {
         None
     }
@@ -34,7 +34,7 @@ impl Library for HasherLib {
     fn method_name_to_signature(
         &self,
         _fn_name: &str,
-        _receiver_type: &ast::DataType,
+        _receiver_type: &ast_types::DataType,
         _args: &[ast::Expr<super::Annotation>],
     ) -> ast::FnSignature {
         panic!("HasherLib does not contain any methods")
@@ -43,7 +43,7 @@ impl Library for HasherLib {
     fn function_name_to_signature(
         &self,
         fn_name: &str,
-        _type_parameter: Option<ast::DataType>,
+        _type_parameter: Option<ast_types::DataType>,
         _args: &[ast::Expr<super::Annotation>],
     ) -> ast::FnSignature {
         if fn_name == HASH_PAIR_FUNCTION_NAME {
@@ -56,7 +56,7 @@ impl Library for HasherLib {
     fn call_method(
         &self,
         _method_name: &str,
-        _receiver_type: &ast::DataType,
+        _receiver_type: &ast_types::DataType,
         _args: &[ast::Expr<super::Annotation>],
         _state: &mut CompilerState,
     ) -> Vec<triton_vm::instruction::LabelledInstruction> {
@@ -66,7 +66,7 @@ impl Library for HasherLib {
     fn call_function(
         &self,
         fn_name: &str,
-        _type_parameter: Option<ast::DataType>,
+        _type_parameter: Option<ast_types::DataType>,
         _args: &[ast::Expr<super::Annotation>],
         state: &mut CompilerState,
     ) -> Vec<triton_vm::instruction::LabelledInstruction> {
@@ -105,18 +105,18 @@ fn get_hash_pair_function() -> LibraryFunction {
     let fn_signature = ast::FnSignature {
         name: "hash_pair".to_owned(),
         args: vec![
-            ast::AbstractArgument::ValueArgument(ast::AbstractValueArg {
+            ast_types::AbstractArgument::ValueArgument(ast_types::AbstractValueArg {
                 name: "left".to_owned(),
-                data_type: ast::DataType::Digest,
+                data_type: ast_types::DataType::Digest,
                 mutable: false,
             }),
-            ast::AbstractArgument::ValueArgument(ast::AbstractValueArg {
+            ast_types::AbstractArgument::ValueArgument(ast_types::AbstractValueArg {
                 name: "right".to_owned(),
-                data_type: ast::DataType::Digest,
+                data_type: ast_types::DataType::Digest,
                 mutable: false,
             }),
         ],
-        output: ast::DataType::Digest,
+        output: ast_types::DataType::Digest,
         // If the definition of Tip5's `hash_pair` was changed, this could
         // be left-to-right instead
         arg_evaluation_order: ast::ArgEvaluationOrder::RightToLeft,

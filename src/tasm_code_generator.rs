@@ -15,14 +15,14 @@ use twenty_first::shared_math::b_field_element::BFieldElement;
 use twenty_first::shared_math::bfield_codec::BFieldCodec;
 
 use self::subroutine::SubRoutine;
-use crate::ast::AbstractArgument;
+use crate::ast_types;
 use crate::libraries::{self};
 use crate::stack::Stack;
-use crate::types::{is_list_type, GetType};
-use crate::{ast, types};
+use crate::type_checker::{is_list_type, GetType};
+use crate::{ast, type_checker};
 
 // the compiler's view of the stack, including information about whether value has been spilled to memory
-type VStack = Stack<(ValueIdentifier, (ast::DataType, Option<u32>))>;
+type VStack = Stack<(ValueIdentifier, (ast_types::DataType, Option<u32>))>;
 type VarAddr = HashMap<String, ValueIdentifier>;
 
 impl VStack {
@@ -33,7 +33,7 @@ impl VStack {
     pub fn find_stack_value(
         &self,
         seek_addr: &ValueIdentifier,
-    ) -> (usize, ast::DataType, Option<u32>) {
+    ) -> (usize, ast_types::DataType, Option<u32>) {
         let mut position: usize = 0;
         for (_i, (found_addr, (data_type, spilled))) in self.inner.iter().rev().enumerate() {
             if seek_addr == found_addr {
@@ -55,9 +55,9 @@ impl VStack {
         &self,
         seek_addr: &ValueIdentifier,
         tuple_index: usize,
-    ) -> (usize, ast::DataType, Option<u32>) {
+    ) -> (usize, ast_types::DataType, Option<u32>) {
         let (tuple_value_position, tuple_type, spilled) = self.find_stack_value(seek_addr);
-        let element_types = if let ast::DataType::Tuple(ets) = &tuple_type {
+        let element_types = if let ast_types::DataType::Tuple(ets) = &tuple_type {
             ets
         } else {
             panic!("Expected type was tuple.")
@@ -247,15 +247,15 @@ impl CompilerState {
     /// generator can start the function with the spilling of these values.
     fn add_input_arguments_to_vstack_and_return_spilled_fn_args(
         &mut self,
-        input_arguments: &[AbstractArgument],
+        input_arguments: &[ast_types::AbstractArgument],
     ) -> Vec<ValueIdentifier> {
         const FN_ARG_NAME_PREFIX: &str = "fn_arg";
 
         let mut fn_arg_spilling = vec![];
         for input_arg in input_arguments {
             match input_arg {
-                AbstractArgument::FunctionArgument(_) => todo!(),
-                AbstractArgument::ValueArgument(abstract_input) => {
+                ast_types::AbstractArgument::FunctionArgument(_) => todo!(),
+                ast_types::AbstractArgument::ValueArgument(abstract_input) => {
                     let (fn_arg_addr, spill) =
                         self.new_value_identifier(FN_ARG_NAME_PREFIX, &abstract_input.data_type);
                     self.function_state
@@ -363,7 +363,7 @@ impl CompilerState {
     pub fn new_value_identifier(
         &mut self,
         prefix: &str,
-        data_type: &ast::DataType,
+        data_type: &ast_types::DataType,
     ) -> (ValueIdentifier, Option<u32>) {
         let name = format!(
             "_{}_{}_{}",
@@ -528,7 +528,7 @@ impl CompilerState {
             .function_state
             .vstack
             .find_stack_value(tuple_identifier);
-        let element_types = if let ast::DataType::Tuple(ets) = &tuple_type {
+        let element_types = if let ast_types::DataType::Tuple(ets) = &tuple_type {
             ets
         } else {
             panic!("Original value must have type tuple")
@@ -770,7 +770,7 @@ impl CompilerState {
 /// Compile a function, returning the code for the function body. Inherits the `global_compiler_state`
 /// from the caller but starts with an empty virtual stack and an empty variable mapping.
 fn compile_function_inner(
-    function: &ast::Fn<types::Typing>,
+    function: &ast::Fn<type_checker::Typing>,
     global_compiler_state: &mut GlobalCompilerState,
 ) -> InnerFunctionTasmCode {
     let fn_name = &function.fn_signature.name;
@@ -825,7 +825,7 @@ fn compile_function_inner(
 
 // TODO: Remove this attribute once we have a sane `main` function that uses this step
 #[allow(dead_code)]
-pub(crate) fn compile_function(function: &ast::Fn<types::Typing>) -> OuterFunctionTasmCode {
+pub(crate) fn compile_function(function: &ast::Fn<type_checker::Typing>) -> OuterFunctionTasmCode {
     let mut state = CompilerState::default();
     let compiled_function = compile_function_inner(function, &mut state.global_compiler_state);
 
@@ -833,8 +833,8 @@ pub(crate) fn compile_function(function: &ast::Fn<types::Typing>) -> OuterFuncti
 }
 
 fn compile_stmt(
-    stmt: &ast::Stmt<types::Typing>,
-    function: &ast::Fn<types::Typing>,
+    stmt: &ast::Stmt<type_checker::Typing>,
+    function: &ast::Fn<type_checker::Typing>,
     state: &mut CompilerState,
 ) -> Vec<LabelledInstruction> {
     match stmt {
@@ -1111,7 +1111,7 @@ fn compile_stmt(
 }
 
 fn compile_fn_call(
-    fn_call: &ast::FnCall<types::Typing>,
+    fn_call: &ast::FnCall<type_checker::Typing>,
     state: &mut CompilerState,
 ) -> Vec<LabelledInstruction> {
     let ast::FnCall {
@@ -1161,7 +1161,7 @@ fn compile_fn_call(
 }
 
 fn compile_method_call(
-    method_call: &ast::MethodCall<types::Typing>,
+    method_call: &ast::MethodCall<type_checker::Typing>,
     state: &mut CompilerState,
 ) -> Vec<LabelledInstruction> {
     let method_name = method_call.method_name.clone();
@@ -1204,9 +1204,9 @@ fn compile_method_call(
 }
 
 fn compile_expr(
-    expr: &ast::Expr<types::Typing>,
+    expr: &ast::Expr<type_checker::Typing>,
     _context: &str,
-    _data_type: &ast::DataType,
+    _data_type: &ast_types::DataType,
     state: &mut CompilerState,
 ) -> (ValueIdentifier, Vec<LabelledInstruction>) {
     let result_type = expr.get_type();
@@ -1250,6 +1250,7 @@ fn compile_expr(
             ast::ExprLit::MemPointer(ast::MemPointerLiteral {
                 mem_pointer_address,
                 struct_name: _,
+                resolved_type: _,
             }) => triton_asm!(push {
                 mem_pointer_address
             }),
@@ -1419,17 +1420,17 @@ fn compile_expr(
         ast::Expr::Unary(unaryop, inner_expr, _known_type) => {
             let inner_type = inner_expr.get_type();
             let (_inner_expr_addr, inner_expr_code) =
-                compile_expr(inner_expr, "_binop_lhs", &inner_type, state);
+                compile_expr(inner_expr, "unop_operand", &inner_type, state);
             let code = match unaryop {
                 ast::UnaryOp::Neg => match inner_type {
-                    ast::DataType::BFE => triton_asm!(push -1 mul),
-                    ast::DataType::XFE => triton_asm!(push -1 xbmul),
+                    ast_types::DataType::BFE => triton_asm!(push -1 mul),
+                    ast_types::DataType::XFE => triton_asm!(push -1 xbmul),
                     _ => panic!("Unsupported negation of type {inner_type}"),
                 },
                 ast::UnaryOp::Not => match inner_type {
-                    ast::DataType::Bool => triton_asm!(push 0 eq),
-                    ast::DataType::U32 => triton_asm!(push {u32::MAX as u64} xor),
-                    ast::DataType::U64 => triton_asm!(
+                    ast_types::DataType::Bool => triton_asm!(push 0 eq),
+                    ast_types::DataType::U32 => triton_asm!(push {u32::MAX as u64} xor),
+                    ast_types::DataType::U64 => triton_asm!(
                         swap 1
                         push {u32::MAX as u64}
                         xor
@@ -1442,13 +1443,12 @@ fn compile_expr(
                 ast::UnaryOp::Deref => {
                     let size_of_value = inner_type.stack_size();
                     // Push `size_of_value` many words from memory onto stack.
-                    // We probably have a function for loading from memory!
-                    // Use that.
-                    // todo!()
                     load_from_memory(None, size_of_value)
                 }
             };
 
+            // Pops the operand from the compiler's view of the stack since
+            // the above code consumes that.
             state.function_state.vstack.pop();
 
             vec![inner_expr_code, code].concat()
@@ -1467,21 +1467,21 @@ fn compile_expr(
                         compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
 
                     let add_code = match result_type {
-                        ast::DataType::U32 => {
+                        ast_types::DataType::U32 => {
                             // We use the safe, overflow-checking, add code as default
                             let safe_add_u32 =
                                 state.import_snippet(Box::new(arithmetic::u32::safe_add::SafeAdd));
                             triton_asm!(call { safe_add_u32 })
                         }
-                        ast::DataType::U64 => {
+                        ast_types::DataType::U64 => {
                             // We use the safe, overflow-checking, add code as default
                             let add_u64 =
                                 state.import_snippet(Box::new(arithmetic::u64::add_u64::AddU64));
 
                             triton_asm!(call { add_u64 })
                         }
-                        ast::DataType::BFE => triton_asm!(add),
-                        ast::DataType::XFE => {
+                        ast_types::DataType::BFE => triton_asm!(add),
+                        ast_types::DataType::XFE => {
                             triton_asm!(xxadd swap 3 pop swap 3 pop swap 3 pop)
                         }
                         _ => panic!("Operator add is not supported for type {result_type}"),
@@ -1500,7 +1500,7 @@ fn compile_expr(
                         compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
 
                     let and_code = match result_type {
-                        ast::DataType::Bool => triton_asm!(add push 2 eq),
+                        ast_types::DataType::Bool => triton_asm!(add push 2 eq),
                         _ => panic!("Logical AND operator is not supported for {result_type}"),
                     };
 
@@ -1518,8 +1518,8 @@ fn compile_expr(
                         compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
 
                     let bitwise_and_code = match result_type {
-                        ast::DataType::U32 => triton_asm!(and),
-                        ast::DataType::U64 => {
+                        ast_types::DataType::U32 => triton_asm!(and),
+                        ast_types::DataType::U64 => {
                             let and_u64 =
                                 state.import_snippet(Box::new(arithmetic::u64::and_u64::AndU64));
                             triton_asm!(call { and_u64 })
@@ -1540,7 +1540,7 @@ fn compile_expr(
                     let (_rhs_expr_addr, rhs_expr_code) =
                         compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
 
-                    use ast::DataType::*;
+                    use ast_types::DataType::*;
                     let xor_code = match result_type {
                         U32 => triton_asm!(xor),
                         U64 => triton_asm!(
@@ -1564,7 +1564,7 @@ fn compile_expr(
                     let (_rhs_expr_addr, rhs_expr_code) =
                         compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
 
-                    use ast::DataType::*;
+                    use ast_types::DataType::*;
 
                     let bitwise_or_code = match result_type {
                         U32 => {
@@ -1586,7 +1586,7 @@ fn compile_expr(
                 }
 
                 ast::BinOp::Div => {
-                    use ast::DataType::*;
+                    use ast_types::DataType::*;
                     match result_type {
                         U32 => {
                             // TODO: Consider evaluating in opposite order to save a clock-cycle by removing `swap1`
@@ -1694,7 +1694,7 @@ fn compile_expr(
                 }
 
                 ast::BinOp::Rem => {
-                    use ast::DataType::*;
+                    use ast_types::DataType::*;
                     match result_type {
                         U32 => {
                             // TODO: Consider evaluating in opposite order to save a clock-cycle by removing `swap1`
@@ -1768,7 +1768,7 @@ fn compile_expr(
                     let (_rhs_expr_addr, rhs_expr_code) =
                         compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
 
-                    use ast::DataType::*;
+                    use ast_types::DataType::*;
 
                     state.function_state.vstack.pop();
                     state.function_state.vstack.pop();
@@ -1806,7 +1806,7 @@ fn compile_expr(
                     let (_rhs_expr_addr, rhs_expr_code) =
                         compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
 
-                    use ast::DataType::*;
+                    use ast_types::DataType::*;
                     state.function_state.vstack.pop();
                     state.function_state.vstack.pop();
 
@@ -1837,7 +1837,7 @@ fn compile_expr(
                     let (_rhs_expr_addr, rhs_expr_code) =
                         compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
 
-                    use ast::DataType::*;
+                    use ast_types::DataType::*;
 
                     state.function_state.vstack.pop();
                     state.function_state.vstack.pop();
@@ -1933,9 +1933,9 @@ fn compile_expr(
                         compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
 
                     let lhs_type = lhs_expr.get_type();
-                    let shl = if matches!(lhs_type, ast::DataType::U32) {
+                    let shl = if matches!(lhs_type, ast_types::DataType::U32) {
                         state.import_snippet(Box::new(arithmetic::u32::shift_left::ShiftLeftU32))
-                    } else if matches!(lhs_type, ast::DataType::U64) {
+                    } else if matches!(lhs_type, ast_types::DataType::U64) {
                         state
                             .import_snippet(Box::new(arithmetic::u64::shift_left_u64::ShiftLeftU64))
                     } else {
@@ -1960,9 +1960,9 @@ fn compile_expr(
                         compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
 
                     let lhs_type = lhs_expr.get_type();
-                    let shr = if matches!(lhs_type, ast::DataType::U32) {
+                    let shr = if matches!(lhs_type, ast_types::DataType::U32) {
                         state.import_snippet(Box::new(arithmetic::u32::shift_right::ShiftRightU32))
-                    } else if matches!(lhs_type, ast::DataType::U64) {
+                    } else if matches!(lhs_type, ast_types::DataType::U64) {
                         state.import_snippet(Box::new(
                             arithmetic::u64::shift_right_u64::ShiftRightU64,
                         ))
@@ -1988,7 +1988,7 @@ fn compile_expr(
                         compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
 
                     let sub_code: Vec<LabelledInstruction> = match result_type {
-                        ast::DataType::U32 => {
+                        ast_types::DataType::U32 => {
                             // As standard, we use safe arithmetic that crashes on overflow
                             let safe_sub_u32 =
                                 state.import_snippet(Box::new(arithmetic::u32::safe_sub::SafeSub));
@@ -1997,7 +1997,7 @@ fn compile_expr(
                                 call {safe_sub_u32}
                             )
                         }
-                        ast::DataType::U64 => {
+                        ast_types::DataType::U64 => {
                             // As standard, we use safe arithmetic that crashes on overflow
                             let sub_u64 =
                                 state.import_snippet(Box::new(arithmetic::u64::sub_u64::SubU64));
@@ -2010,14 +2010,14 @@ fn compile_expr(
                                 call {sub_u64}
                             )
                         }
-                        ast::DataType::BFE => {
+                        ast_types::DataType::BFE => {
                             triton_asm!(
                                 push -1
                                 mul
                                 add
                             )
                         }
-                        ast::DataType::XFE => {
+                        ast_types::DataType::XFE => {
                             triton_asm!(
                                   // multiply top element with -1
                                 push -1
@@ -2146,14 +2146,14 @@ fn compile_expr(
             );
 
             match (&previous_type, &result_type) {
-                (ast::DataType::U64, ast::DataType::U32) => {
+                (ast_types::DataType::U64, ast_types::DataType::U32) => {
                     triton_asm!(
                         {&expr_code}
                         swap 1
                         pop
                     )
                 }
-                (ast::DataType::U32, ast::DataType::U64) => {
+                (ast_types::DataType::U32, ast_types::DataType::U64) => {
                     triton_asm!(
                         {&expr_code}
                         push 0
@@ -2162,34 +2162,49 @@ fn compile_expr(
                 }
                 // Allow identity-casting since we might need this to make the types
                 // agree with code compiled by rustc.
-                (ast::DataType::U32, ast::DataType::U32) => expr_code,
-                (ast::DataType::U64, ast::DataType::U64) => expr_code,
-                (ast::DataType::Bool, ast::DataType::U64) => {
+                (ast_types::DataType::U32, ast_types::DataType::U32) => expr_code,
+                (ast_types::DataType::U64, ast_types::DataType::U64) => expr_code,
+                (ast_types::DataType::Bool, ast_types::DataType::U64) => {
                     triton_asm!(
                         {&expr_code}
                         push 0
                         swap 1
                     )
                 }
-                (ast::DataType::Bool, ast::DataType::U32) => expr_code,
-                (ast::DataType::Bool, ast::DataType::BFE) => expr_code,
+                (ast_types::DataType::Bool, ast_types::DataType::U32) => expr_code,
+                (ast_types::DataType::Bool, ast_types::DataType::BFE) => expr_code,
                 _ => todo!(),
             }
         }
-        ast::Expr::Field(expr, field_name) => {
+        ast::Expr::Field(expr, field_name, resulting_type) => {
             // Here, `receiver_type` *must* be of type `Struct` or of type `mempoint(Struct)`,
             // where the Struct is known. We should handle those cases separately.
             let receiver_type = expr.get_type();
+            let (_expr_addr, expr_get_struct_pointer) =
+                compile_expr(expr, "field_access_receiver", &receiver_type, state);
 
-            match receiver_type {
-                ast::DataType::MemPointer(inner_type) => match *inner_type {
-                    ast::DataType::Struct(inner_struct) => {
+            // stack: _ struct_pointer
+            let get_field_from_struct_pointer = match receiver_type {
+                ast_types::DataType::MemPointer(inner_type) => match *inner_type {
+                    ast_types::DataType::Struct(inner_struct) => {
                         inner_struct.get_field_accessor_code(field_name)
                     }
                     _ => todo!(),
                 },
                 _ => todo!(),
-            }
+            };
+
+            // stack: _ field_pointer
+
+            let load_from_memory = load_from_memory(None, resulting_type.get_type().stack_size());
+            let (_, (_old_data_type, _spilled)) = state.function_state.vstack.pop().unwrap();
+
+            // stack _ [value]
+            triton_asm!(
+                {&expr_get_struct_pointer}
+                {&get_field_from_struct_pointer}
+                {&load_from_memory}
+            )
         }
     };
 
@@ -2294,30 +2309,32 @@ fn copy_top_stack_value_to_memory(
     ret
 }
 
-/// Return the code to load a value from memory. If memory location is not provided, the memory
-/// address is assumed to be on top of the stack. Leaves the stack unchanged in either case.
+/// Return the code to load a value from memory. Leaves the stack with the read value on top.
+/// If no static memory address is provided, the memory address is read from top of the stack,
+/// and this memory address is then consumed.
 fn load_from_memory(
-    memory_location: Option<u32>,
-    top_value_size: usize,
+    static_memory_address: Option<u32>,
+    value_size: usize,
 ) -> Vec<LabelledInstruction> {
     // A stack value of the form `_ val2 val1 val0`, with `val0` being on the top of the stack
     // is stored in memory as: `val0 val1 val2`, where `val0` is stored on the `memory_location`
-    // address. So we read the value at the highes memory location first.
+    // address. So we read the value at the highest memory location first.
     // TODO: Consider making subroutines out of this in
     // order to get shorter programs.
-    // let mut ret = triton_asm!(push {memory_location as u64 + top_value_size as u64 - 1});
-    let mut ret = match memory_location {
-        Some(mem_location) => triton_asm!(push {mem_location as u64 + top_value_size as u64 - 1}),
+    let mut ret = match static_memory_address {
+        Some(mem_location) => triton_asm!(push {mem_location as u64 + value_size as u64 - 1}),
         None => {
-            if top_value_size.is_one() {
-                triton_asm!(dup 0)
+            if value_size.is_one() {
+                triton_asm!()
             } else {
-                triton_asm!(dup 0 push {top_value_size as u64 - 1} add)
+                triton_asm!(push {value_size as u64 - 1} add)
             }
         }
     };
 
-    for i in 0..top_value_size {
+    // stack: _ memory_address_of_last_word
+
+    for i in 0..value_size {
         // Stack: _ memory_address
 
         ret.push(triton_instr!(read_mem));
@@ -2326,7 +2343,7 @@ fn load_from_memory(
         ret.push(triton_instr!(swap 1));
 
         // Decrement memory address to prepare for next loop iteration
-        if i != top_value_size - 1 {
+        if i != value_size - 1 {
             ret.append(&mut triton_asm!(push {BFieldElement::MAX} add))
             // Stack: _ (memory_address - 1)
         }
@@ -2341,10 +2358,10 @@ fn load_from_memory(
 }
 
 fn compile_eq_code(
-    lhs_type: &ast::DataType,
+    lhs_type: &ast_types::DataType,
     state: &mut CompilerState,
 ) -> Vec<LabelledInstruction> {
-    use ast::DataType::*;
+    use ast_types::DataType::*;
     match lhs_type {
         Bool | U32 | BFE | VoidPointer => triton_asm!(eq),
         U64 => triton_asm!(
@@ -2384,7 +2401,7 @@ fn compile_eq_code(
 /// Copy a value at a position on the stack to the top
 fn dup_value_from_stack_code(
     position: OpStackElement,
-    data_type: &ast::DataType,
+    data_type: &ast_types::DataType,
 ) -> Vec<LabelledInstruction> {
     let elem_size = data_type.stack_size();
 
@@ -2397,9 +2414,11 @@ fn dup_value_from_stack_code(
     triton_asm!({ instrs_as_str })
 }
 
-impl ast::StructType {
+impl ast_types::StructType {
     /// Assuming the stack top points to the start of the struct, returns the code
-    /// that modifies the top stack value to point to the indicated field.
+    /// that modifies the top stack value to point to the indicated field. So the top
+    /// stack element is consumed and the returned value is a pointer to the requested
+    /// field in the struct.
     pub fn get_field_accessor_code(&self, field_name: &str) -> Vec<LabelledInstruction> {
         // This implementation must match `BFieldCodec` for the equivalent Rust types
         let mut instructions = vec![];
@@ -2434,5 +2453,7 @@ impl ast::StructType {
         }
 
         instructions
+
+        // TODO: Add code to read value from memory to stack
     }
 }

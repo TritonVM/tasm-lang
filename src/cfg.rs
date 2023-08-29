@@ -1,5 +1,3 @@
-use crate::ast::DataType;
-
 #[derive(Debug, Default)]
 pub struct ControlFlowGraph {
     pub entrypoint: usize,
@@ -98,7 +96,7 @@ impl BasicBlock {
 #[derive(Debug, Hash, PartialEq, Eq, Clone)]
 pub struct Variable {
     pub name: String,
-    pub data_type: DataType,
+    pub data_type: crate::ast_types::DataType,
 }
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone)]

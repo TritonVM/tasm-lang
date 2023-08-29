@@ -8,10 +8,10 @@ use twenty_first::shared_math::b_field_element::{BFieldElement, BFIELD_ONE, BFIE
 use twenty_first::shared_math::bfield_codec::BFieldCodec;
 use twenty_first::shared_math::x_field_element::XFieldElement;
 
-use crate::ast;
 use crate::graft::graft_fn_decl;
 use crate::tasm_code_generator::compile_function;
-use crate::types::{self, annotate_fn, GetType, Typing};
+use crate::type_checker::{self, annotate_fn, GetType, Typing};
+use crate::{ast, ast_types};
 
 #[derive(Debug, Clone)]
 pub struct InputOutputTestCase {
@@ -369,11 +369,11 @@ pub fn show_memory(memory: &HashMap<BFieldElement, BFieldElement>) {
 /// Panic if expected list does not match list on specific memory address
 /// Assumes that the "safe list" implementation is used.
 pub fn assert_list_equal(
-    expected_list: Vec<ast::ExprLit<types::Typing>>,
+    expected_list: Vec<ast::ExprLit<type_checker::Typing>>,
     list_pointer: BFieldElement,
     memory: &HashMap<BFieldElement, BFieldElement>,
 ) {
-    let element_type: Option<ast::DataType> = if !expected_list.is_empty() {
+    let element_type: Option<ast_types::DataType> = if !expected_list.is_empty() {
         Some(expected_list[0].get_type())
     } else {
         None
@@ -382,7 +382,7 @@ pub fn assert_list_equal(
     // assert elements agree on type
     if let Some(element_type) = element_type.clone() {
         for elem in expected_list.iter() {
-            types::assert_type_equals(
+            type_checker::assert_type_equals(
                 &elem.get_type(),
                 &element_type,
                 "assert_list_equal test helper function",
@@ -439,27 +439,27 @@ pub fn assert_list_equal(
     }
 }
 
-pub fn bool_lit(value: bool) -> ast::ExprLit<types::Typing> {
+pub fn bool_lit(value: bool) -> ast::ExprLit<type_checker::Typing> {
     ast::ExprLit::Bool(value)
 }
 
-pub fn u32_lit(value: u32) -> ast::ExprLit<types::Typing> {
+pub fn u32_lit(value: u32) -> ast::ExprLit<type_checker::Typing> {
     ast::ExprLit::U32(value)
 }
 
-pub fn u64_lit(value: u64) -> ast::ExprLit<types::Typing> {
+pub fn u64_lit(value: u64) -> ast::ExprLit<type_checker::Typing> {
     ast::ExprLit::U64(value)
 }
 
-pub fn bfe_lit(value: BFieldElement) -> ast::ExprLit<types::Typing> {
+pub fn bfe_lit(value: BFieldElement) -> ast::ExprLit<type_checker::Typing> {
     ast::ExprLit::BFE(value)
 }
 
-pub fn xfe_lit(value: XFieldElement) -> ast::ExprLit<types::Typing> {
+pub fn xfe_lit(value: XFieldElement) -> ast::ExprLit<type_checker::Typing> {
     ast::ExprLit::XFE(value)
 }
 
-pub fn digest_lit(value: Digest) -> ast::ExprLit<types::Typing> {
+pub fn digest_lit(value: Digest) -> ast::ExprLit<type_checker::Typing> {
     ast::ExprLit::Digest(value)
 }
 

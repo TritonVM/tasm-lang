@@ -503,7 +503,7 @@ mod run_tests {
     };
 
     use super::*;
-    use crate::{ast::DataType, tests_and_benchmarks::test_helpers::shared_test::*};
+    use crate::{ast_types::DataType, tests_and_benchmarks::test_helpers::shared_test::*};
 
     #[test]
     fn spill_u64_values_to_memory_test() {

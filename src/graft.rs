@@ -3,13 +3,14 @@ use std::collections::HashMap;
 use itertools::Itertools;
 use syn::parse_quote;
 
-use crate::ast::AssertStmt;
-use crate::types;
-use crate::{ast, libraries};
+use crate::ast;
+use crate::ast_types;
+use crate::libraries;
+use crate::type_checker;
 
-pub type Annotation = types::Typing;
+pub type Annotation = type_checker::Typing;
 
-pub fn graft_structs(structs: Vec<syn::ItemStruct>) -> HashMap<String, ast::StructType> {
+pub fn graft_structs(structs: Vec<syn::ItemStruct>) -> HashMap<String, ast_types::StructType> {
     let mut ret = HashMap::default();
     for struct_ in structs {
         let syn::ItemStruct {
@@ -22,7 +23,7 @@ pub fn graft_structs(structs: Vec<syn::ItemStruct>) -> HashMap<String, ast::Stru
             semi_token: _,
         } = struct_;
         let name = ident.to_string();
-        let mut ast_fields: Vec<(String, ast::DataType)> = vec![];
+        let mut ast_fields: Vec<(String, ast_types::DataType)> = vec![];
 
         for field in fields.into_iter() {
             let field_name = field.ident.unwrap().to_string();
@@ -32,7 +33,7 @@ pub fn graft_structs(structs: Vec<syn::ItemStruct>) -> HashMap<String, ast::Stru
 
         ret.insert(
             name.clone(),
-            ast::StructType {
+            ast_types::StructType {
                 name,
                 fields: ast_fields,
             },
@@ -47,7 +48,7 @@ pub fn graft_fn_decl(input: &syn::ItemFn) -> ast::Fn<Annotation> {
     let args = input.sig.inputs.iter().map(graft_fn_arg).collect_vec();
     let args = args
         .into_iter()
-        .map(ast::AbstractArgument::ValueArgument)
+        .map(ast_types::AbstractArgument::ValueArgument)
         .collect_vec();
     let output = graft_return_type(&input.sig.output);
     let body = input.block.stmts.iter().map(graft_stmt).collect_vec();
@@ -63,14 +64,14 @@ pub fn graft_fn_decl(input: &syn::ItemFn) -> ast::Fn<Annotation> {
     }
 }
 
-fn rust_type_path_to_data_type(rust_type_path: &syn::TypePath) -> ast::DataType {
+fn rust_type_path_to_data_type(rust_type_path: &syn::TypePath) -> ast_types::DataType {
     assert_eq!(
         1,
         rust_type_path.path.segments.len(),
         "Length other than one not supported"
     );
     let rust_type_as_string = rust_type_path.path.segments[0].ident.to_string();
-    let primitive_type_parse_result = rust_type_as_string.parse::<ast::DataType>();
+    let primitive_type_parse_result = rust_type_as_string.parse::<ast_types::DataType>();
 
     if let Ok(data_type) = primitive_type_parse_result {
         return data_type;
@@ -83,12 +84,12 @@ fn rust_type_path_to_data_type(rust_type_path: &syn::TypePath) -> ast::DataType 
     }
 
     // Handling `Box<T>`. It would be cool if this could be handled same place as
-    // the handling of `&`.
+    // the handling of `&`. `Box<T>` means `MemPointer<T>` in this compiler.
     if rust_type_as_string == "Box" {
         let inner_type = if let syn::PathArguments::AngleBracketed(ab) =
             &rust_type_path.path.segments[0].arguments
         {
-            assert_eq!(1, ab.args.len(), "Must be Vec<T> for *one* generic T.");
+            assert_eq!(1, ab.args.len(), "Must be Box<T> for *one* generic T.");
             match &ab.args[0] {
                 syn::GenericArgument::Type(syn::Type::Path(path)) => {
                     rust_type_path_to_data_type(path)
@@ -98,19 +99,28 @@ fn rust_type_path_to_data_type(rust_type_path: &syn::TypePath) -> ast::DataType 
         } else {
             panic!("Box must be followed by `<T>`");
         };
-        return ast::DataType::MemPointer(Box::new(inner_type));
+        return ast_types::DataType::MemPointer(Box::new(inner_type));
     }
 
-    ast::DataType::Unresolved(rust_type_as_string)
+    // We only allow the user to use types that are capitalized
+    if rust_type_as_string
+        .chars()
+        .next()
+        .map_or(false, |c| c.is_uppercase())
+    {
+        ast_types::DataType::Unresolved(rust_type_as_string)
+    } else {
+        panic!("Does not know type {rust_type_as_string}");
+    }
 }
 
-fn rust_vec_to_data_type(path_args: &syn::PathArguments) -> ast::DataType {
+fn rust_vec_to_data_type(path_args: &syn::PathArguments) -> ast_types::DataType {
     match path_args {
         syn::PathArguments::AngleBracketed(ab) => {
             assert_eq!(1, ab.args.len(), "Must be Vec<T> for *one* generic T.");
             match &ab.args[0] {
                 syn::GenericArgument::Type(syn::Type::Path(path)) => {
-                    ast::DataType::List(Box::new(rust_type_path_to_data_type(path)))
+                    ast_types::DataType::List(Box::new(rust_type_path_to_data_type(path)))
                 }
                 other => panic!("Unsupported type {other:#?}"),
             }
@@ -119,7 +129,7 @@ fn rust_vec_to_data_type(path_args: &syn::PathArguments) -> ast::DataType {
     }
 }
 
-fn rust_type_to_data_type(x: &syn::Type) -> ast::DataType {
+fn rust_type_to_data_type(x: &syn::Type) -> ast_types::DataType {
     match x {
         syn::Type::Path(data_type) => rust_type_path_to_data_type(data_type),
         ty => panic!("Unsupported type {ty:#?}"),
@@ -127,8 +137,10 @@ fn rust_type_to_data_type(x: &syn::Type) -> ast::DataType {
 }
 
 // Extract type and mutability from syn::PatType
-fn pat_type_to_data_type_and_mutability(rust_type_path: &syn::PatType) -> (ast::DataType, bool) {
-    fn pat_type_to_ast_type(pat_type: &syn::Type) -> ast::DataType {
+fn pat_type_to_data_type_and_mutability(
+    rust_type_path: &syn::PatType,
+) -> (ast_types::DataType, bool) {
+    fn pat_type_to_ast_type(pat_type: &syn::Type) -> ast_types::DataType {
         match pat_type {
             syn::Type::Path(path) => rust_type_path_to_data_type(path),
             syn::Type::Tuple(tuple) => {
@@ -136,7 +148,7 @@ fn pat_type_to_data_type_and_mutability(rust_type_path: &syn::PatType) -> (ast::
 
                 // I think this is the correct handling interpretation of mutability as long
                 // as we don't allow destructuring for tuple definitions.
-                ast::DataType::Tuple(types)
+                ast_types::DataType::Tuple(types)
             }
             syn::Type::Reference(syn::TypeReference {
                 and_token: _,
@@ -146,7 +158,7 @@ fn pat_type_to_data_type_and_mutability(rust_type_path: &syn::PatType) -> (ast::
             }) => match *elem.to_owned() {
                 syn::Type::Path(type_path) => {
                     let inner_type = rust_type_path_to_data_type(&type_path);
-                    ast::DataType::MemPointer(Box::new(inner_type))
+                    ast_types::DataType::MemPointer(Box::new(inner_type))
                 }
                 _ => todo!(),
             },
@@ -182,11 +194,11 @@ pub fn path_to_ident(path: &syn::Path) -> String {
     identifiers.join("::")
 }
 
-fn graft_fn_arg(rust_fn_arg: &syn::FnArg) -> ast::AbstractValueArg {
+fn graft_fn_arg(rust_fn_arg: &syn::FnArg) -> ast_types::AbstractValueArg {
     match rust_fn_arg {
         syn::FnArg::Typed(pat_type) => {
             let name = pat_to_name(&pat_type.pat);
-            let (data_type, mutable): (ast::DataType, bool) = match pat_type.ty.as_ref() {
+            let (data_type, mutable): (ast_types::DataType, bool) = match pat_type.ty.as_ref() {
                 syn::Type::Path(type_path) => {
                     let mutable = match *pat_type.pat.to_owned() {
                         syn::Pat::Ident(pi) => pi.mutability.is_some(),
@@ -213,7 +225,7 @@ fn graft_fn_arg(rust_fn_arg: &syn::FnArg) -> ast::AbstractValueArg {
                 other => panic!("unsupported: {other:?}"),
             };
 
-            ast::AbstractValueArg {
+            ast_types::AbstractValueArg {
                 name,
                 data_type,
                 mutable,
@@ -223,7 +235,7 @@ fn graft_fn_arg(rust_fn_arg: &syn::FnArg) -> ast::AbstractValueArg {
     }
 }
 
-fn graft_return_type(rust_return_type: &syn::ReturnType) -> ast::DataType {
+fn graft_return_type(rust_return_type: &syn::ReturnType) -> ast_types::DataType {
     match rust_return_type {
         syn::ReturnType::Type(_, path) => match path.as_ref() {
             syn::Type::Path(type_path) => rust_type_path_to_data_type(type_path),
@@ -235,17 +247,17 @@ fn graft_return_type(rust_return_type: &syn::ReturnType) -> ast::DataType {
                     .map(rust_type_to_data_type)
                     .collect_vec();
 
-                ast::DataType::Tuple(output_elements)
+                ast_types::DataType::Tuple(output_elements)
             }
             _ => panic!("unsupported: {path:?}"),
         },
-        syn::ReturnType::Default => ast::DataType::Tuple(vec![]),
+        syn::ReturnType::Default => ast_types::DataType::Tuple(vec![]),
     }
 }
 
 /// Return type argument found in path
-pub fn path_to_type_parameter(path: &syn::Path) -> Option<ast::DataType> {
-    let mut type_parameter: Option<ast::DataType> = None;
+pub fn path_to_type_parameter(path: &syn::Path) -> Option<ast_types::DataType> {
+    let mut type_parameter: Option<ast_types::DataType> = None;
     for segment in path.segments.iter() {
         match &segment.arguments {
             syn::PathArguments::None => continue,
@@ -477,6 +489,7 @@ pub(crate) fn graft_expr(rust_exp: &syn::Expr) -> ast::Expr<Annotation> {
                         Default::default(),
                     ))),
                     field_name.to_string(),
+                    Default::default(),
                 ),
                 // unnamed field `tuple.2`
                 syn::Member::Unnamed(tuple_index) => ast::Expr::Var(ast::Identifier::TupleIndex(
@@ -611,9 +624,9 @@ fn graft_eq_binop(rust_eq_binop: &syn::BinOp) -> ast::BinOp {
 pub fn graft_stmt(rust_stmt: &syn::Stmt) -> ast::Stmt<Annotation> {
     /// Handle declarations
     fn graft_local_stmt(local: &syn::Local) -> ast::Stmt<Annotation> {
-        let (ident, data_type, mutable): (String, ast::DataType, bool) = match &local.pat {
+        let (ident, data_type, mutable): (String, ast_types::DataType, bool) = match &local.pat {
             syn::Pat::Type(pat_type) => {
-                let (dt, mutable): (ast::DataType, bool) =
+                let (dt, mutable): (ast_types::DataType, bool) =
                     pat_type_to_data_type_and_mutability(pat_type);
                 let ident: String = pat_to_name(&pat_type.pat);
 
@@ -755,7 +768,7 @@ pub fn graft_stmt(rust_stmt: &syn::Stmt) -> ast::Stmt<Annotation> {
                 let tokens = &expr_macro.mac.tokens;
                 let tokens_as_expr_syn: syn::Expr = parse_quote! { #tokens };
                 let tokens_as_expr = graft_expr(&tokens_as_expr_syn);
-                ast::Stmt::Assert(AssertStmt {
+                ast::Stmt::Assert(ast::AssertStmt {
                     expression: tokens_as_expr,
                 })
             }

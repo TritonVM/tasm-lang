@@ -1,4 +1,5 @@
 pub mod ast;
+pub mod ast_types;
 pub mod cfg;
 mod compiled_tasm;
 pub mod graft;
@@ -8,4 +9,4 @@ pub mod stack;
 pub mod tasm_code_generator;
 #[cfg(test)]
 pub mod tests_and_benchmarks;
-pub mod types;
+pub mod type_checker;

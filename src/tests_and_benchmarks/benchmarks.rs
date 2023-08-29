@@ -3,7 +3,7 @@ use tasm_lib::snippet_bencher::{write_benchmarks, BenchmarkCase, BenchmarkResult
 use triton_vm::{instruction::LabelledInstruction, BFieldElement, NonDeterminism};
 
 use super::test_helpers::shared_test::execute_compiled_with_stack_memory_and_ins_for_bench;
-use crate::{ast, types::Typing};
+use crate::{ast, type_checker::Typing};
 
 pub mod mmr;
 

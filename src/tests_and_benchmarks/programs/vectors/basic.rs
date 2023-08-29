@@ -105,7 +105,7 @@ mod compile_and_typecheck_tests {
         use itertools::Itertools;
         use triton_vm::NonDeterminism;
 
-        use crate::ast::{self, DataType};
+        use crate::ast_types::{self, DataType};
 
         use super::*;
 
@@ -144,7 +144,11 @@ mod compile_and_typecheck_tests {
             let elem_2 = vec![BFieldElement::new(4000), BFieldElement::new(0)];
             safe_list_push(list_pointer, elem_2.clone(), &mut memory, elem_2.len());
 
-            safe_list_pop(list_pointer, &mut memory, ast::DataType::U64.stack_size());
+            safe_list_pop(
+                list_pointer,
+                &mut memory,
+                ast_types::DataType::U64.stack_size(),
+            );
 
             let input_memory = HashMap::default();
             compare_prop_with_stack_and_memory(

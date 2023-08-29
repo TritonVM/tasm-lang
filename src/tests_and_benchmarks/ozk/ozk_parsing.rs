@@ -5,7 +5,7 @@ use triton_vm::{instruction::LabelledInstruction, triton_asm};
 use crate::{
     graft::{graft_fn_decl, graft_structs},
     tasm_code_generator::compile_function,
-    types::annotate_fn,
+    type_checker::annotate_fn,
 };
 
 fn extract_types_and_main(parsed_file: syn::File) -> (Vec<syn::ItemStruct>, Option<syn::ItemFn>) {
