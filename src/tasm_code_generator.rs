@@ -18,7 +18,7 @@ use self::subroutine::SubRoutine;
 use crate::ast_types;
 use crate::libraries::{self};
 use crate::stack::Stack;
-use crate::type_checker::{is_list_type, GetType};
+use crate::type_checker::GetType;
 use crate::{ast, type_checker};
 
 // the compiler's view of the stack, including information about whether value has been spilled to memory
@@ -30,7 +30,7 @@ impl VStack {
     /// the value on the stack, i.e. the most shallow part of the value. Top of stack has index 0.
     /// May return a depth that exceeds the addressable space (16 elements) in which case spilling
     /// may be required.
-    pub fn find_stack_value(
+    fn find_stack_value(
         &self,
         seek_addr: &ValueIdentifier,
     ) -> (usize, ast_types::DataType, Option<u32>) {
@@ -47,35 +47,6 @@ impl VStack {
         }
 
         panic!("Cannot find {seek_addr} on vstack")
-    }
-
-    /// Return the stack position of an element inside a tuple.
-    /// Returns (stack_position, data_type, maybe_memory_location).
-    fn find_tuple_element(
-        &self,
-        seek_addr: &ValueIdentifier,
-        tuple_index: usize,
-    ) -> (usize, ast_types::DataType, Option<u32>) {
-        let (tuple_value_position, tuple_type, spilled) = self.find_stack_value(seek_addr);
-        let element_types = if let ast_types::DataType::Tuple(ets) = &tuple_type {
-            ets
-        } else {
-            panic!("Expected type was tuple.")
-        };
-
-        // Last elemen of the tuple is stored on top of the stack
-        let tuple_depth: usize = element_types
-            .iter()
-            .enumerate()
-            .filter(|(i, _x)| *i > tuple_index)
-            .map(|(_i, x)| x.stack_size())
-            .sum::<usize>();
-
-        (
-            tuple_value_position + tuple_depth,
-            element_types[tuple_index].clone(),
-            spilled.map(|x| x + tuple_depth as u32),
-        )
     }
 
     fn get_stack_height(&self) -> usize {
@@ -104,8 +75,8 @@ impl VStack {
     }
 }
 
-#[derive(Clone, Debug, Default)]
 /// State for managing the compilation of a single function
+#[derive(Clone, Debug, Default)]
 
 struct FunctionState {
     vstack: VStack,
@@ -115,8 +86,9 @@ struct FunctionState {
 }
 
 impl FunctionState {
-    /// Add a compiled function and its subroutines to the list of subroutines, without
-    /// concatenating instructions needlessly which would delete information
+    /// Add a compiled function and its subroutines to the list of subroutines, thus
+    /// preserving the structure that would get lost if lists of instructions were
+    /// simply concatenated.
     fn add_compiled_fn_to_subroutines(&mut self, mut function: InnerFunctionTasmCode) {
         self.subroutines.append(&mut function.sub_routines);
         self.subroutines.push(function.call_depth_zero_code);
@@ -186,6 +158,25 @@ impl OuterFunctionTasmCode {
         let _program = Program::new(&ret);
 
         ret
+    }
+}
+
+pub enum ValueLocation {
+    OpStack(usize),
+    StaticMemoryAddress(u32),
+    DynamicMemoryAddress(Vec<LabelledInstruction>),
+}
+
+impl ValueLocation {
+    fn is_accessible(&self, data_type: &ast_types::DataType) -> bool {
+        match self {
+            ValueLocation::StaticMemoryAddress(_) => true,
+            ValueLocation::DynamicMemoryAddress(_) => true,
+            ValueLocation::OpStack(n) => {
+                let bottom_position = n + data_type.stack_size() - 1;
+                bottom_position < SIZE_OF_ACCESSIBLE_STACK
+            }
+        }
     }
 }
 
@@ -274,6 +265,121 @@ impl CompilerState {
     /// Return the set of values that the compiler has determined must be spilled to memory.
     fn get_required_spills(&self) -> HashSet<ValueIdentifier> {
         self.function_state.spill_required.to_owned()
+    }
+
+    /// Return the
+    fn locate_identifier(
+        &mut self,
+        identifier: &ast::Identifier<type_checker::Typing>,
+    ) -> (ValueLocation, ast_types::DataType) {
+        match identifier {
+            ast::Identifier::String(_, _) => {
+                let var_name = identifier.binding_name();
+                let var_addr = self
+                    .function_state
+                    .var_addr
+                    .get(&var_name)
+                    .unwrap_or_else(|| panic!("Could not locate {var_name} on stack"));
+                let (position, ident_data_type, spilled) =
+                    self.function_state.vstack.find_stack_value(var_addr);
+                match spilled {
+                    Some(mem_addr) => (
+                        ValueLocation::StaticMemoryAddress(mem_addr),
+                        ident_data_type,
+                    ),
+                    None => (ValueLocation::OpStack(position), ident_data_type),
+                }
+            }
+            ast::Identifier::TupleIndex(lhs_id, tuple_index) => {
+                let (lhs_location, lhs_type) = self.locate_identifier(lhs_id);
+                let element_types = if let ast_types::DataType::Tuple(ets) = lhs_type {
+                    ets
+                } else {
+                    panic!("Expected type was tuple. Got {lhs_type}.")
+                };
+
+                // Last element of the tuple is stored on top of the stack
+                let tuple_depth: usize = element_types
+                    .iter()
+                    .enumerate()
+                    .filter(|(i, _x)| *i > *tuple_index)
+                    .map(|(_i, x)| x.stack_size())
+                    .sum::<usize>();
+
+                let result_type = element_types[*tuple_index].clone();
+                match lhs_location {
+                    ValueLocation::OpStack(n) => {
+                        (ValueLocation::OpStack(n + tuple_depth), result_type)
+                    }
+                    ValueLocation::StaticMemoryAddress(p) => (
+                        ValueLocation::StaticMemoryAddress(p + tuple_depth as u32),
+                        result_type,
+                    ),
+                    ValueLocation::DynamicMemoryAddress(code) => {
+                        let new_code = vec![code, triton_asm!(push {tuple_depth} add)].concat();
+                        (ValueLocation::DynamicMemoryAddress(new_code), result_type)
+                    }
+                }
+            }
+            ast::Identifier::ListIndex(ident, index_expr) => {
+                let (lhs_location, lhs_type) = self.locate_identifier(ident);
+                let element_type = if let ast_types::DataType::List(element) = &lhs_type {
+                    element
+                } else {
+                    panic!("Expected type was list. Got {lhs_type}.")
+                };
+
+                let ident_addr_code = match lhs_location {
+                    ValueLocation::OpStack(depth) => {
+                        if !lhs_location.is_accessible(element_type) {
+                            let binding_name = ident.binding_name();
+                            let value_ident_of_binding =
+                                self
+                                .function_state
+                                .var_addr
+                                .get(&binding_name)
+                                .unwrap_or_else(|| panic!("Could not locate value identifier for binding {binding_name}"))
+                                .to_owned();
+                            self.mark_as_spilled(&value_ident_of_binding);
+                            triton_asm!(push 0 assert)
+                        } else {
+                            // Type of `l` in `l[<expr>]` is known to be list. So we know stack size = 1
+                            triton_asm!(dup { depth })
+                        }
+                    }
+                    ValueLocation::StaticMemoryAddress(pointer) => {
+                        // Type of `l` in `l[<expr>]` is known to be list. So we know stack size = 1
+                        // Read the list pointer from memory, then clear the stack, leaving only
+                        // the list pointer on the stack.
+                        triton_asm!(push {pointer} read_mem swap 1 pop)
+                    }
+                    ValueLocation::DynamicMemoryAddress(code) => code,
+                };
+                self.new_value_identifier("list_expression", &lhs_type);
+                let (_index_expr, index_code) =
+                    compile_expr(index_expr, "index_on_assign", &index_expr.get_type(), self);
+                let relative_address = triton_asm!(
+                    {&index_code}
+                    push {element_type.stack_size()}
+                    mul
+                    push 2 // assumes safe lists TODO: FIX!
+                    add
+                );
+                let absolute_address = triton_asm!(
+                    {&ident_addr_code}
+                    {&relative_address}
+                    add
+                );
+                self.function_state.vstack.pop();
+                self.function_state.vstack.pop();
+
+                // Compile index expression
+                (
+                    ValueLocation::DynamicMemoryAddress(absolute_address),
+                    *element_type.to_owned(),
+                )
+            }
+        }
     }
 
     /// Return code for a function, without including its external dependencies and without
@@ -1255,143 +1361,44 @@ fn compile_expr(
             }),
         },
 
-        ast::Expr::Var(identifier) => match identifier {
-            ast::Identifier::String(var_name, _known_type) => {
-                let var_addr = state.function_state.var_addr.get(var_name).cloned();
-                match &var_addr {
-                    Some(var_addr) => {
-                        // Identifier is a value that must be living on the stack
-                        let (position, old_data_type, spilled) =
-                            state.function_state.vstack.find_stack_value(var_addr);
-
-                        // If value is not marked as a spilled value and it's inacessible through swap(n)/dup(n),
-                        // this value must be marked as a value to be spilled, and the compiler must be run again.
-                        let bottom_position = position + result_type.stack_size() - 1;
-                        let accessible = bottom_position < SIZE_OF_ACCESSIBLE_STACK;
-                        if spilled.is_none() && !accessible {
-                            state.mark_as_spilled(var_addr);
-                        }
-
-                        // sanity check
-                        assert_eq!(old_data_type, result_type, "type must match expected type");
-
-                        match spilled {
-                            Some(spill_address) => {
-                                // The value has been spilled to memory. Get it from there.
-                                load_from_memory(Some(spill_address), result_type.stack_size())
-                            }
-                            None => {
-                                if !accessible {
-                                    // The compiler needs to run again. Produce unusable code.
-                                    triton_asm!(push 0 assert)
-                                } else {
-                                    // The value is accessible on the stack. Copy it from there.
-                                    dup_value_from_stack_code(
-                                        position.try_into().unwrap(),
-                                        &result_type,
-                                    )
-                                }
-                            }
-                        }
-                    }
-                    // Identifier is a function and must be in scope since typechecker was passed
-                    None => vec![],
-                }
-            }
-            ast::Identifier::TupleIndex(ident, tuple_index) => {
-                let var_name = if let ast::Identifier::String(var_name, _) = *ident.to_owned() {
-                    var_name
+        ast::Expr::Var(identifier) => {
+            if matches!(identifier.get_type(), ast_types::DataType::Function(_)) {
+                // Identifier is a function and must be in scope since typechecker was passed
+                triton_asm!()
+            } else {
+                let (location, ident_type) = state.locate_identifier(identifier);
+                if !location.is_accessible(&ident_type) {
+                    // Compiler must run again. Mark binding as spilled and produce unusable code
+                    let binding_name = identifier.binding_name();
+                    let value_ident_of_binding = state
+                        .function_state
+                        .var_addr
+                        .get(&binding_name)
+                        .unwrap_or_else(|| {
+                            panic!("Could not locate value identifier for binding {binding_name}")
+                        })
+                        .to_owned();
+                    state.mark_as_spilled(&value_ident_of_binding);
+                    triton_asm!(push 0 assert)
                 } else {
-                    panic!("Nested tuple references not yet supported");
-                };
-                let var_addr = state
-                    .function_state
-                    .var_addr
-                    .get(&var_name)
-                    .expect("variable exists")
-                    .to_owned();
-
-                // Note that this function returns the address of the *tuple element*, both
-                // on the stack and in memory if spilled. So the stack position/spilled address
-                // should not be shifted with the elements position inside the tuple.
-                let (position, element_type, spilled) = state
-                    .function_state
-                    .vstack
-                    .find_tuple_element(&var_addr, *tuple_index);
-
-                // If value is not marked as a spilled value and it's inacessible through swap(n)/dup(n),
-                // this value must be marked as a value to be spilled, and the compiler must be run again.
-                let bottom_position = position + element_type.stack_size() - 1;
-                let accessible = bottom_position < SIZE_OF_ACCESSIBLE_STACK;
-                if spilled.is_none() && !accessible {
-                    state.mark_as_spilled(&var_addr);
-                }
-
-                match spilled {
-                    Some(spill_address) => {
-                        // The value has been spilled to memory. Get it from there.
-                        load_from_memory(Some(spill_address), element_type.stack_size())
-                    }
-                    None => {
-                        if !accessible {
-                            // The compiler needs to run again. Produce unusable code.
-                            triton_asm!(push 0 assert)
-                        } else {
-                            // The value is accessible on the stack. Copy it from there.
-                            dup_value_from_stack_code(position.try_into().unwrap(), &element_type)
+                    match location {
+                        ValueLocation::OpStack(position) => {
+                            // let return_type_size = ident_type.stack_size();
+                            // let bottom_position = position + return_type_size - 1;
+                            dup_value_from_stack_code(position.try_into().unwrap(), &ident_type)
                         }
+                        ValueLocation::StaticMemoryAddress(pointer) => {
+                            load_from_memory(Some(pointer), ident_type.stack_size())
+                        }
+                        // TODO: Do we need some dereference here?
+                        ValueLocation::DynamicMemoryAddress(code) => triton_asm!(
+                            {&code}
+                            {&dereference(&ident_type)}
+                        ),
                     }
                 }
             }
-            ast::Identifier::ListIndex(ident, index_expr) => {
-                let ident_type = ident.get_type();
-                let type_param = ident_type.type_parameter().unwrap_or_else(|| {
-                    panic!("identifier must have type parameter when reading through indexing")
-                });
-                let fn_name = state.import_snippet(Box::new(
-                    tasm_lib::list::safe_u32::get::SafeGet(type_param.try_into().unwrap()),
-                ));
-
-                // TODO: Remove these sanity checks
-                let ident_as_string = match *ident.to_owned() {
-                    ast::Identifier::String(as_str, _) => as_str,
-                    _ => panic!("Nested list indexing not yet supported"),
-                };
-                let var_addr = state
-                    .function_state
-                    .var_addr
-                    .get(&ident_as_string)
-                    .expect("variable exists")
-                    .to_owned();
-                let (_position, old_data_type, _spilled) =
-                    state.function_state.vstack.find_stack_value(&var_addr);
-                assert_eq!(
-                    ident_type, old_data_type,
-                    "Type found on vstack must match expected type"
-                );
-                assert!(
-                    is_list_type(&old_data_type),
-                    "Can only index into list types"
-                );
-
-                // The recursive calls below should be able to handle spilled values, so we don't
-                // need to handle it here.
-
-                let ident_expr = ast::Expr::Var(*ident.to_owned());
-                let (_ident_addr, ident_code) =
-                    compile_expr(&ident_expr, "ident_on_assign", &ident_type, state);
-                let (_index_expr, index_code) =
-                    compile_expr(index_expr, "index_on_assign", &index_expr.get_type(), state);
-                state.function_state.vstack.pop();
-                state.function_state.vstack.pop();
-
-                triton_asm!(
-                    {&ident_code}
-                    {&index_code}
-                    call {fn_name}
-                )
-            }
-        },
+        }
 
         ast::Expr::Tuple(exprs) => {
             // Compile arguments left-to-right

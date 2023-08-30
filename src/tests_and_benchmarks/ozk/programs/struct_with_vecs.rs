@@ -27,11 +27,12 @@ fn main() {
     let b: BFieldElement = test_struct.b;
     tasm::tasm_io_write_to_stdout_bfe(b);
 
-    // Print length of `c` twice
+    // Print length of `c` three times
     let c_vector_length_u64: u64 = test_struct.c.len() as u64;
     let c_vector_length: u32 = test_struct.c.len() as u32;
     tasm::tasm_io_write_to_stdout_bfe(BFieldElement::new(c_vector_length as u64));
     tasm::tasm_io_write_to_stdout_bfe(BFieldElement::new(c_vector_length_u64));
+    tasm::tasm_io_write_to_stdout_bfe(BFieldElement::new(test_struct.c.len() as u64));
 
     // // Print element 1 of `c`
     // tasm::tasm_io_write_to_stdout_digest(test_struct.c[1]);
@@ -50,7 +51,6 @@ fn main() {
 
 mod tests {
     use super::*;
-    use itertools::Itertools;
     use rand::random;
     use std::collections::HashMap;
     use triton_vm::BFieldElement;
@@ -80,6 +80,7 @@ mod tests {
         let expected_output = vec![
             test_struct.a.encode(),
             test_struct.b.encode(),
+            (c_list_length as u32).encode(),
             (c_list_length as u32).encode(),
             (c_list_length as u32).encode(),
             // test_struct.c[1].encode(),

@@ -191,6 +191,16 @@ pub enum Identifier<T> {
     ListIndex(Box<Identifier<T>>, Box<Expr<T>>), // x[0]
 }
 
+impl<T> Identifier<T> {
+    pub fn binding_name(&self) -> String {
+        match self {
+            Identifier::String(name, _) => name.to_owned(),
+            Identifier::TupleIndex(inner_id, _) => inner_id.binding_name(),
+            Identifier::ListIndex(inner_id, _) => inner_id.binding_name(),
+        }
+    }
+}
+
 impl<T: core::fmt::Debug> Display for Identifier<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(

@@ -140,15 +140,13 @@ fn rust_type_to_data_type(x: &syn::Type) -> ast_types::DataType {
 fn pat_type_to_data_type_and_mutability(
     rust_type_path: &syn::PatType,
 ) -> (ast_types::DataType, bool) {
-    fn pat_type_to_ast_type(pat_type: &syn::Type) -> ast_types::DataType {
-        match pat_type {
+    fn syn_type_to_ast_type(syn_type: &syn::Type) -> ast_types::DataType {
+        match syn_type {
             syn::Type::Path(path) => rust_type_path_to_data_type(path),
             syn::Type::Tuple(tuple) => {
-                let types = tuple.elems.iter().map(rust_type_to_data_type).collect_vec();
+                let element_types = tuple.elems.iter().map(syn_type_to_ast_type).collect_vec();
 
-                // I think this is the correct handling interpretation of mutability as long
-                // as we don't allow destructuring for tuple definitions.
-                ast_types::DataType::Tuple(types)
+                ast_types::DataType::Tuple(element_types)
             }
             syn::Type::Reference(syn::TypeReference {
                 and_token: _,
@@ -176,7 +174,7 @@ fn pat_type_to_data_type_and_mutability(
         }) => mutability.is_some(),
         other_type => panic!("Unsupported {other_type:#?}"),
     };
-    let ast_type = pat_type_to_ast_type(rust_type_path.ty.as_ref());
+    let ast_type = syn_type_to_ast_type(rust_type_path.ty.as_ref());
 
     (ast_type, mutable)
 }
@@ -473,27 +471,31 @@ pub(crate) fn graft_expr(rust_exp: &syn::Expr) -> ast::Expr<Annotation> {
             })
         }
         syn::Expr::MethodCall(method_call_expr) => graft_method_call(method_call_expr),
-        syn::Expr::Field(field_expr) => {
+        syn::Expr::Field(syn::ExprField {
+            attrs: _,
+            base,
+            dot_token: _,
+            member,
+        }) => {
             // This branch is for tuple support.
-            // Nested tuples are not supported, and that's probably preferable
-            let path = field_expr.base.as_ref();
-            let ident = match expr_to_maybe_ident(path) {
-                Some(ident) => ident,
-                None => panic!("unsupported: {field_expr:?}"),
+            let base_expression = graft_expr(base);
+            let base_ident = match base_expression {
+                ast::Expr::Var(ident) => ident,
+                _ => {
+                    panic!("Left-hand-side of tuple operator must be a declared variable. Declare more bindings if needed. Failed to parse expression: {base_expression} as an identifier");
+                }
             };
-            match &field_expr.member {
+
+            match &member {
                 // named field `foo.bar`
                 syn::Member::Named(field_name) => ast::Expr::Field(
-                    Box::new(ast::Expr::Var(ast::Identifier::String(
-                        ident,
-                        Default::default(),
-                    ))),
+                    Box::new(ast::Expr::Var(base_ident)),
                     field_name.to_string(),
                     Default::default(),
                 ),
                 // unnamed field `tuple.2`
                 syn::Member::Unnamed(tuple_index) => ast::Expr::Var(ast::Identifier::TupleIndex(
-                    Box::new(ast::Identifier::String(ident, Default::default())),
+                    Box::new(base_ident),
                     tuple_index.index as usize,
                 )),
             }

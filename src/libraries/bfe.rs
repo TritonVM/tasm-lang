@@ -153,8 +153,10 @@ impl Library for BfeLibrary {
                 // Unsure how to handle that.
                 ast::Expr::Var(ast::Identifier::String(constant, _)) => {
                     if constant == "BFieldElement::MAX" {
+                        // `const` declaration of `BFieldElement::new(BFieldElement::MAX)`
                         ast::Expr::Lit(ast::ExprLit::BFE(BFieldElement::new(BFieldElement::MAX)))
                     } else {
+                        // non-const declaration of `BFieldElement::new(<expr>)`
                         let bfe_new_function = bfe_new_function();
                         ast::Expr::FnCall(ast::FnCall {
                             name: "BFieldElement::new".to_string(),
@@ -166,6 +168,7 @@ impl Library for BfeLibrary {
                     }
                 }
                 _ => {
+                    // non-const declaration of `BFieldElement::new(<expr>)`
                     let bfe_new_function = bfe_new_function();
                     ast::Expr::FnCall(ast::FnCall {
                         name: "BFieldElement::new".to_string(),
