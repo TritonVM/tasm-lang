@@ -370,7 +370,6 @@ impl CompilerState {
             }
             ast::Identifier::ListIndex(ident, index_expr) => {
                 let (lhs_location, lhs_type) = self.locate_identifier(ident);
-                println!("list_index, lhs_location:\n{lhs_location}\n");
                 let (element_type, list_type) =
                     if let ast_types::DataType::List(element, list_type) = &lhs_type {
                         (element, list_type)
@@ -405,12 +404,12 @@ impl CompilerState {
                     }
                     // We need a while loop here, and we need a unique identifier for that
                     None => {
-                        // Using the Display of `ident` should ensure that we don't get
-                        // more than *one* `loop_subroutine`. Notice that `ident` is
-                        // that which is before this index we are currently processing.
-                        let loop_label = format!("{}_element_finder", ident.label_friendly_name());
+                        // Notice that the following subroutine is always the same, so
+                        // we only need to import it once, no matter if we index into
+                        // different lists with dynamically sized elements in the same
+                        // program.
+                        let loop_label = "tasm_langs_dynamic_list_element_finder".to_owned();
 
-                        // TODO: Can this subroutine be reused?
                         let loop_subroutine = triton_asm!(
                             {&loop_label}:
                                 // _ *vec<T>[n]_size index
@@ -466,7 +465,6 @@ impl CompilerState {
             }
             ast::Identifier::Field(ident, field_name, known_type) => {
                 let (lhs_location, lhs_type) = self.locate_identifier(ident);
-                println!("field, lhs_location:\n{lhs_location}\n");
 
                 let get_struct_pointer =
                     get_lhs_address_code(self, &lhs_location, &known_type.get_type(), ident);
@@ -484,11 +482,6 @@ impl CompilerState {
                 };
 
                 // stack: _ field_pointer
-
-                println!(
-                    "get_field_pointer_from_struct_pointer:\n{}",
-                    get_field_pointer_from_struct_pointer.iter().join("\n")
-                );
 
                 (
                     ValueLocation::DynamicMemoryAddress(triton_asm!(
@@ -1379,7 +1372,6 @@ fn compile_expr(
                 triton_asm!()
             } else {
                 let (location, ident_type) = state.locate_identifier(identifier);
-                println!("returned location:\n{location}\n\n");
                 if !location.is_accessible(&ident_type) {
                     // Compiler must run again. Mark binding as spilled and produce unusable code
                     let binding_name = identifier.binding_name();

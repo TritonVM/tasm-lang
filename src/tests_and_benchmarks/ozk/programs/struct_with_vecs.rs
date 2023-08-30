@@ -47,8 +47,14 @@ fn main() {
     // Print `d`
     tasm::tasm_io_write_to_stdout_xfe(test_struct.d);
 
-    // Print `h[2][5]`
-    tasm::tasm_io_write_to_stdout_xfe(test_struct.h[2][1]);
+    // Print elements from `h`
+    tasm::tasm_io_write_to_stdout_xfe(test_struct.h[2][5]);
+    tasm::tasm_io_write_to_stdout_xfe(test_struct.h[2][5]);
+    tasm::tasm_io_write_to_stdout_xfe(test_struct.h[0][0]);
+    tasm::tasm_io_write_to_stdout_xfe(test_struct.h[3][10]);
+    tasm::tasm_io_write_to_stdout_bfe(BFieldElement::new(test_struct.h[3].len() as u64));
+    tasm::tasm_io_write_to_stdout_bfe(BFieldElement::new(test_struct.h[0].len() as u64));
+    tasm::tasm_io_write_to_stdout_bfe(BFieldElement::new(test_struct.h.len() as u64));
 
     return;
 }
@@ -68,7 +74,7 @@ mod tests {
 
     #[test]
     fn struct_with_vecs_test() {
-        let c_list_length = 2;
+        let c_list_length = 14;
         let test_struct = TestStructWithVecs {
             a: random(),
             b: random(),
@@ -77,7 +83,12 @@ mod tests {
             e: random_elements(25),
             f: random(),
             g: random_elements(9),
-            h: vec![random_elements(1), random_elements(1), random_elements(2)],
+            h: vec![
+                random_elements(10),
+                random_elements(0),
+                random_elements(7),
+                random_elements(11),
+            ],
         };
         println!(
             "test_struct.encode()\n{}",
@@ -97,7 +108,13 @@ mod tests {
             test_struct.g[7].encode(),
             (test_struct.e.len() as u32).encode(),
             test_struct.d.encode(),
-            test_struct.h[2][1].encode(),
+            test_struct.h[2][5].encode(),
+            test_struct.h[2][5].encode(),
+            test_struct.h[0][0].encode(),
+            test_struct.h[3][10].encode(),
+            (test_struct.h[3].len() as u32).encode(),
+            (test_struct.h[0].len() as u32).encode(),
+            (test_struct.h.len() as u32).encode(),
         ]
         .concat();
         let input = vec![];
