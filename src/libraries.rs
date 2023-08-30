@@ -1,6 +1,6 @@
 use crate::{
     ast::{self, FnSignature},
-    ast_types,
+    ast_types::{self, ListType},
     tasm_code_generator::CompilerState,
     type_checker,
 };
@@ -86,8 +86,12 @@ pub trait Library: Debug {
         &self,
         fn_name: &str,
         args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
+        list_type: ListType,
     ) -> Option<ast::Expr<Annotation>>;
 
-    fn graft_method(&self, rust_method_call: &syn::ExprMethodCall)
-        -> Option<ast::Expr<Annotation>>;
+    fn graft_method(
+        &self,
+        rust_method_call: &syn::ExprMethodCall,
+        list_type: ListType,
+    ) -> Option<ast::Expr<Annotation>>;
 }

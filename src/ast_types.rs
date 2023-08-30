@@ -110,7 +110,35 @@ impl From<&FnSignature> for DataType {
     }
 }
 
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
+pub enum ListType {
+    Safe,
+    Unsafe,
+}
+
+impl ListType {
+    pub fn metadata_size(&self) -> usize {
+        match self {
+            ListType::Safe => 2,
+            ListType::Unsafe => 1,
+        }
+    }
+}
+
+impl Display for ListType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                Self::Safe => "safe",
+                Self::Unsafe => "unsafe",
+            }
+        )
+    }
+}
+
+#[derive(Debug, Clone, Hash)]
 pub enum DataType {
     Bool,
     U32,
@@ -119,7 +147,7 @@ pub enum DataType {
     BFE,
     XFE,
     Digest,
-    List(Box<DataType>),
+    List(Box<DataType>, ListType),
     Tuple(Vec<DataType>),
     VoidPointer,
     Function(Box<FunctionType>),
@@ -127,6 +155,22 @@ pub enum DataType {
     MemPointer(Box<DataType>),
     Unresolved(String),
 }
+
+impl PartialEq for DataType {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::List(et0, _), Self::List(et1, _)) => et0 == et1,
+            (Self::Tuple(l0), Self::Tuple(r0)) => l0 == r0,
+            (Self::Function(l0), Self::Function(r0)) => l0 == r0,
+            (Self::Struct(l0), Self::Struct(r0)) => l0 == r0,
+            (Self::MemPointer(l0), Self::MemPointer(r0)) => l0 == r0,
+            (Self::Unresolved(l0), Self::Unresolved(r0)) => l0 == r0,
+            _ => core::mem::discriminant(self) == core::mem::discriminant(other),
+        }
+    }
+}
+
+impl Eq for DataType {}
 
 impl DataType {
     /// What type is returned when type is accessed with a field of name `field_name`?
@@ -154,10 +198,11 @@ impl DataType {
         }
     }
 
+    // TODO: Consider getting rid of this method
     /// Return the element type for lists
     pub fn type_parameter(&self) -> Option<DataType> {
         match self {
-            DataType::List(element_type) => Some(*element_type.to_owned()),
+            DataType::List(element_type, _) => Some(*element_type.to_owned()),
             // TODO: Is this the right solution, or do we perhaps need to resolve
             // other types for our field access operators? I'm leaning towards the
             // latter ... but what if the are more field operators following each
@@ -185,7 +230,7 @@ impl DataType {
                 .iter()
                 .map(|x| x.bfield_codec_length())
                 .fold(Some(0), |acc, x| acc.and_then(|a| x.map(|v| a + v))),
-            DataType::List(_) => None,
+            DataType::List(_, _) => None,
             DataType::Struct(struct_type) => {
                 struct_type
                     .fields
@@ -214,7 +259,7 @@ impl DataType {
             Self::BFE => 1,
             Self::XFE => 3,
             Self::Digest => 5,
-            Self::List(_list_type) => 1,
+            Self::List(_list_type, _) => 1,
             Self::Tuple(tuple_type) => tuple_type.iter().map(Self::stack_size).sum(),
             Self::VoidPointer => 1,
             Self::Function(_) => todo!(),
@@ -230,7 +275,7 @@ impl DataType {
             DataType::Unresolved(_) => true,
             DataType::MemPointer(inner) => inner.is_unresolved(),
             DataType::Tuple(inners) => inners.iter().any(|inner| inner.is_unresolved()),
-            DataType::List(element) => element.is_unresolved(),
+            DataType::List(element, _) => element.is_unresolved(),
             DataType::Struct(StructType { name: _, fields }) => fields
                 .iter()
                 .any(|(_field_name, field_type)| field_type.is_unresolved()),
@@ -262,8 +307,8 @@ impl DataType {
                     fields: resolved_fields,
                 })
             }
-            DataType::List(inner) => {
-                DataType::List(Box::new(inner.resolve_types(declared_structs)))
+            DataType::List(inner, list_type) => {
+                DataType::List(Box::new(inner.resolve_types(declared_structs)), *list_type)
             }
             DataType::Tuple(inners) => DataType::Tuple(
                 inners
@@ -311,7 +356,7 @@ impl TryFrom<DataType> for tasm_lib::snippet::DataType {
             DataType::BFE => Ok(tasm_lib::snippet::DataType::BFE),
             DataType::XFE => Ok(tasm_lib::snippet::DataType::XFE),
             DataType::Digest => Ok(tasm_lib::snippet::DataType::Digest),
-            DataType::List(elem_type) => {
+            DataType::List(elem_type, _) => {
                 let element_type = (*elem_type).try_into();
                 let element_type = match element_type {
                     Ok(e) => e,
@@ -325,8 +370,9 @@ impl TryFrom<DataType> for tasm_lib::snippet::DataType {
             DataType::Struct(_) => todo!(),
             DataType::Unresolved(name) => panic!("cannot convert unresolved type {name}"),
             DataType::MemPointer(value) => match *value {
-                // A MemPointer to a list is just a list (an unsafe list, actually)
-                DataType::List(_) => (*value).try_into(),
+                // A MemPointer to a list is just a list
+                // TODO: Default to `Unsafe` list here??
+                DataType::List(_, ListType::Unsafe) => (*value).try_into(),
                 DataType::Unresolved(_) => todo!(),
                 _ => Ok(tasm_lib::snippet::DataType::VoidPointer),
             }
@@ -347,7 +393,7 @@ impl From<tasm_lib::snippet::DataType> for DataType {
             tasm_lib::snippet::DataType::VoidPointer => DataType::VoidPointer,
             tasm_lib::snippet::DataType::List(elem_type_snip) => {
                 let element_type: DataType = (*elem_type_snip).into();
-                DataType::List(Box::new(element_type))
+                DataType::List(Box::new(element_type), ListType::Safe)
             }
             tasm_lib::snippet::DataType::Tuple(tasm_types) => {
                 let element_types: Vec<DataType> =
@@ -389,7 +435,7 @@ impl Display for DataType {
             BFE => "BField".to_string(),
             XFE => "XField".to_string(),
             Digest => "Digest".to_string(),
-            List(ty) => format!("List({ty})"),
+            List(ty, _list_type) => format!("List({ty})"),
             Tuple(tys) => tys.iter().map(|ty| format!("{ty}")).join(" "),
             VoidPointer => "void pointer".to_string(),
             Function(fn_type) => {

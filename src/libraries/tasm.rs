@@ -116,6 +116,7 @@ impl Library for TasmLibrary {
         &self,
         _fn_name: &str,
         _args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
+        _list_type: ast_types::ListType,
     ) -> Option<ast::Expr<super::Annotation>> {
         panic!("No grafting is handled by TASM lib")
     }
@@ -123,6 +124,7 @@ impl Library for TasmLibrary {
     fn graft_method(
         &self,
         _rust_method_call: &syn::ExprMethodCall,
+        _list_type: ast_types::ListType,
     ) -> Option<ast::Expr<super::Annotation>> {
         None
     }

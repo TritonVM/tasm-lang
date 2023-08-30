@@ -65,9 +65,6 @@ impl<T: GetType> GetType for ast::Expr<T> {
             ast::Expr::If(if_expr) => if_expr.get_type(),
             ast::Expr::Cast(_expr, t) => t.to_owned(),
             ast::Expr::Unary(_unaryop, inner_expr, _) => inner_expr.get_type(),
-            ast::Expr::Field(expr, field_name, _t) => {
-                expr.get_type().field_access_returned_type(field_name)
-            }
         }
     }
 }
@@ -92,9 +89,12 @@ impl<T: GetType> GetType for ast::Identifier<T> {
             ast::Identifier::ListIndex(id, _) => {
                 let rec = id.get_type();
                 match rec {
-                    ast_types::DataType::List(element_type) => *element_type,
+                    ast_types::DataType::List(element_type, _) => *element_type,
                     dt => panic!("Type error. Expected List got: {dt:?}"),
                 }
+            }
+            ast::Identifier::Field(ident, field_name, _t) => {
+                ident.get_type().field_access_returned_type(field_name)
             }
         }
     }
@@ -447,14 +447,28 @@ pub fn annotate_identifier_type(
                 panic!("Cannot index list with type '{index_type}'");
             }
 
-            // TODO: It could make sense to support var.1[i] if there were better support for tuples.
-            if !is_string_identifier(list_identifier) {
-                panic!("Cannot index anything but variables: {list_identifier:?}");
-            }
+            // // TODO: It could make sense to support var.1[i] if there were better support for tuples.
+            // if !is_string_identifier(list_identifier) {
+            //     panic!("Cannot index anything but variables: {list_identifier:?}");
+            // }
 
-            let list_type = annotate_identifier_type(list_identifier, state);
+            let (list_type, mutable) = annotate_identifier_type(list_identifier, state);
 
-            (list_type.0.type_parameter().unwrap(), list_type.1)
+            let element_type = if let ast_types::DataType::List(elem_ty, _list_type) = list_type {
+                elem_ty
+            } else {
+                panic!("Can only index into a list type. Attempted to index into {list_identifier}")
+            };
+
+            (*element_type, mutable)
+        }
+        ast::Identifier::Field(ident, field_name, annot) => {
+            let (receiver_type, mutable) = annotate_identifier_type(ident, state);
+            // Only structs have fields, so receiver_type must be a struct, or a pointer to a struct.
+            let data_type = receiver_type.field_access_returned_type(field_name);
+            *annot = Typing::KnownType(data_type.clone());
+
+            (data_type, mutable)
         }
     }
 }
@@ -521,7 +535,7 @@ fn get_method_signature(
             name: String::from("map"),
             // TODO: Use List<inner_fn_signature-args> here instead for betetr type checking
             args: vec![vector_as_arg, derived_inner_function_as_function_arg],
-            output: ast_types::DataType::List(Box::new(inner_output)),
+            output: ast_types::DataType::List(Box::new(inner_output), ast_types::ListType::Safe),
             arg_evaluation_order: Default::default(),
         };
     }
@@ -674,16 +688,6 @@ fn derive_annotate_expr_type(
                 .map(|expr| derive_annotate_expr_type(expr, no_hint, state))
                 .collect();
             ast_types::DataType::Tuple(tuple_types)
-        }
-        ast::Expr::Field(expr, field_name, annot) => {
-            // Get the receiver type (the type of the left-hand side of the `.`)
-            let receiver_type = derive_annotate_expr_type(expr, None, state);
-
-            // Only structs have fields, so receiver_type must be a struct, or a pointer to a struct.
-            let ret = receiver_type.field_access_returned_type(field_name);
-            *annot = Typing::KnownType(ret.clone());
-
-            ret
         }
 
         ast::Expr::FnCall(ast::FnCall {
@@ -1024,7 +1028,7 @@ pub fn is_string_identifier<T>(identifier: &ast::Identifier<T>) -> bool {
 
 pub fn is_list_type(data_type: &ast_types::DataType) -> bool {
     use ast_types::DataType::*;
-    matches!(data_type, List(_))
+    matches!(data_type, List(_, _))
 }
 
 /// A type that can be used as address in `read_mem` and `write_mem` calls.

@@ -13,6 +13,7 @@ struct TestStructWithVecs {
     pub e: Vec<Digest>,
     pub f: BFieldElement,
     pub g: Vec<XFieldElement>,
+    pub h: Vec<Vec<XFieldElement>>,
 }
 
 fn main() {
@@ -34,23 +35,27 @@ fn main() {
     tasm::tasm_io_write_to_stdout_bfe(BFieldElement::new(c_vector_length_u64));
     tasm::tasm_io_write_to_stdout_bfe(BFieldElement::new(test_struct.c.len() as u64));
 
-    // // Print element 1 of `c`
-    // tasm::tasm_io_write_to_stdout_digest(test_struct.c[1]);
+    // Print element 1 of `c`
+    tasm::tasm_io_write_to_stdout_digest(test_struct.c[1]);
 
-    // // Print element 7 of `g`
-    // tasm::tasm_io_write_to_stdout_xfe(test_struct.g[7]);
+    // Print element 7 of `g`
+    tasm::tasm_io_write_to_stdout_xfe(test_struct.g[7]);
 
-    // // Print length of `e`
-    // tasm::tasm_io_write_to_stdout_u32(test_struct.e.len() as u32);
+    // Print length of `e`
+    tasm::tasm_io_write_to_stdout_u32(test_struct.e.len() as u32);
 
-    // // Print `d`
-    // tasm::tasm_io_write_to_stdout_xfe(test_struct.d);
+    // Print `d`
+    tasm::tasm_io_write_to_stdout_xfe(test_struct.d);
+
+    // Print `h[2][5]`
+    tasm::tasm_io_write_to_stdout_xfe(test_struct.h[2][1]);
 
     return;
 }
 
 mod tests {
     use super::*;
+    use itertools::Itertools;
     use rand::random;
     use std::collections::HashMap;
     use triton_vm::BFieldElement;
@@ -72,7 +77,12 @@ mod tests {
             e: random_elements(25),
             f: random(),
             g: random_elements(9),
+            h: vec![random_elements(1), random_elements(1), random_elements(2)],
         };
+        println!(
+            "test_struct.encode()\n{}",
+            test_struct.encode().iter().join("\n")
+        );
         let non_determinism = init_memory_from(&test_struct, BFieldElement::new(300));
         let mut ram: Vec<(BFieldElement, BFieldElement)> =
             non_determinism.ram.clone().into_iter().collect();
@@ -83,10 +93,11 @@ mod tests {
             (c_list_length as u32).encode(),
             (c_list_length as u32).encode(),
             (c_list_length as u32).encode(),
-            // test_struct.c[1].encode(),
-            // test_struct.g[7].encode(),
-            // (test_struct.e.len() as u32).encode(),
-            // test_struct.d.encode(),
+            test_struct.c[1].encode(),
+            test_struct.g[7].encode(),
+            (test_struct.e.len() as u32).encode(),
+            test_struct.d.encode(),
+            test_struct.h[2][1].encode(),
         ]
         .concat();
         let input = vec![];
@@ -98,6 +109,7 @@ mod tests {
 
         // Run test on Triton-VM
         let test_program = ozk_parsing::compile_for_test("struct_with_vecs");
+        println!("executing:\n{}", test_program.iter().join("\n"));
         let vm_output = execute_compiled_with_stack_memory_and_ins_for_test(
             &test_program,
             vec![],
@@ -107,6 +119,14 @@ mod tests {
             0,
         )
         .unwrap();
-        assert_eq!(expected_output, vm_output.output);
+        // assert_eq!(expected_output, vm_output.output);
+        if expected_output != vm_output.output {
+            panic!(
+                "expected_output:\n {}, got:\n{}. Code was:\n{}",
+                expected_output.iter().join(", "),
+                vm_output.output.iter().join(", "),
+                test_program.iter().join("\n")
+            );
+        }
     }
 }

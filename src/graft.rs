@@ -10,7 +10,10 @@ use crate::type_checker;
 
 pub type Annotation = type_checker::Typing;
 
-pub fn graft_structs(structs: Vec<syn::ItemStruct>) -> HashMap<String, ast_types::StructType> {
+pub fn graft_structs(
+    structs: Vec<syn::ItemStruct>,
+    list_type: ast_types::ListType,
+) -> HashMap<String, ast_types::StructType> {
     let mut ret = HashMap::default();
     for struct_ in structs {
         let syn::ItemStruct {
@@ -27,7 +30,7 @@ pub fn graft_structs(structs: Vec<syn::ItemStruct>) -> HashMap<String, ast_types
 
         for field in fields.into_iter() {
             let field_name = field.ident.unwrap().to_string();
-            let datatype = rust_type_to_data_type(&field.ty);
+            let datatype = rust_type_to_data_type(&field.ty, list_type);
             ast_fields.push((field_name, datatype));
         }
 
@@ -43,15 +46,25 @@ pub fn graft_structs(structs: Vec<syn::ItemStruct>) -> HashMap<String, ast_types
     ret
 }
 
-pub fn graft_fn_decl(input: &syn::ItemFn) -> ast::Fn<Annotation> {
+pub fn graft_fn_decl(input: &syn::ItemFn, list_type: ast_types::ListType) -> ast::Fn<Annotation> {
     let name = input.sig.ident.to_string();
-    let args = input.sig.inputs.iter().map(graft_fn_arg).collect_vec();
+    let args = input
+        .sig
+        .inputs
+        .iter()
+        .map(|x| graft_fn_arg(x, list_type))
+        .collect_vec();
     let args = args
         .into_iter()
         .map(ast_types::AbstractArgument::ValueArgument)
         .collect_vec();
-    let output = graft_return_type(&input.sig.output);
-    let body = input.block.stmts.iter().map(graft_stmt).collect_vec();
+    let output = graft_return_type(&input.sig.output, list_type);
+    let body = input
+        .block
+        .stmts
+        .iter()
+        .map(|x| graft_stmt(x, list_type))
+        .collect_vec();
 
     ast::Fn {
         body,
@@ -64,7 +77,10 @@ pub fn graft_fn_decl(input: &syn::ItemFn) -> ast::Fn<Annotation> {
     }
 }
 
-fn rust_type_path_to_data_type(rust_type_path: &syn::TypePath) -> ast_types::DataType {
+fn rust_type_path_to_data_type(
+    rust_type_path: &syn::TypePath,
+    list_type: ast_types::ListType,
+) -> ast_types::DataType {
     assert_eq!(
         1,
         rust_type_path.path.segments.len(),
@@ -80,7 +96,7 @@ fn rust_type_path_to_data_type(rust_type_path: &syn::TypePath) -> ast_types::Dat
     // Type is not primitive. Is it a vector?
     // TODO: Can we move this to the Vector library?
     if rust_type_as_string == "Vec" {
-        return rust_vec_to_data_type(&rust_type_path.path.segments[0].arguments);
+        return rust_vec_to_data_type(&rust_type_path.path.segments[0].arguments, list_type);
     }
 
     // Handling `Box<T>`. It would be cool if this could be handled same place as
@@ -92,7 +108,7 @@ fn rust_type_path_to_data_type(rust_type_path: &syn::TypePath) -> ast_types::Dat
             assert_eq!(1, ab.args.len(), "Must be Box<T> for *one* generic T.");
             match &ab.args[0] {
                 syn::GenericArgument::Type(syn::Type::Path(path)) => {
-                    rust_type_path_to_data_type(path)
+                    rust_type_path_to_data_type(path, list_type)
                 }
                 other => panic!("Unsupported type {other:#?}"),
             }
@@ -114,14 +130,18 @@ fn rust_type_path_to_data_type(rust_type_path: &syn::TypePath) -> ast_types::Dat
     }
 }
 
-fn rust_vec_to_data_type(path_args: &syn::PathArguments) -> ast_types::DataType {
+fn rust_vec_to_data_type(
+    path_args: &syn::PathArguments,
+    list_type: ast_types::ListType,
+) -> ast_types::DataType {
     match path_args {
         syn::PathArguments::AngleBracketed(ab) => {
             assert_eq!(1, ab.args.len(), "Must be Vec<T> for *one* generic T.");
             match &ab.args[0] {
-                syn::GenericArgument::Type(syn::Type::Path(path)) => {
-                    ast_types::DataType::List(Box::new(rust_type_path_to_data_type(path)))
-                }
+                syn::GenericArgument::Type(syn::Type::Path(path)) => ast_types::DataType::List(
+                    Box::new(rust_type_path_to_data_type(path, list_type)),
+                    list_type,
+                ),
                 other => panic!("Unsupported type {other:#?}"),
             }
         }
@@ -129,9 +149,9 @@ fn rust_vec_to_data_type(path_args: &syn::PathArguments) -> ast_types::DataType 
     }
 }
 
-fn rust_type_to_data_type(x: &syn::Type) -> ast_types::DataType {
+fn rust_type_to_data_type(x: &syn::Type, list_type: ast_types::ListType) -> ast_types::DataType {
     match x {
-        syn::Type::Path(data_type) => rust_type_path_to_data_type(data_type),
+        syn::Type::Path(data_type) => rust_type_path_to_data_type(data_type, list_type),
         ty => panic!("Unsupported type {ty:#?}"),
     }
 }
@@ -139,12 +159,20 @@ fn rust_type_to_data_type(x: &syn::Type) -> ast_types::DataType {
 // Extract type and mutability from syn::PatType
 fn pat_type_to_data_type_and_mutability(
     rust_type_path: &syn::PatType,
+    list_type: ast_types::ListType,
 ) -> (ast_types::DataType, bool) {
-    fn syn_type_to_ast_type(syn_type: &syn::Type) -> ast_types::DataType {
+    fn syn_type_to_ast_type(
+        syn_type: &syn::Type,
+        list_type: ast_types::ListType,
+    ) -> ast_types::DataType {
         match syn_type {
-            syn::Type::Path(path) => rust_type_path_to_data_type(path),
+            syn::Type::Path(path) => rust_type_path_to_data_type(path, list_type),
             syn::Type::Tuple(tuple) => {
-                let element_types = tuple.elems.iter().map(syn_type_to_ast_type).collect_vec();
+                let element_types = tuple
+                    .elems
+                    .iter()
+                    .map(|x| syn_type_to_ast_type(x, list_type))
+                    .collect_vec();
 
                 ast_types::DataType::Tuple(element_types)
             }
@@ -155,7 +183,7 @@ fn pat_type_to_data_type_and_mutability(
                 elem,
             }) => match *elem.to_owned() {
                 syn::Type::Path(type_path) => {
-                    let inner_type = rust_type_path_to_data_type(&type_path);
+                    let inner_type = rust_type_path_to_data_type(&type_path, list_type);
                     ast_types::DataType::MemPointer(Box::new(inner_type))
                 }
                 _ => todo!(),
@@ -174,7 +202,7 @@ fn pat_type_to_data_type_and_mutability(
         }) => mutability.is_some(),
         other_type => panic!("Unsupported {other_type:#?}"),
     };
-    let ast_type = syn_type_to_ast_type(rust_type_path.ty.as_ref());
+    let ast_type = syn_type_to_ast_type(rust_type_path.ty.as_ref(), list_type);
 
     (ast_type, mutable)
 }
@@ -192,7 +220,10 @@ pub fn path_to_ident(path: &syn::Path) -> String {
     identifiers.join("::")
 }
 
-fn graft_fn_arg(rust_fn_arg: &syn::FnArg) -> ast_types::AbstractValueArg {
+fn graft_fn_arg(
+    rust_fn_arg: &syn::FnArg,
+    list_type: ast_types::ListType,
+) -> ast_types::AbstractValueArg {
     match rust_fn_arg {
         syn::FnArg::Typed(pat_type) => {
             let name = pat_to_name(&pat_type.pat);
@@ -202,7 +233,7 @@ fn graft_fn_arg(rust_fn_arg: &syn::FnArg) -> ast_types::AbstractValueArg {
                         syn::Pat::Ident(pi) => pi.mutability.is_some(),
                         _ => todo!(),
                     };
-                    (rust_type_path_to_data_type(type_path), mutable)
+                    (rust_type_path_to_data_type(type_path, list_type), mutable)
                 }
 
                 // Input is a mutable reference
@@ -215,7 +246,7 @@ fn graft_fn_arg(rust_fn_arg: &syn::FnArg) -> ast_types::AbstractValueArg {
                     assert!(mutability.is_some(), "Reference input must be mutable");
                     match *elem.to_owned() {
                         syn::Type::Path(type_path) => {
-                            (rust_type_path_to_data_type(&type_path), true)
+                            (rust_type_path_to_data_type(&type_path, list_type), true)
                         }
                         _ => todo!(),
                     }
@@ -233,16 +264,19 @@ fn graft_fn_arg(rust_fn_arg: &syn::FnArg) -> ast_types::AbstractValueArg {
     }
 }
 
-fn graft_return_type(rust_return_type: &syn::ReturnType) -> ast_types::DataType {
+fn graft_return_type(
+    rust_return_type: &syn::ReturnType,
+    list_type: ast_types::ListType,
+) -> ast_types::DataType {
     match rust_return_type {
         syn::ReturnType::Type(_, path) => match path.as_ref() {
-            syn::Type::Path(type_path) => rust_type_path_to_data_type(type_path),
+            syn::Type::Path(type_path) => rust_type_path_to_data_type(type_path, list_type),
             syn::Type::Tuple(tuple_type) => {
                 let tuple_type = tuple_type;
                 let output_elements = tuple_type
                     .elems
                     .iter()
-                    .map(rust_type_to_data_type)
+                    .map(|x| rust_type_to_data_type(x, list_type))
                     .collect_vec();
 
                 ast_types::DataType::Tuple(output_elements)
@@ -254,7 +288,10 @@ fn graft_return_type(rust_return_type: &syn::ReturnType) -> ast_types::DataType 
 }
 
 /// Return type argument found in path
-pub fn path_to_type_parameter(path: &syn::Path) -> Option<ast_types::DataType> {
+pub fn path_to_type_parameter(
+    path: &syn::Path,
+    list_type: ast_types::ListType,
+) -> Option<ast_types::DataType> {
     let mut type_parameter: Option<ast_types::DataType> = None;
     for segment in path.segments.iter() {
         match &segment.arguments {
@@ -270,7 +307,7 @@ pub fn path_to_type_parameter(path: &syn::Path) -> Option<ast_types::DataType> {
                         type_parameter.is_none(),
                         "only one type parameter supported"
                     );
-                    type_parameter = Some(rust_type_to_data_type(rdt));
+                    type_parameter = Some(rust_type_to_data_type(rdt, list_type));
                 } else {
                     panic!("unsupported GenericArgument: {:#?}", abga.args[0]);
                 }
@@ -289,11 +326,12 @@ pub(crate) fn graft_call_exp(
         paren_token: _,
         args,
     }: &syn::ExprCall,
+    list_type: ast_types::ListType,
 ) -> ast::Expr<Annotation> {
     let (full_name, type_parameter) = match func.as_ref() {
         syn::Expr::Path(path) => (
             path_to_ident(&path.path),
-            path_to_type_parameter(&path.path),
+            path_to_type_parameter(&path.path, list_type),
         ),
         other => panic!("unsupported: {other:?}"),
     };
@@ -301,13 +339,13 @@ pub(crate) fn graft_call_exp(
     // Check if grafting should be handled by a library
     for lib in libraries::all_libraries() {
         if let Some(fn_name) = lib.get_graft_function_name(&full_name) {
-            return lib.graft_function(&fn_name, args).unwrap();
+            return lib.graft_function(&fn_name, args, list_type).unwrap();
         }
     }
 
     // Grafting was not handled by a library. Treat function call as a regular
     // function that is hopefully in scope
-    let args = args.iter().map(graft_expr).collect_vec();
+    let args = args.iter().map(|x| graft_expr(x, list_type)).collect_vec();
     let annot = Default::default();
 
     ast::Expr::FnCall(ast::FnCall {
@@ -328,7 +366,10 @@ fn expr_to_maybe_ident(rust_exp: &syn::Expr) -> Option<String> {
 }
 
 /// Interpret an expression as an identifier
-fn expr_as_identifier(rust_exp: &syn::Expr) -> ast::Identifier<Annotation> {
+fn expr_as_identifier(
+    rust_exp: &syn::Expr,
+    list_type: ast_types::ListType,
+) -> ast::Identifier<Annotation> {
     match rust_exp {
         syn::Expr::Path(path) => {
             ast::Identifier::String(path_to_ident(&path.path), Default::default())
@@ -355,7 +396,7 @@ fn expr_as_identifier(rust_exp: &syn::Expr) -> ast::Identifier<Annotation> {
                 Some(ident) => ident,
                 None => panic!("unsupported: {index_expr:?}"),
             };
-            let index_expr = graft_expr(index_expr.index.as_ref());
+            let index_expr = graft_expr(index_expr.index.as_ref(), list_type);
             ast::Identifier::ListIndex(
                 Box::new(ast::Identifier::String(ident, Default::default())),
                 Box::new(index_expr),
@@ -365,18 +406,27 @@ fn expr_as_identifier(rust_exp: &syn::Expr) -> ast::Identifier<Annotation> {
     }
 }
 
-pub(crate) fn graft_method_call(rust_method_call: &syn::ExprMethodCall) -> ast::Expr<Annotation> {
+pub(crate) fn graft_method_call(
+    rust_method_call: &syn::ExprMethodCall,
+    list_type: ast_types::ListType,
+) -> ast::Expr<Annotation> {
     for lib in libraries::all_libraries() {
-        if let Some(method_call) = lib.graft_method(rust_method_call) {
+        if let Some(method_call) = lib.graft_method(rust_method_call, list_type) {
             return method_call;
         }
     }
 
     let last_method_name = rust_method_call.method.to_string();
     let expr = rust_method_call.receiver.as_ref();
-    let receiver_expr = graft_expr(expr);
+    let receiver_expr = graft_expr(expr, list_type);
     let mut args = vec![receiver_expr];
-    args.append(&mut rust_method_call.args.iter().map(graft_expr).collect_vec());
+    args.append(
+        &mut rust_method_call
+            .args
+            .iter()
+            .map(|x| graft_expr(x, list_type))
+            .collect_vec(),
+    );
     let annot = Default::default();
     ast::Expr::MethodCall(ast::MethodCall {
         method_name: last_method_name,
@@ -390,10 +440,11 @@ pub fn graft_binop_eq_expr(
     left: &syn::Expr,
     op: &syn::BinOp,
     right: &syn::Expr,
+    list_type: ast_types::ListType,
 ) -> ast::Expr<Annotation> {
-    let left = graft_expr(left);
+    let left = graft_expr(left, list_type);
     let ast_binop: ast::BinOp = graft_eq_binop(op);
-    let right = graft_expr(right);
+    let right = graft_expr(right, list_type);
 
     ast::Expr::Binop(
         Box::new(left),
@@ -403,12 +454,15 @@ pub fn graft_binop_eq_expr(
     )
 }
 
-pub(crate) fn graft_expr(rust_exp: &syn::Expr) -> ast::Expr<Annotation> {
+pub(crate) fn graft_expr(
+    rust_exp: &syn::Expr,
+    list_type: ast_types::ListType,
+) -> ast::Expr<Annotation> {
     match rust_exp {
         syn::Expr::Binary(bin_expr) => {
-            let left = graft_expr(&bin_expr.left);
+            let left = graft_expr(&bin_expr.left, list_type);
             let ast_binop: ast::BinOp = graft_binop(bin_expr.op);
-            let right = graft_expr(&bin_expr.right);
+            let right = graft_expr(&bin_expr.right, list_type);
 
             ast::Expr::Binop(
                 Box::new(left),
@@ -433,21 +487,25 @@ pub(crate) fn graft_expr(rust_exp: &syn::Expr) -> ast::Expr<Annotation> {
             }
         }
         syn::Expr::Tuple(tuple_expr) => {
-            let exprs = tuple_expr.elems.iter().map(graft_expr).collect_vec();
+            let exprs = tuple_expr
+                .elems
+                .iter()
+                .map(|x| graft_expr(x, list_type))
+                .collect_vec();
             ast::Expr::Tuple(exprs)
         }
         syn::Expr::Lit(litexp) => {
             let lit = &litexp.lit;
             ast::Expr::Lit(graft_lit(lit))
         }
-        syn::Expr::Call(call_exp) => graft_call_exp(call_exp),
-        syn::Expr::Paren(paren_exp) => graft_expr(&paren_exp.expr),
+        syn::Expr::Call(call_exp) => graft_call_exp(call_exp, list_type),
+        syn::Expr::Paren(paren_exp) => graft_expr(&paren_exp.expr, list_type),
         syn::Expr::If(expr_if) => {
-            let condition = graft_expr(&expr_if.cond);
+            let condition = graft_expr(&expr_if.cond, list_type);
             let if_branch = &expr_if.then_branch.stmts;
             assert_eq!(1, if_branch.len(), "Max one line in if/else expressions");
             let then_branch = match &if_branch[0] {
-                syn::Stmt::Expr(expr) => graft_expr(expr),
+                syn::Stmt::Expr(expr) => graft_expr(expr, list_type),
                 other => panic!("unsupported: {other:?}"),
             };
             let else_branch = &expr_if.else_branch.as_ref().unwrap().1;
@@ -457,7 +515,7 @@ pub(crate) fn graft_expr(rust_exp: &syn::Expr) -> ast::Expr<Annotation> {
                     assert_eq!(1, else_branch.len(), "Max one line in if/else expressions");
 
                     match &else_branch[0] {
-                        syn::Stmt::Expr(expr) => graft_expr(expr),
+                        syn::Stmt::Expr(expr) => graft_expr(expr, list_type),
                         other => panic!("unsupported: {other:?}"),
                     }
                 }
@@ -470,7 +528,7 @@ pub(crate) fn graft_expr(rust_exp: &syn::Expr) -> ast::Expr<Annotation> {
                 else_branch: Box::new(else_branch),
             })
         }
-        syn::Expr::MethodCall(method_call_expr) => graft_method_call(method_call_expr),
+        syn::Expr::MethodCall(method_call_expr) => graft_method_call(method_call_expr, list_type),
         syn::Expr::Field(syn::ExprField {
             attrs: _,
             base,
@@ -478,7 +536,7 @@ pub(crate) fn graft_expr(rust_exp: &syn::Expr) -> ast::Expr<Annotation> {
             member,
         }) => {
             // This branch is for tuple support.
-            let base_expression = graft_expr(base);
+            let base_expression = graft_expr(base, list_type);
             let base_ident = match base_expression {
                 ast::Expr::Var(ident) => ident,
                 _ => {
@@ -488,11 +546,11 @@ pub(crate) fn graft_expr(rust_exp: &syn::Expr) -> ast::Expr<Annotation> {
 
             match &member {
                 // named field `foo.bar`
-                syn::Member::Named(field_name) => ast::Expr::Field(
-                    Box::new(ast::Expr::Var(base_ident)),
+                syn::Member::Named(field_name) => ast::Expr::Var(ast::Identifier::Field(
+                    Box::new(base_ident),
                     field_name.to_string(),
                     Default::default(),
-                ),
+                )),
                 // unnamed field `tuple.2`
                 syn::Member::Unnamed(tuple_index) => ast::Expr::Var(ast::Identifier::TupleIndex(
                     Box::new(base_ident),
@@ -501,8 +559,8 @@ pub(crate) fn graft_expr(rust_exp: &syn::Expr) -> ast::Expr<Annotation> {
             }
         }
         syn::Expr::Index(index_expr) => {
-            let expr = graft_expr(&index_expr.expr);
-            let index = graft_expr(&index_expr.index);
+            let expr = graft_expr(&index_expr.expr, list_type);
+            let index = graft_expr(&index_expr.index, list_type);
 
             if let ast::Expr::Var(identifier) = expr {
                 ast::Expr::Var(ast::Identifier::ListIndex(
@@ -520,12 +578,12 @@ pub(crate) fn graft_expr(rust_exp: &syn::Expr) -> ast::Expr<Annotation> {
             ty,
         }) => {
             let unboxed_ty: syn::Type = *(*ty).to_owned();
-            let as_type = rust_type_to_data_type(&unboxed_ty);
-            let ast_expr = graft_expr(&(*expr).to_owned());
+            let as_type = rust_type_to_data_type(&unboxed_ty, list_type);
+            let ast_expr = graft_expr(expr, list_type);
             ast::Expr::Cast(Box::new(ast_expr), as_type)
         }
         syn::Expr::Unary(syn::ExprUnary { attrs: _, op, expr }) => {
-            let inner_expr = graft_expr(&(*expr).to_owned());
+            let inner_expr = graft_expr(expr, list_type);
             let ast_op = match op {
                 syn::UnOp::Not(_) => ast::UnaryOp::Not,
                 syn::UnOp::Neg(_) => ast::UnaryOp::Neg,
@@ -542,7 +600,7 @@ pub(crate) fn graft_expr(rust_exp: &syn::Expr) -> ast::Expr<Annotation> {
         }) => {
             // This solution amounts to ignoring the `&` operator
             // Maybe long-term we want to do something different?
-            graft_expr(expr)
+            graft_expr(expr, list_type)
         }
         other => panic!("unsupported: {other:?}"),
     }
@@ -623,13 +681,16 @@ fn graft_eq_binop(rust_eq_binop: &syn::BinOp) -> ast::BinOp {
     }
 }
 
-pub fn graft_stmt(rust_stmt: &syn::Stmt) -> ast::Stmt<Annotation> {
+pub fn graft_stmt(rust_stmt: &syn::Stmt, list_type: ast_types::ListType) -> ast::Stmt<Annotation> {
     /// Handle declarations
-    fn graft_local_stmt(local: &syn::Local) -> ast::Stmt<Annotation> {
+    fn graft_local_stmt(
+        local: &syn::Local,
+        list_type: ast_types::ListType,
+    ) -> ast::Stmt<Annotation> {
         let (ident, data_type, mutable): (String, ast_types::DataType, bool) = match &local.pat {
             syn::Pat::Type(pat_type) => {
                 let (dt, mutable): (ast_types::DataType, bool) =
-                    pat_type_to_data_type_and_mutability(pat_type);
+                    pat_type_to_data_type_and_mutability(pat_type, list_type);
                 let ident: String = pat_to_name(&pat_type.pat);
 
                 (ident, dt, mutable)
@@ -644,7 +705,7 @@ pub fn graft_stmt(rust_stmt: &syn::Stmt) -> ast::Stmt<Annotation> {
 
         let init = local.init.as_ref().unwrap();
         let init_expr = init.1.as_ref();
-        let ast_expt = graft_expr(init_expr);
+        let ast_expt = graft_expr(init_expr, list_type);
         let let_stmt = ast::LetStmt {
             var_name: ident,
             data_type,
@@ -655,13 +716,13 @@ pub fn graft_stmt(rust_stmt: &syn::Stmt) -> ast::Stmt<Annotation> {
     }
 
     /// Handle expressions
-    fn graft_expr_stmt(expr: &syn::Expr) -> ast::Stmt<Annotation> {
+    fn graft_expr_stmt(expr: &syn::Expr, list_type: ast_types::ListType) -> ast::Stmt<Annotation> {
         match expr {
             syn::Expr::While(while_stmt) => {
                 let expr_while = while_stmt;
-                let while_condition = graft_expr(&expr_while.cond);
+                let while_condition = graft_expr(&expr_while.cond, ast_types::ListType::Unsafe);
                 let while_stmts: Vec<ast::Stmt<Annotation>> =
-                    while_stmt.body.stmts.iter().map(graft_stmt).collect_vec();
+                    while_stmt.body.stmts.iter().map(|x| graft_stmt(x, list_type)).collect_vec();
 
                 let while_stmt = ast::WhileStmt {
                     condition: while_condition,
@@ -670,17 +731,17 @@ pub fn graft_stmt(rust_stmt: &syn::Stmt) -> ast::Stmt<Annotation> {
                 ast::Stmt::While(while_stmt)
             }
             syn::Expr::If(if_expr) => {
-                let if_condition = graft_expr(&if_expr.cond);
+                let if_condition = graft_expr(&if_expr.cond, ast_types::ListType::Unsafe);
                 let then_stmts: Vec<ast::Stmt<Annotation>> = if_expr
                     .then_branch
                     .stmts
                     .iter()
-                    .map(graft_stmt)
+                    .map(|x| graft_stmt(x, list_type))
                     .collect_vec();
                 let else_stmts: Vec<ast::Stmt<Annotation>> = match if_expr.else_branch.as_ref() {
                     Some(else_stmts) => match else_stmts.1.as_ref() {
                         syn::Expr::Block(block) => {
-                            block.block.stmts.iter().map(graft_stmt).collect()
+                            block.block.stmts.iter().map(|x| graft_stmt(x, list_type)).collect()
                         }
                         other => panic!("unsupported: {other:?}"),
                     },
@@ -698,7 +759,7 @@ pub fn graft_stmt(rust_stmt: &syn::Stmt) -> ast::Stmt<Annotation> {
                 let stmts: Vec<ast::Stmt<Annotation>> = block
                     .stmts
                     .iter()
-                    .map(graft_stmt)
+                    .map(|x| graft_stmt(x, list_type))
                     .collect_vec();
                 ast::Stmt::Block(ast::BlockStmt { stmts })
             },
@@ -707,15 +768,18 @@ pub fn graft_stmt(rust_stmt: &syn::Stmt) -> ast::Stmt<Annotation> {
     }
 
     /// Handle things that end with a semi-colon
-    fn graft_semi_stmt(semi: &syn::Expr) -> ast::Stmt<Annotation> {
+    fn graft_semi_stmt(semi: &syn::Expr, list_type: ast_types::ListType) -> ast::Stmt<Annotation> {
         match semi {
             syn::Expr::Return(ret_expr) => {
-                let optional_ret_expr = ret_expr.expr.as_ref().map(|ret_expr| graft_expr(ret_expr));
+                let optional_ret_expr = ret_expr
+                    .expr
+                    .as_ref()
+                    .map(|ret_expr| graft_expr(ret_expr, list_type));
                 ast::Stmt::Return(optional_ret_expr)
             }
             syn::Expr::Call(call_exp) => {
                 // Handle a function call that's not an assignment or a return expression
-                let ast_fn_call = graft_call_exp(call_exp);
+                let ast_fn_call = graft_call_exp(call_exp, ast_types::ListType::Unsafe);
 
                 match ast_fn_call {
                     ast::Expr::FnCall(fncall) => ast::Stmt::FnCall(fncall),
@@ -729,14 +793,14 @@ pub fn graft_stmt(rust_stmt: &syn::Stmt) -> ast::Stmt<Annotation> {
                 right,
             }) => {
                 // let identifier_expr = assign.left.as_ref();
-                let left_expr = graft_expr(left);
+                let left_expr = graft_expr(left, ast_types::ListType::Unsafe);
                 let left_ident = match left_expr {
                     ast::Expr::Var(ident) => ident,
                     _ => {
                         panic!("Left-hand-side of tuple operator must be a declared variable. Declare more bindings if needed. Failed to parse expression: {left_expr} as an identifier");
                     }
                 };
-                let right_expr = graft_expr(right);
+                let right_expr = graft_expr(right, ast_types::ListType::Unsafe);
                 let assign_stmt = ast::AssignStmt {
                     identifier: left_ident,
                     expr: right_expr,
@@ -751,8 +815,8 @@ pub fn graft_stmt(rust_stmt: &syn::Stmt) -> ast::Stmt<Annotation> {
                 right,
             }) => {
                 let identifier_expr = left.as_ref();
-                let identifier = expr_as_identifier(identifier_expr);
-                let assign_expr = graft_binop_eq_expr(left, op, right);
+                let identifier = expr_as_identifier(identifier_expr, ast_types::ListType::Unsafe);
+                let assign_expr = graft_binop_eq_expr(left, op, right, ast_types::ListType::Unsafe);
                 let assign_stmt = ast::AssignStmt {
                     identifier,
                     expr: assign_expr,
@@ -761,7 +825,7 @@ pub fn graft_stmt(rust_stmt: &syn::Stmt) -> ast::Stmt<Annotation> {
                 ast::Stmt::Assign(assign_stmt)
             }
             syn::Expr::MethodCall(method_call_expr) => {
-                let grafted = graft_method_call(method_call_expr);
+                let grafted = graft_method_call(method_call_expr, ast_types::ListType::Unsafe);
                 match grafted {
                     ast::Expr::MethodCall(mc) => ast::Stmt::MethodCall(mc),
                     _ => panic!("Statement method call must graft to method call"),
@@ -780,7 +844,7 @@ pub fn graft_stmt(rust_stmt: &syn::Stmt) -> ast::Stmt<Annotation> {
                 // `assert( expr, "description" )` has.
                 let tokens = &expr_macro.mac.tokens;
                 let tokens_as_expr_syn: syn::Expr = parse_quote! { #tokens };
-                let tokens_as_expr = graft_expr(&tokens_as_expr_syn);
+                let tokens_as_expr = graft_expr(&tokens_as_expr_syn, ast_types::ListType::Unsafe);
                 ast::Stmt::Assert(ast::AssertStmt {
                     expression: tokens_as_expr,
                 })
@@ -789,22 +853,24 @@ pub fn graft_stmt(rust_stmt: &syn::Stmt) -> ast::Stmt<Annotation> {
         }
     }
 
-    fn graft_item_stmt(item: &syn::Item) -> ast::Stmt<Annotation> {
+    fn graft_item_stmt(item: &syn::Item, _list_type: ast_types::ListType) -> ast::Stmt<Annotation> {
         match item {
-            syn::Item::Fn(item_fn) => ast::Stmt::FnDeclaration(graft_fn_decl(item_fn)),
+            syn::Item::Fn(item_fn) => {
+                ast::Stmt::FnDeclaration(graft_fn_decl(item_fn, ast_types::ListType::Unsafe))
+            }
             other => panic!("unsupported: {other:#?}"),
         }
     }
 
     match rust_stmt {
         // variable declarations
-        syn::Stmt::Local(local) => graft_local_stmt(local),
+        syn::Stmt::Local(local) => graft_local_stmt(local, ast_types::ListType::Unsafe),
         // Expressions
-        syn::Stmt::Expr(expr) => graft_expr_stmt(expr),
+        syn::Stmt::Expr(expr) => graft_expr_stmt(expr, list_type),
         // Things that end with a semi-colon
-        syn::Stmt::Semi(semi, _b) => graft_semi_stmt(semi),
+        syn::Stmt::Semi(semi, _b) => graft_semi_stmt(semi, list_type),
         // Handle locally declared functions
-        syn::Stmt::Item(item) => graft_item_stmt(item),
+        syn::Stmt::Item(item) => graft_item_stmt(item, list_type),
     }
 }
 
@@ -858,7 +924,7 @@ mod tests {
 
         match &tokens {
             syn::Item::Fn(item_fn) => {
-                let _ret = graft_fn_decl(item_fn);
+                let _ret = graft_fn_decl(item_fn, ast_types::ListType::Unsafe);
             }
             _ => panic!("unsupported"),
         }
@@ -880,7 +946,7 @@ mod tests {
 
         match &tokens {
             syn::Item::Fn(item_fn) => {
-                let _ret = graft_fn_decl(item_fn);
+                let _ret = graft_fn_decl(item_fn, ast_types::ListType::Unsafe);
             }
             _ => panic!("unsupported"),
         }
@@ -915,7 +981,7 @@ mod tests {
 
         match &tokens {
             syn::Item::Fn(item_fn) => {
-                let _ret = graft_fn_decl(item_fn);
+                let _ret = graft_fn_decl(item_fn, ast_types::ListType::Unsafe);
             }
             _ => panic!("unsupported"),
         }
@@ -942,7 +1008,7 @@ mod tests {
 
         match &tokens {
             syn::Item::Fn(item_fn) => {
-                let _ret = graft_fn_decl(item_fn);
+                let _ret = graft_fn_decl(item_fn, ast_types::ListType::Unsafe);
             }
             _ => panic!("unsupported"),
         }
@@ -962,7 +1028,7 @@ mod tests {
 
         match &tokens {
             syn::Item::Fn(item_fn) => {
-                let _ret = graft_fn_decl(item_fn);
+                let _ret = graft_fn_decl(item_fn, ast_types::ListType::Unsafe);
             }
             _ => panic!("unsupported"),
         }
@@ -978,7 +1044,7 @@ mod tests {
 
         match &tokens {
             syn::Item::Fn(item_fn) => {
-                let _ret = graft_fn_decl(item_fn);
+                let _ret = graft_fn_decl(item_fn, ast_types::ListType::Unsafe);
             }
             _ => panic!("unsupported"),
         }
@@ -995,7 +1061,7 @@ mod tests {
 
         match &tokens {
             syn::Item::Fn(item_fn) => {
-                let _ret = graft_fn_decl(item_fn);
+                let _ret = graft_fn_decl(item_fn, ast_types::ListType::Unsafe);
             }
             _ => panic!("unsupported"),
         }
@@ -1015,7 +1081,7 @@ mod tests {
 
         match &tokens {
             syn::Item::Fn(item_fn) => {
-                let _ret = graft_fn_decl(item_fn);
+                let _ret = graft_fn_decl(item_fn, ast_types::ListType::Unsafe);
             }
             _ => panic!("unsupported"),
         }
@@ -1039,7 +1105,7 @@ mod tests {
 
         match &tokens {
             syn::Item::Fn(item_fn) => {
-                let _ret = graft_fn_decl(item_fn);
+                let _ret = graft_fn_decl(item_fn, ast_types::ListType::Unsafe);
             }
             _ => panic!("unsupported"),
         }
@@ -1068,7 +1134,7 @@ mod tests {
 
         match &tokens {
             syn::Item::Fn(item_fn) => {
-                let _ret = graft_fn_decl(item_fn);
+                let _ret = graft_fn_decl(item_fn, ast_types::ListType::Unsafe);
             }
             _ => panic!("unsupported"),
         }
@@ -1091,7 +1157,7 @@ mod tests {
 
         match &tokens {
             syn::Item::Fn(item_fn) => {
-                let _ret = graft_fn_decl(item_fn);
+                let _ret = graft_fn_decl(item_fn, ast_types::ListType::Unsafe);
             }
             _ => panic!("unsupported"),
         }
@@ -1109,7 +1175,7 @@ mod tests {
 
         match &tokens {
             syn::Item::Fn(item_fn) => {
-                let _ret = graft_fn_decl(item_fn);
+                let _ret = graft_fn_decl(item_fn, ast_types::ListType::Unsafe);
             }
             _ => panic!("unsupported"),
         }
@@ -1125,7 +1191,7 @@ mod tests {
 
         match &tokens {
             syn::Item::Fn(item_fn) => {
-                let _ret = graft_fn_decl(item_fn);
+                let _ret = graft_fn_decl(item_fn, ast_types::ListType::Unsafe);
             }
             _ => panic!("unsupported"),
         }
@@ -1142,7 +1208,7 @@ mod tests {
 
         match &tokens {
             syn::Item::Fn(item_fn) => {
-                let _ret = graft_fn_decl(item_fn);
+                let _ret = graft_fn_decl(item_fn, ast_types::ListType::Unsafe);
             }
             _ => panic!("unsupported"),
         }
@@ -1157,7 +1223,7 @@ mod tests {
         };
         match &tokens {
             syn::Item::Fn(item_fn) => {
-                let _ret = graft_fn_decl(item_fn);
+                let _ret = graft_fn_decl(item_fn, ast_types::ListType::Unsafe);
             }
             _ => panic!("unsupported"),
         }

@@ -3,6 +3,7 @@ use std::fs;
 use triton_vm::instruction::LabelledInstruction;
 
 use crate::{
+    ast_types::ListType,
     graft::{graft_fn_decl, graft_structs},
     tasm_code_generator::compile_function,
     type_checker::annotate_fn,
@@ -45,8 +46,8 @@ pub(crate) fn compile_for_test(module_name: &str) -> Vec<LabelledInstruction> {
     let (parsed_main, parsed_structs, _) = parse_main_and_structs(module_name);
 
     // parse test
-    let mut function = graft_fn_decl(&parsed_main);
-    let structs = graft_structs(parsed_structs);
+    let mut function = graft_fn_decl(&parsed_main, ListType::Safe);
+    let structs = graft_structs(parsed_structs, ListType::Unsafe);
 
     // type-check and annotate
     annotate_fn(&mut function, structs);

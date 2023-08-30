@@ -149,7 +149,6 @@ pub enum Expr<T> {
     Unary(UnaryOp, Box<Expr<T>>, T),
     If(ExprIf<T>),
     Cast(Box<Expr<T>>, DataType),
-    Field(Box<Expr<T>>, String, T),
     // Index(Box<Expr<T>>, Box<Expr<T>>), // a_expr[i_expr]    (a + 5)[3]
     // TODO: VM-specific intrinsics (hash, absorb, squeeze, etc.)
 }
@@ -168,7 +167,6 @@ impl<T> Display for Expr<T> {
             Expr::If(_) => "if_else".to_owned(),
             Expr::Cast(_, dt) => format!("cast_{dt}"),
             Expr::Unary(unaryop, _, _) => format!("unaryop_{unaryop:?}"),
-            Expr::Field(expr, field, _) => format!("field expression:{expr}.{field}"),
         };
 
         write!(f, "{str}")
@@ -189,6 +187,7 @@ pub enum Identifier<T> {
     String(String, T),                           // x
     TupleIndex(Box<Identifier<T>>, usize),       // x.0
     ListIndex(Box<Identifier<T>>, Box<Expr<T>>), // x[0]
+    Field(Box<Identifier<T>>, String, T),
 }
 
 impl<T> Identifier<T> {
@@ -197,6 +196,22 @@ impl<T> Identifier<T> {
             Identifier::String(name, _) => name.to_owned(),
             Identifier::TupleIndex(inner_id, _) => inner_id.binding_name(),
             Identifier::ListIndex(inner_id, _) => inner_id.binding_name(),
+            Identifier::Field(inner_id, _, _) => inner_id.binding_name(),
+        }
+    }
+
+    pub fn label_friendly_name(&self) -> String {
+        match self {
+            Identifier::String(name, _) => name.to_string(),
+            Identifier::ListIndex(inner_id, l_index_expr) => {
+                format!("{}_{l_index_expr}", inner_id.label_friendly_name(),)
+            }
+            Identifier::TupleIndex(inner_id, t_index) => {
+                format!("{}___{t_index}", inner_id.label_friendly_name())
+            }
+            Identifier::Field(inner_id, field_name, _) => {
+                format!("{}___{field_name}", inner_id.label_friendly_name())
+            }
         }
     }
 }
@@ -208,8 +223,10 @@ impl<T: core::fmt::Debug> Display for Identifier<T> {
             "{}",
             match self {
                 Identifier::String(name, _) => name.to_string(),
-                Identifier::TupleIndex(ident, t_index) => format!("{ident}.{t_index}"),
-                Identifier::ListIndex(ident, l_index_expr) => format!("{ident}[{l_index_expr:?}]"),
+                Identifier::TupleIndex(inner_id, t_index) => format!("{inner_id}.{t_index}"),
+                Identifier::ListIndex(inner_id, l_index_expr) =>
+                    format!("{inner_id}[{l_index_expr}]"),
+                Identifier::Field(inner_id, field_name, _) => format!("{inner_id}[{field_name}]"),
             }
         )
     }

@@ -98,6 +98,7 @@ impl Library for XfeLibrary {
         &self,
         fn_name: &str,
         args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
+        list_type: ast_types::ListType,
     ) -> Option<ast::Expr<super::Annotation>> {
         if fn_name != "new" {
             return None;
@@ -125,14 +126,17 @@ impl Library for XfeLibrary {
                             let (name, _type_parameter) = match func.as_ref() {
                                 syn::Expr::Path(path) => (
                                     graft::path_to_ident(&path.path),
-                                    graft::path_to_type_parameter(&path.path),
+                                    graft::path_to_type_parameter(&path.path, list_type),
                                 ),
                                 other => panic!("unsupported: {other:?}"),
                             };
 
                             if let Some(bfe_fn_name) = BfeLibrary.get_graft_function_name(&name) {
-                                initializer_exprs
-                                    .push(BfeLibrary.graft_function(&bfe_fn_name, args).unwrap());
+                                initializer_exprs.push(
+                                    BfeLibrary
+                                        .graft_function(&bfe_fn_name, args, list_type)
+                                        .unwrap(),
+                                );
                             } else {
                                 panic!();
                             }
@@ -166,6 +170,7 @@ impl Library for XfeLibrary {
     fn graft_method(
         &self,
         rust_method_call: &syn::ExprMethodCall,
+        list_type: ast_types::ListType,
     ) -> Option<ast::Expr<super::Annotation>> {
         // Handle `unlift().unwrap()`. Ignore everything else.
         const UNWRAP_NAME: &str = "unwrap";
@@ -179,7 +184,7 @@ impl Library for XfeLibrary {
 
         match rust_method_call.receiver.as_ref() {
             syn::Expr::MethodCall(rust_inner_method_call) => {
-                let inner_method_call = graft::graft_method_call(rust_inner_method_call);
+                let inner_method_call = graft::graft_method_call(rust_inner_method_call, list_type);
                 let inner_method_call = match inner_method_call {
                     ast::Expr::MethodCall(mc) => mc,
                     _ => return None,
@@ -199,7 +204,7 @@ impl Library for XfeLibrary {
                     &mut rust_inner_method_call
                         .args
                         .iter()
-                        .map(graft_expr)
+                        .map(|x| graft_expr(x, list_type))
                         .collect_vec(),
                 );
                 let annot = Default::default();

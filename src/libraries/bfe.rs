@@ -125,11 +125,13 @@ impl Library for BfeLibrary {
         &self,
         full_name: &str,
         args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
+        list_type: ast_types::ListType,
     ) -> Option<ast::Expr<super::Annotation>> {
         fn handle_bfe_new(
             args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
+            list_type: ast_types::ListType,
         ) -> ast::Expr<super::Annotation> {
-            let args = args.iter().map(graft_expr).collect_vec();
+            let args = args.iter().map(|x| graft_expr(x, list_type)).collect_vec();
 
             if args.len() != 1 {
                 panic!("BFE must be initialized with only one argument. Got: {args:#?}");
@@ -182,7 +184,7 @@ impl Library for BfeLibrary {
         }
 
         if full_name == FUNCTION_NAME_NEW_BFE {
-            return Some(handle_bfe_new(args));
+            return Some(handle_bfe_new(args, list_type));
         }
 
         None
@@ -191,6 +193,7 @@ impl Library for BfeLibrary {
     fn graft_method(
         &self,
         _rust_method_call: &syn::ExprMethodCall,
+        _list_type: ast_types::ListType,
     ) -> Option<ast::Expr<super::Annotation>> {
         None
     }

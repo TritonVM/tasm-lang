@@ -503,7 +503,10 @@ mod run_tests {
     };
 
     use super::*;
-    use crate::{ast_types::DataType, tests_and_benchmarks::test_helpers::shared_test::*};
+    use crate::{
+        ast_types::{DataType, ListType},
+        tests_and_benchmarks::test_helpers::shared_test::*,
+    };
 
     #[test]
     fn spill_u64_values_to_memory_test() {
@@ -782,7 +785,7 @@ mod run_tests {
             &ensure_dyn_malloc_and_static_malloc_do_not_interfere_1_rast(),
             vec![],
             &mut vm_memory,
-            DataType::List(Box::new(DataType::U64)).stack_size() as isize,
+            DataType::List(Box::new(DataType::U64), ListType::Safe).stack_size() as isize,
         )
         .unwrap();
 
@@ -799,7 +802,7 @@ mod run_tests {
             &ensure_dyn_malloc_and_static_malloc_do_not_interfere_2_rast(),
             vec![],
             &mut vm_memory,
-            DataType::List(Box::new(DataType::U64)).stack_size() as isize,
+            DataType::List(Box::new(DataType::U64), ListType::Safe).stack_size() as isize,
         )
         .unwrap();
 
@@ -815,7 +818,7 @@ mod run_tests {
             &ensure_dyn_malloc_and_static_malloc_do_not_interfere_3_rast(),
             vec![],
             &mut vm_memory,
-            DataType::List(Box::new(DataType::U64)).stack_size() as isize,
+            DataType::List(Box::new(DataType::U64), ListType::Safe).stack_size() as isize,
         )
         .unwrap();
 
@@ -833,7 +836,7 @@ mod run_tests {
             &ensure_dyn_malloc_and_static_malloc_do_not_interfere_4_rast(),
             vec![],
             &mut vm_memory,
-            DataType::List(Box::new(DataType::U64)).stack_size() as isize + 2,
+            DataType::List(Box::new(DataType::U64), ListType::Safe).stack_size() as isize + 2,
         )
         .unwrap();
 

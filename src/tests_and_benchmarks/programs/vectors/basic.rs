@@ -148,7 +148,7 @@ mod compile_and_typecheck_tests {
         use rand::random;
         use triton_vm::{Digest, NonDeterminism};
 
-        use crate::ast_types::{self, DataType};
+        use crate::ast_types::{self, DataType, ListType};
 
         use super::*;
 
@@ -277,7 +277,7 @@ mod compile_and_typecheck_tests {
                 &mut vm_memory,
                 vec![],
                 NonDeterminism::new(vec![]),
-                DataType::List(Box::new(DataType::U32)).stack_size() as isize,
+                DataType::List(Box::new(DataType::U32), ListType::Safe).stack_size() as isize,
             )
             .unwrap();
             let mut list_pointer = exec_result.final_stack.last().unwrap();
@@ -291,7 +291,7 @@ mod compile_and_typecheck_tests {
                 &mut vm_memory,
                 vec![],
                 NonDeterminism::new(vec![]),
-                DataType::List(Box::new(DataType::U64)).stack_size() as isize,
+                DataType::List(Box::new(DataType::U64), ListType::Safe).stack_size() as isize,
             )
             .unwrap();
             list_pointer = exec_result.final_stack.last().unwrap();

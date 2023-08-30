@@ -94,7 +94,7 @@ impl Library for VectorLib {
         state: &mut CompilerState,
     ) -> Vec<triton_vm::instruction::LabelledInstruction> {
         let type_param: ast_types::DataType =
-            if let ast_types::DataType::List(type_param) = receiver_type {
+            if let ast_types::DataType::List(type_param, _list_type) = receiver_type {
                 *type_param.to_owned()
             } else {
                 panic!(
@@ -133,6 +133,7 @@ impl Library for VectorLib {
         &self,
         _fn_name: &str,
         _args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
+        _list_type: ast_types::ListType,
     ) -> Option<ast::Expr<super::Annotation>> {
         todo!()
     }
@@ -140,6 +141,7 @@ impl Library for VectorLib {
     fn graft_method(
         &self,
         rust_method_call: &syn::ExprMethodCall,
+        list_type: ast_types::ListType,
     ) -> Option<ast::Expr<super::Annotation>> {
         const POP_NAME: &str = "pop";
         const COLLECT_VEC_NAME: &str = "collect_vec";
@@ -153,7 +155,8 @@ impl Library for VectorLib {
             UNWRAP_NAME => {
                 match rust_method_call.receiver.as_ref() {
                     syn::Expr::MethodCall(rust_inner_method_call) => {
-                        let inner_method_call = graft::graft_method_call(rust_inner_method_call);
+                        let inner_method_call =
+                            graft::graft_method_call(rust_inner_method_call, list_type);
                         let inner_method_call = match inner_method_call {
                             ast::Expr::MethodCall(mc) => mc,
                             _ => return None,
@@ -173,7 +176,7 @@ impl Library for VectorLib {
                             &mut rust_inner_method_call
                                 .args
                                 .iter()
-                                .map(graft_expr)
+                                .map(|x| graft_expr(x, list_type))
                                 .collect_vec(),
                         );
                         let annot = Default::default();
@@ -190,7 +193,8 @@ impl Library for VectorLib {
             COLLECT_VEC_NAME => {
                 match rust_method_call.receiver.as_ref() {
                     syn::Expr::MethodCall(rust_inner_method_call) => {
-                        let inner_method_call = graft::graft_method_call(rust_inner_method_call);
+                        let inner_method_call =
+                            graft::graft_method_call(rust_inner_method_call, list_type);
                         let inner_method_call = match inner_method_call {
                             ast::Expr::MethodCall(mc) => mc,
                             _ => return None,
@@ -207,8 +211,10 @@ impl Library for VectorLib {
                                     panic!("Only allowed syntax with `map` is `x.into_iter().map(<function_name>).collect_vec()")
                                 }
 
-                                let inner_inner_method_call =
-                                    graft::graft_method_call(rust_inner_inner_method_call);
+                                let inner_inner_method_call = graft::graft_method_call(
+                                    rust_inner_inner_method_call,
+                                    list_type,
+                                );
                                 let inner_inner_method_call = match inner_inner_method_call {
                                     ast::Expr::MethodCall(mc) => mc,
                                     _ => return None,
@@ -228,7 +234,7 @@ impl Library for VectorLib {
                             &mut rust_inner_method_call
                                 .args
                                 .iter()
-                                .map(graft_expr)
+                                .map(|x| graft_expr(x, list_type))
                                 .collect_vec(),
                         );
                         let annot: Annotation = Default::default();

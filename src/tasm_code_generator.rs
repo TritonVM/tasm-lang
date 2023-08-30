@@ -3,6 +3,7 @@ pub mod subroutine;
 use itertools::{Either, Itertools};
 use num::{One, Zero};
 use std::collections::{HashMap, HashSet};
+use std::fmt::Display;
 use tasm_lib::library::Library as SnippetState;
 use tasm_lib::memory::dyn_malloc::DynMalloc;
 use tasm_lib::snippet::BasicSnippet;
@@ -155,10 +156,22 @@ impl OuterFunctionTasmCode {
     }
 }
 
+#[derive(Clone, Debug)]
 pub enum ValueLocation {
     OpStack(usize),
     StaticMemoryAddress(u32),
     DynamicMemoryAddress(Vec<LabelledInstruction>),
+}
+
+impl Display for ValueLocation {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let as_string = match self {
+            ValueLocation::OpStack(n) => format!("opstack{n}"),
+            ValueLocation::StaticMemoryAddress(p) => format!("mempointer({p})"),
+            ValueLocation::DynamicMemoryAddress(code) => code.iter().join("\n"),
+        };
+        write!(f, "{as_string}")
+    }
 }
 
 impl ValueLocation {
@@ -269,6 +282,43 @@ impl CompilerState {
         &mut self,
         identifier: &ast::Identifier<type_checker::Typing>,
     ) -> (ValueLocation, ast_types::DataType) {
+        fn get_lhs_address_code(
+            state: &mut CompilerState,
+            lhs_location: &ValueLocation,
+            field_or_element_type: &ast_types::DataType,
+            identifier: &ast::Identifier<type_checker::Typing>,
+        ) -> Vec<LabelledInstruction> {
+            match lhs_location {
+                ValueLocation::OpStack(depth) => {
+                    if !lhs_location.is_accessible(field_or_element_type) {
+                        let binding_name = identifier.binding_name();
+                        let value_ident_of_binding = state
+                            .function_state
+                            .var_addr
+                            .get(&binding_name)
+                            .unwrap_or_else(|| {
+                                panic!(
+                                    "Could not locate value identifier for binding {binding_name}"
+                                )
+                            })
+                            .to_owned();
+                        state.mark_as_spilled(&value_ident_of_binding);
+                        triton_asm!(push 0 assert)
+                    } else {
+                        // Type of `l` in `l[<expr>]` is known to be list. So we know stack size = 1
+                        triton_asm!(dup { depth })
+                    }
+                }
+                ValueLocation::StaticMemoryAddress(pointer) => {
+                    // Type of `l` in `l[<expr>]` is known to be list. So we know stack size = 1
+                    // Read the list pointer from memory, then clear the stack, leaving only
+                    // the list pointer on the stack.
+                    triton_asm!(push {pointer} read_mem swap 1 pop)
+                }
+                ValueLocation::DynamicMemoryAddress(code) => code.to_owned(),
+            }
+        }
+
         match identifier {
             ast::Identifier::String(_, _) => {
                 let var_name = identifier.binding_name();
@@ -320,38 +370,16 @@ impl CompilerState {
             }
             ast::Identifier::ListIndex(ident, index_expr) => {
                 let (lhs_location, lhs_type) = self.locate_identifier(ident);
-                let element_type = if let ast_types::DataType::List(element) = &lhs_type {
-                    element
-                } else {
-                    panic!("Expected type was list. Got {lhs_type}.")
-                };
+                println!("list_index, lhs_location:\n{lhs_location}\n");
+                let (element_type, list_type) =
+                    if let ast_types::DataType::List(element, list_type) = &lhs_type {
+                        (element, list_type)
+                    } else {
+                        panic!("Expected type was list. Got {lhs_type}.")
+                    };
 
-                let ident_addr_code = match lhs_location {
-                    ValueLocation::OpStack(depth) => {
-                        if !lhs_location.is_accessible(element_type) {
-                            let binding_name = ident.binding_name();
-                            let value_ident_of_binding =
-                                self
-                                .function_state
-                                .var_addr
-                                .get(&binding_name)
-                                .unwrap_or_else(|| panic!("Could not locate value identifier for binding {binding_name}"))
-                                .to_owned();
-                            self.mark_as_spilled(&value_ident_of_binding);
-                            triton_asm!(push 0 assert)
-                        } else {
-                            // Type of `l` in `l[<expr>]` is known to be list. So we know stack size = 1
-                            triton_asm!(dup { depth })
-                        }
-                    }
-                    ValueLocation::StaticMemoryAddress(pointer) => {
-                        // Type of `l` in `l[<expr>]` is known to be list. So we know stack size = 1
-                        // Read the list pointer from memory, then clear the stack, leaving only
-                        // the list pointer on the stack.
-                        triton_asm!(push {pointer} read_mem swap 1 pop)
-                    }
-                    ValueLocation::DynamicMemoryAddress(code) => code,
-                };
+                let ident_addr_code =
+                    get_lhs_address_code(self, &lhs_location, element_type, ident);
                 // stack: _ *list
 
                 self.new_value_identifier("list_expression", &lhs_type);
@@ -359,25 +387,115 @@ impl CompilerState {
                     compile_expr(index_expr, "index_on_assign", &index_expr.get_type(), self);
                 // stack: _ *list index
 
-                let relative_address = triton_asm!(
-                    {&index_code}
-                    push {element_type.stack_size()}
-                    mul
-                    push 2 // assumes safe lists TODO: FIX!
-                    add
-                );
-                let absolute_address = triton_asm!(
-                    {&ident_addr_code}
-                    {&relative_address}
-                    add
-                );
+                let list_metadata_size = list_type.metadata_size();
+                let element_address = match element_type.bfield_codec_length() {
+                    Some(static_element_size) => {
+                        let relative_address = triton_asm!(
+                            {&index_code}
+                            push {static_element_size}
+                            mul
+                            push {list_metadata_size}
+                            add
+                        );
+                        triton_asm!(
+                            {&ident_addr_code}
+                            {&relative_address}
+                            add
+                        )
+                    }
+                    // We need a while loop here, and we need a unique identifier for that
+                    None => {
+                        // Using the Display of `ident` should ensure that we don't get
+                        // more than *one* `loop_subroutine`. Notice that `ident` is
+                        // that which is before this index we are currently processing.
+                        let loop_label = format!("{}_element_finder", ident.label_friendly_name());
+
+                        // TODO: Can this subroutine be reused?
+                        let loop_subroutine = triton_asm!(
+                            {&loop_label}:
+                                // _ *vec<T>[n]_size index
+                                dup 0
+                                push 0
+                                eq
+                                skiz
+                                    return
+                                // _ *vec<T>[n]_size index
+
+                                swap 1
+                                read_mem
+                                // _ index *vec<T>[n]_size vec<T>[n]_size
+
+                                push 1 add add
+                                // _ index *vec<T>[n+1]_size
+
+                                swap 1
+                                // _ *vec<T>[n+1]_size index
+
+                                push -1
+                                add
+                                recurse
+
+                        );
+                        let loop_subroutine: SubRoutine = loop_subroutine.try_into().unwrap();
+
+                        self.add_library_function(loop_subroutine);
+
+                        triton_asm!(
+                            {&ident_addr_code}
+                            push {list_metadata_size}
+                            add
+                            {&index_code}
+                            call {loop_label}
+                            // _ *vec<T>[index]_size 0
+
+                            pop
+                            push 1 add
+                            // _ *vec<T>[index]
+                        )
+                    }
+                };
+
                 self.function_state.vstack.pop();
                 self.function_state.vstack.pop();
 
                 // Compile index expression
                 (
-                    ValueLocation::DynamicMemoryAddress(absolute_address),
+                    ValueLocation::DynamicMemoryAddress(element_address),
                     *element_type.to_owned(),
+                )
+            }
+            ast::Identifier::Field(ident, field_name, known_type) => {
+                let (lhs_location, lhs_type) = self.locate_identifier(ident);
+                println!("field, lhs_location:\n{lhs_location}\n");
+
+                let get_struct_pointer =
+                    get_lhs_address_code(self, &lhs_location, &known_type.get_type(), ident);
+                // stack: _ struct_pointer
+
+                // limited field support for now
+                let get_field_pointer_from_struct_pointer = match lhs_type {
+                    ast_types::DataType::MemPointer(inner_type) => match *inner_type {
+                        ast_types::DataType::Struct(inner_struct) => {
+                            inner_struct.get_field_accessor_code(field_name)
+                        }
+                        _ => todo!(),
+                    },
+                    _ => todo!(),
+                };
+
+                // stack: _ field_pointer
+
+                println!(
+                    "get_field_pointer_from_struct_pointer:\n{}",
+                    get_field_pointer_from_struct_pointer.iter().join("\n")
+                );
+
+                (
+                    ValueLocation::DynamicMemoryAddress(triton_asm!(
+                        {&get_struct_pointer}
+                        {&get_field_pointer_from_struct_pointer}
+                    )),
+                    known_type.get_type(),
                 )
             }
         }
@@ -463,6 +581,21 @@ impl CompilerState {
         }
     }
 
+    /// Return a new, guaranteed unique label that can be used anywhere in the code
+    pub fn unique_label(
+        &mut self,
+        prefix: &str,
+        data_type: Option<&ast_types::DataType>,
+    ) -> String {
+        let name = match data_type {
+            Some(ty) => format!("_{}_{}_{}", prefix, ty, self.global_compiler_state.counter),
+            None => format!("_{}_{}", prefix, self.global_compiler_state.counter),
+        };
+        self.global_compiler_state.counter += 1;
+
+        name
+    }
+
     /// Get a new, guaranteed unique, identifier for a value. Returns an address to
     /// spill the value to, iff spilling of this value is required. A previous run
     /// of the compiler will have determined whether spilling is required.
@@ -471,10 +604,7 @@ impl CompilerState {
         prefix: &str,
         data_type: &ast_types::DataType,
     ) -> (ValueIdentifier, Option<u32>) {
-        let name = format!(
-            "_{}_{}_{}",
-            prefix, data_type, self.global_compiler_state.counter
-        );
+        let name = self.unique_label(prefix, Some(data_type));
         let address = ValueIdentifier { name };
 
         // Get a statically known memory address if value needs to be spilled to
@@ -495,7 +625,6 @@ impl CompilerState {
         self.function_state
             .vstack
             .push((address.clone(), (data_type.clone(), spilled)));
-        self.global_compiler_state.counter += 1;
 
         (address, spilled)
     }
@@ -868,7 +997,6 @@ fn compile_stmt(
             } else {
                 match location {
                     ValueLocation::OpStack(top_value_position) => {
-                        // triton_asm!([swap {top_value_position} pop])
                         let swap_pop_instructions = format!("swap {top_value_position} pop\n")
                             .repeat(ident_type.stack_size());
                         triton_asm!({ swap_pop_instructions })
@@ -1251,6 +1379,7 @@ fn compile_expr(
                 triton_asm!()
             } else {
                 let (location, ident_type) = state.locate_identifier(identifier);
+                println!("returned location:\n{location}\n\n");
                 if !location.is_accessible(&ident_type) {
                     // Compiler must run again. Mark binding as spilled and produce unusable code
                     let binding_name = identifier.binding_name();
@@ -2061,36 +2190,6 @@ fn compile_expr(
                 _ => todo!(),
             }
         }
-        ast::Expr::Field(expr, field_name, resulting_type) => {
-            // Here, `receiver_type` *must* be of type `Struct` or of type `mempoint(Struct)`,
-            // where the Struct is known. We should handle those cases separately.
-            let receiver_type = expr.get_type();
-            let (_expr_addr, expr_get_struct_pointer) =
-                compile_expr(expr, "field_access_receiver", &receiver_type, state);
-
-            // stack: _ struct_pointer
-            let get_field_pointer_from_struct_pointer = match receiver_type {
-                ast_types::DataType::MemPointer(inner_type) => match *inner_type {
-                    ast_types::DataType::Struct(inner_struct) => {
-                        inner_struct.get_field_accessor_code(field_name)
-                    }
-                    _ => todo!(),
-                },
-                _ => todo!(),
-            };
-
-            // stack: _ field_pointer
-
-            let dereference_from_memory = dereference(&resulting_type.get_type());
-            let (_, (_old_data_type, _spilled)) = state.function_state.vstack.pop().unwrap();
-
-            // stack _ [value]
-            triton_asm!(
-                {&expr_get_struct_pointer}
-                {&get_field_pointer_from_struct_pointer}
-                {&dereference_from_memory}
-            )
-        }
     };
 
     let (addr, spill) = state.new_value_identifier(&format!("{expr}_{result_type}"), &result_type);
@@ -2204,7 +2303,7 @@ fn copy_top_stack_value_to_memory(
 fn dereference(data_type: &ast_types::DataType) -> Vec<LabelledInstruction> {
     match data_type {
         // From the TASM perspective, a mempointer to a list is the same as a list
-        ast_types::DataType::List(_) => triton_asm!(),
+        ast_types::DataType::List(_, _) => triton_asm!(),
 
         // No idea how to handle these yet
         ast_types::DataType::MemPointer(_) => todo!(),
@@ -2298,7 +2397,7 @@ fn compile_eq_code(
             let eq_digest = state.import_snippet(Box::new(hashing::eq_digest::EqDigest));
             triton_asm!(call { eq_digest })
         }
-        List(_) => todo!(),
+        List(_, _) => todo!(),
         Tuple(_) => todo!(),
         Function(_) => todo!(),
         Struct(_) => todo!(),
