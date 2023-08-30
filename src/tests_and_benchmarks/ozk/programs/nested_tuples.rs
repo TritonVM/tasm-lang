@@ -4,7 +4,7 @@ use triton_vm::BFieldElement;
 use twenty_first::shared_math::x_field_element::XFieldElement;
 
 fn main() {
-    let a: (BFieldElement, (XFieldElement, XFieldElement)) = (
+    let mut a: (BFieldElement, (XFieldElement, XFieldElement)) = (
         BFieldElement::new(300u64),
         (
             XFieldElement::new([
@@ -26,6 +26,16 @@ fn main() {
     tasm::tasm_io_write_to_stdout_xfe(a.1 .0);
     tasm::tasm_io_write_to_stdout_bfe(a.0);
 
+    a.1 .0 = XFieldElement::new([
+        BFieldElement::new(0xffff_0000_0001_0002),
+        BFieldElement::new(0xffff_0000_0001_0003),
+        BFieldElement::new(0xffff_0000_0001_0004),
+    ]);
+    a.0 = BFieldElement::new(900);
+    tasm::tasm_io_write_to_stdout_bfe(a.0);
+    tasm::tasm_io_write_to_stdout_xfe(a.1 .0);
+    tasm::tasm_io_write_to_stdout_xfe(a.1 .0);
+
     return;
 }
 
@@ -42,7 +52,7 @@ mod tests {
     #[test]
     fn nested_tuples_test() {
         let non_determinism = NonDeterminism::new(vec![]);
-        let a = (
+        let a_init = (
             BFieldElement::new(300),
             (
                 XFieldElement::new(
@@ -61,13 +71,35 @@ mod tests {
                 ),
             ),
         );
+        let a_final = (
+            BFieldElement::new(900),
+            (
+                XFieldElement::new(
+                    (0xffff_0000_0001_0002u64..0xffff_0000_0001_0005)
+                        .map(|x| x.into())
+                        .collect_vec()
+                        .try_into()
+                        .unwrap(),
+                ),
+                XFieldElement::new(
+                    (401u64..404)
+                        .map(|x| x.into())
+                        .collect_vec()
+                        .try_into()
+                        .unwrap(),
+                ),
+            ),
+        );
 
         let expected_output = vec![
-            a.1 .1.encode(),
-            a.0.encode(),
-            a.1 .0.encode(),
-            a.1 .0.encode(),
-            a.0.encode(),
+            a_init.1 .1.encode(),
+            a_init.0.encode(),
+            a_init.1 .0.encode(),
+            a_init.1 .0.encode(),
+            a_init.0.encode(),
+            a_final.0.encode(),
+            a_final.1 .0.encode(),
+            a_final.1 .0.encode(),
         ]
         .concat();
         let input = vec![];

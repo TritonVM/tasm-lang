@@ -109,12 +109,6 @@ pub struct OuterFunctionTasmCode {
 
 impl OuterFunctionTasmCode {
     pub fn compose(&self) -> Vec<LabelledInstruction> {
-        // TODO: Should we end this function with a `halt` such that it works as
-        // a standalone program?
-
-        // Remove the first label and the last return such that we can insert
-        // dynamic memory initialization code and replace the last `return` with
-        // a `halt`.
         let inner_body = match self
             .function_data
             .call_depth_zero_code
@@ -267,7 +261,10 @@ impl CompilerState {
         self.function_state.spill_required.to_owned()
     }
 
-    /// Return the
+    /// Return information to show where a value can be found. Options are:
+    /// 1. On the stack at depth `n`
+    /// 2. In memory at memory address `p`.
+    /// 3. In memory at an address that must be resolved at runtime with code `code`.
     fn locate_identifier(
         &mut self,
         identifier: &ast::Identifier<type_checker::Typing>,
@@ -355,9 +352,13 @@ impl CompilerState {
                     }
                     ValueLocation::DynamicMemoryAddress(code) => code,
                 };
+                // stack: _ *list
+
                 self.new_value_identifier("list_expression", &lhs_type);
                 let (_index_expr, index_code) =
                     compile_expr(index_expr, "index_on_assign", &index_expr.get_type(), self);
+                // stack: _ *list index
+
                 let relative_address = triton_asm!(
                     {&index_code}
                     push {element_type.stack_size()}
@@ -572,122 +573,8 @@ impl CompilerState {
         // not change the stack-ordering of bindings when a value is re-assigned.
     }
 
-    /// Return the code to overwrite a stack value with the value that's on top of the stack
-    /// Note that the top value and the value to be removed *must* be of the same type.
-    /// Updates the `vstack` but not the `var_addr` as this is assumed to be handled by the caller.
-    fn overwrite_value(
-        &mut self,
-        value_identifier_to_remove: &ValueIdentifier,
-    ) -> Vec<LabelledInstruction> {
-        let (stack_position_of_value_to_remove, type_to_remove, old_value_spilled) = self
-            .function_state
-            .vstack
-            .find_stack_value(value_identifier_to_remove);
-
-        // If value is not marked as a spilled value and it's inacessible through swap(n)/dup(n),
-        // this value must be marked as a value to be spilled, and the compiler must be run again.
-        let accessible = stack_position_of_value_to_remove < SIZE_OF_ACCESSIBLE_STACK;
-        if old_value_spilled.is_none() && !accessible {
-            self.mark_as_spilled(value_identifier_to_remove);
-        }
-
-        let (_top_element_id, (top_element_type, _new_value_spilled)) = self
-            .function_state
-            .vstack
-            .pop()
-            .expect("vstack cannot be empty");
-
-        assert_eq!(
-            top_element_type, type_to_remove,
-            "Top stack value and value to remove must match"
-        );
-
-        // Overwrite the value, whether it lives on stack or in memory
-        let value_size = type_to_remove.stack_size();
-
-        match old_value_spilled {
-            Some(spill_addr) => move_top_stack_value_to_memory(spill_addr, value_size),
-            None => {
-                if stack_position_of_value_to_remove > 0 && accessible {
-                    let swap_pop_instructions =
-                        format!("swap {stack_position_of_value_to_remove} pop\n")
-                            .repeat(value_size);
-                    triton_asm!({ swap_pop_instructions })
-                } else if !accessible {
-                    eprintln!("Compiler must run again because of {value_identifier_to_remove}");
-                    triton_asm!(push 0 assert)
-                } else {
-                    vec![]
-                }
-            }
-        }
-    }
-
-    fn replace_tuple_element(
-        &mut self,
-        tuple_identifier: &ValueIdentifier,
-        tuple_index: usize,
-    ) -> Vec<LabelledInstruction> {
-        // This function assumes that the last element of the tuple is placed on top of the stack
-        let (stack_position_of_tuple, tuple_type, tuple_spilled) = self
-            .function_state
-            .vstack
-            .find_stack_value(tuple_identifier);
-        let element_types = if let ast_types::DataType::Tuple(ets) = &tuple_type {
-            ets
-        } else {
-            panic!("Original value must have type tuple")
-        };
-
-        let (_top_element_id, (_top_element_type, _)) = self
-            .function_state
-            .vstack
-            .pop()
-            .expect("vstack cannot be empty");
-
-        // Last element of tuple is on top of stack. How many machine
-        // words deep is the value we want to replace?
-        let tuple_depth: usize = element_types
-            .iter()
-            .enumerate()
-            .filter(|(i, _x)| *i > tuple_index)
-            .map(|(_i, x)| x.stack_size())
-            .sum::<usize>();
-
-        // If value is not marked as a spilled value and it's inacessible through swap(n)/dup(n),
-        // this value must be marked as a value to be spilled, and the compiler must be run again.
-        let stack_position_of_value_to_remove = stack_position_of_tuple + tuple_depth;
-        let accessible = stack_position_of_value_to_remove < SIZE_OF_ACCESSIBLE_STACK;
-        if tuple_spilled.is_none() && !accessible {
-            self.mark_as_spilled(tuple_identifier);
-        }
-
-        // Replace the overwritten value on stack, or in memory
-        let value_size = element_types[tuple_index].stack_size();
-        match tuple_spilled {
-            Some(spill_addr) => {
-                let element_address = spill_addr + tuple_depth as u32;
-                move_top_stack_value_to_memory(element_address, value_size)
-            }
-            None => {
-                if !accessible {
-                    eprintln!("Compiler must run again because of {tuple_identifier}");
-                    triton_asm!(push 0 assert)
-                } else if stack_position_of_value_to_remove > 0 && accessible {
-                    let swap_pop_instructions =
-                        format!("swap {stack_position_of_value_to_remove} pop\n")
-                            .repeat(value_size);
-                    triton_asm!({ swap_pop_instructions })
-                } else {
-                    vec![]
-                }
-            }
-        }
-    }
-
     /// Restore the vstack to a previous state, representing the state the stack had
     /// at the beginning of a codeblock. Also returns the code to achieve this.
-    // TODO: Should also handle spilled_values
     fn restore_stack_code(
         &mut self,
         previous_stack: &VStack,
@@ -963,52 +850,49 @@ fn compile_stmt(
             // When overwriting a value, we ignore the identifier of the new expression as
             // it's simply popped from the stack and the old identifier is used.
             let (_expr_addr, expr_code) = compile_expr(expr, "assign", &data_type, state);
-            match identifier {
-                ast::Identifier::String(var_name, _known_type) => {
-                    let value_identifier = state.function_state.var_addr[var_name].clone();
-                    let overwrite_code = state.overwrite_value(&value_identifier);
+            let (location, ident_type) = state.locate_identifier(identifier);
 
-                    vec![expr_code, overwrite_code].concat()
+            let overwrite_code = if !location.is_accessible(&ident_type) {
+                // Compiler must run again. Mark binding as spilled and produce unusable code
+                let binding_name = identifier.binding_name();
+                let value_ident_of_binding = state
+                    .function_state
+                    .var_addr
+                    .get(&binding_name)
+                    .unwrap_or_else(|| {
+                        panic!("Could not locate value identifier for binding {binding_name}")
+                    })
+                    .to_owned();
+                state.mark_as_spilled(&value_ident_of_binding);
+                triton_asm!(push 0 assert)
+            } else {
+                match location {
+                    ValueLocation::OpStack(top_value_position) => {
+                        // triton_asm!([swap {top_value_position} pop])
+                        let swap_pop_instructions = format!("swap {top_value_position} pop\n")
+                            .repeat(ident_type.stack_size());
+                        triton_asm!({ swap_pop_instructions })
+                    }
+                    ValueLocation::StaticMemoryAddress(ram_pointer) => {
+                        move_top_stack_value_to_memory(Some(ram_pointer), ident_type.stack_size())
+                    }
+                    ValueLocation::DynamicMemoryAddress(code) => triton_asm!(
+                        // Goal: Move 2nd to top stack value to memory where memory is indicated
+                        // by the address on top of the stack.
+                        {&code}
+                        {&move_top_stack_value_to_memory(None, ident_type.stack_size())}
+                    ),
                 }
-                ast::Identifier::TupleIndex(ident, tuple_index) => {
-                    let var_name =
-                        if let ast::Identifier::String(var_name, _known_type) = *ident.to_owned() {
-                            var_name
-                        } else {
-                            panic!("Nested tuple expressions not yet supported");
-                        };
+            };
 
-                    let value_identifier = state.function_state.var_addr[&var_name].clone();
+            // remove new value from stack, as it replaces old value and doesn't take up room on the stack
+            // or creates new values in memory.
+            state.function_state.vstack.pop();
 
-                    let overwrite_code =
-                        state.replace_tuple_element(&value_identifier, *tuple_index);
-
-                    vec![expr_code, overwrite_code].concat()
-                }
-                ast::Identifier::ListIndex(ident, index_expr) => {
-                    let fn_name =
-                        state.import_snippet(Box::new(tasm_lib::list::safe_u32::set::SafeSet(
-                            data_type.clone().try_into().unwrap(),
-                        )));
-
-                    let ident_expr = ast::Expr::Var(*ident.to_owned());
-                    let (_ident_addr, ident_code) =
-                        compile_expr(&ident_expr, "ident_on_assign", &data_type, state);
-                    let (_index_expr, index_code) =
-                        compile_expr(index_expr, "index_on_assign", &index_expr.get_type(), state);
-                    state.function_state.vstack.pop();
-                    state.function_state.vstack.pop();
-                    state.function_state.vstack.pop();
-
-                    vec![
-                        expr_code,
-                        ident_code,
-                        index_code,
-                        triton_asm!(call { fn_name }),
-                    ]
-                    .concat()
-                }
-            }
+            triton_asm!(
+                {&expr_code}
+                {&overwrite_code}
+            )
         }
 
         // 'return;': Clean stack
@@ -1390,7 +1274,6 @@ fn compile_expr(
                         ValueLocation::StaticMemoryAddress(pointer) => {
                             load_from_memory(Some(pointer), ident_type.stack_size())
                         }
-                        // TODO: Do we need some dereference here?
                         ValueLocation::DynamicMemoryAddress(code) => triton_asm!(
                             {&code}
                             {&dereference(&ident_type)}
@@ -2249,17 +2132,24 @@ fn copy_value_to_memory(
     ret
 }
 
-/// Return the code to move the top stack element at a
-/// specific memory address. Deletes top stack value.
+/// Return the code to move the top stack element to a
+/// specific memory address. Pops top stack value.
+/// If no static memory pointer is provided, pointer is assumed to be on
+/// top of the stack, above the value that is moved to memory, in
+/// which case this address is also popped from the stack.
 fn move_top_stack_value_to_memory(
-    memory_location: u32,
+    static_memory_location: Option<u32>,
     top_value_size: usize,
 ) -> Vec<LabelledInstruction> {
     // A stack value of the form `_ val2 val1 val0`, with `val0` being on the top of the stack
     // is stored in memory as: `val0 val1 val2`, where `val0` is stored on the `memory_location`
     // address.
-    let mut ret = triton_asm!(push {memory_location as u64});
+    let mut ret = match static_memory_location {
+        Some(static_mem_addr) => triton_asm!(push {static_mem_addr as u64}),
+        None => triton_asm!(),
+    };
 
+    // _ [value] mem_address_start
     for i in 0..top_value_size {
         ret.push(triton_instr!(swap 1));
         // _ mem_address element
@@ -2275,8 +2165,6 @@ fn move_top_stack_value_to_memory(
 
     // remove memory address from top of stack
     ret.push(triton_instr!(pop));
-
-    // TODO: Needs to pop from vstack!
 
     ret
 }
@@ -2484,7 +2372,5 @@ impl ast_types::StructType {
         }
 
         instructions
-
-        // TODO: Add code to read value from memory to stack
     }
 }

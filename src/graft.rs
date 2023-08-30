@@ -722,13 +722,24 @@ pub fn graft_stmt(rust_stmt: &syn::Stmt) -> ast::Stmt<Annotation> {
                     _ => panic!("function call as a statement cannot be a literal"),
                 }
             }
-            syn::Expr::Assign(assign) => {
-                let identifier_expr = assign.left.as_ref();
-                let identifier = expr_as_identifier(identifier_expr);
-                let assign_expr = graft_expr(assign.right.as_ref());
+            syn::Expr::Assign(syn::ExprAssign {
+                attrs: _,
+                left,
+                eq_token: _,
+                right,
+            }) => {
+                // let identifier_expr = assign.left.as_ref();
+                let left_expr = graft_expr(left);
+                let left_ident = match left_expr {
+                    ast::Expr::Var(ident) => ident,
+                    _ => {
+                        panic!("Left-hand-side of tuple operator must be a declared variable. Declare more bindings if needed. Failed to parse expression: {left_expr} as an identifier");
+                    }
+                };
+                let right_expr = graft_expr(right);
                 let assign_stmt = ast::AssignStmt {
-                    identifier,
-                    expr: assign_expr,
+                    identifier: left_ident,
+                    expr: right_expr,
                 };
                 ast::Stmt::Assign(assign_stmt)
             }
