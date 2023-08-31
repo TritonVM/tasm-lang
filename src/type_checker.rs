@@ -633,13 +633,16 @@ fn derive_annotate_expr_type(
             struct_name,
             resolved_type,
         })) => {
+            // First get the type from the declared structs list, then
+            // resolve types on the declared struct in case of nested
+            // structs.
             let resolved_inner_type = state
                 .declared_structs
                 .get(struct_name)
                 .expect("{type_name} not known to type checker");
-            let ret = ast_types::DataType::MemPointer(Box::new(ast_types::DataType::Struct(
-                resolved_inner_type.to_owned(),
-            )));
+            let resolved_inner_type = ast_types::DataType::Struct(resolved_inner_type.to_owned())
+                .resolve_types(&state.declared_structs);
+            let ret = ast_types::DataType::MemPointer(Box::new(resolved_inner_type));
             *resolved_type = Typing::KnownType(ret.clone());
 
             ret
