@@ -22,8 +22,8 @@ fn main() {
         TestStructWithVecs::decode(&tasm::load_from_memory(BFieldElement::new(300))).unwrap();
 
     // Print `a`
-    let a: BFieldElement = test_struct.a; // Use 1 `&`, ignore the 2nd `&`.
-    tasm::tasm_io_write_to_stdout_bfe(a); // Implement both `*` and method `to_owned` to mean put this onto the stack. We might need exceptions for list though.
+    let a: BFieldElement = test_struct.a;
+    tasm::tasm_io_write_to_stdout_bfe(a);
 
     // Print `b`
     let b: BFieldElement = test_struct.b;
@@ -138,9 +138,6 @@ mod tests {
             test_struct.encode().iter().join("\n")
         );
         let non_determinism = init_memory_from(&test_struct, BFieldElement::new(300));
-        let mut ram: Vec<(BFieldElement, BFieldElement)> =
-            non_determinism.ram.clone().into_iter().collect();
-        ram.sort_unstable_by_key(|x| x.0.value());
         let expected_output = vec![
             test_struct.a.encode(),
             test_struct.b.encode(),

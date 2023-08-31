@@ -390,7 +390,7 @@ pub fn assert_type_equals(
 ) {
     if derived_type != data_type {
         panic!(
-            "Type mismatch between type '{data_type}' and derived type '{derived_type}' for {context}",
+            "Type mismatch between type\n'{data_type}'\n and derived type\n'{derived_type}'\n for {context}",
         );
     }
 }

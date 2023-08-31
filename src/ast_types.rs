@@ -138,7 +138,7 @@ impl Display for ListType {
     }
 }
 
-#[derive(Debug, Clone, Hash)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum DataType {
     Bool,
     U32,
@@ -156,21 +156,21 @@ pub enum DataType {
     Unresolved(String),
 }
 
-impl PartialEq for DataType {
-    fn eq(&self, other: &Self) -> bool {
-        match (self, other) {
-            (Self::List(et0, _), Self::List(et1, _)) => et0 == et1,
-            (Self::Tuple(l0), Self::Tuple(r0)) => l0 == r0,
-            (Self::Function(l0), Self::Function(r0)) => l0 == r0,
-            (Self::Struct(l0), Self::Struct(r0)) => l0 == r0,
-            (Self::MemPointer(l0), Self::MemPointer(r0)) => l0 == r0,
-            (Self::Unresolved(l0), Self::Unresolved(r0)) => l0 == r0,
-            _ => core::mem::discriminant(self) == core::mem::discriminant(other),
-        }
-    }
-}
+// impl PartialEq for DataType {
+//     fn eq(&self, other: &Self) -> bool {
+//         match (self, other) {
+//             (Self::List(et0, _), Self::List(et1, _)) => et0 == et1,
+//             (Self::Tuple(l0), Self::Tuple(r0)) => l0 == r0,
+//             (Self::Function(l0), Self::Function(r0)) => l0 == r0,
+//             (Self::Struct(l0), Self::Struct(r0)) => l0 == r0,
+//             (Self::MemPointer(l0), Self::MemPointer(r0)) => l0 == r0,
+//             (Self::Unresolved(l0), Self::Unresolved(r0)) => l0 == r0,
+//             _ => core::mem::discriminant(self) == core::mem::discriminant(other),
+//         }
+//     }
+// }
 
-impl Eq for DataType {}
+// impl Eq for DataType {}
 
 impl DataType {
     /// What type is returned when type is accessed with a field of name `field_name`?
