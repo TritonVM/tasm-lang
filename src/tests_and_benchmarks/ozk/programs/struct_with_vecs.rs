@@ -14,6 +14,7 @@ struct TestStructWithVecs {
     pub f: BFieldElement,
     pub g: Vec<XFieldElement>,
     pub h: Vec<Vec<XFieldElement>>,
+    pub i: Vec<Vec<Vec<XFieldElement>>>,
 }
 
 fn main() {
@@ -56,6 +57,16 @@ fn main() {
     tasm::tasm_io_write_to_stdout_bfe(BFieldElement::new(test_struct.h[0].len() as u64));
     tasm::tasm_io_write_to_stdout_bfe(BFieldElement::new(test_struct.h.len() as u64));
 
+    // Print elements from `i`
+    tasm::tasm_io_write_to_stdout_xfe(test_struct.i[2][3][4]);
+    tasm::tasm_io_write_to_stdout_xfe(test_struct.i[4][3][2]);
+    tasm::tasm_io_write_to_stdout_xfe(test_struct.i[0][0][0]);
+    tasm::tasm_io_write_to_stdout_xfe(test_struct.i[5][0][0]);
+    tasm::tasm_io_write_to_stdout_xfe(test_struct.i[0][5][0]);
+    tasm::tasm_io_write_to_stdout_xfe(test_struct.i[0][0][5]);
+    tasm::tasm_io_write_to_stdout_bfe(BFieldElement::new(test_struct.i[0][0].len() as u64));
+    tasm::tasm_io_write_to_stdout_bfe(BFieldElement::new(test_struct.i[4][3].len() as u64));
+
     return;
 }
 
@@ -89,6 +100,38 @@ mod tests {
                 random_elements(7),
                 random_elements(11),
             ],
+            i: vec![
+                // [0]
+                vec![
+                    random_elements(6), // [0][0]
+                    random_elements(1),
+                    random_elements(2),
+                    random_elements(3),
+                    random_elements(1), // [0][4]
+                    random_elements(3),
+                ],
+                // [1]
+                vec![],
+                // [2]
+                vec![
+                    random_elements(6),
+                    random_elements(1),
+                    random_elements(1),
+                    random_elements(5),
+                ],
+                // [3]
+                vec![],
+                // [4]
+                vec![
+                    random_elements(1),
+                    random_elements(1),
+                    random_elements(1),
+                    random_elements(10), // [4][3]
+                    random_elements(1),
+                ],
+                // [5]
+                vec![random_elements(12)],
+            ],
         };
         println!(
             "test_struct.encode()\n{}",
@@ -115,6 +158,14 @@ mod tests {
             (test_struct.h[3].len() as u32).encode(),
             (test_struct.h[0].len() as u32).encode(),
             (test_struct.h.len() as u32).encode(),
+            test_struct.i[2][3][4].encode(),
+            test_struct.i[4][3][2].encode(),
+            test_struct.i[0][0][0].encode(),
+            test_struct.i[5][0][0].encode(),
+            test_struct.i[0][5][0].encode(),
+            test_struct.i[0][0][5].encode(),
+            (test_struct.i[0][0].len() as u32).encode(),
+            (test_struct.i[4][3].len() as u32).encode(),
         ]
         .concat();
         let input = vec![];
