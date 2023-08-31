@@ -1,3 +1,7 @@
+use crate::graft::Graft;
+use crate::tasm_code_generator::compile_function;
+use crate::type_checker::{self, annotate_fn, GetType, Typing};
+use crate::{ast, ast_types};
 use itertools::Itertools;
 use std::collections::HashMap;
 use tasm_lib::memory::dyn_malloc::DYN_MALLOC_ADDRESS;
@@ -7,11 +11,6 @@ use triton_vm::{Digest, NonDeterminism};
 use twenty_first::shared_math::b_field_element::{BFieldElement, BFIELD_ONE, BFIELD_ZERO};
 use twenty_first::shared_math::bfield_codec::BFieldCodec;
 use twenty_first::shared_math::x_field_element::XFieldElement;
-
-use crate::graft::graft_fn_decl;
-use crate::tasm_code_generator::compile_function;
-use crate::type_checker::{self, annotate_fn, GetType, Typing};
-use crate::{ast, ast_types};
 
 #[derive(Debug, Clone)]
 pub struct InputOutputTestCase {
@@ -55,7 +54,7 @@ pub fn compile_for_run_test(item_fn: &syn::ItemFn) -> (Vec<LabelledInstruction>,
 
 pub fn graft_check_compile_prop(item_fn: &syn::ItemFn) -> Vec<LabelledInstruction> {
     // parse test
-    let mut function = graft_fn_decl(item_fn, ast_types::ListType::Safe);
+    let mut function = Graft::default().graft_fn_decl(item_fn);
 
     // type-check and annotate
     annotate_fn(&mut function, HashMap::default());
