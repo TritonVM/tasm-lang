@@ -7,25 +7,81 @@ use tasm_lib::structure::tasm_object::TasmObject;
 use triton_vm::{BFieldElement, Digest};
 use twenty_first::shared_math::bfield_codec::BFieldCodec;
 use twenty_first::shared_math::other::random_elements;
+use twenty_first::shared_math::x_field_element::XFieldElement;
 
-#[derive(TasmObject, BFieldCodec)]
-struct InnerInnerStruct {
-    pub a: Digest,
-    pub b: Vec<BFieldElement>,
-    pub c: u64,
-    pub d: u128,
+impl Distribution<InnerInnerInnerStruct> for Standard {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> InnerInnerInnerStruct {
+        let b_length = rng.gen_range(6..=16);
+        let e_length = rng.gen_range(5..=20);
+        InnerInnerInnerStruct {
+            a: random(),
+            b: random_elements(b_length),
+            c: random(),
+            d: random(),
+            e: random_elements(e_length),
+        }
+    }
 }
 
 impl Distribution<InnerInnerStruct> for Standard {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> InnerInnerStruct {
         let b_length = rng.gen_range(0..=10);
+        let f_length = rng.gen_range(4..=10);
         InnerInnerStruct {
             a: random(),
             b: random_elements(b_length),
             c: random(),
             d: random(),
+            e: random(),
+            f: random_elements(f_length),
         }
     }
+}
+
+impl Distribution<InnerStruct> for Standard {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> InnerStruct {
+        let c_length = rng.gen_range(3..=14);
+        InnerStruct {
+            a: random(),
+            b: random(),
+            c: random_elements(c_length),
+        }
+    }
+}
+
+impl Distribution<TestStuctNested> for Standard {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> TestStuctNested {
+        let b_length = rng.gen_range(3..=10);
+        let d_length = rng.gen_range(3..=10);
+        let f_length_cubed = rng.gen_range(3..=5);
+        TestStuctNested {
+            a: random(),
+            b: random_elements(b_length),
+            c: random(),
+            d: random_elements(d_length),
+            e: random(),
+            f: vec![vec![random_elements(f_length_cubed); f_length_cubed]; f_length_cubed],
+        }
+    }
+}
+
+#[derive(TasmObject, BFieldCodec, Clone)]
+struct InnerInnerInnerStruct {
+    pub a: Digest,
+    pub b: Vec<u128>,
+    pub c: BFieldElement,
+    pub d: u128,
+    pub e: Vec<XFieldElement>,
+}
+
+#[derive(TasmObject, BFieldCodec, Clone)]
+struct InnerInnerStruct {
+    pub a: Digest,
+    pub b: Vec<BFieldElement>,
+    pub c: u64,
+    pub d: u128,
+    pub e: InnerInnerInnerStruct,
+    pub f: Vec<InnerInnerInnerStruct>,
 }
 
 #[derive(TasmObject, BFieldCodec)]
@@ -35,36 +91,14 @@ struct InnerStruct {
     pub c: Vec<InnerInnerStruct>,
 }
 
-impl Distribution<InnerStruct> for Standard {
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> InnerStruct {
-        let c_length = rng.gen_range(2..=14);
-        InnerStruct {
-            a: random(),
-            b: random(),
-            c: random_elements(c_length),
-        }
-    }
-}
-
 #[derive(TasmObject, BFieldCodec)]
 struct TestStuctNested {
     pub a: InnerStruct,
     pub b: Vec<InnerStruct>,
     pub c: InnerInnerStruct,
     pub d: Vec<InnerInnerStruct>,
-}
-
-impl Distribution<TestStuctNested> for Standard {
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> TestStuctNested {
-        let b_length = rng.gen_range(0..=10);
-        let d_length = rng.gen_range(0..=10);
-        TestStuctNested {
-            a: random(),
-            b: random_elements(b_length),
-            c: random(),
-            d: random_elements(d_length),
-        }
-    }
+    pub e: u64,
+    pub f: Vec<Vec<Vec<InnerInnerStruct>>>,
 }
 
 fn main() {
@@ -74,6 +108,13 @@ fn main() {
     tasm::tasm_io_write_to_stdout_digest(test_struct.a.a);
     tasm::tasm_io_write_to_stdout_u64(test_struct.a.b.c);
     tasm::tasm_io_write_to_stdout_u64(test_struct.a.c[1].c);
+    tasm::tasm_io_write_to_stdout_u128(test_struct.b[2].c[2].f[3].b[5]);
+    tasm::tasm_io_write_to_stdout_u64(test_struct.e);
+    tasm::tasm_io_write_to_stdout_u64(test_struct.c.c);
+    tasm::tasm_io_write_to_stdout_digest(test_struct.f[1][1][1].a);
+    tasm::tasm_io_write_to_stdout_xfe(test_struct.f[1][1][1].f[3].e[4]);
+    tasm::tasm_io_write_to_stdout_xfe(test_struct.f[2][2][2].f[2].e[2]);
+    tasm::tasm_io_write_to_stdout_u64(test_struct.f[2][2][2].f[2].e.len() as u64);
 
     return;
 }
@@ -96,10 +137,17 @@ mod tests {
         let non_determinism = init_memory_from(&test_struct, BFieldElement::new(300));
         let input = vec![];
 
-        let expected_output = vec![
+        let expected_output = [
             test_struct.a.a.encode(),
             test_struct.a.b.c.encode(),
             test_struct.a.c[1].c.encode(),
+            test_struct.b[2].c[2].f[3].b[5].encode(),
+            test_struct.e.encode(),
+            test_struct.c.c.encode(),
+            test_struct.f[1][1][1].a.encode(),
+            test_struct.f[1][1][1].f[3].e[4].encode(),
+            test_struct.f[2][2][2].f[2].e[2].encode(),
+            (test_struct.f[2][2][2].f[2].e.len() as u64).encode(),
         ]
         .concat();
 
