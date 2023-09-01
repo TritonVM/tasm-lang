@@ -1,3 +1,4 @@
+use itertools::Itertools;
 use std::collections::HashMap;
 use std::fmt::Display;
 use triton_vm::Digest;
@@ -78,11 +79,33 @@ pub enum ExprLit<T> {
     GenericNum(u128, T),
 }
 
+impl<T> Display for ExprLit<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let output = match self {
+            ExprLit::Bool(b) => b.to_string(),
+            ExprLit::U32(u32) => u32.to_string(),
+            ExprLit::U64(val) => val.to_string(),
+            ExprLit::BFE(val) => val.to_string(),
+            ExprLit::XFE(val) => val.to_string(),
+            ExprLit::Digest(val) => val.to_string(),
+            ExprLit::MemPointer(val) => format!("*{}", val),
+            ExprLit::GenericNum(val, _) => val.to_string(),
+        };
+        write!(f, "{output}")
+    }
+}
+
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct MemPointerLiteral<T> {
     pub mem_pointer_address: BFieldElement,
     pub struct_name: String,
     pub resolved_type: T,
+}
+
+impl<T> Display for MemPointerLiteral<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.mem_pointer_address)
+    }
 }
 
 impl<T> BFieldCodec for ExprLit<T> {
@@ -158,9 +181,9 @@ pub enum Expr<T> {
 impl<T> Display for Expr<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let str = match self {
-            Expr::Lit(_lit) => "lit".to_owned(),
-            Expr::Var(_) => "var_copy".to_owned(),
-            Expr::Tuple(_) => "tuple".to_owned(),
+            Expr::Lit(lit) => lit.to_string(),
+            Expr::Var(id) => id.to_string(),
+            Expr::Tuple(inner) => format!("({})", inner.iter().join(",")),
             Expr::FnCall(_) => "fn_call".to_owned(),
             Expr::MethodCall(_) => "method_call.method_name".to_owned(),
             Expr::Binop(_, binop, _, _) => format!("binop_{binop:?}"),
@@ -190,6 +213,18 @@ pub enum Identifier<T> {
     Field(Box<Identifier<T>>, String, T),
 }
 
+impl<T> Display for Identifier<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let output = match self {
+            Identifier::String(name, _) => name.to_string(),
+            Identifier::TupleIndex(inner, index) => format!("{inner}.{index}"),
+            Identifier::ListIndex(inner, index) => format!("{inner}[{index}]"),
+            Identifier::Field(inner, field_name, _) => format!("{inner}.{field_name}"),
+        };
+        write!(f, "{output}")
+    }
+}
+
 impl<T> Identifier<T> {
     pub fn binding_name(&self) -> String {
         match self {
@@ -213,22 +248,6 @@ impl<T> Identifier<T> {
                 format!("{}___{field_name}", inner_id.label_friendly_name())
             }
         }
-    }
-}
-
-impl<T: core::fmt::Debug> Display for Identifier<T> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "{}",
-            match self {
-                Identifier::String(name, _) => name.to_string(),
-                Identifier::TupleIndex(inner_id, t_index) => format!("{inner_id}.{t_index}"),
-                Identifier::ListIndex(inner_id, l_index_expr) =>
-                    format!("{inner_id}[{l_index_expr}]"),
-                Identifier::Field(inner_id, field_name, _) => format!("{inner_id}[{field_name}]"),
-            }
-        )
     }
 }
 

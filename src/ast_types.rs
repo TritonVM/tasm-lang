@@ -430,17 +430,17 @@ impl Display for DataType {
             BFE => "BField".to_string(),
             XFE => "XField".to_string(),
             Digest => "Digest".to_string(),
-            List(ty, _list_type) => format!("List({ty})"),
-            Tuple(tys) => tys.iter().map(|ty| format!("{ty}")).join(" "),
+            List(ty, _list_type) => format!("Vec<{ty}>"),
+            Tuple(tys) => format!("({})", tys.iter().join(", ")),
             VoidPointer => "void pointer".to_string(),
             Function(fn_type) => {
                 let input = fn_type.input_argument.to_string();
                 let output = fn_type.output.to_string();
                 format!("Function: {input} -> {output}")
             }
-            Struct(struct_type) => format!("struct_type: {struct_type}"),
+            Struct(StructType { name, fields: _ }) => format!("{name}"),
             Unresolved(name) => format!("unresolved type {name}"),
-            MemPointer(ty) => format!("mempoint({ty})"),
+            MemPointer(ty) => format!("*{ty}"),
         };
         write!(f, "{str}",)
     }
