@@ -66,7 +66,7 @@ mod tests {
         let non_determinism =
             init_memory_from(&test_struct, BFieldElement::new(bfield_code_start_address));
 
-        let expected_output = vec![
+        let expected_output = [
             test_struct.h.encode(),
             vec![test_struct.a],
             test_struct.e.encode(),

@@ -31,7 +31,7 @@ mod run_tests {
         let rhss: Vec<Digest> = random_elements(test_iterations);
         let test_cases = lhss
             .into_iter()
-            .zip_eq(rhss.into_iter())
+            .zip_eq(rhss)
             .map(|(left, right)| {
                 InputOutputTestCase::new(
                     vec![digest_lit(left), digest_lit(right)],

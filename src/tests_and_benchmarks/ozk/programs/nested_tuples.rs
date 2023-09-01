@@ -91,7 +91,7 @@ mod tests {
             ),
         );
 
-        let expected_output = vec![
+        let expected_output = [
             a_init.1 .1.encode(),
             a_init.0.encode(),
             a_init.1 .0.encode(),

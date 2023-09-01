@@ -80,14 +80,14 @@ mod benches {
         let common_case = BenchmarkInput {
             input_args: vec![],
             memory: HashMap::default(),
-            std_in: vec![vec![BFieldElement::new(5)], random_elements(5)].concat(),
+            std_in: [vec![BFieldElement::new(5)], random_elements(5)].concat(),
             non_determinism: NonDeterminism::new(vec![]),
         };
 
         let worst_case = BenchmarkInput {
             input_args: vec![],
             memory: HashMap::default(),
-            std_in: vec![vec![BFieldElement::new(100)], random_elements(100)].concat(),
+            std_in: [vec![BFieldElement::new(100)], random_elements(100)].concat(),
             non_determinism: NonDeterminism::new(vec![]),
         };
 

@@ -372,7 +372,7 @@ impl<'a> CompilerState<'a> {
                         result_type,
                     ),
                     ValueLocation::DynamicMemoryAddress(code) => {
-                        let new_code = vec![code, triton_asm!(push {tuple_depth} add)].concat();
+                        let new_code = [code, triton_asm!(push {tuple_depth} add)].concat();
                         (ValueLocation::DynamicMemoryAddress(new_code), result_type)
                     }
                 }
@@ -952,9 +952,9 @@ fn compile_function_inner(
 
 // TODO: Remove this attribute once we have a sane `main` function that uses this step
 #[allow(dead_code)]
-pub(crate) fn compile_function<'a>(
+pub(crate) fn compile_function(
     function: &ast::Fn<type_checker::Typing>,
-    libraries: &'a [Box<dyn libraries::Library>],
+    libraries: &[Box<dyn libraries::Library>],
 ) -> OuterFunctionTasmCode {
     let mut state = CompilerState::new(GlobalCodeGeneratorState::default(), libraries);
     let compiled_function =
@@ -1102,7 +1102,7 @@ fn compile_stmt(
                 // Remove all but top value from stack
                 let cleanup_code = state.clear_all_but_top_stack_value_above_height(0);
 
-                vec![code, cleanup_code].concat()
+                [code, cleanup_code].concat()
             };
 
             // We don't need to clear `var_addr` here since we are either done with the code generation
@@ -1212,7 +1212,7 @@ fn compile_stmt(
 
             let restore_stack_code = state.restore_stack_code(&vstack_init, &var_addr_init);
 
-            vec![block_body_code, restore_stack_code].concat()
+            [block_body_code, restore_stack_code].concat()
         }
         ast::Stmt::Assert(ast::AssertStmt { expression }) => {
             let (_addr, assert_expr_code) =
@@ -1285,7 +1285,7 @@ fn compile_fn_call(
         state.function_state.vstack.pop();
     }
 
-    vec![args_code.concat(), call_fn_code].concat()
+    [args_code.concat(), call_fn_code].concat()
 }
 
 fn compile_method_call(
@@ -1325,7 +1325,7 @@ fn compile_method_call(
         state.function_state.vstack.pop();
     }
 
-    vec![args_code.concat(), call_code].concat()
+    [args_code.concat(), call_code].concat()
 }
 
 fn compile_expr(
@@ -1472,7 +1472,7 @@ fn compile_expr(
             // the above code consumes that.
             state.function_state.vstack.pop();
 
-            vec![inner_expr_code, code].concat()
+            [inner_expr_code, code].concat()
         }
 
         ast::Expr::Binop(lhs_expr, binop, rhs_expr, _known_type) => {
@@ -1511,7 +1511,7 @@ fn compile_expr(
                     state.function_state.vstack.pop();
                     state.function_state.vstack.pop();
 
-                    vec![lhs_expr_code, rhs_expr_code, add_code].concat()
+                    [lhs_expr_code, rhs_expr_code, add_code].concat()
                 }
                 ast::BinOp::And => {
                     let (_lhs_expr_addr, lhs_expr_code) =
@@ -1528,7 +1528,7 @@ fn compile_expr(
                     state.function_state.vstack.pop();
                     state.function_state.vstack.pop();
 
-                    vec![lhs_expr_code, rhs_expr_code, and_code].concat()
+                    [lhs_expr_code, rhs_expr_code, and_code].concat()
                 }
 
                 ast::BinOp::BitAnd => {
@@ -1551,7 +1551,7 @@ fn compile_expr(
                     state.function_state.vstack.pop();
                     state.function_state.vstack.pop();
 
-                    vec![lhs_expr_code, rhs_expr_code, bitwise_and_code].concat()
+                    [lhs_expr_code, rhs_expr_code, bitwise_and_code].concat()
                 }
 
                 ast::BinOp::BitXor => {
@@ -1576,7 +1576,7 @@ fn compile_expr(
                     state.function_state.vstack.pop();
                     state.function_state.vstack.pop();
 
-                    vec![lhs_expr_code, rhs_expr_code, xor_code].concat()
+                    [lhs_expr_code, rhs_expr_code, xor_code].concat()
                 }
                 ast::BinOp::BitOr => {
                     let (_lhs_expr_addr, lhs_expr_code) =
@@ -1603,7 +1603,7 @@ fn compile_expr(
                     state.function_state.vstack.pop();
                     state.function_state.vstack.pop();
 
-                    vec![lhs_expr_code, rhs_expr_code, bitwise_or_code].concat()
+                    [lhs_expr_code, rhs_expr_code, bitwise_or_code].concat()
                 }
 
                 ast::BinOp::Div => {
@@ -1779,7 +1779,7 @@ fn compile_expr(
                     state.function_state.vstack.pop();
                     state.function_state.vstack.pop();
 
-                    vec![lhs_expr_code, rhs_expr_code, eq_code].concat()
+                    [lhs_expr_code, rhs_expr_code, eq_code].concat()
                 }
 
                 ast::BinOp::Lt => {
@@ -2207,7 +2207,7 @@ fn compile_expr(
         .map(|x| copy_top_stack_value_to_memory(x, result_type.stack_size()))
         .unwrap_or_default();
 
-    (addr, vec![code, spill_code].concat())
+    (addr, [code, spill_code].concat())
 }
 
 /// Return the code to store a stack-value in memory

@@ -250,16 +250,14 @@ impl DataType {
             DataType::Tuple(inner_types) => inner_types
                 .iter()
                 .map(|x| x.bfield_codec_length())
-                .fold(Some(0), |acc, x| acc.and_then(|a| x.map(|v| a + v))),
+                .try_fold(0, |acc: usize, x| x.map(|x| x + acc)),
             DataType::List(_, _) => None,
-            DataType::Struct(struct_type) => {
-                struct_type
-                    .fields
-                    .iter()
-                    .fold(Some(0), |acc, (_, field_type)| {
-                        acc.and_then(|a| field_type.bfield_codec_length().map(|v| a + v))
-                    })
-            }
+            DataType::Struct(struct_type) => struct_type
+                .fields
+                .iter()
+                .try_fold(0, |acc: usize, (_, field_type)| {
+                    field_type.bfield_codec_length().map(|v| acc + v)
+                }),
             DataType::MemPointer(inner_type) => inner_type.bfield_codec_length(),
             DataType::VoidPointer => todo!(),
             DataType::Function(_) => todo!(),

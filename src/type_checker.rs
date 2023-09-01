@@ -364,7 +364,7 @@ fn annotate_stmt(
             assert_type_equals(&expr_type, &ast_types::DataType::Bool, "assert expression");
         }
         ast::Stmt::FnDeclaration(function) => {
-            annotate_fn(function, HashMap::default(), &state.libraries);
+            annotate_fn(function, HashMap::default(), state.libraries);
             state.ftable.insert(
                 function.fn_signature.name.clone(),
                 function.fn_signature.clone(),

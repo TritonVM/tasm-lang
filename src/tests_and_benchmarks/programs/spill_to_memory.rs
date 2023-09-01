@@ -575,7 +575,7 @@ mod run_tests {
             vec![u32_lit(101), u32_lit(102)],
             HashMap::default(),
             None,
-            vec![reversed_digest].concat(),
+            [reversed_digest].concat(),
             NonDeterminism::new(vec![]),
         );
     }
@@ -697,7 +697,7 @@ mod run_tests {
             ],
             HashMap::default(),
             None,
-            vec![
+            [
                 vec![BFieldElement::new(my_bool as u64)],
                 vec![my_u32.into()],
                 split(my_u64),

@@ -387,7 +387,7 @@ mod run_tests {
         let rhss: Vec<BFieldElement> = random_elements(test_iterations);
         let test_cases = lhss
             .into_iter()
-            .zip_eq(rhss.into_iter())
+            .zip_eq(rhss)
             .map(|(lhs, rhs)| {
                 InputOutputTestCase::new(
                     vec![bfe_lit(lhs), bfe_lit(rhs)],
