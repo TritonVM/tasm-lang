@@ -2,7 +2,7 @@ use itertools::Itertools;
 use triton_vm::triton_asm;
 use twenty_first::shared_math::b_field_element::BFieldElement;
 
-use crate::{ast, ast_types, graft::graft_expr, tasm_code_generator::subroutine::SubRoutine};
+use crate::{ast, ast_types, graft::Graft, tasm_code_generator::subroutine::SubRoutine};
 
 use super::{Library, LibraryFunction};
 
@@ -123,15 +123,18 @@ impl Library for BfeLibrary {
 
     fn graft_function(
         &self,
+        graft_config: &Graft,
         full_name: &str,
         args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
-        list_type: ast_types::ListType,
     ) -> Option<ast::Expr<super::Annotation>> {
         fn handle_bfe_new(
+            graft_config: &Graft,
             args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
-            list_type: ast_types::ListType,
         ) -> ast::Expr<super::Annotation> {
-            let args = args.iter().map(|x| graft_expr(x, list_type)).collect_vec();
+            let args = args
+                .iter()
+                .map(|x| graft_config.graft_expr(x))
+                .collect_vec();
 
             if args.len() != 1 {
                 panic!("BFE must be initialized with only one argument. Got: {args:#?}");
@@ -184,7 +187,7 @@ impl Library for BfeLibrary {
         }
 
         if full_name == FUNCTION_NAME_NEW_BFE {
-            return Some(handle_bfe_new(args, list_type));
+            return Some(handle_bfe_new(graft_config, args));
         }
 
         None
@@ -192,8 +195,8 @@ impl Library for BfeLibrary {
 
     fn graft_method(
         &self,
+        _graft_config: &Graft,
         _rust_method_call: &syn::ExprMethodCall,
-        _list_type: ast_types::ListType,
     ) -> Option<ast::Expr<super::Annotation>> {
         None
     }

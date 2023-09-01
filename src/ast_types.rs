@@ -116,6 +116,15 @@ pub enum ListType {
     Unsafe,
 }
 
+impl From<ListType> for tasm_lib::list::ListType {
+    fn from(value: ListType) -> Self {
+        match value {
+            ListType::Safe => tasm_lib::list::ListType::Safe,
+            ListType::Unsafe => tasm_lib::list::ListType::Unsafe,
+        }
+    }
+}
+
 impl ListType {
     pub fn metadata_size(&self) -> usize {
         match self {
@@ -156,23 +165,35 @@ pub enum DataType {
     Unresolved(String),
 }
 
-// impl PartialEq for DataType {
-//     fn eq(&self, other: &Self) -> bool {
-//         match (self, other) {
-//             (Self::List(et0, _), Self::List(et1, _)) => et0 == et1,
-//             (Self::Tuple(l0), Self::Tuple(r0)) => l0 == r0,
-//             (Self::Function(l0), Self::Function(r0)) => l0 == r0,
-//             (Self::Struct(l0), Self::Struct(r0)) => l0 == r0,
-//             (Self::MemPointer(l0), Self::MemPointer(r0)) => l0 == r0,
-//             (Self::Unresolved(l0), Self::Unresolved(r0)) => l0 == r0,
-//             _ => core::mem::discriminant(self) == core::mem::discriminant(other),
-//         }
-//     }
-// }
-
-// impl Eq for DataType {}
-
 impl DataType {
+    pub fn from_tasm_lib_datatype(
+        tasm_lib_type: tasm_lib::snippet::DataType,
+        list_type: ListType,
+    ) -> Self {
+        use DataType::*;
+        match tasm_lib_type {
+            tasm_lib::snippet::DataType::Bool => Bool,
+            tasm_lib::snippet::DataType::U32 => U32,
+            tasm_lib::snippet::DataType::U64 => U64,
+            tasm_lib::snippet::DataType::U128 => U128,
+            tasm_lib::snippet::DataType::BFE => BFE,
+            tasm_lib::snippet::DataType::XFE => XFE,
+            tasm_lib::snippet::DataType::Digest => Digest,
+            tasm_lib::snippet::DataType::List(elem_type) => {
+                let element_type = Self::from_tasm_lib_datatype(*elem_type, list_type);
+                List(Box::new(element_type), list_type)
+            }
+            tasm_lib::snippet::DataType::Tuple(tasm_types) => {
+                let element_types: Vec<DataType> = tasm_types
+                    .into_iter()
+                    .map(|t| Self::from_tasm_lib_datatype(t, list_type))
+                    .collect();
+                Tuple(element_types)
+            }
+            tasm_lib::snippet::DataType::VoidPointer => VoidPointer,
+        }
+    }
+
     /// What type is returned when type is accessed with a field of name `field_name`?
     pub fn field_access_returned_type(&self, field_name: &str) -> Self {
         match &self {
@@ -375,30 +396,6 @@ impl TryFrom<DataType> for tasm_lib::snippet::DataType {
                 DataType::List(_, ListType::Unsafe) => (*value).try_into(),
                 DataType::Unresolved(_) => todo!(),
                 _ => Ok(tasm_lib::snippet::DataType::VoidPointer),
-            }
-        }
-    }
-}
-
-impl From<tasm_lib::snippet::DataType> for DataType {
-    fn from(value: tasm_lib::snippet::DataType) -> Self {
-        match value {
-            tasm_lib::snippet::DataType::Bool => DataType::Bool,
-            tasm_lib::snippet::DataType::U32 => DataType::U32,
-            tasm_lib::snippet::DataType::U64 => DataType::U64,
-            tasm_lib::snippet::DataType::U128 => DataType::U128,
-            tasm_lib::snippet::DataType::BFE => DataType::BFE,
-            tasm_lib::snippet::DataType::XFE => DataType::XFE,
-            tasm_lib::snippet::DataType::Digest => DataType::Digest,
-            tasm_lib::snippet::DataType::VoidPointer => DataType::VoidPointer,
-            tasm_lib::snippet::DataType::List(elem_type_snip) => {
-                let element_type: DataType = (*elem_type_snip).into();
-                DataType::List(Box::new(element_type), ListType::Safe)
-            }
-            tasm_lib::snippet::DataType::Tuple(tasm_types) => {
-                let element_types: Vec<DataType> =
-                    tasm_types.into_iter().map(|t| t.into()).collect();
-                DataType::Tuple(element_types)
             }
         }
     }

@@ -189,21 +189,24 @@ impl ValueLocation {
 
 /// State that is preserved across the compilation of functions
 #[derive(Clone, Debug, Default)]
-pub struct GlobalCompilerState {
+pub struct GlobalCodeGeneratorState {
     counter: usize,
     snippet_state: SnippetState,
 }
 
-#[derive(Clone, Debug, Default)]
-pub struct CompilerState {
+// TODO: Maybe this needs a new lifetime specifier, `'b`?
+#[derive(Debug)]
+pub struct CompilerState<'a> {
     /// The part of the compiler state that applies across function calls to locally defined
-    global_compiler_state: GlobalCompilerState,
+    global_compiler_state: GlobalCodeGeneratorState,
 
     /// The part of the compiler state that only applies within a function
     function_state: FunctionState,
+
+    libraries: &'a [Box<dyn libraries::Library>],
 }
 
-impl CompilerState {
+impl<'a> CompilerState<'a> {
     /// Import a dependency in an idempotent manner, ensuring it's only ever imported once
     pub(crate) fn add_library_function(&mut self, subroutine: SubRoutine) {
         let label = subroutine.get_label();
@@ -214,27 +217,33 @@ impl CompilerState {
     }
 
     /// Construct a new compiler state with no known values that must be spilled.
-    fn new(global_compiler_state: &GlobalCompilerState) -> Self {
+    fn new(
+        global_compiler_state: GlobalCodeGeneratorState,
+        libraries: &'a [Box<dyn libraries::Library>],
+    ) -> Self {
         Self {
-            global_compiler_state: global_compiler_state.to_owned(),
+            global_compiler_state,
             function_state: FunctionState::default(),
+            libraries,
         }
     }
 
     /// Construct a new compiler state with a defined set of values that should be stored in memory,
     /// rather than on the stack, i.e. "spilled".
     fn with_known_spills(
-        global_compiler_state: &GlobalCompilerState,
+        global_compiler_state: GlobalCodeGeneratorState,
         required_spills: HashSet<ValueIdentifier>,
+        libraries: &'a [Box<dyn libraries::Library>],
     ) -> Self {
         Self {
-            global_compiler_state: global_compiler_state.to_owned(),
+            global_compiler_state,
             function_state: FunctionState {
                 vstack: Default::default(),
                 var_addr: VarAddr::default(),
                 spill_required: required_spills,
                 subroutines: Vec::default(),
             },
+            libraries,
         }
     }
 
@@ -561,7 +570,7 @@ impl std::fmt::Display for ValueIdentifier {
     }
 }
 
-impl CompilerState {
+impl<'a> CompilerState<'a> {
     fn get_binding_name(&self, value_identifier: &ValueIdentifier) -> String {
         match self
             .function_state
@@ -885,31 +894,36 @@ impl CompilerState {
 /// from the caller but starts with an empty virtual stack and an empty variable mapping.
 fn compile_function_inner(
     function: &ast::Fn<type_checker::Typing>,
-    global_compiler_state: &mut GlobalCompilerState,
+    global_compiler_state: &mut GlobalCodeGeneratorState,
+    libraries: &[Box<dyn libraries::Library>],
 ) -> InnerFunctionTasmCode {
     let fn_name = &function.fn_signature.name;
     let _fn_stack_output_sig = format!("{}", function.fn_signature.output);
 
     // Run the compilation 1st time to learn which values need to be spilled to memory
-    let mut state = CompilerState::new(global_compiler_state);
-    let fn_arg_spilling =
-        state.add_input_arguments_to_vstack_and_return_spilled_fn_args(&function.fn_signature.args);
-    assert!(
-        fn_arg_spilling.is_empty(),
-        "Cannot memory-spill function arguments first time the code generator runs"
-    );
+    let spills = {
+        let mut temporary_fn_state =
+            CompilerState::new(global_compiler_state.to_owned(), libraries);
+        let fn_arg_spilling = temporary_fn_state
+            .add_input_arguments_to_vstack_and_return_spilled_fn_args(&function.fn_signature.args);
+        assert!(
+            fn_arg_spilling.is_empty(),
+            "Cannot memory-spill function arguments first time the code generator runs"
+        );
 
-    // Compiling the function body allows us to learn which values need to be spilled to memory
-    let _fn_body_code = function
-        .body
-        .iter()
-        .map(|stmt| compile_stmt(stmt, function, &mut state))
-        .concat();
+        // Compiling the function body allows us to learn which values need to be spilled to memory
+        let _fn_body_code = function
+            .body
+            .iter()
+            .map(|stmt| compile_stmt(stmt, function, &mut temporary_fn_state))
+            .concat();
+        temporary_fn_state.get_required_spills()
+    };
 
     // Run the compilation again now that we know which values to spill
     println!("\n\n\nRunning compiler again\n\n\n");
     let mut state =
-        CompilerState::with_known_spills(global_compiler_state, state.get_required_spills());
+        CompilerState::with_known_spills(global_compiler_state.to_owned(), spills, libraries);
 
     // Add function arguments to the compiler's view of the stack.
     let fn_arg_spilling =
@@ -930,18 +944,21 @@ fn compile_function_inner(
             .concat(),
     );
 
-    // Update global compiler state to propagate this to caller, such that external
-    // dependencies that were loaded here will not be loaded again.
-    *global_compiler_state = state.global_compiler_state.to_owned();
+    // Update global compiler state with imported snippets, and label counter
+    *global_compiler_state = state.global_compiler_state.clone();
 
     state.compose_code_for_inner_function(fn_name, fn_body_code)
 }
 
 // TODO: Remove this attribute once we have a sane `main` function that uses this step
 #[allow(dead_code)]
-pub(crate) fn compile_function(function: &ast::Fn<type_checker::Typing>) -> OuterFunctionTasmCode {
-    let mut state = CompilerState::default();
-    let compiled_function = compile_function_inner(function, &mut state.global_compiler_state);
+pub(crate) fn compile_function<'a>(
+    function: &ast::Fn<type_checker::Typing>,
+    libraries: &'a [Box<dyn libraries::Library>],
+) -> OuterFunctionTasmCode {
+    let mut state = CompilerState::new(GlobalCodeGeneratorState::default(), libraries);
+    let compiled_function =
+        compile_function_inner(function, &mut state.global_compiler_state, libraries);
 
     state.compose_code_for_outer_function(compiled_function)
 }
@@ -1210,7 +1227,8 @@ fn compile_stmt(
             )
         }
         ast::Stmt::FnDeclaration(function) => {
-            let compiled_fn = compile_function_inner(function, &mut state.global_compiler_state);
+            let compiled_fn =
+                compile_function_inner(function, &mut state.global_compiler_state, state.libraries);
             state
                 .function_state
                 .add_compiled_fn_to_subroutines(compiled_fn);
@@ -1249,7 +1267,7 @@ fn compile_fn_call(
             .unzip();
 
     let mut call_fn_code = vec![];
-    for lib in libraries::all_libraries() {
+    for lib in state.libraries.iter() {
         if let Some(fn_name) = lib.get_function_name(&name) {
             call_fn_code.append(&mut lib.call_function(&fn_name, type_parameter, &args, state));
             break;
@@ -1290,14 +1308,11 @@ fn compile_method_call(
             .unzip();
 
     let mut call_code = vec![];
-    for lib in libraries::all_libraries() {
+    for lib in state.libraries.iter() {
         if let Some(fn_name) = lib.get_method_name(&method_name, &receiver_type) {
-            call_code.append(&mut lib.call_method(
-                &fn_name,
-                &receiver_type,
-                &method_call.args,
-                state,
-            ));
+            let mut call_method_code =
+                lib.call_method(&fn_name, &receiver_type, &method_call.args, state);
+            call_code.append(&mut call_method_code);
             break;
         }
     }
@@ -2184,7 +2199,10 @@ fn compile_expr(
         }
     };
 
-    let (addr, spill) = state.new_value_identifier(&format!("{expr}_{result_type}"), &result_type);
+    // Update compiler's view of the stack with the new value. Check if value needs to
+    // be spilled to memory.
+    let binding_description = format!("{expr}_{result_type}");
+    let (addr, spill) = state.new_value_identifier(&binding_description, &result_type);
     let spill_code = spill
         .map(|x| copy_top_stack_value_to_memory(x, result_type.stack_size()))
         .unwrap_or_default();

@@ -112,8 +112,10 @@ impl<T: GetType> GetType for ast::MethodCall<T> {
     }
 }
 
-#[derive(Debug, Default)]
-pub struct CheckState {
+#[derive(Debug)]
+pub struct CheckState<'a> {
+    pub libraries: &'a [Box<dyn libraries::Library>],
+
     /// The `vtable` maps variable names to their type.
     ///
     /// This is used for determining the type of variables in expressions.
@@ -154,6 +156,7 @@ impl DataTypeAndMutability {
 pub fn annotate_fn(
     function: &mut ast::Fn<Typing>,
     declared_structs: HashMap<String, ast_types::StructType>,
+    libraries: &[Box<dyn libraries::Library>],
 ) {
     // Initialize `CheckState`
     let vtable: HashMap<String, DataTypeAndMutability> =
@@ -165,6 +168,7 @@ pub fn annotate_fn(
         function.fn_signature.clone(),
     );
     let mut state = CheckState {
+        libraries,
         vtable,
         ftable,
         declared_structs,
@@ -360,7 +364,7 @@ fn annotate_stmt(
             assert_type_equals(&expr_type, &ast_types::DataType::Bool, "assert expression");
         }
         ast::Stmt::FnDeclaration(function) => {
-            annotate_fn(function, HashMap::default());
+            annotate_fn(function, HashMap::default(), &state.libraries);
             state.ftable.insert(
                 function.fn_signature.name.clone(),
                 function.fn_signature.clone(),
@@ -480,7 +484,7 @@ fn get_fn_signature(
     args: &[ast::Expr<Typing>],
 ) -> ast::FnSignature {
     // Function from libraries are in scope
-    for lib in libraries::all_libraries() {
+    for lib in state.libraries.iter() {
         if let Some(fn_name) = lib.get_function_name(name) {
             return lib.function_name_to_signature(&fn_name, type_parameter.to_owned(), args);
         }
@@ -495,7 +499,7 @@ fn get_fn_signature(
 
 fn get_method_signature(
     name: &str,
-    _state: &CheckState,
+    state: &CheckState,
     receiver_type: ast_types::DataType,
     args: &mut [ast::Expr<Typing>],
 ) -> ast::FnSignature {
@@ -506,11 +510,7 @@ fn get_method_signature(
             ast::Expr::Var(inner_fn_name) => inner_fn_name.to_string(),
             _ => panic!("unsupported"),
         };
-        let inner_fn_signature = _state
-            .ftable
-            .get(inner_fn_name.as_str())
-            .unwrap()
-            .to_owned();
+        let inner_fn_signature = state.ftable.get(inner_fn_name.as_str()).unwrap().to_owned();
         // TODO: Expand to handle more arguments
         let inner_output = inner_fn_signature.output;
         let inner_input = match &inner_fn_signature.args[0] {
@@ -541,7 +541,7 @@ fn get_method_signature(
     }
 
     // Only methods from libraries are in scope. New methods cannot be declared.
-    for lib in libraries::all_libraries() {
+    for lib in state.libraries.iter() {
         if let Some(method_name) = lib.get_method_name(name, &receiver_type) {
             return lib.method_name_to_signature(&method_name, &receiver_type, args);
         }
@@ -609,7 +609,7 @@ fn derive_annotate_fn_call_args(
                 let arg_pos = arg_pos + 1;
                 assert_eq!(
                 arg_type, expr_type,
-                "Wrong type of function argument {arg_pos} '{arg_name}' in '{fn_name}'; expected {arg_type}, got {expr_type}.",
+                "Wrong type of function argument {arg_pos} function call '{arg_name}' in '{fn_name}'\n expected type \"{arg_type:#?}\", but got type  \"{expr_type:#?}\".",
             );
             }
         }

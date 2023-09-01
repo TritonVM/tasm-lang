@@ -2,6 +2,7 @@ use triton_vm::triton_asm;
 
 use crate::ast::{self, FnSignature};
 use crate::ast_types;
+use crate::graft::Graft;
 use crate::tasm_code_generator::CompilerState;
 
 use super::Library;
@@ -9,7 +10,9 @@ use super::Library;
 const TASM_LIB_INDICATOR: &str = "tasm::";
 
 #[derive(Clone, Debug)]
-pub struct TasmLibrary;
+pub struct TasmLibrary {
+    pub list_type: ast_types::ListType,
+}
 
 impl Library for TasmLibrary {
     fn get_function_name(&self, full_name: &str) -> Option<String> {
@@ -55,7 +58,7 @@ impl Library for TasmLibrary {
         for (ty, name) in snippet.inputs().into_iter() {
             let fn_arg = ast_types::AbstractValueArg {
                 name,
-                data_type: ty.into(),
+                data_type: ast_types::DataType::from_tasm_lib_datatype(ty, self.list_type),
                 // The tasm snippet input arguments are all considered mutable
                 mutable: true,
             };
@@ -63,8 +66,11 @@ impl Library for TasmLibrary {
         }
 
         let mut output_types: Vec<ast_types::DataType> = vec![];
-        for (otl, _name) in snippet.outputs() {
-            output_types.push(otl.into());
+        for (ty, _name) in snippet.outputs() {
+            output_types.push(ast_types::DataType::from_tasm_lib_datatype(
+                ty,
+                self.list_type,
+            ));
         }
 
         let output = match output_types.len() {
@@ -114,17 +120,17 @@ impl Library for TasmLibrary {
 
     fn graft_function(
         &self,
+        _graft_config: &Graft,
         _fn_name: &str,
         _args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
-        _list_type: ast_types::ListType,
     ) -> Option<ast::Expr<super::Annotation>> {
         panic!("No grafting is handled by TASM lib")
     }
 
     fn graft_method(
         &self,
+        _graft_config: &Graft,
         _rust_method_call: &syn::ExprMethodCall,
-        _list_type: ast_types::ListType,
     ) -> Option<ast::Expr<super::Annotation>> {
         None
     }

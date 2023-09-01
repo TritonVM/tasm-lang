@@ -2,6 +2,7 @@ use triton_vm::triton_asm;
 
 use crate::{
     ast, ast_types,
+    graft::Graft,
     tasm_code_generator::{subroutine::SubRoutine, CompilerState},
 };
 
@@ -87,17 +88,17 @@ impl Library for HasherLib {
 
     fn graft_function(
         &self,
+        _graft_config: &Graft,
         _fn_name: &str,
         _args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
-        _list_type: ast_types::ListType,
     ) -> Option<ast::Expr<super::Annotation>> {
         panic!("HasherLib cannot graft")
     }
 
     fn graft_method(
         &self,
+        _graft_config: &Graft,
         _rust_method_call: &syn::ExprMethodCall,
-        _list_type: ast_types::ListType,
     ) -> Option<ast::Expr<super::Annotation>> {
         None
     }

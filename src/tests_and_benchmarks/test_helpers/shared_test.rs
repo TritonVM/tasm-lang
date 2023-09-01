@@ -1,4 +1,3 @@
-use crate::graft::Graft;
 use crate::tasm_code_generator::compile_function;
 use crate::type_checker::{self, annotate_fn, GetType, Typing};
 use crate::{ast, ast_types};
@@ -53,14 +52,14 @@ pub fn compile_for_run_test(item_fn: &syn::ItemFn) -> (Vec<LabelledInstruction>,
 }
 
 pub fn graft_check_compile_prop(item_fn: &syn::ItemFn) -> Vec<LabelledInstruction> {
-    // parse test
-    let mut function = Graft::default().graft_fn_decl(item_fn);
+    get_standard_setup!(ast_types::ListType::Safe, graft_config, libraries);
+    let mut function = graft_config.graft_fn_decl(item_fn);
 
     // type-check and annotate
-    annotate_fn(&mut function, HashMap::default());
+    annotate_fn(&mut function, HashMap::default(), &libraries);
 
     // compile
-    let tasm = compile_function(&function);
+    let tasm = compile_function(&function, &libraries);
     tasm.compose()
 }
 

@@ -2,6 +2,7 @@ pub mod ast;
 pub mod ast_types;
 pub mod cfg;
 mod compiled_tasm;
+#[macro_use]
 pub mod graft;
 pub mod libraries;
 pub mod ssa;

@@ -1,7 +1,4 @@
-use crate::{
-    ast, ast_types,
-    graft::{self, graft_expr},
-};
+use crate::{ast, graft::Graft};
 
 use super::Library;
 
@@ -69,17 +66,17 @@ impl Library for BFieldCodecLib {
 
     fn graft_function(
         &self,
+        graft_config: &Graft,
         fn_name: &str,
         args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
-        list_type: ast_types::ListType,
     ) -> Option<crate::ast::Expr<super::Annotation>> {
         /// Handle the entire T::decode(...) grafting. Does not handle any appended `unwrap`.
         /// Expects the `decode` expression to be `T::decode(&tasm::load_from_memory(BFieldElement::new(x)))`
         /// Extracts the `x` from the above expression and returns it as a literal.
         fn handle_decode(
+            graft_config: &Graft,
             fn_name: &str,
             args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
-            list_type: ast_types::ListType,
         ) -> crate::ast::Expr<super::Annotation> {
             // Fetch the returned type
             let split_fn_name: Vec<_> = fn_name.split("::").collect();
@@ -96,7 +93,7 @@ impl Library for BFieldCodecLib {
             };
 
             let error_msg = format!("Expected T::decode(tasm::load_from_memory(BFieldElement::new(<n>)))). Got: {decode_arg:#?}");
-            let decode_arg = graft_expr(&decode_arg, list_type);
+            let decode_arg = graft_config.graft_expr(&decode_arg);
             const LOAD_FROM_MEMORY_FN_NAME: &str = "tasm::load_from_memory";
             let pointer_to_struct = match decode_arg {
                 ast::Expr::FnCall(ast::FnCall {
@@ -129,7 +126,7 @@ impl Library for BFieldCodecLib {
         }
 
         if fn_name.contains("::decode") {
-            return Some(handle_decode(fn_name, args, list_type));
+            return Some(handle_decode(graft_config, fn_name, args));
         }
 
         None
@@ -137,16 +134,16 @@ impl Library for BFieldCodecLib {
 
     fn graft_method(
         &self,
+        graft_config: &Graft,
         rust_method_call: &syn::ExprMethodCall,
-        list_type: ast_types::ListType,
     ) -> Option<ast::Expr<super::Annotation>> {
         fn handle_unwrap(
+            graft_config: &Graft,
             rust_method_call: &syn::ExprMethodCall,
-            list_type: ast_types::ListType,
         ) -> Option<ast::Expr<super::Annotation>> {
             match rust_method_call.receiver.as_ref() {
                 syn::Expr::Call(ca) => {
-                    let preceding_function_call = graft::graft_call_exp(ca, list_type);
+                    let preceding_function_call = graft_config.graft_call_exp(ca);
                     if matches!(
                         preceding_function_call,
                         ast::Expr::Lit(ast::ExprLit::MemPointer(_))
@@ -164,7 +161,7 @@ impl Library for BFieldCodecLib {
         const UNWRAP_NAME: &str = "unwrap";
         let last_method_name = rust_method_call.method.to_string();
         if last_method_name == UNWRAP_NAME {
-            return handle_unwrap(rust_method_call, list_type);
+            return handle_unwrap(graft_config, rust_method_call);
         }
 
         None

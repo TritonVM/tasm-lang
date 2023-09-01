@@ -2,10 +2,15 @@ use tasm_lib::snippet::BasicSnippet;
 use triton_vm::triton_asm;
 
 use super::{Library, LibraryFunction};
-use crate::{ast, ast_types, tasm_code_generator::CompilerState, type_checker::is_u32_based_type};
+use crate::{
+    ast, ast_types, graft::Graft, tasm_code_generator::CompilerState,
+    type_checker::is_u32_based_type,
+};
 
 #[derive(Clone, Debug)]
-pub struct UnsignedIntegersLib;
+pub struct UnsignedIntegersLib {
+    pub list_type: ast_types::ListType,
+}
 
 impl Library for UnsignedIntegersLib {
     fn get_function_name(&self, _full_name: &str) -> Option<String> {
@@ -51,7 +56,7 @@ impl Library for UnsignedIntegersLib {
         for (ty, name) in snippet.inputs().into_iter() {
             let fn_arg = ast_types::AbstractValueArg {
                 name,
-                data_type: ty.into(),
+                data_type: ast_types::DataType::from_tasm_lib_datatype(ty, self.list_type),
                 mutable: true,
             };
             args.push(ast_types::AbstractArgument::ValueArgument(fn_arg));
@@ -59,7 +64,10 @@ impl Library for UnsignedIntegersLib {
 
         let mut output_types: Vec<ast_types::DataType> = vec![];
         for (ty, _name) in snippet.outputs() {
-            output_types.push(ty.into());
+            output_types.push(ast_types::DataType::from_tasm_lib_datatype(
+                ty,
+                self.list_type,
+            ));
         }
 
         let output = match output_types.len() {
@@ -120,17 +128,17 @@ impl Library for UnsignedIntegersLib {
 
     fn graft_function(
         &self,
+        _graft_config: &Graft,
         _fn_name: &str,
         _args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
-        _list_type: ast_types::ListType,
     ) -> Option<ast::Expr<super::Annotation>> {
         panic!("unsigned_integers lib cannot graft");
     }
 
     fn graft_method(
         &self,
+        _graft_config: &Graft,
         _rust_method_call: &syn::ExprMethodCall,
-        _list_type: ast_types::ListType,
     ) -> Option<ast::Expr<super::Annotation>> {
         None
     }

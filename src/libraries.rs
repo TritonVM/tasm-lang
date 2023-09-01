@@ -1,6 +1,7 @@
 use crate::{
     ast::{self, FnSignature},
     ast_types::{self},
+    graft::Graft,
     tasm_code_generator::CompilerState,
     type_checker,
 };
@@ -21,14 +22,24 @@ pub struct LibraryFunction {
     pub body: Vec<triton_vm::instruction::LabelledInstruction>,
 }
 
-pub fn all_libraries() -> Vec<Box<dyn Library>> {
+pub struct LibraryConfig {
+    pub list_type: ast_types::ListType,
+}
+
+pub fn all_libraries<'a>(config: LibraryConfig) -> Vec<Box<dyn Library + 'a>> {
     vec![
         Box::new(bfe::BfeLibrary),
         Box::new(bfield_codec::BFieldCodecLib),
         Box::new(hasher::HasherLib),
-        Box::new(tasm::TasmLibrary),
-        Box::new(unsigned_integers::UnsignedIntegersLib),
-        Box::new(vector::VectorLib),
+        Box::new(tasm::TasmLibrary {
+            list_type: config.list_type,
+        }),
+        Box::new(unsigned_integers::UnsignedIntegersLib {
+            list_type: config.list_type,
+        }),
+        Box::new(vector::VectorLib {
+            list_type: config.list_type,
+        }),
         Box::new(xfe::XfeLibrary),
     ]
 }
@@ -84,10 +95,14 @@ pub trait Library: Debug {
 
     fn graft_function(
         &self,
+        graft_config: &Graft,
         fn_name: &str,
         args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
     ) -> Option<ast::Expr<Annotation>>;
 
-    fn graft_method(&self, rust_method_call: &syn::ExprMethodCall)
-        -> Option<ast::Expr<Annotation>>;
+    fn graft_method(
+        &self,
+        graft_config: &Graft,
+        rust_method_call: &syn::ExprMethodCall,
+    ) -> Option<ast::Expr<Annotation>>;
 }

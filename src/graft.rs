@@ -5,24 +5,36 @@ use syn::parse_quote;
 
 use crate::ast;
 use crate::ast_types;
-use crate::libraries;
+use crate::libraries::Library;
 use crate::type_checker;
 
 pub type Annotation = type_checker::Typing;
 
-pub struct Graft {
+#[derive(Debug)]
+pub struct Graft<'a> {
     pub list_type: ast_types::ListType,
+    pub libraries: &'a [Box<dyn Library + 'a>],
 }
 
-impl Default for Graft {
-    fn default() -> Self {
+#[allow(unused_macros)]
+macro_rules! get_standard_setup {
+    ($list_type:expr, $graft_config:ident, $libraries:ident) => {
+        let library_config = crate::libraries::LibraryConfig {
+            list_type: $list_type,
+        };
+        let $libraries = crate::libraries::all_libraries(library_config);
+        let $graft_config = crate::graft::Graft::new($list_type, &$libraries);
+    };
+}
+
+impl<'a> Graft<'a> {
+    pub fn new(list_type: ast_types::ListType, libraries: &'a [Box<dyn Library>]) -> Self {
         Self {
-            list_type: ast_types::ListType::Safe,
+            list_type,
+            libraries,
         }
     }
-}
 
-impl Graft {
     pub fn graft_structs(
         &self,
         structs: Vec<syn::ItemStruct>,
@@ -332,9 +344,9 @@ impl Graft {
         };
 
         // Check if grafting should be handled by a library
-        for lib in libraries::all_libraries() {
+        for lib in self.libraries.iter() {
             if let Some(fn_name) = lib.get_graft_function_name(&full_name) {
-                return lib.graft_function(&fn_name, args).unwrap();
+                return lib.graft_function(self, &fn_name, args).unwrap();
             }
         }
 
@@ -402,8 +414,8 @@ impl Graft {
         &self,
         rust_method_call: &syn::ExprMethodCall,
     ) -> ast::Expr<Annotation> {
-        for lib in libraries::all_libraries() {
-            if let Some(method_call) = lib.graft_method(rust_method_call) {
+        for lib in self.libraries.iter() {
+            if let Some(method_call) = lib.graft_method(self, rust_method_call) {
                 return method_call;
             }
         }
@@ -873,9 +885,8 @@ pub fn item_fn(item: syn::Item) -> syn::ItemFn {
 
 #[cfg(test)]
 mod tests {
-    use syn::parse_quote;
-
     use super::*;
+    use syn::parse_quote;
 
     #[test]
     fn big_mmr_function() {
@@ -914,7 +925,8 @@ mod tests {
 
         match &tokens {
             syn::Item::Fn(item_fn) => {
-                let _ret = Graft::default().graft_fn_decl(item_fn);
+                get_standard_setup!(ast_types::ListType::Safe, graft_config, libraries);
+                let _ret = graft_config.graft_fn_decl(item_fn);
             }
             _ => panic!("unsupported"),
         }
@@ -936,7 +948,8 @@ mod tests {
 
         match &tokens {
             syn::Item::Fn(item_fn) => {
-                let _ret = Graft::default().graft_fn_decl(item_fn);
+                get_standard_setup!(ast_types::ListType::Safe, graft_config, libraries);
+                let _ret = graft_config.graft_fn_decl(item_fn);
             }
             _ => panic!("unsupported"),
         }
@@ -971,7 +984,8 @@ mod tests {
 
         match &tokens {
             syn::Item::Fn(item_fn) => {
-                let _ret = Graft::default().graft_fn_decl(item_fn);
+                get_standard_setup!(ast_types::ListType::Safe, graft_config, libraries);
+                let _ret = graft_config.graft_fn_decl(item_fn);
             }
             _ => panic!("unsupported"),
         }
@@ -998,7 +1012,8 @@ mod tests {
 
         match &tokens {
             syn::Item::Fn(item_fn) => {
-                let _ret = Graft::default().graft_fn_decl(item_fn);
+                get_standard_setup!(ast_types::ListType::Safe, graft_config, libraries);
+                let _ret = graft_config.graft_fn_decl(item_fn);
             }
             _ => panic!("unsupported"),
         }
@@ -1018,7 +1033,8 @@ mod tests {
 
         match &tokens {
             syn::Item::Fn(item_fn) => {
-                let _ret = Graft::default().graft_fn_decl(item_fn);
+                get_standard_setup!(ast_types::ListType::Safe, graft_config, libraries);
+                let _ret = graft_config.graft_fn_decl(item_fn);
             }
             _ => panic!("unsupported"),
         }
@@ -1034,7 +1050,8 @@ mod tests {
 
         match &tokens {
             syn::Item::Fn(item_fn) => {
-                let _ret = Graft::default().graft_fn_decl(item_fn);
+                get_standard_setup!(ast_types::ListType::Safe, graft_config, libraries);
+                let _ret = graft_config.graft_fn_decl(item_fn);
             }
             _ => panic!("unsupported"),
         }
@@ -1051,7 +1068,8 @@ mod tests {
 
         match &tokens {
             syn::Item::Fn(item_fn) => {
-                let _ret = Graft::default().graft_fn_decl(item_fn);
+                get_standard_setup!(ast_types::ListType::Safe, graft_config, libraries);
+                let _ret = graft_config.graft_fn_decl(item_fn);
             }
             _ => panic!("unsupported"),
         }
@@ -1071,7 +1089,8 @@ mod tests {
 
         match &tokens {
             syn::Item::Fn(item_fn) => {
-                let _ret = Graft::default().graft_fn_decl(item_fn);
+                get_standard_setup!(ast_types::ListType::Safe, graft_config, libraries);
+                let _ret = graft_config.graft_fn_decl(item_fn);
             }
             _ => panic!("unsupported"),
         }
@@ -1095,7 +1114,8 @@ mod tests {
 
         match &tokens {
             syn::Item::Fn(item_fn) => {
-                let _ret = Graft::default().graft_fn_decl(item_fn);
+                get_standard_setup!(ast_types::ListType::Safe, graft_config, libraries);
+                let _ret = graft_config.graft_fn_decl(item_fn);
             }
             _ => panic!("unsupported"),
         }
@@ -1124,7 +1144,8 @@ mod tests {
 
         match &tokens {
             syn::Item::Fn(item_fn) => {
-                let _ret = Graft::default().graft_fn_decl(item_fn);
+                get_standard_setup!(ast_types::ListType::Safe, graft_config, libraries);
+                let _ret = graft_config.graft_fn_decl(item_fn);
             }
             _ => panic!("unsupported"),
         }
@@ -1147,7 +1168,8 @@ mod tests {
 
         match &tokens {
             syn::Item::Fn(item_fn) => {
-                let _ret = Graft::default().graft_fn_decl(item_fn);
+                get_standard_setup!(ast_types::ListType::Safe, graft_config, libraries);
+                let _ret = graft_config.graft_fn_decl(item_fn);
             }
             _ => panic!("unsupported"),
         }
@@ -1165,7 +1187,8 @@ mod tests {
 
         match &tokens {
             syn::Item::Fn(item_fn) => {
-                let _ret = Graft::default().graft_fn_decl(item_fn);
+                get_standard_setup!(ast_types::ListType::Safe, graft_config, libraries);
+                let _ret = graft_config.graft_fn_decl(item_fn);
             }
             _ => panic!("unsupported"),
         }
@@ -1181,7 +1204,8 @@ mod tests {
 
         match &tokens {
             syn::Item::Fn(item_fn) => {
-                let _ret = Graft::default().graft_fn_decl(item_fn);
+                get_standard_setup!(ast_types::ListType::Safe, graft_config, libraries);
+                let _ret = graft_config.graft_fn_decl(item_fn);
             }
             _ => panic!("unsupported"),
         }
@@ -1198,7 +1222,8 @@ mod tests {
 
         match &tokens {
             syn::Item::Fn(item_fn) => {
-                let _ret = Graft::default().graft_fn_decl(item_fn);
+                get_standard_setup!(ast_types::ListType::Safe, graft_config, libraries);
+                let _ret = graft_config.graft_fn_decl(item_fn);
             }
             _ => panic!("unsupported"),
         }
@@ -1213,7 +1238,8 @@ mod tests {
         };
         match &tokens {
             syn::Item::Fn(item_fn) => {
-                let _ret = Graft::default().graft_fn_decl(item_fn);
+                get_standard_setup!(ast_types::ListType::Safe, graft_config, libraries);
+                let _ret = graft_config.graft_fn_decl(item_fn);
             }
             _ => panic!("unsupported"),
         }
