@@ -61,6 +61,7 @@ pub trait Library: Debug {
         fn_name: &str,
         receiver_type: &ast_types::DataType,
         args: &[ast::Expr<Annotation>],
+        type_checker_state: &crate::type_checker::CheckState,
     ) -> ast::FnSignature;
 
     /// Return function signature of function, if function is known.
@@ -77,7 +78,7 @@ pub trait Library: Debug {
         method_name: &str,
         receiver_type: &ast_types::DataType,
         args: &[ast::Expr<Annotation>],
-        state: &mut CompilerState,
+        state: &mut crate::tasm_code_generator::CompilerState,
     ) -> Vec<triton_vm::instruction::LabelledInstruction>;
 
     /// Return the instructions to call the function, and imports snippets into `state` if needed.

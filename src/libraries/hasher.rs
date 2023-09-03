@@ -37,6 +37,7 @@ impl Library for HasherLib {
         _fn_name: &str,
         _receiver_type: &ast_types::DataType,
         _args: &[ast::Expr<super::Annotation>],
+        _type_checker_state: &crate::type_checker::CheckState,
     ) -> ast::FnSignature {
         panic!("HasherLib does not contain any methods")
     }

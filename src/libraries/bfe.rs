@@ -43,6 +43,7 @@ impl Library for BfeLibrary {
         method_name: &str,
         receiver_type: &ast_types::DataType,
         _args: &[ast::Expr<super::Annotation>],
+        _type_checker_state: &crate::type_checker::CheckState,
     ) -> ast::FnSignature {
         if matches!(receiver_type, ast_types::DataType::BFE) {
             if method_name == "lift" {

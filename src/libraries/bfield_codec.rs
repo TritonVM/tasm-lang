@@ -23,6 +23,7 @@ impl Library for BFieldCodecLib {
         _fn_name: &str,
         _receiver_type: &crate::ast_types::DataType,
         _args: &[crate::ast::Expr<super::Annotation>],
+        _type_checker_state: &crate::type_checker::CheckState,
     ) -> crate::ast::FnSignature {
         panic!("BFieldCodecLib does not contain any methods")
     }

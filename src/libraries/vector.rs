@@ -32,13 +32,15 @@ impl Library for VectorLib {
     fn get_method_name(
         &self,
         method_name: &str,
-        _receiver_type: &ast_types::DataType,
+        receiver_type: &ast_types::DataType,
     ) -> Option<String> {
-        if matches!(method_name, "push" | "pop" | "len" | "map") {
-            Some(method_name.to_owned())
-        } else {
-            None
+        if let ast_types::DataType::List(_, _) = receiver_type {
+            if matches!(method_name, "push" | "pop" | "len" | "map") {
+                return Some(method_name.to_owned());
+            }
         }
+
+        None
     }
 
     fn method_name_to_signature(
@@ -46,8 +48,19 @@ impl Library for VectorLib {
         fn_name: &str,
         receiver_type: &ast_types::DataType,
         args: &[ast::Expr<super::Annotation>],
+        type_checker_state: &crate::type_checker::CheckState,
     ) -> ast::FnSignature {
-        self.function_name_to_signature(fn_name, receiver_type.type_parameter(), args)
+        if !matches!(receiver_type, ast_types::DataType::List(_, _)) {
+            panic!("Receiver type must be `List`");
+        }
+
+        // Special-case on `map` as we need to dig into the type checker state to find the
+        // function signature.
+        if fn_name == "map" {
+            return self.fn_signature_for_map(args, type_checker_state);
+        }
+
+        return self.function_name_to_signature(fn_name, receiver_type.type_parameter(), args);
     }
 
     fn function_name_to_signature(
@@ -262,6 +275,48 @@ impl Library for VectorLib {
 
 /// Map list-function or method name to the TASM lib snippet type
 impl VectorLib {
+    fn fn_signature_for_map(
+        &self,
+        args: &[ast::Expr<super::Annotation>],
+        type_checker_state: &crate::type_checker::CheckState,
+    ) -> ast::FnSignature {
+        let inner_fn_name = match &args[1] {
+            ast::Expr::Var(inner_fn_name) => inner_fn_name.to_string(),
+            _ => panic!("unsupported"),
+        };
+        let inner_fn_signature = type_checker_state
+            .ftable
+            .get(inner_fn_name.as_str())
+            .unwrap()
+            .to_owned();
+        let inner_output = inner_fn_signature.output;
+        let inner_input = match &inner_fn_signature.args[0] {
+            ast_types::AbstractArgument::FunctionArgument(_) => todo!(),
+            ast_types::AbstractArgument::ValueArgument(value_arg) => value_arg.data_type.to_owned(),
+        };
+        let derived_inner_function_as_function_arg =
+            ast_types::AbstractArgument::FunctionArgument(ast_types::AbstractFunctionArg {
+                abstract_name: String::from("map_inner_function"),
+                function_type: ast_types::FunctionType {
+                    input_argument: inner_input,
+                    output: inner_output.clone(),
+                },
+            });
+        let vector_as_arg =
+            ast_types::AbstractArgument::ValueArgument(ast_types::AbstractValueArg {
+                name: "element_arg_0".to_owned(),
+                data_type: args[0].get_type(),
+                mutable: false,
+            });
+        return ast::FnSignature {
+            name: String::from("map"),
+            // TODO: Use List<inner_fn_signature-args> here instead for betetr type checking
+            args: vec![vector_as_arg, derived_inner_function_as_function_arg],
+            output: ast_types::DataType::List(Box::new(inner_output), ast_types::ListType::Safe),
+            arg_evaluation_order: Default::default(),
+        };
+    }
+
     fn name_to_tasm_lib_snippet(
         &self,
         public_name: &str,

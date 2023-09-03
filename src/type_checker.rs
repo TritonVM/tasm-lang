@@ -3,7 +3,6 @@ use std::collections::HashMap;
 use twenty_first::shared_math::b_field_element::BFieldElement;
 use twenty_first::shared_math::x_field_element::XFieldElement;
 
-use crate::ast_types::{AbstractFunctionArg, AbstractValueArg, FunctionType};
 use crate::tasm_code_generator::SIZE_OF_ACCESSIBLE_STACK;
 use crate::{ast, ast_types, libraries};
 
@@ -203,7 +202,7 @@ pub fn annotate_fn(
         SIZE_OF_ACCESSIBLE_STACK - 1
     );
 
-    // Verify that last statememnt of function exists, and that it is a `return` statement
+    // Verify that last statement of function exists, and that it is a `return` statement
     let last_stmt = function
         .body
         .iter()
@@ -503,47 +502,10 @@ fn get_method_signature(
     receiver_type: ast_types::DataType,
     args: &mut [ast::Expr<Typing>],
 ) -> ast::FnSignature {
-    // Special-case on `map`
-    // TODO: Move special case handling to `Vec` library!
-    if name == "map" {
-        let inner_fn_name = match &args[1] {
-            ast::Expr::Var(inner_fn_name) => inner_fn_name.to_string(),
-            _ => panic!("unsupported"),
-        };
-        let inner_fn_signature = state.ftable.get(inner_fn_name.as_str()).unwrap().to_owned();
-        // TODO: Expand to handle more arguments
-        let inner_output = inner_fn_signature.output;
-        let inner_input = match &inner_fn_signature.args[0] {
-            ast_types::AbstractArgument::FunctionArgument(_) => todo!(),
-            ast_types::AbstractArgument::ValueArgument(value_arg) => value_arg.data_type.to_owned(),
-        };
-        let derived_inner_function_as_function_arg =
-            ast_types::AbstractArgument::FunctionArgument(AbstractFunctionArg {
-                abstract_name: String::from("map_inner_function"),
-                function_type: FunctionType {
-                    input_argument: inner_input,
-                    output: inner_output.clone(),
-                },
-            });
-
-        let vector_as_arg = ast_types::AbstractArgument::ValueArgument(AbstractValueArg {
-            name: "element_arg_0".to_owned(),
-            data_type: receiver_type,
-            mutable: false,
-        });
-        return ast::FnSignature {
-            name: String::from("map"),
-            // TODO: Use List<inner_fn_signature-args> here instead for betetr type checking
-            args: vec![vector_as_arg, derived_inner_function_as_function_arg],
-            output: ast_types::DataType::List(Box::new(inner_output), ast_types::ListType::Safe),
-            arg_evaluation_order: Default::default(),
-        };
-    }
-
     // Only methods from libraries are in scope. New methods cannot be declared.
     for lib in state.libraries.iter() {
         if let Some(method_name) = lib.get_method_name(name, &receiver_type) {
-            return lib.method_name_to_signature(&method_name, &receiver_type, args);
+            return lib.method_name_to_signature(&method_name, &receiver_type, args, state);
         }
     }
 

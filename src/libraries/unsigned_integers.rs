@@ -26,8 +26,6 @@ impl Library for UnsignedIntegersLib {
             if matches!(method_name, "leading_zeros" | "count_ones") {
                 return Some(method_name.to_owned());
             }
-
-            return None;
         }
 
         None
@@ -38,6 +36,7 @@ impl Library for UnsignedIntegersLib {
         method_name: &str,
         receiver_type: &ast_types::DataType,
         _args: &[ast::Expr<super::Annotation>],
+        _type_checker_state: &crate::type_checker::CheckState,
     ) -> ast::FnSignature {
         if !is_u32_based_type(receiver_type) {
             panic!("Cannot call unsigned integer method on non-u32 based value. Receiver type was: {receiver_type}");

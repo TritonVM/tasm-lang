@@ -38,6 +38,7 @@ impl Library for TasmLibrary {
         _fn_name: &str,
         _receiver_type: &ast_types::DataType,
         _args: &[ast::Expr<super::Annotation>],
+        _type_checker_state: &crate::type_checker::CheckState,
     ) -> ast::FnSignature {
         panic!("TASM lib only contains functions, no methods")
     }
