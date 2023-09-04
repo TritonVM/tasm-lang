@@ -199,7 +199,7 @@ mod run_tests {
         let test_iterations = 10;
         let test_cases = random_elements::<BFieldElement>(test_iterations)
             .into_iter()
-            .zip_eq(random_elements::<BFieldElement>(test_iterations).into_iter())
+            .zip_eq(random_elements::<BFieldElement>(test_iterations))
             .map(|(lhs, rhs)| {
                 InputOutputTestCase::new(vec![bfe_lit(lhs), bfe_lit(rhs)], vec![bfe_lit(lhs - rhs)])
             })

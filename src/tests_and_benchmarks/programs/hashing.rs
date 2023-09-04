@@ -14,7 +14,8 @@ mod run_tests {
 
     fn hash_pair_rast() -> syn::ItemFn {
         item_fn(parse_quote! {
-            fn hash_pair(left: Digest, right: Digest) -> Digest {
+            // Calling this `hash_pair` would result in a label collission
+            fn hash_pair_test(left: Digest, right: Digest) -> Digest {
                 let ret: Digest = H::hash_pair(left, right);
                 return ret;
             }
@@ -30,7 +31,7 @@ mod run_tests {
         let rhss: Vec<Digest> = random_elements(test_iterations);
         let test_cases = lhss
             .into_iter()
-            .zip_eq(rhss.into_iter())
+            .zip_eq(rhss)
             .map(|(left, right)| {
                 InputOutputTestCase::new(
                     vec![digest_lit(left), digest_lit(right)],
@@ -43,7 +44,8 @@ mod run_tests {
 
     fn hash_pair_with_references_rast() -> syn::ItemFn {
         item_fn(parse_quote! {
-            fn hash_pair(left: Digest, right: Digest) -> Digest {
+            // Calling this `hash_pair` would result in a label collission
+            fn hash_pair_test(left: Digest, right: Digest) -> Digest {
                 let ret: Digest = H::hash_pair(&left, &right);
                 return ret;
             }

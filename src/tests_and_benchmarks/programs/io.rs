@@ -239,7 +239,7 @@ mod run_tests {
             ],
             HashMap::default(),
             None,
-            vec![
+            [
                 vec![bool_to_bfe(my_bool)],
                 vec![my_u32.into()],
                 split(my_u64),
@@ -281,7 +281,7 @@ mod run_tests {
             ],
             HashMap::default(),
             Some(HashMap::default()),
-            vec![
+            [
                 vec![bool_to_bfe(my_bool)],
                 vec![my_u32.into()],
                 split(my_u64),
@@ -325,7 +325,7 @@ mod run_tests {
             Some(HashMap::default()),
             vec![],
             NonDeterminism::new(
-                vec![
+                [
                     vec![bool_to_bfe(my_bool)],
                     vec![my_u32.into()],
                     split(my_u64),
@@ -357,7 +357,7 @@ mod run_tests {
             ],
             HashMap::default(),
             None,
-            vec![
+            [
                 vec![bool_to_bfe(my_bool)],
                 vec![my_u32.into()],
                 split(my_u64),
@@ -390,7 +390,7 @@ mod run_tests {
             None,
             vec![],
             NonDeterminism::new(
-                vec![
+                [
                     vec![bool_to_bfe(my_bool)],
                     vec![my_u32.into()],
                     split(my_u64),

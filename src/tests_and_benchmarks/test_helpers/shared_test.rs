@@ -1,17 +1,15 @@
+use crate::tasm_code_generator::compile_function;
+use crate::type_checker::{self, annotate_fn, GetType, Typing};
+use crate::{ast, ast_types};
 use itertools::Itertools;
 use std::collections::HashMap;
 use tasm_lib::memory::dyn_malloc::DYN_MALLOC_ADDRESS;
 use tasm_lib::{get_init_tvm_stack, rust_shadowing_helper_functions, DIGEST_LENGTH};
 use triton_vm::instruction::LabelledInstruction;
-use triton_vm::{triton_asm, Digest, NonDeterminism};
+use triton_vm::{Digest, NonDeterminism};
 use twenty_first::shared_math::b_field_element::{BFieldElement, BFIELD_ONE, BFIELD_ZERO};
 use twenty_first::shared_math::bfield_codec::BFieldCodec;
 use twenty_first::shared_math::x_field_element::XFieldElement;
-
-use crate::ast;
-use crate::graft::graft_fn_decl;
-use crate::tasm_code_generator::compile_function;
-use crate::types::{self, annotate_fn, GetType, Typing};
 
 #[derive(Debug, Clone)]
 pub struct InputOutputTestCase {
@@ -31,29 +29,37 @@ impl InputOutputTestCase {
     }
 }
 
+pub fn init_memory_from<T: BFieldCodec>(
+    data_struct: &T,
+    memory_address: BFieldElement,
+) -> NonDeterminism<BFieldElement> {
+    NonDeterminism::new(vec![]).with_ram(
+        data_struct
+            .encode()
+            .into_iter()
+            .zip(memory_address.value()..)
+            .map(|(v, k)| (k.into(), v))
+            .collect(),
+    )
+}
+
 /// Get the execution code and the name of the compiled function
 pub fn compile_for_run_test(item_fn: &syn::ItemFn) -> (Vec<LabelledInstruction>, String) {
     let function_name = item_fn.sig.ident.to_string();
     let code = graft_check_compile_prop(item_fn);
-    let code = triton_asm!(
-        call {function_name}
-        halt
-
-        {&code}
-    );
 
     (code, function_name)
 }
 
 pub fn graft_check_compile_prop(item_fn: &syn::ItemFn) -> Vec<LabelledInstruction> {
-    // parse test
-    let mut function = graft_fn_decl(item_fn);
+    get_standard_setup!(ast_types::ListType::Safe, graft_config, libraries);
+    let mut function = graft_config.graft_fn_decl(item_fn);
 
     // type-check and annotate
-    annotate_fn(&mut function);
+    annotate_fn(&mut function, HashMap::default(), &libraries);
 
     // compile
-    let tasm = compile_function(&function);
+    let tasm = compile_function(&function, &libraries);
     tasm.compose()
 }
 
@@ -193,7 +199,7 @@ pub fn compare_compiled_prop_with_stack_and_memory_and_ins(
     let init_stack_length: usize = get_init_tvm_stack().len()
         + input_args
             .iter()
-            .map(|arg| arg.get_type().size_of())
+            .map(|arg| arg.get_type().stack_size())
             .sum::<usize>();
     let mut actual_memory = init_memory;
     let exec_result = execute_compiled_with_stack_memory_and_ins_for_test(
@@ -361,11 +367,11 @@ pub fn show_memory(memory: &HashMap<BFieldElement, BFieldElement>) {
 /// Panic if expected list does not match list on specific memory address
 /// Assumes that the "safe list" implementation is used.
 pub fn assert_list_equal(
-    expected_list: Vec<ast::ExprLit<types::Typing>>,
+    expected_list: Vec<ast::ExprLit<type_checker::Typing>>,
     list_pointer: BFieldElement,
     memory: &HashMap<BFieldElement, BFieldElement>,
 ) {
-    let element_type: Option<ast::DataType> = if !expected_list.is_empty() {
+    let element_type: Option<ast_types::DataType> = if !expected_list.is_empty() {
         Some(expected_list[0].get_type())
     } else {
         None
@@ -374,7 +380,7 @@ pub fn assert_list_equal(
     // assert elements agree on type
     if let Some(element_type) = element_type.clone() {
         for elem in expected_list.iter() {
-            types::assert_type_equals(
+            type_checker::assert_type_equals(
                 &elem.get_type(),
                 &element_type,
                 "assert_list_equal test helper function",
@@ -407,7 +413,7 @@ pub fn assert_list_equal(
                 list_pointer,
                 i,
                 memory,
-                element_type.as_ref().unwrap().size_of(),
+                element_type.as_ref().unwrap().stack_size(),
             )
         {
             let mut actual_memory = memory.iter().collect_vec();
@@ -431,27 +437,27 @@ pub fn assert_list_equal(
     }
 }
 
-pub fn bool_lit(value: bool) -> ast::ExprLit<types::Typing> {
+pub fn bool_lit(value: bool) -> ast::ExprLit<type_checker::Typing> {
     ast::ExprLit::Bool(value)
 }
 
-pub fn u32_lit(value: u32) -> ast::ExprLit<types::Typing> {
+pub fn u32_lit(value: u32) -> ast::ExprLit<type_checker::Typing> {
     ast::ExprLit::U32(value)
 }
 
-pub fn u64_lit(value: u64) -> ast::ExprLit<types::Typing> {
+pub fn u64_lit(value: u64) -> ast::ExprLit<type_checker::Typing> {
     ast::ExprLit::U64(value)
 }
 
-pub fn bfe_lit(value: BFieldElement) -> ast::ExprLit<types::Typing> {
+pub fn bfe_lit(value: BFieldElement) -> ast::ExprLit<type_checker::Typing> {
     ast::ExprLit::BFE(value)
 }
 
-pub fn xfe_lit(value: XFieldElement) -> ast::ExprLit<types::Typing> {
+pub fn xfe_lit(value: XFieldElement) -> ast::ExprLit<type_checker::Typing> {
     ast::ExprLit::XFE(value)
 }
 
-pub fn digest_lit(value: Digest) -> ast::ExprLit<types::Typing> {
+pub fn digest_lit(value: Digest) -> ast::ExprLit<type_checker::Typing> {
     ast::ExprLit::Digest(value)
 }
 

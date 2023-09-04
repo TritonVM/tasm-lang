@@ -1,6 +1,8 @@
 use triton_vm::triton_asm;
 
 use crate::ast::{self, FnSignature};
+use crate::ast_types;
+use crate::graft::Graft;
 use crate::tasm_code_generator::CompilerState;
 
 use super::Library;
@@ -8,7 +10,9 @@ use super::Library;
 const TASM_LIB_INDICATOR: &str = "tasm::";
 
 #[derive(Clone, Debug)]
-pub struct TasmLibrary;
+pub struct TasmLibrary {
+    pub list_type: ast_types::ListType,
+}
 
 impl Library for TasmLibrary {
     fn get_function_name(&self, full_name: &str) -> Option<String> {
@@ -24,7 +28,7 @@ impl Library for TasmLibrary {
     fn get_method_name(
         &self,
         _method_name: &str,
-        _receiver_type: &ast::DataType,
+        _receiver_type: &ast_types::DataType,
     ) -> Option<String> {
         None
     }
@@ -32,41 +36,48 @@ impl Library for TasmLibrary {
     fn method_name_to_signature(
         &self,
         _fn_name: &str,
-        _receiver_type: &ast::DataType,
+        _receiver_type: &ast_types::DataType,
         _args: &[ast::Expr<super::Annotation>],
+        _type_checker_state: &crate::type_checker::CheckState,
     ) -> ast::FnSignature {
         panic!("TASM lib only contains functions, no methods")
     }
 
     fn function_name_to_signature(
         &self,
-        fn_name: &str,
-        _type_parameter: Option<ast::DataType>,
+        stripped_name: &str,
+        _type_parameter: Option<ast_types::DataType>,
         _args: &[ast::Expr<super::Annotation>],
     ) -> ast::FnSignature {
-        let snippet = tasm_lib::exported_snippets::name_to_snippet(fn_name);
+        // TODO:
+        // Note that this function expects `fn_name` to be stripped of `tasm::`
+        // Maybe that behavior should be changed though?
+        let snippet = tasm_lib::exported_snippets::name_to_snippet(stripped_name);
 
         let name = snippet.entrypoint();
-        let mut args: Vec<ast::AbstractArgument> = vec![];
+        let mut args: Vec<ast_types::AbstractArgument> = vec![];
         for (ty, name) in snippet.inputs().into_iter() {
-            let fn_arg = ast::AbstractValueArg {
+            let fn_arg = ast_types::AbstractValueArg {
                 name,
-                data_type: ty.into(),
+                data_type: ast_types::DataType::from_tasm_lib_datatype(ty, self.list_type),
                 // The tasm snippet input arguments are all considered mutable
                 mutable: true,
             };
-            args.push(ast::AbstractArgument::ValueArgument(fn_arg));
+            args.push(ast_types::AbstractArgument::ValueArgument(fn_arg));
         }
 
-        let mut output_types: Vec<ast::DataType> = vec![];
-        for (otl, _name) in snippet.outputs() {
-            output_types.push(otl.into());
+        let mut output_types: Vec<ast_types::DataType> = vec![];
+        for (ty, _name) in snippet.outputs() {
+            output_types.push(ast_types::DataType::from_tasm_lib_datatype(
+                ty,
+                self.list_type,
+            ));
         }
 
         let output = match output_types.len() {
             1 => output_types[0].clone(),
-            0 => ast::DataType::Tuple(vec![]),
-            _ => ast::DataType::Tuple(output_types),
+            0 => ast_types::DataType::Tuple(vec![]),
+            _ => ast_types::DataType::Tuple(output_types),
         };
 
         FnSignature {
@@ -80,7 +91,7 @@ impl Library for TasmLibrary {
     fn call_method(
         &self,
         _method_name: &str,
-        _receiver_type: &ast::DataType,
+        _receiver_type: &ast_types::DataType,
         _args: &[ast::Expr<super::Annotation>],
         _state: &mut CompilerState,
     ) -> Vec<triton_vm::instruction::LabelledInstruction> {
@@ -89,12 +100,15 @@ impl Library for TasmLibrary {
 
     fn call_function(
         &self,
-        fn_name: &str,
-        _type_parameter: Option<ast::DataType>,
+        stripped_name: &str,
+        _type_parameter: Option<ast_types::DataType>,
         _args: &[ast::Expr<super::Annotation>],
         state: &mut CompilerState,
     ) -> Vec<triton_vm::instruction::LabelledInstruction> {
-        let snippet = tasm_lib::exported_snippets::name_to_snippet(fn_name);
+        // TODO:
+        // Note that this function expects `fn_name` to be stripped of `tasm::`
+        // Maybe that behavior should be changed though?
+        let snippet = tasm_lib::exported_snippets::name_to_snippet(stripped_name);
         let entrypoint = snippet.entrypoint();
         state.import_snippet(snippet);
 
@@ -107,6 +121,7 @@ impl Library for TasmLibrary {
 
     fn graft_function(
         &self,
+        _graft_config: &Graft,
         _fn_name: &str,
         _args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
     ) -> Option<ast::Expr<super::Annotation>> {
@@ -115,8 +130,9 @@ impl Library for TasmLibrary {
 
     fn graft_method(
         &self,
+        _graft_config: &Graft,
         _rust_method_call: &syn::ExprMethodCall,
-    ) -> Option<ast::MethodCall<super::Annotation>> {
+    ) -> Option<ast::Expr<super::Annotation>> {
         None
     }
 }

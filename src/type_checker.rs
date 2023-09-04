@@ -3,9 +3,8 @@ use std::collections::HashMap;
 use twenty_first::shared_math::b_field_element::BFieldElement;
 use twenty_first::shared_math::x_field_element::XFieldElement;
 
-use crate::ast::{AbstractFunctionArg, AbstractValueArg, FunctionType};
 use crate::tasm_code_generator::SIZE_OF_ACCESSIBLE_STACK;
-use crate::{ast, libraries};
+use crate::{ast, ast_types, libraries};
 
 #[derive(Debug, Default, Clone, Hash, PartialEq, Eq)]
 pub enum Typing {
@@ -14,11 +13,11 @@ pub enum Typing {
     UnknownType,
 
     /// A `KnownType` has been determined; this is performed by the type checker.
-    KnownType(ast::DataType),
+    KnownType(ast_types::DataType),
 }
 
 impl GetType for Typing {
-    fn get_type(&self) -> ast::DataType {
+    fn get_type(&self) -> ast_types::DataType {
         match self {
             Typing::UnknownType => {
                 panic!("Cannot unpack type before complete type annotation.")
@@ -29,30 +28,35 @@ impl GetType for Typing {
 }
 
 pub trait GetType {
-    fn get_type(&self) -> ast::DataType;
+    fn get_type(&self) -> ast_types::DataType;
 }
 
 impl<T: GetType> GetType for ast::ExprLit<T> {
-    fn get_type(&self) -> ast::DataType {
+    fn get_type(&self) -> ast_types::DataType {
         match self {
-            ast::ExprLit::Bool(_) => ast::DataType::Bool,
-            ast::ExprLit::U32(_) => ast::DataType::U32,
-            ast::ExprLit::U64(_) => ast::DataType::U64,
-            ast::ExprLit::BFE(_) => ast::DataType::BFE,
-            ast::ExprLit::XFE(_) => ast::DataType::XFE,
-            ast::ExprLit::Digest(_) => ast::DataType::Digest,
+            ast::ExprLit::Bool(_) => ast_types::DataType::Bool,
+            ast::ExprLit::U32(_) => ast_types::DataType::U32,
+            ast::ExprLit::U64(_) => ast_types::DataType::U64,
+            ast::ExprLit::BFE(_) => ast_types::DataType::BFE,
+            ast::ExprLit::XFE(_) => ast_types::DataType::XFE,
+            ast::ExprLit::Digest(_) => ast_types::DataType::Digest,
             ast::ExprLit::GenericNum(_, t) => t.get_type(),
+            ast::ExprLit::MemPointer(ast::MemPointerLiteral {
+                mem_pointer_address: _,
+                struct_name: _,
+                resolved_type,
+            }) => resolved_type.get_type(),
         }
     }
 }
 
-impl<T: GetType> GetType for ast::Expr<T> {
-    fn get_type(&self) -> ast::DataType {
+impl<T: GetType + std::fmt::Debug> GetType for ast::Expr<T> {
+    fn get_type(&self) -> ast_types::DataType {
         match self {
             ast::Expr::Lit(lit) => lit.get_type(),
             ast::Expr::Var(id) => id.get_type(),
             ast::Expr::Tuple(t_list) => {
-                ast::DataType::Tuple(t_list.iter().map(|elem| elem.get_type()).collect())
+                ast_types::DataType::Tuple(t_list.iter().map(|elem| elem.get_type()).collect())
             }
             ast::Expr::FnCall(fn_call) => fn_call.get_type(),
             ast::Expr::MethodCall(method_call) => method_call.get_type(),
@@ -64,48 +68,39 @@ impl<T: GetType> GetType for ast::Expr<T> {
     }
 }
 
-impl<T: GetType> GetType for ast::ExprIf<T> {
-    fn get_type(&self) -> ast::DataType {
+impl<T: GetType + std::fmt::Debug> GetType for ast::ExprIf<T> {
+    fn get_type(&self) -> ast_types::DataType {
         self.then_branch.get_type()
     }
 }
 
 impl<T: GetType> GetType for ast::Identifier<T> {
-    fn get_type(&self) -> ast::DataType {
+    fn get_type(&self) -> ast_types::DataType {
         match self {
             ast::Identifier::String(_, t) => t.get_type(),
-            ast::Identifier::TupleIndex(id, idx) => {
-                let rec = id.get_type();
-                match rec {
-                    ast::DataType::Tuple(list) => list[*idx].clone(),
-                    dt => panic!("Type error. Expected Tuple got: {dt:?}"),
-                }
-            }
-            ast::Identifier::ListIndex(id, _) => {
-                let rec = id.get_type();
-                match rec {
-                    ast::DataType::List(element_type) => *element_type,
-                    dt => panic!("Type error. Expected List got: {dt:?}"),
-                }
-            }
+            ast::Identifier::ListIndex(_, _, t) => t.get_type(),
+            ast::Identifier::TupleIndex(_, _, t) => t.get_type(),
+            ast::Identifier::Field(_, _, t) => t.get_type(),
         }
     }
 }
 
 impl<T: GetType> GetType for ast::FnCall<T> {
-    fn get_type(&self) -> ast::DataType {
+    fn get_type(&self) -> ast_types::DataType {
         self.annot.get_type()
     }
 }
 
 impl<T: GetType> GetType for ast::MethodCall<T> {
-    fn get_type(&self) -> ast::DataType {
+    fn get_type(&self) -> ast_types::DataType {
         self.annot.get_type()
     }
 }
 
-#[derive(Debug, Default)]
-pub struct CheckState {
+#[derive(Debug)]
+pub struct CheckState<'a> {
+    pub libraries: &'a [Box<dyn libraries::Library>],
+
     /// The `vtable` maps variable names to their type.
     ///
     /// This is used for determining the type of variables in expressions.
@@ -115,16 +110,18 @@ pub struct CheckState {
     ///
     /// This is used for determining the type of function calls in expressions.
     pub ftable: HashMap<String, ast::FnSignature>,
+
+    pub declared_structs: HashMap<String, ast_types::StructType>,
 }
 
 #[derive(Clone, Debug)]
 pub struct DataTypeAndMutability {
-    pub data_type: ast::DataType,
+    pub data_type: ast_types::DataType,
     pub mutable: bool,
 }
 
-impl From<ast::AbstractValueArg> for DataTypeAndMutability {
-    fn from(value: ast::AbstractValueArg) -> Self {
+impl From<ast_types::AbstractValueArg> for DataTypeAndMutability {
+    fn from(value: ast_types::AbstractValueArg) -> Self {
         Self {
             data_type: value.data_type,
             mutable: value.mutable,
@@ -133,7 +130,7 @@ impl From<ast::AbstractValueArg> for DataTypeAndMutability {
 }
 
 impl DataTypeAndMutability {
-    pub fn new(data_type: &ast::DataType, mutable: bool) -> Self {
+    pub fn new(data_type: &ast_types::DataType, mutable: bool) -> Self {
         Self {
             data_type: data_type.to_owned(),
             mutable,
@@ -141,7 +138,11 @@ impl DataTypeAndMutability {
     }
 }
 
-pub fn annotate_fn(function: &mut ast::Fn<Typing>) {
+pub fn annotate_fn(
+    function: &mut ast::Fn<Typing>,
+    declared_structs: HashMap<String, ast_types::StructType>,
+    libraries: &[Box<dyn libraries::Library>],
+) {
     // Initialize `CheckState`
     let vtable: HashMap<String, DataTypeAndMutability> =
         HashMap::with_capacity(function.fn_signature.args.len());
@@ -151,13 +152,18 @@ pub fn annotate_fn(function: &mut ast::Fn<Typing>) {
         function.fn_signature.name.clone(),
         function.fn_signature.clone(),
     );
-    let mut state = CheckState { vtable, ftable };
+    let mut state = CheckState {
+        libraries,
+        vtable,
+        ftable,
+        declared_structs,
+    };
 
     // Populate vtable with function arguments
     for arg in function.fn_signature.args.iter() {
         match arg {
-            ast::AbstractArgument::FunctionArgument(_) => todo!(),
-            ast::AbstractArgument::ValueArgument(value_fn_arg) => {
+            ast_types::AbstractArgument::FunctionArgument(_) => todo!(),
+            ast_types::AbstractArgument::ValueArgument(value_fn_arg) => {
                 let duplicate_fn_arg = state
                     .vtable
                     .insert(value_fn_arg.name.clone(), value_fn_arg.to_owned().into())
@@ -174,7 +180,7 @@ pub fn annotate_fn(function: &mut ast::Fn<Typing>) {
         state
             .vtable
             .values()
-            .map(|x| x.data_type.size_of())
+            .map(|x| x.data_type.stack_size())
             .sum::<usize>()
             < SIZE_OF_ACCESSIBLE_STACK,
         "{}: Cannot handle function signatures with input size exceeding {} words",
@@ -182,7 +188,7 @@ pub fn annotate_fn(function: &mut ast::Fn<Typing>) {
         SIZE_OF_ACCESSIBLE_STACK - 1
     );
 
-    // Verify that last statememnt of function exists, and that it is a `return` statement
+    // Verify that last statement of function exists, and that it is a `return` statement
     let last_stmt = function
         .body
         .iter()
@@ -208,7 +214,7 @@ fn annotate_stmt(
     stmt: &mut ast::Stmt<Typing>,
     state: &mut CheckState,
     fn_name: &str,
-    fn_output: &ast::DataType,
+    fn_output: &ast_types::DataType,
 ) {
     match stmt {
         ast::Stmt::Let(ast::LetStmt {
@@ -221,9 +227,16 @@ fn annotate_stmt(
                 panic!("let-assign cannot shadow existing variable '{var_name}'!");
             }
 
-            let let_expr_hint: Option<&ast::DataType> = Some(data_type);
+            // Map types to those declared in program, i.e. resolve local `struct` declarations
+            *data_type = data_type.resolve_types(&state.declared_structs);
+
+            let let_expr_hint: Option<&ast_types::DataType> = Some(data_type);
             let derived_type = derive_annotate_expr_type(expr, let_expr_hint, state);
-            assert_type_equals(&derived_type, data_type, "let-statement");
+            assert_type_equals(
+                &derived_type,
+                data_type,
+                &format!("let-statement of {var_name}"),
+            );
             state.vtable.insert(
                 var_name.clone(),
                 DataTypeAndMutability::new(data_type, *mutable),
@@ -244,7 +257,7 @@ fn annotate_stmt(
         }
 
         ast::Stmt::Return(opt_expr) => match (opt_expr, fn_output) {
-            (None, ast::DataType::Tuple(tys)) => assert_eq!(
+            (None, ast_types::DataType::Tuple(tys)) => assert_eq!(
                 0,
                 tys.len(),
                 "Return without value; expect {fn_name} to return nothing."
@@ -266,7 +279,6 @@ fn annotate_stmt(
             type_parameter,
             arg_evaluation_order,
         }) => {
-            println!("args: {args:?}");
             let fn_signature = get_fn_signature(name, state, type_parameter, args);
             assert!(
                 is_void_type(&fn_signature.output),
@@ -302,9 +314,13 @@ fn annotate_stmt(
         }
 
         ast::Stmt::While(ast::WhileStmt { condition, block }) => {
-            let condition_hint = ast::DataType::Bool;
+            let condition_hint = ast_types::DataType::Bool;
             let condition_type = derive_annotate_expr_type(condition, Some(&condition_hint), state);
-            assert_type_equals(&condition_type, &ast::DataType::Bool, "while-condition");
+            assert_type_equals(
+                &condition_type,
+                &ast_types::DataType::Bool,
+                "while-condition",
+            );
             annotate_block_stmt(block, fn_name, fn_output, state);
         }
 
@@ -313,9 +329,9 @@ fn annotate_stmt(
             then_branch,
             else_branch,
         }) => {
-            let condition_hint = ast::DataType::Bool;
+            let condition_hint = ast_types::DataType::Bool;
             let condition_type = derive_annotate_expr_type(condition, Some(&condition_hint), state);
-            assert_type_equals(&condition_type, &ast::DataType::Bool, "if-condition");
+            assert_type_equals(&condition_type, &ast_types::DataType::Bool, "if-condition");
 
             annotate_block_stmt(then_branch, fn_name, fn_output, state);
             annotate_block_stmt(else_branch, fn_name, fn_output, state);
@@ -327,13 +343,13 @@ fn annotate_stmt(
         ast::Stmt::Assert(assert_expr) => {
             let expr_type = derive_annotate_expr_type(
                 &mut assert_expr.expression,
-                Some(&ast::DataType::Bool),
+                Some(&ast_types::DataType::Bool),
                 state,
             );
-            assert_type_equals(&expr_type, &ast::DataType::Bool, "assert expression");
+            assert_type_equals(&expr_type, &ast_types::DataType::Bool, "assert expression");
         }
         ast::Stmt::FnDeclaration(function) => {
-            annotate_fn(function);
+            annotate_fn(function, HashMap::default(), state.libraries);
             state.ftable.insert(
                 function.fn_signature.name.clone(),
                 function.fn_signature.clone(),
@@ -345,7 +361,7 @@ fn annotate_stmt(
 fn annotate_block_stmt(
     block: &mut ast::BlockStmt<Typing>,
     fn_name: &str,
-    fn_output: &ast::DataType,
+    fn_output: &ast_types::DataType,
     state: &mut CheckState,
 ) {
     let vtable_before = state.vtable.clone();
@@ -356,10 +372,14 @@ fn annotate_block_stmt(
     state.vtable = vtable_before;
 }
 
-pub fn assert_type_equals(derived_type: &ast::DataType, data_type: &ast::DataType, context: &str) {
+pub fn assert_type_equals(
+    derived_type: &ast_types::DataType,
+    data_type: &ast_types::DataType,
+    context: &str,
+) {
     if derived_type != data_type {
         panic!(
-            "Type mismatch between type '{data_type}' and derived type '{derived_type}' for {context}",
+            "Type mismatch between type\n'{data_type}'\n and derived type\n'{derived_type}'\n for {context}",
         );
     }
 }
@@ -368,7 +388,7 @@ pub fn assert_type_equals(derived_type: &ast::DataType, data_type: &ast::DataTyp
 pub fn annotate_identifier_type(
     identifier: &mut ast::Identifier<Typing>,
     state: &mut CheckState,
-) -> (ast::DataType, bool) {
+) -> (ast_types::DataType, bool) {
     match identifier {
         // x
         ast::Identifier::String(var_name, var_type) => match state.vtable.get(var_name) {
@@ -379,7 +399,7 @@ pub fn annotate_identifier_type(
             None => match state.ftable.get(var_name) {
                 Some(function) => {
                     *var_type = Typing::KnownType(function.into());
-                    let function_datatype: ast::DataType = function.into();
+                    let function_datatype: ast_types::DataType = function.into();
                     (function_datatype, false)
                 }
                 None => panic!("variable {var_name} must have known type"),
@@ -387,43 +407,79 @@ pub fn annotate_identifier_type(
         },
 
         // x.0
-        ast::Identifier::TupleIndex(tuple_identifier, index) => {
+        ast::Identifier::TupleIndex(tuple_identifier, index, known_type) => {
             // For syntax like 'x.0.1', find the type of 'x.0'; we don't currently
             // generate ASTs with nested tuple indexing, but it's easier to solve
             // the type inference generally here.
-            let tuple_type = annotate_identifier_type(tuple_identifier, state);
+            let (tuple_type, mutable) = annotate_identifier_type(tuple_identifier, state);
 
-            if let ast::DataType::Tuple(elem_types) = tuple_type.0 {
-                if elem_types.len() < *index {
+            let element_type = if let ast_types::DataType::Tuple(elem_types) = tuple_type {
+                if elem_types.len() > *index {
+                    elem_types[*index].clone()
+                } else {
                     panic!(
                         "Cannot index tuple of {} elements with index {}",
                         elem_types.len(),
                         index
                     );
                 }
-
-                (elem_types[*index].clone(), tuple_type.1)
             } else {
                 panic!("Cannot index non-tuple with tuple index {index}");
-            }
+            };
+
+            *known_type = Typing::KnownType(element_type.clone());
+
+            (element_type, mutable)
         }
 
         // x[e]
-        ast::Identifier::ListIndex(list_identifier, index_expr) => {
-            let index_hint = ast::DataType::U32;
+        ast::Identifier::ListIndex(list_identifier, index_expr, known_type) => {
+            let index_hint = ast_types::DataType::U32;
             let index_type = derive_annotate_expr_type(index_expr, Some(&index_hint), state);
             if !is_index_type(&index_type) {
                 panic!("Cannot index list with type '{index_type}'");
             }
 
-            // TODO: It could make sense to support var.1[i] if there were better support for tuples.
-            if !is_string_identifier(list_identifier) {
-                panic!("Cannot index anything but variables: {list_identifier:?}");
-            }
+            // Only `a: Vec<T>` can be indexed, so if type is e.g. `MemPointer(Vec<T>)`, then the
+            // type of `a` need to be forced to `Vec<T>`.
+            // TODO: It's possible that the type of `list_identifier` needs to be forced to. But to
+            // do that, this function probably needs the expression, and not just the identifier.
+            let (maybe_list_type, mutable) = annotate_identifier_type(list_identifier, state);
+            let mut forced_list_type = maybe_list_type.clone();
+            let element_type = loop {
+                if let ast_types::DataType::List(elem_ty, _) = &forced_list_type {
+                    break elem_ty;
+                } else if let ast_types::DataType::MemPointer(inner_type) = forced_list_type {
+                    forced_list_type = *inner_type.to_owned();
+                } else {
+                    panic!("Cannot index into {list_identifier} of type {maybe_list_type}");
+                }
+            };
 
-            let list_type = annotate_identifier_type(list_identifier, state);
+            // If list_identifier is a MemPointer, and the element type is not copyable,
+            // then the element type statys a MemPointer.
+            let element_type = if let ast_types::DataType::MemPointer(_) = maybe_list_type {
+                if element_type.is_copy() {
+                    *element_type.to_owned()
+                } else {
+                    ast_types::DataType::MemPointer(element_type.to_owned())
+                }
+            } else {
+                *element_type.to_owned()
+            };
 
-            (list_type.0.type_parameter().unwrap(), list_type.1)
+            list_identifier.force_type(&forced_list_type);
+            *known_type = Typing::KnownType(element_type.clone());
+
+            (element_type, mutable)
+        }
+        ast::Identifier::Field(ident, field_name, annot) => {
+            let (receiver_type, mutable) = annotate_identifier_type(ident, state);
+            // Only structs have fields, so receiver_type must be a struct, or a pointer to a struct.
+            let data_type = receiver_type.field_access_returned_type(field_name);
+            *annot = Typing::KnownType(data_type.clone());
+
+            (data_type, mutable)
         }
     }
 }
@@ -431,11 +487,11 @@ pub fn annotate_identifier_type(
 fn get_fn_signature(
     name: &str,
     state: &CheckState,
-    type_parameter: &Option<ast::DataType>,
+    type_parameter: &Option<ast_types::DataType>,
     args: &[ast::Expr<Typing>],
 ) -> ast::FnSignature {
     // Function from libraries are in scope
-    for lib in libraries::all_libraries() {
+    for lib in state.libraries.iter() {
         if let Some(fn_name) = lib.get_function_name(name) {
             return lib.function_name_to_signature(&fn_name, type_parameter.to_owned(), args);
         }
@@ -450,59 +506,55 @@ fn get_fn_signature(
 
 fn get_method_signature(
     name: &str,
-    _state: &CheckState,
-    receiver_type: ast::DataType,
+    state: &CheckState,
+    original_receiver_type: ast_types::DataType,
     args: &mut [ast::Expr<Typing>],
 ) -> ast::FnSignature {
-    // Special-case on `map`
-    if name == "map" {
-        let inner_fn_name = match &args[1] {
-            ast::Expr::Var(inner_fn_name) => inner_fn_name.to_string(),
-            _ => panic!("unsupported"),
-        };
-        let inner_fn_signature = _state
-            .ftable
-            .get(inner_fn_name.as_str())
-            .unwrap()
-            .to_owned();
-        // TODO: Expand to handle more arguments
-        let inner_output = inner_fn_signature.output;
-        let inner_input = match &inner_fn_signature.args[0] {
-            ast::AbstractArgument::FunctionArgument(_) => todo!(),
-            ast::AbstractArgument::ValueArgument(value_arg) => value_arg.data_type.to_owned(),
-        };
-        let derived_inner_function_as_function_arg =
-            ast::AbstractArgument::FunctionArgument(AbstractFunctionArg {
-                abstract_name: String::from("map_inner_function"),
-                function_type: FunctionType {
-                    input_argument: inner_input,
-                    output: inner_output.clone(),
-                },
-            });
-
-        let vector_as_arg = ast::AbstractArgument::ValueArgument(AbstractValueArg {
-            name: "element_arg_0".to_owned(),
-            data_type: receiver_type,
-            mutable: false,
-        });
-        return ast::FnSignature {
-            name: String::from("map"),
-            // TODO: Use List<inner_fn_signature-args> here instead for betetr type checking
-            args: vec![vector_as_arg, derived_inner_function_as_function_arg],
-            output: ast::DataType::List(Box::new(inner_output)),
-            arg_evaluation_order: Default::default(),
-        };
-    }
-
     // Only methods from libraries are in scope. New methods cannot be declared.
-    for lib in libraries::all_libraries() {
-        if let Some(method_name) = lib.get_method_name(name, &receiver_type) {
-            return lib.method_name_to_signature(&method_name, &receiver_type, args);
+    // Implemented following the description from: https://stackoverflow.com/a/28552082/2574407
+    // TODO: Handle automatic dereferencing and referencing of MemPointer types
+    let mut forced_type = original_receiver_type.clone();
+    let mut try_again = true;
+    while try_again {
+        // 1. if there's a method `bar` where the receiver type (the type of self
+        // in the method) matches `forced_type` exactly , use it (a "by value method")
+        for lib in state.libraries.iter() {
+            if let Some(method_name) = lib.get_method_name(name, &forced_type) {
+                if let ast::Expr::Var(var) = &mut args[0] {
+                    var.force_type(&forced_type);
+                }
+
+                return lib.method_name_to_signature(&method_name, &forced_type, args, state);
+            }
+        }
+
+        // 2. therwise, add one auto-ref (take & or &mut of the receiver), and,
+        // if some method's receiver matches &U, use it (an "autorefd method")
+        let auto_refd_forced_type = ast_types::DataType::MemPointer(Box::new(forced_type.clone()));
+        for lib in state.libraries.iter() {
+            if let Some(method_name) = lib.get_method_name(name, &auto_refd_forced_type) {
+                if let ast::Expr::Var(var) = &mut args[0] {
+                    var.force_type(&auto_refd_forced_type);
+                }
+                return lib.method_name_to_signature(
+                    &method_name,
+                    &auto_refd_forced_type,
+                    args,
+                    state,
+                );
+            }
+        }
+
+        // Keep stripping `MemPointer` until we find a match
+        if let ast_types::DataType::MemPointer(inner_type) = forced_type {
+            forced_type = *inner_type.to_owned();
+        } else {
+            try_again = false;
         }
     }
 
     panic!(
-        "Don't know what type of value '{name}' returns! Receiver parameter was: {receiver_type:?}"
+        "Don't know what type of value '{name}' returns! Receiver type was: {original_receiver_type:?}"
     )
 }
 
@@ -522,17 +574,17 @@ fn derive_annotate_fn_call_args(
     );
 
     // Get list of concrete arguments used in function call
-    let concrete_arguments: Vec<ast::DataType> = args
+    let concrete_arguments: Vec<ast_types::DataType> = args
         .iter_mut()
         .zip_eq(fn_signature.args.iter())
         .map(|(arg_expr, fn_arg)| match fn_arg {
-            ast::AbstractArgument::FunctionArgument(abstract_function) => {
+            ast_types::AbstractArgument::FunctionArgument(abstract_function) => {
                 // arg_expr must evaluate to a FnCall here
 
                 let arg_hint = Some(&abstract_function.function_type.input_argument);
                 derive_annotate_expr_type(arg_expr, arg_hint, state)
             }
-            ast::AbstractArgument::ValueArgument(abstract_value) => {
+            ast_types::AbstractArgument::ValueArgument(abstract_value) => {
                 let arg_hint = Some(&abstract_value.data_type);
                 derive_annotate_expr_type(arg_expr, arg_hint, state)
             }
@@ -546,24 +598,16 @@ fn derive_annotate_fn_call_args(
         .zip_eq(concrete_arguments.iter())
         .enumerate()
     {
-        println!("arg_pos: {arg_pos}");
-        println!("fn_arg: {arg_pos:?}");
-        println!("expr_type: {expr_type}");
         match fn_arg {
-            ast::AbstractArgument::FunctionArgument(ast::AbstractFunctionArg {
-                abstract_name,
+            ast_types::AbstractArgument::FunctionArgument(ast_types::AbstractFunctionArg {
+                abstract_name: _,
                 function_type,
-            }) => {
-                println!("abstract_name: {abstract_name}");
-                println!("function_type: {function_type:?}");
-                println!("expr_type : {expr_type:?}");
-                assert_type_equals(
-                    &ast::DataType::Function(Box::new(function_type.to_owned())),
-                    expr_type,
-                    "Function argument",
-                )
-            }
-            ast::AbstractArgument::ValueArgument(ast::AbstractValueArg {
+            }) => assert_type_equals(
+                &ast_types::DataType::Function(Box::new(function_type.to_owned())),
+                expr_type,
+                "Function argument",
+            ),
+            ast_types::AbstractArgument::ValueArgument(ast_types::AbstractValueArg {
                 name: arg_name,
                 data_type: arg_type,
                 mutable: _mutable,
@@ -571,7 +615,7 @@ fn derive_annotate_fn_call_args(
                 let arg_pos = arg_pos + 1;
                 assert_eq!(
                 arg_type, expr_type,
-                "Wrong type of function argument {arg_pos} '{arg_name}' in '{fn_name}'; expected {arg_type}, got {expr_type}.",
+                "Wrong type of function argument {arg_pos} function call '{arg_name}' in '{fn_name}'\n expected type \"{arg_type:#?}\", but got type  \"{expr_type:#?}\".",
             );
             }
         }
@@ -580,19 +624,37 @@ fn derive_annotate_fn_call_args(
 
 fn derive_annotate_expr_type(
     expr: &mut ast::Expr<Typing>,
-    hint: Option<&ast::DataType>,
+    hint: Option<&ast_types::DataType>,
     state: &mut CheckState,
-) -> ast::DataType {
-    // println!("derive_annotate_expr_type({expr:?}, hint: {hint:?})");
+) -> ast_types::DataType {
     match expr {
-        ast::Expr::Lit(ast::ExprLit::Bool(_)) => ast::DataType::Bool,
-        ast::Expr::Lit(ast::ExprLit::U32(_)) => ast::DataType::U32,
-        ast::Expr::Lit(ast::ExprLit::U64(_)) => ast::DataType::U64,
-        ast::Expr::Lit(ast::ExprLit::BFE(_)) => ast::DataType::BFE,
-        ast::Expr::Lit(ast::ExprLit::XFE(_)) => ast::DataType::XFE,
-        ast::Expr::Lit(ast::ExprLit::Digest(_)) => ast::DataType::Digest,
+        ast::Expr::Lit(ast::ExprLit::Bool(_)) => ast_types::DataType::Bool,
+        ast::Expr::Lit(ast::ExprLit::U32(_)) => ast_types::DataType::U32,
+        ast::Expr::Lit(ast::ExprLit::U64(_)) => ast_types::DataType::U64,
+        ast::Expr::Lit(ast::ExprLit::BFE(_)) => ast_types::DataType::BFE,
+        ast::Expr::Lit(ast::ExprLit::XFE(_)) => ast_types::DataType::XFE,
+        ast::Expr::Lit(ast::ExprLit::Digest(_)) => ast_types::DataType::Digest,
+        ast::Expr::Lit(ast::ExprLit::MemPointer(ast::MemPointerLiteral {
+            mem_pointer_address: _,
+            struct_name,
+            resolved_type,
+        })) => {
+            // First get the type from the declared structs list, then
+            // resolve types on the declared struct in case of nested
+            // structs.
+            let resolved_inner_type = state
+                .declared_structs
+                .get(struct_name)
+                .expect("{type_name} not known to type checker");
+            let resolved_inner_type = ast_types::DataType::Struct(resolved_inner_type.to_owned())
+                .resolve_types(&state.declared_structs);
+            let ret = ast_types::DataType::MemPointer(Box::new(resolved_inner_type));
+            *resolved_type = Typing::KnownType(ret.clone());
+
+            ret
+        }
         ast::Expr::Lit(ast::ExprLit::GenericNum(n, _t)) => {
-            use ast::DataType::*;
+            use ast_types::DataType::*;
 
             match hint {
                 Some(&U32) => {
@@ -623,18 +685,21 @@ fn derive_annotate_expr_type(
             }
         }
 
-        ast::Expr::Var(identifier) => {
-            let identifier_type = annotate_identifier_type(identifier, state);
-            identifier_type.0
-        }
+        ast::Expr::Var(identifier) => match identifier.resolved() {
+            Some(ty) => ty,
+            None => {
+                annotate_identifier_type(identifier, state);
+                identifier.get_type()
+            }
+        },
 
         ast::Expr::Tuple(tuple_exprs) => {
             let no_hint = None;
-            let tuple_types: Vec<ast::DataType> = tuple_exprs
+            let tuple_types: Vec<ast_types::DataType> = tuple_exprs
                 .iter_mut()
                 .map(|expr| derive_annotate_expr_type(expr, no_hint, state))
                 .collect();
-            ast::DataType::Tuple(tuple_types)
+            ast_types::DataType::Tuple(tuple_types)
         }
 
         ast::Expr::FnCall(ast::FnCall {
@@ -644,7 +709,6 @@ fn derive_annotate_expr_type(
             type_parameter,
             arg_evaluation_order,
         }) => {
-            println!("args: {args:?}");
             let fn_signature = get_fn_signature(name, state, type_parameter, args);
             assert!(
                 !is_void_type(&fn_signature.output),
@@ -696,11 +760,20 @@ fn derive_annotate_expr_type(
                 }
                 Not => {
                     assert!(
-                        is_not_compatible_type(&inner_expr_type),
+                        type_compatible_with_not(&inner_expr_type),
                         "Cannot negate type '{inner_expr_type}'",
                     );
                     *unaryop_type = Typing::KnownType(inner_expr_type.clone());
                     inner_expr_type
+                }
+                Deref => {
+                    match inner_expr_type {
+                        ast_types::DataType::MemPointer(inner_inner_type) => {
+                            *unaryop_type = Typing::KnownType(*inner_inner_type.clone());
+                            *inner_inner_type
+                        },
+                        _ =>  panic!("Cannot dereference type of `{inner_expr_type}` as this expression has:\n{inner_expr:#?}")
+                    }
                 }
             }
         }
@@ -724,14 +797,14 @@ fn derive_annotate_expr_type(
 
                 // Restricted to bool only.
                 And => {
-                    let bool_hint = Some(&ast::DataType::Bool);
+                    let bool_hint = Some(&ast_types::DataType::Bool);
                     let lhs_type = derive_annotate_expr_type(lhs_expr, bool_hint, state);
                     let rhs_type = derive_annotate_expr_type(rhs_expr, bool_hint, state);
 
-                    assert_type_equals(&lhs_type, &ast::DataType::Bool, "and-expr lhs");
-                    assert_type_equals(&rhs_type, &ast::DataType::Bool, "and-expr rhs");
-                    *binop_type = Typing::KnownType(ast::DataType::Bool);
-                    ast::DataType::Bool
+                    assert_type_equals(&lhs_type, &ast_types::DataType::Bool, "and-expr lhs");
+                    assert_type_equals(&rhs_type, &ast_types::DataType::Bool, "and-expr rhs");
+                    *binop_type = Typing::KnownType(ast_types::DataType::Bool);
+                    ast_types::DataType::Bool
                 }
 
                 // Restricted to U32-based types. (Triton VM limitation)
@@ -802,8 +875,8 @@ fn derive_annotate_expr_type(
                         is_primitive_type(&lhs_type),
                         "Cannot compare non-primitive type '{lhs_type}' for equality"
                     );
-                    *binop_type = Typing::KnownType(ast::DataType::Bool);
-                    ast::DataType::Bool
+                    *binop_type = Typing::KnownType(ast_types::DataType::Bool);
+                    ast_types::DataType::Bool
                 }
 
                 // Restricted to U32-based types. (Triton VM limitation)
@@ -818,8 +891,8 @@ fn derive_annotate_expr_type(
                         is_u32_based_type(&lhs_type),
                         "Cannot compare type '{lhs_type}' with less-than (not u32-based)"
                     );
-                    *binop_type = Typing::KnownType(ast::DataType::Bool);
-                    ast::DataType::Bool
+                    *binop_type = Typing::KnownType(ast_types::DataType::Bool);
+                    ast_types::DataType::Bool
                 }
 
                 // Overloaded for all primitive types.
@@ -848,8 +921,8 @@ fn derive_annotate_expr_type(
                         is_primitive_type(&lhs_type),
                         "Cannot compare type '{lhs_type}' with not-equal (not primitive)"
                     );
-                    *binop_type = Typing::KnownType(ast::DataType::Bool);
-                    ast::DataType::Bool
+                    *binop_type = Typing::KnownType(ast_types::DataType::Bool);
+                    ast_types::DataType::Bool
                 }
 
                 // Restricted to bool only.
@@ -857,10 +930,10 @@ fn derive_annotate_expr_type(
                     let lhs_type = derive_annotate_expr_type(lhs_expr, hint, state);
                     let rhs_type = derive_annotate_expr_type(rhs_expr, hint, state);
 
-                    assert_type_equals(&lhs_type, &ast::DataType::Bool, "or-expr lhs");
-                    assert_type_equals(&rhs_type, &ast::DataType::Bool, "or-expr rhs");
-                    *binop_type = Typing::KnownType(ast::DataType::Bool);
-                    ast::DataType::Bool
+                    assert_type_equals(&lhs_type, &ast_types::DataType::Bool, "or-expr lhs");
+                    assert_type_equals(&rhs_type, &ast_types::DataType::Bool, "or-expr rhs");
+                    *binop_type = Typing::KnownType(ast_types::DataType::Bool);
+                    ast_types::DataType::Bool
                 }
 
                 // Restricted to U32-based types. (Triton VM limitation)
@@ -886,10 +959,10 @@ fn derive_annotate_expr_type(
                         "Cannot shift-left for type '{lhs_type}' (not u32-based)"
                     );
 
-                    let rhs_hint = Some(&ast::DataType::U32);
+                    let rhs_hint = Some(&ast_types::DataType::U32);
                     let rhs_type = derive_annotate_expr_type(rhs_expr, rhs_hint, state);
 
-                    assert_type_equals(&rhs_type, &ast::DataType::U32, "shl-rhs-expr");
+                    assert_type_equals(&rhs_type, &ast_types::DataType::U32, "shl-rhs-expr");
                     *binop_type = Typing::KnownType(lhs_type.clone());
                     lhs_type
                 }
@@ -903,10 +976,10 @@ fn derive_annotate_expr_type(
                         "Cannot shift-right for type '{lhs_type}' (not u32-based)"
                     );
 
-                    let rhs_hint = Some(&ast::DataType::U32);
+                    let rhs_hint = Some(&ast_types::DataType::U32);
                     let rhs_type = derive_annotate_expr_type(rhs_expr, rhs_hint, state);
 
-                    assert_type_equals(&rhs_type, &ast::DataType::U32, "shr-rhs-expr");
+                    assert_type_equals(&rhs_type, &ast_types::DataType::U32, "shr-rhs-expr");
                     *binop_type = Typing::KnownType(lhs_type.clone());
                     lhs_type
                 }
@@ -932,9 +1005,13 @@ fn derive_annotate_expr_type(
             then_branch,
             else_branch,
         }) => {
-            let condition_hint = ast::DataType::Bool;
+            let condition_hint = ast_types::DataType::Bool;
             let condition_type = derive_annotate_expr_type(condition, Some(&condition_hint), state);
-            assert_type_equals(&condition_type, &ast::DataType::Bool, "if-condition-expr");
+            assert_type_equals(
+                &condition_type,
+                &ast_types::DataType::Bool,
+                "if-condition-expr",
+            );
 
             // FIXME: Unify branches
             let branch_hint = None;
@@ -948,7 +1025,7 @@ fn derive_annotate_expr_type(
         ast::Expr::Cast(expr, to_type) => {
             let from_type = derive_annotate_expr_type(expr, None, state);
             let valid_cast = is_u32_based_type(&from_type) && is_u32_based_type(to_type)
-                || from_type == ast::DataType::Bool && is_arithmetic_type(to_type);
+                || from_type == ast_types::DataType::Bool && is_arithmetic_type(to_type);
 
             assert!(valid_cast, "Cannot cast from {from_type} to {to_type}");
 
@@ -961,17 +1038,17 @@ pub fn is_string_identifier<T>(identifier: &ast::Identifier<T>) -> bool {
     matches!(identifier, ast::Identifier::String(_, _))
 }
 
-pub fn is_list_type(data_type: &ast::DataType) -> bool {
-    use ast::DataType::*;
-    matches!(data_type, List(_))
+pub fn is_list_type(data_type: &ast_types::DataType) -> bool {
+    use ast_types::DataType::*;
+    matches!(data_type, List(_, _))
 }
 
 /// A type that can be used as address in `read_mem` and `write_mem` calls.
 ///
 /// Since memory addresses are essentially `BFieldElement`s, only types
 /// that are subsets of `BFE`s can be used. The only such type is `U32`.
-pub fn is_index_type(data_type: &ast::DataType) -> bool {
-    use ast::DataType::*;
+pub fn is_index_type(data_type: &ast_types::DataType) -> bool {
+    use ast_types::DataType::*;
     matches!(data_type, U32 | BFE)
 }
 
@@ -980,39 +1057,39 @@ pub fn is_index_type(data_type: &ast::DataType) -> bool {
 /// Note that not all operators work for all arithmetic types.
 ///
 /// E.g. the bitwise operators only work for `is_u32_based_type()`.
-pub fn is_arithmetic_type(data_type: &ast::DataType) -> bool {
-    use ast::DataType::*;
+pub fn is_arithmetic_type(data_type: &ast_types::DataType) -> bool {
+    use ast_types::DataType::*;
     matches!(data_type, U32 | U64 | BFE | XFE)
 }
 
 /// A type from which expressions such as `-value` can be formed
-pub fn is_negatable_type(data_type: &ast::DataType) -> bool {
-    use ast::DataType::*;
+pub fn is_negatable_type(data_type: &ast_types::DataType) -> bool {
+    use ast_types::DataType::*;
     matches!(data_type, BFE | XFE)
 }
 
 /// A type from which expressions such as `!value` can be formed
-pub fn is_not_compatible_type(data_type: &ast::DataType) -> bool {
-    use ast::DataType::*;
+pub fn type_compatible_with_not(data_type: &ast_types::DataType) -> bool {
+    use ast_types::DataType::*;
     matches!(data_type, Bool | U32 | U64)
 }
 
 /// A type that is implemented in terms of `U32` values.
 ///
 /// E.g. `U32` and `U64`.
-pub fn is_u32_based_type(data_type: &ast::DataType) -> bool {
-    use ast::DataType::*;
+pub fn is_u32_based_type(data_type: &ast_types::DataType) -> bool {
+    use ast_types::DataType::*;
     matches!(data_type, U32 | U64)
 }
 
 /// A non-composite fixed-length type.
-pub fn is_primitive_type(data_type: &ast::DataType) -> bool {
-    use ast::DataType::*;
+pub fn is_primitive_type(data_type: &ast_types::DataType) -> bool {
+    use ast_types::DataType::*;
     matches!(data_type, Bool | U32 | U64 | BFE | XFE | Digest)
 }
 
-pub fn is_void_type(data_type: &ast::DataType) -> bool {
-    if let ast::DataType::Tuple(tys) = data_type {
+pub fn is_void_type(data_type: &ast_types::DataType) -> bool {
+    if let ast_types::DataType::Tuple(tys) = data_type {
         tys.is_empty()
     } else {
         false

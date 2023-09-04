@@ -1,13 +1,21 @@
+use itertools::Itertools;
 use std::collections::HashMap;
 use std::fmt::Display;
-use std::str::FromStr;
-
-use anyhow::bail;
-use itertools::Itertools;
 use triton_vm::Digest;
 use twenty_first::shared_math::b_field_element::BFieldElement;
 use twenty_first::shared_math::bfield_codec::BFieldCodec;
 use twenty_first::shared_math::x_field_element::XFieldElement;
+
+use crate::{
+    ast_types::{AbstractArgument, DataType},
+    type_checker::Typing,
+};
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub struct Fn<T> {
+    pub fn_signature: FnSignature,
+    pub body: Vec<Stmt<T>>,
+}
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct FnSignature {
@@ -22,37 +30,6 @@ pub enum ArgEvaluationOrder {
     #[default]
     LeftToRight,
     RightToLeft,
-}
-
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub struct Fn<T> {
-    pub fn_signature: FnSignature,
-    pub body: Vec<Stmt<T>>,
-}
-
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub enum AbstractArgument {
-    FunctionArgument(AbstractFunctionArg),
-    ValueArgument(AbstractValueArg),
-}
-
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub struct AbstractFunctionArg {
-    pub abstract_name: String,
-    pub function_type: FunctionType,
-}
-
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub struct AbstractValueArg {
-    pub name: String,
-    pub data_type: DataType,
-    pub mutable: bool,
-}
-
-impl Display for AbstractValueArg {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}: {}", self.name, self.data_type)
-    }
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
@@ -101,7 +78,37 @@ pub enum ExprLit<T> {
     BFE(BFieldElement),
     XFE(XFieldElement),
     Digest(Digest),
+    MemPointer(MemPointerLiteral<T>),
     GenericNum(u128, T),
+}
+
+impl<T> Display for ExprLit<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let output = match self {
+            ExprLit::Bool(b) => b.to_string(),
+            ExprLit::U32(u32) => u32.to_string(),
+            ExprLit::U64(val) => val.to_string(),
+            ExprLit::BFE(val) => val.to_string(),
+            ExprLit::XFE(val) => val.to_string(),
+            ExprLit::Digest(val) => val.to_string(),
+            ExprLit::MemPointer(val) => format!("*{}", val),
+            ExprLit::GenericNum(val, _) => val.to_string(),
+        };
+        write!(f, "{output}")
+    }
+}
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub struct MemPointerLiteral<T> {
+    pub mem_pointer_address: BFieldElement,
+    pub struct_name: String,
+    pub resolved_type: T,
+}
+
+impl<T> Display for MemPointerLiteral<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.mem_pointer_address)
+    }
 }
 
 impl<T> BFieldCodec for ExprLit<T> {
@@ -121,6 +128,7 @@ impl<T> BFieldCodec for ExprLit<T> {
             ExprLit::XFE(value) => value.encode(),
             ExprLit::Digest(value) => value.encode(),
             ExprLit::GenericNum(_, _) => todo!(),
+            ExprLit::MemPointer(_) => todo!(),
         }
     }
 
@@ -153,6 +161,7 @@ pub enum BinOp {
 pub enum UnaryOp {
     Neg,
     Not,
+    Deref,
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
@@ -175,9 +184,9 @@ pub enum Expr<T> {
 impl<T> Display for Expr<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let str = match self {
-            Expr::Lit(_lit) => "lit".to_owned(),
-            Expr::Var(_) => "var_copy".to_owned(),
-            Expr::Tuple(_) => "tuple".to_owned(),
+            Expr::Lit(lit) => lit.to_string(),
+            Expr::Var(id) => id.to_string(),
+            Expr::Tuple(inner) => format!("({})", inner.iter().join(",")),
             Expr::FnCall(_) => "fn_call".to_owned(),
             Expr::MethodCall(_) => "method_call.method_name".to_owned(),
             Expr::Binop(_, binop, _, _) => format!("binop_{binop:?}"),
@@ -200,190 +209,79 @@ pub struct ExprIf<T> {
 pub struct SymTable(HashMap<String, (u8, DataType)>);
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub enum DataType {
-    Bool,
-    U32,
-    U64,
-    U128,
-    BFE,
-    XFE,
-    Digest,
-    List(Box<DataType>),
-    Tuple(Vec<DataType>),
-    VoidPointer,
-    Function(Box<FunctionType>),
-}
-
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub struct FunctionType {
-    pub input_argument: DataType,
-    pub output: DataType,
-}
-
-impl From<&FnSignature> for DataType {
-    fn from(value: &FnSignature) -> Self {
-        let mut input_args = vec![];
-
-        for inp in value.args.iter() {
-            let input = match inp {
-                AbstractArgument::FunctionArgument(_) => todo!(),
-                AbstractArgument::ValueArgument(abs_val) => abs_val.data_type.to_owned(),
-            };
-            input_args.push(input);
-        }
-
-        DataType::Function(Box::new(FunctionType {
-            input_argument: match input_args.len() {
-                1 => input_args[0].to_owned(),
-                _ => DataType::Tuple(input_args),
-            },
-            output: value.output.to_owned(),
-        }))
-    }
-}
-
-impl DataType {
-    /// Return the element type for lists
-    pub fn type_parameter(&self) -> Option<DataType> {
-        match self {
-            DataType::List(element_type) => Some(*element_type.to_owned()),
-            _ => None,
-        }
-    }
-
-    pub fn unit() -> Self {
-        Self::Tuple(vec![])
-    }
-
-    pub fn size_of(&self) -> usize {
-        match self {
-            Self::Bool => 1,
-            Self::U32 => 1,
-            Self::U64 => 2,
-            Self::U128 => 4,
-            Self::BFE => 1,
-            Self::XFE => 3,
-            Self::Digest => 5,
-            Self::List(_list_type) => 1,
-            Self::Tuple(tuple_type) => tuple_type.iter().map(Self::size_of).sum(),
-            Self::VoidPointer => 1,
-            Self::Function(_) => todo!(),
-        }
-    }
-}
-
-impl TryFrom<DataType> for tasm_lib::snippet::DataType {
-    type Error = String;
-
-    fn try_from(value: DataType) -> Result<Self, Self::Error> {
-        match value {
-            DataType::Bool => Ok(tasm_lib::snippet::DataType::Bool),
-            DataType::U32 => Ok(tasm_lib::snippet::DataType::U32),
-            DataType::U64 => Ok(tasm_lib::snippet::DataType::U64),
-            DataType::U128 => Ok(tasm_lib::snippet::DataType::U128),
-            DataType::BFE => Ok(tasm_lib::snippet::DataType::BFE),
-            DataType::XFE => Ok(tasm_lib::snippet::DataType::XFE),
-            DataType::Digest => Ok(tasm_lib::snippet::DataType::Digest),
-            DataType::List(elem_type) => {
-                let element_type = (*elem_type).try_into();
-                let element_type = match element_type {
-                    Ok(e) => e,
-                    Err(err) => return Err(format!("Failed to convert element type of list: {err}")),
-                };
-                Ok(tasm_lib::snippet::DataType::List(Box::new(element_type)))
-            },
-            DataType::Tuple(_) => Err("Tuple cannot be converted to a tasm_lib type. Try converting its individual elements".to_string()),
-            DataType::VoidPointer => Ok(tasm_lib::snippet::DataType::VoidPointer),
-            DataType::Function(_) => todo!(),
-        }
-    }
-}
-
-impl From<tasm_lib::snippet::DataType> for DataType {
-    fn from(value: tasm_lib::snippet::DataType) -> Self {
-        match value {
-            tasm_lib::snippet::DataType::Bool => DataType::Bool,
-            tasm_lib::snippet::DataType::U32 => DataType::U32,
-            tasm_lib::snippet::DataType::U64 => DataType::U64,
-            tasm_lib::snippet::DataType::U128 => DataType::U128,
-            tasm_lib::snippet::DataType::BFE => DataType::BFE,
-            tasm_lib::snippet::DataType::XFE => DataType::XFE,
-            tasm_lib::snippet::DataType::Digest => DataType::Digest,
-            tasm_lib::snippet::DataType::Tuple(tasm_types) => {
-                let element_types: Vec<DataType> =
-                    tasm_types.into_iter().map(|t| t.into()).collect();
-                DataType::Tuple(element_types)
-            }
-            tasm_lib::snippet::DataType::VoidPointer => DataType::VoidPointer,
-            tasm_lib::snippet::DataType::List(elem_type_snip) => {
-                let element_type: DataType = (*elem_type_snip).into();
-                DataType::List(Box::new(element_type))
-            }
-        }
-    }
-}
-
-impl FromStr for DataType {
-    type Err = anyhow::Error;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "bool" => Ok(DataType::Bool),
-            "u32" => Ok(DataType::U32),
-
-            // `usize` is just an alias for `u32` in this compiler
-            "usize" => Ok(DataType::U32),
-            "u64" => Ok(DataType::U64),
-            "BFieldElement" => Ok(DataType::BFE),
-            "XFieldElement" => Ok(DataType::XFE),
-            "Digest" => Ok(DataType::Digest),
-            ty => bail!("Unsupported type {}", ty),
-        }
-    }
-}
-
-impl Display for DataType {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        use DataType::*;
-        let str = match self {
-            Bool => "bool".to_string(),
-            U32 => "u32".to_string(),
-            U64 => "u64".to_string(),
-            U128 => "u128".to_string(),
-            BFE => "BField".to_string(),
-            XFE => "XField".to_string(),
-            Digest => "Digest".to_string(),
-            List(ty) => format!("List({ty})"),
-            Tuple(tys) => tys.iter().map(|ty| format!("{ty}")).join(" "),
-            VoidPointer => "void pointer".to_string(),
-            Function(fn_type) => {
-                let input = fn_type.input_argument.to_string();
-                let output = fn_type.output.to_string();
-                format!("Function: {input} -> {output}")
-            }
-        };
-        write!(f, "{str}",)
-    }
-}
-
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum Identifier<T> {
-    String(String, T),                           // x
-    TupleIndex(Box<Identifier<T>>, usize),       // x.0
-    ListIndex(Box<Identifier<T>>, Box<Expr<T>>), // x[0]
+    String(String, T),                              // x
+    TupleIndex(Box<Identifier<T>>, usize, T),       // x.0
+    ListIndex(Box<Identifier<T>>, Box<Expr<T>>, T), // x[0]
+    Field(Box<Identifier<T>>, String, T),
 }
 
-impl<T: core::fmt::Debug> Display for Identifier<T> {
+impl<T> Display for Identifier<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "{}",
-            match self {
-                Identifier::String(name, _) => name.to_string(),
-                Identifier::TupleIndex(ident, t_index) => format!("{ident}.{t_index}"),
-                Identifier::ListIndex(ident, l_index_expr) => format!("{ident}[{l_index_expr:?}]"),
+        let output = match self {
+            Identifier::String(name, _) => name.to_string(),
+            Identifier::TupleIndex(inner, index, _) => format!("{inner}.{index}"),
+            Identifier::ListIndex(inner, index, _) => format!("{inner}[{index}]"),
+            Identifier::Field(inner, field_name, _) => format!("{inner}.{field_name}"),
+        };
+        write!(f, "{output}")
+    }
+}
+
+impl Identifier<Typing> {
+    pub fn force_type(&mut self, forced_type: &DataType) {
+        let forced_type = forced_type.to_owned();
+        println!("Forcing {self} to {forced_type}");
+        match self {
+            Identifier::String(_, t) => *t = crate::type_checker::Typing::KnownType(forced_type),
+            Identifier::TupleIndex(_, _, t) => {
+                *t = crate::type_checker::Typing::KnownType(forced_type)
             }
-        )
+            Identifier::ListIndex(_, _, t) => {
+                *t = crate::type_checker::Typing::KnownType(forced_type)
+            }
+            Identifier::Field(_, _, t) => *t = crate::type_checker::Typing::KnownType(forced_type),
+        }
+    }
+
+    pub fn resolved(&self) -> Option<DataType> {
+        let t = match self {
+            Identifier::String(_, t) => t,
+            Identifier::TupleIndex(_, _, t) => t,
+            Identifier::ListIndex(_, _, t) => t,
+            Identifier::Field(_, _, t) => t,
+        };
+        // matches!(t, Typing::KnownType(_))
+        match t {
+            Typing::UnknownType => None,
+            Typing::KnownType(resolved_type) => Some(resolved_type.to_owned()),
+        }
+    }
+}
+
+impl<T> Identifier<T> {
+    pub fn binding_name(&self) -> String {
+        match self {
+            Identifier::String(name, _) => name.to_owned(),
+            Identifier::TupleIndex(inner_id, _, _) => inner_id.binding_name(),
+            Identifier::ListIndex(inner_id, _, _) => inner_id.binding_name(),
+            Identifier::Field(inner_id, _, _) => inner_id.binding_name(),
+        }
+    }
+
+    pub fn label_friendly_name(&self) -> String {
+        match self {
+            Identifier::String(name, _) => name.to_string(),
+            Identifier::ListIndex(inner_id, l_index_expr, _) => {
+                format!("{}_{l_index_expr}", inner_id.label_friendly_name(),)
+            }
+            Identifier::TupleIndex(inner_id, t_index, _) => {
+                format!("{}___{t_index}", inner_id.label_friendly_name())
+            }
+            Identifier::Field(inner_id, field_name, _) => {
+                format!("{}___{field_name}", inner_id.label_friendly_name())
+            }
+        }
     }
 }
 

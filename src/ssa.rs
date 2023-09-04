@@ -284,7 +284,7 @@ fn substitute_names_in_basic_block(member: &mut BasicBlock, name_map: &HashMap<S
 
 #[cfg(test)]
 mod tests {
-    use crate::ast::DataType;
+    use crate::ast_types::DataType;
     use crate::cfg::{BasicBlock, Edge, Expr, ExprLit};
 
     use super::*;

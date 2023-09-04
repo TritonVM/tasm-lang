@@ -1,7 +1,9 @@
 pub mod subroutine;
 
 use itertools::{Either, Itertools};
+use num::{One, Zero};
 use std::collections::{HashMap, HashSet};
+use std::fmt::Display;
 use tasm_lib::library::Library as SnippetState;
 use tasm_lib::memory::dyn_malloc::DynMalloc;
 use tasm_lib::snippet::BasicSnippet;
@@ -14,14 +16,14 @@ use twenty_first::shared_math::b_field_element::BFieldElement;
 use twenty_first::shared_math::bfield_codec::BFieldCodec;
 
 use self::subroutine::SubRoutine;
-use crate::ast::AbstractArgument;
+use crate::ast_types;
 use crate::libraries::{self};
 use crate::stack::Stack;
-use crate::types::{is_list_type, GetType};
-use crate::{ast, types};
+use crate::type_checker::GetType;
+use crate::{ast, type_checker};
 
 // the compiler's view of the stack, including information about whether value has been spilled to memory
-type VStack = Stack<(ValueIdentifier, (ast::DataType, Option<u32>))>;
+type VStack = Stack<(ValueIdentifier, (ast_types::DataType, Option<u32>))>;
 type VarAddr = HashMap<String, ValueIdentifier>;
 
 impl VStack {
@@ -29,17 +31,17 @@ impl VStack {
     /// the value on the stack, i.e. the most shallow part of the value. Top of stack has index 0.
     /// May return a depth that exceeds the addressable space (16 elements) in which case spilling
     /// may be required.
-    pub fn find_stack_value(
+    fn find_stack_value(
         &self,
         seek_addr: &ValueIdentifier,
-    ) -> (usize, ast::DataType, Option<u32>) {
+    ) -> (usize, ast_types::DataType, Option<u32>) {
         let mut position: usize = 0;
         for (_i, (found_addr, (data_type, spilled))) in self.inner.iter().rev().enumerate() {
             if seek_addr == found_addr {
                 return (position, data_type.to_owned(), spilled.to_owned());
             }
 
-            position += data_type.size_of();
+            position += data_type.stack_size();
 
             // By asserting after `+= data_type.size_of()`, we check that the deepest part
             // of the sought value is addressable, not just the top part of the value.
@@ -48,39 +50,10 @@ impl VStack {
         panic!("Cannot find {seek_addr} on vstack")
     }
 
-    /// Return the stack position of an element inside a tuple.
-    /// Returns (stack_position, data_type, maybe_memory_location).
-    fn find_tuple_element(
-        &self,
-        seek_addr: &ValueIdentifier,
-        tuple_index: usize,
-    ) -> (usize, ast::DataType, Option<u32>) {
-        let (tuple_value_position, tuple_type, spilled) = self.find_stack_value(seek_addr);
-        let element_types = if let ast::DataType::Tuple(ets) = &tuple_type {
-            ets
-        } else {
-            panic!("Expected type was tuple.")
-        };
-
-        // Last elemen of the tuple is stored on top of the stack
-        let tuple_depth: usize = element_types
-            .iter()
-            .enumerate()
-            .filter(|(i, _x)| *i > tuple_index)
-            .map(|(_i, x)| x.size_of())
-            .sum::<usize>();
-
-        (
-            tuple_value_position + tuple_depth,
-            element_types[tuple_index].clone(),
-            spilled.map(|x| x + tuple_depth as u32),
-        )
-    }
-
     fn get_stack_height(&self) -> usize {
         self.inner
             .iter()
-            .map(|(_, (data_type, _))| data_type.size_of())
+            .map(|(_, (data_type, _))| data_type.stack_size())
             .sum()
     }
 
@@ -95,7 +68,7 @@ impl VStack {
             let memory_spill_address = memory_spill_address.unwrap();
             let top_of_value = stack_position;
             let mut spill_code =
-                copy_value_to_memory(memory_spill_address, data_type.size_of(), top_of_value);
+                copy_value_to_memory(memory_spill_address, data_type.stack_size(), top_of_value);
             code.append(&mut spill_code);
         }
 
@@ -103,8 +76,8 @@ impl VStack {
     }
 }
 
-#[derive(Clone, Debug, Default)]
 /// State for managing the compilation of a single function
+#[derive(Clone, Debug, Default)]
 
 struct FunctionState {
     vstack: VStack,
@@ -114,42 +87,19 @@ struct FunctionState {
 }
 
 impl FunctionState {
-    fn assert_subroutines_look_sane(&self) {
-        assert!(
-            self.subroutines.iter().all(|sub| sub.has_valid_structure()),
-            "All subroutines must have a valid structure"
-        );
-    }
-
-    /// Add a compiled function and its subroutines to the list of subroutines, without
-    /// concatenating instructions needlessly which would delete information
+    /// Add a compiled function and its subroutines to the list of subroutines, thus
+    /// preserving the structure that would get lost if lists of instructions were
+    /// simply concatenated.
     fn add_compiled_fn_to_subroutines(&mut self, mut function: InnerFunctionTasmCode) {
         self.subroutines.append(&mut function.sub_routines);
-        println!(
-            "bare_inner is: {}",
-            function.call_depth_zero_code.iter().join("\n")
-        );
-        self.subroutines.push(function.call_depth_zero_code.into());
+        self.subroutines.push(function.call_depth_zero_code);
     }
 }
 
 struct InnerFunctionTasmCode {
     name: String,
-    call_depth_zero_code: Vec<LabelledInstruction>,
+    call_depth_zero_code: SubRoutine,
     sub_routines: Vec<SubRoutine>,
-}
-
-impl InnerFunctionTasmCode {
-    pub fn remove_own_name(&self) -> Vec<LabelledInstruction> {
-        assert!(
-            matches!(
-                self.call_depth_zero_code.first().unwrap(),
-                LabelledInstruction::Label(_)
-            ),
-            "1st line must be a label when removing it"
-        );
-        self.call_depth_zero_code[1..].to_vec()
-    }
 }
 
 pub struct OuterFunctionTasmCode {
@@ -160,34 +110,42 @@ pub struct OuterFunctionTasmCode {
 
 impl OuterFunctionTasmCode {
     pub fn compose(&self) -> Vec<LabelledInstruction> {
-        // Remove the first label.
-        // This is done to ensure that the code wrapping this function in a `call <fn_name>, halt` logic still
-        // sets the dynamic allocator initial value. Otherwise, the dynamic memory allocation would not be
-        // included in the code executed with this wrapper code. If this code is *not* run through tests,
-        // this rearrangement is inconsequential as it just moves the initialization to after a label, which is
-        // removed later by the linker. It's not super elegant but it works. Sue me.
-        let call_depth_zero_code = self.function_data.remove_own_name();
+        let inner_body = match self
+            .function_data
+            .call_depth_zero_code
+            .get_function_body_for_inlining()
+        {
+            Some(inner) => inner,
+            None => panic!(
+                "Inner function must conform to: <label>: <body> return.\nGot:\n{}",
+                self.function_data.call_depth_zero_code
+            ),
+        };
 
         let name = &self.function_data.name;
         let dyn_malloc_init = self.dyn_malloc_init_code.clone();
         let external_dependencies_code = self
             .external_dependencies
             .iter()
-            .map(|x| x.get_code())
+            .map(|x| x.get_whole_function())
             .concat();
         let subroutines = self
             .function_data
             .sub_routines
             .iter()
-            .map(|sr| sr.get_code())
+            .map(|sr| sr.get_whole_function())
             .concat();
 
+        // Wrap entire execution in a call such that `recurse` can be used on the outermost layer, i.e. in `inner_body`.
         let ret = triton_asm!(
+            {&dyn_malloc_init}
+            call {name}
+            halt
             {name}:
-                {&dyn_malloc_init}
-                {&call_depth_zero_code}
-                {&subroutines}
-                {&external_dependencies_code}
+                {&inner_body}
+                return
+            {&subroutines}
+            {&external_dependencies_code}
         );
 
         // Verify that code parses by wrapping it in a program, panics
@@ -198,45 +156,94 @@ impl OuterFunctionTasmCode {
     }
 }
 
+#[derive(Clone, Debug)]
+pub enum ValueLocation {
+    OpStack(usize),
+    StaticMemoryAddress(u32),
+    DynamicMemoryAddress(Vec<LabelledInstruction>),
+}
+
+impl Display for ValueLocation {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let as_string = match self {
+            ValueLocation::OpStack(n) => format!("opstack{n}"),
+            ValueLocation::StaticMemoryAddress(p) => format!("mempointer({p})"),
+            ValueLocation::DynamicMemoryAddress(code) => code.iter().join("\n"),
+        };
+        write!(f, "{as_string}")
+    }
+}
+
+impl ValueLocation {
+    fn is_accessible(&self, data_type: &ast_types::DataType) -> bool {
+        match self {
+            ValueLocation::StaticMemoryAddress(_) => true,
+            ValueLocation::DynamicMemoryAddress(_) => true,
+            ValueLocation::OpStack(n) => {
+                let bottom_position = n + data_type.stack_size() - 1;
+                bottom_position < SIZE_OF_ACCESSIBLE_STACK
+            }
+        }
+    }
+}
+
 /// State that is preserved across the compilation of functions
 #[derive(Clone, Debug, Default)]
-pub struct GlobalCompilerState {
+pub struct GlobalCodeGeneratorState {
     counter: usize,
     snippet_state: SnippetState,
 }
 
-#[derive(Clone, Debug, Default)]
-pub struct CompilerState {
+// TODO: Maybe this needs a new lifetime specifier, `'b`?
+#[derive(Debug)]
+pub struct CompilerState<'a> {
     /// The part of the compiler state that applies across function calls to locally defined
-    global_compiler_state: GlobalCompilerState,
+    global_compiler_state: GlobalCodeGeneratorState,
 
     /// The part of the compiler state that only applies within a function
     function_state: FunctionState,
+
+    libraries: &'a [Box<dyn libraries::Library>],
 }
 
-impl CompilerState {
+impl<'a> CompilerState<'a> {
+    /// Import a dependency in an idempotent manner, ensuring it's only ever imported once
+    pub(crate) fn add_library_function(&mut self, subroutine: SubRoutine) {
+        let label = subroutine.get_label();
+        let instructions = subroutine.get_whole_function();
+        self.global_compiler_state
+            .snippet_state
+            .explicit_import(&label, &instructions);
+    }
+
     /// Construct a new compiler state with no known values that must be spilled.
-    fn new(global_compiler_state: &GlobalCompilerState) -> Self {
+    fn new(
+        global_compiler_state: GlobalCodeGeneratorState,
+        libraries: &'a [Box<dyn libraries::Library>],
+    ) -> Self {
         Self {
-            global_compiler_state: global_compiler_state.to_owned(),
+            global_compiler_state,
             function_state: FunctionState::default(),
+            libraries,
         }
     }
 
     /// Construct a new compiler state with a defined set of values that should be stored in memory,
     /// rather than on the stack, i.e. "spilled".
     fn with_known_spills(
-        global_compiler_state: &GlobalCompilerState,
+        global_compiler_state: GlobalCodeGeneratorState,
         required_spills: HashSet<ValueIdentifier>,
+        libraries: &'a [Box<dyn libraries::Library>],
     ) -> Self {
         Self {
-            global_compiler_state: global_compiler_state.to_owned(),
+            global_compiler_state,
             function_state: FunctionState {
                 vstack: Default::default(),
                 var_addr: VarAddr::default(),
                 spill_required: required_spills,
                 subroutines: Vec::default(),
             },
+            libraries,
         }
     }
 
@@ -246,15 +253,15 @@ impl CompilerState {
     /// generator can start the function with the spilling of these values.
     fn add_input_arguments_to_vstack_and_return_spilled_fn_args(
         &mut self,
-        input_arguments: &[AbstractArgument],
+        input_arguments: &[ast_types::AbstractArgument],
     ) -> Vec<ValueIdentifier> {
         const FN_ARG_NAME_PREFIX: &str = "fn_arg";
 
         let mut fn_arg_spilling = vec![];
         for input_arg in input_arguments {
             match input_arg {
-                AbstractArgument::FunctionArgument(_) => todo!(),
-                AbstractArgument::ValueArgument(abstract_input) => {
+                ast_types::AbstractArgument::FunctionArgument(_) => todo!(),
+                ast_types::AbstractArgument::ValueArgument(abstract_input) => {
                     let (fn_arg_addr, spill) =
                         self.new_value_identifier(FN_ARG_NAME_PREFIX, &abstract_input.data_type);
                     self.function_state
@@ -276,6 +283,215 @@ impl CompilerState {
         self.function_state.spill_required.to_owned()
     }
 
+    /// Return information to show where a value can be found. Options are:
+    /// 1. On the stack at depth `n`
+    /// 2. In memory at memory address `p`.
+    /// 3. In memory at an address that must be resolved at runtime with code `code`.
+    fn locate_identifier(
+        &mut self,
+        identifier: &ast::Identifier<type_checker::Typing>,
+    ) -> ValueLocation {
+        fn get_lhs_address_code(
+            state: &mut CompilerState,
+            lhs_location: &ValueLocation,
+            field_or_element_type: &ast_types::DataType,
+            identifier: &ast::Identifier<type_checker::Typing>,
+        ) -> Vec<LabelledInstruction> {
+            match lhs_location {
+                ValueLocation::OpStack(depth) => {
+                    if !lhs_location.is_accessible(field_or_element_type) {
+                        let binding_name = identifier.binding_name();
+                        let value_ident_of_binding = state
+                            .function_state
+                            .var_addr
+                            .get(&binding_name)
+                            .unwrap_or_else(|| {
+                                panic!(
+                                    "Could not locate value identifier for binding {binding_name}"
+                                )
+                            })
+                            .to_owned();
+                        state.mark_as_spilled(&value_ident_of_binding);
+                        triton_asm!(push 0 assert)
+                    } else {
+                        // Type of `l` in `l[<expr>]` is known to be list. So we know stack size = 1
+                        triton_asm!(dup { depth })
+                    }
+                }
+                ValueLocation::StaticMemoryAddress(pointer) => {
+                    // Type of `l` in `l[<expr>]` is known to be list. So we know stack size = 1
+                    // Read the list pointer from memory, then clear the stack, leaving only
+                    // the list pointer on the stack.
+                    triton_asm!(push {pointer} read_mem swap 1 pop)
+                }
+                ValueLocation::DynamicMemoryAddress(code) => code.to_owned(),
+            }
+        }
+
+        match identifier {
+            ast::Identifier::String(_, _) => {
+                let var_name = identifier.binding_name();
+                let var_addr = self
+                    .function_state
+                    .var_addr
+                    .get(&var_name)
+                    .unwrap_or_else(|| panic!("Could not locate {var_name} on stack"));
+                let (position, _ident_data_type, spilled) =
+                    self.function_state.vstack.find_stack_value(var_addr);
+                match spilled {
+                    Some(mem_addr) => ValueLocation::StaticMemoryAddress(mem_addr),
+                    None => ValueLocation::OpStack(position),
+                }
+            }
+            ast::Identifier::TupleIndex(lhs_id, tuple_index, _known_type) => {
+                let lhs_location = self.locate_identifier(lhs_id);
+                let lhs_type = lhs_id.get_type();
+                let element_types = if let ast_types::DataType::Tuple(ets) = lhs_type {
+                    ets
+                } else {
+                    panic!("Expected type was tuple. Got {lhs_type}.")
+                };
+
+                // Last element of the tuple is stored on top of the stack
+                let tuple_depth: usize = element_types
+                    .iter()
+                    .enumerate()
+                    .filter(|(i, _x)| *i > *tuple_index)
+                    .map(|(_i, x)| x.stack_size())
+                    .sum::<usize>();
+
+                match lhs_location {
+                    ValueLocation::OpStack(n) => ValueLocation::OpStack(n + tuple_depth),
+                    ValueLocation::StaticMemoryAddress(p) => {
+                        ValueLocation::StaticMemoryAddress(p + tuple_depth as u32)
+                    }
+                    ValueLocation::DynamicMemoryAddress(code) => {
+                        let new_code = [code, triton_asm!(push {tuple_depth} add)].concat();
+                        ValueLocation::DynamicMemoryAddress(new_code)
+                    }
+                }
+            }
+            ast::Identifier::ListIndex(ident, index_expr, element_type) => {
+                let element_type = element_type.get_type();
+                let lhs_location = self.locate_identifier(ident);
+                let ident_addr_code =
+                    get_lhs_address_code(self, &lhs_location, &element_type, ident);
+                // stack: _ *list
+
+                let lhs_type = ident.get_type();
+                let list_type = if let ast_types::DataType::List(_, lity) = lhs_type {
+                    lity
+                } else {
+                    panic!("Expected type was list. Got {lhs_type}.")
+                };
+
+                self.new_value_identifier("list_expression", &ident.get_type());
+                let (_index_expr, index_code) =
+                    compile_expr(index_expr, "index_on_assign", &index_expr.get_type(), self);
+                // stack: _ *list index
+
+                let list_metadata_size = list_type.metadata_size();
+                let element_address = match element_type.bfield_codec_length() {
+                    Some(static_element_size) => {
+                        let relative_address = triton_asm!(
+                            {&index_code}
+                            push {static_element_size}
+                            mul
+                            push {list_metadata_size}
+                            add
+                        );
+                        triton_asm!(
+                            {&ident_addr_code}
+                            {&relative_address}
+                            add
+                        )
+                    }
+                    // We need a while loop here, and we need a unique identifier for that
+                    None => {
+                        // Notice that the following subroutine is always the same, so
+                        // we only need to import it once, no matter if we index into
+                        // different lists with dynamically sized elements in the same
+                        // program.
+                        let loop_label = "tasm_langs_dynamic_list_element_finder".to_owned();
+
+                        let loop_subroutine = triton_asm!(
+                            {&loop_label}:
+                                // _ *vec<T>[n]_size index
+                                dup 0
+                                push 0
+                                eq
+                                skiz
+                                    return
+                                // _ *vec<T>[n]_size index
+
+                                swap 1
+                                read_mem
+                                // _ index *vec<T>[n]_size vec<T>[n]_size
+
+                                push 1 add add
+                                // _ index *vec<T>[n+1]_size
+
+                                swap 1
+                                // _ *vec<T>[n+1]_size index
+
+                                push -1
+                                add
+                                recurse
+
+                        );
+                        let loop_subroutine: SubRoutine = loop_subroutine.try_into().unwrap();
+
+                        self.add_library_function(loop_subroutine);
+
+                        triton_asm!(
+                            {&ident_addr_code}
+                            push {list_metadata_size}
+                            add
+                            {&index_code}
+                            call {loop_label}
+                            // _ *vec<T>[index]_size 0
+
+                            pop
+                            push 1 add
+                            // _ *vec<T>[index]
+                        )
+                    }
+                };
+
+                self.function_state.vstack.pop();
+                self.function_state.vstack.pop();
+
+                ValueLocation::DynamicMemoryAddress(element_address)
+            }
+            ast::Identifier::Field(ident, field_name, known_type) => {
+                let lhs_location = self.locate_identifier(ident);
+
+                let get_struct_pointer =
+                    get_lhs_address_code(self, &lhs_location, &known_type.get_type(), ident);
+                // stack: _ struct_pointer
+
+                // limited field support for now
+                let ident_type = ident.get_type();
+                let get_field_pointer_from_struct_pointer = match ident.get_type() {
+                    ast_types::DataType::MemPointer(inner_type) => match *inner_type {
+                        ast_types::DataType::Struct(inner_struct) => {
+                            inner_struct.get_field_accessor_code(field_name)
+                        }
+                        _ => todo!("ident_type: {ident_type}"),
+                    },
+                    _ => todo!("ident_type: {ident_type}"),
+                };
+
+                // stack: _ field_pointer
+
+                ValueLocation::DynamicMemoryAddress(triton_asm!(
+                    {&get_struct_pointer}
+                    {&get_field_pointer_from_struct_pointer}
+                ))
+            }
+        }
+    }
+
     /// Return code for a function, without including its external dependencies and without
     /// initialization of the dynamic memory allocator, as these pieces of code should be
     /// included only once, by the outer function.
@@ -290,7 +506,7 @@ impl CompilerState {
                 return);
         InnerFunctionTasmCode {
             name: fn_name.to_owned(),
-            call_depth_zero_code: with_own_label,
+            call_depth_zero_code: with_own_label.try_into().unwrap(),
             sub_routines: self.function_state.subroutines.clone(),
         }
     }
@@ -319,7 +535,7 @@ impl CompilerState {
             .snippet_state
             .all_external_dependencies()
             .into_iter()
-            .map(|x| x.into())
+            .map(|x| x.try_into().unwrap())
             .collect_vec();
 
         OuterFunctionTasmCode {
@@ -343,7 +559,7 @@ impl std::fmt::Display for ValueIdentifier {
     }
 }
 
-impl CompilerState {
+impl<'a> CompilerState<'a> {
     fn get_binding_name(&self, value_identifier: &ValueIdentifier) -> String {
         match self
             .function_state
@@ -356,18 +572,30 @@ impl CompilerState {
         }
     }
 
+    /// Return a new, guaranteed unique label that can be used anywhere in the code
+    pub fn unique_label(
+        &mut self,
+        prefix: &str,
+        data_type: Option<&ast_types::DataType>,
+    ) -> String {
+        let name = match data_type {
+            Some(ty) => format!("_{}_{}_{}", prefix, ty, self.global_compiler_state.counter),
+            None => format!("_{}_{}", prefix, self.global_compiler_state.counter),
+        };
+        self.global_compiler_state.counter += 1;
+
+        name
+    }
+
     /// Get a new, guaranteed unique, identifier for a value. Returns an address to
     /// spill the value to, iff spilling of this value is required. A previous run
     /// of the compiler will have determined whether spilling is required.
     pub fn new_value_identifier(
         &mut self,
         prefix: &str,
-        data_type: &ast::DataType,
+        data_type: &ast_types::DataType,
     ) -> (ValueIdentifier, Option<u32>) {
-        let name = format!(
-            "_{}_{}_{}",
-            prefix, data_type, self.global_compiler_state.counter
-        );
+        let name = self.unique_label(prefix, Some(data_type));
         let address = ValueIdentifier { name };
 
         // Get a statically known memory address if value needs to be spilled to
@@ -376,7 +604,7 @@ impl CompilerState {
             let spill_address = self
                 .global_compiler_state
                 .snippet_state
-                .kmalloc(data_type.size_of())
+                .kmalloc(data_type.stack_size())
                 .try_into()
                 .unwrap();
             eprintln!("Warning: spill required of {address}. Spilling to address: {spill_address}");
@@ -388,7 +616,6 @@ impl CompilerState {
         self.function_state
             .vstack
             .push((address.clone(), (data_type.clone(), spilled)));
-        self.global_compiler_state.counter += 1;
 
         (address, spilled)
     }
@@ -466,122 +693,8 @@ impl CompilerState {
         // not change the stack-ordering of bindings when a value is re-assigned.
     }
 
-    /// Return the code to overwrite a stack value with the value that's on top of the stack
-    /// Note that the top value and the value to be removed *must* be of the same type.
-    /// Updates the `vstack` but not the `var_addr` as this is assumed to be handled by the caller.
-    fn overwrite_value(
-        &mut self,
-        value_identifier_to_remove: &ValueIdentifier,
-    ) -> Vec<LabelledInstruction> {
-        let (stack_position_of_value_to_remove, type_to_remove, old_value_spilled) = self
-            .function_state
-            .vstack
-            .find_stack_value(value_identifier_to_remove);
-
-        // If value is not marked as a spilled value and it's inacessible through swap(n)/dup(n),
-        // this value must be marked as a value to be spilled, and the compiler must be run again.
-        let accessible = stack_position_of_value_to_remove < SIZE_OF_ACCESSIBLE_STACK;
-        if old_value_spilled.is_none() && !accessible {
-            self.mark_as_spilled(value_identifier_to_remove);
-        }
-
-        let (_top_element_id, (top_element_type, _new_value_spilled)) = self
-            .function_state
-            .vstack
-            .pop()
-            .expect("vstack cannot be empty");
-
-        assert_eq!(
-            top_element_type, type_to_remove,
-            "Top stack value and value to remove must match"
-        );
-
-        // Overwrite the value, whether it lives on stack or in memory
-        let value_size = type_to_remove.size_of();
-
-        match old_value_spilled {
-            Some(spill_addr) => move_top_stack_value_to_memory(spill_addr, value_size),
-            None => {
-                if stack_position_of_value_to_remove > 0 && accessible {
-                    let swap_pop_instructions =
-                        format!("swap {stack_position_of_value_to_remove} pop\n")
-                            .repeat(value_size);
-                    triton_asm!({ swap_pop_instructions })
-                } else if !accessible {
-                    eprintln!("Compiler must run again because of {value_identifier_to_remove}");
-                    triton_asm!(push 0 assert)
-                } else {
-                    vec![]
-                }
-            }
-        }
-    }
-
-    fn replace_tuple_element(
-        &mut self,
-        tuple_identifier: &ValueIdentifier,
-        tuple_index: usize,
-    ) -> Vec<LabelledInstruction> {
-        // This function assumes that the last element of the tuple is placed on top of the stack
-        let (stack_position_of_tuple, tuple_type, tuple_spilled) = self
-            .function_state
-            .vstack
-            .find_stack_value(tuple_identifier);
-        let element_types = if let ast::DataType::Tuple(ets) = &tuple_type {
-            ets
-        } else {
-            panic!("Original value must have type tuple")
-        };
-
-        let (_top_element_id, (_top_element_type, _)) = self
-            .function_state
-            .vstack
-            .pop()
-            .expect("vstack cannot be empty");
-
-        // Last element of tuple is on top of stack. How many machine
-        // words deep is the value we want to replace?
-        let tuple_depth: usize = element_types
-            .iter()
-            .enumerate()
-            .filter(|(i, _x)| *i > tuple_index)
-            .map(|(_i, x)| x.size_of())
-            .sum::<usize>();
-
-        // If value is not marked as a spilled value and it's inacessible through swap(n)/dup(n),
-        // this value must be marked as a value to be spilled, and the compiler must be run again.
-        let stack_position_of_value_to_remove = stack_position_of_tuple + tuple_depth;
-        let accessible = stack_position_of_value_to_remove < SIZE_OF_ACCESSIBLE_STACK;
-        if tuple_spilled.is_none() && !accessible {
-            self.mark_as_spilled(tuple_identifier);
-        }
-
-        // Replace the overwritten value on stack, or in memory
-        let value_size = element_types[tuple_index].size_of();
-        match tuple_spilled {
-            Some(spill_addr) => {
-                let element_address = spill_addr + tuple_depth as u32;
-                move_top_stack_value_to_memory(element_address, value_size)
-            }
-            None => {
-                if !accessible {
-                    eprintln!("Compiler must run again because of {tuple_identifier}");
-                    triton_asm!(push 0 assert)
-                } else if stack_position_of_value_to_remove > 0 && accessible {
-                    let swap_pop_instructions =
-                        format!("swap {stack_position_of_value_to_remove} pop\n")
-                            .repeat(value_size);
-                    triton_asm!({ swap_pop_instructions })
-                } else {
-                    vec![]
-                }
-            }
-        }
-    }
-
     /// Restore the vstack to a previous state, representing the state the stack had
     /// at the beginning of a codeblock. Also returns the code to achieve this.
-    // TODO: Should also handle spilled_values
     fn restore_stack_code(
         &mut self,
         previous_stack: &VStack,
@@ -610,7 +723,7 @@ impl CompilerState {
             {
                 break;
             } else {
-                code.append(&mut triton_asm![pop; dt.size_of()]);
+                code.append(&mut triton_asm![pop; dt.stack_size()]);
                 self.function_state.vstack.pop();
                 if let Some(binding) = binding_name {
                     let removed = self.function_state.var_addr.remove(&binding);
@@ -674,7 +787,7 @@ impl CompilerState {
             "Cannot handle spilled value as top element in stack clearing yet"
         );
 
-        let top_value_size = top_element_type.size_of();
+        let top_value_size = top_element_type.stack_size();
 
         // Generate code to move value to the bottom of the requested stack range
         let words_to_remove = height_of_affected_stack - top_value_size;
@@ -708,7 +821,7 @@ impl CompilerState {
                 .unwrap();
             let mut code = copy_top_stack_value_to_memory(memory_location, top_value_size);
             code.append(&mut triton_asm![pop; height_of_affected_stack]);
-            code.append(&mut load_from_memory(memory_location, top_value_size));
+            code.append(&mut load_from_memory(Some(memory_location), top_value_size));
 
             code
         } else if words_to_remove != 0 {
@@ -769,32 +882,37 @@ impl CompilerState {
 /// Compile a function, returning the code for the function body. Inherits the `global_compiler_state`
 /// from the caller but starts with an empty virtual stack and an empty variable mapping.
 fn compile_function_inner(
-    function: &ast::Fn<types::Typing>,
-    global_compiler_state: &mut GlobalCompilerState,
+    function: &ast::Fn<type_checker::Typing>,
+    global_compiler_state: &mut GlobalCodeGeneratorState,
+    libraries: &[Box<dyn libraries::Library>],
 ) -> InnerFunctionTasmCode {
     let fn_name = &function.fn_signature.name;
     let _fn_stack_output_sig = format!("{}", function.fn_signature.output);
 
     // Run the compilation 1st time to learn which values need to be spilled to memory
-    let mut state = CompilerState::new(global_compiler_state);
-    let fn_arg_spilling =
-        state.add_input_arguments_to_vstack_and_return_spilled_fn_args(&function.fn_signature.args);
-    assert!(
-        fn_arg_spilling.is_empty(),
-        "Cannot memory-spill function arguments first time the code generator runs"
-    );
+    let spills = {
+        let mut temporary_fn_state =
+            CompilerState::new(global_compiler_state.to_owned(), libraries);
+        let fn_arg_spilling = temporary_fn_state
+            .add_input_arguments_to_vstack_and_return_spilled_fn_args(&function.fn_signature.args);
+        assert!(
+            fn_arg_spilling.is_empty(),
+            "Cannot memory-spill function arguments first time the code generator runs"
+        );
 
-    // Compiling the function body allows us to learn which values need to be spilled to memory
-    let _fn_body_code = function
-        .body
-        .iter()
-        .map(|stmt| compile_stmt(stmt, function, &mut state))
-        .concat();
+        // Compiling the function body allows us to learn which values need to be spilled to memory
+        let _fn_body_code = function
+            .body
+            .iter()
+            .map(|stmt| compile_stmt(stmt, function, &mut temporary_fn_state))
+            .concat();
+        temporary_fn_state.get_required_spills()
+    };
 
     // Run the compilation again now that we know which values to spill
     println!("\n\n\nRunning compiler again\n\n\n");
     let mut state =
-        CompilerState::with_known_spills(global_compiler_state, state.get_required_spills());
+        CompilerState::with_known_spills(global_compiler_state.to_owned(), spills, libraries);
 
     // Add function arguments to the compiler's view of the stack.
     let fn_arg_spilling =
@@ -815,28 +933,28 @@ fn compile_function_inner(
             .concat(),
     );
 
-    // Sanity check: Assert that all subroutines start with a label and end with a return
-    state.function_state.assert_subroutines_look_sane();
-
-    // Update global compiler state to propagate this to caller, such that external
-    // dependencies that were loaded here will not be loaded again.
-    *global_compiler_state = state.global_compiler_state.to_owned();
+    // Update global compiler state with imported snippets, and label counter
+    *global_compiler_state = state.global_compiler_state.clone();
 
     state.compose_code_for_inner_function(fn_name, fn_body_code)
 }
 
 // TODO: Remove this attribute once we have a sane `main` function that uses this step
 #[allow(dead_code)]
-pub(crate) fn compile_function(function: &ast::Fn<types::Typing>) -> OuterFunctionTasmCode {
-    let mut state = CompilerState::default();
-    let compiled_function = compile_function_inner(function, &mut state.global_compiler_state);
+pub(crate) fn compile_function(
+    function: &ast::Fn<type_checker::Typing>,
+    libraries: &[Box<dyn libraries::Library>],
+) -> OuterFunctionTasmCode {
+    let mut state = CompilerState::new(GlobalCodeGeneratorState::default(), libraries);
+    let compiled_function =
+        compile_function_inner(function, &mut state.global_compiler_state, libraries);
 
     state.compose_code_for_outer_function(compiled_function)
 }
 
 fn compile_stmt(
-    stmt: &ast::Stmt<types::Typing>,
-    function: &ast::Fn<types::Typing>,
+    stmt: &ast::Stmt<type_checker::Typing>,
+    function: &ast::Fn<type_checker::Typing>,
     state: &mut CompilerState,
 ) -> Vec<LabelledInstruction> {
     match stmt {
@@ -860,59 +978,56 @@ fn compile_stmt(
             // When overwriting a value, we ignore the identifier of the new expression as
             // it's simply popped from the stack and the old identifier is used.
             let (_expr_addr, expr_code) = compile_expr(expr, "assign", &data_type, state);
-            match identifier {
-                ast::Identifier::String(var_name, _known_type) => {
-                    let value_identifier = state.function_state.var_addr[var_name].clone();
-                    let overwrite_code = state.overwrite_value(&value_identifier);
+            let location = state.locate_identifier(identifier);
 
-                    vec![expr_code, overwrite_code].concat()
+            let ident_type = identifier.get_type();
+            let overwrite_code = if !location.is_accessible(&ident_type) {
+                // Compiler must run again. Mark binding as spilled and produce unusable code
+                let binding_name = identifier.binding_name();
+                let value_ident_of_binding = state
+                    .function_state
+                    .var_addr
+                    .get(&binding_name)
+                    .unwrap_or_else(|| {
+                        panic!("Could not locate value identifier for binding {binding_name}")
+                    })
+                    .to_owned();
+                state.mark_as_spilled(&value_ident_of_binding);
+                triton_asm!(push 0 assert)
+            } else {
+                match location {
+                    ValueLocation::OpStack(top_value_position) => {
+                        let swap_pop_instructions = format!("swap {top_value_position} pop\n")
+                            .repeat(ident_type.stack_size());
+                        triton_asm!({ swap_pop_instructions })
+                    }
+                    ValueLocation::StaticMemoryAddress(ram_pointer) => {
+                        move_top_stack_value_to_memory(Some(ram_pointer), ident_type.stack_size())
+                    }
+                    ValueLocation::DynamicMemoryAddress(code) => triton_asm!(
+                        // Goal: Move 2nd to top stack value to memory where memory is indicated
+                        // by the address on top of the stack.
+                        {&code}
+                        {&move_top_stack_value_to_memory(None, ident_type.stack_size())}
+                    ),
                 }
-                ast::Identifier::TupleIndex(ident, tuple_index) => {
-                    let var_name =
-                        if let ast::Identifier::String(var_name, _known_type) = *ident.to_owned() {
-                            var_name
-                        } else {
-                            panic!("Nested tuple expressions not yet supported");
-                        };
+            };
 
-                    let value_identifier = state.function_state.var_addr[&var_name].clone();
+            // remove new value from stack, as it replaces old value and doesn't take up room on the stack
+            // or creates new values in memory.
+            state.function_state.vstack.pop();
 
-                    let overwrite_code =
-                        state.replace_tuple_element(&value_identifier, *tuple_index);
-
-                    vec![expr_code, overwrite_code].concat()
-                }
-                ast::Identifier::ListIndex(ident, index_expr) => {
-                    let fn_name =
-                        state.import_snippet(Box::new(tasm_lib::list::safe_u32::set::SafeSet(
-                            data_type.clone().try_into().unwrap(),
-                        )));
-
-                    let ident_expr = ast::Expr::Var(*ident.to_owned());
-                    let (_ident_addr, ident_code) =
-                        compile_expr(&ident_expr, "ident_on_assign", &data_type, state);
-                    let (_index_expr, index_code) =
-                        compile_expr(index_expr, "index_on_assign", &index_expr.get_type(), state);
-                    state.function_state.vstack.pop();
-                    state.function_state.vstack.pop();
-                    state.function_state.vstack.pop();
-
-                    vec![
-                        expr_code,
-                        ident_code,
-                        index_code,
-                        triton_asm!(call { fn_name }),
-                    ]
-                    .concat()
-                }
-            }
+            triton_asm!(
+                {&expr_code}
+                {&overwrite_code}
+            )
         }
 
         // 'return;': Clean stack
         ast::Stmt::Return(None) => {
             let mut code = vec![];
             while let Some((_addr, (data_type, _spilled))) = state.function_state.vstack.pop() {
-                code.push(triton_asm![pop; data_type.size_of()])
+                code.push(triton_asm![pop; data_type.stack_size()])
             }
 
             code.concat()
@@ -947,7 +1062,10 @@ fn compile_stmt(
                             Some(spill_addr) => {
                                 // Value is spilled, so we load it from memory and clear that stack.
                                 code.append(&mut triton_asm![pop; state.function_state.vstack.get_stack_height()]);
-                                code.append(&mut load_from_memory(*spill_addr, dt.size_of()))
+                                code.append(&mut load_from_memory(
+                                    Some(*spill_addr),
+                                    dt.stack_size(),
+                                ))
                             }
 
                             None => {
@@ -961,7 +1079,7 @@ fn compile_stmt(
                         break;
                     }
 
-                    code.append(&mut triton_asm![pop; dt.size_of()]);
+                    code.append(&mut triton_asm![pop; dt.stack_size()]);
                     state.function_state.vstack.pop();
                 }
 
@@ -974,7 +1092,7 @@ fn compile_stmt(
                 // Remove all but top value from stack
                 let cleanup_code = state.clear_all_but_top_stack_value_above_height(0);
 
-                vec![code, cleanup_code].concat()
+                [code, cleanup_code].concat()
             };
 
             // We don't need to clear `var_addr` here since we are either done with the code generation
@@ -1011,7 +1129,7 @@ fn compile_stmt(
             state
                 .function_state
                 .subroutines
-                .push(while_loop_code.into());
+                .push(while_loop_code.try_into().unwrap());
 
             triton_asm!(call {
                 while_loop_subroutine_name
@@ -1061,8 +1179,14 @@ fn compile_stmt(
                     return
             );
 
-            state.function_state.subroutines.push(then_code.into());
-            state.function_state.subroutines.push(else_code.into());
+            state
+                .function_state
+                .subroutines
+                .push(then_code.try_into().unwrap());
+            state
+                .function_state
+                .subroutines
+                .push(else_code.try_into().unwrap());
 
             if_code
         }
@@ -1078,7 +1202,7 @@ fn compile_stmt(
 
             let restore_stack_code = state.restore_stack_code(&vstack_init, &var_addr_init);
 
-            vec![block_body_code, restore_stack_code].concat()
+            [block_body_code, restore_stack_code].concat()
         }
         ast::Stmt::Assert(ast::AssertStmt { expression }) => {
             let (_addr, assert_expr_code) =
@@ -1093,7 +1217,8 @@ fn compile_stmt(
             )
         }
         ast::Stmt::FnDeclaration(function) => {
-            let compiled_fn = compile_function_inner(function, &mut state.global_compiler_state);
+            let compiled_fn =
+                compile_function_inner(function, &mut state.global_compiler_state, state.libraries);
             state
                 .function_state
                 .add_compiled_fn_to_subroutines(compiled_fn);
@@ -1104,7 +1229,7 @@ fn compile_stmt(
 }
 
 fn compile_fn_call(
-    fn_call: &ast::FnCall<types::Typing>,
+    fn_call: &ast::FnCall<type_checker::Typing>,
     state: &mut CompilerState,
 ) -> Vec<LabelledInstruction> {
     let ast::FnCall {
@@ -1132,7 +1257,7 @@ fn compile_fn_call(
             .unzip();
 
     let mut call_fn_code = vec![];
-    for lib in libraries::all_libraries() {
+    for lib in state.libraries.iter() {
         if let Some(fn_name) = lib.get_function_name(&name) {
             call_fn_code.append(&mut lib.call_function(&fn_name, type_parameter, &args, state));
             break;
@@ -1150,11 +1275,11 @@ fn compile_fn_call(
         state.function_state.vstack.pop();
     }
 
-    vec![args_code.concat(), call_fn_code].concat()
+    [args_code.concat(), call_fn_code].concat()
 }
 
 fn compile_method_call(
-    method_call: &ast::MethodCall<types::Typing>,
+    method_call: &ast::MethodCall<type_checker::Typing>,
     state: &mut CompilerState,
 ) -> Vec<LabelledInstruction> {
     let method_name = method_call.method_name.clone();
@@ -1173,14 +1298,11 @@ fn compile_method_call(
             .unzip();
 
     let mut call_code = vec![];
-    for lib in libraries::all_libraries() {
+    for lib in state.libraries.iter() {
         if let Some(fn_name) = lib.get_method_name(&method_name, &receiver_type) {
-            call_code.append(&mut lib.call_method(
-                &fn_name,
-                &receiver_type,
-                &method_call.args,
-                state,
-            ));
+            let mut call_method_code =
+                lib.call_method(&fn_name, &receiver_type, &method_call.args, state);
+            call_code.append(&mut call_method_code);
             break;
         }
     }
@@ -1193,13 +1315,13 @@ fn compile_method_call(
         state.function_state.vstack.pop();
     }
 
-    vec![args_code.concat(), call_code].concat()
+    [args_code.concat(), call_code].concat()
 }
 
 fn compile_expr(
-    expr: &ast::Expr<types::Typing>,
+    expr: &ast::Expr<type_checker::Typing>,
     _context: &str,
-    _data_type: &ast::DataType,
+    _data_type: &ast_types::DataType,
     state: &mut CompilerState,
 ) -> (ValueIdentifier, Vec<LabelledInstruction>) {
     let result_type = expr.get_type();
@@ -1240,145 +1362,62 @@ fn compile_expr(
             ast::ExprLit::GenericNum(n, _) => {
                 panic!("Type of number literal {n} not resolved")
             }
+            ast::ExprLit::MemPointer(ast::MemPointerLiteral {
+                mem_pointer_address,
+                struct_name: _,
+                resolved_type: _,
+            }) => triton_asm!(push {
+                mem_pointer_address
+            }),
         },
 
-        ast::Expr::Var(identifier) => match identifier {
-            ast::Identifier::String(var_name, _known_type) => {
-                let var_addr = state.function_state.var_addr.get(var_name).cloned();
-                match &var_addr {
-                    Some(var_addr) => {
-                        // Identifier is a value that must be living on the stack
-                        let (position, old_data_type, spilled) =
-                            state.function_state.vstack.find_stack_value(var_addr);
-
-                        // If value is not marked as a spilled value and it's inacessible through swap(n)/dup(n),
-                        // this value must be marked as a value to be spilled, and the compiler must be run again.
-                        let bottom_position = position + result_type.size_of() - 1;
-                        let accessible = bottom_position < SIZE_OF_ACCESSIBLE_STACK;
-                        if spilled.is_none() && !accessible {
-                            state.mark_as_spilled(var_addr);
-                        }
-
-                        // sanity check
-                        assert_eq!(old_data_type, result_type, "type must match expected type");
-
-                        match spilled {
-                            Some(spill_address) => {
-                                // The value has been spilled to memory. Get it from there.
-                                load_from_memory(spill_address, result_type.size_of())
-                            }
-                            None => {
-                                if !accessible {
-                                    // The compiler needs to run again. Produce unusable code.
-                                    triton_asm!(push 0 assert)
-                                } else {
-                                    // The value is accessible on the stack. Copy it from there.
-                                    dup_value_from_stack_code(
-                                        position.try_into().unwrap(),
-                                        &result_type,
-                                    )
-                                }
-                            }
-                        }
-                    }
-                    // Identifier is a function and must be in scope since typechecker was passed
-                    None => vec![],
-                }
-            }
-            ast::Identifier::TupleIndex(ident, tuple_index) => {
-                let var_name = if let ast::Identifier::String(var_name, _) = *ident.to_owned() {
-                    var_name
+        ast::Expr::Var(identifier) => {
+            // TODO: We probably need to use `known_type` here!
+            let var_type = identifier.get_type();
+            if matches!(var_type, ast_types::DataType::Function(_)) {
+                // Identifier is a function and must be in scope since typechecker was passed
+                triton_asm!()
+            } else {
+                let location = state.locate_identifier(identifier);
+                if !location.is_accessible(&var_type) {
+                    // Compiler must run again. Mark binding as spilled and produce unusable code
+                    let binding_name = identifier.binding_name();
+                    let value_ident_of_binding = state
+                        .function_state
+                        .var_addr
+                        .get(&binding_name)
+                        .unwrap_or_else(|| {
+                            panic!("Could not locate value identifier for binding {binding_name}")
+                        })
+                        .to_owned();
+                    state.mark_as_spilled(&value_ident_of_binding);
+                    triton_asm!(push 0 assert)
                 } else {
-                    panic!("Nested tuple references not yet supported");
-                };
-                let var_addr = state
-                    .function_state
-                    .var_addr
-                    .get(&var_name)
-                    .expect("variable exists")
-                    .to_owned();
-
-                // Note that this function returns the address of the *tuple element*, both
-                // on the stack and in memory if spilled. So the stack position/spilled address
-                // should not be shifted with the elements position inside the tuple.
-                let (position, element_type, spilled) = state
-                    .function_state
-                    .vstack
-                    .find_tuple_element(&var_addr, *tuple_index);
-
-                // If value is not marked as a spilled value and it's inacessible through swap(n)/dup(n),
-                // this value must be marked as a value to be spilled, and the compiler must be run again.
-                let bottom_position = position + element_type.size_of() - 1;
-                let accessible = bottom_position < SIZE_OF_ACCESSIBLE_STACK;
-                if spilled.is_none() && !accessible {
-                    state.mark_as_spilled(&var_addr);
-                }
-
-                match spilled {
-                    Some(spill_address) => {
-                        // The value has been spilled to memory. Get it from there.
-                        load_from_memory(spill_address, element_type.size_of())
-                    }
-                    None => {
-                        if !accessible {
-                            // The compiler needs to run again. Produce unusable code.
-                            triton_asm!(push 0 assert)
-                        } else {
-                            // The value is accessible on the stack. Copy it from there.
-                            dup_value_from_stack_code(position.try_into().unwrap(), &element_type)
+                    match location {
+                        ValueLocation::OpStack(position) => {
+                            dup_value_from_stack_code(position.try_into().unwrap(), &var_type)
+                        }
+                        ValueLocation::StaticMemoryAddress(pointer) => {
+                            load_from_memory(Some(pointer), var_type.stack_size())
+                        }
+                        ValueLocation::DynamicMemoryAddress(code) => {
+                            triton_asm!(
+                                {&code}
+                                {&dereference(&var_type)}
+                            )
+                            // if let ast_types::DataType::MemPointer(_) = var_type {
+                            //     triton_asm!(
+                            //         {&code}
+                            //         {&dereference(&var_type)}
+                            //     )
+                            // } else {
+                            //     code
+                            // }
                         }
                     }
                 }
             }
-            ast::Identifier::ListIndex(ident, index_expr) => {
-                let ident_type = ident.get_type();
-                let type_param = ident_type.type_parameter().unwrap_or_else(|| {
-                    panic!("identifier must have type parameter when reading through indexing")
-                });
-                let fn_name = state.import_snippet(Box::new(
-                    tasm_lib::list::safe_u32::get::SafeGet(type_param.try_into().unwrap()),
-                ));
-
-                // TODO: Remove these sanity checks
-                let ident_as_string = match *ident.to_owned() {
-                    ast::Identifier::String(as_str, _) => as_str,
-                    _ => panic!("Nested list indexing not yet supported"),
-                };
-                let var_addr = state
-                    .function_state
-                    .var_addr
-                    .get(&ident_as_string)
-                    .expect("variable exists")
-                    .to_owned();
-                let (_position, old_data_type, _spilled) =
-                    state.function_state.vstack.find_stack_value(&var_addr);
-                assert_eq!(
-                    ident_type, old_data_type,
-                    "Type found on vstack must match expected type"
-                );
-                assert!(
-                    is_list_type(&old_data_type),
-                    "Can only index into list types"
-                );
-
-                // The recursive calls below should be able to handle spilled values, so we don't
-                // need to handle it here.
-
-                let ident_expr = ast::Expr::Var(*ident.to_owned());
-                let (_ident_addr, ident_code) =
-                    compile_expr(&ident_expr, "ident_on_assign", &ident_type, state);
-                let (_index_expr, index_code) =
-                    compile_expr(index_expr, "index_on_assign", &index_expr.get_type(), state);
-                state.function_state.vstack.pop();
-                state.function_state.vstack.pop();
-
-                triton_asm!(
-                    {&ident_code}
-                    {&index_code}
-                    call {fn_name}
-                )
-            }
-        },
+        }
 
         ast::Expr::Tuple(exprs) => {
             // Compile arguments left-to-right
@@ -1406,17 +1445,17 @@ fn compile_expr(
         ast::Expr::Unary(unaryop, inner_expr, _known_type) => {
             let inner_type = inner_expr.get_type();
             let (_inner_expr_addr, inner_expr_code) =
-                compile_expr(inner_expr, "_binop_lhs", &inner_type, state);
+                compile_expr(inner_expr, "unop_operand", &inner_type, state);
             let code = match unaryop {
                 ast::UnaryOp::Neg => match inner_type {
-                    ast::DataType::BFE => triton_asm!(push -1 mul),
-                    ast::DataType::XFE => triton_asm!(push -1 xbmul),
+                    ast_types::DataType::BFE => triton_asm!(push -1 mul),
+                    ast_types::DataType::XFE => triton_asm!(push -1 xbmul),
                     _ => panic!("Unsupported negation of type {inner_type}"),
                 },
                 ast::UnaryOp::Not => match inner_type {
-                    ast::DataType::Bool => triton_asm!(push 0 eq),
-                    ast::DataType::U32 => triton_asm!(push {u32::MAX as u64} xor),
-                    ast::DataType::U64 => triton_asm!(
+                    ast_types::DataType::Bool => triton_asm!(push 0 eq),
+                    ast_types::DataType::U32 => triton_asm!(push {u32::MAX as u64} xor),
+                    ast_types::DataType::U64 => triton_asm!(
                         swap 1
                         push {u32::MAX as u64}
                         xor
@@ -1426,11 +1465,14 @@ fn compile_expr(
                     ),
                     _ => panic!("Unsupported not of type {inner_type}"),
                 },
+                ast::UnaryOp::Deref => dereference(&inner_type),
             };
 
+            // Pops the operand from the compiler's view of the stack since
+            // the above code consumes that.
             state.function_state.vstack.pop();
 
-            vec![inner_expr_code, code].concat()
+            [inner_expr_code, code].concat()
         }
 
         ast::Expr::Binop(lhs_expr, binop, rhs_expr, _known_type) => {
@@ -1446,21 +1488,21 @@ fn compile_expr(
                         compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
 
                     let add_code = match result_type {
-                        ast::DataType::U32 => {
+                        ast_types::DataType::U32 => {
                             // We use the safe, overflow-checking, add code as default
                             let safe_add_u32 =
                                 state.import_snippet(Box::new(arithmetic::u32::safe_add::SafeAdd));
                             triton_asm!(call { safe_add_u32 })
                         }
-                        ast::DataType::U64 => {
+                        ast_types::DataType::U64 => {
                             // We use the safe, overflow-checking, add code as default
                             let add_u64 =
                                 state.import_snippet(Box::new(arithmetic::u64::add_u64::AddU64));
 
                             triton_asm!(call { add_u64 })
                         }
-                        ast::DataType::BFE => triton_asm!(add),
-                        ast::DataType::XFE => {
+                        ast_types::DataType::BFE => triton_asm!(add),
+                        ast_types::DataType::XFE => {
                             triton_asm!(xxadd swap 3 pop swap 3 pop swap 3 pop)
                         }
                         _ => panic!("Operator add is not supported for type {result_type}"),
@@ -1469,7 +1511,7 @@ fn compile_expr(
                     state.function_state.vstack.pop();
                     state.function_state.vstack.pop();
 
-                    vec![lhs_expr_code, rhs_expr_code, add_code].concat()
+                    [lhs_expr_code, rhs_expr_code, add_code].concat()
                 }
                 ast::BinOp::And => {
                     let (_lhs_expr_addr, lhs_expr_code) =
@@ -1479,14 +1521,14 @@ fn compile_expr(
                         compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
 
                     let and_code = match result_type {
-                        ast::DataType::Bool => triton_asm!(add push 2 eq),
+                        ast_types::DataType::Bool => triton_asm!(add push 2 eq),
                         _ => panic!("Logical AND operator is not supported for {result_type}"),
                     };
 
                     state.function_state.vstack.pop();
                     state.function_state.vstack.pop();
 
-                    vec![lhs_expr_code, rhs_expr_code, and_code].concat()
+                    [lhs_expr_code, rhs_expr_code, and_code].concat()
                 }
 
                 ast::BinOp::BitAnd => {
@@ -1497,8 +1539,8 @@ fn compile_expr(
                         compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
 
                     let bitwise_and_code = match result_type {
-                        ast::DataType::U32 => triton_asm!(and),
-                        ast::DataType::U64 => {
+                        ast_types::DataType::U32 => triton_asm!(and),
+                        ast_types::DataType::U64 => {
                             let and_u64 =
                                 state.import_snippet(Box::new(arithmetic::u64::and_u64::AndU64));
                             triton_asm!(call { and_u64 })
@@ -1509,7 +1551,7 @@ fn compile_expr(
                     state.function_state.vstack.pop();
                     state.function_state.vstack.pop();
 
-                    vec![lhs_expr_code, rhs_expr_code, bitwise_and_code].concat()
+                    [lhs_expr_code, rhs_expr_code, bitwise_and_code].concat()
                 }
 
                 ast::BinOp::BitXor => {
@@ -1519,7 +1561,7 @@ fn compile_expr(
                     let (_rhs_expr_addr, rhs_expr_code) =
                         compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
 
-                    use ast::DataType::*;
+                    use ast_types::DataType::*;
                     let xor_code = match result_type {
                         U32 => triton_asm!(xor),
                         U64 => triton_asm!(
@@ -1534,7 +1576,7 @@ fn compile_expr(
                     state.function_state.vstack.pop();
                     state.function_state.vstack.pop();
 
-                    vec![lhs_expr_code, rhs_expr_code, xor_code].concat()
+                    [lhs_expr_code, rhs_expr_code, xor_code].concat()
                 }
                 ast::BinOp::BitOr => {
                     let (_lhs_expr_addr, lhs_expr_code) =
@@ -1543,7 +1585,7 @@ fn compile_expr(
                     let (_rhs_expr_addr, rhs_expr_code) =
                         compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
 
-                    use ast::DataType::*;
+                    use ast_types::DataType::*;
 
                     let bitwise_or_code = match result_type {
                         U32 => {
@@ -1561,11 +1603,11 @@ fn compile_expr(
                     state.function_state.vstack.pop();
                     state.function_state.vstack.pop();
 
-                    vec![lhs_expr_code, rhs_expr_code, bitwise_or_code].concat()
+                    [lhs_expr_code, rhs_expr_code, bitwise_or_code].concat()
                 }
 
                 ast::BinOp::Div => {
-                    use ast::DataType::*;
+                    use ast_types::DataType::*;
                     match result_type {
                         U32 => {
                             // TODO: Consider evaluating in opposite order to save a clock-cycle by removing `swap1`
@@ -1673,7 +1715,7 @@ fn compile_expr(
                 }
 
                 ast::BinOp::Rem => {
-                    use ast::DataType::*;
+                    use ast_types::DataType::*;
                     match result_type {
                         U32 => {
                             // TODO: Consider evaluating in opposite order to save a clock-cycle by removing `swap1`
@@ -1737,7 +1779,7 @@ fn compile_expr(
                     state.function_state.vstack.pop();
                     state.function_state.vstack.pop();
 
-                    vec![lhs_expr_code, rhs_expr_code, eq_code].concat()
+                    [lhs_expr_code, rhs_expr_code, eq_code].concat()
                 }
 
                 ast::BinOp::Lt => {
@@ -1747,7 +1789,7 @@ fn compile_expr(
                     let (_rhs_expr_addr, rhs_expr_code) =
                         compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
 
-                    use ast::DataType::*;
+                    use ast_types::DataType::*;
 
                     state.function_state.vstack.pop();
                     state.function_state.vstack.pop();
@@ -1785,7 +1827,7 @@ fn compile_expr(
                     let (_rhs_expr_addr, rhs_expr_code) =
                         compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
 
-                    use ast::DataType::*;
+                    use ast_types::DataType::*;
                     state.function_state.vstack.pop();
                     state.function_state.vstack.pop();
 
@@ -1816,7 +1858,7 @@ fn compile_expr(
                     let (_rhs_expr_addr, rhs_expr_code) =
                         compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
 
-                    use ast::DataType::*;
+                    use ast_types::DataType::*;
 
                     state.function_state.vstack.pop();
                     state.function_state.vstack.pop();
@@ -1912,9 +1954,9 @@ fn compile_expr(
                         compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
 
                     let lhs_type = lhs_expr.get_type();
-                    let shl = if matches!(lhs_type, ast::DataType::U32) {
+                    let shl = if matches!(lhs_type, ast_types::DataType::U32) {
                         state.import_snippet(Box::new(arithmetic::u32::shift_left::ShiftLeftU32))
-                    } else if matches!(lhs_type, ast::DataType::U64) {
+                    } else if matches!(lhs_type, ast_types::DataType::U64) {
                         state
                             .import_snippet(Box::new(arithmetic::u64::shift_left_u64::ShiftLeftU64))
                     } else {
@@ -1939,9 +1981,9 @@ fn compile_expr(
                         compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
 
                     let lhs_type = lhs_expr.get_type();
-                    let shr = if matches!(lhs_type, ast::DataType::U32) {
+                    let shr = if matches!(lhs_type, ast_types::DataType::U32) {
                         state.import_snippet(Box::new(arithmetic::u32::shift_right::ShiftRightU32))
-                    } else if matches!(lhs_type, ast::DataType::U64) {
+                    } else if matches!(lhs_type, ast_types::DataType::U64) {
                         state.import_snippet(Box::new(
                             arithmetic::u64::shift_right_u64::ShiftRightU64,
                         ))
@@ -1967,7 +2009,7 @@ fn compile_expr(
                         compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
 
                     let sub_code: Vec<LabelledInstruction> = match result_type {
-                        ast::DataType::U32 => {
+                        ast_types::DataType::U32 => {
                             // As standard, we use safe arithmetic that crashes on overflow
                             let safe_sub_u32 =
                                 state.import_snippet(Box::new(arithmetic::u32::safe_sub::SafeSub));
@@ -1976,7 +2018,7 @@ fn compile_expr(
                                 call {safe_sub_u32}
                             )
                         }
-                        ast::DataType::U64 => {
+                        ast_types::DataType::U64 => {
                             // As standard, we use safe arithmetic that crashes on overflow
                             let sub_u64 =
                                 state.import_snippet(Box::new(arithmetic::u64::sub_u64::SubU64));
@@ -1989,14 +2031,14 @@ fn compile_expr(
                                 call {sub_u64}
                             )
                         }
-                        ast::DataType::BFE => {
+                        ast_types::DataType::BFE => {
                             triton_asm!(
                                 push -1
                                 mul
                                 add
                             )
                         }
-                        ast::DataType::XFE => {
+                        ast_types::DataType::XFE => {
                             triton_asm!(
                                   // multiply top element with -1
                                 push -1
@@ -2100,8 +2142,14 @@ fn compile_expr(
                     return
             );
 
-            state.function_state.subroutines.push(then_code.into());
-            state.function_state.subroutines.push(else_code.into());
+            state
+                .function_state
+                .subroutines
+                .push(then_code.try_into().unwrap());
+            state
+                .function_state
+                .subroutines
+                .push(else_code.try_into().unwrap());
 
             code
         }
@@ -2119,14 +2167,14 @@ fn compile_expr(
             );
 
             match (&previous_type, &result_type) {
-                (ast::DataType::U64, ast::DataType::U32) => {
+                (ast_types::DataType::U64, ast_types::DataType::U32) => {
                     triton_asm!(
                         {&expr_code}
                         swap 1
                         pop
                     )
                 }
-                (ast::DataType::U32, ast::DataType::U64) => {
+                (ast_types::DataType::U32, ast_types::DataType::U64) => {
                     triton_asm!(
                         {&expr_code}
                         push 0
@@ -2135,28 +2183,31 @@ fn compile_expr(
                 }
                 // Allow identity-casting since we might need this to make the types
                 // agree with code compiled by rustc.
-                (ast::DataType::U32, ast::DataType::U32) => expr_code,
-                (ast::DataType::U64, ast::DataType::U64) => expr_code,
-                (ast::DataType::Bool, ast::DataType::U64) => {
+                (ast_types::DataType::U32, ast_types::DataType::U32) => expr_code,
+                (ast_types::DataType::U64, ast_types::DataType::U64) => expr_code,
+                (ast_types::DataType::Bool, ast_types::DataType::U64) => {
                     triton_asm!(
                         {&expr_code}
                         push 0
                         swap 1
                     )
                 }
-                (ast::DataType::Bool, ast::DataType::U32) => expr_code,
-                (ast::DataType::Bool, ast::DataType::BFE) => expr_code,
+                (ast_types::DataType::Bool, ast_types::DataType::U32) => expr_code,
+                (ast_types::DataType::Bool, ast_types::DataType::BFE) => expr_code,
                 _ => todo!(),
             }
         }
     };
 
-    let (addr, spill) = state.new_value_identifier(&format!("{expr}_{result_type}"), &result_type);
+    // Update compiler's view of the stack with the new value. Check if value needs to
+    // be spilled to memory.
+    let binding_description = format!("{expr}_{result_type}");
+    let (addr, spill) = state.new_value_identifier(&binding_description, &result_type);
     let spill_code = spill
-        .map(|x| copy_top_stack_value_to_memory(x, result_type.size_of()))
+        .map(|x| copy_top_stack_value_to_memory(x, result_type.stack_size()))
         .unwrap_or_default();
 
-    (addr, vec![code, spill_code].concat())
+    (addr, [code, spill_code].concat())
 }
 
 /// Return the code to store a stack-value in memory
@@ -2190,17 +2241,24 @@ fn copy_value_to_memory(
     ret
 }
 
-/// Return the code to move the top stack element at a
-/// specific memory address. Deletes top stack value.
+/// Return the code to move the top stack element to a
+/// specific memory address. Pops top stack value.
+/// If no static memory pointer is provided, pointer is assumed to be on
+/// top of the stack, above the value that is moved to memory, in
+/// which case this address is also popped from the stack.
 fn move_top_stack_value_to_memory(
-    memory_location: u32,
+    static_memory_location: Option<u32>,
     top_value_size: usize,
 ) -> Vec<LabelledInstruction> {
     // A stack value of the form `_ val2 val1 val0`, with `val0` being on the top of the stack
     // is stored in memory as: `val0 val1 val2`, where `val0` is stored on the `memory_location`
     // address.
-    let mut ret = triton_asm!(push {memory_location as u64});
+    let mut ret = match static_memory_location {
+        Some(static_mem_addr) => triton_asm!(push {static_mem_addr as u64}),
+        None => triton_asm!(),
+    };
 
+    // _ [value] mem_address_start
     for i in 0..top_value_size {
         ret.push(triton_instr!(swap 1));
         // _ mem_address element
@@ -2216,8 +2274,6 @@ fn move_top_stack_value_to_memory(
 
     // remove memory address from top of stack
     ret.push(triton_instr!(pop));
-
-    // TODO: Needs to pop from vstack!
 
     ret
 }
@@ -2252,15 +2308,51 @@ fn copy_top_stack_value_to_memory(
     ret
 }
 
-fn load_from_memory(memory_location: u32, top_value_size: usize) -> Vec<LabelledInstruction> {
+/// Returns the code to convert a `MemPointer<data_type>` into a `data_type` on the stack. Consumes the
+/// address (`MemPointer<data_type>`) that is on top of the stack.
+fn dereference(data_type: &ast_types::DataType) -> Vec<LabelledInstruction> {
+    match data_type {
+        // From the TASM perspective, a mempointer to a list is the same as a list
+        ast_types::DataType::List(_, _) => triton_asm!(),
+
+        // No idea how to handle these yet
+        ast_types::DataType::MemPointer(_) => todo!(),
+        ast_types::DataType::VoidPointer => todo!(),
+        ast_types::DataType::Function(_) => todo!(),
+        ast_types::DataType::Struct(_) => todo!(),
+        ast_types::DataType::Unresolved(_) => todo!(),
+
+        // Simple data types are simple read from memory and placed on the stack
+        _ => load_from_memory(None, data_type.stack_size()),
+    }
+}
+
+/// Return the code to load a value from memory. Leaves the stack with the read value on top.
+/// If no static memory address is provided, the memory address is read from top of the stack,
+/// and this memory address is then consumed.
+fn load_from_memory(
+    static_memory_address: Option<u32>,
+    value_size: usize,
+) -> Vec<LabelledInstruction> {
     // A stack value of the form `_ val2 val1 val0`, with `val0` being on the top of the stack
     // is stored in memory as: `val0 val1 val2`, where `val0` is stored on the `memory_location`
-    // address. So we read the value at the highes memory location first.
+    // address. So we read the value at the highest memory location first.
     // TODO: Consider making subroutines out of this in
     // order to get shorter programs.
-    let mut ret = triton_asm!(push {memory_location as u64 + top_value_size as u64 - 1});
+    let mut ret = match static_memory_address {
+        Some(mem_location) => triton_asm!(push {mem_location as u64 + value_size as u64 - 1}),
+        None => {
+            if value_size.is_one() {
+                triton_asm!()
+            } else {
+                triton_asm!(push {value_size as u64 - 1} add)
+            }
+        }
+    };
 
-    for i in 0..top_value_size {
+    // stack: _ memory_address_of_last_word
+
+    for i in 0..value_size {
         // Stack: _ memory_address
 
         ret.push(triton_instr!(read_mem));
@@ -2269,7 +2361,7 @@ fn load_from_memory(memory_location: u32, top_value_size: usize) -> Vec<Labelled
         ret.push(triton_instr!(swap 1));
 
         // Decrement memory address to prepare for next loop iteration
-        if i != top_value_size - 1 {
+        if i != value_size - 1 {
             ret.append(&mut triton_asm!(push {BFieldElement::MAX} add))
             // Stack: _ (memory_address - 1)
         }
@@ -2284,10 +2376,10 @@ fn load_from_memory(memory_location: u32, top_value_size: usize) -> Vec<Labelled
 }
 
 fn compile_eq_code(
-    lhs_type: &ast::DataType,
+    lhs_type: &ast_types::DataType,
     state: &mut CompilerState,
 ) -> Vec<LabelledInstruction> {
-    use ast::DataType::*;
+    use ast_types::DataType::*;
     match lhs_type {
         Bool | U32 | BFE | VoidPointer => triton_asm!(eq),
         U64 => triton_asm!(
@@ -2315,18 +2407,21 @@ fn compile_eq_code(
             let eq_digest = state.import_snippet(Box::new(hashing::eq_digest::EqDigest));
             triton_asm!(call { eq_digest })
         }
-        List(_) => todo!(),
+        List(_, _) => todo!(),
         Tuple(_) => todo!(),
         Function(_) => todo!(),
+        Struct(_) => todo!(),
+        MemPointer(_) => todo!("Comparison of MemPointer not supported yet"),
+        Unresolved(name) => panic!("Cannot compare unresolved type {name}"),
     }
 }
 
 /// Copy a value at a position on the stack to the top
 fn dup_value_from_stack_code(
     position: OpStackElement,
-    data_type: &ast::DataType,
+    data_type: &ast_types::DataType,
 ) -> Vec<LabelledInstruction> {
-    let elem_size = data_type.size_of();
+    let elem_size = data_type.stack_size();
 
     // the position of the deepest element of the value.
     let n: usize = Into::<usize>::into(position) + elem_size - 1;
@@ -2335,4 +2430,56 @@ fn dup_value_from_stack_code(
     let instrs_as_str = instrs_as_str.repeat(elem_size);
 
     triton_asm!({ instrs_as_str })
+}
+
+impl ast_types::StructType {
+    /// Assuming the stack top points to the start of the struct, returns the code
+    /// that modifies the top stack value to point to the indicated field. So the top
+    /// stack element is consumed and the returned value is a pointer to the requested
+    /// field in the struct. Note that the top of the stack is where the field begins,
+    /// not the size indication of that field.
+    pub fn get_field_accessor_code(&self, field_name: &str) -> Vec<LabelledInstruction> {
+        // This implementation must match `BFieldCodec` for the equivalent Rust types
+        let mut instructions = vec![];
+        let mut static_pointer_addition = 0;
+        let needle_name = field_name;
+        let mut needle_type: Option<ast_types::DataType> = None;
+        for (haystack_field_name, haystack_type) in self.fields.iter() {
+            if haystack_field_name == needle_name {
+                // If we've found the field the accumulators are in the right state.
+                // return them.
+                needle_type = Some(haystack_type.to_owned());
+                break;
+            } else {
+                // We have not reached the field yet. If the field has a statically
+                // known size, we can just add that number to the accumulator. Otherwise,
+                // we have to read the size of the field from RAM, and add that value
+                // to the pointer
+                match haystack_type.bfield_codec_length() {
+                    Some(static_length) => static_pointer_addition += static_length,
+                    None => {
+                        if !static_pointer_addition.is_zero() {
+                            instructions
+                                .append(&mut triton_asm!(push {static_pointer_addition} add));
+                        }
+                        instructions.append(&mut triton_asm!(read_mem add push 1 add));
+                        static_pointer_addition = 0;
+                    }
+                }
+            }
+        }
+
+        // If the requested field is dynamically sized, add one to address, to point to start
+        // of the field instead of the size of the field.
+        match needle_type.unwrap().bfield_codec_length() {
+            Some(_) => (),
+            None => static_pointer_addition += 1,
+        }
+
+        if !static_pointer_addition.is_zero() {
+            instructions.append(&mut triton_asm!(push {static_pointer_addition} add));
+        }
+
+        instructions
+    }
 }

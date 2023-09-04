@@ -503,7 +503,10 @@ mod run_tests {
     };
 
     use super::*;
-    use crate::{ast::DataType, tests_and_benchmarks::test_helpers::shared_test::*};
+    use crate::{
+        ast_types::{DataType, ListType},
+        tests_and_benchmarks::test_helpers::shared_test::*,
+    };
 
     #[test]
     fn spill_u64_values_to_memory_test() {
@@ -572,7 +575,7 @@ mod run_tests {
             vec![u32_lit(101), u32_lit(102)],
             HashMap::default(),
             None,
-            vec![reversed_digest].concat(),
+            [reversed_digest].concat(),
             NonDeterminism::new(vec![]),
         );
     }
@@ -694,7 +697,7 @@ mod run_tests {
             ],
             HashMap::default(),
             None,
-            vec![
+            [
                 vec![BFieldElement::new(my_bool as u64)],
                 vec![my_u32.into()],
                 split(my_u64),
@@ -782,7 +785,7 @@ mod run_tests {
             &ensure_dyn_malloc_and_static_malloc_do_not_interfere_1_rast(),
             vec![],
             &mut vm_memory,
-            DataType::List(Box::new(DataType::U64)).size_of() as isize,
+            DataType::List(Box::new(DataType::U64), ListType::Safe).stack_size() as isize,
         )
         .unwrap();
 
@@ -799,7 +802,7 @@ mod run_tests {
             &ensure_dyn_malloc_and_static_malloc_do_not_interfere_2_rast(),
             vec![],
             &mut vm_memory,
-            DataType::List(Box::new(DataType::U64)).size_of() as isize,
+            DataType::List(Box::new(DataType::U64), ListType::Safe).stack_size() as isize,
         )
         .unwrap();
 
@@ -815,7 +818,7 @@ mod run_tests {
             &ensure_dyn_malloc_and_static_malloc_do_not_interfere_3_rast(),
             vec![],
             &mut vm_memory,
-            DataType::List(Box::new(DataType::U64)).size_of() as isize,
+            DataType::List(Box::new(DataType::U64), ListType::Safe).stack_size() as isize,
         )
         .unwrap();
 
@@ -833,7 +836,7 @@ mod run_tests {
             &ensure_dyn_malloc_and_static_malloc_do_not_interfere_4_rast(),
             vec![],
             &mut vm_memory,
-            DataType::List(Box::new(DataType::U64)).size_of() as isize + 2,
+            DataType::List(Box::new(DataType::U64), ListType::Safe).stack_size() as isize + 2,
         )
         .unwrap();
 

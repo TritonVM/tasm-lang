@@ -4,6 +4,7 @@ use std::thread_local;
 use std::vec::Vec;
 use tasm_lib::Digest;
 use triton_vm::{BFieldElement, NonDeterminism};
+use twenty_first::shared_math::{bfield_codec::BFieldCodec, x_field_element::XFieldElement};
 
 // This module contains functions for interacting with the input/output monad
 // implicit in a VM execution. It contains functions for mutating and verifying
@@ -21,7 +22,30 @@ thread_local! {
     static ND_MEMORY: RefCell<HashMap<BFieldElement, BFieldElement>> = RefCell::new(HashMap::default());
 }
 
-pub fn init_io(pub_input: Vec<BFieldElement>, non_determinism: NonDeterminism<BFieldElement>) {
+pub(super) fn load_from_memory(start_address: BFieldElement) -> Vec<BFieldElement> {
+    // Loads everything from address 1 an upwards
+    // TODO: We probably want to be able to set the
+    // starting address of the memory we want to load
+    let mut sorted_key_values = ND_MEMORY.with(|v| {
+        let mut ret = vec![];
+        for (k, v) in v.borrow().iter() {
+            ret.push((*k, *v));
+        }
+        ret
+    });
+    sorted_key_values.sort_unstable_by_key(|x| x.0.value());
+    let sorted_values = sorted_key_values
+        .iter()
+        .filter(|(k, _v)| k.value() >= start_address.value())
+        .map(|x| x.1)
+        .collect();
+    sorted_values
+}
+
+pub(super) fn init_io(
+    pub_input: Vec<BFieldElement>,
+    non_determinism: NonDeterminism<BFieldElement>,
+) {
     let mut pub_input_reversed = pub_input;
     pub_input_reversed.reverse();
     let mut inidividual_tokens_reversed = non_determinism.individual_tokens;
@@ -39,33 +63,70 @@ pub fn init_io(pub_input: Vec<BFieldElement>, non_determinism: NonDeterminism<BF
     ND_DIGESTS.with(|v| {
         *v.borrow_mut() = digests_reversed;
     });
+    ND_MEMORY.with(|v| {
+        *v.borrow_mut() = non_determinism.ram;
+    });
     PUB_OUTPUT.with(|v| {
         *v.borrow_mut() = vec![];
     });
 }
 
-pub fn get_pub_output() -> Vec<BFieldElement> {
+pub(super) fn get_pub_output() -> Vec<BFieldElement> {
     PUB_OUTPUT.with(|v| v.borrow().clone())
 }
 
-#[allow(dead_code)]
-pub(crate) fn pub_input() -> BFieldElement {
+pub(super) fn tasm_io_read_stdin_bfe() -> BFieldElement {
     #[allow(clippy::unwrap_used)]
     PUB_INPUT.with(|v| v.borrow_mut().pop().unwrap())
 }
 
-pub(crate) fn pub_output(x: BFieldElement) {
+pub(super) fn tasm_io_write_to_stdout_bfe(x: BFieldElement) {
     PUB_OUTPUT.with(|v| v.borrow_mut().push(x));
 }
 
+pub(super) fn tasm_io_write_to_stdout_xfe(x: XFieldElement) {
+    PUB_OUTPUT.with(|v| v.borrow_mut().append(&mut x.coefficients.to_vec()));
+}
+
+pub(super) fn tasm_io_write_to_stdout_digest(x: Digest) {
+    PUB_OUTPUT.with(|v| v.borrow_mut().append(&mut x.values().to_vec()));
+}
+
+pub(super) fn tasm_io_write_to_stdout_bool(x: bool) {
+    PUB_OUTPUT.with(|v| v.borrow_mut().push(BFieldElement::new(x as u64)));
+}
+
+pub(super) fn tasm_io_write_to_stdout_u32(x: u32) {
+    PUB_OUTPUT.with(|v| v.borrow_mut().push(BFieldElement::new(x as u64)));
+}
+
+pub(super) fn tasm_io_write_to_stdout_u64(x: u64) {
+    PUB_OUTPUT.with(|v| v.borrow_mut().append(&mut x.encode()));
+}
+
+pub(super) fn tasm_io_write_to_stdout_u128(x: u128) {
+    PUB_OUTPUT.with(|v| v.borrow_mut().append(&mut x.encode()));
+}
+
+pub(super) fn tasm_io_read_stdin_digest() -> Digest {
+    #[allow(clippy::unwrap_used)]
+    // ND_DIGESTS.with(|v| v.borrow_mut().pop().unwrap())
+    let e4 = PUB_INPUT.with(|v| v.borrow_mut().pop().unwrap());
+    let e3 = PUB_INPUT.with(|v| v.borrow_mut().pop().unwrap());
+    let e2 = PUB_INPUT.with(|v| v.borrow_mut().pop().unwrap());
+    let e1 = PUB_INPUT.with(|v| v.borrow_mut().pop().unwrap());
+    let e0 = PUB_INPUT.with(|v| v.borrow_mut().pop().unwrap());
+    Digest::new([e0, e1, e2, e3, e4])
+}
+
 #[allow(dead_code)]
-pub(crate) fn divine() -> BFieldElement {
+pub(super) fn divine() -> BFieldElement {
     #[allow(clippy::unwrap_used)]
     ND_INDIVIDUAL_TOKEN.with(|v| v.borrow_mut().pop().unwrap())
 }
 
 #[allow(clippy::type_complexity)]
-pub fn wrap_main_with_io(
+pub(super) fn wrap_main_with_io(
     main_func: &'static dyn Fn(),
 ) -> Box<dyn Fn(Vec<BFieldElement>, NonDeterminism<BFieldElement>) -> Vec<BFieldElement>> {
     // TODO: It would be cool if `main_func` could return something, but I'm not sure that's possible.

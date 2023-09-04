@@ -7,6 +7,17 @@ mod compile_and_typecheck_tests {
 
     use crate::{graft::item_fn, tests_and_benchmarks::test_helpers::shared_test::*};
 
+    fn very_simple_list_support() -> syn::ItemFn {
+        item_fn(parse_quote! {
+            fn make_very_short_list() -> u32 {
+                let mut a: Vec<u32> = Vec::<u32>::with_capacity(17);
+                a.push(2000u32);
+
+                return a[0];
+            }
+        })
+    }
+
     fn simple_list_support() -> syn::ItemFn {
         item_fn(parse_quote! {
             fn make_short_list() -> (Vec<u64>, u32, u64, u64) {
@@ -22,6 +33,37 @@ mod compile_and_typecheck_tests {
                 let d: u64 = a[0];
 
                 return (a, len, b, d);
+            }
+        })
+    }
+
+    fn simple_digest_list() -> syn::ItemFn {
+        item_fn(parse_quote! {
+            fn make_short_digest_list(digest: Digest) -> Digest {
+                let mut a: Vec<Digest> = Vec::<Digest>::with_capacity(17);
+                a.push(digest);
+                return a[0];
+            }
+        })
+    }
+
+    fn build_digest_list_with_indexing() -> syn::ItemFn {
+        item_fn(parse_quote! {
+            fn make_short_digest_list(digest1: Digest, digest0: Digest, digest2: Digest) -> (Digest, Digest, Digest) {
+                let mut a: Vec<Digest> = Vec::<Digest>::with_capacity(17);
+                a.push(digest1);
+                a.push(digest0);
+                a.push(digest2);
+                // a = [d1, d0, d2]
+
+                // Reorganize list
+                let temp: Digest = a[0];
+                a[0] = a[1];
+                a[1] = temp;
+                a[2] = a[2];
+                // a = [d0, d1, d2]
+
+                return (a[0], a[1], a[2]);
             }
         })
     }
@@ -103,11 +145,45 @@ mod compile_and_typecheck_tests {
 
     pub mod run_tests {
         use itertools::Itertools;
-        use triton_vm::NonDeterminism;
+        use rand::random;
+        use triton_vm::{Digest, NonDeterminism};
 
-        use crate::ast::{self, DataType};
+        use crate::ast_types::{self, DataType, ListType};
 
         use super::*;
+
+        #[test]
+        fn very_simple_list_support_test() {
+            let inputs = vec![];
+            let expected_outputs = vec![u32_lit(2000)];
+            compare_prop_with_stack(&very_simple_list_support(), inputs, expected_outputs);
+        }
+
+        #[test]
+        fn simple_digest_list_support_test() {
+            let random_digest: Digest = random();
+            let inputs = vec![digest_lit(random_digest)];
+            let expected_outputs = vec![digest_lit(random_digest)];
+            compare_prop_with_stack(&simple_digest_list(), inputs, expected_outputs);
+        }
+
+        #[test]
+        fn build_digest_list_with_indexing_test() {
+            let random_digest0: Digest = random();
+            let random_digest1: Digest = random();
+            let random_digest2: Digest = random();
+            let inputs = vec![
+                digest_lit(random_digest1),
+                digest_lit(random_digest0),
+                digest_lit(random_digest2),
+            ];
+            let expected_outputs = vec![
+                digest_lit(random_digest0),
+                digest_lit(random_digest1),
+                digest_lit(random_digest2),
+            ];
+            compare_prop_with_stack(&build_digest_list_with_indexing(), inputs, expected_outputs);
+        }
 
         #[test]
         fn simple_list_support_run_test() {
@@ -144,7 +220,11 @@ mod compile_and_typecheck_tests {
             let elem_2 = vec![BFieldElement::new(4000), BFieldElement::new(0)];
             safe_list_push(list_pointer, elem_2.clone(), &mut memory, elem_2.len());
 
-            safe_list_pop(list_pointer, &mut memory, ast::DataType::U64.size_of());
+            safe_list_pop(
+                list_pointer,
+                &mut memory,
+                ast_types::DataType::U64.stack_size(),
+            );
 
             let input_memory = HashMap::default();
             compare_prop_with_stack_and_memory(
@@ -197,7 +277,7 @@ mod compile_and_typecheck_tests {
                 &mut vm_memory,
                 vec![],
                 NonDeterminism::new(vec![]),
-                DataType::List(Box::new(DataType::U32)).size_of() as isize,
+                DataType::List(Box::new(DataType::U32), ListType::Safe).stack_size() as isize,
             )
             .unwrap();
             let mut list_pointer = exec_result.final_stack.last().unwrap();
@@ -211,7 +291,7 @@ mod compile_and_typecheck_tests {
                 &mut vm_memory,
                 vec![],
                 NonDeterminism::new(vec![]),
-                DataType::List(Box::new(DataType::U64)).size_of() as isize,
+                DataType::List(Box::new(DataType::U64), ListType::Safe).stack_size() as isize,
             )
             .unwrap();
             list_pointer = exec_result.final_stack.last().unwrap();

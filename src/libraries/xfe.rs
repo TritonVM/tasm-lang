@@ -5,13 +5,9 @@ use twenty_first::shared_math::{
     x_field_element::{XFieldElement, EXTENSION_DEGREE},
 };
 
-use crate::{
-    ast,
-    graft::{self, graft_expr},
-    libraries::Library,
-};
+use crate::{ast, ast_types, graft::Graft, libraries::Library};
 
-use super::{bfe::BfeLibrary, CompiledFunction};
+use super::{bfe::BfeLibrary, LibraryFunction};
 const XFIELDELEMENT_LIB_INDICATOR: &str = "XFieldElement::";
 
 #[derive(Clone, Debug)]
@@ -22,21 +18,26 @@ impl Library for XfeLibrary {
         None
     }
 
-    fn get_method_name(&self, method_name: &str, _receiver_type: &ast::DataType) -> Option<String> {
-        if method_name == "unlift" {
-            Some(method_name.to_owned())
-        } else {
-            None
+    fn get_method_name(
+        &self,
+        method_name: &str,
+        receiver_type: &ast_types::DataType,
+    ) -> Option<String> {
+        if *receiver_type == ast_types::DataType::XFE && method_name == "unlift" {
+            return Some(method_name.to_owned());
         }
+
+        None
     }
 
     fn method_name_to_signature(
         &self,
         method_name: &str,
-        _receiver_type: &ast::DataType,
+        receiver_type: &ast_types::DataType,
         _args: &[ast::Expr<super::Annotation>],
+        _type_checker_state: &crate::type_checker::CheckState,
     ) -> ast::FnSignature {
-        if method_name == "unlift" {
+        if *receiver_type == ast_types::DataType::XFE && method_name == "unlift" {
             get_xfe_unlift_method().signature
         } else {
             panic!("Unknown method in XFE library. Got: {method_name}");
@@ -46,7 +47,7 @@ impl Library for XfeLibrary {
     fn function_name_to_signature(
         &self,
         _fn_name: &str,
-        _type_parameter: Option<ast::DataType>,
+        _type_parameter: Option<ast_types::DataType>,
         _args: &[ast::Expr<super::Annotation>],
     ) -> ast::FnSignature {
         panic!("No functions implemented for XFE library");
@@ -55,11 +56,11 @@ impl Library for XfeLibrary {
     fn call_method(
         &self,
         method_name: &str,
-        _receiver_type: &ast::DataType,
+        receiver_type: &ast_types::DataType,
         _args: &[ast::Expr<super::Annotation>],
         _state: &mut crate::tasm_code_generator::CompilerState,
     ) -> Vec<triton_vm::instruction::LabelledInstruction> {
-        if method_name == "unlift" {
+        if *receiver_type == ast_types::DataType::XFE && method_name == "unlift" {
             get_xfe_unlift_method().body
         } else {
             panic!("Unknown method in XFE library. Got: {method_name}");
@@ -69,7 +70,7 @@ impl Library for XfeLibrary {
     fn call_function(
         &self,
         _fn_name: &str,
-        _type_parameter: Option<ast::DataType>,
+        _type_parameter: Option<ast_types::DataType>,
         _args: &[ast::Expr<super::Annotation>],
         _state: &mut crate::tasm_code_generator::CompilerState,
     ) -> Vec<triton_vm::instruction::LabelledInstruction> {
@@ -92,6 +93,7 @@ impl Library for XfeLibrary {
 
     fn graft_function(
         &self,
+        graft_config: &Graft,
         fn_name: &str,
         args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
     ) -> Option<ast::Expr<super::Annotation>> {
@@ -120,15 +122,18 @@ impl Library for XfeLibrary {
                         }) => {
                             let (name, _type_parameter) = match func.as_ref() {
                                 syn::Expr::Path(path) => (
-                                    graft::path_to_ident(&path.path),
-                                    graft::path_to_type_parameter(&path.path),
+                                    Graft::path_to_ident(&path.path),
+                                    graft_config.path_to_type_parameter(&path.path),
                                 ),
                                 other => panic!("unsupported: {other:?}"),
                             };
 
                             if let Some(bfe_fn_name) = BfeLibrary.get_graft_function_name(&name) {
-                                initializer_exprs
-                                    .push(BfeLibrary.graft_function(&bfe_fn_name, args).unwrap());
+                                initializer_exprs.push(
+                                    BfeLibrary
+                                        .graft_function(graft_config, &bfe_fn_name, args)
+                                        .unwrap(),
+                                );
                             } else {
                                 panic!();
                             }
@@ -161,8 +166,9 @@ impl Library for XfeLibrary {
 
     fn graft_method(
         &self,
+        graft_config: &Graft,
         rust_method_call: &syn::ExprMethodCall,
-    ) -> Option<ast::MethodCall<super::Annotation>> {
+    ) -> Option<ast::Expr<super::Annotation>> {
         // Handle `unlift().unwrap()`. Ignore everything else.
         const UNWRAP_NAME: &str = "unwrap";
         const UNLIFT_NAME: &str = "unlift";
@@ -175,7 +181,11 @@ impl Library for XfeLibrary {
 
         match rust_method_call.receiver.as_ref() {
             syn::Expr::MethodCall(rust_inner_method_call) => {
-                let inner_method_call = graft::graft_method_call(rust_inner_method_call);
+                let inner_method_call = graft_config.graft_method_call(rust_inner_method_call);
+                let inner_method_call = match inner_method_call {
+                    ast::Expr::MethodCall(mc) => mc,
+                    _ => return None,
+                };
                 if inner_method_call.method_name != UNLIFT_NAME {
                     return None;
                 }
@@ -191,37 +201,37 @@ impl Library for XfeLibrary {
                     &mut rust_inner_method_call
                         .args
                         .iter()
-                        .map(graft_expr)
+                        .map(|x| graft_config.graft_expr(x))
                         .collect_vec(),
                 );
                 let annot = Default::default();
 
-                Some(ast::MethodCall {
+                Some(ast::Expr::MethodCall(ast::MethodCall {
                     method_name: UNLIFT_NAME.to_owned(),
                     args,
                     annot,
-                })
+                }))
             }
-            _ => todo!(),
+            _ => None,
         }
     }
 }
 
-fn get_xfe_unlift_method() -> CompiledFunction {
+fn get_xfe_unlift_method() -> LibraryFunction {
     let fn_signature = ast::FnSignature {
         name: "unlift".to_owned(),
-        args: vec![ast::AbstractArgument::ValueArgument(
-            ast::AbstractValueArg {
+        args: vec![ast_types::AbstractArgument::ValueArgument(
+            ast_types::AbstractValueArg {
                 name: "value".to_owned(),
-                data_type: ast::DataType::XFE,
+                data_type: ast_types::DataType::XFE,
                 mutable: false,
             },
         )],
-        output: ast::DataType::BFE,
+        output: ast_types::DataType::BFE,
         arg_evaluation_order: Default::default(),
     };
 
-    CompiledFunction {
+    LibraryFunction {
         signature: fn_signature,
         body: triton_asm!(swap 2 push 0 eq assert push 0 eq assert),
     }
