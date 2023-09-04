@@ -459,7 +459,7 @@ impl Display for DataType {
                 let output = fn_type.output.to_string();
                 format!("Function: {input} -> {output}")
             }
-            Struct(StructType { name, fields: _ }) => format!("{name}"),
+            Struct(StructType { name, fields: _ }) => name.to_string(),
             Unresolved(name) => format!("unresolved type {name}"),
             MemPointer(ty) => format!("*{ty}"),
         };

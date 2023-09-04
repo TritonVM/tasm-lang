@@ -336,14 +336,14 @@ impl<'a> CompilerState<'a> {
                     .var_addr
                     .get(&var_name)
                     .unwrap_or_else(|| panic!("Could not locate {var_name} on stack"));
-                let (position, ident_data_type, spilled) =
+                let (position, _ident_data_type, spilled) =
                     self.function_state.vstack.find_stack_value(var_addr);
                 match spilled {
                     Some(mem_addr) => ValueLocation::StaticMemoryAddress(mem_addr),
                     None => ValueLocation::OpStack(position),
                 }
             }
-            ast::Identifier::TupleIndex(lhs_id, tuple_index, known_type) => {
+            ast::Identifier::TupleIndex(lhs_id, tuple_index, _known_type) => {
                 let lhs_location = self.locate_identifier(lhs_id);
                 let lhs_type = lhs_id.get_type();
                 let element_types = if let ast_types::DataType::Tuple(ets) = lhs_type {

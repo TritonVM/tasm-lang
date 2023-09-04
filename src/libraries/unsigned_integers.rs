@@ -12,6 +12,9 @@ pub struct UnsignedIntegersLib {
     pub list_type: ast_types::ListType,
 }
 
+const LEADING_ZEROS_METHOD: &str = "leading_zeros";
+const COUNT_ONES_METHOD: &str = "count_ones";
+
 impl Library for UnsignedIntegersLib {
     fn get_function_name(&self, _full_name: &str) -> Option<String> {
         None
@@ -22,10 +25,10 @@ impl Library for UnsignedIntegersLib {
         method_name: &str,
         receiver_type: &ast_types::DataType,
     ) -> Option<String> {
-        if is_u32_based_type(receiver_type) {
-            if matches!(method_name, "leading_zeros" | "count_ones") {
-                return Some(method_name.to_owned());
-            }
+        if is_u32_based_type(receiver_type)
+            && matches!(method_name, LEADING_ZEROS_METHOD | COUNT_ONES_METHOD)
+        {
+            return Some(method_name.to_owned());
         }
 
         None
@@ -42,7 +45,7 @@ impl Library for UnsignedIntegersLib {
             panic!("Cannot call unsigned integer method on non-u32 based value. Receiver type was: {receiver_type}");
         }
 
-        if method_name == "count_ones" && *receiver_type == ast_types::DataType::U32 {
+        if method_name == COUNT_ONES_METHOD && *receiver_type == ast_types::DataType::U32 {
             return get_count_ones_u32_method().signature;
         }
 
@@ -99,7 +102,7 @@ impl Library for UnsignedIntegersLib {
         _args: &[ast::Expr<super::Annotation>],
         state: &mut CompilerState,
     ) -> Vec<triton_vm::instruction::LabelledInstruction> {
-        if method_name == "count_ones" && ast_types::DataType::U32 == *receiver_type {
+        if method_name == COUNT_ONES_METHOD && ast_types::DataType::U32 == *receiver_type {
             return get_count_ones_u32_method().body;
         }
 
@@ -145,7 +148,7 @@ impl Library for UnsignedIntegersLib {
 
 fn get_count_ones_u32_method() -> LibraryFunction {
     let fn_signature = ast::FnSignature {
-        name: "count_ones".to_owned(),
+        name: COUNT_ONES_METHOD.to_owned(),
         args: vec![ast_types::AbstractArgument::ValueArgument(
             ast_types::AbstractValueArg {
                 name: "value".to_owned(),
@@ -169,20 +172,20 @@ fn name_to_tasm_lib_snippet(
     receiver_type: &ast_types::DataType,
 ) -> Option<Box<dyn BasicSnippet>> {
     match public_name {
-        "leading_zeros" => match receiver_type {
+        LEADING_ZEROS_METHOD => match receiver_type {
             ast_types::DataType::U32 => Some(Box::new(
                 tasm_lib::arithmetic::u32::leading_zeros_u32::LeadingZerosU32,
             )),
             ast_types::DataType::U64 => Some(Box::new(
                 tasm_lib::arithmetic::u64::leading_zeros_u64::LeadingZerosU64,
             )),
-            _ => panic!("Dont know `leading_zeros` for {receiver_type}"),
+            _ => panic!("Dont know `{LEADING_ZEROS_METHOD}` for {receiver_type}"),
         },
-        "count_ones" => match receiver_type {
+        COUNT_ONES_METHOD => match receiver_type {
             ast_types::DataType::U64 => Some(Box::new(
                 tasm_lib::arithmetic::u64::popcount_u64::PopCountU64,
             )),
-            _ => panic!("Dont know `count_ones` for {receiver_type}"),
+            _ => panic!("Dont know `{COUNT_ONES_METHOD}` for {receiver_type}"),
         },
         _ => None,
     }

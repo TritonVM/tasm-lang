@@ -60,7 +60,7 @@ impl Library for VectorLib {
             return self.fn_signature_for_map(args, type_checker_state);
         }
 
-        return self.function_name_to_signature(fn_name, receiver_type.type_parameter(), args);
+        self.function_name_to_signature(fn_name, receiver_type.type_parameter(), args)
     }
 
     fn function_name_to_signature(
@@ -308,13 +308,13 @@ impl VectorLib {
                 data_type: args[0].get_type(),
                 mutable: false,
             });
-        return ast::FnSignature {
+        ast::FnSignature {
             name: String::from("map"),
             // TODO: Use List<inner_fn_signature-args> here instead for betetr type checking
             args: vec![vector_as_arg, derived_inner_function_as_function_arg],
             output: ast_types::DataType::List(Box::new(inner_output), ast_types::ListType::Safe),
             arg_evaluation_order: Default::default(),
-        };
+        }
     }
 
     fn name_to_tasm_lib_snippet(

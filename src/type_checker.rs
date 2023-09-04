@@ -78,9 +78,9 @@ impl<T: GetType> GetType for ast::Identifier<T> {
     fn get_type(&self) -> ast_types::DataType {
         match self {
             ast::Identifier::String(_, t) => t.get_type(),
-            ast::Identifier::ListIndex(id, _, t) => t.get_type(),
-            ast::Identifier::TupleIndex(id, idx, t) => t.get_type(),
-            ast::Identifier::Field(ident, field_name, t) => t.get_type(),
+            ast::Identifier::ListIndex(_, _, t) => t.get_type(),
+            ast::Identifier::TupleIndex(_, _, t) => t.get_type(),
+            ast::Identifier::Field(_, _, t) => t.get_type(),
         }
     }
 }
