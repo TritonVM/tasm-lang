@@ -460,7 +460,7 @@ impl Display for DataType {
                 format!("Function: {input} -> {output}")
             }
             Struct(StructType { name, fields: _ }) => name.to_string(),
-            Unresolved(name) => format!("unresolved type {name}"),
+            Unresolved(name) => name.to_string(),
             MemPointer(ty) => format!("*{ty}"),
         };
         write!(f, "{str}",)

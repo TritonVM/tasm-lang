@@ -229,7 +229,7 @@ mod tests {
         assert_eq!(native_output, expected_output);
 
         // Run test on Triton-VM
-        let test_program = ozk_parsing::compile_for_test("nested_structs");
+        let test_program = ozk_parsing::compile_for_test("structs", "nested_structs");
         println!("executing:\n{}", test_program.iter().join("\n"));
         let vm_output = execute_compiled_with_stack_memory_and_ins_for_test(
             &test_program,

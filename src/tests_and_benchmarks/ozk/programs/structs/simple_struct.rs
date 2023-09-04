@@ -38,16 +38,14 @@ fn main() {
 
 mod tests {
     use super::*;
-    use itertools::Itertools;
-    use rand::random;
-    use std::collections::HashMap;
-    use triton_vm::BFieldElement;
-
-    use crate::tests_and_benchmarks::ozk::programs::simple_struct::SIMPLE_STRUCTS_BFIELD_CODEC_START_ADDRESS;
     use crate::tests_and_benchmarks::ozk::{ozk_parsing, rust_shadows};
     use crate::tests_and_benchmarks::test_helpers::shared_test::{
         execute_compiled_with_stack_memory_and_ins_for_test, init_memory_from,
     };
+    use itertools::Itertools;
+    use rand::random;
+    use std::collections::HashMap;
+    use triton_vm::BFieldElement;
 
     #[test]
     fn simple_struct_ozk_test() {
@@ -85,8 +83,7 @@ mod tests {
         assert_eq!(native_output, expected_output);
 
         // Run test on Triton-VM
-        let test_program = ozk_parsing::compile_for_test("simple_struct");
-        println!("test_program is:\n{}", test_program.iter().join("\n"));
+        let test_program = ozk_parsing::compile_for_test("structs", "simple_struct");
         let vm_output = execute_compiled_with_stack_memory_and_ins_for_test(
             &test_program,
             vec![],

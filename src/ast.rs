@@ -12,6 +12,28 @@ use crate::{
 };
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub struct Method<T> {
+    pub method_signature: MethodSignature,
+    pub body: Vec<Stmt<T>>,
+}
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub enum MethodReceiverFlavor {
+    BorrowedSelf,
+    OwnedSelf,
+    MutBorrowedSelf,
+}
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub struct MethodSignature {
+    pub name: String,
+    pub receiver_type: DataType,
+    pub receiver_flavor: MethodReceiverFlavor,
+    pub other_args: Vec<AbstractArgument>,
+    pub output: DataType,
+}
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct Fn<T> {
     pub fn_signature: FnSignature,
     pub body: Vec<Stmt<T>>,

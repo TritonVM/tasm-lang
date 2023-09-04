@@ -51,7 +51,7 @@ mod tests {
             rust_shadows::wrap_main_with_io(&main)(input.clone(), non_determinism.clone());
         assert_eq!(expected_output, native_output);
 
-        let test_program = ozk_parsing::compile_for_test("simple_nested_struct");
+        let test_program = ozk_parsing::compile_for_test("structs", "simple_nested_struct");
         println!("executing:\n{}", test_program.iter().join("\n"));
         let vm_output = execute_compiled_with_stack_memory_and_ins_for_test(
             &test_program,

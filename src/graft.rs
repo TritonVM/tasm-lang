@@ -37,9 +37,16 @@ impl<'a> Graft<'a> {
 
     pub fn graft_structs(
         &self,
-        structs: Vec<syn::ItemStruct>,
+        structs_and_methods: HashMap<String, (syn::ItemStruct, Vec<syn::ImplItemMethod>)>,
     ) -> HashMap<String, ast_types::StructType> {
-        let mut ret = HashMap::default();
+        let mut struct_types = HashMap::default();
+
+        // Handle structs
+        let structs = structs_and_methods
+            .clone()
+            .into_iter()
+            .map(|(_, (syn_struct, _methods))| syn_struct)
+            .collect_vec();
         for struct_ in structs {
             let syn::ItemStruct {
                 attrs: _,
@@ -59,7 +66,7 @@ impl<'a> Graft<'a> {
                 ast_fields.push((field_name, datatype));
             }
 
-            ret.insert(
+            struct_types.insert(
                 name.clone(),
                 ast_types::StructType {
                     name,
@@ -68,7 +75,36 @@ impl<'a> Graft<'a> {
             );
         }
 
-        ret
+        // Handle methods
+        let struct_names_and_methods = structs_and_methods
+            .clone()
+            .into_iter()
+            // .flat_map(|(struct_name, (_syn_struct, methods))| methods)
+            .map(|(struct_name, (_syn_struct, methods))| (struct_name, methods))
+            .collect_vec();
+        let mut methods = vec![];
+        for (struct_name, syn_methods) in struct_names_and_methods {
+            for syn_method in syn_methods {
+                methods.push(self.graft_method(&syn_method, &struct_types[&struct_name]));
+            }
+        }
+
+        struct_types
+    }
+
+    fn graft_method(
+        &self,
+        method: &syn::ImplItemMethod,
+        struct_type: &ast_types::StructType,
+    ) -> ast::Method<Annotation> {
+        let method_name = method.sig.ident.to_string();
+        println!("method_name: {method_name:?}");
+        let receiver = method.sig.receiver().unwrap().to_owned();
+        println!("receiver: {receiver:?}");
+        let fn_arg = self.graft_fn_arg(&receiver);
+        println!("fn_arg: {fn_arg:?}");
+
+        todo!()
     }
 
     pub fn graft_fn_decl(&self, input: &syn::ItemFn) -> ast::Fn<Annotation> {
@@ -168,7 +204,7 @@ impl<'a> Graft<'a> {
         }
     }
 
-    fn rust_type_to_data_type(&self, x: &syn::Type) -> ast_types::DataType {
+    pub fn rust_type_to_data_type(&self, x: &syn::Type) -> ast_types::DataType {
         match x {
             syn::Type::Path(data_type) => self.rust_type_path_to_data_type(data_type),
             ty => panic!("Unsupported type {ty:#?}"),
