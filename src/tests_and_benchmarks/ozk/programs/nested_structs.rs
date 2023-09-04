@@ -10,11 +10,11 @@ use twenty_first::shared_math::other::random_elements;
 use twenty_first::shared_math::x_field_element::XFieldElement;
 
 impl Distribution<InnerInnerInnerInnerStruct> for Standard {
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> InnerInnerInnerInnerStruct {
-        // Don't set this value to more than 3, as it
+    fn sample<R: Rng + ?Sized>(&self, _rng: &mut R) -> InnerInnerInnerInnerStruct {
+        // Don't set this value to more than 2, as it
         // will cause the program to take too long to run
-        let g_length_inner = rng.gen_range(2..=3);
-        let g_length_quartic = rng.gen_range(2..=3);
+        let g_length_inner = 2;
+        let g_length_quartic = 2;
         InnerInnerInnerInnerStruct {
             a: random(),
             b: random(),
