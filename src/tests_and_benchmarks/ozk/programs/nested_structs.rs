@@ -9,6 +9,31 @@ use twenty_first::shared_math::bfield_codec::BFieldCodec;
 use twenty_first::shared_math::other::random_elements;
 use twenty_first::shared_math::x_field_element::XFieldElement;
 
+impl Distribution<InnerInnerInnerInnerStruct> for Standard {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> InnerInnerInnerInnerStruct {
+        // Don't set this value to more than 3, as it
+        // will cause the program to take too long to run
+        let g_length_inner = rng.gen_range(2..=3);
+        let g_length_quartic = rng.gen_range(2..=3);
+        InnerInnerInnerInnerStruct {
+            a: random(),
+            b: random(),
+            c: random(),
+            d: vec![
+                vec![
+                    vec![
+                        vec![random_elements(g_length_inner); g_length_quartic];
+                        g_length_quartic
+                    ];
+                    g_length_quartic
+                ];
+                g_length_quartic
+            ],
+            e: random(),
+        }
+    }
+}
+
 impl Distribution<InnerInnerInnerStruct> for Standard {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> InnerInnerInnerStruct {
         let b_length = rng.gen_range(6..=16);
@@ -19,6 +44,7 @@ impl Distribution<InnerInnerInnerStruct> for Standard {
             c: random(),
             d: random(),
             e: random_elements(e_length),
+            f: random(),
         }
     }
 }
@@ -54,6 +80,7 @@ impl Distribution<TestStuctNested> for Standard {
         let b_length = rng.gen_range(3..=10);
         let d_length = rng.gen_range(3..=10);
         let f_length_cubed = rng.gen_range(3..=5);
+        let g_length_quartic = rng.gen_range(4..=5);
         TestStuctNested {
             a: random(),
             b: random_elements(b_length),
@@ -61,8 +88,24 @@ impl Distribution<TestStuctNested> for Standard {
             d: random_elements(d_length),
             e: random(),
             f: vec![vec![random_elements(f_length_cubed); f_length_cubed]; f_length_cubed],
+            g: vec![
+                vec![
+                    vec![random_elements(g_length_quartic); g_length_quartic];
+                    g_length_quartic
+                ];
+                g_length_quartic
+            ],
         }
     }
+}
+
+#[derive(TasmObject, BFieldCodec, Clone)]
+struct InnerInnerInnerInnerStruct {
+    pub a: u128,
+    pub b: BFieldElement,
+    pub c: bool,
+    pub d: Vec<Vec<Vec<Vec<Vec<Digest>>>>>,
+    pub e: Digest,
 }
 
 #[derive(TasmObject, BFieldCodec, Clone)]
@@ -72,6 +115,7 @@ struct InnerInnerInnerStruct {
     pub c: BFieldElement,
     pub d: u128,
     pub e: Vec<XFieldElement>,
+    pub f: InnerInnerInnerInnerStruct,
 }
 
 #[derive(TasmObject, BFieldCodec, Clone)]
@@ -99,6 +143,7 @@ struct TestStuctNested {
     pub d: Vec<InnerInnerStruct>,
     pub e: u64,
     pub f: Vec<Vec<Vec<InnerInnerStruct>>>,
+    pub g: Vec<Vec<Vec<Vec<u128>>>>,
 }
 
 fn main() {
@@ -115,6 +160,20 @@ fn main() {
     tasm::tasm_io_write_to_stdout_xfe(test_struct.f[1][1][1].f[3].e[4]);
     tasm::tasm_io_write_to_stdout_xfe(test_struct.f[2][2][2].f[2].e[2]);
     tasm::tasm_io_write_to_stdout_u64(test_struct.f[2][2][2].f[2].e.len() as u64);
+    tasm::tasm_io_write_to_stdout_u128(test_struct.g[0][1][2][3]);
+    tasm::tasm_io_write_to_stdout_u128(test_struct.g[3][2][1][0]);
+    tasm::tasm_io_write_to_stdout_u128(test_struct.g[0][3][2][1]);
+    tasm::tasm_io_write_to_stdout_u128(test_struct.a.b.e.f.a);
+    tasm::tasm_io_write_to_stdout_bfe(test_struct.a.b.e.f.b);
+    tasm::tasm_io_write_to_stdout_bool(test_struct.a.b.e.f.c);
+    tasm::tasm_io_write_to_stdout_digest(test_struct.a.b.e.f.d[1][1][0][1][0]);
+    tasm::tasm_io_write_to_stdout_digest(test_struct.a.b.e.f.e);
+
+    tasm::tasm_io_write_to_stdout_u32(test_struct.a.b.e.f.d[1][1][0][1].len() as u32);
+    tasm::tasm_io_write_to_stdout_u32(test_struct.a.b.e.f.d[1][1][0].len() as u32);
+    tasm::tasm_io_write_to_stdout_u32(test_struct.a.b.e.f.d[1][1].len() as u32);
+    tasm::tasm_io_write_to_stdout_u32(test_struct.a.b.e.f.d[1].len() as u32);
+    tasm::tasm_io_write_to_stdout_u32(test_struct.a.b.e.f.d.len() as u32);
 
     return;
 }
@@ -148,6 +207,19 @@ mod tests {
             test_struct.f[1][1][1].f[3].e[4].encode(),
             test_struct.f[2][2][2].f[2].e[2].encode(),
             (test_struct.f[2][2][2].f[2].e.len() as u64).encode(),
+            test_struct.g[0][1][2][3].encode(),
+            test_struct.g[3][2][1][0].encode(),
+            test_struct.g[0][3][2][1].encode(),
+            test_struct.a.b.e.f.a.encode(),
+            test_struct.a.b.e.f.b.encode(),
+            test_struct.a.b.e.f.c.encode(),
+            test_struct.a.b.e.f.d[1][1][0][1][0].encode(),
+            test_struct.a.b.e.f.e.encode(),
+            (test_struct.a.b.e.f.d[1][1][0][1].len() as u32).encode(),
+            (test_struct.a.b.e.f.d[1][1][0].len() as u32).encode(),
+            (test_struct.a.b.e.f.d[1][1].len() as u32).encode(),
+            (test_struct.a.b.e.f.d[1].len() as u32).encode(),
+            (test_struct.a.b.e.f.d.len() as u32).encode(),
         ]
         .concat();
 

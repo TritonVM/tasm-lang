@@ -166,6 +166,27 @@ pub enum DataType {
 }
 
 impl DataType {
+    /// Return true if it's OK to copy this type including its underlying
+    /// data, false if it's expensive to copy.
+    pub fn is_copy(&self) -> bool {
+        match self {
+            DataType::Bool => true,
+            DataType::U32 => true,
+            DataType::U64 => true,
+            DataType::U128 => true,
+            DataType::BFE => true,
+            DataType::XFE => true,
+            DataType::Digest => true,
+            DataType::Tuple(_) => true,
+            DataType::List(_, _) => false,
+            DataType::VoidPointer => false,
+            DataType::Function(_) => false,
+            DataType::Struct(_) => false,
+            DataType::Unresolved(_) => false,
+            DataType::MemPointer(_) => false,
+        }
+    }
+
     pub fn from_tasm_lib_datatype(
         tasm_lib_type: tasm_lib::snippet::DataType,
         list_type: ListType,
@@ -197,24 +218,24 @@ impl DataType {
     /// What type is returned when type is accessed with a field of name `field_name`?
     pub fn field_access_returned_type(&self, field_name: &str) -> Self {
         match &self {
+            // If something is a `MemPointer`, it stays a `MemPointer` after field access,
+            // unless the field is a copy type.
             DataType::MemPointer(inner_type) => {
-                if let DataType::Struct(inner_struct_type) = *inner_type.to_owned() {
-                    // Case: `let foo: Foo = ...; foo.a`. `inner_struct_type = Foo`
-                    let resulting_type = inner_struct_type.get_field_type(field_name);
+                let struct_type = match &**inner_type {
+                    DataType::Struct(struct_type) => struct_type,
+                    _ => panic!("Field access can only be performed on structs"),
+                };
 
-                    // `resulting_type` is type of `a` field i `Foo`
-
-                    // We dereference all resulting type unless we have nested structs, in that case, new pointers to structs
-                    // are returned. I think that's more or less how Rust does it.
-                    match &resulting_type {
-                        DataType::Struct(_) => DataType::MemPointer(Box::new(resulting_type)),
-                        _ => resulting_type,
-                    }
+                let field_type = struct_type.get_field_type(field_name);
+                if field_type.is_copy() {
+                    field_type
                 } else {
-                    panic!("Field getter can only operate on type of struct or pointer to struct. Attempted to access field `{field_name}` on type `{self}`")
+                    DataType::MemPointer(Box::new(field_type))
                 }
+            }
+            DataType::Struct(struct_type) => {
+                struct_type.get_field_type(field_name)
             },
-            DataType::Struct(struct_type) => struct_type.get_field_type(field_name),
             _ => panic!("Field getter can only operate on type of struct or pointer to struct. Attempted to access field `{field_name}` on type `{self}`")
         }
     }

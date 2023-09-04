@@ -290,7 +290,7 @@ impl<'a> CompilerState<'a> {
     fn locate_identifier(
         &mut self,
         identifier: &ast::Identifier<type_checker::Typing>,
-    ) -> (ValueLocation, ast_types::DataType) {
+    ) -> ValueLocation {
         fn get_lhs_address_code(
             state: &mut CompilerState,
             lhs_location: &ValueLocation,
@@ -339,15 +339,13 @@ impl<'a> CompilerState<'a> {
                 let (position, ident_data_type, spilled) =
                     self.function_state.vstack.find_stack_value(var_addr);
                 match spilled {
-                    Some(mem_addr) => (
-                        ValueLocation::StaticMemoryAddress(mem_addr),
-                        ident_data_type,
-                    ),
-                    None => (ValueLocation::OpStack(position), ident_data_type),
+                    Some(mem_addr) => ValueLocation::StaticMemoryAddress(mem_addr),
+                    None => ValueLocation::OpStack(position),
                 }
             }
-            ast::Identifier::TupleIndex(lhs_id, tuple_index) => {
-                let (lhs_location, lhs_type) = self.locate_identifier(lhs_id);
+            ast::Identifier::TupleIndex(lhs_id, tuple_index, known_type) => {
+                let lhs_location = self.locate_identifier(lhs_id);
+                let lhs_type = lhs_id.get_type();
                 let element_types = if let ast_types::DataType::Tuple(ets) = lhs_type {
                     ets
                 } else {
@@ -362,35 +360,32 @@ impl<'a> CompilerState<'a> {
                     .map(|(_i, x)| x.stack_size())
                     .sum::<usize>();
 
-                let result_type = element_types[*tuple_index].clone();
                 match lhs_location {
-                    ValueLocation::OpStack(n) => {
-                        (ValueLocation::OpStack(n + tuple_depth), result_type)
+                    ValueLocation::OpStack(n) => ValueLocation::OpStack(n + tuple_depth),
+                    ValueLocation::StaticMemoryAddress(p) => {
+                        ValueLocation::StaticMemoryAddress(p + tuple_depth as u32)
                     }
-                    ValueLocation::StaticMemoryAddress(p) => (
-                        ValueLocation::StaticMemoryAddress(p + tuple_depth as u32),
-                        result_type,
-                    ),
                     ValueLocation::DynamicMemoryAddress(code) => {
                         let new_code = [code, triton_asm!(push {tuple_depth} add)].concat();
-                        (ValueLocation::DynamicMemoryAddress(new_code), result_type)
+                        ValueLocation::DynamicMemoryAddress(new_code)
                     }
                 }
             }
-            ast::Identifier::ListIndex(ident, index_expr) => {
-                let (lhs_location, lhs_type) = self.locate_identifier(ident);
-                let (element_type, list_type) =
-                    if let ast_types::DataType::List(element, list_type) = &lhs_type {
-                        (element, list_type)
-                    } else {
-                        panic!("Expected type was list. Got {lhs_type}.")
-                    };
-
+            ast::Identifier::ListIndex(ident, index_expr, element_type) => {
+                let element_type = element_type.get_type();
+                let lhs_location = self.locate_identifier(ident);
                 let ident_addr_code =
-                    get_lhs_address_code(self, &lhs_location, element_type, ident);
+                    get_lhs_address_code(self, &lhs_location, &element_type, ident);
                 // stack: _ *list
 
-                self.new_value_identifier("list_expression", &lhs_type);
+                let lhs_type = ident.get_type();
+                let list_type = if let ast_types::DataType::List(_, lity) = lhs_type {
+                    lity
+                } else {
+                    panic!("Expected type was list. Got {lhs_type}.")
+                };
+
+                self.new_value_identifier("list_expression", &ident.get_type());
                 let (_index_expr, index_code) =
                     compile_expr(index_expr, "index_on_assign", &index_expr.get_type(), self);
                 // stack: _ *list index
@@ -466,39 +461,33 @@ impl<'a> CompilerState<'a> {
                 self.function_state.vstack.pop();
                 self.function_state.vstack.pop();
 
-                // Compile index expression
-                (
-                    ValueLocation::DynamicMemoryAddress(element_address),
-                    *element_type.to_owned(),
-                )
+                ValueLocation::DynamicMemoryAddress(element_address)
             }
             ast::Identifier::Field(ident, field_name, known_type) => {
-                let (lhs_location, lhs_type) = self.locate_identifier(ident);
+                let lhs_location = self.locate_identifier(ident);
 
                 let get_struct_pointer =
                     get_lhs_address_code(self, &lhs_location, &known_type.get_type(), ident);
                 // stack: _ struct_pointer
 
                 // limited field support for now
-                let get_field_pointer_from_struct_pointer = match lhs_type {
+                let ident_type = ident.get_type();
+                let get_field_pointer_from_struct_pointer = match ident.get_type() {
                     ast_types::DataType::MemPointer(inner_type) => match *inner_type {
                         ast_types::DataType::Struct(inner_struct) => {
                             inner_struct.get_field_accessor_code(field_name)
                         }
-                        _ => todo!(),
+                        _ => todo!("ident_type: {ident_type}"),
                     },
-                    _ => todo!(),
+                    _ => todo!("ident_type: {ident_type}"),
                 };
 
                 // stack: _ field_pointer
 
-                (
-                    ValueLocation::DynamicMemoryAddress(triton_asm!(
-                        {&get_struct_pointer}
-                        {&get_field_pointer_from_struct_pointer}
-                    )),
-                    known_type.get_type(),
-                )
+                ValueLocation::DynamicMemoryAddress(triton_asm!(
+                    {&get_struct_pointer}
+                    {&get_field_pointer_from_struct_pointer}
+                ))
             }
         }
     }
@@ -989,8 +978,9 @@ fn compile_stmt(
             // When overwriting a value, we ignore the identifier of the new expression as
             // it's simply popped from the stack and the old identifier is used.
             let (_expr_addr, expr_code) = compile_expr(expr, "assign", &data_type, state);
-            let (location, ident_type) = state.locate_identifier(identifier);
+            let location = state.locate_identifier(identifier);
 
+            let ident_type = identifier.get_type();
             let overwrite_code = if !location.is_accessible(&ident_type) {
                 // Compiler must run again. Mark binding as spilled and produce unusable code
                 let binding_name = identifier.binding_name();
@@ -1382,12 +1372,14 @@ fn compile_expr(
         },
 
         ast::Expr::Var(identifier) => {
-            if matches!(identifier.get_type(), ast_types::DataType::Function(_)) {
+            // TODO: We probably need to use `known_type` here!
+            let var_type = identifier.get_type();
+            if matches!(var_type, ast_types::DataType::Function(_)) {
                 // Identifier is a function and must be in scope since typechecker was passed
                 triton_asm!()
             } else {
-                let (location, ident_type) = state.locate_identifier(identifier);
-                if !location.is_accessible(&ident_type) {
+                let location = state.locate_identifier(identifier);
+                if !location.is_accessible(&var_type) {
                     // Compiler must run again. Mark binding as spilled and produce unusable code
                     let binding_name = identifier.binding_name();
                     let value_ident_of_binding = state
@@ -1403,17 +1395,25 @@ fn compile_expr(
                 } else {
                     match location {
                         ValueLocation::OpStack(position) => {
-                            // let return_type_size = ident_type.stack_size();
-                            // let bottom_position = position + return_type_size - 1;
-                            dup_value_from_stack_code(position.try_into().unwrap(), &ident_type)
+                            dup_value_from_stack_code(position.try_into().unwrap(), &var_type)
                         }
                         ValueLocation::StaticMemoryAddress(pointer) => {
-                            load_from_memory(Some(pointer), ident_type.stack_size())
+                            load_from_memory(Some(pointer), var_type.stack_size())
                         }
-                        ValueLocation::DynamicMemoryAddress(code) => triton_asm!(
-                            {&code}
-                            {&dereference(&ident_type)}
-                        ),
+                        ValueLocation::DynamicMemoryAddress(code) => {
+                            triton_asm!(
+                                {&code}
+                                {&dereference(&var_type)}
+                            )
+                            // if let ast_types::DataType::MemPointer(_) = var_type {
+                            //     triton_asm!(
+                            //         {&code}
+                            //         {&dereference(&var_type)}
+                            //     )
+                            // } else {
+                            //     code
+                            // }
+                        }
                     }
                 }
             }

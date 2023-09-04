@@ -6,7 +6,10 @@ use twenty_first::shared_math::b_field_element::BFieldElement;
 use twenty_first::shared_math::bfield_codec::BFieldCodec;
 use twenty_first::shared_math::x_field_element::XFieldElement;
 
-use crate::ast_types::{AbstractArgument, DataType};
+use crate::{
+    ast_types::{AbstractArgument, DataType},
+    type_checker::Typing,
+};
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct Fn<T> {
@@ -207,9 +210,9 @@ pub struct SymTable(HashMap<String, (u8, DataType)>);
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum Identifier<T> {
-    String(String, T),                           // x
-    TupleIndex(Box<Identifier<T>>, usize),       // x.0
-    ListIndex(Box<Identifier<T>>, Box<Expr<T>>), // x[0]
+    String(String, T),                              // x
+    TupleIndex(Box<Identifier<T>>, usize, T),       // x.0
+    ListIndex(Box<Identifier<T>>, Box<Expr<T>>, T), // x[0]
     Field(Box<Identifier<T>>, String, T),
 }
 
@@ -217,11 +220,42 @@ impl<T> Display for Identifier<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let output = match self {
             Identifier::String(name, _) => name.to_string(),
-            Identifier::TupleIndex(inner, index) => format!("{inner}.{index}"),
-            Identifier::ListIndex(inner, index) => format!("{inner}[{index}]"),
+            Identifier::TupleIndex(inner, index, _) => format!("{inner}.{index}"),
+            Identifier::ListIndex(inner, index, _) => format!("{inner}[{index}]"),
             Identifier::Field(inner, field_name, _) => format!("{inner}.{field_name}"),
         };
         write!(f, "{output}")
+    }
+}
+
+impl Identifier<Typing> {
+    pub fn force_type(&mut self, forced_type: &DataType) {
+        let forced_type = forced_type.to_owned();
+        println!("Forcing {self} to {forced_type}");
+        match self {
+            Identifier::String(_, t) => *t = crate::type_checker::Typing::KnownType(forced_type),
+            Identifier::TupleIndex(_, _, t) => {
+                *t = crate::type_checker::Typing::KnownType(forced_type)
+            }
+            Identifier::ListIndex(_, _, t) => {
+                *t = crate::type_checker::Typing::KnownType(forced_type)
+            }
+            Identifier::Field(_, _, t) => *t = crate::type_checker::Typing::KnownType(forced_type),
+        }
+    }
+
+    pub fn resolved(&self) -> Option<DataType> {
+        let t = match self {
+            Identifier::String(_, t) => t,
+            Identifier::TupleIndex(_, _, t) => t,
+            Identifier::ListIndex(_, _, t) => t,
+            Identifier::Field(_, _, t) => t,
+        };
+        // matches!(t, Typing::KnownType(_))
+        match t {
+            Typing::UnknownType => None,
+            Typing::KnownType(resolved_type) => Some(resolved_type.to_owned()),
+        }
     }
 }
 
@@ -229,8 +263,8 @@ impl<T> Identifier<T> {
     pub fn binding_name(&self) -> String {
         match self {
             Identifier::String(name, _) => name.to_owned(),
-            Identifier::TupleIndex(inner_id, _) => inner_id.binding_name(),
-            Identifier::ListIndex(inner_id, _) => inner_id.binding_name(),
+            Identifier::TupleIndex(inner_id, _, _) => inner_id.binding_name(),
+            Identifier::ListIndex(inner_id, _, _) => inner_id.binding_name(),
             Identifier::Field(inner_id, _, _) => inner_id.binding_name(),
         }
     }
@@ -238,10 +272,10 @@ impl<T> Identifier<T> {
     pub fn label_friendly_name(&self) -> String {
         match self {
             Identifier::String(name, _) => name.to_string(),
-            Identifier::ListIndex(inner_id, l_index_expr) => {
+            Identifier::ListIndex(inner_id, l_index_expr, _) => {
                 format!("{}_{l_index_expr}", inner_id.label_friendly_name(),)
             }
-            Identifier::TupleIndex(inner_id, t_index) => {
+            Identifier::TupleIndex(inner_id, t_index, _) => {
                 format!("{}___{t_index}", inner_id.label_friendly_name())
             }
             Identifier::Field(inner_id, field_name, _) => {

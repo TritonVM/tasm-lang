@@ -393,6 +393,7 @@ impl<'a> Graft<'a> {
                 ast::Identifier::TupleIndex(
                     Box::new(ast::Identifier::String(ident, Default::default())),
                     tuple_index.index as usize,
+                    Default::default(),
                 )
             }
             syn::Expr::Index(index_expr) => {
@@ -404,6 +405,7 @@ impl<'a> Graft<'a> {
                 ast::Identifier::ListIndex(
                     Box::new(ast::Identifier::String(ident, Default::default())),
                     Box::new(index_expr),
+                    Default::default(),
                 )
             }
             other => panic!("unsupported: {other:?}"),
@@ -557,6 +559,7 @@ impl<'a> Graft<'a> {
                         ast::Expr::Var(ast::Identifier::TupleIndex(
                             Box::new(base_ident),
                             tuple_index.index as usize,
+                            Default::default(),
                         ))
                     }
                 }
@@ -569,6 +572,7 @@ impl<'a> Graft<'a> {
                     ast::Expr::Var(ast::Identifier::ListIndex(
                         Box::new(identifier),
                         Box::new(index),
+                        Default::default(),
                     ))
                 } else {
                     panic!("unsupported index expression: {index_expr:#?}");

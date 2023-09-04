@@ -50,7 +50,7 @@ impl<T: GetType> GetType for ast::ExprLit<T> {
     }
 }
 
-impl<T: GetType> GetType for ast::Expr<T> {
+impl<T: GetType + std::fmt::Debug> GetType for ast::Expr<T> {
     fn get_type(&self) -> ast_types::DataType {
         match self {
             ast::Expr::Lit(lit) => lit.get_type(),
@@ -68,7 +68,7 @@ impl<T: GetType> GetType for ast::Expr<T> {
     }
 }
 
-impl<T: GetType> GetType for ast::ExprIf<T> {
+impl<T: GetType + std::fmt::Debug> GetType for ast::ExprIf<T> {
     fn get_type(&self) -> ast_types::DataType {
         self.then_branch.get_type()
     }
@@ -78,23 +78,9 @@ impl<T: GetType> GetType for ast::Identifier<T> {
     fn get_type(&self) -> ast_types::DataType {
         match self {
             ast::Identifier::String(_, t) => t.get_type(),
-            ast::Identifier::TupleIndex(id, idx) => {
-                let rec = id.get_type();
-                match rec {
-                    ast_types::DataType::Tuple(list) => list[*idx].clone(),
-                    dt => panic!("Type error. Expected Tuple got: {dt:?}"),
-                }
-            }
-            ast::Identifier::ListIndex(id, _) => {
-                let rec = id.get_type();
-                match rec {
-                    ast_types::DataType::List(element_type, _) => *element_type,
-                    dt => panic!("Type error. Expected List got: {dt:?}"),
-                }
-            }
-            ast::Identifier::Field(ident, field_name, _t) => {
-                ident.get_type().field_access_returned_type(field_name)
-            }
+            ast::Identifier::ListIndex(id, _, t) => t.get_type(),
+            ast::Identifier::TupleIndex(id, idx, t) => t.get_type(),
+            ast::Identifier::Field(ident, field_name, t) => t.get_type(),
         }
     }
 }
@@ -421,49 +407,71 @@ pub fn annotate_identifier_type(
         },
 
         // x.0
-        ast::Identifier::TupleIndex(tuple_identifier, index) => {
+        ast::Identifier::TupleIndex(tuple_identifier, index, known_type) => {
             // For syntax like 'x.0.1', find the type of 'x.0'; we don't currently
             // generate ASTs with nested tuple indexing, but it's easier to solve
             // the type inference generally here.
-            let tuple_type = annotate_identifier_type(tuple_identifier, state);
+            let (tuple_type, mutable) = annotate_identifier_type(tuple_identifier, state);
 
-            if let ast_types::DataType::Tuple(elem_types) = tuple_type.0 {
-                if elem_types.len() < *index {
+            let element_type = if let ast_types::DataType::Tuple(elem_types) = tuple_type {
+                if elem_types.len() > *index {
+                    elem_types[*index].clone()
+                } else {
                     panic!(
                         "Cannot index tuple of {} elements with index {}",
                         elem_types.len(),
                         index
                     );
                 }
-
-                (elem_types[*index].clone(), tuple_type.1)
             } else {
                 panic!("Cannot index non-tuple with tuple index {index}");
-            }
+            };
+
+            *known_type = Typing::KnownType(element_type.clone());
+
+            (element_type, mutable)
         }
 
         // x[e]
-        ast::Identifier::ListIndex(list_identifier, index_expr) => {
+        ast::Identifier::ListIndex(list_identifier, index_expr, known_type) => {
             let index_hint = ast_types::DataType::U32;
             let index_type = derive_annotate_expr_type(index_expr, Some(&index_hint), state);
             if !is_index_type(&index_type) {
                 panic!("Cannot index list with type '{index_type}'");
             }
 
-            // // TODO: It could make sense to support var.1[i] if there were better support for tuples.
-            // if !is_string_identifier(list_identifier) {
-            //     panic!("Cannot index anything but variables: {list_identifier:?}");
-            // }
-
-            let (list_type, mutable) = annotate_identifier_type(list_identifier, state);
-
-            let element_type = if let ast_types::DataType::List(elem_ty, _list_type) = list_type {
-                elem_ty
-            } else {
-                panic!("Can only index into a list type. Attempted to index into {list_identifier}")
+            // Only `a: Vec<T>` can be indexed, so if type is e.g. `MemPointer(Vec<T>)`, then the
+            // type of `a` need to be forced to `Vec<T>`.
+            // TODO: It's possible that the type of `list_identifier` needs to be forced to. But to
+            // do that, this function probably needs the expression, and not just the identifier.
+            let (maybe_list_type, mutable) = annotate_identifier_type(list_identifier, state);
+            let mut forced_list_type = maybe_list_type.clone();
+            let element_type = loop {
+                if let ast_types::DataType::List(elem_ty, _) = &forced_list_type {
+                    break elem_ty;
+                } else if let ast_types::DataType::MemPointer(inner_type) = forced_list_type {
+                    forced_list_type = *inner_type.to_owned();
+                } else {
+                    panic!("Cannot index into {list_identifier} of type {maybe_list_type}");
+                }
             };
 
-            (*element_type, mutable)
+            // If list_identifier is a MemPointer, and the element type is not copyable,
+            // then the element type statys a MemPointer.
+            let element_type = if let ast_types::DataType::MemPointer(_) = maybe_list_type {
+                if element_type.is_copy() {
+                    *element_type.to_owned()
+                } else {
+                    ast_types::DataType::MemPointer(element_type.to_owned())
+                }
+            } else {
+                *element_type.to_owned()
+            };
+
+            list_identifier.force_type(&forced_list_type);
+            *known_type = Typing::KnownType(element_type.clone());
+
+            (element_type, mutable)
         }
         ast::Identifier::Field(ident, field_name, annot) => {
             let (receiver_type, mutable) = annotate_identifier_type(ident, state);
@@ -499,18 +507,54 @@ fn get_fn_signature(
 fn get_method_signature(
     name: &str,
     state: &CheckState,
-    receiver_type: ast_types::DataType,
+    original_receiver_type: ast_types::DataType,
     args: &mut [ast::Expr<Typing>],
 ) -> ast::FnSignature {
     // Only methods from libraries are in scope. New methods cannot be declared.
-    for lib in state.libraries.iter() {
-        if let Some(method_name) = lib.get_method_name(name, &receiver_type) {
-            return lib.method_name_to_signature(&method_name, &receiver_type, args, state);
+    // Implemented following the description from: https://stackoverflow.com/a/28552082/2574407
+    // TODO: Handle automatic dereferencing and referencing of MemPointer types
+    let mut forced_type = original_receiver_type.clone();
+    let mut try_again = true;
+    while try_again {
+        // 1. if there's a method `bar` where the receiver type (the type of self
+        // in the method) matches `forced_type` exactly , use it (a "by value method")
+        for lib in state.libraries.iter() {
+            if let Some(method_name) = lib.get_method_name(name, &forced_type) {
+                if let ast::Expr::Var(var) = &mut args[0] {
+                    var.force_type(&forced_type);
+                }
+
+                return lib.method_name_to_signature(&method_name, &forced_type, args, state);
+            }
+        }
+
+        // 2. therwise, add one auto-ref (take & or &mut of the receiver), and,
+        // if some method's receiver matches &U, use it (an "autorefd method")
+        let auto_refd_forced_type = ast_types::DataType::MemPointer(Box::new(forced_type.clone()));
+        for lib in state.libraries.iter() {
+            if let Some(method_name) = lib.get_method_name(name, &auto_refd_forced_type) {
+                if let ast::Expr::Var(var) = &mut args[0] {
+                    var.force_type(&auto_refd_forced_type);
+                }
+                return lib.method_name_to_signature(
+                    &method_name,
+                    &auto_refd_forced_type,
+                    args,
+                    state,
+                );
+            }
+        }
+
+        // Keep stripping `MemPointer` until we find a match
+        if let ast_types::DataType::MemPointer(inner_type) = forced_type {
+            forced_type = *inner_type.to_owned();
+        } else {
+            try_again = false;
         }
     }
 
     panic!(
-        "Don't know what type of value '{name}' returns! Receiver parameter was: {receiver_type:?}"
+        "Don't know what type of value '{name}' returns! Receiver type was: {original_receiver_type:?}"
     )
 }
 
@@ -641,10 +685,13 @@ fn derive_annotate_expr_type(
             }
         }
 
-        ast::Expr::Var(identifier) => {
-            let identifier_type = annotate_identifier_type(identifier, state);
-            identifier_type.0
-        }
+        ast::Expr::Var(identifier) => match identifier.resolved() {
+            Some(ty) => ty,
+            None => {
+                annotate_identifier_type(identifier, state);
+                identifier.get_type()
+            }
+        },
 
         ast::Expr::Tuple(tuple_exprs) => {
             let no_hint = None;
