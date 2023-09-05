@@ -1380,8 +1380,8 @@ fn compile_method_call(
                 .compiled_methods
                 .contains_key(&method_label)
             {
-                // Insert something *before* making recursive call, otherwise
-                // the methods cannot handle recursion.
+                // Insert something with the right label *before* compiling,
+                // otherwise the methods cannot handle recursion.
                 state.global_compiler_state.compiled_methods.insert(
                     method_label.clone(),
                     InnerFunctionTasmCode::dummy_value(&method_label),
