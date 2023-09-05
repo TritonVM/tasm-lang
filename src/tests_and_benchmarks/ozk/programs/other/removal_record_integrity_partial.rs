@@ -61,18 +61,57 @@ fn main() {
     //     &secret_input.iter().skip(1).copied().collect_vec(),
     // )
     // .unwrap();
+    // let hash_of_kernel = *Digest::decode(
+    //     &public_input
+    //         .individual_tokens
+    //         .iter()
+    //         .copied()
+    //         .take(DIGEST_LENGTH)
+    //         .rev()
+    //         .collect_vec(),
+    // )
+    // .expect("Could not decode public input in Removal Records Integrity :: verify_raw");
+
+    // // 1. read and process witness data
+    // let memory_length = nondeterminism.ram.len() as u64;
+    // let memory_vector = (1u64..memory_length)
+    //     .map(BFieldElement::new)
+    //     .map(|b| *nondeterminism.ram.get(&b).unwrap_or(&BFieldElement::new(0)))
+    //     .collect_vec();
+    // let witness = *RemovalRecordsIntegrityWitness::decode(&memory_vector).unwrap();
+
+    // println!("first element of witness: {}", witness.encode()[0]);
+    // println!("first element of kernel: {}", witness.kernel.encode()[0]);
+
+    // // 2. assert that the kernel from the witness matches the hash in the public input
+    // // now we can trust all data in kernel
+    // assert_eq!(
+    //     hash_of_kernel,
+    //     witness.kernel.mast_hash(),
+    //     "hash of kernel ({})\nwitness kernel ({})",
+    //     hash_of_kernel,
+    //     witness.kernel.mast_hash()
+    // );
+
+    // // 3. assert that the mutator set's MMRs in the witness match the kernel
+    // // now we can trust all data in these MMRs as well
+    // let mutator_set_hash = Hash::hash_pair(
+    //     &Hash::hash_pair(&witness.aocl.bag_peaks(), &witness.swbfi.bag_peaks()),
+    //     &Hash::hash_pair(&witness.swbfa_hash, &Digest::default()),
+    // );
+    // assert_eq!(witness.kernel.mutator_set_hash, mutator_set_hash);
 
     return;
 }
 
 mod tests {
-    use std::collections::HashMap;
-
+    use super::*;
     use crate::tests_and_benchmarks::{
         ozk::{self, ozk_parsing},
         test_helpers::shared_test::*,
     };
     use rand::random;
+    use std::collections::HashMap;
     use tasm_lib::Digest;
     use triton_vm::NonDeterminism;
     use twenty_first::shared_math::bfield_codec::BFieldCodec;
@@ -83,14 +122,13 @@ mod tests {
         let input = input.encode();
         let non_determinism = NonDeterminism::new(vec![]);
         let expected_output = vec![];
-        let native_output = ozk::rust_shadows::wrap_main_with_io(
-            &ozk::programs::removal_record_integrity_partial::main,
-        )(input.clone(), non_determinism.clone());
+        let native_output =
+            ozk::rust_shadows::wrap_main_with_io(&main)(input.clone(), non_determinism.clone());
         assert_eq!(native_output, expected_output);
 
         // Test function in Triton VM
         let (parsed, _, _) =
-            ozk_parsing::parse_main_and_structs("removal_record_integrity_partial");
+            ozk_parsing::parse_main_and_structs("other", "removal_record_integrity_partial");
         let expected_stack_diff = 0;
         let vm_output = execute_with_stack_memory_and_ins(
             &parsed,

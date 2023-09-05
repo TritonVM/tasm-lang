@@ -1,6 +1,5 @@
-use std::collections::HashMap;
-
 use itertools::Itertools;
+use std::collections::HashMap;
 use syn::parse_quote;
 
 use crate::ast;
@@ -37,9 +36,19 @@ impl<'a> Graft<'a> {
 
     pub fn graft_structs(
         &self,
-        structs: Vec<syn::ItemStruct>,
-    ) -> HashMap<String, ast_types::StructType> {
-        let mut ret = HashMap::default();
+        structs_and_methods: HashMap<String, (syn::ItemStruct, Vec<syn::ImplItemMethod>)>,
+    ) -> (
+        HashMap<String, ast_types::StructType>,
+        Vec<ast::Method<Annotation>>,
+    ) {
+        let mut struct_types = HashMap::default();
+
+        // Handle structs
+        let structs = structs_and_methods
+            .clone()
+            .into_iter()
+            .map(|(_, (syn_struct, _methods))| syn_struct)
+            .collect_vec();
         for struct_ in structs {
             let syn::ItemStruct {
                 attrs: _,
@@ -59,7 +68,7 @@ impl<'a> Graft<'a> {
                 ast_fields.push((field_name, datatype));
             }
 
-            ret.insert(
+            struct_types.insert(
                 name.clone(),
                 ast_types::StructType {
                     name,
@@ -68,7 +77,80 @@ impl<'a> Graft<'a> {
             );
         }
 
-        ret
+        // Handle methods
+        let struct_names_and_methods = structs_and_methods
+            .clone()
+            .into_iter()
+            // .flat_map(|(struct_name, (_syn_struct, methods))| methods)
+            .map(|(struct_name, (_syn_struct, methods))| (struct_name, methods))
+            .collect_vec();
+        let mut methods = vec![];
+        for (struct_name, syn_methods) in struct_names_and_methods {
+            for syn_method in syn_methods {
+                methods.push(self.graft_method(&syn_method, &struct_types[&struct_name]));
+            }
+        }
+
+        (struct_types, methods)
+    }
+
+    fn graft_method(
+        &self,
+        method: &syn::ImplItemMethod,
+        struct_type: &ast_types::StructType,
+    ) -> ast::Method<Annotation> {
+        let method_name = method.sig.ident.to_string();
+        let receiver = method.sig.receiver().unwrap().to_owned();
+        let receiver = if let syn::FnArg::Receiver(receiver) = receiver {
+            let syn::Receiver {
+                reference,
+                mutability,
+                ..
+            } = receiver;
+            assert!(
+                reference.is_some(),
+                "Can only handle &self as receiver for now"
+            );
+            ast_types::AbstractValueArg {
+                name: "self".to_string(),
+                data_type: ast_types::DataType::MemPointer(Box::new(ast_types::DataType::Struct(
+                    struct_type.to_owned(),
+                ))),
+                mutable: mutability.is_some(),
+            }
+        } else {
+            panic!("Expected receiver as 1st abstract argument to method {method_name}");
+        };
+        let other_args = method
+            .sig
+            .inputs
+            .iter()
+            .skip(1)
+            .map(|x| self.graft_fn_arg(x))
+            .collect_vec();
+        let all_args = [vec![receiver], other_args].concat();
+        let all_args = all_args
+            .into_iter()
+            .map(ast_types::AbstractArgument::ValueArgument)
+            .collect_vec();
+
+        // TODO: Also handle owned `self` as receiver. Now we only allow
+        // `&self`.
+        let output = self.graft_return_type(&method.sig.output);
+        let signature = ast::FnSignature {
+            name: method_name,
+            args: all_args,
+            output,
+            arg_evaluation_order: Default::default(),
+        };
+        let body = method
+            .block
+            .stmts
+            .iter()
+            .map(|x| self.graft_stmt(x))
+            .collect_vec();
+
+        ast::Method { signature, body }
     }
 
     pub fn graft_fn_decl(&self, input: &syn::ItemFn) -> ast::Fn<Annotation> {
@@ -93,7 +175,7 @@ impl<'a> Graft<'a> {
 
         ast::Fn {
             body,
-            fn_signature: ast::FnSignature {
+            signature: ast::FnSignature {
                 name,
                 args,
                 output,
@@ -168,7 +250,7 @@ impl<'a> Graft<'a> {
         }
     }
 
-    fn rust_type_to_data_type(&self, x: &syn::Type) -> ast_types::DataType {
+    pub fn rust_type_to_data_type(&self, x: &syn::Type) -> ast_types::DataType {
         match x {
             syn::Type::Path(data_type) => self.rust_type_path_to_data_type(data_type),
             ty => panic!("Unsupported type {ty:#?}"),

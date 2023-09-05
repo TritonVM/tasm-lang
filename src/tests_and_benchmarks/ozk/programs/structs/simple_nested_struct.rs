@@ -13,14 +13,6 @@ struct NestedStruct {
     a: InnerStruct,
 }
 
-impl NestedStruct {
-    fn new(inner_val: u32) -> NestedStruct {
-        NestedStruct {
-            a: InnerStruct { b: inner_val },
-        }
-    }
-}
-
 fn main() {
     let test_struct: Box<NestedStruct> =
         NestedStruct::decode(&tasm::load_from_memory(BFieldElement::new(300))).unwrap();
@@ -40,6 +32,14 @@ mod tests {
     use super::*;
     use itertools::Itertools;
 
+    impl NestedStruct {
+        fn new(inner_val: u32) -> NestedStruct {
+            NestedStruct {
+                a: InnerStruct { b: inner_val },
+            }
+        }
+    }
+
     #[test]
     fn simple_nested_structs_test() {
         let ts = NestedStruct::new(2023);
@@ -51,7 +51,7 @@ mod tests {
             rust_shadows::wrap_main_with_io(&main)(input.clone(), non_determinism.clone());
         assert_eq!(expected_output, native_output);
 
-        let test_program = ozk_parsing::compile_for_test("simple_nested_struct");
+        let test_program = ozk_parsing::compile_for_test("structs", "simple_nested_struct");
         println!("executing:\n{}", test_program.iter().join("\n"));
         let vm_output = execute_compiled_with_stack_memory_and_ins_for_test(
             &test_program,
