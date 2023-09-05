@@ -1,4 +1,5 @@
 use itertools::Itertools;
+use num::Zero;
 use triton_vm::triton_asm;
 use twenty_first::shared_math::{
     b_field_element::BFieldElement,
@@ -9,6 +10,9 @@ use crate::{ast, ast_types, graft::Graft, libraries::Library};
 
 use super::{bfe::BfeLibrary, LibraryFunction};
 const XFIELDELEMENT_LIB_INDICATOR: &str = "XFieldElement::";
+const ZERO_CONST_NAME: &str = "XFieldElement::zero";
+const FUNCTION_NAME_NEW: &str = "XFieldElement::new";
+const UNLIFT_NAME: &str = "unlift";
 
 #[derive(Clone, Debug)]
 pub struct XfeLibrary;
@@ -23,7 +27,7 @@ impl Library for XfeLibrary {
         method_name: &str,
         receiver_type: &ast_types::DataType,
     ) -> Option<String> {
-        if *receiver_type == ast_types::DataType::XFE && method_name == "unlift" {
+        if *receiver_type == ast_types::DataType::XFE && method_name == UNLIFT_NAME {
             return Some(method_name.to_owned());
         }
 
@@ -37,7 +41,7 @@ impl Library for XfeLibrary {
         _args: &[ast::Expr<super::Annotation>],
         _type_checker_state: &crate::type_checker::CheckState,
     ) -> ast::FnSignature {
-        if *receiver_type == ast_types::DataType::XFE && method_name == "unlift" {
+        if *receiver_type == ast_types::DataType::XFE && method_name == UNLIFT_NAME {
             get_xfe_unlift_method().signature
         } else {
             panic!("Unknown method in XFE library. Got: {method_name}");
@@ -60,7 +64,7 @@ impl Library for XfeLibrary {
         _args: &[ast::Expr<super::Annotation>],
         _state: &mut crate::tasm_code_generator::CompilerState,
     ) -> Vec<triton_vm::instruction::LabelledInstruction> {
-        if *receiver_type == ast_types::DataType::XFE && method_name == "unlift" {
+        if *receiver_type == ast_types::DataType::XFE && method_name == UNLIFT_NAME {
             get_xfe_unlift_method().body
         } else {
             panic!("Unknown method in XFE library. Got: {method_name}");
@@ -82,13 +86,11 @@ impl Library for XfeLibrary {
             return None;
         }
 
-        let stripped_name = &full_name[XFIELDELEMENT_LIB_INDICATOR.len()..full_name.len()];
-
-        if stripped_name != "new" {
-            return None;
+        if full_name == FUNCTION_NAME_NEW || full_name == ZERO_CONST_NAME {
+            return Some(full_name.to_owned());
         }
 
-        Some(stripped_name.to_owned())
+        None
     }
 
     fn graft_function(
@@ -97,7 +99,12 @@ impl Library for XfeLibrary {
         fn_name: &str,
         args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
     ) -> Option<ast::Expr<super::Annotation>> {
-        if fn_name != "new" {
+        if fn_name == ZERO_CONST_NAME {
+            assert!(args.len().is_zero(), "{ZERO_CONST_NAME} takes no arguments");
+            return Some(ast::Expr::Lit(ast::ExprLit::XFE(XFieldElement::zero())));
+        }
+
+        if fn_name != FUNCTION_NAME_NEW {
             return None;
         }
 
