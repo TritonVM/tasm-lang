@@ -103,6 +103,17 @@ struct InnerFunctionTasmCode {
     sub_routines: Vec<SubRoutine>,
 }
 
+impl InnerFunctionTasmCode {
+    /// Return a dummy value, needed to allow recursive calls for methods.
+    fn dummy_value(name: &str) -> Self {
+        Self {
+            name: name.to_owned(),
+            call_depth_zero_code: triton_asm!({name}: return).try_into().unwrap(),
+            sub_routines: vec![],
+        }
+    }
+}
+
 pub struct OuterFunctionTasmCode {
     function_data: InnerFunctionTasmCode,
     external_dependencies: Vec<SubRoutine>,
@@ -1369,6 +1380,13 @@ fn compile_method_call(
                 .compiled_methods
                 .contains_key(&method_label)
             {
+                // Insert something *before* making recursive call, otherwise
+                // the methods cannot handle recursion.
+                state.global_compiler_state.compiled_methods.insert(
+                    method_label.clone(),
+                    InnerFunctionTasmCode::dummy_value(&method_label),
+                );
+
                 // Compile the method as a function and add it to compiled methods
                 let compiled_method = compile_function_inner(
                     &declared_method.clone().to_ast_function(&method_label),
@@ -1376,6 +1394,7 @@ fn compile_method_call(
                     state.libraries,
                     state.declared_methods,
                 );
+
                 state
                     .global_compiler_state
                     .compiled_methods
