@@ -2314,7 +2314,11 @@ fn compile_expr(
 
     // Update compiler's view of the stack with the new value. Check if value needs to
     // be spilled to memory.
-    let binding_description = format!("{expr}_{result_type}");
+    let binding_description = format!(
+        "{}__L{}R",
+        expr.label_friendly_name(),
+        result_type.label_friendly_name()
+    );
     let (addr, spill) = state.new_value_identifier(&binding_description, &result_type);
     let spill_code = spill
         .map(|x| copy_top_stack_value_to_memory(x, result_type.stack_size()))

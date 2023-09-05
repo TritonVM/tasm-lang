@@ -122,6 +122,21 @@ pub enum ExprLit<T> {
     GenericNum(u128, T),
 }
 
+impl<T> ExprLit<T> {
+    pub fn label_friendly_name(&self) -> String {
+        match self {
+            ExprLit::Bool(b) => b.to_string(),
+            ExprLit::U32(u32) => u32.to_string(),
+            ExprLit::U64(val) => val.to_string(),
+            ExprLit::BFE(val) => val.to_string(),
+            ExprLit::XFE(val) => val.to_string(),
+            ExprLit::Digest(val) => val.to_string(),
+            ExprLit::MemPointer(val) => format!("MP_L{}R", val.mem_pointer_address),
+            ExprLit::GenericNum(val, _) => val.to_string(),
+        }
+    }
+}
+
 impl<T> Display for ExprLit<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let output = match self {
@@ -217,6 +232,25 @@ pub enum Expr<T> {
     Cast(Box<Expr<T>>, DataType),
     // Index(Box<Expr<T>>, Box<Expr<T>>), // a_expr[i_expr]    (a + 5)[3]
     // TODO: VM-specific intrinsics (hash, absorb, squeeze, etc.)
+}
+
+impl<T> Expr<T> {
+    pub fn label_friendly_name(&self) -> String {
+        match self {
+            Expr::Lit(lit) => lit.label_friendly_name(),
+            Expr::Var(var) => var.label_friendly_name(),
+            Expr::Tuple(vals) => format!(
+                "tuple__L{}R__",
+                vals.iter().map(|x| x.label_friendly_name()).join("_")
+            ),
+            Expr::FnCall(_) => "fn_call".to_owned(),
+            Expr::MethodCall(_) => "method_call_method_name".to_owned(),
+            Expr::Binop(_, binop, _, _) => format!("binop_{binop:?}"),
+            Expr::Unary(unaryop, _, _) => format!("unaryop_{unaryop:?}"),
+            Expr::If(_) => "if_else".to_owned(),
+            Expr::Cast(_, dt) => format!("cast_{}", dt.label_friendly_name()),
+        }
+    }
 }
 
 // Used for making nice value identifiers whose position you might be
