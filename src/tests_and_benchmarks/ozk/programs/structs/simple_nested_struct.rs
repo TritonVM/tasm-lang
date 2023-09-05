@@ -13,14 +13,6 @@ struct NestedStruct {
     a: InnerStruct,
 }
 
-impl NestedStruct {
-    fn new(inner_val: u32) -> NestedStruct {
-        NestedStruct {
-            a: InnerStruct { b: inner_val },
-        }
-    }
-}
-
 fn main() {
     let test_struct: Box<NestedStruct> =
         NestedStruct::decode(&tasm::load_from_memory(BFieldElement::new(300))).unwrap();
@@ -39,6 +31,14 @@ mod tests {
 
     use super::*;
     use itertools::Itertools;
+
+    impl NestedStruct {
+        fn new(inner_val: u32) -> NestedStruct {
+            NestedStruct {
+                a: InnerStruct { b: inner_val },
+            }
+        }
+    }
 
     #[test]
     fn simple_nested_structs_test() {

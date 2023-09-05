@@ -52,7 +52,7 @@ fn extract_types_and_main(parsed_file: syn::File) -> (StructsAndMethods, Option<
         }
     }
 
-    // Each method must have a struct. So we can unwrap the Option type
+    // Each method must have a struct. So we can unwrap the Option type.
     let structs: StructsAndMethods = structs
         .into_iter()
         .map(|(struct_name, (option_struct, methods))| (struct_name.clone(), (option_struct.unwrap_or_else(|| panic!("Couldn't find struct definition for {struct_name} for which methods was defined")), methods)))
@@ -86,21 +86,10 @@ pub(crate) fn compile_for_test(directory: &str, module_name: &str) -> Vec<Labell
 
     let (parsed_main, parsed_structs, _) = parse_main_and_structs(directory, module_name);
     let mut function = graft_config.graft_fn_decl(&parsed_main);
-    // let parsed_structs = parsed_structs
-    //     .into_iter()
-    //     .map(|(struct_name, (maybe_itemstruct, methods))| {
-    //         maybe_itemstruct
-    //             .as_ref()
-    //             .unwrap_or_else(|| {
-    //                 panic!("Cannot have methods defined without their associated structs")
-    //             })
-    //             .to_owned()
-    //     })
-    //     .collect_vec();
-    let structs = graft_config.graft_structs(parsed_structs);
+    let (structs, methods) = graft_config.graft_structs(parsed_structs);
 
     // type-check and annotate
-    annotate_fn(&mut function, structs, &libraries);
+    annotate_fn(&mut function, structs, methods, &libraries);
 
     // compile
     let tasm = compile_function(&function, &libraries);

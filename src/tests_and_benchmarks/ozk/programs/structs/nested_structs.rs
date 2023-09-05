@@ -1,103 +1,12 @@
 // Allows the use of input/output on the native architecture
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 use rand::prelude::Distribution;
-use rand::random;
 use rand::{distributions::Standard, Rng};
 use tasm_lib::structure::tasm_object::TasmObject;
 use triton_vm::{BFieldElement, Digest};
 use twenty_first::shared_math::bfield_codec::BFieldCodec;
 use twenty_first::shared_math::other::random_elements;
 use twenty_first::shared_math::x_field_element::XFieldElement;
-
-impl Distribution<InnerInnerInnerInnerStruct> for Standard {
-    fn sample<R: Rng + ?Sized>(&self, _rng: &mut R) -> InnerInnerInnerInnerStruct {
-        // Don't set this value to more than 2, as it
-        // will cause the program to take too long to run
-        let g_length_inner = 2;
-        let g_length_quartic = 2;
-        InnerInnerInnerInnerStruct {
-            a: random(),
-            b: random(),
-            c: random(),
-            d: vec![
-                vec![
-                    vec![
-                        vec![random_elements(g_length_inner); g_length_quartic];
-                        g_length_quartic
-                    ];
-                    g_length_quartic
-                ];
-                g_length_quartic
-            ],
-            e: random(),
-        }
-    }
-}
-
-impl Distribution<InnerInnerInnerStruct> for Standard {
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> InnerInnerInnerStruct {
-        let b_length = rng.gen_range(6..=16);
-        let e_length = rng.gen_range(5..=20);
-        InnerInnerInnerStruct {
-            a: random(),
-            b: random_elements(b_length),
-            c: random(),
-            d: random(),
-            e: random_elements(e_length),
-            f: random(),
-        }
-    }
-}
-
-impl Distribution<InnerInnerStruct> for Standard {
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> InnerInnerStruct {
-        let b_length = rng.gen_range(0..=10);
-        let f_length = rng.gen_range(4..=10);
-        InnerInnerStruct {
-            a: random(),
-            b: random_elements(b_length),
-            c: random(),
-            d: random(),
-            e: random(),
-            f: random_elements(f_length),
-        }
-    }
-}
-
-impl Distribution<InnerStruct> for Standard {
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> InnerStruct {
-        let c_length = rng.gen_range(3..=14);
-        InnerStruct {
-            a: random(),
-            b: random(),
-            c: random_elements(c_length),
-        }
-    }
-}
-
-impl Distribution<TestStuctNested> for Standard {
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> TestStuctNested {
-        let b_length = rng.gen_range(3..=10);
-        let d_length = rng.gen_range(3..=10);
-        let f_length_cubed = rng.gen_range(3..=5);
-        let g_length_quartic = rng.gen_range(4..=5);
-        TestStuctNested {
-            a: random(),
-            b: random_elements(b_length),
-            c: random(),
-            d: random_elements(d_length),
-            e: random(),
-            f: vec![vec![random_elements(f_length_cubed); f_length_cubed]; f_length_cubed],
-            g: vec![
-                vec![
-                    vec![random_elements(g_length_quartic); g_length_quartic];
-                    g_length_quartic
-                ];
-                g_length_quartic
-            ],
-        }
-    }
-}
 
 #[derive(TasmObject, BFieldCodec, Clone)]
 struct InnerInnerInnerInnerStruct {
@@ -189,6 +98,96 @@ mod tests {
     use super::*;
     use itertools::Itertools;
     use rand::random;
+
+    impl Distribution<InnerInnerInnerInnerStruct> for Standard {
+        fn sample<R: Rng + ?Sized>(&self, _rng: &mut R) -> InnerInnerInnerInnerStruct {
+            // Don't set this value to more than 2, as it
+            // will cause the program to take too long to run
+            let g_length_inner = 2;
+            let g_length_quartic = 2;
+            InnerInnerInnerInnerStruct {
+                a: random(),
+                b: random(),
+                c: random(),
+                d: vec![
+                    vec![
+                        vec![
+                            vec![random_elements(g_length_inner); g_length_quartic];
+                            g_length_quartic
+                        ];
+                        g_length_quartic
+                    ];
+                    g_length_quartic
+                ],
+                e: random(),
+            }
+        }
+    }
+
+    impl Distribution<InnerInnerInnerStruct> for Standard {
+        fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> InnerInnerInnerStruct {
+            let b_length = rng.gen_range(6..=16);
+            let e_length = rng.gen_range(5..=20);
+            InnerInnerInnerStruct {
+                a: random(),
+                b: random_elements(b_length),
+                c: random(),
+                d: random(),
+                e: random_elements(e_length),
+                f: random(),
+            }
+        }
+    }
+
+    impl Distribution<InnerInnerStruct> for Standard {
+        fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> InnerInnerStruct {
+            let b_length = rng.gen_range(0..=10);
+            let f_length = rng.gen_range(4..=10);
+            InnerInnerStruct {
+                a: random(),
+                b: random_elements(b_length),
+                c: random(),
+                d: random(),
+                e: random(),
+                f: random_elements(f_length),
+            }
+        }
+    }
+
+    impl Distribution<InnerStruct> for Standard {
+        fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> InnerStruct {
+            let c_length = rng.gen_range(3..=14);
+            InnerStruct {
+                a: random(),
+                b: random(),
+                c: random_elements(c_length),
+            }
+        }
+    }
+
+    impl Distribution<TestStuctNested> for Standard {
+        fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> TestStuctNested {
+            let b_length = rng.gen_range(3..=10);
+            let d_length = rng.gen_range(3..=10);
+            let f_length_cubed = rng.gen_range(3..=5);
+            let g_length_quartic = rng.gen_range(4..=5);
+            TestStuctNested {
+                a: random(),
+                b: random_elements(b_length),
+                c: random(),
+                d: random_elements(d_length),
+                e: random(),
+                f: vec![vec![random_elements(f_length_cubed); f_length_cubed]; f_length_cubed],
+                g: vec![
+                    vec![
+                        vec![random_elements(g_length_quartic); g_length_quartic];
+                        g_length_quartic
+                    ];
+                    g_length_quartic
+                ],
+            }
+        }
+    }
 
     #[test]
     fn nested_structs_test() {
