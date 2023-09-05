@@ -4,12 +4,12 @@ use crate::graft::item_fn;
 
 fn instantiate_bfe_with_literal() -> syn::ItemFn {
     item_fn(parse_quote! {
-            fn instantiate_bfe() -> (BFieldElement, BFieldElement, BFieldElement, BFieldElement, BFieldElement, BFieldElement) {
+            fn instantiate_bfe() -> (BFieldElement, BFieldElement, BFieldElement, BFieldElement, BFieldElement, BFieldElement, BFieldElement, BFieldElement) {
                 let a: BFieldElement = BFieldElement::new(400u64);
                 let b: BFieldElement = BFieldElement::new(BFieldElement::MAX);
                 let c: BFieldElement = BFieldElement::new(0xffff_fffe_ffff_ffff); // `BFieldElement::MAX - 1`
                 let d: BFieldElement = BFieldElement::new(0xffff_fffe_ffff_fffe); // `BFieldElement::MAX - 2`
-                return (a, BFieldElement::new(500u64), b, c, d, BFieldElement::new(0xffff_fffe_ffff_fffd));
+                return (a, BFieldElement::new(500u64), b, c, d, BFieldElement::new(0xffff_fffe_ffff_fffd), BFieldElement::zero(), BFieldElement::one());
             }
     })
 }
@@ -162,6 +162,7 @@ mod compile_and_typecheck_tests {
 #[cfg(test)]
 mod run_tests {
     use itertools::Itertools;
+    use num::{One, Zero};
     use rand::random;
     use twenty_first::shared_math::{b_field_element::BFieldElement, other::random_elements};
 
@@ -181,6 +182,8 @@ mod run_tests {
                 bfe_lit((BFieldElement::MAX - 1).into()),
                 bfe_lit((BFieldElement::MAX - 2).into()),
                 bfe_lit((BFieldElement::MAX - 3).into()),
+                bfe_lit(BFieldElement::zero()),
+                bfe_lit(BFieldElement::one()),
             ],
         );
     }

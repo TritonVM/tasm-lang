@@ -1,4 +1,5 @@
 use itertools::Itertools;
+use num::{One, Zero};
 use triton_vm::triton_asm;
 use twenty_first::shared_math::b_field_element::BFieldElement;
 
@@ -6,15 +7,16 @@ use crate::{ast, ast_types, graft::Graft, tasm_code_generator::subroutine::SubRo
 
 use super::{Library, LibraryFunction};
 
-const BFIELDELEMENT_LIB_INDICATOR: &str = "BFieldElement::";
 const FUNCTION_NAME_NEW_BFE: &str = "BFieldElement::new";
+const FUNCTION_NAME_ZERO: &str = "BFieldElement::zero";
+const FUNCTION_NAME_ONE: &str = "BFieldElement::one";
 
 #[derive(Clone, Debug)]
 pub struct BfeLibrary;
 
 impl Library for BfeLibrary {
     fn get_function_name(&self, full_name: &str) -> Option<String> {
-        if full_name.starts_with(BFIELDELEMENT_LIB_INDICATOR) {
+        if full_name == FUNCTION_NAME_NEW_BFE {
             return Some(full_name.to_owned());
         }
 
@@ -115,7 +117,10 @@ impl Library for BfeLibrary {
     }
 
     fn get_graft_function_name(&self, full_name: &str) -> Option<String> {
-        if full_name == FUNCTION_NAME_NEW_BFE {
+        if full_name == FUNCTION_NAME_NEW_BFE
+            || full_name == FUNCTION_NAME_ZERO
+            || full_name == FUNCTION_NAME_ONE
+        {
             return Some(full_name.to_owned());
         }
 
@@ -185,6 +190,14 @@ impl Library for BfeLibrary {
                     })
                 }
             }
+        }
+
+        if full_name == FUNCTION_NAME_ZERO {
+            return Some(ast::Expr::Lit(ast::ExprLit::BFE(BFieldElement::zero())));
+        }
+
+        if full_name == FUNCTION_NAME_ONE {
+            return Some(ast::Expr::Lit(ast::ExprLit::BFE(BFieldElement::one())));
         }
 
         if full_name == FUNCTION_NAME_NEW_BFE {

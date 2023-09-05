@@ -2,6 +2,17 @@ use syn::parse_quote;
 
 use crate::graft::item_fn;
 
+fn instantiate_xfe_with_num_traits_rast() -> syn::ItemFn {
+    item_fn(parse_quote! {
+        fn zeros_and_one() -> (XFieldElement, XFieldElement) {
+            let a: XFieldElement = XFieldElement::one();
+            let b: XFieldElement = XFieldElement::zero();
+
+            return (a, b);
+        }
+    })
+}
+
 fn instantiate_xfe_with_literal_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn instantiate_cfe() -> (XFieldElement, XFieldElement, XFieldElement, XFieldElement) {
@@ -275,6 +286,18 @@ mod run_tests {
 
     use super::*;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
+
+    #[test]
+    fn instantiate_xfe_with_num_test() {
+        compare_prop_with_stack(
+            &instantiate_xfe_with_num_traits_rast(),
+            vec![],
+            vec![
+                xfe_lit(XFieldElement::one()),
+                xfe_lit(XFieldElement::zero()),
+            ],
+        );
+    }
 
     #[test]
     fn instantiate_xfe_with_literal_test() {

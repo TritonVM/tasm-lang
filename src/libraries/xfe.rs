@@ -1,5 +1,5 @@
 use itertools::Itertools;
-use num::Zero;
+use num::{One, Zero};
 use triton_vm::triton_asm;
 use twenty_first::shared_math::{
     b_field_element::BFieldElement,
@@ -11,6 +11,7 @@ use crate::{ast, ast_types, graft::Graft, libraries::Library};
 use super::{bfe::BfeLibrary, LibraryFunction};
 const XFIELDELEMENT_LIB_INDICATOR: &str = "XFieldElement::";
 const ZERO_CONST_NAME: &str = "XFieldElement::zero";
+const ONE_CONST_NAME: &str = "XFieldElement::one";
 const FUNCTION_NAME_NEW: &str = "XFieldElement::new";
 const UNLIFT_NAME: &str = "unlift";
 
@@ -86,7 +87,10 @@ impl Library for XfeLibrary {
             return None;
         }
 
-        if full_name == FUNCTION_NAME_NEW || full_name == ZERO_CONST_NAME {
+        if full_name == FUNCTION_NAME_NEW
+            || full_name == ZERO_CONST_NAME
+            || full_name == ONE_CONST_NAME
+        {
             return Some(full_name.to_owned());
         }
 
@@ -102,6 +106,11 @@ impl Library for XfeLibrary {
         if fn_name == ZERO_CONST_NAME {
             assert!(args.len().is_zero(), "{ZERO_CONST_NAME} takes no arguments");
             return Some(ast::Expr::Lit(ast::ExprLit::XFE(XFieldElement::zero())));
+        }
+
+        if fn_name == ONE_CONST_NAME {
+            assert!(args.len().is_zero(), "{ONE_CONST_NAME} takes no arguments");
+            return Some(ast::Expr::Lit(ast::ExprLit::XFE(XFieldElement::one())));
         }
 
         if fn_name != FUNCTION_NAME_NEW {
