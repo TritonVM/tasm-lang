@@ -1,5 +1,5 @@
 use crate::tasm_code_generator::compile_function;
-use crate::type_checker::{self, annotate_fn, GetType, Typing};
+use crate::type_checker::{self, annotate_fn_outer, GetType, Typing};
 use crate::{ast, ast_types};
 use itertools::Itertools;
 use std::collections::HashMap;
@@ -56,10 +56,10 @@ pub fn graft_check_compile_prop(item_fn: &syn::ItemFn) -> Vec<LabelledInstructio
     let mut function = graft_config.graft_fn_decl(item_fn);
 
     // type-check and annotate. Doesn't handle structs and methods yet.
-    annotate_fn(
+    annotate_fn_outer(
         &mut function,
         HashMap::default(),
-        Vec::default(),
+        &mut Vec::default(),
         &libraries,
     );
 

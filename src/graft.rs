@@ -100,8 +100,6 @@ impl<'a> Graft<'a> {
         struct_type: &ast_types::StructType,
     ) -> ast::Method<Annotation> {
         let method_name = method.sig.ident.to_string();
-        println!("method_name: {method_name:?}");
-        println!("struct_type: {struct_type}");
         let receiver = method.sig.receiver().unwrap().to_owned();
         let receiver_as_abstract_value_arg = if let syn::FnArg::Receiver(receiver) = receiver {
             let syn::Receiver {
@@ -124,15 +122,8 @@ impl<'a> Graft<'a> {
             panic!("Expected receiver as 1st abstract argument to method {method_name}");
         };
 
-        let receiver_type = receiver_as_abstract_value_arg.data_type.to_owned();
-        println!("receiver_as_abstract_value_arg: {receiver_as_abstract_value_arg:?}");
-
         // TODO: Handle the rest of the arguments
         // TODO: Also handle owned `self` as receiver
-        let receiver_flavor = match receiver_as_abstract_value_arg.mutable {
-            true => ast::MethodReceiverFlavor::MutBorrowedSelf,
-            false => ast::MethodReceiverFlavor::BorrowedSelf,
-        };
         let output = self.graft_return_type(&method.sig.output);
         let signature = ast::FnSignature {
             name: method_name,
@@ -174,7 +165,7 @@ impl<'a> Graft<'a> {
 
         ast::Fn {
             body,
-            fn_signature: ast::FnSignature {
+            signature: ast::FnSignature {
                 name,
                 args,
                 output,

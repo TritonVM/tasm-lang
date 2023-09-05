@@ -6,6 +6,7 @@ use twenty_first::shared_math::b_field_element::BFieldElement;
 use twenty_first::shared_math::bfield_codec::BFieldCodec;
 use twenty_first::shared_math::x_field_element::XFieldElement;
 
+use crate::type_checker::{self, GetType};
 use crate::{
     ast_types::{AbstractArgument, DataType},
     type_checker::Typing,
@@ -17,11 +18,13 @@ pub struct Method<T> {
     pub body: Vec<Stmt<T>>,
 }
 
-impl<T> From<Method<T>> for Fn<T> {
-    fn from(method: Method<T>) -> Self {
+impl<T: Clone> Method<T> {
+    pub fn to_ast_function(self, new_name: &str) -> Fn<T> {
+        let mut fn_signature = self.signature;
+        fn_signature.name = new_name.to_owned();
         Fn {
-            fn_signature: method.signature,
-            body: method.body,
+            signature: fn_signature,
+            body: self.body,
         }
     }
 }
@@ -41,7 +44,7 @@ impl<T> Method<T> {
     }
 
     /// Return a label uniquely identifying a method
-    pub fn get_label(&self) -> String {
+    pub fn get_tasm_label(&self) -> String {
         let receiver_type = self.receiver_type().label_friendly_name();
         let method_name = self.signature.name.to_owned();
         format!("method_{receiver_type}_{method_name}")
@@ -49,25 +52,8 @@ impl<T> Method<T> {
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub enum MethodReceiverFlavor {
-    BorrowedSelf,
-    OwnedSelf,
-    MutBorrowedSelf,
-}
-
-// We use `FnSignature` instead.
-// #[derive(Debug, Clone, Hash, PartialEq, Eq)]
-// pub struct MethodSignature {
-//     pub name: String,
-//     pub receiver_type: DataType,
-//     pub receiver_flavor: MethodReceiverFlavor,
-//     pub other_args: Vec<AbstractArgument>,
-//     pub output: DataType,
-// }
-
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct Fn<T> {
-    pub fn_signature: FnSignature,
+    pub signature: FnSignature,
     pub body: Vec<Stmt<T>>,
 }
 
@@ -367,4 +353,17 @@ pub struct MethodCall<T> {
     pub method_name: String,
     pub args: Vec<Expr<T>>,
     pub annot: T,
+}
+
+impl MethodCall<type_checker::Typing> {
+    pub fn receiver_type(&self) -> crate::ast_types::DataType {
+        self.args[0].get_type()
+    }
+
+    /// Return a label uniquely identifying a method
+    pub fn get_tasm_label(&self) -> String {
+        let receiver_type = self.receiver_type().label_friendly_name();
+        let method_name = self.method_name.to_owned();
+        format!("method_{receiver_type}_{method_name}")
+    }
 }

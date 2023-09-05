@@ -1,8 +1,7 @@
-use itertools::Itertools;
 use std::{collections::HashMap, fs};
 use triton_vm::instruction::LabelledInstruction;
 
-use crate::{ast_types, tasm_code_generator::compile_function, type_checker::annotate_fn};
+use crate::{ast_types, tasm_code_generator::compile_function, type_checker::annotate_fn_outer};
 
 pub type StructsAndMethods = HashMap<String, (syn::ItemStruct, Vec<syn::ImplItemMethod>)>;
 
@@ -86,10 +85,10 @@ pub(crate) fn compile_for_test(directory: &str, module_name: &str) -> Vec<Labell
 
     let (parsed_main, parsed_structs, _) = parse_main_and_structs(directory, module_name);
     let mut function = graft_config.graft_fn_decl(&parsed_main);
-    let (structs, methods) = graft_config.graft_structs(parsed_structs);
+    let (structs, mut methods) = graft_config.graft_structs(parsed_structs);
 
     // type-check and annotate
-    annotate_fn(&mut function, structs, methods.clone(), &libraries);
+    annotate_fn_outer(&mut function, structs, &mut methods, &libraries);
 
     // compile
     let tasm = compile_function(&function, &libraries, methods);

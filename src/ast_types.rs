@@ -1,6 +1,6 @@
 use anyhow::bail;
 use itertools::Itertools;
-use std::{collections::HashMap, fmt::Display, ptr::addr_of_mut, str::FromStr};
+use std::{collections::HashMap, fmt::Display, str::FromStr};
 
 use crate::ast::FnSignature;
 

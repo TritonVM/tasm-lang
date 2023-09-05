@@ -96,6 +96,7 @@ impl FunctionState {
     }
 }
 
+#[derive(Clone, Debug)]
 struct InnerFunctionTasmCode {
     name: String,
     call_depth_zero_code: SubRoutine,
@@ -106,6 +107,7 @@ pub struct OuterFunctionTasmCode {
     function_data: InnerFunctionTasmCode,
     external_dependencies: Vec<SubRoutine>,
     dyn_malloc_init_code: Vec<LabelledInstruction>,
+    compiled_method_calls: Vec<InnerFunctionTasmCode>,
 }
 
 impl OuterFunctionTasmCode {
@@ -121,6 +123,18 @@ impl OuterFunctionTasmCode {
                 self.function_data.call_depth_zero_code
             ),
         };
+
+        // `methods` list must be sorted at this point to produce deterministic programs
+        let methods_call_depth_zero = self
+            .compiled_method_calls
+            .iter()
+            .map(|x| x.call_depth_zero_code.clone())
+            .collect_vec();
+        let method_subroutines = self
+            .compiled_method_calls
+            .iter()
+            .flat_map(|x| x.sub_routines.clone())
+            .collect_vec();
 
         let name = &self.function_data.name;
         let dyn_malloc_init = self.dyn_malloc_init_code.clone();
@@ -145,6 +159,8 @@ impl OuterFunctionTasmCode {
                 {&inner_body}
                 return
             {&subroutines}
+            {&methods_call_depth_zero}
+            {&method_subroutines}
             {&external_dependencies_code}
         );
 
@@ -192,6 +208,7 @@ impl ValueLocation {
 pub struct GlobalCodeGeneratorState {
     counter: usize,
     snippet_state: SnippetState,
+    compiled_methods: HashMap<String, InnerFunctionTasmCode>,
 }
 
 // TODO: Maybe this needs a new lifetime specifier, `'b`?
@@ -544,10 +561,23 @@ impl<'a> CompilerState<'a> {
             .map(|x| x.try_into().unwrap())
             .collect_vec();
 
+        let mut method_calls_sorted = self
+            .global_compiler_state
+            .compiled_methods
+            .clone()
+            .into_iter()
+            .collect_vec();
+        method_calls_sorted.sort_by_key(|x| x.0.clone());
+        let compiled_method_calls = method_calls_sorted
+            .into_iter()
+            .map(|(_name, code)| code)
+            .collect_vec();
+
         OuterFunctionTasmCode {
             function_data: inner_function,
             external_dependencies,
             dyn_malloc_init_code,
+            compiled_method_calls,
         }
     }
 }
@@ -893,8 +923,8 @@ fn compile_function_inner(
     libraries: &[Box<dyn libraries::Library>],
     declared_methods: &[ast::Method<type_checker::Typing>],
 ) -> InnerFunctionTasmCode {
-    let fn_name = &function.fn_signature.name;
-    let _fn_stack_output_sig = format!("{}", function.fn_signature.output);
+    let fn_name = &function.signature.name;
+    let _fn_stack_output_sig = format!("{}", function.signature.output);
 
     // Run the compilation 1st time to learn which values need to be spilled to memory
     let spills = {
@@ -904,7 +934,7 @@ fn compile_function_inner(
             declared_methods,
         );
         let fn_arg_spilling = temporary_fn_state
-            .add_input_arguments_to_vstack_and_return_spilled_fn_args(&function.fn_signature.args);
+            .add_input_arguments_to_vstack_and_return_spilled_fn_args(&function.signature.args);
         assert!(
             fn_arg_spilling.is_empty(),
             "Cannot memory-spill function arguments first time the code generator runs"
@@ -930,7 +960,7 @@ fn compile_function_inner(
 
     // Add function arguments to the compiler's view of the stack.
     let fn_arg_spilling =
-        state.add_input_arguments_to_vstack_and_return_spilled_fn_args(&function.fn_signature.args);
+        state.add_input_arguments_to_vstack_and_return_spilled_fn_args(&function.signature.args);
 
     // Create code to spill required function arguments to memory
     let mut fn_body_code = state
@@ -1109,8 +1139,7 @@ fn compile_stmt(
                 code
             } else {
                 // Case: Returning an expression that must be computed
-                let code =
-                    compile_expr(ret_expr, "ret_expr", &function.fn_signature.output, state).1;
+                let code = compile_expr(ret_expr, "ret_expr", &function.signature.output, state).1;
 
                 // Remove all but top value from stack
                 let cleanup_code = state.clear_all_but_top_stack_value_above_height(0);
@@ -1327,13 +1356,44 @@ fn compile_method_call(
             })
             .unzip();
 
+    // First check if this is a locally declared method
     let mut call_code = vec![];
-    for lib in state.libraries.iter() {
-        if let Some(fn_name) = lib.get_method_name(&method_name, &receiver_type) {
-            let mut call_method_code =
-                lib.call_method(&fn_name, &receiver_type, &method_call.args, state);
-            call_code.append(&mut call_method_code);
-            break;
+    for declared_method in state.declared_methods.iter() {
+        if method_call.method_name == declared_method.signature.name
+            && receiver_type == declared_method.receiver_type()
+        {
+            let method_label = declared_method.get_tasm_label();
+            if !state
+                .global_compiler_state
+                .compiled_methods
+                .contains_key(&method_label)
+            {
+                // Compile the method as a function and add it to compiled methods
+                let compiled_method = compile_function_inner(
+                    &declared_method.clone().to_ast_function(&method_label),
+                    &mut state.global_compiler_state,
+                    state.libraries,
+                    state.declared_methods,
+                );
+                state
+                    .global_compiler_state
+                    .compiled_methods
+                    .insert(method_label.clone(), compiled_method);
+            }
+
+            call_code.append(&mut triton_asm!(call { method_label }));
+        }
+    }
+
+    // Then check if it is a method from a library
+    if call_code.is_empty() {
+        for lib in state.libraries.iter() {
+            if let Some(fn_name) = lib.get_method_name(&method_name, &receiver_type) {
+                let mut call_method_code =
+                    lib.call_method(&fn_name, &receiver_type, &method_call.args, state);
+                call_code.append(&mut call_method_code);
+                break;
+            }
         }
     }
 
@@ -1530,6 +1590,13 @@ fn compile_expr(
                                 state.import_snippet(Box::new(arithmetic::u64::add_u64::AddU64));
 
                             triton_asm!(call { add_u64 })
+                        }
+                        ast_types::DataType::U128 => {
+                            // We use the safe, overflow-checking, add code as default
+                            let add_u128 =
+                                state.import_snippet(Box::new(arithmetic::u128::add_u128::AddU128));
+
+                            triton_asm!(call { add_u128 })
                         }
                         ast_types::DataType::BFE => triton_asm!(add),
                         ast_types::DataType::XFE => {
@@ -2205,10 +2272,25 @@ fn compile_expr(
                     )
                 }
                 (ast_types::DataType::U32, ast_types::DataType::U64) => {
+                    triton_asm!({ &expr_code } push 0 swap 1)
+                }
+                (ast_types::DataType::U32, ast_types::DataType::U128) => {
                     triton_asm!(
                         {&expr_code}
                         push 0
+                        push 0
+                        push 0
+                        swap 3
+                    )
+                }
+                (ast_types::DataType::U64, ast_types::DataType::U128) => {
+                    triton_asm!(
+                        {&expr_code}
+                        push 0
+                        push 0
+                        swap 3
                         swap 1
+                        swap 2
                     )
                 }
                 // Allow identity-casting since we might need this to make the types
@@ -2224,7 +2306,7 @@ fn compile_expr(
                 }
                 (ast_types::DataType::Bool, ast_types::DataType::U32) => expr_code,
                 (ast_types::DataType::Bool, ast_types::DataType::BFE) => expr_code,
-                _ => todo!(),
+                _ => todo!("previous_type: {previous_type}; result_type: {result_type}"),
             }
         }
     };

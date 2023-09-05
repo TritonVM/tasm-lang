@@ -140,21 +140,18 @@ impl DataTypeAndMutability {
     }
 }
 
-pub fn annotate_fn(
-    function: &mut ast::Fn<Typing>,
+pub fn annotate_method(
+    method: &mut ast::Method<Typing>,
     declared_structs: HashMap<String, ast_types::StructType>,
     declared_methods: Vec<ast::Method<Typing>>,
     libraries: &[Box<dyn libraries::Library>],
 ) {
     // Initialize `CheckState`
     let vtable: HashMap<String, DataTypeAndMutability> =
-        HashMap::with_capacity(function.fn_signature.args.len());
+        HashMap::with_capacity(method.signature.args.len());
     let mut ftable: HashMap<String, ast::FnSignature> = HashMap::new();
     // Insert self into ftable; TODO: Handle multiple functions
-    ftable.insert(
-        function.fn_signature.name.clone(),
-        function.fn_signature.clone(),
-    );
+    ftable.insert(method.signature.name.clone(), method.signature.clone());
     let mut state = CheckState {
         libraries,
         vtable,
@@ -164,7 +161,78 @@ pub fn annotate_fn(
     };
 
     // Populate vtable with function arguments
-    for arg in function.fn_signature.args.iter() {
+    for arg in method.signature.args.iter() {
+        match arg {
+            ast_types::AbstractArgument::FunctionArgument(_) => todo!(),
+            ast_types::AbstractArgument::ValueArgument(value_fn_arg) => {
+                let duplicate_fn_arg = state
+                    .vtable
+                    .insert(value_fn_arg.name.clone(), value_fn_arg.to_owned().into())
+                    .is_some();
+                if duplicate_fn_arg {
+                    panic!("Duplicate function argument {}", value_fn_arg.name);
+                }
+            }
+        }
+    }
+
+    // Verify that input arguments do not exceed 15 words
+    assert!(
+        state
+            .vtable
+            .values()
+            .map(|x| x.data_type.stack_size())
+            .sum::<usize>()
+            < SIZE_OF_ACCESSIBLE_STACK,
+        "{}: Cannot handle method signatures with input size exceeding {} words",
+        method.signature.name,
+        SIZE_OF_ACCESSIBLE_STACK - 1
+    );
+
+    // Verify that last statement of function exists, and that it is a `return` statement
+    let last_stmt = method
+        .body
+        .iter()
+        .last()
+        .unwrap_or_else(|| panic!("{}: Function cannot be emtpy.", method.signature.name));
+    assert!(
+        matches!(last_stmt, ast::Stmt::Return(_)),
+        "Last line of function must be a `return`"
+    );
+
+    // Type-annotate each statement in-place
+    method.body.iter_mut().for_each(|stmt| {
+        annotate_stmt(
+            stmt,
+            &mut state,
+            &method.signature.name,
+            &method.signature.output,
+        )
+    });
+}
+
+pub fn annotate_fn_inner(
+    function: &mut ast::Fn<Typing>,
+    declared_structs: HashMap<String, ast_types::StructType>,
+    declared_methods: Vec<ast::Method<Typing>>,
+    libraries: &[Box<dyn libraries::Library>],
+) {
+    // Initialize `CheckState`
+    let vtable: HashMap<String, DataTypeAndMutability> =
+        HashMap::with_capacity(function.signature.args.len());
+    let mut ftable: HashMap<String, ast::FnSignature> = HashMap::new();
+    // Insert self into ftable; TODO: Handle multiple functions
+    ftable.insert(function.signature.name.clone(), function.signature.clone());
+    let mut state = CheckState {
+        libraries,
+        vtable,
+        ftable,
+        declared_structs,
+        declared_methods: declared_methods.to_owned(),
+    };
+
+    // Populate vtable with function arguments
+    for arg in function.signature.args.iter() {
         match arg {
             ast_types::AbstractArgument::FunctionArgument(_) => todo!(),
             ast_types::AbstractArgument::ValueArgument(value_fn_arg) => {
@@ -188,7 +256,7 @@ pub fn annotate_fn(
             .sum::<usize>()
             < SIZE_OF_ACCESSIBLE_STACK,
         "{}: Cannot handle function signatures with input size exceeding {} words",
-        function.fn_signature.name,
+        function.signature.name,
         SIZE_OF_ACCESSIBLE_STACK - 1
     );
 
@@ -197,7 +265,7 @@ pub fn annotate_fn(
         .body
         .iter()
         .last()
-        .unwrap_or_else(|| panic!("{}: Function cannot be emtpy.", function.fn_signature.name));
+        .unwrap_or_else(|| panic!("{}: Function cannot be emtpy.", function.signature.name));
     assert!(
         matches!(last_stmt, ast::Stmt::Return(_)),
         "Last line of function must be a `return`"
@@ -208,10 +276,37 @@ pub fn annotate_fn(
         annotate_stmt(
             stmt,
             &mut state,
-            &function.fn_signature.name,
-            &function.fn_signature.output,
+            &function.signature.name,
+            &function.signature.output,
         )
     });
+}
+
+pub fn annotate_fn_outer(
+    function: &mut ast::Fn<Typing>,
+    declared_structs: HashMap<String, ast_types::StructType>,
+    declared_methods: &mut [ast::Method<Typing>],
+    libraries: &[Box<dyn libraries::Library>],
+) {
+    let untyped_declared_methods = declared_methods.to_owned();
+
+    // Type annotate the function
+    annotate_fn_inner(
+        function,
+        declared_structs.clone(),
+        untyped_declared_methods.clone(),
+        libraries,
+    );
+
+    // Type annotate all declared methods
+    for declared_method in declared_methods.iter_mut() {
+        annotate_method(
+            declared_method,
+            declared_structs.clone(),
+            untyped_declared_methods.clone(),
+            libraries,
+        )
+    }
 }
 
 fn annotate_stmt(
@@ -353,16 +448,15 @@ fn annotate_stmt(
             assert_type_equals(&expr_type, &ast_types::DataType::Bool, "assert expression");
         }
         ast::Stmt::FnDeclaration(function) => {
-            annotate_fn(
+            annotate_fn_inner(
                 function,
                 state.declared_structs.clone(),
                 state.declared_methods.clone(),
                 state.libraries,
             );
-            state.ftable.insert(
-                function.fn_signature.name.clone(),
-                function.fn_signature.clone(),
-            );
+            state
+                .ftable
+                .insert(function.signature.name.clone(), function.signature.clone());
         }
     }
 }
@@ -1094,7 +1188,7 @@ pub fn is_index_type(data_type: &ast_types::DataType) -> bool {
 /// E.g. the bitwise operators only work for `is_u32_based_type()`.
 pub fn is_arithmetic_type(data_type: &ast_types::DataType) -> bool {
     use ast_types::DataType::*;
-    matches!(data_type, U32 | U64 | BFE | XFE)
+    matches!(data_type, U32 | U64 | U128 | BFE | XFE)
 }
 
 /// A type from which expressions such as `-value` can be formed
@@ -1114,7 +1208,7 @@ pub fn type_compatible_with_not(data_type: &ast_types::DataType) -> bool {
 /// E.g. `U32` and `U64`.
 pub fn is_u32_based_type(data_type: &ast_types::DataType) -> bool {
     use ast_types::DataType::*;
-    matches!(data_type, U32 | U64)
+    matches!(data_type, U32 | U64 | U128)
 }
 
 /// A non-composite fixed-length type.
