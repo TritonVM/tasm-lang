@@ -193,7 +193,7 @@ mod tests {
     fn nested_structs_test() {
         let test_struct: TestStuctNested = random();
         let non_determinism = init_memory_from(&test_struct, BFieldElement::new(300));
-        let input = vec![];
+        let stdin = vec![];
 
         let expected_output = [
             test_struct.a.a.encode(),
@@ -224,7 +224,7 @@ mod tests {
 
         // Run test on host machine
         let native_output =
-            rust_shadows::wrap_main_with_io(&main)(input.clone(), non_determinism.clone());
+            rust_shadows::wrap_main_with_io(&main)(stdin.clone(), non_determinism.clone());
         assert_eq!(native_output, expected_output);
 
         // Run test on Triton-VM
@@ -234,7 +234,7 @@ mod tests {
             &test_program,
             vec![],
             &mut HashMap::default(),
-            input,
+            stdin,
             non_determinism,
             0,
         )

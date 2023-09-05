@@ -40,16 +40,16 @@ mod tests {
     #[test]
     fn simple_map_on_bfe_test() {
         // Test function on host machine
-        let input = vec![
+        let stdin = vec![
             BFieldElement::new(3),
             BFieldElement::new(1000),
             BFieldElement::new(3000),
             BFieldElement::new(BFieldElement::MAX),
         ];
         let non_determinism = NonDeterminism::new(vec![]);
-        let expected_output = input[1..].iter().map(|x| *x + *x).collect_vec();
+        let expected_output = stdin[1..].iter().map(|x| *x + *x).collect_vec();
         let native_output =
-            rust_shadows::wrap_main_with_io(&main)(input.clone(), non_determinism.clone());
+            rust_shadows::wrap_main_with_io(&main)(stdin.clone(), non_determinism.clone());
         assert_eq!(native_output, expected_output);
 
         // Test function in Triton VM
@@ -59,7 +59,7 @@ mod tests {
             &parsed,
             vec![],
             &mut HashMap::default(),
-            input,
+            stdin,
             non_determinism,
             expected_stack_diff,
         )

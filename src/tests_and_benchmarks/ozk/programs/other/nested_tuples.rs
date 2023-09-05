@@ -102,11 +102,11 @@ mod tests {
             a_final.1 .0.encode(),
         ]
         .concat();
-        let input = vec![];
+        let stdin = vec![];
 
         // Run test on host machine
         let native_output =
-            rust_shadows::wrap_main_with_io(&main)(input.clone(), non_determinism.clone());
+            rust_shadows::wrap_main_with_io(&main)(stdin.clone(), non_determinism.clone());
         assert_eq!(native_output, expected_output);
 
         // Run test on Triton-VM
@@ -116,7 +116,7 @@ mod tests {
             &test_program,
             vec![],
             &mut HashMap::default(),
-            input,
+            stdin,
             non_determinism,
             0,
         )

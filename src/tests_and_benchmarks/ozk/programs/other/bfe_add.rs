@@ -30,7 +30,7 @@ mod tests {
     #[test]
     fn add_bfe_ozk_test_same_file() {
         // Test function on host machine
-        let input = vec![];
+        let stdin = vec![];
         let non_determinism = NonDeterminism::new(vec![]);
         let expected_output = vec![
             BFieldElement::new(29),
@@ -38,7 +38,7 @@ mod tests {
             BFieldElement::new(1001000 + (1u64 << 32)),
         ];
         let native_output =
-            rust_shadows::wrap_main_with_io(&main)(input.clone(), non_determinism.clone());
+            rust_shadows::wrap_main_with_io(&main)(stdin.clone(), non_determinism.clone());
         assert_eq!(native_output, expected_output);
 
         // Test function in Triton VM

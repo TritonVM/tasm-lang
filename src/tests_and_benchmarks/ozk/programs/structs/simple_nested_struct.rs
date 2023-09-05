@@ -46,9 +46,9 @@ mod tests {
         let non_determinism = init_memory_from(&ts, BFieldElement::new(300));
 
         let expected_output = vec![BFieldElement::new(2023)];
-        let input = vec![];
+        let stdin = vec![];
         let native_output =
-            rust_shadows::wrap_main_with_io(&main)(input.clone(), non_determinism.clone());
+            rust_shadows::wrap_main_with_io(&main)(stdin.clone(), non_determinism.clone());
         assert_eq!(expected_output, native_output);
 
         let test_program = ozk_parsing::compile_for_test("structs", "simple_nested_struct");
@@ -57,7 +57,7 @@ mod tests {
             &test_program,
             vec![],
             &mut HashMap::default(),
-            input,
+            stdin,
             non_determinism,
             0,
         )
