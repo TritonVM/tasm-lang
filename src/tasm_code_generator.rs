@@ -792,6 +792,7 @@ impl<'a> CompilerState<'a> {
                 (3, 2) => triton_asm!(swap 2 swap 4 pop swap 2 pop),
                 (4, 2) => triton_asm!(swap 1 swap 3 swap 5 pop swap 1 swap 3 pop),
                 (6, 2) => triton_asm!(swap 2 swap 4 swap 6 pop swap 2 swap 4 swap 6 pop),
+                (4, 3) => triton_asm!(swap 3 swap 6 pop swap 3 pop swap 3 pop),
                 (6, 4) => triton_asm!(swap 4 swap 8 pop swap 4 swap 8 pop swap 4 pop swap 4 pop),
                 (n, 1) => {
                     let mut swaps = vec![];

@@ -19,16 +19,17 @@ impl TestStruct {
         return self.a + self.b;
     }
 
-    fn cd_sum(&self) -> u128 {
-        return self.c as u128 + self.d as u128;
+    fn cd_sum(&self, other_value: u64) -> u128 {
+        return self.c as u128 + self.d as u128 + other_value as u128;
     }
 }
 
 fn main() {
     let test_struct: Box<TestStruct> =
         TestStruct::decode(&tasm::load_from_memory(BFieldElement::new(2))).unwrap();
+    let other_value: u64 = 2023;
     tasm::tasm_io_write_to_stdout_bfe(test_struct.ab_sum());
-    tasm::tasm_io_write_to_stdout_u128(test_struct.cd_sum());
+    tasm::tasm_io_write_to_stdout_u128(test_struct.cd_sum(other_value));
     return;
 }
 
@@ -55,7 +56,7 @@ mod tests {
             &ts,
             BFieldElement::new(SIMPLE_STRUCTS_BFIELD_CODEC_START_ADDRESS),
         );
-        let expected_output = [ts.ab_sum().encode(), ts.cd_sum().encode()].concat();
+        let expected_output = [ts.ab_sum().encode(), ts.cd_sum(2023).encode()].concat();
         let input = vec![];
         let native_output =
             rust_shadows::wrap_main_with_io(&main)(input.clone(), non_determinism.clone());

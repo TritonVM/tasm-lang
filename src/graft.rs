@@ -101,7 +101,7 @@ impl<'a> Graft<'a> {
     ) -> ast::Method<Annotation> {
         let method_name = method.sig.ident.to_string();
         let receiver = method.sig.receiver().unwrap().to_owned();
-        let receiver_as_abstract_value_arg = if let syn::FnArg::Receiver(receiver) = receiver {
+        let receiver = if let syn::FnArg::Receiver(receiver) = receiver {
             let syn::Receiver {
                 reference,
                 mutability,
@@ -121,15 +121,25 @@ impl<'a> Graft<'a> {
         } else {
             panic!("Expected receiver as 1st abstract argument to method {method_name}");
         };
+        let other_args = method
+            .sig
+            .inputs
+            .iter()
+            .skip(1)
+            .map(|x| self.graft_fn_arg(x))
+            .collect_vec();
+        let all_args = [vec![receiver], other_args].concat();
+        let all_args = all_args
+            .into_iter()
+            .map(ast_types::AbstractArgument::ValueArgument)
+            .collect_vec();
 
-        // TODO: Handle the rest of the arguments
-        // TODO: Also handle owned `self` as receiver
+        // TODO: Also handle owned `self` as receiver. Now we only allow
+        // `&self`.
         let output = self.graft_return_type(&method.sig.output);
         let signature = ast::FnSignature {
             name: method_name,
-            args: vec![ast_types::AbstractArgument::ValueArgument(
-                receiver_as_abstract_value_arg,
-            )],
+            args: all_args,
             output,
             arg_evaluation_order: Default::default(),
         };
