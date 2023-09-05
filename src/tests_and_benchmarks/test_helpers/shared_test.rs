@@ -3,7 +3,7 @@ use crate::type_checker::{self, annotate_fn_outer, GetType, Typing};
 use crate::{ast, ast_types};
 use itertools::Itertools;
 use std::collections::HashMap;
-use tasm_lib::memory::dyn_malloc::DYN_MALLOC_ADDRESS;
+use tasm_lib::memory::dyn_malloc::{self, DYN_MALLOC_ADDRESS};
 use tasm_lib::{get_init_tvm_stack, rust_shadowing_helper_functions, DIGEST_LENGTH};
 use triton_vm::instruction::LabelledInstruction;
 use triton_vm::{Digest, NonDeterminism};
@@ -33,14 +33,19 @@ pub fn init_memory_from<T: BFieldCodec>(
     data_struct: &T,
     memory_address: BFieldElement,
 ) -> NonDeterminism<BFieldElement> {
-    NonDeterminism::new(vec![]).with_ram(
-        data_struct
-            .encode()
-            .into_iter()
-            .zip(memory_address.value()..)
-            .map(|(v, k)| (k.into(), v))
-            .collect(),
-    )
+    // Encode data structure and insert it into RAM, then set the dynamic memory allocator
+    let data_struct_encoded = data_struct.encode();
+    let first_free_address = memory_address.value() + data_struct_encoded.len() as u64 + 1;
+    let mut init_ram: HashMap<BFieldElement, BFieldElement> = data_struct_encoded
+        .into_iter()
+        .zip(memory_address.value()..)
+        .map(|(v, k)| (k.into(), v))
+        .collect();
+    init_ram.insert(
+        dyn_malloc::DYN_MALLOC_ADDRESS.into(),
+        first_free_address.into(),
+    );
+    NonDeterminism::new(vec![]).with_ram(init_ram)
 }
 
 /// Get the execution code and the name of the compiled function
