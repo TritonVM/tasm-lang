@@ -262,7 +262,11 @@ impl<T> Display for Expr<T> {
             Expr::Var(id) => id.to_string(),
             Expr::Tuple(inner) => format!("({})", inner.iter().join(",")),
             Expr::FnCall(_) => "fn_call".to_owned(),
-            Expr::MethodCall(_) => "method_call.method_name".to_owned(),
+            Expr::MethodCall(MethodCall {
+                method_name,
+                args,
+                annot: _,
+            }) => format!("{}.{method_name}", args[0]),
             Expr::Binop(_, binop, _, _) => format!("binop_{binop:?}"),
             Expr::If(_) => "if_else".to_owned(),
             Expr::Cast(_, dt) => format!("cast_{dt}"),
