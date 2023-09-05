@@ -1,6 +1,6 @@
 use anyhow::bail;
 use itertools::Itertools;
-use std::{collections::HashMap, fmt::Display, str::FromStr};
+use std::{collections::HashMap, fmt::Display, ptr::addr_of_mut, str::FromStr};
 
 use crate::ast::FnSignature;
 
@@ -184,6 +184,34 @@ impl DataType {
             DataType::Struct(_) => false,
             DataType::Unresolved(_) => false,
             DataType::MemPointer(_) => false,
+        }
+    }
+
+    /// Use this if the type is used to make labels in the TASM code
+    pub fn label_friendly_name(&self) -> String {
+        use DataType::*;
+        match self {
+            Bool => "bool".to_string(),
+            U32 => "u32".to_string(),
+            U64 => "u64".to_string(),
+            U128 => "u128".to_string(),
+            BFE => "BField".to_string(),
+            XFE => "XField".to_string(),
+            Digest => "Digest".to_string(),
+            List(ty, _list_type) => format!("Vec_R{}_L", ty.label_friendly_name()),
+            Tuple(tys) => format!(
+                "({})",
+                tys.iter().map(|x| x.label_friendly_name()).join("_")
+            ),
+            VoidPointer => "void_pointer".to_string(),
+            Function(fn_type) => {
+                let input = fn_type.input_argument.label_friendly_name();
+                let output = fn_type.output.label_friendly_name();
+                format!("function_from_L{}R__to_L{}R", input, output)
+            }
+            Struct(StructType { name, fields: _ }) => name.to_string(),
+            Unresolved(name) => name.to_string(),
+            MemPointer(ty) => format!("mempointer_L{}R", ty.label_friendly_name()),
         }
     }
 

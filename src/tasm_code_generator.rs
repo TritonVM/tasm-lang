@@ -204,6 +204,8 @@ pub struct CompilerState<'a> {
     function_state: FunctionState,
 
     libraries: &'a [Box<dyn libraries::Library>],
+
+    declared_methods: &'a [ast::Method<type_checker::Typing>],
 }
 
 impl<'a> CompilerState<'a> {
@@ -220,11 +222,13 @@ impl<'a> CompilerState<'a> {
     fn new(
         global_compiler_state: GlobalCodeGeneratorState,
         libraries: &'a [Box<dyn libraries::Library>],
+        declared_methods: &'a [ast::Method<type_checker::Typing>],
     ) -> Self {
         Self {
             global_compiler_state,
             function_state: FunctionState::default(),
             libraries,
+            declared_methods,
         }
     }
 
@@ -234,6 +238,7 @@ impl<'a> CompilerState<'a> {
         global_compiler_state: GlobalCodeGeneratorState,
         required_spills: HashSet<ValueIdentifier>,
         libraries: &'a [Box<dyn libraries::Library>],
+        declared_methods: &'a [ast::Method<type_checker::Typing>],
     ) -> Self {
         Self {
             global_compiler_state,
@@ -244,6 +249,7 @@ impl<'a> CompilerState<'a> {
                 subroutines: Vec::default(),
             },
             libraries,
+            declared_methods,
         }
     }
 
@@ -885,14 +891,18 @@ fn compile_function_inner(
     function: &ast::Fn<type_checker::Typing>,
     global_compiler_state: &mut GlobalCodeGeneratorState,
     libraries: &[Box<dyn libraries::Library>],
+    declared_methods: &[ast::Method<type_checker::Typing>],
 ) -> InnerFunctionTasmCode {
     let fn_name = &function.fn_signature.name;
     let _fn_stack_output_sig = format!("{}", function.fn_signature.output);
 
     // Run the compilation 1st time to learn which values need to be spilled to memory
     let spills = {
-        let mut temporary_fn_state =
-            CompilerState::new(global_compiler_state.to_owned(), libraries);
+        let mut temporary_fn_state = CompilerState::new(
+            global_compiler_state.to_owned(),
+            libraries,
+            declared_methods,
+        );
         let fn_arg_spilling = temporary_fn_state
             .add_input_arguments_to_vstack_and_return_spilled_fn_args(&function.fn_signature.args);
         assert!(
@@ -911,8 +921,12 @@ fn compile_function_inner(
 
     // Run the compilation again now that we know which values to spill
     println!("\n\n\nRunning compiler again\n\n\n");
-    let mut state =
-        CompilerState::with_known_spills(global_compiler_state.to_owned(), spills, libraries);
+    let mut state = CompilerState::with_known_spills(
+        global_compiler_state.to_owned(),
+        spills,
+        libraries,
+        declared_methods,
+    );
 
     // Add function arguments to the compiler's view of the stack.
     let fn_arg_spilling =
@@ -944,10 +958,19 @@ fn compile_function_inner(
 pub(crate) fn compile_function(
     function: &ast::Fn<type_checker::Typing>,
     libraries: &[Box<dyn libraries::Library>],
+    declared_methods: Vec<ast::Method<type_checker::Typing>>,
 ) -> OuterFunctionTasmCode {
-    let mut state = CompilerState::new(GlobalCodeGeneratorState::default(), libraries);
-    let compiled_function =
-        compile_function_inner(function, &mut state.global_compiler_state, libraries);
+    let mut state = CompilerState::new(
+        GlobalCodeGeneratorState::default(),
+        libraries,
+        &declared_methods,
+    );
+    let compiled_function = compile_function_inner(
+        function,
+        &mut state.global_compiler_state,
+        libraries,
+        &declared_methods,
+    );
 
     state.compose_code_for_outer_function(compiled_function)
 }
@@ -1217,8 +1240,12 @@ fn compile_stmt(
             )
         }
         ast::Stmt::FnDeclaration(function) => {
-            let compiled_fn =
-                compile_function_inner(function, &mut state.global_compiler_state, state.libraries);
+            let compiled_fn = compile_function_inner(
+                function,
+                &mut state.global_compiler_state,
+                state.libraries,
+                state.declared_methods,
+            );
             state
                 .function_state
                 .add_compiled_fn_to_subroutines(compiled_fn);
@@ -1283,6 +1310,9 @@ fn compile_method_call(
     state: &mut CompilerState,
 ) -> Vec<LabelledInstruction> {
     let method_name = method_call.method_name.clone();
+
+    // The type checker might have forced the `receiver_type` here, so
+    // we're not allowed to change it again.
     let receiver_type = method_call.args[0].get_type();
 
     // Compile arguments, including receiver, left-to-right

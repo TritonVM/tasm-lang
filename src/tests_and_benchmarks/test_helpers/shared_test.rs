@@ -55,11 +55,16 @@ pub fn graft_check_compile_prop(item_fn: &syn::ItemFn) -> Vec<LabelledInstructio
     get_standard_setup!(ast_types::ListType::Safe, graft_config, libraries);
     let mut function = graft_config.graft_fn_decl(item_fn);
 
-    // type-check and annotate
-    annotate_fn(&mut function, HashMap::default(), &libraries);
+    // type-check and annotate. Doesn't handle structs and methods yet.
+    annotate_fn(
+        &mut function,
+        HashMap::default(),
+        Vec::default(),
+        &libraries,
+    );
 
     // compile
-    let tasm = compile_function(&function, &libraries);
+    let tasm = compile_function(&function, &libraries, Vec::default());
     tasm.compose()
 }
 

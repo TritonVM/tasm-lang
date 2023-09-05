@@ -13,8 +13,39 @@ use crate::{
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct Method<T> {
-    pub method_signature: MethodSignature,
+    pub signature: FnSignature,
     pub body: Vec<Stmt<T>>,
+}
+
+impl<T> From<Method<T>> for Fn<T> {
+    fn from(method: Method<T>) -> Self {
+        Fn {
+            fn_signature: method.signature,
+            body: method.body,
+        }
+    }
+}
+
+impl<T> Method<T> {
+    pub fn receiver_type(&self) -> crate::ast_types::DataType {
+        match &self.signature.args[0] {
+            AbstractArgument::FunctionArgument(_) => {
+                panic!("Method cannot take function as 1st argument")
+            }
+            AbstractArgument::ValueArgument(crate::ast_types::AbstractValueArg {
+                name: _,
+                data_type,
+                mutable: _,
+            }) => data_type.to_owned(),
+        }
+    }
+
+    /// Return a label uniquely identifying a method
+    pub fn get_label(&self) -> String {
+        let receiver_type = self.receiver_type().label_friendly_name();
+        let method_name = self.signature.name.to_owned();
+        format!("method_{receiver_type}_{method_name}")
+    }
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
@@ -24,14 +55,15 @@ pub enum MethodReceiverFlavor {
     MutBorrowedSelf,
 }
 
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub struct MethodSignature {
-    pub name: String,
-    pub receiver_type: DataType,
-    pub receiver_flavor: MethodReceiverFlavor,
-    pub other_args: Vec<AbstractArgument>,
-    pub output: DataType,
-}
+// We use `FnSignature` instead.
+// #[derive(Debug, Clone, Hash, PartialEq, Eq)]
+// pub struct MethodSignature {
+//     pub name: String,
+//     pub receiver_type: DataType,
+//     pub receiver_flavor: MethodReceiverFlavor,
+//     pub other_args: Vec<AbstractArgument>,
+//     pub output: DataType,
+// }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct Fn<T> {

@@ -89,10 +89,10 @@ pub(crate) fn compile_for_test(directory: &str, module_name: &str) -> Vec<Labell
     let (structs, methods) = graft_config.graft_structs(parsed_structs);
 
     // type-check and annotate
-    annotate_fn(&mut function, structs, methods, &libraries);
+    annotate_fn(&mut function, structs, methods.clone(), &libraries);
 
     // compile
-    let tasm = compile_function(&function, &libraries);
+    let tasm = compile_function(&function, &libraries, methods);
 
     // compose
     tasm.compose()

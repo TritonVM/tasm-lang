@@ -1,6 +1,5 @@
-use std::collections::HashMap;
-
 use itertools::Itertools;
+use std::collections::HashMap;
 use syn::parse_quote;
 
 use crate::ast;
@@ -38,7 +37,10 @@ impl<'a> Graft<'a> {
     pub fn graft_structs(
         &self,
         structs_and_methods: HashMap<String, (syn::ItemStruct, Vec<syn::ImplItemMethod>)>,
-    ) -> HashMap<String, ast_types::StructType> {
+    ) -> (
+        HashMap<String, ast_types::StructType>,
+        Vec<ast::Method<Annotation>>,
+    ) {
         let mut struct_types = HashMap::default();
 
         // Handle structs
@@ -89,7 +91,7 @@ impl<'a> Graft<'a> {
             }
         }
 
-        struct_types
+        (struct_types, methods)
     }
 
     fn graft_method(
@@ -99,12 +101,55 @@ impl<'a> Graft<'a> {
     ) -> ast::Method<Annotation> {
         let method_name = method.sig.ident.to_string();
         println!("method_name: {method_name:?}");
+        println!("struct_type: {struct_type}");
         let receiver = method.sig.receiver().unwrap().to_owned();
-        println!("receiver: {receiver:?}");
-        let fn_arg = self.graft_fn_arg(&receiver);
-        println!("fn_arg: {fn_arg:?}");
+        let receiver_as_abstract_value_arg = if let syn::FnArg::Receiver(receiver) = receiver {
+            let syn::Receiver {
+                reference,
+                mutability,
+                ..
+            } = receiver;
+            assert!(
+                reference.is_some(),
+                "Can only handle &self as receiver for now"
+            );
+            ast_types::AbstractValueArg {
+                name: "self".to_string(),
+                data_type: ast_types::DataType::MemPointer(Box::new(ast_types::DataType::Struct(
+                    struct_type.to_owned(),
+                ))),
+                mutable: mutability.is_some(),
+            }
+        } else {
+            panic!("Expected receiver as 1st abstract argument to method {method_name}");
+        };
 
-        todo!()
+        let receiver_type = receiver_as_abstract_value_arg.data_type.to_owned();
+        println!("receiver_as_abstract_value_arg: {receiver_as_abstract_value_arg:?}");
+
+        // TODO: Handle the rest of the arguments
+        // TODO: Also handle owned `self` as receiver
+        let receiver_flavor = match receiver_as_abstract_value_arg.mutable {
+            true => ast::MethodReceiverFlavor::MutBorrowedSelf,
+            false => ast::MethodReceiverFlavor::BorrowedSelf,
+        };
+        let output = self.graft_return_type(&method.sig.output);
+        let signature = ast::FnSignature {
+            name: method_name,
+            args: vec![ast_types::AbstractArgument::ValueArgument(
+                receiver_as_abstract_value_arg,
+            )],
+            output,
+            arg_evaluation_order: Default::default(),
+        };
+        let body = method
+            .block
+            .stmts
+            .iter()
+            .map(|x| self.graft_stmt(x))
+            .collect_vec();
+
+        ast::Method { signature, body }
     }
 
     pub fn graft_fn_decl(&self, input: &syn::ItemFn) -> ast::Fn<Annotation> {

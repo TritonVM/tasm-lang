@@ -112,6 +112,8 @@ pub struct CheckState<'a> {
     pub ftable: HashMap<String, ast::FnSignature>,
 
     pub declared_structs: HashMap<String, ast_types::StructType>,
+
+    pub declared_methods: Vec<ast::Method<Typing>>,
 }
 
 #[derive(Clone, Debug)]
@@ -141,6 +143,7 @@ impl DataTypeAndMutability {
 pub fn annotate_fn(
     function: &mut ast::Fn<Typing>,
     declared_structs: HashMap<String, ast_types::StructType>,
+    declared_methods: Vec<ast::Method<Typing>>,
     libraries: &[Box<dyn libraries::Library>],
 ) {
     // Initialize `CheckState`
@@ -157,6 +160,7 @@ pub fn annotate_fn(
         vtable,
         ftable,
         declared_structs,
+        declared_methods,
     };
 
     // Populate vtable with function arguments
@@ -349,7 +353,12 @@ fn annotate_stmt(
             assert_type_equals(&expr_type, &ast_types::DataType::Bool, "assert expression");
         }
         ast::Stmt::FnDeclaration(function) => {
-            annotate_fn(function, HashMap::default(), state.libraries);
+            annotate_fn(
+                function,
+                state.declared_structs.clone(),
+                state.declared_methods.clone(),
+                state.libraries,
+            );
             state.ftable.insert(
                 function.fn_signature.name.clone(),
                 function.fn_signature.clone(),
@@ -510,7 +519,9 @@ fn get_method_signature(
     original_receiver_type: ast_types::DataType,
     args: &mut [ast::Expr<Typing>],
 ) -> ast::FnSignature {
-    // Only methods from libraries are in scope. New methods cannot be declared.
+    // Note that `state.libraries` contain the methods that are always available, whereas
+    // `state.declared_methods` contain the methods that are declared in the program.
+
     // Implemented following the description from: https://stackoverflow.com/a/28552082/2574407
     // TODO: Handle automatic dereferencing and referencing of MemPointer types
     let mut forced_type = original_receiver_type.clone();
@@ -518,6 +529,18 @@ fn get_method_signature(
     while try_again {
         // 1. if there's a method `bar` where the receiver type (the type of self
         // in the method) matches `forced_type` exactly , use it (a "by value method")
+        for declared_method in state.declared_methods.iter() {
+            if declared_method.signature.name == name {
+                let method_receiver_type = args[0].get_type();
+                if method_receiver_type == forced_type {
+                    if let ast::Expr::Var(var) = &mut args[0] {
+                        var.force_type(&forced_type);
+                    }
+                    return declared_method.signature.clone();
+                }
+            }
+        }
+
         for lib in state.libraries.iter() {
             if let Some(method_name) = lib.get_method_name(name, &forced_type) {
                 if let ast::Expr::Var(var) = &mut args[0] {
@@ -531,6 +554,18 @@ fn get_method_signature(
         // 2. therwise, add one auto-ref (take & or &mut of the receiver), and,
         // if some method's receiver matches &U, use it (an "autorefd method")
         let auto_refd_forced_type = ast_types::DataType::MemPointer(Box::new(forced_type.clone()));
+        for declared_method in state.declared_methods.iter() {
+            if declared_method.signature.name == name {
+                let method_receiver_type = args[0].get_type();
+                if method_receiver_type == auto_refd_forced_type {
+                    if let ast::Expr::Var(var) = &mut args[0] {
+                        var.force_type(&auto_refd_forced_type);
+                    }
+                    return declared_method.signature.clone();
+                }
+            }
+        }
+
         for lib in state.libraries.iter() {
             if let Some(method_name) = lib.get_method_name(name, &auto_refd_forced_type) {
                 if let ast::Expr::Var(var) = &mut args[0] {
