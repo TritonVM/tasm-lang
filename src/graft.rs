@@ -154,7 +154,7 @@ impl<'a> Graft<'a> {
     }
 
     pub fn graft_fn_decl(&self, input: &syn::ItemFn) -> ast::Fn<Annotation> {
-        let name = input.sig.ident.to_string();
+        let function_name = input.sig.ident.to_string();
         let args = input
             .sig
             .inputs
@@ -176,7 +176,7 @@ impl<'a> Graft<'a> {
         ast::Fn {
             body,
             signature: ast::FnSignature {
-                name,
+                name: function_name,
                 args,
                 output,
                 arg_evaluation_order: Default::default(),
@@ -771,7 +771,18 @@ impl<'a> Graft<'a> {
     }
 
     pub fn graft_stmt(&self, rust_stmt: &syn::Stmt) -> ast::Stmt<Annotation> {
-        /// Handle declarations
+        return match rust_stmt {
+            // variable declarations
+            syn::Stmt::Local(local) => graft_local_stmt(self, local),
+            // Expressions
+            syn::Stmt::Expr(expr) => graft_expr_stmt(self, expr),
+            // ExpressionsThings that end with a semi-colon
+            syn::Stmt::Semi(semi, _b) => graft_semi_stmt(self, semi),
+            // Handle declared functions
+            syn::Stmt::Item(item) => graft_item_stmt(self, item),
+        };
+
+        /// Handle declarations, i.e. `let a: u32 = 200;`
         fn graft_local_stmt(graft_config: &Graft, local: &syn::Local) -> ast::Stmt<Annotation> {
             let (ident, data_type, mutable): (String, ast_types::DataType, bool) = match &local.pat
             {
@@ -940,6 +951,7 @@ impl<'a> Graft<'a> {
             }
         }
 
+        /// Handle locally declared functions: `fn foo(input: BFieldElement) -> BFieldelement { return input * input; }`
         fn graft_item_stmt(graft_config: &Graft, item: &syn::Item) -> ast::Stmt<Annotation> {
             match item {
                 syn::Item::Fn(item_fn) => {
@@ -947,17 +959,6 @@ impl<'a> Graft<'a> {
                 }
                 other => panic!("unsupported: {other:#?}"),
             }
-        }
-
-        match rust_stmt {
-            // variable declarations
-            syn::Stmt::Local(local) => graft_local_stmt(self, local),
-            // Expressions
-            syn::Stmt::Expr(expr) => graft_expr_stmt(self, expr),
-            // ExpressionsThings that end with a semi-colon
-            syn::Stmt::Semi(semi, _b) => graft_semi_stmt(self, semi),
-            // Handle loExpressionscally declared functions
-            syn::Stmt::Item(item) => graft_item_stmt(self, item),
         }
     }
 }

@@ -58,18 +58,18 @@ pub fn compile_for_run_test(item_fn: &syn::ItemFn) -> (Vec<LabelledInstruction>,
 
 pub fn graft_check_compile_prop(item_fn: &syn::ItemFn) -> Vec<LabelledInstruction> {
     get_standard_setup!(ast_types::ListType::Safe, graft_config, libraries);
-    let mut function = graft_config.graft_fn_decl(item_fn);
+    let mut intermediate_language_ast = graft_config.graft_fn_decl(item_fn);
 
     // type-check and annotate. Doesn't handle structs and methods yet.
     annotate_fn_outer(
-        &mut function,
+        &mut intermediate_language_ast,
         HashMap::default(),
         &mut Vec::default(),
         &libraries,
     );
 
     // compile
-    let tasm = compile_function(&function, &libraries, Vec::default());
+    let tasm = compile_function(&intermediate_language_ast, &libraries, Vec::default());
     tasm.compose()
 }
 
@@ -128,11 +128,11 @@ pub fn execute_compiled_with_stack_memory_and_ins_for_test(
 }
 
 pub fn execute_with_stack(
-    item_fn: &syn::ItemFn,
+    rust_ast: &syn::ItemFn,
     stack_start: Vec<ast::ExprLit<Typing>>,
     expected_stack_diff: isize,
 ) -> anyhow::Result<tasm_lib::VmOutputState> {
-    let (code, _fn_name) = compile_for_run_test(item_fn);
+    let (code, _fn_name) = compile_for_run_test(rust_ast);
 
     // Run and return final VM state
     execute_compiled_with_stack_memory_and_ins_for_test(
