@@ -3,7 +3,7 @@ use triton_vm::triton_asm;
 
 use crate::{ast, ast_types, graft::Graft};
 
-use super::{Library, LibraryFunction};
+use super::Library;
 
 const ENCODE_METHOD_NAME: &str = "encode";
 

@@ -1469,7 +1469,16 @@ fn compile_expr(
                     push {value.coefficients[0]}
                 )
             }
-            ast::ExprLit::Digest(_) => todo!(),
+            ast::ExprLit::Digest(digest) => {
+                let digest_values = digest.values();
+                triton_asm!(
+                    push {digest_values[4]}
+                    push {digest_values[3]}
+                    push {digest_values[2]}
+                    push {digest_values[1]}
+                    push {digest_values[0]}
+                )
+            }
             ast::ExprLit::GenericNum(n, _) => {
                 panic!("Type of number literal {n} not resolved")
             }

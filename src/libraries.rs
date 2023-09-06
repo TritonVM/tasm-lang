@@ -32,7 +32,9 @@ pub fn all_libraries<'a>(config: LibraryConfig) -> Vec<Box<dyn Library + 'a>> {
         Box::new(bfield_codec::BFieldCodecLib {
             list_type: config.list_type,
         }),
-        Box::new(hasher::HasherLib),
+        Box::new(hasher::HasherLib {
+            list_type: config.list_type,
+        }),
         Box::new(tasm::TasmLibrary {
             list_type: config.list_type,
         }),
