@@ -119,12 +119,6 @@ pub(super) fn tasm_io_read_stdin_digest() -> Digest {
     Digest::new([e0, e1, e2, e3, e4])
 }
 
-#[allow(dead_code)]
-pub(super) fn divine() -> BFieldElement {
-    #[allow(clippy::unwrap_used)]
-    ND_INDIVIDUAL_TOKEN.with(|v| v.borrow_mut().pop().unwrap())
-}
-
 #[allow(clippy::type_complexity)]
 pub(super) fn wrap_main_with_io(
     main_func: &'static dyn Fn(),
