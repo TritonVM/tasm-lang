@@ -33,6 +33,9 @@ impl TransactionKernel {
 
     pub fn mast_hash(&self) -> Digest {
         // get a sequence of BFieldElements for each field
+        // Note that this is a super stupid way to calculate the MAST hash, as the relevant
+        // vectors are already present in memory and we could just hash them directly.
+        // Here we're reconstructing those lists.
         let sequences: Vec<Vec<BFieldElement>> = self.mast_sequences();
 
         let sequence_count: usize = sequences.len();
@@ -42,11 +45,6 @@ impl TransactionKernel {
             mt_leafs.push(H::hash_varlen(&sequences[i]));
             i += 1usize;
         }
-
-        // let mut mt_leafs = sequences
-        //     .iter()
-        //     .map(|seq| VmHasher::hash_varlen(seq))
-        //     .collect_vec();
 
         // pad until power of two
         while mt_leafs.len() & (mt_leafs.len() - 1usize) != 0usize {

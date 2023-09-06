@@ -1,4 +1,5 @@
 pub mod arithmetic;
+pub mod bfield_codec;
 pub mod hashing;
 pub mod io;
 pub mod local_functions;
