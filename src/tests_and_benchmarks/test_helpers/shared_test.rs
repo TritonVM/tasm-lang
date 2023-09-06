@@ -147,13 +147,13 @@ pub fn execute_with_stack(
 
 /// Execute a function with provided input and initial memory
 pub fn execute_with_stack_and_memory(
-    item_fn: &syn::ItemFn,
+    rust_ast: &syn::ItemFn,
     input_args: Vec<ast::ExprLit<Typing>>,
     memory: &mut HashMap<BFieldElement, BFieldElement>,
     expected_stack_diff: isize,
 ) -> anyhow::Result<tasm_lib::VmOutputState> {
     // Compile
-    let (code, _fn_name) = compile_for_run_test(item_fn);
+    let (code, _fn_name) = compile_for_run_test(rust_ast);
 
     // Run and return final VM state
     execute_compiled_with_stack_memory_and_ins_for_test(
@@ -168,7 +168,7 @@ pub fn execute_with_stack_and_memory(
 
 /// Execute a function with provided input and initial memory
 pub fn execute_with_stack_memory_and_ins(
-    item_fn: &syn::ItemFn,
+    rust_ast: &syn::ItemFn,
     input_args: Vec<ast::ExprLit<Typing>>,
     memory: &mut HashMap<BFieldElement, BFieldElement>,
     std_in: Vec<BFieldElement>,
@@ -176,7 +176,7 @@ pub fn execute_with_stack_memory_and_ins(
     expected_stack_diff: isize,
 ) -> anyhow::Result<tasm_lib::VmOutputState> {
     // Compile
-    let (code, _fn_name) = compile_for_run_test(item_fn);
+    let (code, _fn_name) = compile_for_run_test(rust_ast);
 
     // Run and compare
     execute_compiled_with_stack_memory_and_ins_for_test(

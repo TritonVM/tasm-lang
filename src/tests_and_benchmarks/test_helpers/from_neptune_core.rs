@@ -15,7 +15,6 @@ use twenty_first::shared_math::b_field_element::BFieldElement;
 use twenty_first::shared_math::bfield_codec::BFieldCodec;
 use twenty_first::shared_math::other::log_2_floor;
 use twenty_first::shared_math::tip5::Digest;
-use twenty_first::shared_math::tip5::Tip5;
 use twenty_first::shared_math::tip5::DIGEST_LENGTH;
 use twenty_first::util_types::algebraic_hasher::AlgebraicHasher;
 use twenty_first::util_types::algebraic_hasher::SpongeHasher;
@@ -26,7 +25,7 @@ use twenty_first::util_types::mmr::mmr_membership_proof::MmrMembershipProof;
 use twenty_first::util_types::mmr::mmr_trait::Mmr;
 use twenty_first::util_types::mmr::shared_basic::leaf_index_to_mt_index_and_peak_index;
 
-use tasm_lib::{compiled_program::test_rust_shadow, VmHasher};
+use tasm_lib::VmHasher;
 
 pub const NATIVE_COIN_TYPESCRIPT_DIGEST: Digest = Digest::new([
     BFieldElement::new(4843866011885844809),
