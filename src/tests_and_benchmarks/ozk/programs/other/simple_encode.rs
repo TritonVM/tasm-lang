@@ -54,7 +54,7 @@ mod tests {
 
         let (rust_ast, _, _) = ozk_parsing::parse_main_and_structs("other", "simple_encode");
         let expected_stack_diff = 0;
-        let vm_output = execute_with_stack_memory_and_ins(
+        let vm_output = execute_with_stack_memory_and_ins_safe_lists(
             &rust_ast,
             vec![],
             &mut HashMap::default(),

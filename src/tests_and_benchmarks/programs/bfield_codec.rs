@@ -23,7 +23,7 @@ mod run_tests {
     #[test]
     fn bfe_encode_test() {
         let input_bfe: BFieldElement = BFieldElement::new(87);
-        compare_prop_with_stack(
+        compare_prop_with_stack_safe_lists(
             &bfe_encode_rast(),
             vec![bfe_lit(input_bfe)],
             vec![bfe_lit(input_bfe)],
@@ -47,7 +47,7 @@ mod run_tests {
         let input_digest1: Digest = random();
         let digest0_words = input_digest0.values();
         let digest1_words = input_digest1.values();
-        compare_prop_with_stack(
+        compare_prop_with_stack_safe_lists(
             &digest_encode_rast(),
             vec![digest_lit(input_digest0), digest_lit(input_digest1)],
             vec![
@@ -84,6 +84,6 @@ mod run_tests {
                 )
             })
             .collect_vec();
-        multiple_compare_prop_with_stack(&digest_encode_rast(), test_cases);
+        multiple_compare_prop_with_stack_safe_lists(&digest_encode_rast(), test_cases);
     }
 }

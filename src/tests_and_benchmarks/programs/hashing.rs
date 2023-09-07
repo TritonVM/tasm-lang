@@ -28,7 +28,7 @@ mod run_tests {
             })
         }
 
-        compare_prop_with_stack(
+        compare_prop_with_stack_safe_lists(
             &default_digest_rast(),
             vec![],
             vec![digest_lit(Digest::default())],
@@ -60,7 +60,7 @@ mod run_tests {
                 )
             })
             .collect_vec();
-        multiple_compare_prop_with_stack(&hash_pair_rast(), test_cases);
+        multiple_compare_prop_with_stack_safe_lists(&hash_pair_rast(), test_cases);
     }
 
     #[test]
@@ -81,7 +81,10 @@ mod run_tests {
             vec![digest_lit(left), digest_lit(right)],
             vec![digest_lit(H::hash_pair(&left, &right))],
         );
-        multiple_compare_prop_with_stack(&hash_pair_with_references_rast(), vec![test_case]);
+        multiple_compare_prop_with_stack_safe_lists(
+            &hash_pair_with_references_rast(),
+            vec![test_case],
+        );
     }
 
     fn hash_varlen_rast() -> syn::ItemFn {
@@ -108,7 +111,7 @@ mod run_tests {
         let mut ram = non_determinism.ram.clone().into_iter().collect_vec();
         ram.sort_by_key(|x| x.0.value());
 
-        compare_prop_with_stack_and_memory_and_ins(
+        compare_prop_with_stack_and_memory_and_ins_safe_lists(
             &hash_varlen_rast(),
             vec![bfe_lit(BFieldElement::one())],
             vec![digest_lit(H::hash_varlen(&random_bfes))],
@@ -121,8 +124,6 @@ mod run_tests {
 
     #[test]
     fn hash_varlen_unsafe_list_test() {
-        // TODO: Get this to work by allowing the compiler to run with safe *and*
-        // unsafe lists.
         fn hash_varlen_rast() -> syn::ItemFn {
             item_fn(parse_quote! {
                 fn hash_varlen_test_function(input: Vec<BFieldElement>) -> Digest {
@@ -144,7 +145,7 @@ mod run_tests {
         let mut ram = non_determinism.ram.clone().into_iter().collect_vec();
         ram.sort_by_key(|x| x.0.value());
 
-        compare_prop_with_stack_and_memory_and_ins(
+        compare_prop_with_stack_and_memory_and_ins_unsafe_lists(
             &hash_varlen_rast(),
             vec![bfe_lit(BFieldElement::one())],
             vec![digest_lit(H::hash_varlen(&random_bfes))],

@@ -49,15 +49,21 @@ pub fn init_memory_from<T: BFieldCodec>(
 }
 
 /// Get the execution code and the name of the compiled function
-pub fn compile_for_run_test(item_fn: &syn::ItemFn) -> (Vec<LabelledInstruction>, String) {
+pub fn compile_for_run_test(
+    item_fn: &syn::ItemFn,
+    list_type: ast_types::ListType,
+) -> (Vec<LabelledInstruction>, String) {
     let function_name = item_fn.sig.ident.to_string();
-    let code = graft_check_compile_prop(item_fn);
+    let code = graft_check_compile_prop(item_fn, list_type);
 
     (code, function_name)
 }
 
-pub fn graft_check_compile_prop(item_fn: &syn::ItemFn) -> Vec<LabelledInstruction> {
-    get_standard_setup!(ast_types::ListType::Safe, graft_config, libraries);
+pub fn graft_check_compile_prop(
+    item_fn: &syn::ItemFn,
+    list_type: ast_types::ListType,
+) -> Vec<LabelledInstruction> {
+    get_standard_setup!(list_type, graft_config, libraries);
     let mut intermediate_language_ast = graft_config.graft_fn_decl(item_fn);
 
     // type-check and annotate. Doesn't handle structs and methods yet.
@@ -127,12 +133,12 @@ pub fn execute_compiled_with_stack_memory_and_ins_for_test(
     )
 }
 
-pub fn execute_with_stack(
+pub fn execute_with_stack_safe_lists(
     rust_ast: &syn::ItemFn,
     stack_start: Vec<ast::ExprLit<Typing>>,
     expected_stack_diff: isize,
 ) -> anyhow::Result<tasm_lib::VmOutputState> {
-    let (code, _fn_name) = compile_for_run_test(rust_ast);
+    let (code, _fn_name) = compile_for_run_test(rust_ast, ast_types::ListType::Safe);
 
     // Run and return final VM state
     execute_compiled_with_stack_memory_and_ins_for_test(
@@ -146,14 +152,14 @@ pub fn execute_with_stack(
 }
 
 /// Execute a function with provided input and initial memory
-pub fn execute_with_stack_and_memory(
+pub fn execute_with_stack_and_memory_safe_lists(
     rust_ast: &syn::ItemFn,
     input_args: Vec<ast::ExprLit<Typing>>,
     memory: &mut HashMap<BFieldElement, BFieldElement>,
     expected_stack_diff: isize,
 ) -> anyhow::Result<tasm_lib::VmOutputState> {
     // Compile
-    let (code, _fn_name) = compile_for_run_test(rust_ast);
+    let (code, _fn_name) = compile_for_run_test(rust_ast, ast_types::ListType::Safe);
 
     // Run and return final VM state
     execute_compiled_with_stack_memory_and_ins_for_test(
@@ -167,7 +173,7 @@ pub fn execute_with_stack_and_memory(
 }
 
 /// Execute a function with provided input and initial memory
-pub fn execute_with_stack_memory_and_ins(
+pub fn execute_with_stack_memory_and_ins_safe_lists(
     rust_ast: &syn::ItemFn,
     input_args: Vec<ast::ExprLit<Typing>>,
     memory: &mut HashMap<BFieldElement, BFieldElement>,
@@ -176,7 +182,7 @@ pub fn execute_with_stack_memory_and_ins(
     expected_stack_diff: isize,
 ) -> anyhow::Result<tasm_lib::VmOutputState> {
     // Compile
-    let (code, _fn_name) = compile_for_run_test(rust_ast);
+    let (code, _fn_name) = compile_for_run_test(rust_ast, ast_types::ListType::Safe);
 
     // Run and compare
     execute_compiled_with_stack_memory_and_ins_for_test(
@@ -285,7 +291,7 @@ pub fn compare_compiled_prop_with_stack_and_memory_and_ins(
     }
 }
 
-pub fn compare_prop_with_stack_and_memory_and_ins(
+pub fn compare_prop_with_stack_and_memory_and_ins_unsafe_lists(
     item_fn: &syn::ItemFn,
     input_args: Vec<ast::ExprLit<Typing>>,
     expected_outputs: Vec<ast::ExprLit<Typing>>,
@@ -294,11 +300,7 @@ pub fn compare_prop_with_stack_and_memory_and_ins(
     std_in: Vec<BFieldElement>,
     non_determinism: NonDeterminism<BFieldElement>,
 ) {
-    let (code, function_name) = compile_for_run_test(item_fn);
-    println!(
-        "***code***\n{}",
-        code.iter().map(|x| x.to_string()).collect_vec().join("\n")
-    );
+    let (code, function_name) = compile_for_run_test(item_fn, ast_types::ListType::Unsafe);
     compare_compiled_prop_with_stack_and_memory_and_ins(
         &code,
         &function_name,
@@ -311,14 +313,36 @@ pub fn compare_prop_with_stack_and_memory_and_ins(
     )
 }
 
-pub fn compare_prop_with_stack_and_memory(
+pub fn compare_prop_with_stack_and_memory_and_ins_safe_lists(
+    item_fn: &syn::ItemFn,
+    input_args: Vec<ast::ExprLit<Typing>>,
+    expected_outputs: Vec<ast::ExprLit<Typing>>,
+    init_memory: HashMap<BFieldElement, BFieldElement>,
+    expected_final_memory: Option<HashMap<BFieldElement, BFieldElement>>,
+    std_in: Vec<BFieldElement>,
+    non_determinism: NonDeterminism<BFieldElement>,
+) {
+    let (code, function_name) = compile_for_run_test(item_fn, ast_types::ListType::Safe);
+    compare_compiled_prop_with_stack_and_memory_and_ins(
+        &code,
+        &function_name,
+        input_args,
+        expected_outputs,
+        init_memory,
+        expected_final_memory,
+        std_in,
+        non_determinism,
+    )
+}
+
+pub fn compare_prop_with_stack_and_memory_safe_lists(
     item_fn: &syn::ItemFn,
     input_args: Vec<ast::ExprLit<Typing>>,
     expected_outputs: Vec<ast::ExprLit<Typing>>,
     init_memory: HashMap<BFieldElement, BFieldElement>,
     expected_final_memory: Option<HashMap<BFieldElement, BFieldElement>>,
 ) {
-    compare_prop_with_stack_and_memory_and_ins(
+    compare_prop_with_stack_and_memory_and_ins_safe_lists(
         item_fn,
         input_args,
         expected_outputs,
@@ -329,12 +353,12 @@ pub fn compare_prop_with_stack_and_memory(
     )
 }
 
-pub fn compare_prop_with_stack(
+pub fn compare_prop_with_stack_safe_lists(
     item_fn: &syn::ItemFn,
     input_args: Vec<ast::ExprLit<Typing>>,
     expected_outputs: Vec<ast::ExprLit<Typing>>,
 ) {
-    compare_prop_with_stack_and_memory(
+    compare_prop_with_stack_and_memory_safe_lists(
         item_fn,
         input_args,
         expected_outputs,
@@ -343,12 +367,12 @@ pub fn compare_prop_with_stack(
     )
 }
 
-pub fn multiple_compare_prop_with_stack(
+pub fn multiple_compare_prop_with_stack_safe_lists(
     item_fn: &syn::ItemFn,
     test_cases: Vec<InputOutputTestCase>,
 ) {
     // Compile
-    let (code, fn_name) = compile_for_run_test(item_fn);
+    let (code, fn_name) = compile_for_run_test(item_fn, ast_types::ListType::Safe);
 
     for test_case in test_cases {
         compare_compiled_prop_with_stack_and_memory_and_ins(

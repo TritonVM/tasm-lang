@@ -1,3 +1,6 @@
+// We allow this file to be messy for now, as we're importing a lot from Neptune Core.
+#![allow(dead_code)]
+#![allow(unused_variables)]
 use anyhow::bail;
 use field_count::FieldCount;
 use itertools::Itertools;
@@ -206,11 +209,7 @@ pub fn pseudorandom_mmra_with_mps(
             (original_index, mmr_index, mt_index, peak_index)
         })
         .collect_vec();
-    let leafs_and_indices = leafs
-        .iter()
-        .copied()
-        .zip(leaf_indices.into_iter())
-        .collect_vec();
+    let leafs_and_indices = leafs.iter().copied().zip(leaf_indices).collect_vec();
 
     // iterate over all trees
     let mut peaks = vec![];
@@ -478,7 +477,7 @@ impl Amount {
         self.0.div_two();
     }
 
-    pub fn to_native_coins(&self) -> Vec<Coin> {
+    pub fn to_native_coins(self) -> Vec<Coin> {
         let dictionary = vec![Coin {
             type_script_hash: NATIVE_COIN_TYPESCRIPT_DIGEST,
             state: self.encode(),

@@ -45,7 +45,8 @@ mod tests {
         let (parsed, _, _) = ozk_parsing::parse_main_and_structs("other", "bfe_add");
         let expected_stack_diff = 0;
         let stack_start = vec![];
-        let vm_output = execute_with_stack(&parsed, stack_start, expected_stack_diff).unwrap();
+        let vm_output =
+            execute_with_stack_safe_lists(&parsed, stack_start, expected_stack_diff).unwrap();
         assert_eq!(expected_output, vm_output.output);
     }
 }

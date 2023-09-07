@@ -65,7 +65,7 @@ mod benchmark {
         }
 
         let rast = programs::mmr::verify_authentication_path_with_local_function();
-        let (code, fn_name) = compile_for_run_test(&rast);
+        let (code, fn_name) = compile_for_run_test(&rast, crate::ast_types::ListType::Safe);
 
         let common_case = prepare_benchmark_case(31);
         let worst_case = prepare_benchmark_case(63);

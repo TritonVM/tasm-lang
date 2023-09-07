@@ -510,7 +510,7 @@ mod run_tests {
 
     #[test]
     fn spill_u64_values_to_memory_test() {
-        compare_prop_with_stack(
+        compare_prop_with_stack_safe_lists(
             &spill_u64_values_to_memory_rast(),
             vec![],
             vec![u64_lit(100), u64_lit(200), u64_lit(400)],
@@ -519,7 +519,7 @@ mod run_tests {
 
     #[test]
     fn spill_u32_values_to_memory_test() {
-        compare_prop_with_stack(
+        compare_prop_with_stack_safe_lists(
             &spill_u32_values_to_memory_rast(),
             vec![],
             vec![
@@ -534,7 +534,7 @@ mod run_tests {
 
     #[test]
     fn long_expression_that_must_spill_1_test() {
-        compare_prop_with_stack(
+        compare_prop_with_stack_safe_lists(
             &long_expression_that_must_spill_1_rast(),
             vec![u64_lit(107)],
             vec![
@@ -550,7 +550,7 @@ mod run_tests {
 
     #[test]
     fn long_expression_that_must_spill_2_test() {
-        compare_prop_with_stack(
+        compare_prop_with_stack_safe_lists(
             &long_expression_that_must_spill_2_rast(),
             vec![u64_lit(1), u32_lit(2), u64_lit(3), u64_lit(4u64)],
             vec![u32_lit(1129)],
@@ -569,7 +569,7 @@ mod run_tests {
                 digest
             })
             .concat();
-        compare_prop_with_stack_and_memory_and_ins(
+        compare_prop_with_stack_and_memory_and_ins_safe_lists(
             &spill_to_memory_overwrite_values(),
             vec![],
             vec![u32_lit(101), u32_lit(102)],
@@ -582,7 +582,7 @@ mod run_tests {
 
     #[test]
     fn spill_to_memory_in_branch_test_1() {
-        compare_prop_with_stack(
+        compare_prop_with_stack_safe_lists(
             &spill_to_memory_in_branch_rast(),
             vec![
                 u64_lit(1),
@@ -598,7 +598,7 @@ mod run_tests {
 
     #[test]
     fn spill_to_memory_in_branch_test_2() {
-        compare_prop_with_stack(
+        compare_prop_with_stack_safe_lists(
             &spill_to_memory_in_branch_rast(),
             vec![
                 u64_lit(6),
@@ -618,7 +618,7 @@ mod run_tests {
         let ten_billion: u64 = 10_000_000_000;
         let hun_billion: u64 = 100_000_000_000;
         let mil_billion: u64 = 1_000_000_000_000;
-        compare_prop_with_stack(
+        compare_prop_with_stack_safe_lists(
             &spill_tuple_to_memory_index_0_rast(),
             vec![u64_lit(ten_billion)],
             vec![
@@ -629,7 +629,7 @@ mod run_tests {
             ],
         );
 
-        compare_prop_with_stack(
+        compare_prop_with_stack_safe_lists(
             &spill_tuple_to_memory_index_1_rast(),
             vec![u32_lit(one_billion)],
             vec![
@@ -639,7 +639,7 @@ mod run_tests {
                 bfe_lit(400u64.into()),
             ],
         );
-        compare_prop_with_stack(
+        compare_prop_with_stack_safe_lists(
             &spill_tuple_to_memory_index_2_rast(),
             vec![u64_lit(hun_billion)],
             vec![
@@ -649,7 +649,7 @@ mod run_tests {
                 bfe_lit(400u64.into()),
             ],
         );
-        compare_prop_with_stack(
+        compare_prop_with_stack_safe_lists(
             &spill_tuple_to_memory_index_3_rast(),
             vec![bfe_lit(mil_billion.into())],
             vec![
@@ -683,7 +683,7 @@ mod run_tests {
                 digest
             })
             .concat();
-        compare_prop_with_stack_and_memory_and_ins(
+        compare_prop_with_stack_and_memory_and_ins_safe_lists(
             &spill_many_types(),
             vec![],
             vec![
@@ -712,7 +712,7 @@ mod run_tests {
 
     #[test]
     fn spill_many_bindings_to_memory_test() {
-        compare_prop_with_stack(
+        compare_prop_with_stack_safe_lists(
             &spill_many_bindings_to_memory_rast(),
             vec![
                 u64_lit(6),
@@ -728,7 +728,7 @@ mod run_tests {
 
     #[test]
     fn big_branches_spill_test() {
-        compare_prop_with_stack(
+        compare_prop_with_stack_safe_lists(
             &big_branches_spill_rast(),
             vec![
                 u64_lit(6),
@@ -740,7 +740,7 @@ mod run_tests {
             ],
             vec![u64_lit(6), u64_lit(122)],
         );
-        compare_prop_with_stack(
+        compare_prop_with_stack_safe_lists(
             &big_branches_spill_rast(),
             vec![
                 u64_lit(6),
@@ -752,7 +752,7 @@ mod run_tests {
             ],
             vec![u64_lit(6), u64_lit(103)],
         );
-        compare_prop_with_stack(
+        compare_prop_with_stack_safe_lists(
             &big_branches_spill_rast(),
             vec![
                 u64_lit(6),
@@ -764,7 +764,7 @@ mod run_tests {
             ],
             vec![u64_lit(6), u64_lit(211)],
         );
-        compare_prop_with_stack(
+        compare_prop_with_stack_safe_lists(
             &big_branches_spill_rast(),
             vec![
                 u64_lit(6),
@@ -781,7 +781,7 @@ mod run_tests {
     #[test]
     fn ensure_dyn_malloc_and_static_malloc_do_not_interfere_test_1() {
         let mut vm_memory = HashMap::default();
-        let exec_result = execute_with_stack_and_memory(
+        let exec_result = execute_with_stack_and_memory_safe_lists(
             &ensure_dyn_malloc_and_static_malloc_do_not_interfere_1_rast(),
             vec![],
             &mut vm_memory,
@@ -798,7 +798,7 @@ mod run_tests {
     #[test]
     fn ensure_dyn_malloc_and_static_malloc_do_not_interfere_test_2() {
         let mut vm_memory = HashMap::default();
-        let exec_result = execute_with_stack_and_memory(
+        let exec_result = execute_with_stack_and_memory_safe_lists(
             &ensure_dyn_malloc_and_static_malloc_do_not_interfere_2_rast(),
             vec![],
             &mut vm_memory,
@@ -814,7 +814,7 @@ mod run_tests {
     #[test]
     fn ensure_dyn_malloc_and_static_malloc_do_not_interfere_test_3() {
         let mut vm_memory = HashMap::default();
-        let exec_result = execute_with_stack_and_memory(
+        let exec_result = execute_with_stack_and_memory_safe_lists(
             &ensure_dyn_malloc_and_static_malloc_do_not_interfere_3_rast(),
             vec![],
             &mut vm_memory,
@@ -832,7 +832,7 @@ mod run_tests {
         // First run the program to get the list's pointer that is stored as the third-to-last
         // output.
         let mut vm_memory = HashMap::default();
-        let exec_result = execute_with_stack_and_memory(
+        let exec_result = execute_with_stack_and_memory_safe_lists(
             &ensure_dyn_malloc_and_static_malloc_do_not_interfere_4_rast(),
             vec![],
             &mut vm_memory,
@@ -847,7 +847,7 @@ mod run_tests {
         assert_list_equal(expected_list, list_pointer, &vm_memory);
 
         // Check the other return value
-        compare_prop_with_stack(
+        compare_prop_with_stack_safe_lists(
             &ensure_dyn_malloc_and_static_malloc_do_not_interfere_4_rast(),
             vec![],
             vec![bfe_lit(list_pointer), u64_lit(10421)],
@@ -859,7 +859,7 @@ mod run_tests {
         // First run the program to get the list's pointer that is stored as the 11th-to-last
         // output.
         let mut vm_memory = HashMap::default();
-        let exec_result = execute_with_stack_and_memory(
+        let exec_result = execute_with_stack_and_memory_safe_lists(
             &ensure_dyn_malloc_and_static_malloc_do_not_interfere_5_rast(),
             vec![],
             &mut vm_memory,
@@ -878,7 +878,7 @@ mod run_tests {
         assert_list_equal(expected_list_a, list_pointer_a, &vm_memory);
 
         // Check the other return value
-        compare_prop_with_stack(
+        compare_prop_with_stack_safe_lists(
             &ensure_dyn_malloc_and_static_malloc_do_not_interfere_5_rast(),
             vec![],
             vec![

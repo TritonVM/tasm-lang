@@ -1,3 +1,7 @@
+// We allow this file to be messy for now, as we're importing a lot from Neptune Core.
+#![allow(dead_code)]
+#![allow(unused_variables)]
+#![allow(clippy::vec_init_then_push)]
 use tasm_lib::{structure::tasm_object::TasmObject, VmHasher as H};
 use triton_vm::Digest;
 use twenty_first::shared_math::bfield_codec::BFieldCodec;
@@ -151,7 +155,6 @@ fn main() {
 mod tests {
     use super::*;
     use anyhow::bail;
-    use field_count::FieldCount;
     use itertools::Itertools;
     use num::One;
     use num::Zero;
@@ -170,8 +173,6 @@ mod tests {
     use twenty_first::shared_math::tip5::DIGEST_LENGTH;
     use twenty_first::util_types::algebraic_hasher::AlgebraicHasher;
     use twenty_first::util_types::algebraic_hasher::SpongeHasher;
-    use twenty_first::util_types::merkle_tree::CpuParallel;
-    use twenty_first::util_types::merkle_tree_maker::MerkleTreeMaker;
     use twenty_first::util_types::mmr::mmr_accumulator::MmrAccumulator;
     use twenty_first::util_types::mmr::mmr_membership_proof::MmrMembershipProof;
     use twenty_first::util_types::mmr::mmr_trait::Mmr;
@@ -217,8 +218,11 @@ mod tests {
         assert_eq!(native_output, expected_output);
 
         // Run test on Triton-VM
-        let test_program =
-            ozk_parsing::compile_for_test("other", "removal_record_integrity_partial");
+        let test_program = ozk_parsing::compile_for_test(
+            "other",
+            "removal_record_integrity_partial",
+            crate::ast_types::ListType::Unsafe,
+        );
         println!("executing:\n{}", test_program.iter().join("\n"));
         let vm_output = execute_compiled_with_stack_memory_and_ins_for_test(
             &test_program,
@@ -411,11 +415,7 @@ mod tests {
                 (original_index, mmr_index, mt_index, peak_index)
             })
             .collect_vec();
-        let leafs_and_indices = leafs
-            .iter()
-            .copied()
-            .zip(leaf_indices.into_iter())
-            .collect_vec();
+        let leafs_and_indices = leafs.iter().copied().zip(leaf_indices).collect_vec();
 
         // iterate over all trees
         let mut peaks = vec![];
@@ -614,7 +614,7 @@ mod tests {
             self.0.div_two();
         }
 
-        pub fn to_native_coins(&self) -> Vec<Coin> {
+        pub fn to_native_coins(self) -> Vec<Coin> {
             let dictionary = vec![Coin {
                 type_script_hash: NATIVE_COIN_TYPESCRIPT_DIGEST,
                 state: self.encode(),
