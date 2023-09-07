@@ -23,9 +23,7 @@ thread_local! {
 }
 
 pub(super) fn load_from_memory(start_address: BFieldElement) -> Vec<BFieldElement> {
-    // Loads everything from address 1 an upwards
-    // TODO: We probably want to be able to set the
-    // starting address of the memory we want to load
+    // Loads everything from address `start_address` an upwards
     let mut sorted_key_values = ND_MEMORY.with(|v| {
         let mut ret = vec![];
         for (k, v) in v.borrow().iter() {

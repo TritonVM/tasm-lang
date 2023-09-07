@@ -109,6 +109,7 @@ impl Library for HasherLib {
         _graft_config: &Graft,
         full_name: &str,
         args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
+        _function_type_parameter: Option<ast_types::DataType>,
     ) -> Option<ast::Expr<super::Annotation>> {
         if full_name != DEFAULT_DIGEST_FUNCTION {
             panic!("HasherLib cannot graft")

@@ -102,6 +102,7 @@ impl Library for XfeLibrary {
         graft_config: &Graft,
         fn_name: &str,
         args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
+        _function_type_parameter: Option<ast_types::DataType>,
     ) -> Option<ast::Expr<super::Annotation>> {
         if fn_name == ZERO_CONST_NAME {
             assert!(args.len().is_zero(), "{ZERO_CONST_NAME} takes no arguments");
@@ -147,7 +148,7 @@ impl Library for XfeLibrary {
                             if let Some(bfe_fn_name) = BfeLibrary.get_graft_function_name(&name) {
                                 initializer_exprs.push(
                                     BfeLibrary
-                                        .graft_function(graft_config, &bfe_fn_name, args)
+                                        .graft_function(graft_config, &bfe_fn_name, args, None)
                                         .unwrap(),
                                 );
                             } else {

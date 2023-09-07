@@ -156,7 +156,7 @@ impl<T> Display for ExprLit<T> {
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct MemPointerLiteral<T> {
     pub mem_pointer_address: BFieldElement,
-    pub struct_name: String,
+    pub mem_pointer_declared_type: DataType,
     pub resolved_type: T,
 }
 

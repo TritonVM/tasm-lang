@@ -43,7 +43,7 @@ impl<T: GetType> GetType for ast::ExprLit<T> {
             ast::ExprLit::GenericNum(_, t) => t.get_type(),
             ast::ExprLit::MemPointer(ast::MemPointerLiteral {
                 mem_pointer_address: _,
-                struct_name: _,
+                mem_pointer_declared_type: _,
                 resolved_type,
             }) => resolved_type.get_type(),
         }
@@ -765,18 +765,24 @@ fn derive_annotate_expr_type(
         ast::Expr::Lit(ast::ExprLit::Digest(_)) => ast_types::DataType::Digest,
         ast::Expr::Lit(ast::ExprLit::MemPointer(ast::MemPointerLiteral {
             mem_pointer_address: _,
-            struct_name,
+            mem_pointer_declared_type,
             resolved_type,
         })) => {
             // First get the type from the declared structs list, then
             // resolve types on the declared struct in case of nested
             // structs.
-            let resolved_inner_type = state
-                .declared_structs
-                .get(struct_name)
-                .expect("{type_name} not known to type checker");
-            let resolved_inner_type = ast_types::DataType::Struct(resolved_inner_type.to_owned())
-                .resolve_types(&state.declared_structs);
+            let resolved_inner_type = match mem_pointer_declared_type {
+                ast_types::DataType::Unresolved(struct_name) => {
+                    let resolved_inner_type = state
+                        .declared_structs
+                        .get(struct_name)
+                        .unwrap_or_else(|| panic!("{struct_name} not known to type checker"));
+                    ast_types::DataType::Struct(resolved_inner_type.to_owned())
+                        .resolve_types(&state.declared_structs)
+                }
+                ast_types::DataType::List(_, _) => mem_pointer_declared_type.to_owned(),
+                _ => todo!(),
+            };
             let ret = ast_types::DataType::MemPointer(Box::new(resolved_inner_type));
             *resolved_type = Typing::KnownType(ret.clone());
 

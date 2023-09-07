@@ -331,21 +331,21 @@ impl<'a> Graft<'a> {
                         (self.rust_type_path_to_data_type(type_path), mutable)
                     }
 
-                    // Input is a mutable reference
+                    // Input is a reference
                     syn::Type::Reference(syn::TypeReference {
                         and_token: _,
                         lifetime: _,
                         mutability,
                         elem,
-                    }) => {
-                        assert!(mutability.is_some(), "Reference input must be mutable");
-                        match *elem.to_owned() {
-                            syn::Type::Path(type_path) => {
-                                (self.rust_type_path_to_data_type(&type_path), true)
-                            }
-                            _ => todo!(),
-                        }
-                    }
+                    }) => match *elem.to_owned() {
+                        syn::Type::Path(type_path) => (
+                            ast_types::DataType::MemPointer(Box::new(
+                                self.rust_type_path_to_data_type(&type_path),
+                            )),
+                            mutability.is_some(),
+                        ),
+                        _ => todo!(),
+                    },
                     other => panic!("unsupported: {other:?}"),
                 };
 
@@ -417,7 +417,7 @@ impl<'a> Graft<'a> {
             args,
         }: &syn::ExprCall,
     ) -> ast::Expr<Annotation> {
-        let (full_name, type_parameter) = match func.as_ref() {
+        let (full_name, function_type_parameter) = match func.as_ref() {
             syn::Expr::Path(path) => (
                 Graft::path_to_ident(&path.path),
                 self.path_to_type_parameter(&path.path),
@@ -428,7 +428,9 @@ impl<'a> Graft<'a> {
         // Check if grafting should be handled by a library
         for lib in self.libraries.iter() {
             if let Some(fn_name) = lib.get_graft_function_name(&full_name) {
-                return lib.graft_function(self, &fn_name, args).unwrap();
+                return lib
+                    .graft_function(self, &fn_name, args, function_type_parameter)
+                    .unwrap();
             }
         }
 
@@ -441,7 +443,7 @@ impl<'a> Graft<'a> {
             name: full_name,
             args,
             annot,
-            type_parameter,
+            type_parameter: function_type_parameter,
             arg_evaluation_order: Default::default(),
         })
     }

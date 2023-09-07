@@ -156,6 +156,7 @@ impl Library for VectorLib {
         _graft_config: &Graft,
         _fn_name: &str,
         _args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
+        _function_type_parameter: Option<ast_types::DataType>,
     ) -> Option<ast::Expr<super::Annotation>> {
         todo!()
     }

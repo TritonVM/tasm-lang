@@ -103,6 +103,7 @@ pub trait Library: Debug {
         graft_config: &Graft,
         fn_name: &str,
         args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
+        type_parameter: Option<ast_types::DataType>,
     ) -> Option<ast::Expr<Annotation>>;
 
     fn graft_method(

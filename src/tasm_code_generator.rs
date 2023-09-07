@@ -804,6 +804,7 @@ impl<'a> CompilerState<'a> {
                 (4, 2) => triton_asm!(swap 1 swap 3 swap 5 pop swap 1 swap 3 pop),
                 (6, 2) => triton_asm!(swap 2 swap 4 swap 6 pop swap 2 swap 4 swap 6 pop),
                 (4, 3) => triton_asm!(swap 3 swap 6 pop swap 3 pop swap 3 pop),
+                (5, 3) => triton_asm!(swap 4 swap 7 pop swap 2 swap 5 pop swap 3 pop swap 1),
                 (6, 4) => triton_asm!(swap 4 swap 8 pop swap 4 swap 8 pop swap 4 pop swap 4 pop),
                 (8, 4) => triton_asm!(swap 4 swap 8 pop swap 4 swap 8 pop swap 4 swap 8 pop swap 4 swap 8 pop),
                 (n, 1) => {
@@ -1484,7 +1485,7 @@ fn compile_expr(
             }
             ast::ExprLit::MemPointer(ast::MemPointerLiteral {
                 mem_pointer_address,
-                struct_name: _,
+                mem_pointer_declared_type: _,
                 resolved_type: _,
             }) => triton_asm!(push {
                 mem_pointer_address

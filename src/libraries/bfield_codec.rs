@@ -1,7 +1,11 @@
 use tasm_lib::memory::dyn_malloc;
 use triton_vm::triton_asm;
 
-use crate::{ast, ast_types, graft::Graft};
+use crate::{
+    ast::{self},
+    ast_types,
+    graft::Graft,
+};
 
 use super::Library;
 
@@ -179,6 +183,7 @@ impl Library for BFieldCodecLib {
         graft_config: &Graft,
         fn_name: &str,
         args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
+        function_type_parameter: Option<ast_types::DataType>,
     ) -> Option<crate::ast::Expr<super::Annotation>> {
         /// Handle the entire T::decode(...) grafting. Does not handle any appended `unwrap`.
         /// Expects the `decode` expression to be `T::decode(&tasm::load_from_memory(BFieldElement::new(x)))`
@@ -187,6 +192,8 @@ impl Library for BFieldCodecLib {
             graft_config: &Graft,
             fn_name: &str,
             args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
+            function_type_parameter: Option<ast_types::DataType>,
+            list_type: ast_types::ListType,
         ) -> crate::ast::Expr<super::Annotation> {
             // Fetch the returned type
             let split_fn_name: Vec<_> = fn_name.split("::").collect();
@@ -196,6 +203,16 @@ impl Library for BFieldCodecLib {
                 "Can only handle pattern T::decode. Got: {fn_name}"
             );
             let return_type = split_fn_name[0].to_owned();
+
+            // TODO: This is not very elegant! Can only handle `Vec<T>` and declared structs.
+            let mem_pointer_declared_type = if return_type == "Vec" {
+                match function_type_parameter {
+                    Some(t) => ast_types::DataType::List(Box::new(t), list_type),
+                    None => panic!("Expected type parameter for Vec<T> in `decode` function"),
+                }
+            } else {
+                ast_types::DataType::Unresolved(return_type)
+            };
 
             let decode_arg = match args.len() {
                 1 => args[0].clone(),
@@ -228,7 +245,7 @@ impl Library for BFieldCodecLib {
             let ret: ast::Expr<super::Annotation> =
                 ast::Expr::Lit(ast::ExprLit::MemPointer(ast::MemPointerLiteral {
                     mem_pointer_address: pointer_to_struct,
-                    struct_name: return_type,
+                    mem_pointer_declared_type,
                     // `resolved_type` is to be filled out by the type checker
                     resolved_type: Default::default(),
                 }));
@@ -236,7 +253,13 @@ impl Library for BFieldCodecLib {
         }
 
         if fn_name.contains("::decode") {
-            return Some(handle_decode(graft_config, fn_name, args));
+            return Some(handle_decode(
+                graft_config,
+                fn_name,
+                args,
+                function_type_parameter,
+                self.list_type,
+            ));
         }
 
         None
