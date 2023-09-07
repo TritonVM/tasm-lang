@@ -8,16 +8,16 @@ type H = twenty_first::shared_math::tip5::Tip5;
 
 fn main() {
     fn merkle_root(leafs: &Vec<Digest>, start: usize, stop: usize) -> Digest {
-        #[allow(unused_assignments)]
-        let mut result: Digest = Digest::default();
-        if stop == start + 1usize {
-            result = leafs[start];
+        // #[allow(unused_assignments)]
+        // let mut result: Digest = Digest::default();
+        let result: Digest = if stop == start + 1usize {
+            leafs[start]
         } else {
             let half: usize = (stop - start) / 2;
             let left: Digest = merkle_root(leafs, start, stop - half);
             let right: Digest = merkle_root(leafs, start + half, stop);
-            result = H::hash_pair(&left, &right);
-        }
+            H::hash_pair(&left, &right)
+        };
 
         return result;
     }

@@ -2214,8 +2214,29 @@ fn compile_expr(
             let return_type = then_branch.get_type();
 
             // Compile `then` branch
-            let (then_addr, mut then_body_code) =
-                compile_expr(then_branch, "then", &return_type, state);
+            // 1. Compile all stmt in a iter map
+            // 2. Compile last expression
+            // 3. Compile body cleanup_code
+
+            // 1. Compile all stmt in a iter map
+            let then_branch_statement_code = then_branch
+                .stmts
+                .iter()
+                .map(|stmt| compile_stmt(stmt, &ast::Fn::<type_checker::Typing>::dummy(), state))
+                .collect_vec()
+                .concat();
+            let (then_addr, then_branch_return_expression_code) = compile_expr(
+                &then_branch.return_expr,
+                "then_branch_return_expression",
+                &return_type,
+                state,
+            );
+
+            let mut then_body_code = [
+                then_branch_statement_code,
+                then_branch_return_expression_code,
+            ]
+            .concat();
 
             // Cleanup stack and variable name mapping after `then` body. Preserve the return
             // value from the `then` branch on the stack, but not on vstack as this value is
@@ -2223,13 +2244,33 @@ fn compile_expr(
             let mut then_body_cleanup_code = state
                 .clear_all_but_top_stack_value_above_height(branch_start_vstack.get_stack_height());
             then_body_code.append(&mut then_body_cleanup_code);
-            let _returned_value_from_then_block = state.function_state.vstack.pop().unwrap();
-            state.verify_same_ordering_of_bindings(&branch_start_vstack, &branch_start_var_addr);
+
+            // Return vstack to the state it was in before the `then` branch was compiled,
+            // so it's ready for the `else` branch compilation.
+            // let _returned_value_from_then_block = state.function_state.vstack.pop().unwrap();
+            state.function_state.vstack = branch_start_vstack.clone();
             state.function_state.var_addr = branch_start_var_addr.clone();
+            state.verify_same_ordering_of_bindings(&branch_start_vstack, &branch_start_var_addr);
 
             // Compile `else` branch
-            let (_else_addr, mut else_body_code) =
-                compile_expr(else_branch, "else", &return_type, state);
+            let else_branch_statement_code = else_branch
+                .stmts
+                .iter()
+                .map(|stmt| compile_stmt(stmt, &ast::Fn::<type_checker::Typing>::dummy(), state))
+                .collect_vec()
+                .concat();
+            let (else_addr, else_branch_return_expression_code) = compile_expr(
+                &else_branch.return_expr,
+                "else_branch_return_expression",
+                &return_type,
+                state,
+            );
+
+            let mut else_body_code = [
+                else_branch_statement_code,
+                else_branch_return_expression_code,
+            ]
+            .concat();
 
             // Cleanup stack and variable name mapping after `else` body. Preserve the return
             // value from the `else` branch on the stack, but not on vstack, as this is added
@@ -2237,14 +2278,15 @@ fn compile_expr(
             let mut else_body_cleanup_code = state
                 .clear_all_but_top_stack_value_above_height(branch_start_vstack.get_stack_height());
             else_body_code.append(&mut else_body_cleanup_code);
-            let _returned_value_from_else_block = state.function_state.vstack.pop().unwrap();
+            // let _returned_value_from_else_block = state.function_state.vstack.pop().unwrap();
+            state.function_state.vstack = branch_start_vstack.clone();
+            state.function_state.var_addr = branch_start_var_addr.clone();
             state.verify_same_ordering_of_bindings(&branch_start_vstack, &branch_start_var_addr);
-            state.function_state.var_addr = branch_start_var_addr;
 
             // Both branches are compiled as subroutines which are called depending on what `cond`
             // evaluates to.
             let then_subroutine_name = format!("{then_addr}_then");
-            let else_subroutine_name = format!("{then_addr}_else");
+            let else_subroutine_name = format!("{else_addr}_else");
 
             let code = triton_asm!(
                 {&cond_code}

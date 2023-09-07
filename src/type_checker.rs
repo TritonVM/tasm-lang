@@ -68,6 +68,12 @@ impl<T: GetType + std::fmt::Debug> GetType for ast::Expr<T> {
     }
 }
 
+impl<T: GetType + std::fmt::Debug> GetType for ast::ReturningBlock<T> {
+    fn get_type(&self) -> ast_types::DataType {
+        self.return_expr.get_type()
+    }
+}
+
 impl<T: GetType + std::fmt::Debug> GetType for ast::ExprIf<T> {
     fn get_type(&self) -> ast_types::DataType {
         self.then_branch.get_type()
@@ -1148,11 +1154,25 @@ fn derive_annotate_expr_type(
                 "if-condition-expr",
             );
 
-            // FIXME: Unify branches
             let branch_hint = None;
-            let then_type = derive_annotate_expr_type(then_branch, branch_hint, state);
-            let else_type = derive_annotate_expr_type(else_branch, branch_hint, state);
+            let dummy_type = ast_types::DataType::BFE;
+            let vtable_before = state.vtable.clone();
+            then_branch
+                .stmts
+                .iter_mut()
+                .for_each(|stmt| annotate_stmt(stmt, state, "if-branch", &dummy_type));
+            let then_type =
+                derive_annotate_expr_type(&mut then_branch.return_expr, branch_hint, state);
+            state.vtable = vtable_before.clone();
+
+            else_branch
+                .stmts
+                .iter_mut()
+                .for_each(|stmt| annotate_stmt(stmt, state, "else-branch", &dummy_type));
+            let else_type =
+                derive_annotate_expr_type(&mut else_branch.return_expr, branch_hint, state);
             assert_type_equals(&then_type, &else_type, "if-then-else-expr");
+            state.vtable = vtable_before;
 
             then_type
         }

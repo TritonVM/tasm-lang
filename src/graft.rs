@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use syn::parse_quote;
 
 use crate::ast;
+use crate::ast::ReturningBlock;
 use crate::ast_types;
 use crate::libraries::Library;
 use crate::type_checker;
@@ -590,20 +591,38 @@ impl<'a> Graft<'a> {
             syn::Expr::If(expr_if) => {
                 let condition = self.graft_expr(&expr_if.cond);
                 let if_branch = &expr_if.then_branch.stmts;
-                assert_eq!(1, if_branch.len(), "Max one line in if/else expressions");
-                let then_branch = match &if_branch[0] {
-                    syn::Stmt::Expr(expr) => self.graft_expr(expr),
-                    other => panic!("unsupported: {other:?}"),
+                let then_branch = match if_branch.last() {
+                    Some(syn::Stmt::Expr(last_expr)) => {
+                        let then_branch_statements = if_branch[0..if_branch.len() - 1]
+                            .iter()
+                            .map(|x| self.graft_stmt(x))
+                            .collect_vec();
+                        let then_branch_last_expr = self.graft_expr(last_expr);
+                        ReturningBlock {
+                            stmts: then_branch_statements,
+                            return_expr: then_branch_last_expr,
+                        }
+                    }
+                    _ => panic!("unsupported: {if_branch:#?}"),
                 };
+
                 let else_branch = &expr_if.else_branch.as_ref().unwrap().1;
                 let else_branch = match else_branch.as_ref() {
                     syn::Expr::Block(block) => {
                         let else_branch = &block.block.stmts;
-                        assert_eq!(1, else_branch.len(), "Max one line in if/else expressions");
-
-                        match &else_branch[0] {
-                            syn::Stmt::Expr(expr) => self.graft_expr(expr),
-                            other => panic!("unsupported: {other:?}"),
+                        match else_branch.last() {
+                            Some(syn::Stmt::Expr(last_expr)) => {
+                                let else_branch_statements = else_branch[0..else_branch.len() - 1]
+                                    .iter()
+                                    .map(|x| self.graft_stmt(x))
+                                    .collect_vec();
+                                let else_branch_last_expr = self.graft_expr(last_expr);
+                                ReturningBlock {
+                                    stmts: else_branch_statements,
+                                    return_expr: else_branch_last_expr,
+                                }
+                            }
+                            _ => panic!("unsupported: {if_branch:#?}"),
                         }
                     }
                     other => panic!("unsupported: {other:?}"),
