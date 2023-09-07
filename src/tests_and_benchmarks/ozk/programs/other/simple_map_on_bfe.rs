@@ -40,26 +40,26 @@ mod tests {
     #[test]
     fn simple_map_on_bfe_test() {
         // Test function on host machine
-        let input = vec![
+        let stdin = vec![
             BFieldElement::new(3),
             BFieldElement::new(1000),
             BFieldElement::new(3000),
             BFieldElement::new(BFieldElement::MAX),
         ];
         let non_determinism = NonDeterminism::new(vec![]);
-        let expected_output = input[1..].iter().map(|x| *x + *x).collect_vec();
+        let expected_output = stdin[1..].iter().map(|x| *x + *x).collect_vec();
         let native_output =
-            rust_shadows::wrap_main_with_io(&main)(input.clone(), non_determinism.clone());
+            rust_shadows::wrap_main_with_io(&main)(stdin.clone(), non_determinism.clone());
         assert_eq!(native_output, expected_output);
 
         // Test function in Triton VM
         let (parsed, _, _) = ozk_parsing::parse_main_and_structs("other", "simple_map_on_bfe");
         let expected_stack_diff = 0;
-        let vm_output = execute_with_stack_memory_and_ins(
+        let vm_output = execute_with_stack_memory_and_ins_safe_lists(
             &parsed,
             vec![],
             &mut HashMap::default(),
-            input,
+            stdin,
             non_determinism,
             expected_stack_diff,
         )
@@ -93,7 +93,8 @@ mod benches {
 
         let (parsed_code, _, module_name) =
             ozk_parsing::parse_main_and_structs("other", "simple_map_on_bfe");
-        let (code, _fn_name) = compile_for_run_test(&parsed_code);
+        let (code, _fn_name) =
+            compile_for_run_test(&parsed_code, crate::ast_types::ListType::Unsafe);
         execute_and_write_benchmark(module_name, code, common_case, worst_case, 0)
     }
 }

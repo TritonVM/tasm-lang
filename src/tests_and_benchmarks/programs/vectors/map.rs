@@ -17,23 +17,6 @@ mod tests {
         })
     }
 
-    mod compile_tests {
-        use itertools::Itertools;
-
-        use super::*;
-        use crate::tests_and_benchmarks::test_helpers::shared_test::*;
-        #[test]
-        fn simple_map_mul_by_2_test() {
-            fn local_function_verify(input: u64) -> u64 {
-                input * 2
-            }
-            let values = vec![];
-            let _return_values: Vec<u64> =
-                values.into_iter().map(local_function_verify).collect_vec();
-            graft_check_compile_prop(&simple_map_mul_by_2());
-        }
-    }
-
     mod run_tests {
         use itertools::Itertools;
         use std::collections::HashMap;
@@ -65,7 +48,7 @@ mod tests {
                     .map(|(k, v)| format!("({k} => {v})"))
                     .join(",")
             );
-            let exec_result = execute_with_stack_and_memory(
+            let exec_result = execute_with_stack_and_memory_safe_lists(
                 &simple_map_mul_by_2(),
                 vec![bfe_lit(input_list_pointer)],
                 &mut vm_memory,

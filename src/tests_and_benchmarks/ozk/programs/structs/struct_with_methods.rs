@@ -96,7 +96,7 @@ mod tests {
             &test_struct,
             BFieldElement::new(SIMPLE_STRUCTS_BFIELD_CODEC_START_ADDRESS),
         );
-        let input = vec![];
+        let stdin = vec![];
 
         let expected_output = [
             test_struct.bc_count_ones_and_add(200).encode(),
@@ -110,18 +110,22 @@ mod tests {
 
         // Run test on host machine
         let native_output =
-            rust_shadows::wrap_main_with_io(&main)(input.clone(), non_determinism.clone());
+            rust_shadows::wrap_main_with_io(&main)(stdin.clone(), non_determinism.clone());
         assert_eq!(native_output, expected_output);
 
         // Run test on Triton-VM
-        let test_program = ozk_parsing::compile_for_test("structs", "struct_with_methods");
+        let test_program = ozk_parsing::compile_for_test(
+            "structs",
+            "struct_with_methods",
+            crate::ast_types::ListType::Unsafe,
+        );
         println!("executing:\n{}", test_program.iter().join("\n"));
         let expected_stack_diff = 0;
         let vm_output = execute_compiled_with_stack_memory_and_ins_for_test(
             &test_program,
             vec![],
             &mut HashMap::default(),
-            input,
+            stdin,
             non_determinism,
             expected_stack_diff,
         )

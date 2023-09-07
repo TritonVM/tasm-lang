@@ -312,7 +312,7 @@ impl VectorLib {
             name: String::from("map"),
             // TODO: Use List<inner_fn_signature-args> here instead for betetr type checking
             args: vec![vector_as_arg, derived_inner_function_as_function_arg],
-            output: ast_types::DataType::List(Box::new(inner_output), ast_types::ListType::Safe),
+            output: ast_types::DataType::List(Box::new(inner_output), self.list_type),
             arg_evaluation_order: Default::default(),
         }
     }

@@ -57,18 +57,22 @@ mod tests {
             BFieldElement::new(SIMPLE_STRUCTS_BFIELD_CODEC_START_ADDRESS),
         );
         let expected_output = [ts.ab_sum().encode(), ts.cd_sum(2023).encode()].concat();
-        let input = vec![];
+        let stdin = vec![];
         let native_output =
-            rust_shadows::wrap_main_with_io(&main)(input.clone(), non_determinism.clone());
+            rust_shadows::wrap_main_with_io(&main)(stdin.clone(), non_determinism.clone());
         assert_eq!(native_output, expected_output);
 
         // Run test on Triton-VM
-        let test_program = ozk_parsing::compile_for_test("structs", "struct_with_simple_methods");
+        let test_program = ozk_parsing::compile_for_test(
+            "structs",
+            "struct_with_simple_methods",
+            crate::ast_types::ListType::Unsafe,
+        );
         let vm_output = execute_compiled_with_stack_memory_and_ins_for_test(
             &test_program,
             vec![],
             &mut HashMap::default(),
-            input,
+            stdin,
             non_determinism,
             0,
         )

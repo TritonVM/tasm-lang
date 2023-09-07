@@ -1,9 +1,36 @@
-use crate::{ast, graft::Graft};
+use tasm_lib::memory::dyn_malloc;
+use triton_vm::triton_asm;
+
+use crate::{ast, ast_types, graft::Graft};
 
 use super::Library;
 
+const ENCODE_METHOD_NAME: &str = "encode";
+
 #[derive(Clone, Debug)]
-pub struct BFieldCodecLib;
+pub struct BFieldCodecLib {
+    pub list_type: ast_types::ListType,
+}
+
+impl BFieldCodecLib {
+    fn encode_method_signature(
+        &self,
+        receiver_type: &crate::ast_types::DataType,
+    ) -> ast::FnSignature {
+        ast::FnSignature {
+            name: ENCODE_METHOD_NAME.to_owned(),
+            args: vec![ast_types::AbstractArgument::ValueArgument(
+                ast_types::AbstractValueArg {
+                    name: "value".to_owned(),
+                    data_type: receiver_type.to_owned(),
+                    mutable: false,
+                },
+            )],
+            output: ast_types::DataType::List(Box::new(ast_types::DataType::BFE), self.list_type),
+            arg_evaluation_order: Default::default(),
+        }
+    }
+}
 
 impl Library for BFieldCodecLib {
     fn get_function_name(&self, _full_name: &str) -> Option<String> {
@@ -12,20 +39,34 @@ impl Library for BFieldCodecLib {
 
     fn get_method_name(
         &self,
-        _method_name: &str,
-        _receiver_type: &crate::ast_types::DataType,
+        method_name: &str,
+        receiver_type: &crate::ast_types::DataType,
     ) -> Option<String> {
+        if method_name == ENCODE_METHOD_NAME {
+            // For now, we only allow `encode` to be called on values
+            // with a statically known length.
+            if receiver_type.bfield_codec_length().is_some() {
+                return Some(method_name.to_owned());
+            } else {
+                panic!(".encode() can only be called on values with a statically known length. Got: {receiver_type:#?}");
+            }
+        }
+
         None
     }
 
     fn method_name_to_signature(
         &self,
-        _fn_name: &str,
-        _receiver_type: &crate::ast_types::DataType,
+        method_name: &str,
+        receiver_type: &crate::ast_types::DataType,
         _args: &[crate::ast::Expr<super::Annotation>],
         _type_checker_state: &crate::type_checker::CheckState,
     ) -> crate::ast::FnSignature {
-        panic!("BFieldCodecLib does not contain any methods")
+        if method_name == ENCODE_METHOD_NAME && receiver_type.bfield_codec_length().is_some() {
+            self.encode_method_signature(receiver_type)
+        } else {
+            panic!("Unknown method in BFieldCodecLib. Got: {method_name} on receiver_type: {receiver_type}");
+        }
     }
 
     fn function_name_to_signature(
@@ -39,12 +80,80 @@ impl Library for BFieldCodecLib {
 
     fn call_method(
         &self,
-        _method_name: &str,
-        _receiver_type: &crate::ast_types::DataType,
+        method_name: &str,
+        receiver_type: &crate::ast_types::DataType,
         _args: &[crate::ast::Expr<super::Annotation>],
-        _state: &mut crate::tasm_code_generator::CompilerState,
+        state: &mut crate::tasm_code_generator::CompilerState,
     ) -> Vec<triton_vm::instruction::LabelledInstruction> {
-        todo!()
+        if !(method_name == ENCODE_METHOD_NAME && receiver_type.bfield_codec_length().is_some()) {
+            panic!("Unknown method in BFieldCodecLib. Got: {method_name} on receiver_type: {receiver_type}");
+        }
+
+        let value_size = receiver_type.bfield_codec_length().unwrap();
+        let list_size_in_memory = (value_size + self.list_type.metadata_size()) as i32;
+
+        // 1. Create a new list with the appropriate capacity
+        // 2. Maybe
+        let dyn_malloc_label = state.import_snippet(Box::new(dyn_malloc::DynMalloc));
+
+        let write_capacity = match self.list_type {
+            ast_types::ListType::Safe => {
+                triton_asm!(
+                    // _ *list
+                    push 1 add
+                    // _ (*list + 1)
+                    push {value_size}
+                    // _ (*list + 1) value_size
+
+                    write_mem
+                    // _ (*list + 1)
+
+                    push -1 add
+                    // _ *list
+                )
+            }
+            ast_types::ListType::Unsafe => triton_asm!(),
+        };
+        let write_words_to_list = "swap 1 write_mem push 1 add\n".repeat(value_size);
+
+        let encode_subroutine_label =
+            format!("{method_name}_{}", receiver_type.label_friendly_name());
+        let encode_subroutine_code = triton_asm!(
+                {encode_subroutine_label}:
+                    // _ [value]
+
+                    push {list_size_in_memory}
+                    call {dyn_malloc_label}
+                    // _ [value] *list
+
+                    // write length
+                    push {value_size}
+                    write_mem
+                    // _ [value] *list
+
+                    {&write_capacity}
+                    // _ [value] *list
+
+                    push {self.list_type.metadata_size()}
+                    add
+                    // _ [value] *word_0
+
+                    {write_words_to_list}
+
+                    // _ *word_{value_size}
+
+                    push {-list_size_in_memory}
+                    add
+
+                    // _ *list
+                    return
+        );
+
+        state.add_library_function(encode_subroutine_code.try_into().unwrap());
+
+        triton_asm!(call {
+            encode_subroutine_label
+        })
     }
 
     fn call_function(

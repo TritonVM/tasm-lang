@@ -130,19 +130,6 @@ mod compile_and_typecheck_tests {
         })
     }
 
-    pub mod compile_tests {
-        use super::*;
-        #[test]
-        fn simple_list_support_test() {
-            graft_check_compile_prop(&simple_list_support());
-        }
-
-        #[test]
-        fn mut_list_argument_test() {
-            graft_check_compile_prop(&mut_list_argument());
-        }
-    }
-
     pub mod run_tests {
         use itertools::Itertools;
         use rand::random;
@@ -156,7 +143,11 @@ mod compile_and_typecheck_tests {
         fn very_simple_list_support_test() {
             let inputs = vec![];
             let expected_outputs = vec![u32_lit(2000)];
-            compare_prop_with_stack(&very_simple_list_support(), inputs, expected_outputs);
+            compare_prop_with_stack_safe_lists(
+                &very_simple_list_support(),
+                inputs,
+                expected_outputs,
+            );
         }
 
         #[test]
@@ -164,7 +155,7 @@ mod compile_and_typecheck_tests {
             let random_digest: Digest = random();
             let inputs = vec![digest_lit(random_digest)];
             let expected_outputs = vec![digest_lit(random_digest)];
-            compare_prop_with_stack(&simple_digest_list(), inputs, expected_outputs);
+            compare_prop_with_stack_safe_lists(&simple_digest_list(), inputs, expected_outputs);
         }
 
         #[test]
@@ -182,7 +173,11 @@ mod compile_and_typecheck_tests {
                 digest_lit(random_digest1),
                 digest_lit(random_digest2),
             ];
-            compare_prop_with_stack(&build_digest_list_with_indexing(), inputs, expected_outputs);
+            compare_prop_with_stack_safe_lists(
+                &build_digest_list_with_indexing(),
+                inputs,
+                expected_outputs,
+            );
         }
 
         #[test]
@@ -227,7 +222,7 @@ mod compile_and_typecheck_tests {
             );
 
             let input_memory = HashMap::default();
-            compare_prop_with_stack_and_memory(
+            compare_prop_with_stack_and_memory_safe_lists(
                 &simple_list_support(),
                 inputs,
                 outputs,
@@ -259,7 +254,7 @@ mod compile_and_typecheck_tests {
                 );
             }
 
-            compare_prop_with_stack_and_memory(
+            compare_prop_with_stack_and_memory_safe_lists(
                 &mut_list_argument(),
                 vec![bfe_lit(list_pointer)],
                 vec![],
@@ -271,7 +266,7 @@ mod compile_and_typecheck_tests {
         #[test]
         fn build_vector_in_while_loop_test() {
             let mut vm_memory = HashMap::default();
-            let mut exec_result = execute_with_stack_memory_and_ins(
+            let mut exec_result = execute_with_stack_memory_and_ins_safe_lists(
                 &build_u32_vector_in_while_loop_rast(),
                 vec![],
                 &mut vm_memory,
@@ -285,7 +280,7 @@ mod compile_and_typecheck_tests {
             assert_list_equal(expected_list, *list_pointer, &vm_memory);
 
             vm_memory = HashMap::default();
-            exec_result = execute_with_stack_memory_and_ins(
+            exec_result = execute_with_stack_memory_and_ins_safe_lists(
                 &build_u64_vector_in_while_loop_rast(),
                 vec![],
                 &mut vm_memory,
@@ -336,7 +331,7 @@ mod compile_and_typecheck_tests {
             safe_list_push(list_pointer_b, elem_3.clone(), &mut memory, elem_3.len());
 
             let input_memory = HashMap::default();
-            compare_prop_with_stack_and_memory(
+            compare_prop_with_stack_and_memory_safe_lists(
                 &polymorphic_vectors_rast(),
                 inputs,
                 outputs,

@@ -80,8 +80,12 @@ pub(super) fn parse_main_and_structs(
     }
 }
 
-pub(crate) fn compile_for_test(directory: &str, module_name: &str) -> Vec<LabelledInstruction> {
-    get_standard_setup!(ast_types::ListType::Unsafe, graft_config, libraries);
+pub(crate) fn compile_for_test(
+    directory: &str,
+    module_name: &str,
+    list_type: ast_types::ListType,
+) -> Vec<LabelledInstruction> {
+    get_standard_setup!(list_type, graft_config, libraries);
 
     let (parsed_main, parsed_structs, _) = parse_main_and_structs(directory, module_name);
     let mut function = graft_config.graft_fn_decl(&parsed_main);

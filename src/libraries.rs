@@ -29,8 +29,12 @@ pub struct LibraryConfig {
 pub fn all_libraries<'a>(config: LibraryConfig) -> Vec<Box<dyn Library + 'a>> {
     vec![
         Box::new(bfe::BfeLibrary),
-        Box::new(bfield_codec::BFieldCodecLib),
-        Box::new(hasher::HasherLib),
+        Box::new(bfield_codec::BFieldCodecLib {
+            list_type: config.list_type,
+        }),
+        Box::new(hasher::HasherLib {
+            list_type: config.list_type,
+        }),
         Box::new(tasm::TasmLibrary {
             list_type: config.list_type,
         }),

@@ -102,21 +102,25 @@ mod tests {
             a_final.1 .0.encode(),
         ]
         .concat();
-        let input = vec![];
+        let stdin = vec![];
 
         // Run test on host machine
         let native_output =
-            rust_shadows::wrap_main_with_io(&main)(input.clone(), non_determinism.clone());
+            rust_shadows::wrap_main_with_io(&main)(stdin.clone(), non_determinism.clone());
         assert_eq!(native_output, expected_output);
 
         // Run test on Triton-VM
-        let test_program = ozk_parsing::compile_for_test("other", "nested_tuples");
+        let test_program = ozk_parsing::compile_for_test(
+            "other",
+            "nested_tuples",
+            crate::ast_types::ListType::Safe,
+        );
         println!("test_program is:\n{}", test_program.iter().join("\n"));
         let vm_output = execute_compiled_with_stack_memory_and_ins_for_test(
             &test_program,
             vec![],
             &mut HashMap::default(),
-            input,
+            stdin,
             non_determinism,
             0,
         )
