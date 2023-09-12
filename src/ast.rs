@@ -7,7 +7,7 @@ use twenty_first::shared_math::bfield_codec::BFieldCodec;
 use twenty_first::shared_math::x_field_element::XFieldElement;
 
 use crate::{
-    ast_types::{self, AbstractArgument, DataType},
+    ast_types::{AbstractArgument, DataType},
     type_checker::Typing,
 };
 
@@ -55,21 +55,6 @@ impl<T> Method<T> {
 pub struct Fn<T> {
     pub signature: FnSignature,
     pub body: Vec<Stmt<T>>,
-}
-
-impl<T> Fn<T> {
-    // TODO: REMOVE!
-    pub fn dummy() -> Self {
-        Self {
-            signature: FnSignature {
-                name: "dummy".to_owned(),
-                args: vec![],
-                output: ast_types::DataType::U32,
-                arg_evaluation_order: Default::default(),
-            },
-            body: vec![],
-        }
-    }
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
