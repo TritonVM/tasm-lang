@@ -946,8 +946,12 @@ fn derive_annotate_expr_type(
                 Add => {
                     let lhs_type =
                         derive_annotate_expr_type(lhs_expr, hint, state, env_fn_signature);
-                    let rhs_type =
-                        derive_annotate_expr_type(rhs_expr, hint, state, env_fn_signature);
+                    let rhs_type = derive_annotate_expr_type(
+                        rhs_expr,
+                        Some(&lhs_type),
+                        state,
+                        env_fn_signature,
+                    );
 
                     assert_type_equals(&lhs_type, &rhs_type, "add-expr");
                     assert!(
@@ -976,8 +980,12 @@ fn derive_annotate_expr_type(
                 BitAnd => {
                     let lhs_type =
                         derive_annotate_expr_type(lhs_expr, hint, state, env_fn_signature);
-                    let rhs_type =
-                        derive_annotate_expr_type(rhs_expr, hint, state, env_fn_signature);
+                    let rhs_type = derive_annotate_expr_type(
+                        rhs_expr,
+                        Some(&lhs_type),
+                        state,
+                        env_fn_signature,
+                    );
 
                     assert_type_equals(&lhs_type, &rhs_type, "bitwise-and-expr");
                     assert!(
@@ -992,8 +1000,12 @@ fn derive_annotate_expr_type(
                 BitXor => {
                     let lhs_type =
                         derive_annotate_expr_type(lhs_expr, hint, state, env_fn_signature);
-                    let rhs_type =
-                        derive_annotate_expr_type(rhs_expr, hint, state, env_fn_signature);
+                    let rhs_type = derive_annotate_expr_type(
+                        rhs_expr,
+                        Some(&lhs_type),
+                        state,
+                        env_fn_signature,
+                    );
 
                     assert_type_equals(&lhs_type, &rhs_type, "bitwise-xor-expr");
                     assert!(
@@ -1008,8 +1020,12 @@ fn derive_annotate_expr_type(
                 BitOr => {
                     let lhs_type =
                         derive_annotate_expr_type(lhs_expr, hint, state, env_fn_signature);
-                    let rhs_type =
-                        derive_annotate_expr_type(rhs_expr, hint, state, env_fn_signature);
+                    let rhs_type = derive_annotate_expr_type(
+                        rhs_expr,
+                        Some(&lhs_type),
+                        state,
+                        env_fn_signature,
+                    );
 
                     assert_type_equals(&lhs_type, &rhs_type, "bitwise-or-expr");
                     assert!(
@@ -1024,8 +1040,12 @@ fn derive_annotate_expr_type(
                 Div => {
                     let lhs_type =
                         derive_annotate_expr_type(lhs_expr, hint, state, env_fn_signature);
-                    let rhs_type =
-                        derive_annotate_expr_type(rhs_expr, hint, state, env_fn_signature);
+                    let rhs_type = derive_annotate_expr_type(
+                        rhs_expr,
+                        Some(&lhs_type),
+                        state,
+                        env_fn_signature,
+                    );
 
                     assert_type_equals(&lhs_type, &rhs_type, "div-expr");
                     assert!(
@@ -1042,8 +1062,12 @@ fn derive_annotate_expr_type(
                     let no_hint = None;
                     let lhs_type =
                         derive_annotate_expr_type(lhs_expr, no_hint, state, env_fn_signature);
-                    let rhs_type =
-                        derive_annotate_expr_type(rhs_expr, no_hint, state, env_fn_signature);
+                    let rhs_type = derive_annotate_expr_type(
+                        rhs_expr,
+                        Some(&lhs_type),
+                        state,
+                        env_fn_signature,
+                    );
 
                     assert_type_equals(&lhs_type, &rhs_type, "eq-expr");
                     assert!(
@@ -1060,8 +1084,12 @@ fn derive_annotate_expr_type(
                     let no_hint = None;
                     let lhs_type =
                         derive_annotate_expr_type(lhs_expr, no_hint, state, env_fn_signature);
-                    let rhs_type =
-                        derive_annotate_expr_type(rhs_expr, no_hint, state, env_fn_signature);
+                    let rhs_type = derive_annotate_expr_type(
+                        rhs_expr,
+                        Some(&lhs_type),
+                        state,
+                        env_fn_signature,
+                    );
 
                     assert_type_equals(&lhs_type, &rhs_type, "lt-expr");
                     assert!(
@@ -1076,8 +1104,12 @@ fn derive_annotate_expr_type(
                 Mul => {
                     let lhs_type =
                         derive_annotate_expr_type(lhs_expr, hint, state, env_fn_signature);
-                    let rhs_type =
-                        derive_annotate_expr_type(rhs_expr, hint, state, env_fn_signature);
+                    let rhs_type = derive_annotate_expr_type(
+                        rhs_expr,
+                        Some(&lhs_type),
+                        state,
+                        env_fn_signature,
+                    );
 
                     assert_type_equals(&lhs_type, &rhs_type, "mul-expr");
                     assert!(
@@ -1123,8 +1155,12 @@ fn derive_annotate_expr_type(
                 Rem => {
                     let lhs_type =
                         derive_annotate_expr_type(lhs_expr, hint, state, env_fn_signature);
-                    let rhs_type =
-                        derive_annotate_expr_type(rhs_expr, hint, state, env_fn_signature);
+                    let rhs_type = derive_annotate_expr_type(
+                        rhs_expr,
+                        Some(&lhs_type),
+                        state,
+                        env_fn_signature,
+                    );
 
                     assert_type_equals(&lhs_type, &rhs_type, "rem-expr");
                     assert!(
@@ -1177,8 +1213,12 @@ fn derive_annotate_expr_type(
                 Sub => {
                     let lhs_type =
                         derive_annotate_expr_type(lhs_expr, hint, state, env_fn_signature);
-                    let rhs_type =
-                        derive_annotate_expr_type(rhs_expr, hint, state, env_fn_signature);
+                    let rhs_type = derive_annotate_expr_type(
+                        rhs_expr,
+                        Some(&lhs_type),
+                        state,
+                        env_fn_signature,
+                    );
 
                     assert_type_equals(&lhs_type, &rhs_type, "sub-expr");
                     assert!(
