@@ -43,7 +43,6 @@ mod tests {
         ozk::{ozk_parsing, rust_shadows},
         test_helpers::shared_test::*,
     };
-    use itertools::Itertools;
     use twenty_first::shared_math::other::random_elements;
     use twenty_first::util_types::merkle_tree::{CpuParallel, MerkleTree};
     use twenty_first::util_types::merkle_tree_maker::MerkleTreeMaker;
@@ -64,7 +63,6 @@ mod tests {
         let (rust_ast, _, _) = ozk_parsing::parse_main_and_structs("other", "merkle_root");
         let expected_stack_diff = 0;
         let (code, _fn_name) = compile_for_run_test(&rust_ast, ast_types::ListType::Unsafe);
-        println!("code:\n{}", code.iter().join("\n"));
         let vm_output = execute_compiled_with_stack_memory_and_ins_for_test(
             &code,
             vec![],

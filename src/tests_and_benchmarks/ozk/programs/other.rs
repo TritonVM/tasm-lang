@@ -1,4 +1,5 @@
 mod bfe_add;
+mod hash_varlen;
 pub mod merkle_root;
 mod nested_tuples;
 #[allow(dead_code)]
