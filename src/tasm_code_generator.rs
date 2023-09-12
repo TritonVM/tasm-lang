@@ -1024,6 +1024,26 @@ fn compile_stmt(
     stmt: &ast::Stmt<type_checker::Typing>,
     state: &mut CompilerState,
 ) -> Vec<LabelledInstruction> {
+    /// Local function to handle a block statement. Returns code to execute
+    /// all statements, and to clean up the stack after the exit of a block.
+    fn compile_block_stmt(
+        block: &ast::BlockStmt<type_checker::Typing>,
+        state: &mut CompilerState,
+    ) -> Vec<LabelledInstruction> {
+        let vstack_init = state.function_state.vstack.clone();
+        let var_addr_init = state.function_state.var_addr.clone();
+        let block_body_code = block
+            .stmts
+            .iter()
+            .map(|stmt| compile_stmt(stmt, state))
+            .collect_vec()
+            .concat();
+
+        let restore_stack_code = state.restore_stack_code(&vstack_init, &var_addr_init);
+
+        [block_body_code, restore_stack_code].concat()
+    }
+
     match stmt {
         ast::Stmt::Let(ast::LetStmt {
             var_name,
@@ -1183,8 +1203,7 @@ fn compile_stmt(
 
             // Compiling the while body as a block means we also get the code to
             // cleanup the stack from local declarations.
-            // TODO: Factor out block compilation to a separate function.
-            let loop_body_code = compile_stmt(&ast::Stmt::Block(block.to_owned()), state);
+            let loop_body_code = compile_block_stmt(block, state);
             let while_loop_code = triton_asm!(
                     {while_loop_subroutine_name}:
                         {&cond_evaluation_code}
@@ -1213,9 +1232,9 @@ fn compile_stmt(
             // Pop condition result from vstack as it's not on the stack inside the branches
             let _condition_addr = state.function_state.vstack.pop();
 
-            let then_body_code = compile_stmt(&ast::Stmt::Block(then_branch.to_owned()), state);
+            let then_body_code = compile_block_stmt(then_branch, state);
 
-            let else_body_code = compile_stmt(&ast::Stmt::Block(else_branch.to_owned()), state);
+            let else_body_code = compile_block_stmt(else_branch, state);
 
             let then_subroutine_name = format!("{cond_addr}_then");
             let else_subroutine_name = format!("{cond_addr}_else");
@@ -1255,20 +1274,7 @@ fn compile_stmt(
             if_code
         }
 
-        ast::Stmt::Block(ast::BlockStmt { stmts }) => {
-            // TODO: Factor out block compilation handling to a separate function
-            let vstack_init = state.function_state.vstack.clone();
-            let var_addr_init = state.function_state.var_addr.clone();
-            let block_body_code = stmts
-                .iter()
-                .map(|stmt| compile_stmt(stmt, state))
-                .collect_vec()
-                .concat();
-
-            let restore_stack_code = state.restore_stack_code(&vstack_init, &var_addr_init);
-
-            [block_body_code, restore_stack_code].concat()
-        }
+        ast::Stmt::Block(block_stmt) => compile_block_stmt(block_stmt, state),
         ast::Stmt::Assert(ast::AssertStmt { expression }) => {
             let (_addr, assert_expr_code) = compile_expr(expression, "assert-expr", state);
 
