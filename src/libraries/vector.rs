@@ -10,7 +10,7 @@ use crate::{
     type_checker::GetType,
 };
 
-use super::Library;
+use super::{Library, LibraryFunction};
 
 const VECTOR_LIB_INDICATOR: &str = "Vec::";
 
@@ -35,7 +35,7 @@ impl Library for VectorLib {
         receiver_type: &ast_types::DataType,
     ) -> Option<String> {
         if let ast_types::DataType::List(_, _) = receiver_type {
-            if matches!(method_name, "push" | "pop" | "len" | "map") {
+            if matches!(method_name, "push" | "pop" | "len" | "map" | "clear") {
                 return Some(method_name.to_owned());
             }
         }
@@ -50,14 +50,20 @@ impl Library for VectorLib {
         args: &[ast::Expr<super::Annotation>],
         type_checker_state: &crate::type_checker::CheckState,
     ) -> ast::FnSignature {
-        if !matches!(receiver_type, ast_types::DataType::List(_, _)) {
+        let element_type = if let ast_types::DataType::List(ety, _) = receiver_type {
+            *ety.to_owned()
+        } else {
             panic!("Receiver type must be `List`");
-        }
+        };
 
         // Special-case on `map` as we need to dig into the type checker state to find the
         // function signature.
         if fn_name == "map" {
             return self.fn_signature_for_map(args, type_checker_state);
+        }
+
+        if fn_name == "clear" {
+            return self.clear_method(&element_type).signature;
         }
 
         self.function_name_to_signature(fn_name, receiver_type.type_parameter(), args)
@@ -113,7 +119,7 @@ impl Library for VectorLib {
         args: &[ast::Expr<super::Annotation>],
         state: &mut CompilerState,
     ) -> Vec<triton_vm::instruction::LabelledInstruction> {
-        let type_param: ast_types::DataType =
+        let element_type: ast_types::DataType =
             if let ast_types::DataType::List(type_param, _list_type) = receiver_type {
                 *type_param.to_owned()
             } else {
@@ -121,9 +127,14 @@ impl Library for VectorLib {
                 "Cannot call vector method without type param. Got receiver_type: {receiver_type}"
             )
             };
+
+        if method_name == "clear" {
+            return self.clear_method(&element_type).body;
+        }
+
         // find inner function if needed
         let snippet = self
-            .name_to_tasm_lib_snippet(method_name, &Some(type_param), args)
+            .name_to_tasm_lib_snippet(method_name, &Some(element_type), args)
             .unwrap_or_else(|| panic!("Unknown function name {method_name}"));
         let entrypoint = snippet.entrypoint();
         state.import_snippet(snippet);
@@ -276,6 +287,38 @@ impl Library for VectorLib {
 
 /// Map list-function or method name to the TASM lib snippet type
 impl VectorLib {
+    /// Defines the `a.clear()` method that can be called
+    /// on a vector, resulting in an empty vector. Compatible with
+    /// Rust's `clear` method on `Vec<T>`.
+    fn clear_method(&self, element_type: &ast_types::DataType) -> LibraryFunction {
+        let fn_signature = ast::FnSignature {
+            name: "clear".to_owned(),
+            args: vec![ast_types::AbstractArgument::ValueArgument(
+                ast_types::AbstractValueArg {
+                    name: "list".to_owned(),
+                    data_type: ast_types::DataType::List(
+                        Box::new(element_type.to_owned()),
+                        self.list_type,
+                    ),
+                    mutable: true,
+                },
+            )],
+            output: ast_types::DataType::Tuple(vec![]),
+            arg_evaluation_order: Default::default(),
+        };
+
+        LibraryFunction {
+            signature: fn_signature,
+            // Notice that we don't have to check capacity for safe lists, since
+            // length 0 can never exceed capacity.
+            // Stack at function start:
+            // _ *list
+            // Stack at function end:
+            // _
+            body: triton_asm!(push 0 write_mem pop),
+        }
+    }
+
     fn fn_signature_for_map(
         &self,
         args: &[ast::Expr<super::Annotation>],

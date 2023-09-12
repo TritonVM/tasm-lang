@@ -151,6 +151,38 @@ mod compile_and_typecheck_tests {
         }
 
         #[test]
+        fn clear_support_test() {
+            fn clear_list_rast() -> syn::ItemFn {
+                item_fn(parse_quote! {
+                    fn clear_list() -> usize {
+                        let mut a: Vec<u32> = Vec::<u32>::with_capacity(17);
+                        a.push(2001u32);
+                        a.push(2002u32);
+                        a.push(2003u32);
+                        a.push(2004u32);
+                        a.push(2005u32);
+                        a.push(2006u32);
+                        a.push(2007u32);
+                        a.push(2008u32);
+
+                        // Length is 8
+                        a.clear();
+
+                        a.push(2009u32);
+                        a.push(2010u32);
+                        a.push(2011u32);
+
+                        // Length is 3
+                        return a.len();
+                    }
+                })
+            }
+
+            compare_prop_with_stack_safe_lists(&clear_list_rast(), vec![], vec![u32_lit(3)]);
+            compare_prop_with_stack_unsafe_lists(&clear_list_rast(), vec![], vec![u32_lit(3)]);
+        }
+
+        #[test]
         fn simple_digest_list_support_test() {
             let random_digest: Digest = random();
             let inputs = vec![digest_lit(random_digest)];

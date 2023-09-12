@@ -353,6 +353,24 @@ pub fn compare_prop_with_stack_and_memory_safe_lists(
     )
 }
 
+pub fn compare_prop_with_stack_unsafe_lists(
+    item_fn: &syn::ItemFn,
+    input_args: Vec<ast::ExprLit<Typing>>,
+    expected_outputs: Vec<ast::ExprLit<Typing>>,
+) {
+    let (code, function_name) = compile_for_run_test(item_fn, ast_types::ListType::Unsafe);
+    compare_compiled_prop_with_stack_and_memory_and_ins(
+        &code,
+        &function_name,
+        input_args,
+        expected_outputs,
+        HashMap::default(),
+        None,
+        vec![],
+        NonDeterminism::new(vec![]),
+    )
+}
+
 pub fn compare_prop_with_stack_safe_lists(
     item_fn: &syn::ItemFn,
     input_args: Vec<ast::ExprLit<Typing>>,
