@@ -168,41 +168,41 @@ mod run_tests {
 
     #[test]
     fn div_u64_test() {
-        compare_prop_with_stack_safe_lists(
-            &div_u64_rast(),
-            vec![u64_lit(9075814844808036352), u64_lit(1675951742761566208)],
-            vec![u64_lit(5)],
-        );
-        compare_prop_with_stack_safe_lists(
-            &div_u64_rast(),
-            vec![u64_lit(u64::MAX), u64_lit(2)],
-            vec![u64_lit((1u64 << 63) - 1)],
-        );
+        let mut test_cases = vec![
+            InputOutputTestCase::new(
+                vec![u64_lit(9075814844808036352), u64_lit(1675951742761566208)],
+                vec![u64_lit(5)],
+            ),
+            InputOutputTestCase::new(
+                vec![u64_lit(u64::MAX), u64_lit(2)],
+                vec![u64_lit((1u64 << 63) - 1)],
+            ),
+        ];
 
         // Test with small divisors
         let mut rng = thread_rng();
-        for _ in 0..4 {
+        for _ in 0..10 {
             let numerator: u64 = rng.next_u64();
             let divisor: u64 = rng.gen_range(1..(1 << 12));
-            compare_prop_with_stack_safe_lists(
-                &div_u64_rast(),
+            test_cases.push(InputOutputTestCase::new(
                 vec![u64_lit(numerator), u64_lit(divisor)],
                 vec![u64_lit(numerator / divisor)],
-            );
+            ));
         }
 
         // Test with big divisor
         for j in 0..33 {
-            for _ in 0..2 {
+            for _ in 0..4 {
                 let numerator: u64 = rng.next_u64();
                 let divisor: u64 = rng.next_u32() as u64 + (1u64 << (31 + j));
-                compare_prop_with_stack_safe_lists(
-                    &div_u64_rast(),
+                test_cases.push(InputOutputTestCase::new(
                     vec![u64_lit(numerator), u64_lit(divisor)],
                     vec![u64_lit(numerator / divisor)],
-                );
+                ));
             }
         }
+
+        multiple_compare_prop_with_stack_safe_lists(&div_u64_rast(), test_cases);
 
         fn div_u64_rast() -> syn::ItemFn {
             item_fn(parse_quote! {
@@ -215,41 +215,38 @@ mod run_tests {
 
     #[test]
     fn rem_u64_test() {
-        compare_prop_with_stack_safe_lists(
-            &rem_u64_rast(),
-            vec![u64_lit(9075814844808036352), u64_lit(1675951742761566208)],
-            vec![u64_lit(696056131000205312)],
-        );
-        compare_prop_with_stack_safe_lists(
-            &rem_u64_rast(),
-            vec![u64_lit(u64::MAX), u64_lit(2)],
-            vec![u64_lit(1)],
-        );
+        let mut test_cases = vec![
+            InputOutputTestCase::new(
+                vec![u64_lit(9075814844808036352), u64_lit(1675951742761566208)],
+                vec![u64_lit(696056131000205312)],
+            ),
+            InputOutputTestCase::new(vec![u64_lit(u64::MAX), u64_lit(2)], vec![u64_lit(1)]),
+        ];
 
         // Test with small divisors
         let mut rng = thread_rng();
-        for _ in 0..4 {
+        for _ in 0..10 {
             let numerator: u64 = rng.next_u64();
             let divisor: u64 = rng.gen_range(1..(1 << 12));
-            compare_prop_with_stack_safe_lists(
-                &rem_u64_rast(),
+            test_cases.push(InputOutputTestCase::new(
                 vec![u64_lit(numerator), u64_lit(divisor)],
                 vec![u64_lit(numerator % divisor)],
-            );
+            ));
         }
 
         // Test with big divisor
         for j in 0..33 {
-            for _ in 0..2 {
+            for _ in 0..4 {
                 let numerator: u64 = rng.next_u64();
                 let divisor: u64 = rng.next_u32() as u64 + (1u64 << (31 + j));
-                compare_prop_with_stack_safe_lists(
-                    &rem_u64_rast(),
+                test_cases.push(InputOutputTestCase::new(
                     vec![u64_lit(numerator), u64_lit(divisor)],
                     vec![u64_lit(numerator % divisor)],
-                );
+                ));
             }
         }
+
+        multiple_compare_prop_with_stack_safe_lists(&rem_u64_rast(), test_cases);
 
         fn rem_u64_rast() -> syn::ItemFn {
             item_fn(parse_quote! {
