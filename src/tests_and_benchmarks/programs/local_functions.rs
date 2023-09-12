@@ -170,6 +170,23 @@ mod compile_and_typecheck_tests {
 
     #[should_panic]
     #[test]
+    fn type_error_in_outer_function_test() {
+        fn local_function_type_error_in_fn_decl() -> syn::ItemFn {
+            item_fn(parse_quote! {
+                fn simple_local_function() -> u32 {
+                    return 14u64;
+                }
+            })
+        }
+
+        graft_check_compile_prop(
+            &local_function_type_error_in_fn_decl(),
+            crate::ast_types::ListType::Safe,
+        );
+    }
+
+    #[should_panic]
+    #[test]
     fn local_function_type_error_in_fn_decl_test() {
         fn local_function_type_error_in_fn_decl() -> syn::ItemFn {
             item_fn(parse_quote! {
