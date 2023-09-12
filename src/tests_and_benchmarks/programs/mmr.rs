@@ -62,6 +62,7 @@ mod run_tests {
     use num::One;
     use rand::{random, thread_rng, RngCore};
     use tasm_lib::rust_shadowing_helper_functions;
+    use triton_vm::NonDeterminism;
     use twenty_first::{
         shared_math::{
             b_field_element::BFieldElement,
@@ -73,7 +74,7 @@ mod run_tests {
     };
 
     use super::*;
-    use crate::tests_and_benchmarks::test_helpers::shared_test::*;
+    use crate::{ast_types::ListType, tests_and_benchmarks::test_helpers::shared_test::*};
 
     #[test]
     fn right_child_run_test() {
@@ -748,10 +749,15 @@ mod run_tests {
             })
         }
 
-        for src in [
-            calculate_new_peaks_from_leaf_mutation_inlined_rast,
-            calculate_new_peaks_from_leaf_mutation_with_local_function_rast,
-        ] {
+        let (code_inlined_function, _fn_name) = compile_for_run_test(
+            &calculate_new_peaks_from_leaf_mutation_inlined_rast(),
+            ListType::Safe,
+        );
+        let (code_local_function, _fn_name) = compile_for_run_test(
+            &calculate_new_peaks_from_leaf_mutation_with_local_function_rast(),
+            ListType::Safe,
+        );
+        for code in [code_inlined_function, code_local_function] {
             for size in 1..90 {
                 let digests: Vec<Digest> = random_elements(size);
                 let ammr = get_rustyleveldb_ammr_from_digests(digests.clone());
@@ -783,8 +789,14 @@ mod run_tests {
                     bfe_lit(ap_pointer),
                     u64_lit(leaf_index),
                 ];
-                let res =
-                    execute_with_stack_and_memory_safe_lists(&src(), inputs, &mut memory, -10);
+                let res = execute_compiled_with_stack_memory_and_ins_for_test(
+                    &code,
+                    inputs,
+                    &mut memory,
+                    vec![],
+                    NonDeterminism::new(vec![]),
+                    -10,
+                );
                 assert!(res.is_ok(), "VM execution must succeed");
 
                 let expected_new_peaks = mmr::shared_basic::calculate_new_peaks_from_leaf_mutation::<
@@ -816,10 +828,13 @@ mod run_tests {
     fn verify_authentication_path_test() {
         type H = Tip5;
 
-        for src in [
-            verify_authentication_path_inlined,
-            verify_authentication_path_with_local_function,
-        ] {
+        let (code_inlined_function, _fn_name) =
+            compile_for_run_test(&verify_authentication_path_inlined(), ListType::Safe);
+        let (code_local_function, _fn_name) = compile_for_run_test(
+            &verify_authentication_path_with_local_function(),
+            ListType::Safe,
+        );
+        for code in [code_inlined_function, code_local_function] {
             for size in 1..35 {
                 let digests: Vec<Digest> = random_elements(size);
                 let ammr = get_rustyleveldb_ammr_from_digests(digests.clone());
@@ -854,10 +869,12 @@ mod run_tests {
                 ];
 
                 // Positive test
-                let vm_res = match execute_with_stack_and_memory_safe_lists(
-                    &src(),
+                let vm_res = match execute_compiled_with_stack_memory_and_ins_for_test(
+                    &code,
                     good_inputs,
                     &mut memory,
+                    vec![],
+                    NonDeterminism::new(vec![]),
                     -10,
                 ) {
                     Ok(vm_res) => vm_res,
@@ -881,10 +898,12 @@ mod run_tests {
                     u64_lit(leaf_index),
                     digest_lit(bad_leaf),
                 ];
-                let vm_res_negative = match execute_with_stack_and_memory_safe_lists(
-                    &src(),
+                let vm_res_negative = match execute_compiled_with_stack_memory_and_ins_for_test(
+                    &code,
                     bad_inputs,
                     &mut memory,
+                    vec![],
+                    NonDeterminism::new(vec![]),
                     -10,
                 ) {
                     Ok(vm_res) => vm_res,
