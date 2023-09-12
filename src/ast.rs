@@ -280,8 +280,14 @@ impl<T> Display for Expr<T> {
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct ExprIf<T> {
     pub condition: Box<Expr<T>>,
-    pub then_branch: Box<Expr<T>>,
-    pub else_branch: Box<Expr<T>>,
+    pub then_branch: Box<ReturningBlock<T>>,
+    pub else_branch: Box<ReturningBlock<T>>,
+}
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub struct ReturningBlock<T> {
+    pub stmts: Vec<Stmt<T>>,
+    pub return_expr: Expr<T>,
 }
 
 pub struct SymTable(HashMap<String, (u8, DataType)>);

@@ -228,7 +228,7 @@ pub struct CompilerState<'a> {
     /// The part of the compiler state that applies across function calls to locally defined
     global_compiler_state: GlobalCodeGeneratorState,
 
-    /// The part of the compiler state that only applies within a function
+    /// The part of the compiler state that only applies within a function or a method
     function_state: FunctionState,
 
     libraries: &'a [Box<dyn libraries::Library>],
@@ -420,8 +420,7 @@ impl<'a> CompilerState<'a> {
                 };
 
                 self.new_value_identifier("list_expression", &ident.get_type());
-                let (_index_expr, index_code) =
-                    compile_expr(index_expr, "index_on_assign", &index_expr.get_type(), self);
+                let (_index_expr, index_code) = compile_expr(index_expr, "index_on_assign", self);
                 // stack: _ *list index
 
                 let list_metadata_size = list_type.metadata_size();
@@ -958,7 +957,7 @@ fn compile_function_inner(
         let _fn_body_code = function
             .body
             .iter()
-            .map(|stmt| compile_stmt(stmt, function, &mut temporary_fn_state))
+            .map(|stmt| compile_stmt(stmt, &mut temporary_fn_state))
             .concat();
         temporary_fn_state.get_required_spills()
     };
@@ -987,7 +986,7 @@ fn compile_function_inner(
         &mut function
             .body
             .iter()
-            .map(|stmt| compile_stmt(stmt, function, &mut state))
+            .map(|stmt| compile_stmt(stmt, &mut state))
             .concat(),
     );
 
@@ -1019,19 +1018,40 @@ pub(crate) fn compile_function(
     state.compose_code_for_outer_function(compiled_function)
 }
 
+/// Produce the code and handle the `vstack` for a statement. `env_fn_signature` is the
+/// function signature in which the statement is enclosed.
 fn compile_stmt(
     stmt: &ast::Stmt<type_checker::Typing>,
-    function: &ast::Fn<type_checker::Typing>,
     state: &mut CompilerState,
 ) -> Vec<LabelledInstruction> {
+    /// Local function to handle a block statement. Returns code to execute
+    /// all statements, and to clean up the stack after the exit of a block.
+    fn compile_block_stmt(
+        block: &ast::BlockStmt<type_checker::Typing>,
+        state: &mut CompilerState,
+    ) -> Vec<LabelledInstruction> {
+        let vstack_init = state.function_state.vstack.clone();
+        let var_addr_init = state.function_state.var_addr.clone();
+        let block_body_code = block
+            .stmts
+            .iter()
+            .map(|stmt| compile_stmt(stmt, state))
+            .collect_vec()
+            .concat();
+
+        let restore_stack_code = state.restore_stack_code(&vstack_init, &var_addr_init);
+
+        [block_body_code, restore_stack_code].concat()
+    }
+
     match stmt {
         ast::Stmt::Let(ast::LetStmt {
             var_name,
-            data_type,
+            data_type: _,
             expr,
             mutable: _,
         }) => {
-            let (expr_addr, expr_code) = compile_expr(expr, var_name, data_type, state);
+            let (expr_addr, expr_code) = compile_expr(expr, var_name, state);
             state
                 .function_state
                 .var_addr
@@ -1040,11 +1060,9 @@ fn compile_stmt(
         }
 
         ast::Stmt::Assign(ast::AssignStmt { identifier, expr }) => {
-            let data_type = expr.get_type();
-
-            // When overwriting a value, we ignore the identifier of the new expression as
-            // it's simply popped from the stack and the old identifier is used.
-            let (_expr_addr, expr_code) = compile_expr(expr, "assign", &data_type, state);
+            // When overwriting a value, we ignore the value identifier of the new expression as
+            // it's simply popped from the stack and the old value identifier is used.
+            let (_expr_addr, expr_code) = compile_expr(expr, "assign", state);
             let location = state.locate_identifier(identifier);
 
             let ident_type = identifier.get_type();
@@ -1153,7 +1171,7 @@ fn compile_stmt(
                 code
             } else {
                 // Case: Returning an expression that must be computed
-                let code = compile_expr(ret_expr, "ret_expr", &function.signature.output, state).1;
+                let code = compile_expr(ret_expr, "ret_expr", state).1;
 
                 // Remove all but top value from stack
                 let cleanup_code = state.clear_all_but_top_stack_value_above_height(0);
@@ -1176,14 +1194,16 @@ fn compile_stmt(
             // The code generated here is a subroutine that contains the while loop code
             // and then just a call to this subroutine.
             let (cond_addr, cond_evaluation_code) =
-                compile_expr(condition, "while_condition", &condition.get_type(), state);
+                compile_expr(condition, "while_condition", state);
 
             let while_loop_subroutine_name = format!("{cond_addr}_while_loop");
 
             // condition evaluation is not visible to loop body, so pop this from vstack
             state.function_state.vstack.pop();
 
-            let loop_body_code = compile_stmt(&ast::Stmt::Block(block.to_owned()), function, state);
+            // Compiling the while body as a block means we also get the code to
+            // cleanup the stack from local declarations.
+            let loop_body_code = compile_block_stmt(block, state);
             let while_loop_code = triton_asm!(
                     {while_loop_subroutine_name}:
                         {&cond_evaluation_code}
@@ -1207,17 +1227,14 @@ fn compile_stmt(
             then_branch,
             else_branch,
         }) => {
-            let (cond_addr, cond_code) =
-                compile_expr(condition, "if_condition", &condition.get_type(), state);
+            let (cond_addr, cond_code) = compile_expr(condition, "if_condition", state);
 
             // Pop condition result from vstack as it's not on the stack inside the branches
             let _condition_addr = state.function_state.vstack.pop();
 
-            let then_body_code =
-                compile_stmt(&ast::Stmt::Block(then_branch.to_owned()), function, state);
+            let then_body_code = compile_block_stmt(then_branch, state);
 
-            let else_body_code =
-                compile_stmt(&ast::Stmt::Block(else_branch.to_owned()), function, state);
+            let else_body_code = compile_block_stmt(else_branch, state);
 
             let then_subroutine_name = format!("{cond_addr}_then");
             let else_subroutine_name = format!("{cond_addr}_else");
@@ -1257,22 +1274,9 @@ fn compile_stmt(
             if_code
         }
 
-        ast::Stmt::Block(ast::BlockStmt { stmts }) => {
-            let vstack_init = state.function_state.vstack.clone();
-            let var_addr_init = state.function_state.var_addr.clone();
-            let block_body_code = stmts
-                .iter()
-                .map(|stmt| compile_stmt(stmt, function, state))
-                .collect_vec()
-                .concat();
-
-            let restore_stack_code = state.restore_stack_code(&vstack_init, &var_addr_init);
-
-            [block_body_code, restore_stack_code].concat()
-        }
+        ast::Stmt::Block(block_stmt) => compile_block_stmt(block_stmt, state),
         ast::Stmt::Assert(ast::AssertStmt { expression }) => {
-            let (_addr, assert_expr_code) =
-                compile_expr(expression, "assert-expr", &expression.get_type(), state);
+            let (_addr, assert_expr_code) = compile_expr(expression, "assert-expr", state);
 
             // evaluated expression value is not visible after `assert` instruction has been executed
             state.function_state.vstack.pop();
@@ -1322,7 +1326,7 @@ fn compile_fn_call(
         args_iter
             .map(|(arg_pos, arg_expr)| {
                 let context = format!("_{name}_arg_{arg_pos}");
-                compile_expr(arg_expr, &context, &arg_expr.get_type(), state)
+                compile_expr(arg_expr, &context, state)
             })
             .unzip();
 
@@ -1366,7 +1370,7 @@ fn compile_method_call(
             .enumerate()
             .map(|(arg_pos, arg_expr)| {
                 let context = format!("_{method_name}_arg_{arg_pos}");
-                compile_expr(arg_expr, &context, &arg_expr.get_type(), state)
+                compile_expr(arg_expr, &context, state)
             })
             .unzip();
 
@@ -1433,7 +1437,6 @@ fn compile_method_call(
 fn compile_expr(
     expr: &ast::Expr<type_checker::Typing>,
     _context: &str,
-    _data_type: &ast_types::DataType,
     state: &mut CompilerState,
 ) -> (ValueIdentifier, Vec<LabelledInstruction>) {
     let result_type = expr.get_type();
@@ -1547,7 +1550,7 @@ fn compile_expr(
                 .enumerate()
                 .map(|(arg_pos, arg_expr)| {
                     let context = format!("_tuple_{arg_pos}");
-                    compile_expr(arg_expr, &context, &arg_expr.get_type(), state)
+                    compile_expr(arg_expr, &context, state)
                 })
                 .unzip();
 
@@ -1566,7 +1569,7 @@ fn compile_expr(
         ast::Expr::Unary(unaryop, inner_expr, _known_type) => {
             let inner_type = inner_expr.get_type();
             let (_inner_expr_addr, inner_expr_code) =
-                compile_expr(inner_expr, "unop_operand", &inner_type, state);
+                compile_expr(inner_expr, "unop_operand", state);
             let code = match unaryop {
                 ast::UnaryOp::Neg => match inner_type {
                     ast_types::DataType::BFE => triton_asm!(push -1 mul),
@@ -1598,15 +1601,14 @@ fn compile_expr(
 
         ast::Expr::Binop(lhs_expr, binop, rhs_expr, _known_type) => {
             let lhs_type = lhs_expr.get_type();
-            let rhs_type = rhs_expr.get_type();
 
             match binop {
                 ast::BinOp::Add => {
                     let (_lhs_expr_addr, lhs_expr_code) =
-                        compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
+                        compile_expr(lhs_expr, "_binop_lhs", state);
 
                     let (_rhs_expr_addr, rhs_expr_code) =
-                        compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
+                        compile_expr(rhs_expr, "_binop_rhs", state);
 
                     let add_code = match result_type {
                         ast_types::DataType::U32 => {
@@ -1643,10 +1645,10 @@ fn compile_expr(
                 }
                 ast::BinOp::And => {
                     let (_lhs_expr_addr, lhs_expr_code) =
-                        compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
+                        compile_expr(lhs_expr, "_binop_lhs", state);
 
                     let (_rhs_expr_addr, rhs_expr_code) =
-                        compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
+                        compile_expr(rhs_expr, "_binop_rhs", state);
 
                     let and_code = match result_type {
                         ast_types::DataType::Bool => triton_asm!(add push 2 eq),
@@ -1661,10 +1663,10 @@ fn compile_expr(
 
                 ast::BinOp::BitAnd => {
                     let (_lhs_expr_addr, lhs_expr_code) =
-                        compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
+                        compile_expr(lhs_expr, "_binop_lhs", state);
 
                     let (_rhs_expr_addr, rhs_expr_code) =
-                        compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
+                        compile_expr(rhs_expr, "_binop_rhs", state);
 
                     let bitwise_and_code = match result_type {
                         ast_types::DataType::U32 => triton_asm!(and),
@@ -1684,10 +1686,10 @@ fn compile_expr(
 
                 ast::BinOp::BitXor => {
                     let (_lhs_expr_addr, lhs_expr_code) =
-                        compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
+                        compile_expr(lhs_expr, "_binop_lhs", state);
 
                     let (_rhs_expr_addr, rhs_expr_code) =
-                        compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
+                        compile_expr(rhs_expr, "_binop_rhs", state);
 
                     use ast_types::DataType::*;
                     let xor_code = match result_type {
@@ -1708,10 +1710,10 @@ fn compile_expr(
                 }
                 ast::BinOp::BitOr => {
                     let (_lhs_expr_addr, lhs_expr_code) =
-                        compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
+                        compile_expr(lhs_expr, "_binop_lhs", state);
 
                     let (_rhs_expr_addr, rhs_expr_code) =
-                        compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
+                        compile_expr(rhs_expr, "_binop_rhs", state);
 
                     use ast_types::DataType::*;
 
@@ -1741,9 +1743,9 @@ fn compile_expr(
                             // TODO: Consider evaluating in opposite order to save a clock-cycle by removing `swap1`
                             // below. This would change the "left-to-right" convention though.
                             let (_lhs_expr_addr, lhs_expr_code) =
-                                compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
+                                compile_expr(lhs_expr, "_binop_lhs", state);
                             let (_rhs_expr_addr, rhs_expr_code) =
-                                compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
+                                compile_expr(rhs_expr, "_binop_rhs", state);
 
                             // Pop numerator and denominator
                             state.function_state.vstack.pop();
@@ -1763,7 +1765,7 @@ fn compile_expr(
                             let rhs_expr_owned = *rhs_expr.to_owned();
                             if matches!(rhs_expr_owned, ast::Expr::Lit(ast::ExprLit::U64(2))) {
                                 let (_lhs_expr_addr, lhs_expr_code) =
-                                    compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
+                                    compile_expr(lhs_expr, "_binop_lhs", state);
                                 let div2 = state
                                     .import_snippet(Box::new(arithmetic::u64::div2_u64::Div2U64));
 
@@ -1776,9 +1778,9 @@ fn compile_expr(
                                 )
                             } else {
                                 let (_lhs_expr_addr, lhs_expr_code) =
-                                    compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
+                                    compile_expr(lhs_expr, "_binop_lhs", state);
                                 let (_rhs_expr_addr, rhs_expr_code) =
-                                    compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
+                                    compile_expr(rhs_expr, "_binop_rhs", state);
 
                                 let div_mod_u64 = state.import_snippet(Box::new(
                                     arithmetic::u64::div_mod_u64::DivModU64,
@@ -1799,9 +1801,9 @@ fn compile_expr(
                         }
                         BFE => {
                             let (_lhs_expr_addr, lhs_expr_code) =
-                                compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
+                                compile_expr(lhs_expr, "_binop_lhs", state);
                             let (_rhs_expr_addr, rhs_expr_code) =
-                                compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
+                                compile_expr(rhs_expr, "_binop_rhs", state);
 
                             // Pop numerator and denominator
                             state.function_state.vstack.pop();
@@ -1817,9 +1819,9 @@ fn compile_expr(
                         }
                         XFE => {
                             let (_lhs_expr_addr, lhs_expr_code) =
-                                compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
+                                compile_expr(lhs_expr, "_binop_lhs", state);
                             let (_rhs_expr_addr, rhs_expr_code) =
-                                compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
+                                compile_expr(rhs_expr, "_binop_rhs", state);
 
                             // Pop numerator and denominator
                             state.function_state.vstack.pop();
@@ -1849,9 +1851,9 @@ fn compile_expr(
                             // TODO: Consider evaluating in opposite order to save a clock-cycle by removing `swap1`
                             // below. This would change the "left-to-right" convention though.
                             let (_lhs_expr_addr, lhs_expr_code) =
-                                compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
+                                compile_expr(lhs_expr, "_binop_lhs", state);
                             let (_rhs_expr_addr, rhs_expr_code) =
-                                compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
+                                compile_expr(rhs_expr, "_binop_rhs", state);
 
                             // Pop numerator and denominator
                             state.function_state.vstack.pop();
@@ -1870,9 +1872,9 @@ fn compile_expr(
                             // divsion and remainder are very expensive in the general case!
                             // Try to use a bitmask instead.
                             let (_lhs_expr_addr, lhs_expr_code) =
-                                compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
+                                compile_expr(lhs_expr, "_binop_lhs", state);
                             let (_rhs_expr_addr, rhs_expr_code) =
-                                compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
+                                compile_expr(rhs_expr, "_binop_rhs", state);
 
                             let div_mod_u64 = state
                                 .import_snippet(Box::new(arithmetic::u64::div_mod_u64::DivModU64));
@@ -1897,10 +1899,10 @@ fn compile_expr(
 
                 ast::BinOp::Eq => {
                     let (_lhs_expr_addr, lhs_expr_code) =
-                        compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
+                        compile_expr(lhs_expr, "_binop_lhs", state);
 
                     let (_rhs_expr_addr, rhs_expr_code) =
-                        compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
+                        compile_expr(rhs_expr, "_binop_rhs", state);
 
                     let eq_code = compile_eq_code(&lhs_type, state);
 
@@ -1912,10 +1914,10 @@ fn compile_expr(
 
                 ast::BinOp::Lt => {
                     let (_lhs_expr_addr, lhs_expr_code) =
-                        compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
+                        compile_expr(lhs_expr, "_binop_lhs", state);
 
                     let (_rhs_expr_addr, rhs_expr_code) =
-                        compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
+                        compile_expr(rhs_expr, "_binop_rhs", state);
 
                     use ast_types::DataType::*;
 
@@ -1950,10 +1952,10 @@ fn compile_expr(
                 // ast::Expr::Binop(lhs_expr, binop, rhs_expr, _known_type)
                 ast::BinOp::Gt => {
                     let (_lhs_expr_addr, lhs_expr_code) =
-                        compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
+                        compile_expr(lhs_expr, "_binop_lhs", state);
 
                     let (_rhs_expr_addr, rhs_expr_code) =
-                        compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
+                        compile_expr(rhs_expr, "_binop_rhs", state);
 
                     use ast_types::DataType::*;
                     state.function_state.vstack.pop();
@@ -1981,10 +1983,10 @@ fn compile_expr(
                 }
                 ast::BinOp::Mul => {
                     let (_lhs_expr_addr, lhs_expr_code) =
-                        compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
+                        compile_expr(lhs_expr, "_binop_lhs", state);
 
                     let (_rhs_expr_addr, rhs_expr_code) =
-                        compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
+                        compile_expr(rhs_expr, "_binop_rhs", state);
 
                     use ast_types::DataType::*;
 
@@ -2034,10 +2036,10 @@ fn compile_expr(
                 }
                 ast::BinOp::Neq => {
                     let (_lhs_expr_addr, lhs_expr_code) =
-                        compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
+                        compile_expr(lhs_expr, "_binop_lhs", state);
 
                     let (_rhs_expr_addr, rhs_expr_code) =
-                        compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
+                        compile_expr(rhs_expr, "_binop_rhs", state);
 
                     let eq_code = compile_eq_code(&lhs_type, state);
 
@@ -2055,10 +2057,10 @@ fn compile_expr(
 
                 ast::BinOp::Or => {
                     let (_lhs_expr_addr, lhs_expr_code) =
-                        compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
+                        compile_expr(lhs_expr, "_binop_lhs", state);
 
                     let (_rhs_expr_addr, rhs_expr_code) =
-                        compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
+                        compile_expr(rhs_expr, "_binop_rhs", state);
 
                     state.function_state.vstack.pop();
                     state.function_state.vstack.pop();
@@ -2076,10 +2078,10 @@ fn compile_expr(
 
                 ast::BinOp::Shl => {
                     let (_lhs_expr_addr, lhs_expr_code) =
-                        compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
+                        compile_expr(lhs_expr, "_binop_lhs", state);
 
                     let (_rhs_expr_addr, rhs_expr_code) =
-                        compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
+                        compile_expr(rhs_expr, "_binop_rhs", state);
 
                     let lhs_type = lhs_expr.get_type();
                     let shl = if matches!(lhs_type, ast_types::DataType::U32) {
@@ -2103,10 +2105,10 @@ fn compile_expr(
 
                 ast::BinOp::Shr => {
                     let (_lhs_expr_addr, lhs_expr_code) =
-                        compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
+                        compile_expr(lhs_expr, "_binop_lhs", state);
 
                     let (_rhs_expr_addr, rhs_expr_code) =
-                        compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
+                        compile_expr(rhs_expr, "_binop_rhs", state);
 
                     let lhs_type = lhs_expr.get_type();
                     let shr = if matches!(lhs_type, ast_types::DataType::U32) {
@@ -2131,10 +2133,10 @@ fn compile_expr(
 
                 ast::BinOp::Sub => {
                     let (_lhs_expr_addr, lhs_expr_code) =
-                        compile_expr(lhs_expr, "_binop_lhs", &lhs_type, state);
+                        compile_expr(lhs_expr, "_binop_lhs", state);
 
                     let (_rhs_expr_addr, rhs_expr_code) =
-                        compile_expr(rhs_expr, "_binop_rhs", &rhs_type, state);
+                        compile_expr(rhs_expr, "_binop_rhs", state);
 
                     let sub_code: Vec<LabelledInstruction> = match result_type {
                         ast_types::DataType::U32 => {
@@ -2202,8 +2204,7 @@ fn compile_expr(
             then_branch,
             else_branch,
         }) => {
-            let (_cond_addr, cond_code) =
-                compile_expr(condition, "if_cond", &condition.get_type(), state);
+            let (_cond_addr, cond_code) = compile_expr(condition, "if_cond", state);
 
             // Condition is handled immediately and it is not on the stack when
             // the `then` or `else` branches are entered.
@@ -2211,11 +2212,30 @@ fn compile_expr(
 
             let branch_start_vstack = state.function_state.vstack.clone();
             let branch_start_var_addr = state.function_state.var_addr.clone();
-            let return_type = then_branch.get_type();
 
             // Compile `then` branch
-            let (then_addr, mut then_body_code) =
-                compile_expr(then_branch, "then", &return_type, state);
+            // 1. Compile all stmt in a iter map
+            // 2. Compile last expression
+            // 3. Compile body cleanup_code
+
+            // 1. Compile all stmt in a iter map
+            let then_branch_statement_code = then_branch
+                .stmts
+                .iter()
+                .map(|stmt| compile_stmt(stmt, state))
+                .collect_vec()
+                .concat();
+            let (then_addr, then_branch_return_expression_code) = compile_expr(
+                &then_branch.return_expr,
+                "then_branch_return_expression",
+                state,
+            );
+
+            let mut then_body_code = [
+                then_branch_statement_code,
+                then_branch_return_expression_code,
+            ]
+            .concat();
 
             // Cleanup stack and variable name mapping after `then` body. Preserve the return
             // value from the `then` branch on the stack, but not on vstack as this value is
@@ -2223,13 +2243,32 @@ fn compile_expr(
             let mut then_body_cleanup_code = state
                 .clear_all_but_top_stack_value_above_height(branch_start_vstack.get_stack_height());
             then_body_code.append(&mut then_body_cleanup_code);
-            let _returned_value_from_then_block = state.function_state.vstack.pop().unwrap();
-            state.verify_same_ordering_of_bindings(&branch_start_vstack, &branch_start_var_addr);
+
+            // Return vstack to the state it was in before the `then` branch was compiled,
+            // so it's ready for the `else` branch compilation.
+            // let _returned_value_from_then_block = state.function_state.vstack.pop().unwrap();
+            state.function_state.vstack = branch_start_vstack.clone();
             state.function_state.var_addr = branch_start_var_addr.clone();
+            state.verify_same_ordering_of_bindings(&branch_start_vstack, &branch_start_var_addr);
 
             // Compile `else` branch
-            let (_else_addr, mut else_body_code) =
-                compile_expr(else_branch, "else", &return_type, state);
+            let else_branch_statement_code = else_branch
+                .stmts
+                .iter()
+                .map(|stmt| compile_stmt(stmt, state))
+                .collect_vec()
+                .concat();
+            let (else_addr, else_branch_return_expression_code) = compile_expr(
+                &else_branch.return_expr,
+                "else_branch_return_expression",
+                state,
+            );
+
+            let mut else_body_code = [
+                else_branch_statement_code,
+                else_branch_return_expression_code,
+            ]
+            .concat();
 
             // Cleanup stack and variable name mapping after `else` body. Preserve the return
             // value from the `else` branch on the stack, but not on vstack, as this is added
@@ -2237,14 +2276,15 @@ fn compile_expr(
             let mut else_body_cleanup_code = state
                 .clear_all_but_top_stack_value_above_height(branch_start_vstack.get_stack_height());
             else_body_code.append(&mut else_body_cleanup_code);
-            let _returned_value_from_else_block = state.function_state.vstack.pop().unwrap();
+            // let _returned_value_from_else_block = state.function_state.vstack.pop().unwrap();
+            state.function_state.vstack = branch_start_vstack.clone();
+            state.function_state.var_addr = branch_start_var_addr.clone();
             state.verify_same_ordering_of_bindings(&branch_start_vstack, &branch_start_var_addr);
-            state.function_state.var_addr = branch_start_var_addr;
 
             // Both branches are compiled as subroutines which are called depending on what `cond`
             // evaluates to.
             let then_subroutine_name = format!("{then_addr}_then");
-            let else_subroutine_name = format!("{then_addr}_else");
+            let else_subroutine_name = format!("{else_addr}_else");
 
             let code = triton_asm!(
                 {&cond_code}
@@ -2284,7 +2324,7 @@ fn compile_expr(
 
         ast::Expr::Cast(expr, _as_type) => {
             let previous_type = expr.get_type();
-            let (_expr_addr, expr_code) = compile_expr(expr, "as", &previous_type, state);
+            let (_expr_addr, expr_code) = compile_expr(expr, "as", state);
             let (_, (_old_data_type, spilled)) = state.function_state.vstack.pop().unwrap();
 
             // I don't think this value *can* be spilled unless maybe if you make a tuple

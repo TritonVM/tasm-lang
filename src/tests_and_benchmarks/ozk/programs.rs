@@ -1,2 +1,3 @@
-pub mod other;
-pub mod structs;
+mod other;
+mod project_euler;
+mod structs;
