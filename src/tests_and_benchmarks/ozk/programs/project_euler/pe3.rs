@@ -1,11 +1,10 @@
 // Allows the use of input/output on the native architecture
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
-#[allow(clippy::needless_else)]
 fn main() {
     // https://projecteuler.net/problem=3
 
-    // Notice that the number used on the Project Euler website i `600851475143`
+    // Notice that the number used on the Project Euler website is `600851475143`
     // but we use a smaller number here, since we don't want this test too take
     // too long.
     // let mut composite_number: u64 = 600851475143;

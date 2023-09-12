@@ -739,12 +739,15 @@ impl<'a> Graft<'a> {
                 attrs: _,
                 and_token: _,
                 raw: _,
-                mutability: _,
+                mutability,
                 expr,
             }) => {
-                // This solution amounts to ignoring the `&` operator
-                // Maybe long-term we want to do something different?
-                self.graft_expr(expr)
+                let inner_expr = self.graft_expr(expr);
+                ast::Expr::Unary(
+                    ast::UnaryOp::Ref(mutability.is_some()),
+                    Box::new(inner_expr),
+                    Default::default(),
+                )
             }
             other => panic!("unsupported: {other:?}"),
         }

@@ -1590,6 +1590,11 @@ fn compile_expr(
                     _ => panic!("Unsupported not of type {inner_type}"),
                 },
                 ast::UnaryOp::Deref => dereference(&inner_type),
+
+                // This reference only works for `Vec<T>` and `MemPointer<U>`, for these data types `S` it
+                // holds that `eval(MemPointer<S>) == eval(S)`, so we don't need to do anything here. For
+                // types that are copy the reference operator is simply ignored.
+                ast::UnaryOp::Ref(_mutable) => vec![],
             };
 
             // Pops the operand from the compiler's view of the stack since

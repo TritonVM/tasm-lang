@@ -936,6 +936,31 @@ fn derive_annotate_expr_type(
                         _ =>  panic!("Cannot dereference type of `{inner_expr_type}` as this expression has:\n{inner_expr:#?}")
                     }
                 }
+                Ref(_mutable) => {
+                    if inner_expr_type.is_copy() {
+                        *unaryop_type = Typing::KnownType(inner_expr_type.clone());
+                        inner_expr_type
+                    } else {
+                        match inner_expr_type {
+                            ast_types::DataType::List(_, _) => {
+                                let resulting_type = ast_types::DataType::MemPointer(Box::new(inner_expr_type));
+                                *unaryop_type = Typing::KnownType(resulting_type.clone());
+                                resulting_type
+                            }
+                            ast_types::DataType::MemPointer(inner_inner_expr_type) => {
+                                match *inner_inner_expr_type {
+                                    ast_types::DataType::List(_, _) => {
+                                        let resulting_type = ast_types::DataType::MemPointer(Box::new(*inner_inner_expr_type));
+                                        *unaryop_type = Typing::KnownType(resulting_type.clone());
+                                        resulting_type
+                                    },
+                                    _ => panic!("Can only reference Copy types or `Vec<T>` for now. Got: {inner_expr:?}")
+                                }
+                            },
+                            _ => panic!("Can only reference Copy types or `Vec<T>` for now. Got: {inner_expr:?}")
+                    }
+                }
+                },
             }
         }
 
@@ -1126,8 +1151,12 @@ fn derive_annotate_expr_type(
                     let no_hint = None;
                     let lhs_type =
                         derive_annotate_expr_type(lhs_expr, no_hint, state, env_fn_signature);
-                    let rhs_type =
-                        derive_annotate_expr_type(rhs_expr, no_hint, state, env_fn_signature);
+                    let rhs_type = derive_annotate_expr_type(
+                        rhs_expr,
+                        Some(&lhs_type),
+                        state,
+                        env_fn_signature,
+                    );
 
                     assert_type_equals(&lhs_type, &rhs_type, "neq-expr");
                     assert!(

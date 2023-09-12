@@ -1,0 +1,91 @@
+// Allows the use of input/output on the native architecture
+use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
+
+#[allow(clippy::needless_else)]
+fn main() {
+    // https://projecteuler.net/problem=4
+    // Warning! Takes four minutes to run on my fast machine with the original
+    // problem size, which is `min_value = 100`, `max_value = 1000`
+
+    /// Convert a u32 number into a list of its decimal digits. Overwrites the
+    /// list provided as input. Least significant digit occupies the lowest
+    /// indices of the `digits` list.
+    fn find_decimal_digits(value: u32, digits: &mut Vec<u32>) {
+        let mut rem: u32 = value;
+        digits.clear();
+        while rem != 0 {
+            digits.push(rem % 10);
+            rem /= 10;
+        }
+
+        return;
+    }
+
+    /// Return true iff list is the same read backwards as forwards
+    fn list_is_palindrome(list: &Vec<u32>) -> bool {
+        let list_length: usize = list.len();
+        let mut i: usize = 0;
+        let mut result: bool = true;
+        while i != list_length / 2 {
+            if list[i] != list[list_length - 1 - i] {
+                result = false;
+            }
+
+            i += 1;
+        }
+
+        return result;
+    }
+
+    let mut decimal_digits: Vec<u32> = Vec::<u32>::with_capacity(10);
+    let min_value: u32 = 10;
+    let max_value: u32 = 100;
+    let mut lhs: u32 = min_value;
+    let mut max_palindrome: u32 = 0;
+    while lhs != max_value {
+        let mut rhs: u32 = min_value;
+        while rhs != lhs + 1 {
+            let prod: u32 = lhs * rhs;
+            find_decimal_digits(prod, &mut decimal_digits);
+            if list_is_palindrome(&decimal_digits) && prod > max_palindrome {
+                max_palindrome = prod;
+            }
+            rhs += 1;
+        }
+
+        lhs += 1;
+    }
+
+    tasm::tasm_io_write_to_stdout_u32(max_palindrome);
+
+    return;
+}
+
+mod tests {
+    use super::*;
+    use crate::tests_and_benchmarks::{
+        ozk::{ozk_parsing, rust_shadows},
+        test_helpers::shared_test::*,
+    };
+    use itertools::Itertools;
+    use triton_vm::NonDeterminism;
+
+    #[test]
+    fn pe4_test() {
+        // Test function on host machine
+        let stdin = vec![];
+        let non_determinism = NonDeterminism::new(vec![]);
+        let native_output =
+            rust_shadows::wrap_main_with_io(&main)(stdin.clone(), non_determinism.clone());
+
+        // Test function in Triton VM
+        let (parsed, _, _) = ozk_parsing::parse_main_and_structs("project_euler", "pe4");
+        let expected_stack_diff = 0;
+        let stack_start = vec![];
+        let vm_output =
+            execute_with_stack_safe_lists(&parsed, stack_start, expected_stack_diff).unwrap();
+        assert_eq!(native_output, vm_output.output);
+
+        println!("vm_output.output: {}", vm_output.output.iter().join(","));
+    }
+}

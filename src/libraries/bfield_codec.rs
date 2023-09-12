@@ -219,24 +219,29 @@ impl Library for BFieldCodecLib {
                 _ => panic!("Argument list to `decode` function call must have length one. Got args:\n{args:#?}"),
             };
 
-            let error_msg = format!("Expected T::decode(tasm::load_from_memory(BFieldElement::new(<n>)))). Got: {decode_arg:#?}");
+            let error_msg = format!("Expected T::decode(&tasm::load_from_memory(BFieldElement::new(<n>)))). Got: {decode_arg:#?}");
             let decode_arg = graft_config.graft_expr(&decode_arg);
             const LOAD_FROM_MEMORY_FN_NAME: &str = "tasm::load_from_memory";
             let pointer_to_struct = match decode_arg {
-                ast::Expr::FnCall(ast::FnCall {
-                    name,
-                    args: load_function_args,
-                    type_parameter: _,
-                    arg_evaluation_order: _,
-                    annot: _,
-                }) => {
-                    assert_eq!(LOAD_FROM_MEMORY_FN_NAME, name, "{error_msg}");
-                    assert_eq!(1, load_function_args.len(), "{error_msg}");
-                    match &load_function_args[0] {
-                        // TODO: Maybe `address` can be an expression and doesn't have to be a literal?
-                        // Do we need or want that?
-                        ast::Expr::Lit(ast::ExprLit::BFE(address_value)) => address_value.to_owned(),
-                        _ => panic!("Argument to {LOAD_FROM_MEMORY_FN_NAME} must be known at compile time and must be a BFieldElement"),
+                ast::Expr::Unary(ast::UnaryOp::Ref(false), inner_expr, _) => {
+                    match *inner_expr {
+                        ast::Expr::FnCall(ast::FnCall {
+                            name,
+                            args: load_function_args,
+                            type_parameter: _,
+                            arg_evaluation_order: _,
+                            annot: _,
+                        }) => {
+                            assert_eq!(LOAD_FROM_MEMORY_FN_NAME, name, "{error_msg}");
+                            assert_eq!(1, load_function_args.len(), "{error_msg}");
+                            match &load_function_args[0] {
+                                // TODO: Maybe `address` can be an expression and doesn't have to be a literal?
+                                // Do we need or want that?
+                                ast::Expr::Lit(ast::ExprLit::BFE(address_value)) => address_value.to_owned(),
+                                _ => panic!("Argument to {LOAD_FROM_MEMORY_FN_NAME} must be known at compile time and must be a BFieldElement"),
+                            }
+                        }
+                        _ => panic!("{error_msg}"),
                     }
                 }
                 _ => panic!("{error_msg}"),

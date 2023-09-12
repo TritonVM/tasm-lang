@@ -217,6 +217,7 @@ pub enum UnaryOp {
     Neg,
     Not,
     Deref,
+    Ref(bool),
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]

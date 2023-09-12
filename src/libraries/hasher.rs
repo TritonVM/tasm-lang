@@ -139,18 +139,12 @@ impl HasherLib {
             args: vec![ast_types::AbstractArgument::ValueArgument(
                 ast_types::AbstractValueArg {
                     name: "list".to_owned(),
-                    // I *think* we should use *Vec here, alternatively just Vec
-                    data_type: ast_types::DataType::List(
-                        Box::new(ast_types::DataType::BFE),
-                        self.list_type,
-                    ),
-
-                    // data_type: ast_types::DataType::MemPointer(Box::new(
-                    //     ast_types::DataType::List(
-                    //         Box::new(ast_types::DataType::BFE),
-                    //         self.list_type,
-                    //     ),
-                    // )),
+                    data_type: ast_types::DataType::MemPointer(Box::new(
+                        ast_types::DataType::List(
+                            Box::new(ast_types::DataType::BFE),
+                            self.list_type,
+                        ),
+                    )),
                     mutable: false,
                 },
             )],
@@ -179,7 +173,6 @@ impl HasherLib {
             // _ *elem_0 len
 
 
-            // push 999 assert
             call { tasm_libs_hash_varlen_label }
             // _ digest
             return
