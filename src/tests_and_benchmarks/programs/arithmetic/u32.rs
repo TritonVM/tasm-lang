@@ -207,81 +207,118 @@ mod run_tests {
     #[test]
     fn cmp_u32_dynamic_test() {
         let mut rng = thread_rng();
+        let mut lt_test_cases = vec![];
+        let mut lte_test_cases = vec![];
+        let mut gt_test_cases = vec![];
+        let mut gte_test_cases = vec![];
         for _ in 0..10 {
             let lhs = rng.next_u32();
             let rhs = rng.next_u32();
-            compare_prop_with_stack_safe_lists(
-                &lt_u32_dynamic_rast(),
-                vec![u32_lit(lhs), u32_lit(rhs)],
+
+            let function_input_different = vec![u32_lit(lhs), u32_lit(rhs)];
+            let function_input_same_value = vec![u32_lit(lhs), u32_lit(lhs)];
+            lt_test_cases.push(InputOutputTestCase::new(
+                function_input_different.clone(),
                 vec![bool_lit(lhs < rhs)],
-            );
-
-            compare_prop_with_stack_safe_lists(
-                &lt_u32_dynamic_rast(),
-                vec![u32_lit(lhs), u32_lit(lhs)],
+            ));
+            lt_test_cases.push(InputOutputTestCase::new(
+                function_input_same_value.clone(),
                 vec![bool_lit(false)],
-            );
-
-            compare_prop_with_stack_safe_lists(
-                &gt_u32_dynamic_rast(),
-                vec![u32_lit(lhs), u32_lit(rhs)],
+            ));
+            lte_test_cases.push(InputOutputTestCase::new(
+                function_input_different.clone(),
+                vec![bool_lit(lhs <= rhs)],
+            ));
+            lte_test_cases.push(InputOutputTestCase::new(
+                function_input_same_value.clone(),
+                vec![bool_lit(true)],
+            ));
+            gt_test_cases.push(InputOutputTestCase::new(
+                function_input_different.clone(),
                 vec![bool_lit(lhs > rhs)],
-            );
-
-            compare_prop_with_stack_safe_lists(
-                &gt_u32_dynamic_rast(),
-                vec![u32_lit(lhs), u32_lit(lhs)],
+            ));
+            gt_test_cases.push(InputOutputTestCase::new(
+                function_input_same_value.clone(),
                 vec![bool_lit(false)],
-            );
+            ));
+            gte_test_cases.push(InputOutputTestCase::new(
+                function_input_different.clone(),
+                vec![bool_lit(lhs >= rhs)],
+            ));
+            gte_test_cases.push(InputOutputTestCase::new(
+                function_input_same_value.clone(),
+                vec![bool_lit(true)],
+            ));
         }
 
         // 0 vs 0
-        compare_prop_with_stack_safe_lists(
-            &lt_u32_dynamic_rast(),
-            vec![u32_lit(0), u32_lit(0)],
+        let input_0_0 = vec![u32_lit(0), u32_lit(0)];
+        lt_test_cases.push(InputOutputTestCase::new(
+            input_0_0.clone(),
             vec![bool_lit(false)],
-        );
-        compare_prop_with_stack_safe_lists(
-            &gt_u32_dynamic_rast(),
-            vec![u32_lit(0), u32_lit(0)],
-            vec![bool_lit(false)],
-        );
-
-        // 0 vs 1
-        compare_prop_with_stack_safe_lists(
-            &lt_u32_dynamic_rast(),
-            vec![u32_lit(0), u32_lit(1)],
+        ));
+        lte_test_cases.push(InputOutputTestCase::new(
+            input_0_0.clone(),
             vec![bool_lit(true)],
-        );
-        compare_prop_with_stack_safe_lists(
-            &gt_u32_dynamic_rast(),
-            vec![u32_lit(0), u32_lit(1)],
+        ));
+        gt_test_cases.push(InputOutputTestCase::new(
+            input_0_0.clone(),
             vec![bool_lit(false)],
-        );
+        ));
+        gte_test_cases.push(InputOutputTestCase::new(input_0_0, vec![bool_lit(true)]));
 
-        // 1 vs 0
-        compare_prop_with_stack_safe_lists(
-            &lt_u32_dynamic_rast(),
-            vec![u32_lit(1), u32_lit(0)],
-            vec![bool_lit(false)],
-        );
-        compare_prop_with_stack_safe_lists(
-            &gt_u32_dynamic_rast(),
-            vec![u32_lit(1), u32_lit(0)],
+        // // 0 vs 1
+        let input_0_1 = vec![u32_lit(0), u32_lit(1)];
+        lt_test_cases.push(InputOutputTestCase::new(
+            input_0_1.clone(),
             vec![bool_lit(true)],
-        );
+        ));
+        lte_test_cases.push(InputOutputTestCase::new(
+            input_0_1.clone(),
+            vec![bool_lit(true)],
+        ));
+        gt_test_cases.push(InputOutputTestCase::new(
+            input_0_1.clone(),
+            vec![bool_lit(false)],
+        ));
+        gte_test_cases.push(InputOutputTestCase::new(input_0_1, vec![bool_lit(false)]));
 
-        // 1 vs 1
-        compare_prop_with_stack_safe_lists(
-            &lt_u32_dynamic_rast(),
-            vec![u32_lit(1), u32_lit(1)],
+        // // 1 vs 0
+        let input_1_0 = vec![u32_lit(1), u32_lit(0)];
+        lt_test_cases.push(InputOutputTestCase::new(
+            input_1_0.clone(),
             vec![bool_lit(false)],
-        );
-        compare_prop_with_stack_safe_lists(
-            &gt_u32_dynamic_rast(),
-            vec![u32_lit(1), u32_lit(1)],
+        ));
+        lte_test_cases.push(InputOutputTestCase::new(
+            input_1_0.clone(),
             vec![bool_lit(false)],
-        );
+        ));
+        gt_test_cases.push(InputOutputTestCase::new(
+            input_1_0.clone(),
+            vec![bool_lit(true)],
+        ));
+        gte_test_cases.push(InputOutputTestCase::new(input_1_0, vec![bool_lit(true)]));
+
+        // // 1 vs 1
+        let input_1_1 = vec![u32_lit(1), u32_lit(1)];
+        lt_test_cases.push(InputOutputTestCase::new(
+            input_1_1.clone(),
+            vec![bool_lit(false)],
+        ));
+        lte_test_cases.push(InputOutputTestCase::new(
+            input_1_1.clone(),
+            vec![bool_lit(true)],
+        ));
+        gt_test_cases.push(InputOutputTestCase::new(
+            input_1_1.clone(),
+            vec![bool_lit(false)],
+        ));
+        gte_test_cases.push(InputOutputTestCase::new(input_1_1, vec![bool_lit(true)]));
+
+        multiple_compare_prop_with_stack_safe_lists(&lt_u32_dynamic_rast(), lt_test_cases);
+        multiple_compare_prop_with_stack_safe_lists(&lte_u32_dynamic_rast(), lte_test_cases);
+        multiple_compare_prop_with_stack_safe_lists(&gt_u32_dynamic_rast(), gt_test_cases);
+        multiple_compare_prop_with_stack_safe_lists(&gte_u32_dynamic_rast(), gte_test_cases);
 
         fn lt_u32_dynamic_rast() -> syn::ItemFn {
             item_fn(parse_quote! {
@@ -295,6 +332,22 @@ mod run_tests {
             item_fn(parse_quote! {
                 fn gt_u32_dynamic(lhs: u32, rhs: u32) -> bool {
                     return lhs > rhs;
+                }
+            })
+        }
+
+        fn lte_u32_dynamic_rast() -> syn::ItemFn {
+            item_fn(parse_quote! {
+                fn lte_u32_dynamic(lhs: u32, rhs: u32) -> bool {
+                    return lhs <= rhs;
+                }
+            })
+        }
+
+        fn gte_u32_dynamic_rast() -> syn::ItemFn {
+            item_fn(parse_quote! {
+                fn gte_u32_dynamic(lhs: u32, rhs: u32) -> bool {
+                    return lhs >= rhs;
                 }
             })
         }

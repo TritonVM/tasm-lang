@@ -443,6 +443,146 @@ mod run_tests {
     }
 
     #[test]
+    fn lte_u64_test() {
+        let mut test_cases = vec![
+            InputOutputTestCase::new(vec![u64_lit(0), u64_lit(0)], vec![bool_lit(true)]),
+            InputOutputTestCase::new(vec![u64_lit(0), u64_lit(1)], vec![bool_lit(true)]),
+            InputOutputTestCase::new(vec![u64_lit(1), u64_lit(0)], vec![bool_lit(false)]),
+            InputOutputTestCase::new(vec![u64_lit(1), u64_lit(1)], vec![bool_lit(true)]),
+            InputOutputTestCase::new(vec![u64_lit(1), u64_lit(2)], vec![bool_lit(true)]),
+            InputOutputTestCase::new(vec![u64_lit(2), u64_lit(1)], vec![bool_lit(false)]),
+            InputOutputTestCase::new(vec![u64_lit(2), u64_lit(2)], vec![bool_lit(true)]),
+            InputOutputTestCase::new(vec![u64_lit(2), u64_lit(3)], vec![bool_lit(true)]),
+            InputOutputTestCase::new(vec![u64_lit(3), u64_lit(2)], vec![bool_lit(false)]),
+            InputOutputTestCase::new(vec![u64_lit(3), u64_lit(3)], vec![bool_lit(true)]),
+            InputOutputTestCase::new(vec![u64_lit(12001), u64_lit(12001)], vec![bool_lit(true)]),
+            InputOutputTestCase::new(vec![u64_lit(12001), u64_lit(12002)], vec![bool_lit(true)]),
+            InputOutputTestCase::new(vec![u64_lit(12002), u64_lit(12001)], vec![bool_lit(false)]),
+            InputOutputTestCase::new(vec![u64_lit(12002), u64_lit(12002)], vec![bool_lit(true)]),
+            InputOutputTestCase::new(
+                vec![u64_lit((1 << 40) + 12), u64_lit((1 << 40) + 12)],
+                vec![bool_lit(true)],
+            ),
+            InputOutputTestCase::new(
+                vec![u64_lit((1 << 40) + 12), u64_lit((1 << 40) + 13)],
+                vec![bool_lit(true)],
+            ),
+            InputOutputTestCase::new(
+                vec![u64_lit((1 << 40) + 13), u64_lit((1 << 40) + 12)],
+                vec![bool_lit(false)],
+            ),
+        ];
+
+        let values_lhs: Vec<u64> = random_elements(10);
+        let values_rhs: Vec<u64> = random_elements(10);
+        test_cases.append(
+            &mut values_lhs
+                .iter()
+                .zip_eq(values_rhs.iter())
+                .map(|(lhs, rhs)| {
+                    InputOutputTestCase::new(
+                        vec![u64_lit(*lhs), u64_lit(*rhs)],
+                        vec![bool_lit(*lhs <= *rhs)],
+                    )
+                })
+                .collect_vec(),
+        );
+        multiple_compare_prop_with_stack_safe_lists(&lte_u64_rast(), test_cases);
+        fn lte_u64_rast() -> syn::ItemFn {
+            item_fn(parse_quote! {
+                fn lte_u64(lhs: u64, rhs: u64) -> bool {
+                    return lhs <= rhs;
+                }
+            })
+        }
+
+        compare_prop_with_stack_safe_lists(&lte_in_while_loop_rast(), vec![], vec![u64_lit(4)]);
+        fn lte_in_while_loop_rast() -> syn::ItemFn {
+            item_fn(parse_quote! {
+                fn lte_u64() -> u64 {
+                    let mut i: u64 = 0;
+
+                    while i <= 3 {
+                        i += 1;
+                    }
+
+                    return i;
+                }
+            })
+        }
+    }
+
+    #[test]
+    fn gte_u64_test() {
+        let mut test_cases = vec![
+            InputOutputTestCase::new(vec![u64_lit(0), u64_lit(0)], vec![bool_lit(true)]),
+            InputOutputTestCase::new(vec![u64_lit(0), u64_lit(1)], vec![bool_lit(false)]),
+            InputOutputTestCase::new(vec![u64_lit(1), u64_lit(0)], vec![bool_lit(true)]),
+            InputOutputTestCase::new(vec![u64_lit(1), u64_lit(1)], vec![bool_lit(true)]),
+            InputOutputTestCase::new(vec![u64_lit(1), u64_lit(2)], vec![bool_lit(false)]),
+            InputOutputTestCase::new(vec![u64_lit(2), u64_lit(1)], vec![bool_lit(true)]),
+            InputOutputTestCase::new(vec![u64_lit(2), u64_lit(2)], vec![bool_lit(true)]),
+            InputOutputTestCase::new(vec![u64_lit(2), u64_lit(3)], vec![bool_lit(false)]),
+            InputOutputTestCase::new(vec![u64_lit(3), u64_lit(2)], vec![bool_lit(true)]),
+            InputOutputTestCase::new(vec![u64_lit(3), u64_lit(3)], vec![bool_lit(true)]),
+            InputOutputTestCase::new(vec![u64_lit(12001), u64_lit(12001)], vec![bool_lit(true)]),
+            InputOutputTestCase::new(vec![u64_lit(12001), u64_lit(12002)], vec![bool_lit(false)]),
+            InputOutputTestCase::new(vec![u64_lit(12002), u64_lit(12001)], vec![bool_lit(true)]),
+            InputOutputTestCase::new(vec![u64_lit(12002), u64_lit(12002)], vec![bool_lit(true)]),
+            InputOutputTestCase::new(
+                vec![u64_lit((1 << 40) + 12), u64_lit((1 << 40) + 12)],
+                vec![bool_lit(true)],
+            ),
+            InputOutputTestCase::new(
+                vec![u64_lit((1 << 40) + 12), u64_lit((1 << 40) + 13)],
+                vec![bool_lit(false)],
+            ),
+            InputOutputTestCase::new(
+                vec![u64_lit((1 << 40) + 13), u64_lit((1 << 40) + 12)],
+                vec![bool_lit(true)],
+            ),
+        ];
+
+        let values_lhs: Vec<u64> = random_elements(10);
+        let values_rhs: Vec<u64> = random_elements(10);
+        test_cases.append(
+            &mut values_lhs
+                .iter()
+                .zip_eq(values_rhs.iter())
+                .map(|(lhs, rhs)| {
+                    InputOutputTestCase::new(
+                        vec![u64_lit(*lhs), u64_lit(*rhs)],
+                        vec![bool_lit(*lhs >= *rhs)],
+                    )
+                })
+                .collect_vec(),
+        );
+        multiple_compare_prop_with_stack_safe_lists(&gte_u64_rast(), test_cases);
+        fn gte_u64_rast() -> syn::ItemFn {
+            item_fn(parse_quote! {
+                fn gte_u64(lhs: u64, rhs: u64) -> bool {
+                    return lhs >= rhs;
+                }
+            })
+        }
+
+        compare_prop_with_stack_safe_lists(&gte_in_while_loop_rast(), vec![], vec![u64_lit(13)]);
+        fn gte_in_while_loop_rast() -> syn::ItemFn {
+            item_fn(parse_quote! {
+                fn gte_u64() -> u64 {
+                    let mut i: u64 = 16;
+
+                    while i >= 14 {
+                        i -= 1;
+                    }
+
+                    return i;
+                }
+            })
+        }
+    }
+
+    #[test]
     fn leading_zeros_u64_test() {
         let values: Vec<u64> = random_elements(40);
         let mut test_cases = values

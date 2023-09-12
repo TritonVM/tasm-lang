@@ -548,16 +548,50 @@ impl<'a> Graft<'a> {
     pub(crate) fn graft_expr(&self, rust_exp: &syn::Expr) -> ast::Expr<Annotation> {
         match rust_exp {
             syn::Expr::Binary(bin_expr) => {
+                // Handle `<=` and `>=`
                 let left = self.graft_expr(&bin_expr.left);
-                let ast_binop: ast::BinOp = Self::graft_binop(bin_expr.op);
                 let right = self.graft_expr(&bin_expr.right);
-
-                ast::Expr::Binop(
-                    Box::new(left),
-                    ast_binop,
-                    Box::new(right),
-                    Default::default(),
-                )
+                if matches!(bin_expr.op, syn::BinOp::Le(_)) {
+                    // Rewrite
+                    // `lhs <= rhs`
+                    // to
+                    // `!(lhs > rhs)`
+                    let replacement_binop = ast::BinOp::Gt;
+                    ast::Expr::Unary(
+                        ast::UnaryOp::Not,
+                        Box::new(ast::Expr::Binop(
+                            Box::new(left),
+                            replacement_binop,
+                            Box::new(right),
+                            Default::default(),
+                        )),
+                        Default::default(),
+                    )
+                } else if matches!(bin_expr.op, syn::BinOp::Ge(_)) {
+                    // Rewrite
+                    // `lhs >= rhs`
+                    // to
+                    // `!(lhs < rhs)`
+                    let replacement_binop = ast::BinOp::Lt;
+                    ast::Expr::Unary(
+                        ast::UnaryOp::Not,
+                        Box::new(ast::Expr::Binop(
+                            Box::new(left),
+                            replacement_binop,
+                            Box::new(right),
+                            Default::default(),
+                        )),
+                        Default::default(),
+                    )
+                } else {
+                    let ast_binop = Self::graft_binop(bin_expr.op);
+                    ast::Expr::Binop(
+                        Box::new(left),
+                        ast_binop,
+                        Box::new(right),
+                        Default::default(),
+                    )
+                }
             }
             syn::Expr::Path(path) => {
                 let path = &path.path;
