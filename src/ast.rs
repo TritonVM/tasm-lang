@@ -220,6 +220,17 @@ pub enum UnaryOp {
     Ref(bool),
 }
 
+impl UnaryOp {
+    pub fn label_friendly_name(&self) -> String {
+        match self {
+            UnaryOp::Neg => "negative".to_owned(),
+            UnaryOp::Not => "not".to_owned(),
+            UnaryOp::Deref => "deref".to_owned(),
+            UnaryOp::Ref(mutable) => format!("ret_L{mutable}R"),
+        }
+    }
+}
+
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum Expr<T> {
     Lit(ExprLit<T>),
@@ -247,7 +258,7 @@ impl<T> Expr<T> {
             Expr::FnCall(_) => "fn_call".to_owned(),
             Expr::MethodCall(_) => "method_call_method_name".to_owned(),
             Expr::Binop(_, binop, _, _) => format!("binop_{binop:?}"),
-            Expr::Unary(unaryop, _, _) => format!("unaryop_{unaryop:?}"),
+            Expr::Unary(unaryop, _, _) => format!("unaryop_{}", unaryop.label_friendly_name()),
             Expr::If(_) => "if_else".to_owned(),
             Expr::Cast(_, dt) => format!("cast_{}", dt.label_friendly_name()),
         }
