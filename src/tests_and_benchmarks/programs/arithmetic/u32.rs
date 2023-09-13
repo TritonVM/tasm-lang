@@ -185,6 +185,58 @@ mod run_tests {
     }
 
     #[test]
+    fn pow_u32_run_test() {
+        fn add_test_case(
+            base: u32,
+            exp: u32,
+            expected: u32,
+            test_cases: &mut Vec<InputOutputTestCase>,
+        ) {
+            assert_eq!(
+                base.pow(exp),
+                expected,
+                "Expected value must agree with `rustc` definition."
+            );
+            test_cases.push(InputOutputTestCase::new(
+                vec![u32_lit(base), u32_lit(exp)],
+                vec![u32_lit(expected)],
+            ))
+        }
+
+        let mut test_cases = vec![];
+        add_test_case(0, 0, 1, &mut test_cases);
+        add_test_case(1, 0, 1, &mut test_cases);
+        add_test_case(0, 1, 0, &mut test_cases);
+        add_test_case(1, 1, 1, &mut test_cases);
+        add_test_case(1, 2, 1, &mut test_cases);
+        add_test_case(1, 2, 1, &mut test_cases);
+        add_test_case(1, 14, 1, &mut test_cases);
+        add_test_case(1, 1 << 31, 1, &mut test_cases);
+        add_test_case(2, 1, 2, &mut test_cases);
+        add_test_case(2, 2, 4, &mut test_cases);
+        add_test_case(2, 3, 8, &mut test_cases);
+        add_test_case(2, 30, 1 << 30, &mut test_cases);
+        add_test_case(2, 31, 1 << 31, &mut test_cases);
+        add_test_case(3, 1, 3, &mut test_cases);
+        add_test_case(3, 2, 9, &mut test_cases);
+        add_test_case(3, 3, 27, &mut test_cases);
+        add_test_case(3, 4, 81, &mut test_cases);
+        add_test_case(4, 4, 256, &mut test_cases);
+        add_test_case(10, 7, 10_000_000, &mut test_cases);
+        add_test_case(10, 9, 1_000_000_000, &mut test_cases);
+        add_test_case(1 << 15, 2, 1 << 30, &mut test_cases);
+        multiple_compare_prop_with_stack_safe_lists(&pow_u32_rast(), test_cases);
+
+        fn pow_u32_rast() -> syn::ItemFn {
+            item_fn(parse_quote! {
+                fn mul_u32(base: u32, exponent: u32) -> u32 {
+                    return base.pow(exponent);
+                }
+            })
+        }
+    }
+
+    #[test]
     fn bitwise_and_u32_test() {
         let lhs: u32 = random();
         let rhs: u32 = random();

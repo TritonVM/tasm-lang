@@ -14,6 +14,7 @@ pub struct UnsignedIntegersLib {
 
 const LEADING_ZEROS_METHOD: &str = "leading_zeros";
 const COUNT_ONES_METHOD: &str = "count_ones";
+const POW_METHOD: &str = "pow";
 
 impl Library for UnsignedIntegersLib {
     fn get_function_name(&self, _full_name: &str) -> Option<String> {
@@ -26,7 +27,10 @@ impl Library for UnsignedIntegersLib {
         receiver_type: &ast_types::DataType,
     ) -> Option<String> {
         if is_u32_based_type(receiver_type)
-            && matches!(method_name, LEADING_ZEROS_METHOD | COUNT_ONES_METHOD)
+            && matches!(
+                method_name,
+                LEADING_ZEROS_METHOD | COUNT_ONES_METHOD | POW_METHOD
+            )
         {
             return Some(method_name.to_owned());
         }
@@ -45,8 +49,12 @@ impl Library for UnsignedIntegersLib {
             panic!("Cannot call unsigned integer method on non-u32 based value. Receiver type was: {receiver_type}");
         }
 
-        if method_name == COUNT_ONES_METHOD && *receiver_type == ast_types::DataType::U32 {
+        if method_name == COUNT_ONES_METHOD && ast_types::DataType::U32 == *receiver_type {
             return get_count_ones_u32_method().signature;
+        }
+
+        if method_name == POW_METHOD && ast_types::DataType::U32 == *receiver_type {
+            return get_pow_u32_method().signature;
         }
 
         let snippet = name_to_tasm_lib_snippet(method_name, receiver_type)
@@ -106,6 +114,10 @@ impl Library for UnsignedIntegersLib {
             return get_count_ones_u32_method().body;
         }
 
+        if method_name == POW_METHOD && ast_types::DataType::U32 == *receiver_type {
+            return get_pow_u32_method().body;
+        }
+
         let snippet = name_to_tasm_lib_snippet(method_name, receiver_type)
             .unwrap_or_else(|| panic!("Unknown function name {method_name}"));
         let entrypoint = snippet.entrypoint();
@@ -144,6 +156,47 @@ impl Library for UnsignedIntegersLib {
         _rust_method_call: &syn::ExprMethodCall,
     ) -> Option<ast::Expr<super::Annotation>> {
         None
+    }
+}
+
+fn get_pow_u32_method() -> LibraryFunction {
+    let fn_signature = ast::FnSignature {
+        name: POW_METHOD.to_owned(),
+        args: vec![
+            ast_types::AbstractArgument::ValueArgument(ast_types::AbstractValueArg {
+                name: "base".to_owned(),
+                data_type: ast_types::DataType::U32,
+                mutable: false,
+            }),
+            ast_types::AbstractArgument::ValueArgument(ast_types::AbstractValueArg {
+                name: "exponent".to_owned(),
+                data_type: ast_types::DataType::U32,
+                mutable: false,
+            }),
+        ],
+        output: ast_types::DataType::U32,
+        arg_evaluation_order: Default::default(),
+    };
+
+    LibraryFunction {
+        signature: fn_signature,
+        // Crash if result is not u32
+        body: triton_asm!(
+            // _ base exp
+            swap 1
+            // _ exp base
+            pow
+            // _ base**exp
+            split
+            // _ res_hi res_lo
+            swap 1
+            // _ res_lo res_hi
+            push 0
+            eq
+            // _ res_lo (res_hi == 0)
+            assert
+            // _ res_lo
+        ),
     }
 }
 
