@@ -10,6 +10,9 @@ use super::{Library, LibraryFunction};
 const FUNCTION_NAME_NEW_BFE: &str = "BFieldElement::new";
 const FUNCTION_NAME_ZERO: &str = "BFieldElement::zero";
 const FUNCTION_NAME_ONE: &str = "BFieldElement::one";
+const METHOD_NAME_MOD_POW_U32: &str = "mod_pow_u32";
+const METHOD_NAME_LIFT: &str = "lift";
+const METHOD_NAME_VALUE: &str = "value";
 
 #[derive(Clone, Debug)]
 pub struct BfeLibrary;
@@ -30,7 +33,10 @@ impl Library for BfeLibrary {
     ) -> Option<String> {
         match receiver_type {
             ast_types::DataType::BFE => {
-                if method_name == "lift" || method_name == "value" {
+                if method_name == METHOD_NAME_LIFT
+                    || method_name == METHOD_NAME_VALUE
+                    || method_name == METHOD_NAME_MOD_POW_U32
+                {
                     Some(method_name.to_owned())
                 } else {
                     None
@@ -48,12 +54,16 @@ impl Library for BfeLibrary {
         _type_checker_state: &crate::type_checker::CheckState,
     ) -> ast::FnSignature {
         if matches!(receiver_type, ast_types::DataType::BFE) {
-            if method_name == "lift" {
+            if method_name == METHOD_NAME_LIFT {
                 return bfe_lift_method().signature;
             }
 
-            if method_name == "value" {
+            if method_name == METHOD_NAME_VALUE {
                 return bfe_value_method().signature;
+            }
+
+            if method_name == METHOD_NAME_MOD_POW_U32 {
+                return bfe_mod_pow_method().signature;
             }
         }
 
@@ -84,12 +94,16 @@ impl Library for BfeLibrary {
             // TODO: Instead of inlining this, we could add the subroutine to the
             // compiler state and the call that subroutine. And then let the inline
             // handle whatever needs to be inlined.
-            if method_name == "lift" {
+            if method_name == METHOD_NAME_LIFT {
                 return bfe_lift_method().body;
             }
 
-            if method_name == "value" {
+            if method_name == METHOD_NAME_VALUE {
                 return bfe_value_method().body;
+            }
+
+            if method_name == METHOD_NAME_MOD_POW_U32 {
+                return bfe_mod_pow_method().body;
             }
         }
 
@@ -217,9 +231,34 @@ impl Library for BfeLibrary {
     }
 }
 
+fn bfe_mod_pow_method() -> LibraryFunction {
+    let fn_signature = ast::FnSignature {
+        name: METHOD_NAME_MOD_POW_U32.to_owned(),
+        args: vec![
+            ast_types::AbstractArgument::ValueArgument(ast_types::AbstractValueArg {
+                name: "base".to_owned(),
+                data_type: ast_types::DataType::BFE,
+                mutable: false,
+            }),
+            ast_types::AbstractArgument::ValueArgument(ast_types::AbstractValueArg {
+                name: "exponent".to_owned(),
+                data_type: ast_types::DataType::U32,
+                mutable: false,
+            }),
+        ],
+        output: ast_types::DataType::BFE,
+        arg_evaluation_order: Default::default(),
+    };
+
+    LibraryFunction {
+        signature: fn_signature,
+        body: triton_asm!(swap 1 pow),
+    }
+}
+
 fn bfe_lift_method() -> LibraryFunction {
     let fn_signature = ast::FnSignature {
-        name: "lift".to_owned(),
+        name: METHOD_NAME_LIFT.to_owned(),
         args: vec![ast_types::AbstractArgument::ValueArgument(
             ast_types::AbstractValueArg {
                 name: "value".to_owned(),
@@ -239,7 +278,7 @@ fn bfe_lift_method() -> LibraryFunction {
 
 fn bfe_value_method() -> LibraryFunction {
     let fn_signature = ast::FnSignature {
-        name: "value".to_owned(),
+        name: METHOD_NAME_VALUE.to_owned(),
         args: vec![ast_types::AbstractArgument::ValueArgument(
             ast_types::AbstractValueArg {
                 name: "bfe_value".to_owned(),
