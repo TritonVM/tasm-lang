@@ -625,7 +625,12 @@ impl<'a> CompilerState<'a> {
         data_type: Option<&ast_types::DataType>,
     ) -> String {
         let name = match data_type {
-            Some(ty) => format!("_{}_{}_{}", prefix, ty, self.global_compiler_state.counter),
+            Some(ty) => format!(
+                "_{}_{}_{}",
+                prefix,
+                ty.label_friendly_name(),
+                self.global_compiler_state.counter
+            ),
             None => format!("_{}_{}", prefix, self.global_compiler_state.counter),
         };
         self.global_compiler_state.counter += 1;
@@ -1987,6 +1992,7 @@ fn compile_expr(
                     }
                 }
                 ast::BinOp::Mul => {
+                    let rhs_type = rhs_expr.get_type();
                     let (_lhs_expr_addr, lhs_expr_code) =
                         compile_expr(lhs_expr, "_binop_lhs", state);
 
@@ -1998,8 +2004,8 @@ fn compile_expr(
                     state.function_state.vstack.pop();
                     state.function_state.vstack.pop();
 
-                    match lhs_type {
-                        U32 => {
+                    match (&lhs_type, &rhs_type) {
+                        (U32, U32) => {
                             let fn_name =
                                 state.import_snippet(Box::new(arithmetic::u32::safe_mul::SafeMul));
 
@@ -2009,7 +2015,7 @@ fn compile_expr(
                                 call {fn_name}
                             )
                         }
-                        U64 => {
+                        (U64, U64) => {
                             let fn_name = state.import_snippet(Box::new(
                                 arithmetic::u64::safe_mul_u64::SafeMulU64,
                             ));
@@ -2020,12 +2026,12 @@ fn compile_expr(
                                 call {fn_name}
                             )
                         }
-                        BFE => triton_asm!(
+                        (BFE, BFE) => triton_asm!(
                             {&lhs_expr_code}
                             {&rhs_expr_code}
                             mul
                         ),
-                        XFE => triton_asm!(
+                        (XFE, XFE) => triton_asm!(
                             {&lhs_expr_code}
                             {&rhs_expr_code}
                             xxmul
@@ -2036,7 +2042,12 @@ fn compile_expr(
                             swap 3
                             pop
                         ),
-                        _ => panic!("Unsupported MUL for type {lhs_type}"),
+                        (XFE, BFE) => triton_asm!(
+                            {&lhs_expr_code}
+                            {&rhs_expr_code}
+                            xbmul
+                        ),
+                        _ => panic!("Unsupported MUL for types LHS: {lhs_type}, RHS: {rhs_type}"),
                     }
                 }
                 ast::BinOp::Neq => {

@@ -1148,13 +1148,21 @@ fn derive_annotate_expr_type(
                         env_fn_signature,
                     );
 
-                    assert_type_equals(&lhs_type, &rhs_type, "mul-expr");
-                    assert!(
-                        is_arithmetic_type(&lhs_type),
-                        "Cannot multiply non-arithmetic type '{lhs_type}'"
-                    );
-                    *binop_type = Typing::KnownType(lhs_type.clone());
-                    lhs_type
+                    // We are allowed to multiply an XFieldElement with a BFieldElement, but we
+                    // don't currently support the mirrored expression.
+                    if lhs_type == ast_types::DataType::XFE && rhs_type == ast_types::DataType::BFE
+                    {
+                        *binop_type = Typing::KnownType(ast_types::DataType::XFE);
+                        ast_types::DataType::XFE
+                    } else {
+                        assert_type_equals(&lhs_type, &rhs_type, "mul-expr");
+                        assert!(
+                            is_arithmetic_type(&lhs_type),
+                            "Cannot multiply non-arithmetic type '{lhs_type}'"
+                        );
+                        *binop_type = Typing::KnownType(lhs_type.clone());
+                        lhs_type
+                    }
                 }
 
                 // Overloaded for all primitive types.
