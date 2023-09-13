@@ -159,7 +159,14 @@ impl Library for UnsignedIntegersLib {
     }
 }
 
+/// I hope you know what you're doing if you use this function.
+/// Wraps around the B field prime, and then wraps around 2^32.
+/// If any intermediate result is above u32::MAX, it will not give
+/// what you expect
 fn get_pow_u32_method() -> LibraryFunction {
+    // `pow` has scary wrap-around behavior. It could be argued
+    // it should be implemented using "Exponentiation by squaring"
+    // instead of the built-in `pow` instruction.
     let fn_signature = ast::FnSignature {
         name: POW_METHOD.to_owned(),
         args: vec![
@@ -180,7 +187,6 @@ fn get_pow_u32_method() -> LibraryFunction {
 
     LibraryFunction {
         signature: fn_signature,
-        // Crash if result is not u32
         body: triton_asm!(
             // _ base exp
             swap 1
@@ -191,10 +197,7 @@ fn get_pow_u32_method() -> LibraryFunction {
             // _ res_hi res_lo
             swap 1
             // _ res_lo res_hi
-            push 0
-            eq
-            // _ res_lo (res_hi == 0)
-            assert
+            pop
             // _ res_lo
         ),
     }
