@@ -106,6 +106,30 @@ pub fn execute_compiled_with_stack_memory_and_ins_for_bench(
     )
 }
 
+pub fn execute_compiled_with_stack_for_test(
+    code: &[LabelledInstruction],
+    input_args: Vec<ast::ExprLit<Typing>>,
+    expected_stack_diff: isize,
+) -> anyhow::Result<tasm_lib::VmOutputState> {
+    let mut stack = get_init_tvm_stack();
+    for input_arg in input_args {
+        let input_arg_seq = input_arg.encode();
+        stack.append(&mut input_arg_seq.into_iter().rev().collect());
+    }
+
+    // Run the tasm-lib's execute function without requesting initialization of the dynamic
+    // memory allocator, as this is the compiler's responsibility.
+    tasm_lib::execute_test(
+        code,
+        &mut stack,
+        expected_stack_diff,
+        vec![],
+        &NonDeterminism::new(vec![]),
+        &mut HashMap::default(),
+        None,
+    )
+}
+
 pub fn execute_compiled_with_stack_memory_and_ins_for_test(
     code: &[LabelledInstruction],
     input_args: Vec<ast::ExprLit<Typing>>,
