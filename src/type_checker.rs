@@ -220,11 +220,11 @@ pub fn annotate_fn_inner(
     declared_structs: HashMap<String, ast_types::StructType>,
     declared_methods: Vec<ast::Method<Typing>>,
     libraries: &[Box<dyn libraries::Library>],
+    mut ftable: HashMap<String, ast::FnSignature>,
 ) {
     // Initialize `CheckState`
     let vtable: HashMap<String, DataTypeAndMutability> =
         HashMap::with_capacity(function.signature.args.len());
-    let mut ftable: HashMap<String, ast::FnSignature> = HashMap::new();
 
     // Insert self into ftable
     ftable.insert(function.signature.name.clone(), function.signature.clone());
@@ -297,6 +297,7 @@ pub fn annotate_fn_outer(
         declared_structs.clone(),
         untyped_declared_methods.clone(),
         libraries,
+        HashMap::default(),
     );
 
     // Type annotate all declared methods
@@ -386,7 +387,8 @@ fn annotate_stmt(
             type_parameter,
             arg_evaluation_order,
         }) => {
-            let callees_fn_signature = get_fn_signature(name, state, type_parameter, args);
+            let callees_fn_signature =
+                get_fn_signature(name, state, type_parameter, args, env_fn_signature);
             assert!(
                 is_void_type(&callees_fn_signature.output),
                 "Function call '{name}' at statement-level must return the unit type."
@@ -406,8 +408,13 @@ fn annotate_stmt(
             derive_annotate_expr_type(&mut args[0], None, state, env_fn_signature);
             let receiver_type = args[0].get_type();
 
-            let callees_method_signature: ast::FnSignature =
-                get_method_signature(method_name, state, receiver_type.clone(), args);
+            let callees_method_signature: ast::FnSignature = get_method_signature(
+                method_name,
+                state,
+                receiver_type.clone(),
+                args,
+                env_fn_signature,
+            );
             assert!(
                 is_void_type(&callees_method_signature.output),
                 "Method call {receiver_type}.'{method_name}' at statement-level must return the unit type."
@@ -467,11 +474,13 @@ fn annotate_stmt(
             assert_type_equals(&expr_type, &ast_types::DataType::Bool, "assert expression");
         }
         ast::Stmt::FnDeclaration(function) => {
+            // A local function can see all functions available in the outer scope.
             annotate_fn_inner(
                 function,
                 state.declared_structs.clone(),
                 state.declared_methods.clone(),
                 state.libraries,
+                state.ftable.clone(),
             );
             state
                 .ftable
@@ -616,6 +625,7 @@ fn get_fn_signature(
     state: &CheckState,
     type_parameter: &Option<ast_types::DataType>,
     args: &[ast::Expr<Typing>],
+    env_fn_signature: &ast::FnSignature,
 ) -> ast::FnSignature {
     // Function from libraries are in scope
     for lib in state.libraries.iter() {
@@ -627,7 +637,7 @@ fn get_fn_signature(
     state
         .ftable
         .get(name)
-        .unwrap_or_else(|| panic!("Don't know what type of value '{name}' returns! Type parameter was: {type_parameter:?}"))
+        .unwrap_or_else(|| panic!("Function call in {} Don't know what type of value '{name}' returns! Type parameter was: {type_parameter:?}", env_fn_signature.name))
         .clone()
 }
 
@@ -636,6 +646,7 @@ fn get_method_signature(
     state: &CheckState,
     original_receiver_type: ast_types::DataType,
     args: &mut [ast::Expr<Typing>],
+    env_fn_signature: &ast::FnSignature,
 ) -> ast::FnSignature {
     // Note that `state.libraries` contain the methods that are always available, whereas
     // `state.declared_methods` contain the methods that are declared in the program.
@@ -707,7 +718,7 @@ fn get_method_signature(
     }
 
     panic!(
-        "Don't know what type of value '{name}' returns! Receiver type was: {original_receiver_type:?}"
+        "Method call in {} Don't know what type of value '{name}' returns! Receiver type was: {original_receiver_type:?}", env_fn_signature.name
     )
 }
 
@@ -869,7 +880,8 @@ fn derive_annotate_expr_type(
             type_parameter,
             arg_evaluation_order,
         }) => {
-            let callees_fn_signature = get_fn_signature(name, state, type_parameter, args);
+            let callees_fn_signature =
+                get_fn_signature(name, state, type_parameter, args, env_fn_signature);
             assert!(
                 !is_void_type(&callees_fn_signature.output),
                 "Function calls in expressions cannot return the unit type"
@@ -890,7 +902,7 @@ fn derive_annotate_expr_type(
             derive_annotate_expr_type(&mut args[0], None, state, env_fn_signature);
             let receiver_type = args[0].get_type();
             let callees_method_signature: ast::FnSignature =
-                get_method_signature(method_name, state, receiver_type, args);
+                get_method_signature(method_name, state, receiver_type, args, env_fn_signature);
             assert!(
                 !is_void_type(&callees_method_signature.output),
                 "Method calls in expressions cannot return the unit type"
