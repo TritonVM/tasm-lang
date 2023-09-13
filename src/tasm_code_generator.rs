@@ -2517,9 +2517,9 @@ fn dereference(data_type: &ast_types::DataType) -> Vec<LabelledInstruction> {
     match data_type {
         // From the TASM perspective, a mempointer to a list is the same as a list
         ast_types::DataType::List(_, _) => triton_asm!(),
+        ast_types::DataType::MemPointer(_) => triton_asm!(),
 
         // No idea how to handle these yet
-        ast_types::DataType::MemPointer(_) => todo!(),
         ast_types::DataType::VoidPointer => todo!(),
         ast_types::DataType::Function(_) => todo!(),
         ast_types::DataType::Struct(_) => todo!(),
