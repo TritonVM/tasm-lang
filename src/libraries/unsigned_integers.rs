@@ -53,10 +53,6 @@ impl Library for UnsignedIntegersLib {
             return get_count_ones_u32_method().signature;
         }
 
-        if method_name == POW_METHOD && ast_types::DataType::U32 == *receiver_type {
-            return get_pow_u32_method().signature;
-        }
-
         let snippet = name_to_tasm_lib_snippet(method_name, receiver_type)
             .unwrap_or_else(|| panic!("Unknown function name {method_name}"));
 
@@ -114,10 +110,6 @@ impl Library for UnsignedIntegersLib {
             return get_count_ones_u32_method().body;
         }
 
-        if method_name == POW_METHOD && ast_types::DataType::U32 == *receiver_type {
-            return get_pow_u32_method().body;
-        }
-
         let snippet = name_to_tasm_lib_snippet(method_name, receiver_type)
             .unwrap_or_else(|| panic!("Unknown function name {method_name}"));
         let entrypoint = snippet.entrypoint();
@@ -159,50 +151,6 @@ impl Library for UnsignedIntegersLib {
     }
 }
 
-/// I hope you know what you're doing if you use this function.
-/// Wraps around the B field prime, and then wraps around 2^32.
-/// If any intermediate result is above u32::MAX, it will not give
-/// what you expect
-fn get_pow_u32_method() -> LibraryFunction {
-    // `pow` has scary wrap-around behavior. It could be argued
-    // it should be implemented using "Exponentiation by squaring"
-    // instead of the built-in `pow` instruction.
-    let fn_signature = ast::FnSignature {
-        name: POW_METHOD.to_owned(),
-        args: vec![
-            ast_types::AbstractArgument::ValueArgument(ast_types::AbstractValueArg {
-                name: "base".to_owned(),
-                data_type: ast_types::DataType::U32,
-                mutable: false,
-            }),
-            ast_types::AbstractArgument::ValueArgument(ast_types::AbstractValueArg {
-                name: "exponent".to_owned(),
-                data_type: ast_types::DataType::U32,
-                mutable: false,
-            }),
-        ],
-        output: ast_types::DataType::U32,
-        arg_evaluation_order: Default::default(),
-    };
-
-    LibraryFunction {
-        signature: fn_signature,
-        body: triton_asm!(
-            // _ base exp
-            swap 1
-            // _ exp base
-            pow
-            // _ base**exp
-            split
-            // _ res_hi res_lo
-            swap 1
-            // _ res_lo res_hi
-            pop
-            // _ res_lo
-        ),
-    }
-}
-
 fn get_count_ones_u32_method() -> LibraryFunction {
     let fn_signature = ast::FnSignature {
         name: COUNT_ONES_METHOD.to_owned(),
@@ -236,13 +184,19 @@ fn name_to_tasm_lib_snippet(
             ast_types::DataType::U64 => Some(Box::new(
                 tasm_lib::arithmetic::u64::leading_zeros_u64::LeadingZerosU64,
             )),
-            _ => panic!("Dont know `{LEADING_ZEROS_METHOD}` for {receiver_type}"),
+            _ => panic!("Dont know `{public_name}` for {receiver_type}"),
         },
         COUNT_ONES_METHOD => match receiver_type {
             ast_types::DataType::U64 => Some(Box::new(
                 tasm_lib::arithmetic::u64::popcount_u64::PopCountU64,
             )),
-            _ => panic!("Dont know `{COUNT_ONES_METHOD}` for {receiver_type}"),
+            _ => panic!("Dont know `{public_name}` for {receiver_type}"),
+        },
+        POW_METHOD => match receiver_type {
+            ast_types::DataType::U32 => {
+                Some(Box::new(tasm_lib::arithmetic::u32::safe_pow::SafePow))
+            }
+            _ => panic!("Dont know `{public_name}` for {receiver_type}"),
         },
         _ => None,
     }

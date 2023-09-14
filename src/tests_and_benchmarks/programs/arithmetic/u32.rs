@@ -191,51 +191,42 @@ mod run_tests {
             exp: u32,
             expected: u32,
             test_cases: &mut Vec<InputOutputTestCase>,
-            rustc_must_agree: bool,
         ) {
-            if rustc_must_agree {
-                assert_eq!(
-                    base.pow(exp),
-                    expected,
-                    "Expected value must agree with `rustc` definition."
-                );
-            }
+            assert_eq!(
+                base.pow(exp),
+                expected,
+                "Expected value must agree with `rustc` definition."
+            );
             test_cases.push(InputOutputTestCase::new(
                 vec![u32_lit(base), u32_lit(exp)],
                 vec![u32_lit(expected)],
             ))
         }
 
-        // `pow` has scary wrap-around behavior. It could be argued
-        // it should be implemented using "Exponentiation by squaring"
-        // instead of the built-in `pow` instruction.
-
         let mut test_cases = vec![];
-        add_test_case(0, 0, 1, &mut test_cases, true);
-        add_test_case(1, 0, 1, &mut test_cases, true);
-        add_test_case(0, 1, 0, &mut test_cases, true);
-        add_test_case(1, 1, 1, &mut test_cases, true);
-        add_test_case(1, 2, 1, &mut test_cases, true);
-        add_test_case(1, 2, 1, &mut test_cases, true);
-        add_test_case(1, 14, 1, &mut test_cases, true);
-        add_test_case(1, 1 << 31, 1, &mut test_cases, true);
-        add_test_case(2, 1, 2, &mut test_cases, true);
-        add_test_case(2, 2, 4, &mut test_cases, true);
-        add_test_case(2, 3, 8, &mut test_cases, true);
-        add_test_case(2, 30, 1 << 30, &mut test_cases, true);
-        add_test_case(2, 31, 1 << 31, &mut test_cases, true);
-        add_test_case(2, 32, 0, &mut test_cases, false);
-        add_test_case(3, 1, 3, &mut test_cases, true);
-        add_test_case(3, 2, 9, &mut test_cases, true);
-        add_test_case(3, 3, 27, &mut test_cases, true);
-        add_test_case(3, 4, 81, &mut test_cases, true);
-        add_test_case(3, 20, 3486784401, &mut test_cases, true);
-        add_test_case(4, 4, 256, &mut test_cases, true);
-        add_test_case(4, 15, 1073741824, &mut test_cases, true);
-        add_test_case(4, 16, 0, &mut test_cases, false);
-        add_test_case(10, 7, 10_000_000, &mut test_cases, true);
-        add_test_case(10, 9, 1_000_000_000, &mut test_cases, true);
-        add_test_case(1 << 15, 2, 1 << 30, &mut test_cases, true);
+        add_test_case(0, 0, 1, &mut test_cases);
+        add_test_case(1, 0, 1, &mut test_cases);
+        add_test_case(0, 1, 0, &mut test_cases);
+        add_test_case(1, 1, 1, &mut test_cases);
+        add_test_case(1, 2, 1, &mut test_cases);
+        add_test_case(1, 2, 1, &mut test_cases);
+        add_test_case(1, 14, 1, &mut test_cases);
+        add_test_case(1, 1 << 31, 1, &mut test_cases);
+        add_test_case(2, 1, 2, &mut test_cases);
+        add_test_case(2, 2, 4, &mut test_cases);
+        add_test_case(2, 3, 8, &mut test_cases);
+        add_test_case(2, 30, 1 << 30, &mut test_cases);
+        add_test_case(2, 31, 1 << 31, &mut test_cases);
+        add_test_case(3, 1, 3, &mut test_cases);
+        add_test_case(3, 2, 9, &mut test_cases);
+        add_test_case(3, 3, 27, &mut test_cases);
+        add_test_case(3, 4, 81, &mut test_cases);
+        add_test_case(3, 20, 3486784401, &mut test_cases);
+        add_test_case(4, 4, 256, &mut test_cases);
+        add_test_case(4, 15, 1073741824, &mut test_cases);
+        add_test_case(10, 7, 10_000_000, &mut test_cases);
+        add_test_case(10, 9, 1_000_000_000, &mut test_cases);
+        add_test_case(1 << 15, 2, 1 << 30, &mut test_cases);
 
         // Positive tests
         multiple_compare_prop_with_stack_safe_lists(&pow_u32_rast(), test_cases);
