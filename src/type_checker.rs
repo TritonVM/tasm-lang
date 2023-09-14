@@ -64,6 +64,7 @@ impl<T: GetType + std::fmt::Debug> GetType for ast::Expr<T> {
             ast::Expr::If(if_expr) => if_expr.get_type(),
             ast::Expr::Cast(_expr, t) => t.to_owned(),
             ast::Expr::Unary(_unaryop, inner_expr, _) => inner_expr.get_type(),
+            ast::Expr::ReturningBlock(ret_block) => ret_block.get_type(),
         }
     }
 }
@@ -1298,34 +1299,17 @@ fn derive_annotate_expr_type(
                 "if-condition-expr",
             );
 
-            let branch_hint = None;
-            let vtable_before = state.vtable.clone();
-            then_branch
-                .stmts
-                .iter_mut()
-                .for_each(|stmt| annotate_stmt(stmt, state, env_fn_signature));
-            let then_type = derive_annotate_expr_type(
-                &mut then_branch.return_expr,
-                branch_hint,
-                state,
-                env_fn_signature,
-            );
-            state.vtable = vtable_before.clone();
+            let then_type =
+                derive_annotate_returning_block_expr(then_branch, hint, state, env_fn_signature);
+            let else_type =
+                derive_annotate_returning_block_expr(else_branch, hint, state, env_fn_signature);
 
-            else_branch
-                .stmts
-                .iter_mut()
-                .for_each(|stmt| annotate_stmt(stmt, state, env_fn_signature));
-            let else_type = derive_annotate_expr_type(
-                &mut else_branch.return_expr,
-                branch_hint,
-                state,
-                env_fn_signature,
-            );
             assert_type_equals(&then_type, &else_type, "if-then-else-expr");
-            state.vtable = vtable_before;
 
             then_type
+        }
+        ast::Expr::ReturningBlock(ret_block) => {
+            derive_annotate_returning_block_expr(ret_block, hint, state, env_fn_signature)
         }
 
         ast::Expr::Cast(expr, to_type) => {
@@ -1338,6 +1322,23 @@ fn derive_annotate_expr_type(
             to_type.to_owned()
         }
     }
+}
+
+fn derive_annotate_returning_block_expr(
+    ret_block: &mut ast::ReturningBlock<Typing>,
+    hint: Option<&ast_types::DataType>,
+    state: &mut CheckState,
+    env_fn_signature: &ast::FnSignature,
+) -> ast_types::DataType {
+    let vtable_before = state.vtable.clone();
+    ret_block
+        .stmts
+        .iter_mut()
+        .for_each(|stmt| annotate_stmt(stmt, state, env_fn_signature));
+    let ret_type =
+        derive_annotate_expr_type(&mut ret_block.return_expr, hint, state, env_fn_signature);
+    state.vtable = vtable_before.clone();
+    ret_type
 }
 
 pub fn is_string_identifier<T>(identifier: &ast::Identifier<T>) -> bool {

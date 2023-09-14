@@ -749,6 +749,24 @@ impl<'a> Graft<'a> {
                     Default::default(),
                 )
             }
+            syn::Expr::Block(syn::ExprBlock {
+                attrs: _,
+                label: _,
+                block,
+            }) => {
+                let (returning_expr, stmts) = block.stmts.split_last().unwrap();
+
+                // Last line must be an expression, cannot be a binding or anything else.
+                let return_expr = match returning_expr {
+                    syn::Stmt::Local(_) => panic!(),
+                    syn::Stmt::Item(_) => panic!(),
+                    syn::Stmt::Expr(expr) => self.graft_expr(expr),
+                    syn::Stmt::Semi(_, _) => panic!(),
+                };
+
+                let stmts = stmts.iter().map(|x| self.graft_stmt(x)).collect();
+                ast::Expr::ReturningBlock(Box::new(ast::ReturningBlock { stmts, return_expr }))
+            }
             other => panic!("unsupported: {other:?}"),
         }
     }
@@ -874,53 +892,65 @@ impl<'a> Graft<'a> {
         /// Handle expressions
         fn graft_expr_stmt(graft_config: &Graft, expr: &syn::Expr) -> ast::Stmt<Annotation> {
             match expr {
-            syn::Expr::While(while_stmt) => {
-                let expr_while = while_stmt;
-                let while_condition = graft_config.graft_expr(&expr_while.cond);
-                let while_stmts: Vec<ast::Stmt<Annotation>> =
-                    while_stmt.body.stmts.iter().map(|x| graft_config.graft_stmt(x)).collect_vec();
+                syn::Expr::While(while_stmt) => {
+                    let expr_while = while_stmt;
+                    let while_condition = graft_config.graft_expr(&expr_while.cond);
+                    let while_stmts: Vec<ast::Stmt<Annotation>> = while_stmt
+                        .body
+                        .stmts
+                        .iter()
+                        .map(|x| graft_config.graft_stmt(x))
+                        .collect_vec();
 
-                let while_stmt = ast::WhileStmt {
-                    condition: while_condition,
-                    block: ast::BlockStmt { stmts: while_stmts },
-                };
-                ast::Stmt::While(while_stmt)
-            }
-            syn::Expr::If(if_expr) => {
-                let if_condition = graft_config.graft_expr(&if_expr.cond);
-                let then_stmts: Vec<ast::Stmt<Annotation>> = if_expr
-                    .then_branch
-                    .stmts
-                    .iter()
-                    .map(|x| graft_config.graft_stmt(x))
-                    .collect_vec();
-                let else_stmts: Vec<ast::Stmt<Annotation>> = match if_expr.else_branch.as_ref() {
-                    Some(else_stmts) => match else_stmts.1.as_ref() {
-                        syn::Expr::Block(block) => {
-                            block.block.stmts.iter().map(|x| graft_config.graft_stmt(x)).collect()
-                        }
-                        other => panic!("unsupported: {other:?}"),
-                    },
-                    None => vec![],
-                };
+                    let while_stmt = ast::WhileStmt {
+                        condition: while_condition,
+                        block: ast::BlockStmt { stmts: while_stmts },
+                    };
+                    ast::Stmt::While(while_stmt)
+                }
+                syn::Expr::If(if_expr) => {
+                    let if_condition = graft_config.graft_expr(&if_expr.cond);
+                    let then_stmts: Vec<ast::Stmt<Annotation>> = if_expr
+                        .then_branch
+                        .stmts
+                        .iter()
+                        .map(|x| graft_config.graft_stmt(x))
+                        .collect_vec();
+                    let else_stmts: Vec<ast::Stmt<Annotation>> = match if_expr.else_branch.as_ref()
+                    {
+                        Some(else_stmts) => match else_stmts.1.as_ref() {
+                            syn::Expr::Block(block) => block
+                                .block
+                                .stmts
+                                .iter()
+                                .map(|x| graft_config.graft_stmt(x))
+                                .collect(),
+                            other => panic!("unsupported: {other:?}"),
+                        },
+                        None => vec![],
+                    };
 
-                let if_stmt = ast::IfStmt {
-                    condition: if_condition,
-                    then_branch: ast::BlockStmt { stmts: then_stmts },
-                    else_branch: ast::BlockStmt { stmts: else_stmts },
-                };
-                ast::Stmt::If(if_stmt)
+                    let if_stmt = ast::IfStmt {
+                        condition: if_condition,
+                        then_branch: ast::BlockStmt { stmts: then_stmts },
+                        else_branch: ast::BlockStmt { stmts: else_stmts },
+                    };
+                    ast::Stmt::If(if_stmt)
+                }
+                syn::Expr::Block(syn::ExprBlock {
+                    attrs: _attrs,
+                    label: _label,
+                    block,
+                }) => {
+                    let stmts: Vec<ast::Stmt<Annotation>> = block
+                        .stmts
+                        .iter()
+                        .map(|x| graft_config.graft_stmt(x))
+                        .collect_vec();
+                    ast::Stmt::Block(ast::BlockStmt { stmts })
+                }
+                other => panic!("unsupported expression. make sure to end statements by semi-colon and to explicitly 'return':\n{other:?}"),
             }
-            syn::Expr::Block(syn::ExprBlock { attrs: _attrs, label: _label, block }) => {
-                let stmts: Vec<ast::Stmt<Annotation>> = block
-                    .stmts
-                    .iter()
-                    .map(|x| graft_config.graft_stmt(x))
-                    .collect_vec();
-                ast::Stmt::Block(ast::BlockStmt { stmts })
-            },
-            other => panic!("unsupported expression. make sure to end statements by semi-colon and to explicitly 'return': {other:?}"),
-        }
         }
 
         /// Handle things that end with a semi-colon

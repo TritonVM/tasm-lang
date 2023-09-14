@@ -2226,76 +2226,8 @@ fn compile_expr(
             // the `then` or `else` branches are entered.
             state.function_state.vstack.pop();
 
-            let branch_start_vstack = state.function_state.vstack.clone();
-            let branch_start_var_addr = state.function_state.var_addr.clone();
-
-            // Compile `then` branch
-            // 1. Compile all stmt in a iter map
-            // 2. Compile last expression
-            // 3. Compile body cleanup_code
-
-            // 1. Compile all stmt in a iter map
-            let then_branch_statement_code = then_branch
-                .stmts
-                .iter()
-                .map(|stmt| compile_stmt(stmt, state))
-                .collect_vec()
-                .concat();
-            let (then_addr, then_branch_return_expression_code) = compile_expr(
-                &then_branch.return_expr,
-                "then_branch_return_expression",
-                state,
-            );
-
-            let mut then_body_code = [
-                then_branch_statement_code,
-                then_branch_return_expression_code,
-            ]
-            .concat();
-
-            // Cleanup stack and variable name mapping after `then` body. Preserve the return
-            // value from the `then` branch on the stack, but not on vstack as this value is
-            // not visible to the `else` branch.
-            let mut then_body_cleanup_code = state
-                .clear_all_but_top_stack_value_above_height(branch_start_vstack.get_stack_height());
-            then_body_code.append(&mut then_body_cleanup_code);
-
-            // Return vstack to the state it was in before the `then` branch was compiled,
-            // so it's ready for the `else` branch compilation.
-            // let _returned_value_from_then_block = state.function_state.vstack.pop().unwrap();
-            state.function_state.vstack = branch_start_vstack.clone();
-            state.function_state.var_addr = branch_start_var_addr.clone();
-            state.verify_same_ordering_of_bindings(&branch_start_vstack, &branch_start_var_addr);
-
-            // Compile `else` branch
-            let else_branch_statement_code = else_branch
-                .stmts
-                .iter()
-                .map(|stmt| compile_stmt(stmt, state))
-                .collect_vec()
-                .concat();
-            let (else_addr, else_branch_return_expression_code) = compile_expr(
-                &else_branch.return_expr,
-                "else_branch_return_expression",
-                state,
-            );
-
-            let mut else_body_code = [
-                else_branch_statement_code,
-                else_branch_return_expression_code,
-            ]
-            .concat();
-
-            // Cleanup stack and variable name mapping after `else` body. Preserve the return
-            // value from the `else` branch on the stack, but not on vstack, as this is added
-            // later.
-            let mut else_body_cleanup_code = state
-                .clear_all_but_top_stack_value_above_height(branch_start_vstack.get_stack_height());
-            else_body_code.append(&mut else_body_cleanup_code);
-            // let _returned_value_from_else_block = state.function_state.vstack.pop().unwrap();
-            state.function_state.vstack = branch_start_vstack.clone();
-            state.function_state.var_addr = branch_start_var_addr.clone();
-            state.verify_same_ordering_of_bindings(&branch_start_vstack, &branch_start_var_addr);
+            let (then_addr, then_code) = compile_returning_block_expr(_context, state, then_branch);
+            let (else_addr, else_code) = compile_returning_block_expr(_context, state, else_branch);
 
             // Both branches are compiled as subroutines which are called depending on what `cond`
             // evaluates to.
@@ -2315,14 +2247,14 @@ fn compile_expr(
             let then_code = triton_asm!(
                 {then_subroutine_name}:
                     pop
-                    {&then_body_code}
+                    {&then_code}
                     push 0
                     return
             );
 
             let else_code = triton_asm!(
                 {else_subroutine_name}:
-                    {&else_body_code}
+                    {&else_code}
                     return
             );
 
@@ -2334,6 +2266,12 @@ fn compile_expr(
                 .function_state
                 .subroutines
                 .push(else_code.try_into().unwrap());
+
+            code
+        }
+
+        ast::Expr::ReturningBlock(ret_block) => {
+            let (_, code) = compile_returning_block_expr(_context, state, ret_block);
 
             code
         }
@@ -2411,6 +2349,38 @@ fn compile_expr(
         .unwrap_or_default();
 
     (addr, [code, spill_code].concat())
+}
+
+fn compile_returning_block_expr(
+    context: &str,
+    state: &mut CompilerState,
+    ret_block: &ast::ReturningBlock<type_checker::Typing>,
+) -> (ValueIdentifier, Vec<LabelledInstruction>) {
+    let start_vstack = state.function_state.vstack.clone();
+    let start_var_addr = state.function_state.var_addr.clone();
+    let statement_code = ret_block
+        .stmts
+        .iter()
+        .map(|stmt| compile_stmt(stmt, state))
+        .collect_vec()
+        .concat();
+    let (expr_add, expr_code) = compile_expr(
+        &ret_block.return_expr,
+        &format!("{context}_return_expression"),
+        state,
+    );
+
+    // Cleanup stack and variable name mapping after `then` body. Preserve the return
+    // value from the `then` branch on the stack, but not on vstack as this value is
+    // not visible to the `else` branch.
+    let cleanup_code =
+        state.clear_all_but_top_stack_value_above_height(start_vstack.get_stack_height());
+
+    state.function_state.vstack = start_vstack.clone();
+    state.function_state.var_addr = start_var_addr.clone();
+    state.verify_same_ordering_of_bindings(&start_vstack, &start_var_addr);
+
+    (expr_add, [statement_code, expr_code, cleanup_code].concat())
 }
 
 /// Return the code to store a stack-value in memory

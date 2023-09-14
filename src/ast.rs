@@ -242,6 +242,7 @@ pub enum Expr<T> {
     Unary(UnaryOp, Box<Expr<T>>, T),
     If(ExprIf<T>),
     Cast(Box<Expr<T>>, DataType),
+    ReturningBlock(Box<ReturningBlock<T>>),
     // Index(Box<Expr<T>>, Box<Expr<T>>), // a_expr[i_expr]    (a + 5)[3]
     // TODO: VM-specific intrinsics (hash, absorb, squeeze, etc.)
 }
@@ -261,6 +262,7 @@ impl<T> Expr<T> {
             Expr::Unary(unaryop, _, _) => format!("unaryop_{}", unaryop.label_friendly_name()),
             Expr::If(_) => "if_else".to_owned(),
             Expr::Cast(_, dt) => format!("cast_{}", dt.label_friendly_name()),
+            Expr::ReturningBlock(_) => "returning_block".to_owned(),
         }
     }
 }
@@ -283,6 +285,7 @@ impl<T> Display for Expr<T> {
             Expr::If(_) => "if_else".to_owned(),
             Expr::Cast(_, dt) => format!("cast_{dt}"),
             Expr::Unary(unaryop, _, _) => format!("unaryop_{unaryop:?}"),
+            Expr::ReturningBlock(_) => "returning_block".to_owned(),
         };
 
         write!(f, "{str}")
