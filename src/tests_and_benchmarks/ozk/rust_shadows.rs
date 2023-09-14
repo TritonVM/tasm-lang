@@ -117,6 +117,10 @@ pub(super) fn tasm_io_read_stdin_digest() -> Digest {
     Digest::new([e0, e1, e2, e3, e4])
 }
 
+pub(super) fn tasm_arithmetic_u64_mul_two_u64s_to_u128_u64(lhs: u64, rhs: u64) -> u128 {
+    lhs as u128 * rhs as u128
+}
+
 #[allow(clippy::type_complexity)]
 pub(super) fn wrap_main_with_io(
     main_func: &'static dyn Fn(),
