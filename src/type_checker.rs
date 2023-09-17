@@ -328,8 +328,14 @@ fn annotate_stmt(
                 panic!("let-assign cannot shadow existing variable '{var_name}'!");
             }
 
+            println!("var_name: {var_name}");
+            println!("data_type: {data_type}");
+            println!("expr: {expr}");
+
             // Map types to those declared in program, i.e. resolve local `struct` declarations
-            *data_type = data_type.resolve_types(&state.declared_structs);
+            println!("before: data_type: {data_type:#?}");
+            data_type.resolve_types(&mut state.declared_structs);
+            println!("after: data_type: {data_type:#?}");
 
             let let_expr_hint: Option<&ast_types::DataType> = Some(data_type);
             let derived_type =
@@ -510,7 +516,7 @@ pub fn assert_type_equals(
 ) {
     if derived_type != data_type {
         panic!(
-            "Type mismatch between type\n'{data_type}'\n and derived type\n'{derived_type}'\n for {context}",
+            "Type mismatch between type\n'{data_type:?}'\n and derived type\n'{derived_type:?}'\n for {context}",
         );
     }
 }
@@ -814,8 +820,10 @@ fn derive_annotate_expr_type(
                         .declared_structs
                         .get(struct_name)
                         .unwrap_or_else(|| panic!("{struct_name} not known to type checker"));
-                    ast_types::DataType::Struct(resolved_inner_type.to_owned())
-                        .resolve_types(&state.declared_structs)
+                    let mut resolved_inner_type =
+                        ast_types::DataType::Struct(resolved_inner_type.to_owned());
+                    resolved_inner_type.resolve_types(&mut state.declared_structs);
+                    resolved_inner_type
                 }
                 ast_types::DataType::List(_, _) => mem_pointer_declared_type.to_owned(),
                 _ => todo!(),

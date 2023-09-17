@@ -155,8 +155,13 @@ impl<T> Display for ExprLit<T> {
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct MemPointerLiteral<T> {
+    /// Where in memory does the struct start?
     pub mem_pointer_address: BFieldElement,
+
+    /// What type was used in the declaration of the memory pointer?
     pub mem_pointer_declared_type: DataType,
+
+    // Resolved type for binding
     pub resolved_type: T,
 }
 
@@ -310,8 +315,10 @@ pub struct SymTable(HashMap<String, (u8, DataType)>);
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum Identifier<T> {
     String(String, T),                              // x
-    TupleIndex(Box<Identifier<T>>, usize, T),       // x.0
     ListIndex(Box<Identifier<T>>, Box<Expr<T>>, T), // x[0]
+
+    // TODO: Collapse `TupleIndex` and `Field` into one
+    TupleIndex(Box<Identifier<T>>, usize, T), // x.0
     Field(Box<Identifier<T>>, String, T),
 }
 

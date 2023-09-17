@@ -508,7 +508,7 @@ impl<'a> CompilerState<'a> {
                 let get_field_pointer_from_struct_pointer = match ident.get_type() {
                     ast_types::DataType::MemPointer(inner_type) => match *inner_type {
                         ast_types::DataType::Struct(inner_struct) => {
-                            inner_struct.get_field_accessor_code(field_name)
+                            inner_struct.get_field_accessor_code(&field_name.into())
                         }
                         _ => todo!("ident_type: {ident_type}"),
                     },
@@ -2611,14 +2611,17 @@ impl ast_types::StructType {
     /// stack element is consumed and the returned value is a pointer to the requested
     /// field in the struct. Note that the top of the stack is where the field begins,
     /// not the size indication of that field.
-    pub fn get_field_accessor_code(&self, field_name: &str) -> Vec<LabelledInstruction> {
+    pub fn get_field_accessor_code(
+        &self,
+        field_id: &ast_types::FieldId,
+    ) -> Vec<LabelledInstruction> {
         // This implementation must match `BFieldCodec` for the equivalent Rust types
         let mut instructions = vec![];
         let mut static_pointer_addition = 0;
-        let needle_name = field_name;
+        let needle_id = field_id;
         let mut needle_type: Option<ast_types::DataType> = None;
-        for (haystack_field_name, haystack_type) in self.fields.iter() {
-            if haystack_field_name == needle_name {
+        for (haystack_field_id, haystack_type) in self.field_ids_and_types() {
+            if haystack_field_id == *needle_id {
                 // If we've found the field the accumulators are in the right state.
                 // return them.
                 needle_type = Some(haystack_type.to_owned());

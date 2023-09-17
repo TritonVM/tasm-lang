@@ -30,7 +30,109 @@ impl Display for AbstractValueArg {
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub struct StructType {
+pub enum StructType {
+    TupleStruct(TupleStruct),
+    NamedFields(NamedFieldsStruct),
+}
+
+impl StructType {
+    pub fn name(&self) -> String {
+        match self {
+            StructType::TupleStruct(ts) => ts.name.to_owned(),
+            StructType::NamedFields(nfs) => nfs.name.to_owned(),
+        }
+    }
+
+    pub fn field_types<'a>(&'a self) -> Box<dyn Iterator<Item = &'a DataType> + 'a> {
+        match self {
+            StructType::TupleStruct(ts) => Box::new(ts.fields.iter()),
+            StructType::NamedFields(nfs) => Box::new(nfs.fields.iter().map(|(_name, dtype)| dtype)),
+        }
+    }
+
+    pub fn field_types_mut<'a>(&'a mut self) -> Box<dyn Iterator<Item = &'a mut DataType> + 'a> {
+        match self {
+            StructType::TupleStruct(ts) => Box::new(ts.fields.iter_mut()),
+            StructType::NamedFields(nfs) => {
+                Box::new(nfs.fields.iter_mut().map(|(_name, dtype)| dtype))
+            }
+        }
+    }
+
+    pub fn field_ids_and_types<'a>(
+        &'a self,
+    ) -> Box<dyn Iterator<Item = (FieldId, &'a DataType)> + 'a> {
+        match self {
+            StructType::TupleStruct(ts) => Box::new(
+                ts.fields
+                    .iter()
+                    .enumerate()
+                    .map(|(tuple_idx, element_type)| (tuple_idx.into(), element_type)),
+            ),
+            StructType::NamedFields(nfs) => Box::new(
+                nfs.fields
+                    .iter()
+                    .map(|(field_name, element_type)| (field_name.into(), element_type)),
+            ),
+        }
+    }
+}
+
+impl Display for StructType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let output = self.name();
+        write!(f, "{output}")
+    }
+}
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub struct TupleStruct {
+    pub name: String,
+    pub fields: Vec<DataType>,
+}
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub enum FieldId {
+    NamedField(String),
+    UnnamedField(usize),
+}
+
+impl From<&str> for FieldId {
+    fn from(value: &str) -> Self {
+        Self::NamedField(value.to_owned())
+    }
+}
+
+impl From<&String> for FieldId {
+    fn from(value: &String) -> Self {
+        Self::NamedField(value.to_owned())
+    }
+}
+
+impl From<&usize> for FieldId {
+    fn from(value: &usize) -> Self {
+        Self::UnnamedField(*value)
+    }
+}
+
+impl From<usize> for FieldId {
+    fn from(value: usize) -> Self {
+        Self::UnnamedField(value)
+    }
+}
+
+impl Display for FieldId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let output = match self {
+            FieldId::NamedField(name) => name.to_owned(),
+            FieldId::UnnamedField(tuple_index) => tuple_index.to_string(),
+        };
+        write!(f, "{output}")
+    }
+}
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub struct NamedFieldsStruct {
     pub name: String,
     pub fields: Vec<(String, DataType)>,
 }
@@ -48,27 +150,32 @@ impl From<&StructType> for DataType {
 }
 
 impl StructType {
-    pub fn get_field_type(&self, field_name: &str) -> DataType {
-        match self.fields.iter().find(|&field| field.0 == *field_name) {
-            // Type of the field is either another struct, or a pointer to a primitive
-            // type living in memory. In case of a pointer to a list, that is the same
-            // as a list. An unsafe one, though, so we keep the list wrapped in a
-            // MemPointer for now.
-            // TODO: Once #38 is implemented, we can remove the MemPointer here and
-            // use unsafe list type here.
-            // Some((_field_name, field_type)) => match field_type {
-            //     DataType::Struct(_) => field_type.to_owned(),
-            //     // ast_types::DataType::List(_) => item.to_owned(),
-            //     // _ => DataType::MemPointer(Box::new(field_type.clone())),
-            Some((_field_name, field_type)) => field_type.to_owned(),
+    pub fn get_field_type(&self, field_id: FieldId) -> DataType {
+        let res = match self {
+            StructType::TupleStruct(ts) => match &field_id {
+                FieldId::NamedField(_) => todo!(),
+                FieldId::UnnamedField(tuple_index) => {
+                    ts.fields.get(*tuple_index).map(|x| x.to_owned())
+                }
+            },
+            StructType::NamedFields(nfs) => match &field_id {
+                FieldId::NamedField(field_name) => nfs
+                    .fields
+                    .iter()
+                    .find(|&field| field.0 == *field_name)
+                    .map(|x| x.1.to_owned()),
+                FieldId::UnnamedField(_) => todo!(),
+            },
+        };
 
-            // },
-            None => panic!("Struct {} has no field of name {field_name}", self.name),
+        match res {
+            Some(dtype) => dtype,
+            None => panic!("Struct {self} has no field '{field_id}'"),
         }
     }
 }
 
-impl Display for StructType {
+impl Display for NamedFieldsStruct {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
@@ -209,7 +316,7 @@ impl DataType {
                 let output = fn_type.output.label_friendly_name();
                 format!("function_from_L{}R__to_L{}R", input, output)
             }
-            Struct(StructType { name, fields: _ }) => name.to_string(),
+            Struct(struct_type) => struct_type.name(),
             Unresolved(name) => name.to_string(),
             MemPointer(ty) => format!("mempointer_L{}R", ty.label_friendly_name()),
         }
@@ -254,7 +361,7 @@ impl DataType {
                     _ => panic!("Field access can only be performed on structs"),
                 };
 
-                let field_type = struct_type.get_field_type(field_name);
+                let field_type = struct_type.get_field_type(field_name.into());
                 if field_type.is_copy() {
                     field_type
                 } else {
@@ -262,7 +369,7 @@ impl DataType {
                 }
             }
             DataType::Struct(struct_type) => {
-                struct_type.get_field_type(field_name)
+                struct_type.get_field_type(field_name.into())
             },
             _ => panic!("Field getter can only operate on type of struct or pointer to struct. Attempted to access field `{field_name}` on type `{self}`")
         }
@@ -302,9 +409,8 @@ impl DataType {
                 .try_fold(0, |acc: usize, x| x.map(|x| x + acc)),
             DataType::List(_, _) => None,
             DataType::Struct(struct_type) => struct_type
-                .fields
-                .iter()
-                .try_fold(0, |acc: usize, (_, field_type)| {
+                .field_types()
+                .try_fold(0, |acc: usize, field_type| {
                     field_type.bfield_codec_length().map(|v| acc + v)
                 }),
             DataType::MemPointer(inner_type) => inner_type.bfield_codec_length(),
@@ -344,9 +450,9 @@ impl DataType {
             DataType::MemPointer(inner) => inner.is_unresolved(),
             DataType::Tuple(inners) => inners.iter().any(|inner| inner.is_unresolved()),
             DataType::List(element, _) => element.is_unresolved(),
-            DataType::Struct(StructType { name: _, fields }) => fields
-                .iter()
-                .any(|(_field_name, field_type)| field_type.is_unresolved()),
+            DataType::Struct(struct_type) => struct_type
+                .field_types()
+                .any(|field_type| field_type.is_unresolved()),
             DataType::Function(function_type) => {
                 function_type.input_argument.is_unresolved() || function_type.output.is_unresolved()
             }
@@ -354,60 +460,41 @@ impl DataType {
         }
     }
 
-    pub fn resolve_types(&self, declared_structs: &HashMap<String, StructType>) -> Self {
+    pub fn resolve_types(&mut self, declared_structs: &HashMap<String, StructType>) {
+        // TODO: Should this also mutate the structs in `declared_structs`? Currently
+        // it only mutates `self` to the resolved type.
         match self {
             DataType::Unresolved(unresolved_type) => {
-                let outer_resolved = declared_structs.get(unresolved_type).unwrap_or_else(|| {
-                    panic!("Failed to resolve type {unresolved_type}. Does not know this type.")
-                });
-                let resolved_fields = outer_resolved
-                    .fields
-                    .iter()
-                    .map(|(field_name, field_type)| {
-                        (
-                            field_name.to_owned(),
-                            field_type.resolve_types(declared_structs),
-                        )
+                let mut outer_resolved = declared_structs
+                    .get(unresolved_type)
+                    .unwrap_or_else(|| {
+                        panic!("Failed to resolve type {unresolved_type}. Does not know this type.")
                     })
-                    .collect_vec();
-                DataType::Struct(StructType {
-                    name: outer_resolved.name.clone(),
-                    fields: resolved_fields,
-                })
+                    .to_owned();
+                outer_resolved
+                    .field_types_mut()
+                    .for_each(|x| x.resolve_types(declared_structs));
+                *self = DataType::Struct(outer_resolved);
             }
             DataType::List(inner, list_type) => {
-                DataType::List(Box::new(inner.resolve_types(declared_structs)), *list_type)
+                inner.resolve_types(declared_structs);
             }
-            DataType::Tuple(inners) => DataType::Tuple(
-                inners
-                    .iter()
-                    .map(|inner_type| inner_type.resolve_types(declared_structs))
-                    .collect_vec(),
-            ),
-            DataType::Function(function_type) => DataType::Function(Box::new(FunctionType {
-                input_argument: function_type.input_argument.resolve_types(declared_structs),
-                output: function_type.output.resolve_types(declared_structs),
-            })),
+            DataType::Tuple(inners) => inners
+                .iter_mut()
+                .for_each(|x| x.resolve_types(declared_structs)),
+            DataType::Function(function_type) => {
+                function_type.input_argument.resolve_types(declared_structs);
+                function_type.output.resolve_types(declared_structs);
+            }
             DataType::MemPointer(inner) => {
-                DataType::MemPointer(Box::new(inner.resolve_types(declared_structs)))
+                inner.resolve_types(declared_structs);
             }
             DataType::Struct(struct_type) => {
                 let resolved_fields = struct_type
-                    .fields
-                    .iter()
-                    .map(|(field_name, field_type)| {
-                        (
-                            field_name.to_owned(),
-                            field_type.resolve_types(declared_structs),
-                        )
-                    })
-                    .collect_vec();
-                DataType::Struct(StructType {
-                    name: struct_type.name.clone(),
-                    fields: resolved_fields,
-                })
+                    .field_types_mut()
+                    .for_each(|x| x.resolve_types(declared_structs));
             }
-            _ => self.clone(),
+            _ => (),
         }
     }
 }
@@ -487,7 +574,7 @@ impl Display for DataType {
                 let output = fn_type.output.to_string();
                 format!("Function: {input} -> {output}")
             }
-            Struct(StructType { name, fields: _ }) => name.to_string(),
+            Struct(struct_type) => struct_type.name(),
             Unresolved(name) => name.to_string(),
             MemPointer(ty) => format!("*{ty}"),
         };

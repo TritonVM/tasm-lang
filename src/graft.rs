@@ -42,6 +42,40 @@ impl<'a> Graft<'a> {
         HashMap<String, ast_types::StructType>,
         Vec<ast::Method<Annotation>>,
     ) {
+        fn graft_struct_with_named_fields(
+            graft_config: &Graft,
+            struct_name: &str,
+            fields: syn::Fields,
+        ) -> ast_types::NamedFieldsStruct {
+            let mut ast_fields: Vec<(String, ast_types::DataType)> = vec![];
+            for field in fields.into_iter() {
+                let field_name = field.ident.unwrap().to_string();
+                let datatype = graft_config.rust_type_to_data_type(&field.ty);
+                ast_fields.push((field_name, datatype));
+            }
+
+            ast_types::NamedFieldsStruct {
+                fields: ast_fields,
+                name: struct_name.to_owned(),
+            }
+        }
+
+        fn graft_tuple_struct(
+            graft_config: &Graft,
+            struct_name: &str,
+            fields: syn::Fields,
+        ) -> ast_types::TupleStruct {
+            let mut ast_fields: Vec<ast_types::DataType> = vec![];
+            for field in fields {
+                ast_fields.push(graft_config.rust_type_to_data_type(&field.ty));
+            }
+
+            ast_types::TupleStruct {
+                name: struct_name.to_owned(),
+                fields: ast_fields,
+            }
+        }
+
         let mut struct_types = HashMap::default();
 
         // Handle structs
@@ -61,28 +95,24 @@ impl<'a> Graft<'a> {
                 semi_token: _,
             } = struct_;
             let name = ident.to_string();
-            let mut ast_fields: Vec<(String, ast_types::DataType)> = vec![];
 
-            for field in fields.into_iter() {
-                let field_name = field.ident.unwrap().to_string();
-                let datatype = self.rust_type_to_data_type(&field.ty);
-                ast_fields.push((field_name, datatype));
-            }
+            // Rust structs come in three forms: with named fields, tuple structs, and
+            // unit structs. We don't yet support unit structs, so we can assume that
+            // the struct has at least *one* field.
+            let struct_type = match fields.iter().next().unwrap().ident {
+                Some(_) => ast_types::StructType::NamedFields(graft_struct_with_named_fields(
+                    self, &name, fields,
+                )),
+                None => ast_types::StructType::TupleStruct(graft_tuple_struct(self, &name, fields)),
+            };
 
-            struct_types.insert(
-                name.clone(),
-                ast_types::StructType {
-                    name,
-                    fields: ast_fields,
-                },
-            );
+            struct_types.insert(name.clone(), struct_type);
         }
 
         // Handle methods
         let struct_names_and_methods = structs_and_methods
             .clone()
             .into_iter()
-            // .flat_map(|(struct_name, (_syn_struct, methods))| methods)
             .map(|(struct_name, (_syn_struct, methods))| (struct_name, methods))
             .collect_vec();
         let mut methods = vec![];
