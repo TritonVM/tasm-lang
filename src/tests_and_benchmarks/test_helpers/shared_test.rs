@@ -75,6 +75,7 @@ pub fn graft_check_compile_prop(
         &mut intermediate_language_ast,
         HashMap::default(),
         &mut Vec::default(),
+        &mut HashMap::default(),
         &libraries,
     );
 

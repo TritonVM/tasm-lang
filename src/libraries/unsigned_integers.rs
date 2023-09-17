@@ -78,8 +78,8 @@ impl Library for UnsignedIntegersLib {
 
         let output = match output_types.len() {
             1 => output_types[0].clone(),
-            0 => ast_types::DataType::Tuple(vec![]),
-            _ => ast_types::DataType::Tuple(output_types),
+            0 => ast_types::DataType::Tuple(vec![].into()),
+            _ => ast_types::DataType::Tuple(output_types.into()),
         };
 
         ast::FnSignature {

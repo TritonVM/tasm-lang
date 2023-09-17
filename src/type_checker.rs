@@ -55,9 +55,13 @@ impl<T: GetType + std::fmt::Debug> GetType for ast::Expr<T> {
         match self {
             ast::Expr::Lit(lit) => lit.get_type(),
             ast::Expr::Var(id) => id.get_type(),
-            ast::Expr::Tuple(t_list) => {
-                ast_types::DataType::Tuple(t_list.iter().map(|elem| elem.get_type()).collect())
-            }
+            ast::Expr::Tuple(t_list) => ast_types::DataType::Tuple(
+                t_list
+                    .iter()
+                    .map(|elem| elem.get_type())
+                    .collect_vec()
+                    .into(),
+            ),
             ast::Expr::FnCall(fn_call) => fn_call.get_type(),
             ast::Expr::MethodCall(method_call) => method_call.get_type(),
             ast::Expr::Binop(_, _, _, t) => t.get_type(),
@@ -121,6 +125,9 @@ pub struct CheckState<'a> {
     pub declared_structs: HashMap<String, ast_types::StructType>,
 
     pub declared_methods: Vec<ast::Method<Typing>>,
+
+    /// Functions declared in `impl` blocks, without a `&self` argument
+    pub associated_functions: HashMap<String, HashMap<String, ast::Fn<Typing>>>,
 }
 
 #[derive(Clone, Debug)]
@@ -152,6 +159,7 @@ pub fn annotate_method(
     method: &mut ast::Method<Typing>,
     declared_structs: HashMap<String, ast_types::StructType>,
     declared_methods: Vec<ast::Method<Typing>>,
+    associated_functions: &HashMap<String, HashMap<String, ast::Fn<Typing>>>,
     libraries: &[Box<dyn libraries::Library>],
 ) {
     // Initialize `CheckState`
@@ -167,6 +175,7 @@ pub fn annotate_method(
         ftable,
         declared_structs,
         declared_methods,
+        associated_functions: associated_functions.to_owned(),
     };
 
     // Populate vtable with function arguments
@@ -220,6 +229,7 @@ pub fn annotate_fn_inner(
     function: &mut ast::Fn<Typing>,
     declared_structs: HashMap<String, ast_types::StructType>,
     declared_methods: Vec<ast::Method<Typing>>,
+    associated_functions: &HashMap<String, HashMap<String, ast::Fn<Typing>>>,
     libraries: &[Box<dyn libraries::Library>],
     mut ftable: HashMap<String, ast::FnSignature>,
 ) {
@@ -235,6 +245,7 @@ pub fn annotate_fn_inner(
         ftable,
         declared_structs,
         declared_methods: declared_methods.to_owned(),
+        associated_functions: associated_functions.to_owned(),
     };
 
     // Populate vtable with function arguments
@@ -288,6 +299,7 @@ pub fn annotate_fn_outer(
     function: &mut ast::Fn<Typing>,
     declared_structs: HashMap<String, ast_types::StructType>,
     declared_methods: &mut [ast::Method<Typing>],
+    associated_functions: &mut HashMap<String, HashMap<String, ast::Fn<Typing>>>,
     libraries: &[Box<dyn libraries::Library>],
 ) {
     let untyped_declared_methods = declared_methods.to_owned();
@@ -297,18 +309,35 @@ pub fn annotate_fn_outer(
         function,
         declared_structs.clone(),
         untyped_declared_methods.clone(),
+        associated_functions,
         libraries,
         HashMap::default(),
     );
 
     // Type annotate all declared methods
+    let untyped_assoc_functions = associated_functions.clone();
     for declared_method in declared_methods.iter_mut() {
         annotate_method(
             declared_method,
             declared_structs.clone(),
             untyped_declared_methods.clone(),
+            &untyped_assoc_functions,
             libraries,
         )
+    }
+
+    // Type annotate all associated functions
+    for (_, functions) in associated_functions.iter_mut() {
+        for (_, afunc) in functions.iter_mut() {
+            annotate_fn_inner(
+                afunc,
+                declared_structs.clone(),
+                untyped_declared_methods.clone(),
+                &untyped_assoc_functions,
+                libraries,
+                HashMap::default(),
+            )
+        }
     }
 }
 
@@ -327,15 +356,6 @@ fn annotate_stmt(
             if state.vtable.contains_key(var_name) {
                 panic!("let-assign cannot shadow existing variable '{var_name}'!");
             }
-
-            println!("var_name: {var_name}");
-            println!("data_type: {data_type}");
-            println!("expr: {expr}");
-
-            // Map types to those declared in program, i.e. resolve local `struct` declarations
-            println!("before: data_type: {data_type:#?}");
-            data_type.resolve_types(&mut state.declared_structs);
-            println!("after: data_type: {data_type:#?}");
 
             let let_expr_hint: Option<&ast_types::DataType> = Some(data_type);
             let derived_type =
@@ -486,6 +506,7 @@ fn annotate_stmt(
                 function,
                 state.declared_structs.clone(),
                 state.declared_methods.clone(),
+                &state.associated_functions,
                 state.libraries,
                 state.ftable.clone(),
             );
@@ -552,18 +573,48 @@ pub fn annotate_identifier_type(
             let (tuple_type, mutable) =
                 annotate_identifier_type(tuple_identifier, state, fn_signature);
 
-            let element_type = if let ast_types::DataType::Tuple(elem_types) = tuple_type {
-                if elem_types.len() > *index {
-                    elem_types[*index].clone()
+            let tuple = match &tuple_type {
+                ast_types::DataType::Tuple(tuple) => tuple.to_owned(),
+                ast_types::DataType::Struct(ast_types::StructType {
+                    name: _,
+                    is_copy: _,
+                    variant,
+                }) => match variant {
+                    ast_types::StructVariant::TupleStruct(tuple) => tuple.to_owned(),
+                    ast_types::StructVariant::NamedFields(_) => panic!(
+                        "Cannot index non-tuple with tuple index {index}. Type was {tuple_type}"
+                    ),
+                },
+                ast_types::DataType::MemPointer(inner_type) => match *inner_type.to_owned() {
+                    ast_types::DataType::Struct(ast_types::StructType {
+                        name: _,
+                        is_copy: _,
+                        variant,
+                    }) => match variant {
+                        ast_types::StructVariant::TupleStruct(tuple) => tuple,
+                        ast_types::StructVariant::NamedFields(_) => panic!(
+                            "Cannot index non-tuple with tuple index {index}. Type was {tuple_type}"
+                        ),
+                    },
+                    _ => {
+                        panic!("Cannot index non-tuple with tuple index {index}. Type was {tuple_type}")
+                    }
+                },
+                _ => {
+                    panic!("Cannot index non-tuple with tuple index {index}. Type was {tuple_type}")
+                }
+            };
+
+            let element_type = {
+                if tuple.len() > *index {
+                    tuple[*index].clone()
                 } else {
                     panic!(
                         "Cannot index tuple of {} elements with index {}",
-                        elem_types.len(),
+                        tuple.len(),
                         index
                     );
                 }
-            } else {
-                panic!("Cannot index non-tuple with tuple index {index}");
             };
 
             *known_type = Typing::KnownType(element_type.clone());
@@ -641,6 +692,26 @@ fn get_fn_signature(
         }
     }
 
+    // Associated functions are in scope, they must be called with `<Type>::<function_name>`
+    let split_name = name.split("::").collect_vec();
+    if split_name.len() > 1 {
+        let associated_type_name = split_name[0];
+        let fn_name = split_name[1];
+
+        let mut ret_value = match state.associated_functions.get(associated_type_name) {
+            Some(entry) => {
+                match entry.get(fn_name) {
+                Some(function) => function.signature.to_owned(),
+                None => panic!("Don't know associated function '{fn_name}' for type {associated_type_name}"),
+            }},
+            None => panic!("Don't know type {associated_type_name} for which an associated function {fn_name} is made"),
+        };
+        println!("Before resolve_types:\n{ret_value:?}");
+        ret_value.resolve_types(&state.declared_structs);
+        println!("After resolve_types:\n{ret_value:?}");
+        return ret_value;
+    }
+
     state
         .ftable
         .get(name)
@@ -663,16 +734,31 @@ fn get_method_signature(
     let mut forced_type = original_receiver_type.clone();
     let mut try_again = true;
     while try_again {
+        if name == "value" {
+            println!("forced_type: {forced_type}\n\n\n");
+        }
         // 1. if there's a method `bar` where the receiver type (the type of self
         // in the method) matches `forced_type` exactly , use it (a "by value method")
         for declared_method in state.declared_methods.iter() {
             if declared_method.signature.name == name {
                 let method_receiver_type = args[0].get_type();
+                if name == "value" {
+                    println!("method_receiver_type: {method_receiver_type}");
+                    println!("forced_type: {forced_type}");
+                }
                 if method_receiver_type == forced_type {
                     if let ast::Expr::Var(var) = &mut args[0] {
                         var.force_type(&forced_type);
                     }
-                    return declared_method.signature.clone();
+
+                    // TODO: Can we resolve types somewhere else than here? This is a mess.
+                    let mut ret = declared_method.signature.clone();
+                    ret.resolve_types(&state.declared_structs);
+
+                    if name == "value" {
+                        println!("PMD0:\n\n\n");
+                    }
+                    return ret;
                 }
             }
         }
@@ -697,7 +783,14 @@ fn get_method_signature(
                     if let ast::Expr::Var(var) = &mut args[0] {
                         var.force_type(&auto_refd_forced_type);
                     }
-                    return declared_method.signature.clone();
+                    // TODO: Can we resolve types somewhere else than here? This is a mess.
+                    let mut ret = declared_method.signature.clone();
+                    ret.resolve_types(&state.declared_structs);
+
+                    if name == "value" {
+                        println!("PMD1:\n\n\n");
+                    }
+                    return ret;
                 }
             }
         }
@@ -734,6 +827,7 @@ fn derive_annotate_fn_call_args(
     args: &mut [ast::Expr<Typing>],
     state: &mut CheckState,
 ) {
+    println!("callees_fn_signature:\n{callees_fn_signature:?}");
     let fn_name = &callees_fn_signature.name;
     assert_eq!(
         callees_fn_signature.args.len(),
@@ -763,6 +857,8 @@ fn derive_annotate_fn_call_args(
         .collect();
 
     // Compare list of concrete arguments with function signature, i.e. expected arguments
+    println!("\n\n*********** callees_fn_signature ***********");
+    println!("{:#?}", callees_fn_signature);
     for (arg_pos, (fn_arg, expr_type)) in callees_fn_signature
         .args
         .iter()
@@ -784,6 +880,8 @@ fn derive_annotate_fn_call_args(
                 mutable: _mutable,
             }) => {
                 let arg_pos = arg_pos + 1;
+                println!("arg_type: {arg_type:?}");
+                println!("expr_type: {expr_type:?}");
                 assert_eq!(
                 arg_type, expr_type,
                 "Wrong type of function argument {arg_pos} function call '{arg_name}' in '{fn_name}'\n expected type \"{arg_type:#?}\", but got type  \"{expr_type:#?}\".",
@@ -822,7 +920,6 @@ fn derive_annotate_expr_type(
                         .unwrap_or_else(|| panic!("{struct_name} not known to type checker"));
                     let mut resolved_inner_type =
                         ast_types::DataType::Struct(resolved_inner_type.to_owned());
-                    resolved_inner_type.resolve_types(&mut state.declared_structs);
                     resolved_inner_type
                 }
                 ast_types::DataType::List(_, _) => mem_pointer_declared_type.to_owned(),
@@ -879,7 +976,7 @@ fn derive_annotate_expr_type(
                 .iter_mut()
                 .map(|expr| derive_annotate_expr_type(expr, no_hint, state, env_fn_signature))
                 .collect();
-            ast_types::DataType::Tuple(tuple_types)
+            ast_types::DataType::Tuple(tuple_types.into())
         }
 
         ast::Expr::FnCall(ast::FnCall {
@@ -920,6 +1017,7 @@ fn derive_annotate_expr_type(
             // We don't need to check receiver type here since that is done by
             // `derive_annotate_fn_call_args` below.
 
+            println!("BEFORE derive_annotate_fn_call_args: {callees_method_signature:#?}");
             derive_annotate_fn_call_args(&callees_method_signature, args, state);
 
             *annot = Typing::KnownType(callees_method_signature.output.clone());
@@ -959,8 +1057,9 @@ fn derive_annotate_expr_type(
                 }
                 Ref(_mutable) => {
                     if inner_expr_type.is_copy() {
-                        *unaryop_type = Typing::KnownType(inner_expr_type.clone());
-                        inner_expr_type
+                        let resulting_type = ast_types::DataType::MemPointer(Box::new(inner_expr_type));
+                        *unaryop_type = Typing::KnownType(resulting_type.clone());
+                        resulting_type
                     } else {
                         match inner_expr_type {
                             ast_types::DataType::List(_, _) => {

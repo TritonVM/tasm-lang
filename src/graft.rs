@@ -35,12 +35,13 @@ impl<'a> Graft<'a> {
         }
     }
 
-    pub fn graft_structs(
+    pub fn graft_structs_methods_and_associated_functions(
         &self,
         structs_and_methods: HashMap<String, (syn::ItemStruct, Vec<syn::ImplItemMethod>)>,
     ) -> (
         HashMap<String, ast_types::StructType>,
         Vec<ast::Method<Annotation>>,
+        HashMap<String, HashMap<String, ast::Fn<Annotation>>>,
     ) {
         fn graft_struct_with_named_fields(
             graft_config: &Graft,
@@ -64,16 +65,13 @@ impl<'a> Graft<'a> {
             graft_config: &Graft,
             struct_name: &str,
             fields: syn::Fields,
-        ) -> ast_types::TupleStruct {
+        ) -> ast_types::Tuple {
             let mut ast_fields: Vec<ast_types::DataType> = vec![];
             for field in fields {
                 ast_fields.push(graft_config.rust_type_to_data_type(&field.ty));
             }
 
-            ast_types::TupleStruct {
-                name: struct_name.to_owned(),
-                fields: ast_fields,
-            }
+            ast_fields.into()
         }
 
         let mut struct_types = HashMap::default();
@@ -86,7 +84,7 @@ impl<'a> Graft<'a> {
             .collect_vec();
         for struct_ in structs {
             let syn::ItemStruct {
-                attrs: _,
+                attrs,
                 vis: _,
                 struct_token: _,
                 ident,
@@ -96,33 +94,64 @@ impl<'a> Graft<'a> {
             } = struct_;
             let name = ident.to_string();
 
+            let is_copy = match attrs.len() {
+                1 => attrs[0].tokens.to_string().contains("Copy"),
+                0 => false,
+                _ => panic!("Can only handl eone line of attributes for now."),
+            };
+
             // Rust structs come in three forms: with named fields, tuple structs, and
             // unit structs. We don't yet support unit structs, so we can assume that
             // the struct has at least *one* field.
             let struct_type = match fields.iter().next().unwrap().ident {
-                Some(_) => ast_types::StructType::NamedFields(graft_struct_with_named_fields(
+                Some(_) => ast_types::StructVariant::NamedFields(graft_struct_with_named_fields(
                     self, &name, fields,
                 )),
-                None => ast_types::StructType::TupleStruct(graft_tuple_struct(self, &name, fields)),
+                None => {
+                    ast_types::StructVariant::TupleStruct(graft_tuple_struct(self, &name, fields))
+                }
+            };
+            let struct_type = ast_types::StructType {
+                is_copy,
+                variant: struct_type,
+                name: name.clone(),
             };
 
             struct_types.insert(name.clone(), struct_type);
         }
 
         // Handle methods
-        let struct_names_and_methods = structs_and_methods
+        let struct_names_and_associated_functions = structs_and_methods
             .clone()
             .into_iter()
             .map(|(struct_name, (_syn_struct, methods))| (struct_name, methods))
             .collect_vec();
         let mut methods = vec![];
-        for (struct_name, syn_methods) in struct_names_and_methods {
-            for syn_method in syn_methods {
-                methods.push(self.graft_method(&syn_method, &struct_types[&struct_name]));
+        let mut associated_functions = HashMap::default();
+        for (struct_name, assoc_function) in struct_names_and_associated_functions {
+            for syn_method in assoc_function {
+                if syn_method.sig.receiver().is_some() {
+                    // Associated function is a method
+                    methods.push(self.graft_method(&syn_method, &struct_types[&struct_name]));
+                } else {
+                    // Associated function is *not* a method, i.e., does not take `self` argument
+                    let grafted_assoc_function =
+                        self.graft_associated_function(&syn_method, &struct_types[&struct_name]);
+                    let new_entry = (
+                        grafted_assoc_function.signature.name.clone(),
+                        grafted_assoc_function.clone(),
+                    );
+                    associated_functions
+                        .entry(struct_name.clone())
+                        .and_modify(|x: &mut HashMap<String, ast::Fn<Annotation>>| {
+                            x.insert(new_entry.0.clone(), new_entry.1.clone());
+                        })
+                        .or_insert(HashMap::from([new_entry]));
+                }
             }
         }
 
-        (struct_types, methods)
+        (struct_types, methods, associated_functions)
     }
 
     fn graft_method(
@@ -138,15 +167,15 @@ impl<'a> Graft<'a> {
                 mutability,
                 ..
             } = receiver;
-            assert!(
-                reference.is_some(),
-                "Can only handle &self as receiver for now"
-            );
-            ast_types::AbstractValueArg {
-                name: "self".to_string(),
-                data_type: ast_types::DataType::MemPointer(Box::new(ast_types::DataType::Struct(
+            let receiver_data_type = match reference {
+                Some(_) => ast_types::DataType::MemPointer(Box::new(ast_types::DataType::Struct(
                     struct_type.to_owned(),
                 ))),
+                None => ast_types::DataType::Struct(struct_type.to_owned()),
+            };
+            ast_types::AbstractValueArg {
+                name: "self".to_string(),
+                data_type: receiver_data_type,
                 mutable: mutability.is_some(),
             }
         } else {
@@ -167,7 +196,7 @@ impl<'a> Graft<'a> {
 
         // TODO: Also handle owned `self` as receiver. Now we only allow
         // `&self`.
-        let output = self.graft_return_type(&method.sig.output);
+        let output = self.graft_return_type(&method.sig.output, Some(struct_type));
         let signature = ast::FnSignature {
             name: method_name,
             args: all_args,
@@ -184,6 +213,44 @@ impl<'a> Graft<'a> {
         ast::Method { signature, body }
     }
 
+    /// Graft a function declaration inside an `impl` block of a custom-defined
+    /// structure. The function does not take a `self` as input argument.
+    pub fn graft_associated_function(
+        &self,
+        input: &syn::ImplItemMethod,
+        struct_type: &ast_types::StructType,
+    ) -> ast::Fn<Annotation> {
+        let function_name = input.sig.ident.to_string();
+        let args = input
+            .sig
+            .inputs
+            .iter()
+            .map(|x| self.graft_fn_arg(x))
+            .collect_vec();
+        let args = args
+            .into_iter()
+            .map(ast_types::AbstractArgument::ValueArgument)
+            .collect_vec();
+        let output = self.graft_return_type(&input.sig.output, Some(struct_type));
+        println!("output return type: {output:?}");
+        let body = input
+            .block
+            .stmts
+            .iter()
+            .map(|x| self.graft_stmt(x))
+            .collect_vec();
+
+        ast::Fn {
+            signature: ast::FnSignature {
+                name: function_name,
+                args,
+                output,
+                arg_evaluation_order: Default::default(),
+            },
+            body,
+        }
+    }
+
     pub fn graft_fn_decl(&self, input: &syn::ItemFn) -> ast::Fn<Annotation> {
         let function_name = input.sig.ident.to_string();
         let args = input
@@ -196,7 +263,7 @@ impl<'a> Graft<'a> {
             .into_iter()
             .map(ast_types::AbstractArgument::ValueArgument)
             .collect_vec();
-        let output = self.graft_return_type(&input.sig.output);
+        let output = self.graft_return_type(&input.sig.output, None);
         let body = input
             .block
             .stmts
@@ -215,7 +282,11 @@ impl<'a> Graft<'a> {
         }
     }
 
-    fn rust_type_path_to_data_type(&self, rust_type_path: &syn::TypePath) -> ast_types::DataType {
+    fn rust_type_path_to_data_type(
+        &self,
+        rust_type_path: &syn::TypePath,
+        associated_type: Option<&ast_types::StructType>,
+    ) -> ast_types::DataType {
         assert_eq!(
             1,
             rust_type_path.path.segments.len(),
@@ -231,7 +302,10 @@ impl<'a> Graft<'a> {
         // Type is not primitive. Is it a vector?
         // TODO: Can we move this to the Vector library?
         if rust_type_as_string == "Vec" {
-            return self.rust_vec_to_data_type(&rust_type_path.path.segments[0].arguments);
+            return self.rust_vec_to_data_type(
+                &rust_type_path.path.segments[0].arguments,
+                associated_type,
+            );
         }
 
         // Handling `Box<T>`. It would be cool if this could be handled same place as
@@ -243,7 +317,7 @@ impl<'a> Graft<'a> {
                 assert_eq!(1, ab.args.len(), "Must be Box<T> for *one* generic T.");
                 match &ab.args[0] {
                     syn::GenericArgument::Type(syn::Type::Path(path)) => {
-                        self.rust_type_path_to_data_type(path)
+                        self.rust_type_path_to_data_type(path, associated_type)
                     }
                     other => panic!("Unsupported type {other:#?}"),
                 }
@@ -251,6 +325,15 @@ impl<'a> Graft<'a> {
                 panic!("Box must be followed by `<T>`");
             };
             return ast_types::DataType::MemPointer(Box::new(inner_type));
+        }
+
+        // Is type `Self`? Then use the associated type which comes from the surrounding `impl` block
+        if rust_type_as_string == "Self" {
+            return ast_types::DataType::Struct(
+                associated_type
+                    .unwrap_or_else(|| panic!("Cannot use `Self` outside of `impl` block"))
+                    .to_owned(),
+            );
         }
 
         // We only allow the user to use types that are capitalized
@@ -265,13 +348,17 @@ impl<'a> Graft<'a> {
         }
     }
 
-    fn rust_vec_to_data_type(&self, path_args: &syn::PathArguments) -> ast_types::DataType {
+    fn rust_vec_to_data_type(
+        &self,
+        path_args: &syn::PathArguments,
+        associated_type: Option<&ast_types::StructType>,
+    ) -> ast_types::DataType {
         match path_args {
             syn::PathArguments::AngleBracketed(ab) => {
                 assert_eq!(1, ab.args.len(), "Must be Vec<T> for *one* generic T.");
                 match &ab.args[0] {
                     syn::GenericArgument::Type(syn::Type::Path(path)) => ast_types::DataType::List(
-                        Box::new(self.rust_type_path_to_data_type(path)),
+                        Box::new(self.rust_type_path_to_data_type(path, associated_type)),
                         self.list_type,
                     ),
                     other => panic!("Unsupported type {other:#?}"),
@@ -283,7 +370,7 @@ impl<'a> Graft<'a> {
 
     pub fn rust_type_to_data_type(&self, x: &syn::Type) -> ast_types::DataType {
         match x {
-            syn::Type::Path(data_type) => self.rust_type_path_to_data_type(data_type),
+            syn::Type::Path(data_type) => self.rust_type_path_to_data_type(data_type, None),
             ty => panic!("Unsupported type {ty:#?}"),
         }
     }
@@ -292,18 +379,25 @@ impl<'a> Graft<'a> {
     fn pat_type_to_data_type_and_mutability(
         &self,
         rust_type_path: &syn::PatType,
+        associated_type: Option<&ast_types::StructType>,
     ) -> (ast_types::DataType, bool) {
-        fn syn_type_to_ast_type(graft_config: &Graft, syn_type: &syn::Type) -> ast_types::DataType {
+        fn syn_type_to_ast_type(
+            graft_config: &Graft,
+            syn_type: &syn::Type,
+            associated_type: Option<&ast_types::StructType>,
+        ) -> ast_types::DataType {
             match syn_type {
-                syn::Type::Path(path) => graft_config.rust_type_path_to_data_type(path),
+                syn::Type::Path(path) => {
+                    graft_config.rust_type_path_to_data_type(path, associated_type)
+                }
                 syn::Type::Tuple(tuple) => {
                     let element_types = tuple
                         .elems
                         .iter()
-                        .map(|x| syn_type_to_ast_type(graft_config, x))
+                        .map(|x| syn_type_to_ast_type(graft_config, x, associated_type))
                         .collect_vec();
 
-                    ast_types::DataType::Tuple(element_types)
+                    ast_types::DataType::Tuple(element_types.into())
                 }
                 syn::Type::Reference(syn::TypeReference {
                     and_token: _,
@@ -312,7 +406,8 @@ impl<'a> Graft<'a> {
                     elem,
                 }) => match *elem.to_owned() {
                     syn::Type::Path(type_path) => {
-                        let inner_type = graft_config.rust_type_path_to_data_type(&type_path);
+                        let inner_type =
+                            graft_config.rust_type_path_to_data_type(&type_path, associated_type);
                         ast_types::DataType::MemPointer(Box::new(inner_type))
                     }
                     _ => todo!(),
@@ -331,7 +426,7 @@ impl<'a> Graft<'a> {
             }) => mutability.is_some(),
             other_type => panic!("Unsupported {other_type:#?}"),
         };
-        let ast_type = syn_type_to_ast_type(self, rust_type_path.ty.as_ref());
+        let ast_type = syn_type_to_ast_type(self, rust_type_path.ty.as_ref(), associated_type);
 
         (ast_type, mutable)
     }
@@ -359,7 +454,7 @@ impl<'a> Graft<'a> {
                             syn::Pat::Ident(pi) => pi.mutability.is_some(),
                             _ => todo!(),
                         };
-                        (self.rust_type_path_to_data_type(type_path), mutable)
+                        (self.rust_type_path_to_data_type(type_path, None), mutable)
                     }
 
                     // Input is a reference
@@ -371,7 +466,7 @@ impl<'a> Graft<'a> {
                     }) => match *elem.to_owned() {
                         syn::Type::Path(type_path) => (
                             ast_types::DataType::MemPointer(Box::new(
-                                self.rust_type_path_to_data_type(&type_path),
+                                self.rust_type_path_to_data_type(&type_path, None),
                             )),
                             mutability.is_some(),
                         ),
@@ -390,10 +485,16 @@ impl<'a> Graft<'a> {
         }
     }
 
-    fn graft_return_type(&self, rust_return_type: &syn::ReturnType) -> ast_types::DataType {
+    fn graft_return_type(
+        &self,
+        rust_return_type: &syn::ReturnType,
+        associated_type: Option<&ast_types::StructType>,
+    ) -> ast_types::DataType {
         match rust_return_type {
             syn::ReturnType::Type(_, path) => match path.as_ref() {
-                syn::Type::Path(type_path) => self.rust_type_path_to_data_type(type_path),
+                syn::Type::Path(type_path) => {
+                    self.rust_type_path_to_data_type(type_path, associated_type)
+                }
                 syn::Type::Tuple(tuple_type) => {
                     let tuple_type = tuple_type;
                     let output_elements = tuple_type
@@ -402,11 +503,11 @@ impl<'a> Graft<'a> {
                         .map(|x| self.rust_type_to_data_type(x))
                         .collect_vec();
 
-                    ast_types::DataType::Tuple(output_elements)
+                    ast_types::DataType::Tuple(output_elements.into())
                 }
                 _ => panic!("unsupported: {path:?}"),
             },
-            syn::ReturnType::Default => ast_types::DataType::Tuple(vec![]),
+            syn::ReturnType::Default => ast_types::DataType::Tuple(vec![].into()),
         }
     }
 
@@ -893,8 +994,9 @@ impl<'a> Graft<'a> {
             let (ident, data_type, mutable): (String, ast_types::DataType, bool) = match &local.pat
             {
                 syn::Pat::Type(pat_type) => {
+                    // TODO: Set associated type to allow the use of `Self` for `let` declarations.
                     let (dt, mutable): (ast_types::DataType, bool) =
-                        graft_config.pat_type_to_data_type_and_mutability(pat_type);
+                        graft_config.pat_type_to_data_type_and_mutability(pat_type, None);
                     let ident: String = Graft::pat_to_name(&pat_type.pat);
 
                     (ident, dt, mutable)

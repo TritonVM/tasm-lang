@@ -2,31 +2,35 @@ use triton_vm::BFieldElement;
 
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
-#[derive(Debug)]
+#[derive(Clone, Copy, Debug)]
 struct DazeFieldElement(u64);
 
 impl DazeFieldElement {
-    fn montyred(x: u128) -> u64 {
-        // See reference above for a description of the following implementation.
-        let xl = x as u64;
-        let xh = (x >> 64) as u64;
-        let (a, e) = xl.overflowing_add(xl << 32);
-
-        let b = a.wrapping_sub(a >> 32).wrapping_sub(e as u64);
-
-        let (r, c) = xh.overflowing_sub(b);
-
-        return r.wrapping_sub((1 + !0xffff_ffff_0000_0001u64) * c as u64);
-    }
-
-    fn new(value: u64) -> DazeFieldElement {
+    fn new(value: u64) -> Self {
         return Self(Self::montyred(
             tasm::tasm_arithmetic_u64_mul_two_u64s_to_u128_u64(value, 0xFFFFFFFE00000001),
         ));
     }
 
+    fn montyred(x: u128) -> u64 {
+        // See reference above for a description of the following implementation.
+        let xl: u64 = x as u64;
+        let xh: u64 = (x >> 64) as u64;
+        let add_res: (u64, bool) = xl.overflowing_add(xl << 32);
+        let a: u64 = add_res.0;
+        let e: bool = add_res.1;
+
+        let b: u64 = a.wrapping_sub(a >> 32).wrapping_sub(e as u64);
+
+        let sub_res: (u64, bool) = xh.overflowing_sub(b);
+        let r: u64 = sub_res.0;
+        let c: bool = sub_res.1;
+
+        return r.wrapping_sub((1 + !0xffff_ffff_0000_0001u64) * c as u64);
+    }
+
     fn canonical_representation(&self) -> u64 {
-        return Self::montyred(self.0 as u128);
+        return DazeFieldElement::montyred(self.0 as u128);
     }
 
     fn value(&self) -> u64 {
@@ -34,10 +38,9 @@ impl DazeFieldElement {
     }
 
     fn mul(self, rhs: DazeFieldElement) -> Self {
-        return Self(Self::montyred(
+        return DazeFieldElement(DazeFieldElement::montyred(
             tasm::tasm_arithmetic_u64_mul_two_u64s_to_u128_u64(self.0, rhs.0),
         ));
-        // Self(Self::montyred((self.0 as u128) * (rhs.0 as u128)))
     }
 }
 
@@ -50,7 +53,7 @@ fn main() {
     let b_bfe: BFieldElement = BFieldElement::new(1_000_000_001u64);
     let prod_bfe: BFieldElement = a_bfe * b_bfe;
 
-    tasm::tasm_io_write_to_stdout_u64(prod.value());
+    tasm::tasm_io_write_to_stdout_u64((&prod).value());
 
     return;
 }

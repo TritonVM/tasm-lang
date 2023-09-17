@@ -1,7 +1,10 @@
 use std::{collections::HashMap, fs};
 use triton_vm::instruction::LabelledInstruction;
 
-use crate::{ast_types, tasm_code_generator::compile_function, type_checker::annotate_fn_outer};
+use crate::{
+    ast_types, custom_type_resolver::resolve_types, tasm_code_generator::compile_function,
+    type_checker::annotate_fn_outer,
+};
 
 pub type StructsAndMethods = HashMap<String, (syn::ItemStruct, Vec<syn::ImplItemMethod>)>;
 
@@ -87,12 +90,28 @@ pub(crate) fn compile_for_test(
 ) -> Vec<LabelledInstruction> {
     get_standard_setup!(list_type, graft_config, libraries);
 
-    let (parsed_main, parsed_structs, _) = parse_main_and_structs(directory, module_name);
-    let mut function = graft_config.graft_fn_decl(&parsed_main);
-    let (structs, mut methods) = graft_config.graft_structs(parsed_structs);
+    let (rust_main_ast, rust_struct_asts, _) = parse_main_and_structs(directory, module_name);
+    let mut function = graft_config.graft_fn_decl(&rust_main_ast);
+    let (structs, mut methods, mut associated_functions) =
+        graft_config.graft_structs_methods_and_associated_functions(rust_struct_asts);
+    // panic!("methods: {methods:#?}");
+
+    resolve_types(
+        &mut function,
+        &structs,
+        &mut methods,
+        &mut associated_functions,
+        &libraries,
+    );
 
     // type-check and annotate
-    annotate_fn_outer(&mut function, structs, &mut methods, &libraries);
+    annotate_fn_outer(
+        &mut function,
+        structs,
+        &mut methods,
+        &mut associated_functions,
+        &libraries,
+    );
 
     // compile
     let tasm = compile_function(&function, &libraries, methods);

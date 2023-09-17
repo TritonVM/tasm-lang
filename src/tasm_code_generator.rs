@@ -388,7 +388,7 @@ impl<'a> CompilerState<'a> {
 
                 // Last element of the tuple is stored on top of the stack
                 let tuple_depth: usize = element_types
-                    .iter()
+                    .into_iter()
                     .enumerate()
                     .filter(|(i, _x)| *i > *tuple_index)
                     .map(|(_i, x)| x.stack_size())
