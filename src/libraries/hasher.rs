@@ -191,12 +191,12 @@ fn get_hash_pair_function() -> LibraryFunction {
         args: vec![
             ast_types::AbstractArgument::ValueArgument(ast_types::AbstractValueArg {
                 name: "left".to_owned(),
-                data_type: ast_types::DataType::Digest,
+                data_type: ast_types::DataType::MemPointer(Box::new(ast_types::DataType::Digest)),
                 mutable: false,
             }),
             ast_types::AbstractArgument::ValueArgument(ast_types::AbstractValueArg {
                 name: "right".to_owned(),
-                data_type: ast_types::DataType::Digest,
+                data_type: ast_types::DataType::MemPointer(Box::new(ast_types::DataType::Digest)),
                 mutable: false,
             }),
         ],

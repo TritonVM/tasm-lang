@@ -1,4 +1,4 @@
-use std::{collections::HashMap, process::id};
+use std::collections::HashMap;
 
 use crate::{
     ast::*,
@@ -177,13 +177,41 @@ pub fn resolve_custom_types(
     declared_structs: &HashMap<String, ast_types::StructType>,
     declared_methods: &mut [Method<Typing>],
     associated_functions: &mut HashMap<String, HashMap<String, Fn<Typing>>>,
-    libraries: &[Box<dyn libraries::Library>],
 ) {
-    function.signature.resolve_types(declared_structs);
-    function
-        .body
+    function.resolve_custom_types(declared_structs);
+
+    declared_methods
         .iter_mut()
         .for_each(|x| x.resolve_custom_types(declared_structs));
+
+    associated_functions.values_mut().for_each(|x| {
+        x.values_mut()
+            .for_each(|x| x.resolve_custom_types(declared_structs))
+    });
+}
+
+impl Fn<Typing> {
+    pub fn resolve_custom_types(
+        &mut self,
+        declared_structs: &HashMap<String, ast_types::StructType>,
+    ) {
+        self.signature.resolve_types(declared_structs);
+        self.body
+            .iter_mut()
+            .for_each(|x| x.resolve_custom_types(declared_structs));
+    }
+}
+
+impl Method<Typing> {
+    pub fn resolve_custom_types(
+        &mut self,
+        declared_structs: &HashMap<String, ast_types::StructType>,
+    ) {
+        self.signature.resolve_types(declared_structs);
+        self.body
+            .iter_mut()
+            .for_each(|x| x.resolve_custom_types(declared_structs));
+    }
 }
 
 impl DataType {

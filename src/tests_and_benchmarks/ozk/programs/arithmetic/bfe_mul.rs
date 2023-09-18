@@ -6,8 +6,8 @@ use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 struct DazeFieldElement(u64);
 
 impl DazeFieldElement {
-    fn new(value: u64) -> Self {
-        return Self(Self::montyred(
+    fn new(value: u64) -> DazeFieldElement {
+        return DazeFieldElement(DazeFieldElement::montyred(
             tasm::tasm_arithmetic_u64_mul_two_u64s_to_u128_u64(value, 0xFFFFFFFE00000001),
         ));
     }
@@ -37,7 +37,7 @@ impl DazeFieldElement {
         return self.canonical_representation();
     }
 
-    fn mul(self, rhs: DazeFieldElement) -> Self {
+    fn mul(self, rhs: DazeFieldElement) -> DazeFieldElement {
         return DazeFieldElement(DazeFieldElement::montyred(
             tasm::tasm_arithmetic_u64_mul_two_u64s_to_u128_u64(self.0, rhs.0),
         ));

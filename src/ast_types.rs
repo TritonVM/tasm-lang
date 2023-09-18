@@ -1,8 +1,9 @@
 use anyhow::bail;
 use itertools::Itertools;
 use std::{collections::HashMap, fmt::Display, str::FromStr};
+use triton_vm::triton_asm;
 
-use crate::ast::FnSignature;
+use crate::{ast::FnSignature, libraries::LibraryFunction};
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum DataType {
@@ -328,6 +329,40 @@ impl From<&StructType> for DataType {
 }
 
 impl StructType {
+    /// Only named tuples, i.e. tuple structs should use this constructor.
+    pub fn constructor(&self) -> LibraryFunction {
+        let tuple = if let StructVariant::TupleStruct(tuple) = &self.variant {
+            tuple
+        } else {
+            panic!("Only tuple structs have constructor functions. Attempted to get constructor for struct {}", self.name);
+        };
+        let args = tuple
+            .fields
+            .iter()
+            .enumerate()
+            .map(|(i, x)| {
+                AbstractArgument::ValueArgument(AbstractValueArg {
+                    name: format!("tuple_elem_{i}"),
+                    data_type: x.to_owned(),
+                    mutable: false,
+                })
+            })
+            .collect_vec();
+        let signature = FnSignature {
+            name: self.name.to_owned(),
+            args,
+            output: DataType::Struct(self.to_owned()),
+            arg_evaluation_order: Default::default(),
+        };
+
+        // Function body of the tuple-struct constructor is empty, since
+        // the construction simply corresponds to the evaluation of arguments
+        // from left-to-rigth, as this will leave the last element of the
+        // tuple on top of the stack.
+        let body = triton_asm!();
+        LibraryFunction { signature, body }
+    }
+
     pub fn get_field_type(&self, field_id: FieldId) -> DataType {
         let res = match &self.variant {
             StructVariant::TupleStruct(ts) => match &field_id {

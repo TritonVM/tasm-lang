@@ -161,11 +161,11 @@ pub fn annotate_method(
     declared_methods: Vec<ast::Method<Typing>>,
     associated_functions: &HashMap<String, HashMap<String, ast::Fn<Typing>>>,
     libraries: &[Box<dyn libraries::Library>],
+    mut ftable: HashMap<String, ast::FnSignature>,
 ) {
     // Initialize `CheckState`
     let vtable: HashMap<String, DataTypeAndMutability> =
         HashMap::with_capacity(method.signature.args.len());
-    let mut ftable: HashMap<String, ast::FnSignature> = HashMap::new();
 
     // Insert self into ftable
     ftable.insert(method.signature.name.clone(), method.signature.clone());
@@ -304,14 +304,27 @@ pub fn annotate_fn_outer(
 ) {
     let untyped_declared_methods = declared_methods.to_owned();
 
+    // Populate `ftable` with tuple constructors, allowing initialization of tuple structs
+    // using `struct Foo(u32); let a = Foo(200);`
+    let mut ftable: HashMap<String, ast::FnSignature> = HashMap::default();
+    for (struct_name, declared_struct) in declared_structs.iter() {
+        if let ast_types::StructVariant::TupleStruct(_) = &declared_struct.variant {
+            ftable.insert(
+                struct_name.to_owned(),
+                declared_struct.constructor().signature,
+            );
+        }
+    }
+
     // Type annotate the function
+    let ftable_outer = ftable.clone();
     annotate_fn_inner(
         function,
         declared_structs.clone(),
         untyped_declared_methods.clone(),
         associated_functions,
         libraries,
-        HashMap::default(),
+        ftable,
     );
 
     // Type annotate all declared methods
@@ -323,6 +336,7 @@ pub fn annotate_fn_outer(
             untyped_declared_methods.clone(),
             &untyped_assoc_functions,
             libraries,
+            ftable_outer.clone(),
         )
     }
 
@@ -335,7 +349,7 @@ pub fn annotate_fn_outer(
                 untyped_declared_methods.clone(),
                 &untyped_assoc_functions,
                 libraries,
-                HashMap::default(),
+                ftable_outer.clone(),
             )
         }
     }
@@ -804,7 +818,6 @@ fn derive_annotate_fn_call_args(
     args: &mut [ast::Expr<Typing>],
     state: &mut CheckState,
 ) {
-    println!("callees_fn_signature:\n{callees_fn_signature:?}");
     let fn_name = &callees_fn_signature.name;
     assert_eq!(
         callees_fn_signature.args.len(),
@@ -834,8 +847,6 @@ fn derive_annotate_fn_call_args(
         .collect();
 
     // Compare list of concrete arguments with function signature, i.e. expected arguments
-    println!("\n\n*********** callees_fn_signature ***********");
-    println!("{:#?}", callees_fn_signature);
     for (arg_pos, (fn_arg, expr_type)) in callees_fn_signature
         .args
         .iter()
@@ -857,8 +868,6 @@ fn derive_annotate_fn_call_args(
                 mutable: _mutable,
             }) => {
                 let arg_pos = arg_pos + 1;
-                println!("arg_type: {arg_type:?}");
-                println!("expr_type: {expr_type:?}");
                 assert_eq!(
                 arg_type, expr_type,
                 "Wrong type of function argument {arg_pos} function call '{arg_name}' in '{fn_name}'\n expected type \"{arg_type:#?}\", but got type  \"{expr_type:#?}\".",
@@ -978,7 +987,6 @@ fn derive_annotate_expr_type(
             // We don't need to check receiver type here since that is done by
             // `derive_annotate_fn_call_args` below.
 
-            println!("BEFORE derive_annotate_fn_call_args: {callees_method_signature:#?}");
             derive_annotate_fn_call_args(&callees_method_signature, args, state);
 
             *annot = Typing::KnownType(callees_method_signature.output.clone());

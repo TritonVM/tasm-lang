@@ -41,7 +41,7 @@ mod run_tests {
             item_fn(parse_quote! {
                 // Calling this `hash_pair` would result in a label collission
                 fn hash_pair_test(left: Digest, right: Digest) -> Digest {
-                    let ret: Digest = H::hash_pair(left, right);
+                    let ret: Digest = H::hash_pair(&left, &right);
                     return ret;
                 }
             })

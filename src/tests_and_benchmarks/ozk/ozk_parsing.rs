@@ -31,7 +31,7 @@ fn extract_types_and_main(parsed_file: syn::File) -> (StructsAndMethods, Option<
             }
         }
 
-        // Get all struct methods
+        // Get all struct methods and associated functions
         if let syn::Item::Impl(item_impl) = &item {
             get_standard_setup!(ast_types::ListType::Unsafe, graft_config, _lib);
             let type_name = graft_config
@@ -91,22 +91,20 @@ pub(crate) fn compile_for_test(
     get_standard_setup!(list_type, graft_config, libraries);
 
     let (rust_main_ast, rust_struct_asts, _) = parse_main_and_structs(directory, module_name);
-    let mut function = graft_config.graft_fn_decl(&rust_main_ast);
+    let mut oil_ast = graft_config.graft_fn_decl(&rust_main_ast);
     let (structs, mut methods, mut associated_functions) =
         graft_config.graft_structs_methods_and_associated_functions(rust_struct_asts);
-    // panic!("methods: {methods:#?}");
 
     resolve_custom_types(
-        &mut function,
+        &mut oil_ast,
         &structs,
         &mut methods,
         &mut associated_functions,
-        &libraries,
     );
 
     // type-check and annotate
     annotate_fn_outer(
-        &mut function,
+        &mut oil_ast,
         structs,
         &mut methods,
         &mut associated_functions,
@@ -114,7 +112,7 @@ pub(crate) fn compile_for_test(
     );
 
     // compile
-    let tasm = compile_function(&function, &libraries, methods);
+    let tasm = compile_function(&oil_ast, &libraries, methods);
 
     // compose
     tasm.compose()
