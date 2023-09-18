@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, process::id};
 
 use crate::{
     ast::*,
@@ -61,13 +61,30 @@ impl Expr<Typing> {
                 then_branch.resolve_types(declared_structs);
                 else_branch.resolve_types(declared_structs);
             }
-            Expr::Cast(_, _) => todo!(),
-            Expr::ReturningBlock(_) => todo!(),
-            Expr::Var(_) => todo!(),
+            Expr::Cast(expr, target_type) => {
+                expr.resolve_types(declared_structs);
+                target_type.resolve_types(declared_structs);
+            }
+            Expr::ReturningBlock(ret_block) => ret_block.resolve_types(declared_structs),
+            Expr::Var(ident) => ident.resolve_types(declared_structs),
             Expr::Binop(ref mut lhs, _, ref mut rhs, _) => {
                 lhs.resolve_types(declared_structs);
                 rhs.resolve_types(declared_structs);
             }
+        }
+    }
+}
+
+impl Identifier<Typing> {
+    fn resolve_types(&mut self, declared_structs: &HashMap<String, ast_types::StructType>) {
+        match self {
+            Identifier::String(_, _) => (),
+            Identifier::ListIndex(inner_id, index_expr, _) => {
+                inner_id.resolve_types(declared_structs);
+                index_expr.resolve_types(declared_structs);
+            }
+            Identifier::TupleIndex(inner_id, _, _) => inner_id.resolve_types(declared_structs),
+            Identifier::Field(inner_id, _, _) => inner_id.resolve_types(declared_structs),
         }
     }
 }
@@ -82,17 +99,71 @@ impl Stmt<Typing> {
                 expr,
             }) => {
                 data_type.resolve_types(declared_structs);
-                todo!()
+                expr.resolve_types(declared_structs);
             }
-            Stmt::Assign(_) => todo!(),
-            Stmt::Return(_) => todo!(),
-            Stmt::FnCall(_) => todo!(),
-            Stmt::MethodCall(_) => todo!(),
-            Stmt::While(_) => todo!(),
-            Stmt::If(_) => todo!(),
-            Stmt::Block(_) => todo!(),
-            Stmt::Assert(_) => todo!(),
-            Stmt::FnDeclaration(_) => todo!(),
+            Stmt::Assign(AssignStmt { identifier, expr }) => {
+                expr.resolve_types(declared_structs);
+                identifier.resolve_types(declared_structs);
+            }
+            Stmt::Return(maybe_expr) => {
+                maybe_expr
+                    .as_mut()
+                    .map(|x| x.resolve_types(declared_structs));
+            }
+            Stmt::FnCall(FnCall {
+                name: _,
+                args,
+                type_parameter,
+                arg_evaluation_order: _,
+                annot: _,
+            }) => {
+                args.iter_mut()
+                    .for_each(|x| x.resolve_types(declared_structs));
+                type_parameter
+                    .as_mut()
+                    .map(|x| x.resolve_types(declared_structs));
+            }
+            Stmt::MethodCall(MethodCall {
+                method_name: _,
+                args,
+                annot: _,
+            }) => {
+                args.iter_mut()
+                    .for_each(|x| x.resolve_types(declared_structs));
+            }
+            Stmt::While(WhileStmt { condition, block }) => {
+                condition.resolve_types(declared_structs);
+                block
+                    .stmts
+                    .iter_mut()
+                    .for_each(|x| x.resolve_types(declared_structs));
+            }
+            Stmt::If(IfStmt {
+                condition,
+                then_branch,
+                else_branch,
+            }) => {
+                condition.resolve_types(declared_structs);
+                then_branch
+                    .stmts
+                    .iter_mut()
+                    .for_each(|x| x.resolve_types(declared_structs));
+                else_branch
+                    .stmts
+                    .iter_mut()
+                    .for_each(|x| x.resolve_types(declared_structs));
+            }
+            Stmt::Block(BlockStmt { stmts }) => {
+                stmts
+                    .iter_mut()
+                    .for_each(|x| x.resolve_types(declared_structs));
+            }
+            Stmt::Assert(AssertStmt { expression }) => expression.resolve_types(declared_structs),
+            Stmt::FnDeclaration(Fn { signature, body }) => {
+                signature.resolve_types(declared_structs);
+                body.iter_mut()
+                    .for_each(|x| x.resolve_types(declared_structs));
+            }
         }
     }
 }

@@ -54,6 +54,7 @@ impl<T> Method<T> {
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct Fn<T> {
     pub signature: FnSignature,
+    // TODO: Should probably be a BlockStmt<T> instead of Vec<Stmt>
     pub body: Vec<Stmt<T>>,
 }
 
