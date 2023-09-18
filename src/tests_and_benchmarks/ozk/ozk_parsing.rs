@@ -2,7 +2,7 @@ use std::{collections::HashMap, fs};
 use triton_vm::instruction::LabelledInstruction;
 
 use crate::{
-    ast_types, custom_type_resolver::resolve_types, tasm_code_generator::compile_function,
+    ast_types, custom_type_resolver::resolve_custom_types, tasm_code_generator::compile_function,
     type_checker::annotate_fn_outer,
 };
 
@@ -96,7 +96,7 @@ pub(crate) fn compile_for_test(
         graft_config.graft_structs_methods_and_associated_functions(rust_struct_asts);
     // panic!("methods: {methods:#?}");
 
-    resolve_types(
+    resolve_custom_types(
         &mut function,
         &structs,
         &mut methods,

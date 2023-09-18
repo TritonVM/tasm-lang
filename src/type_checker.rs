@@ -698,7 +698,7 @@ fn get_fn_signature(
         let associated_type_name = split_name[0];
         let fn_name = split_name[1];
 
-        let mut ret_value = match state.associated_functions.get(associated_type_name) {
+        let ret_value = match state.associated_functions.get(associated_type_name) {
             Some(entry) => {
                 match entry.get(fn_name) {
                 Some(function) => function.signature.to_owned(),
@@ -706,9 +706,6 @@ fn get_fn_signature(
             }},
             None => panic!("Don't know type {associated_type_name} for which an associated function {fn_name} is made"),
         };
-        println!("Before resolve_types:\n{ret_value:?}");
-        ret_value.resolve_types(&state.declared_structs);
-        println!("After resolve_types:\n{ret_value:?}");
         return ret_value;
     }
 
@@ -734,31 +731,17 @@ fn get_method_signature(
     let mut forced_type = original_receiver_type.clone();
     let mut try_again = true;
     while try_again {
-        if name == "value" {
-            println!("forced_type: {forced_type}\n\n\n");
-        }
         // 1. if there's a method `bar` where the receiver type (the type of self
         // in the method) matches `forced_type` exactly , use it (a "by value method")
         for declared_method in state.declared_methods.iter() {
             if declared_method.signature.name == name {
                 let method_receiver_type = args[0].get_type();
-                if name == "value" {
-                    println!("method_receiver_type: {method_receiver_type}");
-                    println!("forced_type: {forced_type}");
-                }
                 if method_receiver_type == forced_type {
                     if let ast::Expr::Var(var) = &mut args[0] {
                         var.force_type(&forced_type);
                     }
 
-                    // TODO: Can we resolve types somewhere else than here? This is a mess.
-                    let mut ret = declared_method.signature.clone();
-                    ret.resolve_types(&state.declared_structs);
-
-                    if name == "value" {
-                        println!("PMD0:\n\n\n");
-                    }
-                    return ret;
+                    return declared_method.signature.clone();
                 }
             }
         }
@@ -783,14 +766,8 @@ fn get_method_signature(
                     if let ast::Expr::Var(var) = &mut args[0] {
                         var.force_type(&auto_refd_forced_type);
                     }
-                    // TODO: Can we resolve types somewhere else than here? This is a mess.
-                    let mut ret = declared_method.signature.clone();
-                    ret.resolve_types(&state.declared_structs);
 
-                    if name == "value" {
-                        println!("PMD1:\n\n\n");
-                    }
-                    return ret;
+                    return declared_method.signature.clone();
                 }
             }
         }
