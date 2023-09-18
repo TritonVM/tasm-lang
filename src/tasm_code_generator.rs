@@ -2195,14 +2195,17 @@ fn compile_expr(
                         compile_expr(rhs_expr, "_binop_rhs", state);
 
                     let lhs_type = lhs_expr.get_type();
-                    let shr = if matches!(lhs_type, ast_types::DataType::U32) {
-                        state.import_snippet(Box::new(arithmetic::u32::shift_right::ShiftRightU32))
-                    } else if matches!(lhs_type, ast_types::DataType::U64) {
-                        state.import_snippet(Box::new(
-                            arithmetic::u64::shift_right_u64::ShiftRightU64,
-                        ))
-                    } else {
-                        panic!("Unsupported SHL of type {lhs_type}");
+                    // TODO: add optimization where RHS is a literal. Also applies for `Binop::Shl`. We have code snippets
+                    // for left/right shifting u128s with statically known bits.
+                    let shr = match lhs_type {
+                        ast_types::DataType::U32 => state.import_snippet(Box::new(arithmetic::u32::shift_right::ShiftRightU32)),
+                        ast_types::DataType::U64 => state.import_snippet(Box::new(
+                                    arithmetic::u64::shift_right_u64::ShiftRightU64,
+                                )),
+                        ast_types::DataType::U128 => state.import_snippet(Box::new(
+                            arithmetic::u128::shift_right_u128::ShiftRightU128,
+                        )),
+                        _ => panic!("Unsupported SHL of type {lhs_type}. Expression was `{lhs_expr}: >> {rhs_expr}`; types: `{lhs_type}`, {}.", rhs_expr.get_type()),
                     };
 
                     state.function_state.vstack.pop();
