@@ -15,6 +15,9 @@ pub struct UnsignedIntegersLib {
 const LEADING_ZEROS_METHOD: &str = "leading_zeros";
 const COUNT_ONES_METHOD: &str = "count_ones";
 const POW_METHOD: &str = "pow";
+const OVERFLOWING_ADD_METHOD: &str = "overflowing_add";
+const OVERFLOWING_SUB_METHOD: &str = "overflowing_sub";
+const WRAPPING_SUB_METHOD: &str = "wrapping_sub";
 
 impl Library for UnsignedIntegersLib {
     fn get_function_name(&self, _full_name: &str) -> Option<String> {
@@ -29,7 +32,12 @@ impl Library for UnsignedIntegersLib {
         if is_u32_based_type(receiver_type)
             && matches!(
                 method_name,
-                LEADING_ZEROS_METHOD | COUNT_ONES_METHOD | POW_METHOD
+                LEADING_ZEROS_METHOD
+                    | COUNT_ONES_METHOD
+                    | POW_METHOD
+                    | OVERFLOWING_ADD_METHOD
+                    | OVERFLOWING_SUB_METHOD
+                    | WRAPPING_SUB_METHOD
             )
         {
             return Some(method_name.to_owned());
@@ -196,6 +204,24 @@ fn name_to_tasm_lib_snippet(
             ast_types::DataType::U32 => {
                 Some(Box::new(tasm_lib::arithmetic::u32::safe_pow::SafePow))
             }
+            _ => panic!("Dont know `{public_name}` for {receiver_type}"),
+        },
+        OVERFLOWING_ADD_METHOD => match receiver_type {
+            ast_types::DataType::U64 => Some(Box::new(
+                tasm_lib::arithmetic::u64::overflowing_add_u64::OverflowingAdd,
+            )),
+            _ => panic!("Dont know `{public_name}` for {receiver_type}"),
+        },
+        OVERFLOWING_SUB_METHOD => match receiver_type {
+            ast_types::DataType::U64 => Some(Box::new(
+                tasm_lib::arithmetic::u64::overflowing_sub_u64::OverflowingSub,
+            )),
+            _ => panic!("Dont know `{public_name}` for {receiver_type}"),
+        },
+        WRAPPING_SUB_METHOD => match receiver_type {
+            ast_types::DataType::U64 => Some(Box::new(
+                tasm_lib::arithmetic::u64::wrapping_sub_u64::WrappingSub,
+            )),
             _ => panic!("Dont know `{public_name}` for {receiver_type}"),
         },
         _ => None,

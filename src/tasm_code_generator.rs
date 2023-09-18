@@ -1343,6 +1343,8 @@ fn compile_fn_call(
         }
     }
 
+    // TODO: Handle associated functions
+
     if call_fn_code.is_empty() {
         // Function is not a library function, but type checker has guaranteed that it is in
         // scope. So we just call it.

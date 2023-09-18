@@ -15,9 +15,9 @@ dependencies = [
 
 [[package]]
 name = "aho-corasick"
-version = "1.0.5"
+version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0c378d78423fdad8089616f827526ee33c19f2fddbd5de1629152c9593ba4783"
+checksum = "0f2135563fb5c609d2b2b87c1e8ce7bc41b0b45430fa9661f457981503dd5bf0"
 dependencies = [
  "memchr",
 ]
@@ -408,7 +408,7 @@ dependencies = [
 [[package]]
 name = "derive_tasm_object"
 version = "0.1.0"
-source = "git+https://github.com/TritonVM/tasm-lib.git#32ab714dafd0ad10d804351bc7ae1dbd4c03d16e"
+source = "git+https://github.com/TritonVM/tasm-lib.git#6ca396cce7cfa07eaa3b9fcf86a4b5c2c7e023af"
 dependencies = [
  "quote",
  "syn 1.0.109",
@@ -1350,7 +1350,7 @@ dependencies = [
 [[package]]
 name = "tasm-lib"
 version = "0.2.1"
-source = "git+https://github.com/TritonVM/tasm-lib.git#32ab714dafd0ad10d804351bc7ae1dbd4c03d16e"
+source = "git+https://github.com/TritonVM/tasm-lib.git#6ca396cce7cfa07eaa3b9fcf86a4b5c2c7e023af"
 dependencies = [
  "anyhow",
  "derive_tasm_object",
