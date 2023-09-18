@@ -751,9 +751,12 @@ fn get_method_signature(
             if declared_method.signature.name == name {
                 let method_receiver_type = args[0].get_type();
                 if method_receiver_type == forced_type {
-                    if let ast::Expr::Var(var) = &mut args[0] {
+                    println!("args[0].get_type() was: {}", args[0].get_type());
+                    if let ast::Expr::Var(ref mut var) = &mut args[0] {
+                        println!("type checker forcing for expression {}", var);
                         var.force_type(&forced_type);
                     }
+                    println!("args[0].get_type() is now: {}", args[0].get_type());
 
                     return declared_method.signature.clone();
                 }

@@ -80,7 +80,12 @@ pub fn graft_check_compile_prop(
     );
 
     // compile
-    let tasm = compile_function(&intermediate_language_ast, &libraries, Vec::default());
+    let tasm = compile_function(
+        &intermediate_language_ast,
+        &libraries,
+        Vec::default(),
+        &HashMap::default(),
+    );
     tasm.compose()
 }
 

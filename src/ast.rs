@@ -58,6 +58,12 @@ pub struct Fn<T> {
     pub body: Vec<Stmt<T>>,
 }
 
+impl<T> Fn<T> {
+    pub fn get_tasm_label(&self) -> String {
+        self.signature.name.replace("::", "_assoc_funciton___of___")
+    }
+}
+
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct FnSignature {
     pub name: String,

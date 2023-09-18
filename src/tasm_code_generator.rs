@@ -220,6 +220,7 @@ pub struct GlobalCodeGeneratorState {
     counter: usize,
     snippet_state: SnippetState,
     compiled_methods: HashMap<String, InnerFunctionTasmCode>,
+    compiled_associated_functions: HashMap<String, InnerFunctionTasmCode>,
 }
 
 // TODO: Maybe this needs a new lifetime specifier, `'b`?
@@ -234,6 +235,8 @@ pub struct CompilerState<'a> {
     libraries: &'a [Box<dyn libraries::Library>],
 
     declared_methods: &'a [ast::Method<type_checker::Typing>],
+
+    associated_functions: &'a HashMap<String, HashMap<String, ast::Fn<type_checker::Typing>>>,
 }
 
 impl<'a> CompilerState<'a> {
@@ -251,12 +254,14 @@ impl<'a> CompilerState<'a> {
         global_compiler_state: GlobalCodeGeneratorState,
         libraries: &'a [Box<dyn libraries::Library>],
         declared_methods: &'a [ast::Method<type_checker::Typing>],
+        associated_functions: &'a HashMap<String, HashMap<String, ast::Fn<type_checker::Typing>>>,
     ) -> Self {
         Self {
             global_compiler_state,
             function_state: FunctionState::default(),
             libraries,
             declared_methods,
+            associated_functions,
         }
     }
 
@@ -267,6 +272,7 @@ impl<'a> CompilerState<'a> {
         required_spills: HashSet<ValueIdentifier>,
         libraries: &'a [Box<dyn libraries::Library>],
         declared_methods: &'a [ast::Method<type_checker::Typing>],
+        associated_functions: &'a HashMap<String, HashMap<String, ast::Fn<type_checker::Typing>>>,
     ) -> Self {
         Self {
             global_compiler_state,
@@ -278,6 +284,7 @@ impl<'a> CompilerState<'a> {
             },
             libraries,
             declared_methods,
+            associated_functions,
         }
     }
 
@@ -380,11 +387,7 @@ impl<'a> CompilerState<'a> {
             ast::Identifier::TupleIndex(lhs_id, tuple_index, _known_type) => {
                 let lhs_location = self.locate_identifier(lhs_id);
                 let lhs_type = lhs_id.get_type();
-                let element_types = if let ast_types::DataType::Tuple(ets) = lhs_type {
-                    ets
-                } else {
-                    panic!("Expected type was tuple. Got {lhs_type}.")
-                };
+                let element_types = lhs_type.get_tuple_elements();
 
                 // Last element of the tuple is stored on top of the stack
                 let tuple_depth: usize = element_types
@@ -582,6 +585,9 @@ impl<'a> CompilerState<'a> {
             .into_iter()
             .map(|(_name, code)| code)
             .collect_vec();
+
+        // Compile all associated functions
+        // self.associated_functions.values().map(|x| x.values().map(|y| compi))
 
         OuterFunctionTasmCode {
             function_data: inner_function,
@@ -940,6 +946,7 @@ fn compile_function_inner(
     global_compiler_state: &mut GlobalCodeGeneratorState,
     libraries: &[Box<dyn libraries::Library>],
     declared_methods: &[ast::Method<type_checker::Typing>],
+    associated_functions: &HashMap<String, HashMap<String, ast::Fn<type_checker::Typing>>>,
 ) -> InnerFunctionTasmCode {
     let fn_name = &function.signature.name;
     let _fn_stack_output_sig = format!("{}", function.signature.output);
@@ -950,6 +957,7 @@ fn compile_function_inner(
             global_compiler_state.to_owned(),
             libraries,
             declared_methods,
+            associated_functions,
         );
         let fn_arg_spilling = temporary_fn_state
             .add_input_arguments_to_vstack_and_return_spilled_fn_args(&function.signature.args);
@@ -974,6 +982,7 @@ fn compile_function_inner(
         spills,
         libraries,
         declared_methods,
+        associated_functions,
     );
 
     // Add function arguments to the compiler's view of the stack.
@@ -1007,17 +1016,20 @@ pub(crate) fn compile_function(
     function: &ast::Fn<type_checker::Typing>,
     libraries: &[Box<dyn libraries::Library>],
     declared_methods: Vec<ast::Method<type_checker::Typing>>,
+    associated_functions: &HashMap<String, HashMap<String, ast::Fn<type_checker::Typing>>>,
 ) -> OuterFunctionTasmCode {
     let mut state = CompilerState::new(
         GlobalCodeGeneratorState::default(),
         libraries,
         &declared_methods,
+        associated_functions,
     );
     let compiled_function = compile_function_inner(
         function,
         &mut state.global_compiler_state,
         libraries,
         &declared_methods,
+        associated_functions,
     );
 
     state.compose_code_for_outer_function(compiled_function)
@@ -1297,6 +1309,7 @@ fn compile_stmt(
                 &mut state.global_compiler_state,
                 state.libraries,
                 state.declared_methods,
+                state.associated_functions,
             );
             state
                 .function_state
@@ -1343,7 +1356,53 @@ fn compile_fn_call(
         }
     }
 
-    // TODO: Handle associated functions
+    // Associated functions are in scope, they must be called with `<Type>::<function_name>`
+    if call_fn_code.is_empty() {
+        let split_name = name.split("::").collect_vec();
+        if split_name.len() > 1 {
+            let associated_type_name = split_name[0];
+            let fn_name = split_name[1];
+
+            let assoc_fun = match state.associated_functions.get(associated_type_name) {
+                Some(entry) => {
+                    match entry.get(fn_name) {
+                        Some(function) => function.to_owned(),
+                        None => panic!("Don't know associated function '{fn_name}' for type {associated_type_name}"),
+                    }},
+                    None => panic!("Don't know type {associated_type_name} for which an associated function {fn_name} is made"),
+                };
+
+            let function_label: String = assoc_fun.get_tasm_label();
+            call_fn_code.append(&mut triton_asm!(call { function_label }));
+
+            if !state
+                .global_compiler_state
+                .compiled_associated_functions
+                .contains_key(&function_label)
+            {
+                // Insert something with the right label *before* compiling,
+                // otherwise the methods cannot handle recursion.
+                state.global_compiler_state.compiled_methods.insert(
+                    function_label.clone(),
+                    InnerFunctionTasmCode::dummy_value(&function_label),
+                );
+
+                // Compile the method as a function and add it to compiled methods
+                let compiled_function = compile_function_inner(
+                    &assoc_fun,
+                    &mut state.global_compiler_state,
+                    state.libraries,
+                    state.declared_methods,
+                    state.associated_functions,
+                );
+
+                state
+                    .global_compiler_state
+                    .compiled_methods
+                    .insert(function_label.clone(), compiled_function);
+            }
+        }
+    }
 
     if call_fn_code.is_empty() {
         // Function is not a library function, but type checker has guaranteed that it is in
@@ -1381,11 +1440,14 @@ fn compile_method_call(
             })
             .unzip();
 
-    // First check if this is a locally declared method
+    // First check if this is a declared method
     let mut call_code = vec![];
     for declared_method in state.declared_methods.iter() {
         if method_call.method_name == declared_method.signature.name
-            && receiver_type == declared_method.receiver_type()
+            && receiver_type == declared_method.receiver_type() ||
+            // TODO: Type checker should handle this. Remove this extra condition!
+            method_call.method_name == declared_method.signature.name
+            && ast_types::DataType::MemPointer(Box::new(receiver_type.clone())) == declared_method.receiver_type()
         {
             let method_label = declared_method.get_tasm_label();
             if !state
@@ -1406,6 +1468,7 @@ fn compile_method_call(
                     &mut state.global_compiler_state,
                     state.libraries,
                     state.declared_methods,
+                    state.associated_functions,
                 );
 
                 state
@@ -1430,7 +1493,10 @@ fn compile_method_call(
         }
     }
 
-    assert!(!call_code.is_empty(), "Unknown method: {method_name}");
+    assert!(
+        !call_code.is_empty(),
+        "Unknown method: \"{method_name}\" for receiver type \"{receiver_type}\""
+    );
 
     // Update vstack to reflect that all input arguments, including receiver
     // were consumed.
@@ -2333,6 +2399,15 @@ fn compile_expr(
                 }
                 (ast_types::DataType::Bool, ast_types::DataType::U32) => expr_code,
                 (ast_types::DataType::Bool, ast_types::DataType::BFE) => expr_code,
+                (ast_types::DataType::U128, ast_types::DataType::U64) => {
+                    triton_asm!(
+                    {&expr_code}
+                    swap 2
+                    pop
+                    swap 2
+                    pop
+                    )
+                }
                 _ => todo!("previous_type: {previous_type}; result_type: {result_type}"),
             }
         }

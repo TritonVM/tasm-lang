@@ -24,6 +24,36 @@ pub enum DataType {
 }
 
 impl DataType {
+    pub fn get_tuple_elements(&self) -> Tuple {
+        match self {
+            DataType::Tuple(tuple) => tuple.to_owned(),
+            DataType::Struct(StructType {
+                name: _,
+                is_copy: _,
+                variant,
+            }) => match variant {
+                StructVariant::TupleStruct(ts) => ts.to_owned(),
+                StructVariant::NamedFields(_) => todo!(),
+            },
+            // TODO: Get rid of this mess by using `FieldId` in `Identifier` instead
+            DataType::MemPointer(inner) => {
+                let inner = *inner.to_owned();
+                match inner {
+                    DataType::Struct(StructType {
+                        name: _,
+                        is_copy: _,
+                        variant,
+                    }) => match variant {
+                        StructVariant::TupleStruct(ts) => ts.to_owned(),
+                        StructVariant::NamedFields(_) => todo!(),
+                    },
+                    _ => panic!("Type is not unnamed or named tuple. Type was: {self}"),
+                }
+            }
+            _ => panic!("Type is not unnamed or named tuple. Type was: {self}"),
+        }
+    }
+
     /// Return true if it's OK to copy this type including its underlying
     /// data, false if it's expensive to copy.
     pub fn is_copy(&self) -> bool {

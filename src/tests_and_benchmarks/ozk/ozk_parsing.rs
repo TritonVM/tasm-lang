@@ -1,3 +1,4 @@
+use itertools::Itertools;
 use std::{collections::HashMap, fs};
 use triton_vm::instruction::LabelledInstruction;
 
@@ -112,7 +113,19 @@ pub(crate) fn compile_for_test(
     );
 
     // compile
-    let tasm = compile_function(&oil_ast, &libraries, methods);
+    println!(
+        "compile_for_test: methods:\n{} ",
+        methods.iter().map(|x| &x.signature.name).join(",")
+    );
+    println!(
+        "compile_for_test: associated_functions:\n{} ",
+        associated_functions
+            .values()
+            .map(|x| x.iter().map(|y| &y.1.signature.name).join(","))
+            .join(";")
+    );
+
+    let tasm = compile_function(&oil_ast, &libraries, methods, &associated_functions);
 
     // compose
     tasm.compose()
