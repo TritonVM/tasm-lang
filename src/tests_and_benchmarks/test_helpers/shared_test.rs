@@ -73,7 +73,7 @@ pub fn graft_check_compile_prop(
     // type-check and annotate. Doesn't handle structs and methods yet.
     annotate_fn_outer(
         &mut intermediate_language_ast,
-        HashMap::default(),
+        &HashMap::default(),
         &mut Vec::default(),
         &mut HashMap::default(),
         &libraries,
@@ -84,6 +84,7 @@ pub fn graft_check_compile_prop(
         &intermediate_language_ast,
         &libraries,
         Vec::default(),
+        &HashMap::default(),
         &HashMap::default(),
     );
     tasm.compose()

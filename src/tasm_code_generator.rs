@@ -234,6 +234,8 @@ pub struct CompilerState<'a> {
 
     libraries: &'a [Box<dyn libraries::Library>],
 
+    declared_structs: &'a HashMap<String, ast_types::StructType>,
+
     declared_methods: &'a [ast::Method<type_checker::Typing>],
 
     associated_functions: &'a HashMap<String, HashMap<String, ast::Fn<type_checker::Typing>>>,
@@ -255,6 +257,7 @@ impl<'a> CompilerState<'a> {
         libraries: &'a [Box<dyn libraries::Library>],
         declared_methods: &'a [ast::Method<type_checker::Typing>],
         associated_functions: &'a HashMap<String, HashMap<String, ast::Fn<type_checker::Typing>>>,
+        declared_structs: &'a HashMap<String, ast_types::StructType>,
     ) -> Self {
         Self {
             global_compiler_state,
@@ -262,6 +265,7 @@ impl<'a> CompilerState<'a> {
             libraries,
             declared_methods,
             associated_functions,
+            declared_structs,
         }
     }
 
@@ -273,6 +277,7 @@ impl<'a> CompilerState<'a> {
         libraries: &'a [Box<dyn libraries::Library>],
         declared_methods: &'a [ast::Method<type_checker::Typing>],
         associated_functions: &'a HashMap<String, HashMap<String, ast::Fn<type_checker::Typing>>>,
+        declared_structs: &'a HashMap<String, ast_types::StructType>,
     ) -> Self {
         Self {
             global_compiler_state,
@@ -285,6 +290,7 @@ impl<'a> CompilerState<'a> {
             libraries,
             declared_methods,
             associated_functions,
+            declared_structs,
         }
     }
 
@@ -565,6 +571,18 @@ impl<'a> CompilerState<'a> {
                 .try_into()
                 .unwrap(),
         );
+
+        // Insert tuple constructors
+        for (struct_name, declared_struct) in self.declared_structs.iter() {
+            let entry = if let ast_types::StructVariant::TupleStruct(_) = &declared_struct.variant {
+                (
+                    struct_name.to_owned(),
+                    declared_struct.constructor().signature,
+                )
+            } else {
+                continue;
+            };
+        }
 
         let external_dependencies: Vec<SubRoutine> = self
             .global_compiler_state
@@ -947,6 +965,7 @@ fn compile_function_inner(
     libraries: &[Box<dyn libraries::Library>],
     declared_methods: &[ast::Method<type_checker::Typing>],
     associated_functions: &HashMap<String, HashMap<String, ast::Fn<type_checker::Typing>>>,
+    declared_structs: &HashMap<String, ast_types::StructType>,
 ) -> InnerFunctionTasmCode {
     let fn_name = &function.signature.name;
     let _fn_stack_output_sig = format!("{}", function.signature.output);
@@ -958,6 +977,7 @@ fn compile_function_inner(
             libraries,
             declared_methods,
             associated_functions,
+            declared_structs,
         );
         let fn_arg_spilling = temporary_fn_state
             .add_input_arguments_to_vstack_and_return_spilled_fn_args(&function.signature.args);
@@ -983,6 +1003,7 @@ fn compile_function_inner(
         libraries,
         declared_methods,
         associated_functions,
+        declared_structs,
     );
 
     // Add function arguments to the compiler's view of the stack.
@@ -1017,12 +1038,14 @@ pub(crate) fn compile_function(
     libraries: &[Box<dyn libraries::Library>],
     declared_methods: Vec<ast::Method<type_checker::Typing>>,
     associated_functions: &HashMap<String, HashMap<String, ast::Fn<type_checker::Typing>>>,
+    declared_structs: &HashMap<String, ast_types::StructType>,
 ) -> OuterFunctionTasmCode {
     let mut state = CompilerState::new(
         GlobalCodeGeneratorState::default(),
         libraries,
         &declared_methods,
         associated_functions,
+        declared_structs,
     );
     let compiled_function = compile_function_inner(
         function,
@@ -1030,6 +1053,7 @@ pub(crate) fn compile_function(
         libraries,
         &declared_methods,
         associated_functions,
+        declared_structs,
     );
 
     state.compose_code_for_outer_function(compiled_function)
@@ -1310,6 +1334,7 @@ fn compile_stmt(
                 state.libraries,
                 state.declared_methods,
                 state.associated_functions,
+                state.declared_structs,
             );
             state
                 .function_state
@@ -1394,6 +1419,7 @@ fn compile_fn_call(
                     state.libraries,
                     state.declared_methods,
                     state.associated_functions,
+                    state.declared_structs,
                 );
 
                 state
@@ -1469,6 +1495,7 @@ fn compile_method_call(
                     state.libraries,
                     state.declared_methods,
                     state.associated_functions,
+                    state.declared_structs,
                 );
 
                 state

@@ -122,8 +122,6 @@ pub struct CheckState<'a> {
     /// This is used for determining the type of function calls in expressions.
     pub ftable: HashMap<String, ast::FnSignature>,
 
-    pub declared_structs: HashMap<String, ast_types::StructType>,
-
     pub declared_methods: Vec<ast::Method<Typing>>,
 
     /// Functions declared in `impl` blocks, without a `&self` argument
@@ -157,7 +155,6 @@ impl DataTypeAndMutability {
 // TODO: Delete `annotate_method`, use `annotate_function` instead
 pub fn annotate_method(
     method: &mut ast::Method<Typing>,
-    declared_structs: HashMap<String, ast_types::StructType>,
     declared_methods: Vec<ast::Method<Typing>>,
     associated_functions: &HashMap<String, HashMap<String, ast::Fn<Typing>>>,
     libraries: &[Box<dyn libraries::Library>],
@@ -173,7 +170,6 @@ pub fn annotate_method(
         libraries,
         vtable,
         ftable,
-        declared_structs,
         declared_methods,
         associated_functions: associated_functions.to_owned(),
     };
@@ -227,7 +223,6 @@ pub fn annotate_method(
 
 pub fn annotate_fn_inner(
     function: &mut ast::Fn<Typing>,
-    declared_structs: HashMap<String, ast_types::StructType>,
     declared_methods: Vec<ast::Method<Typing>>,
     associated_functions: &HashMap<String, HashMap<String, ast::Fn<Typing>>>,
     libraries: &[Box<dyn libraries::Library>],
@@ -243,7 +238,6 @@ pub fn annotate_fn_inner(
         libraries,
         vtable,
         ftable,
-        declared_structs,
         declared_methods: declared_methods.to_owned(),
         associated_functions: associated_functions.to_owned(),
     };
@@ -297,7 +291,7 @@ pub fn annotate_fn_inner(
 
 pub fn annotate_fn_outer(
     function: &mut ast::Fn<Typing>,
-    declared_structs: HashMap<String, ast_types::StructType>,
+    declared_structs: &HashMap<String, ast_types::StructType>,
     declared_methods: &mut [ast::Method<Typing>],
     associated_functions: &mut HashMap<String, HashMap<String, ast::Fn<Typing>>>,
     libraries: &[Box<dyn libraries::Library>],
@@ -320,7 +314,6 @@ pub fn annotate_fn_outer(
     let ftable_outer = ftable.clone();
     annotate_fn_inner(
         function,
-        declared_structs.clone(),
         untyped_declared_methods.clone(),
         associated_functions,
         libraries,
@@ -332,7 +325,6 @@ pub fn annotate_fn_outer(
     for declared_method in declared_methods.iter_mut() {
         annotate_method(
             declared_method,
-            declared_structs.clone(),
             untyped_declared_methods.clone(),
             &untyped_assoc_functions,
             libraries,
@@ -345,7 +337,6 @@ pub fn annotate_fn_outer(
         for (_, afunc) in functions.iter_mut() {
             annotate_fn_inner(
                 afunc,
-                declared_structs.clone(),
                 untyped_declared_methods.clone(),
                 &untyped_assoc_functions,
                 libraries,
@@ -518,7 +509,6 @@ fn annotate_stmt(
             // A local function can see all functions available in the outer scope.
             annotate_fn_inner(
                 function,
-                state.declared_structs.clone(),
                 state.declared_methods.clone(),
                 &state.associated_functions,
                 state.libraries,

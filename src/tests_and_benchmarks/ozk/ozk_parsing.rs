@@ -106,7 +106,7 @@ pub(crate) fn compile_for_test(
     // type-check and annotate
     annotate_fn_outer(
         &mut oil_ast,
-        structs,
+        &structs,
         &mut methods,
         &mut associated_functions,
         &libraries,
@@ -125,7 +125,13 @@ pub(crate) fn compile_for_test(
             .join(";")
     );
 
-    let tasm = compile_function(&oil_ast, &libraries, methods, &associated_functions);
+    let tasm = compile_function(
+        &oil_ast,
+        &libraries,
+        methods,
+        &associated_functions,
+        &structs,
+    );
 
     // compose
     tasm.compose()
