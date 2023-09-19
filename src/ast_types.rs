@@ -215,12 +215,27 @@ impl DataType {
             Self::XFE => 3,
             Self::Digest => 5,
             Self::List(_list_type, _) => 1,
-            Self::Tuple(tuple_type) => tuple_type.into_iter().map(|x| Self::stack_size(&x)).sum(),
+            Self::Tuple(tuple_type) => tuple_type.stack_size(),
             Self::VoidPointer => 1,
             Self::Function(_) => todo!(),
-            Self::Struct(_) => 1, // a pointer to a struct in memory
             Self::Unresolved(name) => panic!("cannot get size of unresolved type {name}"),
-            Self::MemPointer(_) => 1,
+            Self::Struct(inner_type) => {
+                if inner_type.is_copy {
+                    match &inner_type.variant {
+                        StructVariant::TupleStruct(tuple) => tuple.stack_size(),
+                        StructVariant::NamedFields(_) => todo!(),
+                    }
+                } else {
+                    1
+                }
+            }
+            Self::MemPointer(inner_type) => {
+                if inner_type.is_copy() {
+                    inner_type.stack_size()
+                } else {
+                    1
+                }
+            }
         }
     }
 }
@@ -514,6 +529,10 @@ impl Tuple {
 
     pub fn is_empty(&self) -> bool {
         self.fields.is_empty()
+    }
+
+    pub fn stack_size(&self) -> usize {
+        self.into_iter().map(|x| x.stack_size()).sum()
     }
 }
 

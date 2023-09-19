@@ -46,6 +46,7 @@ fn main() {
         (((1u128 << 40) + 1) as u64) as u128,
     ));
     tasm::tasm_io_write_to_stdout_u64(DazeFieldElement::montyred(0xFFFFFFFF00000000));
+    tasm::tasm_io_write_to_stdout_u64(DazeFieldElement::montyred(2u128 * 0xFFFFFFFE00000001u128));
 
     return;
 }
@@ -75,6 +76,7 @@ mod tests {
             BFieldElement::montyred(1 << 40).encode(),
             BFieldElement::montyred((1 << 40) + 1).encode(),
             BFieldElement::montyred(0xFFFFFFFF00000000).encode(),
+            BFieldElement::montyred(2u128 * 0xFFFFFFFE00000001u128).encode(),
         ]
         .concat();
         let native_output =
