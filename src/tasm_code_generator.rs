@@ -1467,10 +1467,9 @@ fn compile_method_call(
     let mut call_code = vec![];
     for declared_method in state.declared_methods.iter() {
         if method_call.method_name == declared_method.signature.name
-            && receiver_type == declared_method.receiver_type() ||
+            && (receiver_type == declared_method.receiver_type() ||
             // TODO: Type checker should handle this. Remove this extra condition!
-            method_call.method_name == declared_method.signature.name
-            && ast_types::DataType::MemPointer(Box::new(receiver_type.clone())) == declared_method.receiver_type()
+            ast_types::DataType::MemPointer(Box::new(receiver_type.clone())) == declared_method.receiver_type())
         {
             let method_label = declared_method.get_tasm_label();
             if !state

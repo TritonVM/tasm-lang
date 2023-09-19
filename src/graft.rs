@@ -35,6 +35,7 @@ impl<'a> Graft<'a> {
         }
     }
 
+    #[allow(clippy::type_complexity)]
     pub fn graft_structs_methods_and_associated_functions(
         &self,
         structs_and_methods: HashMap<String, (syn::ItemStruct, Vec<syn::ImplItemMethod>)>,

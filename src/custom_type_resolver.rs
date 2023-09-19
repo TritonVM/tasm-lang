@@ -26,14 +26,16 @@ impl Expr<Typing> {
             }) => args
                 .iter_mut()
                 .for_each(|arg_expr| arg_expr.resolve_custom_types(declared_structs)),
-            Expr::Lit(lit) => match lit {
-                ExprLit::MemPointer(MemPointerLiteral {
+            Expr::Lit(lit) => {
+                if let ExprLit::MemPointer(MemPointerLiteral {
                     mem_pointer_address: _,
                     mem_pointer_declared_type,
                     resolved_type: _,
-                }) => mem_pointer_declared_type.resolve_custom_types(declared_structs),
-                _ => (),
-            },
+                }) = lit
+                {
+                    mem_pointer_declared_type.resolve_custom_types(declared_structs)
+                }
+            }
             Expr::Tuple(exprs) => exprs
                 .iter_mut()
                 .for_each(|x| x.resolve_custom_types(declared_structs)),
@@ -46,9 +48,9 @@ impl Expr<Typing> {
             }) => {
                 args.iter_mut()
                     .for_each(|x| x.resolve_custom_types(declared_structs));
-                type_parameter
-                    .as_mut()
-                    .map(|typa| typa.resolve_custom_types(declared_structs));
+                if let Some(typa) = type_parameter.as_mut() {
+                    typa.resolve_custom_types(declared_structs)
+                }
             }
             Expr::Unary(_, ref mut expr, _) => expr.resolve_custom_types(declared_structs),
             Expr::If(ExprIf {
@@ -107,9 +109,9 @@ impl Stmt<Typing> {
                 identifier.resolve_custom_types(declared_structs);
             }
             Stmt::Return(maybe_expr) => {
-                maybe_expr
-                    .as_mut()
-                    .map(|x| x.resolve_custom_types(declared_structs));
+                if let Some(x) = maybe_expr.as_mut() {
+                    x.resolve_custom_types(declared_structs)
+                }
             }
             Stmt::FnCall(FnCall {
                 name: _,
@@ -120,9 +122,9 @@ impl Stmt<Typing> {
             }) => {
                 args.iter_mut()
                     .for_each(|x| x.resolve_custom_types(declared_structs));
-                type_parameter
-                    .as_mut()
-                    .map(|x| x.resolve_custom_types(declared_structs));
+                if let Some(typa) = type_parameter.as_mut() {
+                    typa.resolve_custom_types(declared_structs)
+                }
             }
             Stmt::MethodCall(MethodCall {
                 method_name: _,
