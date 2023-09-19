@@ -16,7 +16,7 @@ use twenty_first::shared_math::b_field_element::BFieldElement;
 use twenty_first::shared_math::bfield_codec::BFieldCodec;
 
 use self::subroutine::SubRoutine;
-use crate::ast_types;
+use crate::ast_types::{self, StructVariant};
 use crate::libraries::{self};
 use crate::stack::Stack;
 use crate::type_checker::GetType;
@@ -571,18 +571,6 @@ impl<'a> CompilerState<'a> {
                 .try_into()
                 .unwrap(),
         );
-
-        // Insert tuple constructors
-        for (struct_name, declared_struct) in self.declared_structs.iter() {
-            let entry = if let ast_types::StructVariant::TupleStruct(_) = &declared_struct.variant {
-                (
-                    struct_name.to_owned(),
-                    declared_struct.constructor().signature,
-                )
-            } else {
-                continue;
-            };
-        }
 
         let external_dependencies: Vec<SubRoutine> = self
             .global_compiler_state
@@ -1431,9 +1419,18 @@ fn compile_fn_call(
     }
 
     if call_fn_code.is_empty() {
-        // Function is not a library function, but type checker has guaranteed that it is in
-        // scope. So we just call it.
-        call_fn_code.append(&mut triton_asm!(call { name }));
+        // Is the function a tuple constuctor? `struct Foo(u32); let a = Foo(200);`
+        if let Some(struct_type) = state.declared_structs.get(&name) {
+            assert!(
+                matches!(struct_type.variant, StructVariant::TupleStruct(_)),
+                "Can only call tuple constructor of tuple struct. Got: {struct_type}"
+            );
+            call_fn_code.append(&mut struct_type.constructor().body.clone());
+        } else {
+            // Function is not a library function, but type checker has guaranteed that it is in
+            // scope. So we just call it.
+            call_fn_code.append(&mut triton_asm!(call { name }));
+        }
     }
 
     // Remove function arguments from vstack since they're not visible after the function call
@@ -1559,6 +1556,17 @@ fn compile_expr(
                 let code = stack_serialized
                     .iter()
                     .flat_map(|bfe| triton_asm!(push {**bfe}))
+                    .collect_vec();
+
+                code
+            }
+
+            ast::ExprLit::U128(value) => {
+                let mut stack_serialized = value.encode();
+                stack_serialized.reverse();
+                let code = stack_serialized
+                    .iter()
+                    .flat_map(|bfe| triton_asm!(push {*bfe}))
                     .collect_vec();
 
                 code
@@ -2121,6 +2129,17 @@ fn compile_expr(
                                 call {fn_name}
                             )
                         }
+                        (U128, U128) => {
+                            let fn_name = state.import_snippet(Box::new(
+                                arithmetic::u128::safe_mul_u128::SafeMulU128,
+                            ));
+
+                            triton_asm!(
+                                {&lhs_expr_code}
+                                {&rhs_expr_code}
+                                call {fn_name}
+                            )
+                        }
                         (BFE, BFE) => triton_asm!(
                             {&lhs_expr_code}
                             {&rhs_expr_code}
@@ -2195,13 +2214,15 @@ fn compile_expr(
                         compile_expr(rhs_expr, "_binop_rhs", state);
 
                     let lhs_type = lhs_expr.get_type();
-                    let shl = if matches!(lhs_type, ast_types::DataType::U32) {
-                        state.import_snippet(Box::new(arithmetic::u32::shift_left::ShiftLeftU32))
-                    } else if matches!(lhs_type, ast_types::DataType::U64) {
-                        state
-                            .import_snippet(Box::new(arithmetic::u64::shift_left_u64::ShiftLeftU64))
-                    } else {
-                        panic!("Unsupported SHL of type {lhs_type}");
+                    let shl = match lhs_type {
+                        ast_types::DataType::U32 => state.import_snippet(Box::new(arithmetic::u32::shift_left::ShiftLeftU32)),
+                        ast_types::DataType::U64 => state.import_snippet(Box::new(
+                                    arithmetic::u64::shift_left_u64::ShiftLeftU64,
+                                )),
+                        ast_types::DataType::U128 => state.import_snippet(Box::new(
+                            arithmetic::u128::shift_left_u128::ShiftLeftU128,
+                        )),
+                        _ => panic!("Unsupported SHL of type {lhs_type}. Expression was `{lhs_expr}: >> {rhs_expr}`; types: `{lhs_type}`, {}.", rhs_expr.get_type()),
                     };
 
                     state.function_state.vstack.pop();
@@ -2232,7 +2253,7 @@ fn compile_expr(
                         ast_types::DataType::U128 => state.import_snippet(Box::new(
                             arithmetic::u128::shift_right_u128::ShiftRightU128,
                         )),
-                        _ => panic!("Unsupported SHL of type {lhs_type}. Expression was `{lhs_expr}: >> {rhs_expr}`; types: `{lhs_type}`, {}.", rhs_expr.get_type()),
+                        _ => panic!("Unsupported SHR of type {lhs_type}. Expression was `{lhs_expr}: >> {rhs_expr}`; types: `{lhs_type}`, {}.", rhs_expr.get_type()),
                     };
 
                     state.function_state.vstack.pop();
@@ -2273,6 +2294,35 @@ fn compile_expr(
                                 swap 3
                                 swap 2
                                 call {sub_u64}
+                            )
+                        }
+                        ast_types::DataType::U128 => {
+                            // As standard, we use safe arithmetic that crashes on overflow
+                            let sub_u128 =
+                                state.import_snippet(Box::new(arithmetic::u128::sub_u128::SubU128));
+                            triton_asm!(
+                                // _ lhs_3 lhs_2 lhs_1 lhs_0 rhs_3 rhs_2 rhs_1 rhs_0
+                                swap 7
+                                // _ rhs_0 lhs_2 lhs_1 lhs_0 rhs_3 rhs_2 rhs_1 lhs_3
+                                swap 6
+                                // _ rhs_0 lhs_3 lhs_1 lhs_0 rhs_3 rhs_2 rhs_1 lhs_2
+                                swap 2
+                                // _ rhs_0 lhs_3 lhs_1 lhs_0 rhs_3 lhs_2 rhs_1 rhs_2
+                                swap 6
+                                // _ rhs_0 rhs_2 lhs_1 lhs_0 rhs_3 lhs_2 rhs_1 lhs_3
+                                swap 3
+                                // _ rhs_0 rhs_2 lhs_1 lhs_0 lhs_3 lhs_2 rhs_1 rhs_3
+                                swap 7
+                                // _ rhs_3 rhs_2 lhs_1 lhs_0 lhs_3 lhs_2 rhs_1 rhs_0
+                                swap 1
+                                // _ rhs_3 rhs_2 lhs_1 lhs_0 lhs_3 lhs_2 rhs_0 rhs_1
+                                swap 5
+                                // _ rhs_3 rhs_2 rhs_1 lhs_0 lhs_3 lhs_2 rhs_0 lhs_1
+                                swap 1
+                                // _ rhs_3 rhs_2 rhs_1 lhs_0 lhs_3 lhs_2 lhs_1 rhs_0
+                                swap 4
+                                // _ rhs_3 rhs_2 rhs_1 rhs_0 lhs_3 lhs_2 lhs_1 lhs_0
+                                call {sub_u128}
                             )
                         }
                         ast_types::DataType::BFE => {
@@ -2670,7 +2720,25 @@ fn compile_eq_code(
             eq
             mul
         ),
-        U128 => todo!(),
+        U128 => triton_asm!(
+            // _ a_3 a_2 a_1 a_0 b_3 b_2 b_1 b_0
+            swap 5
+            eq
+            // _ a_3 a_2 b_0 a_0 b_3 b_2 (b_1 == a_1)
+            swap 5
+            eq
+            // _ a_3 (b_1 == a_1) b_0 a_0 b_3 (b_2 == a_2)
+            swap 5
+            eq
+            // _ (b_2 == a_2) (b_1 == a_1) b_0 a_0 (b_3 == a_3)
+            swap 2
+            eq
+            // _ (b_2 == a_2) (b_1 == a_1) (b_3 == a_3) (b_0 == a_0)
+            mul
+            mul
+            mul
+            // _ (b_2 == a_2) * (b_1 == a_1) * (b_3 == a_3) * (b_0 == a_0)
+        ),
 
         XFE => triton_asm!(
              // _ a_2 a_1 a_0 b_2 b_1 b_0

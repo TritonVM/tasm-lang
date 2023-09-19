@@ -529,6 +529,10 @@ pub fn u64_lit(value: u64) -> ast::ExprLit<type_checker::Typing> {
     ast::ExprLit::U64(value)
 }
 
+pub fn u128_lit(value: u128) -> ast::ExprLit<type_checker::Typing> {
+    ast::ExprLit::U128(value)
+}
+
 pub fn bfe_lit(value: BFieldElement) -> ast::ExprLit<type_checker::Typing> {
     ast::ExprLit::BFE(value)
 }

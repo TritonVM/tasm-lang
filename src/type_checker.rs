@@ -37,6 +37,7 @@ impl<T: GetType> GetType for ast::ExprLit<T> {
             ast::ExprLit::Bool(_) => ast_types::DataType::Bool,
             ast::ExprLit::U32(_) => ast_types::DataType::U32,
             ast::ExprLit::U64(_) => ast_types::DataType::U64,
+            ast::ExprLit::U128(_) => ast_types::DataType::U128,
             ast::ExprLit::BFE(_) => ast_types::DataType::BFE,
             ast::ExprLit::XFE(_) => ast_types::DataType::XFE,
             ast::ExprLit::Digest(_) => ast_types::DataType::Digest,
@@ -880,6 +881,7 @@ fn derive_annotate_expr_type(
         ast::Expr::Lit(ast::ExprLit::Bool(_)) => ast_types::DataType::Bool,
         ast::Expr::Lit(ast::ExprLit::U32(_)) => ast_types::DataType::U32,
         ast::Expr::Lit(ast::ExprLit::U64(_)) => ast_types::DataType::U64,
+        ast::Expr::Lit(ast::ExprLit::U128(_)) => ast_types::DataType::U128,
         ast::Expr::Lit(ast::ExprLit::BFE(_)) => ast_types::DataType::BFE,
         ast::Expr::Lit(ast::ExprLit::XFE(_)) => ast_types::DataType::XFE,
         ast::Expr::Lit(ast::ExprLit::Digest(_)) => ast_types::DataType::Digest,
@@ -906,6 +908,10 @@ fn derive_annotate_expr_type(
                 Some(&U64) => {
                     *expr = ast::Expr::Lit(ast::ExprLit::U64(TryInto::<u64>::try_into(*n).unwrap()));
                     U64
+                }
+                Some(&U128) => {
+                    *expr = ast::Expr::Lit(ast::ExprLit::U128(TryInto::<u128>::try_into(*n).unwrap()));
+                    U128
                 }
                 Some(&BFE) => {
                     assert!(*n <= BFieldElement::MAX as u128);
@@ -1461,7 +1467,7 @@ pub fn is_u32_based_type(data_type: &ast_types::DataType) -> bool {
 /// A non-composite fixed-length type.
 pub fn is_primitive_type(data_type: &ast_types::DataType) -> bool {
     use ast_types::DataType::*;
-    matches!(data_type, Bool | U32 | U64 | BFE | XFE | Digest)
+    matches!(data_type, Bool | U32 | U64 | U128 | BFE | XFE | Digest)
 }
 
 pub fn is_void_type(data_type: &ast_types::DataType) -> bool {

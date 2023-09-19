@@ -697,6 +697,8 @@ impl<'a> Graft<'a> {
                     ast::Expr::Lit(ast::ExprLit::U32(u32::MAX))
                 } else if ident == "u64::MAX" {
                     ast::Expr::Lit(ast::ExprLit::U64(u64::MAX))
+                } else if ident == "u128::MAX" {
+                    ast::Expr::Lit(ast::ExprLit::U128(u128::MAX))
                 } else {
                     ast::Expr::Var(ast::Identifier::String(ident, Default::default()))
                 }
@@ -889,6 +891,12 @@ impl<'a> Graft<'a> {
                 if let Some(_int_lit_stripped) = int_lit_str.strip_suffix("u64") {
                     if let Ok(int_u64) = int_lit.base10_parse::<u64>() {
                         return ast::ExprLit::U64(int_u64);
+                    }
+                }
+
+                if let Some(_int_lit_stripped) = int_lit_str.strip_suffix("u128") {
+                    if let Ok(int_u128) = int_lit.base10_parse::<u128>() {
+                        return ast::ExprLit::U128(int_u128);
                     }
                 }
 
