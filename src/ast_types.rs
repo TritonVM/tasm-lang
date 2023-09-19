@@ -1,6 +1,6 @@
 use anyhow::bail;
 use itertools::Itertools;
-use std::{collections::HashMap, fmt::Display, str::FromStr};
+use std::{fmt::Display, str::FromStr};
 use triton_vm::triton_asm;
 
 use crate::{ast::FnSignature, libraries::LibraryFunction};

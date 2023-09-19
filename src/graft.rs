@@ -61,11 +61,7 @@ impl<'a> Graft<'a> {
             }
         }
 
-        fn graft_tuple_struct(
-            graft_config: &Graft,
-            struct_name: &str,
-            fields: syn::Fields,
-        ) -> ast_types::Tuple {
+        fn graft_tuple_struct(graft_config: &Graft, fields: syn::Fields) -> ast_types::Tuple {
             let mut ast_fields: Vec<ast_types::DataType> = vec![];
             for field in fields {
                 ast_fields.push(graft_config.rust_type_to_data_type(&field.ty));
@@ -107,9 +103,7 @@ impl<'a> Graft<'a> {
                 Some(_) => ast_types::StructVariant::NamedFields(graft_struct_with_named_fields(
                     self, &name, fields,
                 )),
-                None => {
-                    ast_types::StructVariant::TupleStruct(graft_tuple_struct(self, &name, fields))
-                }
+                None => ast_types::StructVariant::TupleStruct(graft_tuple_struct(self, fields)),
             };
             let struct_type = ast_types::StructType {
                 is_copy,

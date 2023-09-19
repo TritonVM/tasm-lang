@@ -3,7 +3,6 @@ use std::collections::HashMap;
 use crate::{
     ast::*,
     ast_types::{self, AbstractArgument, AbstractValueArg, DataType, StructType},
-    libraries,
     type_checker::Typing,
 };
 
@@ -95,8 +94,8 @@ impl Stmt<Typing> {
     fn resolve_custom_types(&mut self, declared_structs: &HashMap<String, ast_types::StructType>) {
         match self {
             Stmt::Let(LetStmt {
-                var_name,
-                mutable,
+                var_name: _,
+                mutable: _,
                 data_type,
                 expr,
             }) => {
@@ -248,7 +247,7 @@ impl DataType {
                     .for_each(|x| x.resolve_custom_types(declared_structs));
                 *self = DataType::Struct(outer_resolved);
             }
-            DataType::List(inner, list_type) => {
+            DataType::List(inner, _list_type) => {
                 inner.resolve_custom_types(declared_structs);
             }
             DataType::Tuple(inners) => inners
@@ -278,11 +277,11 @@ impl FnSignature {
         self.output.resolve_custom_types(declared_structs);
         for input in self.args.iter_mut() {
             match input {
-                AbstractArgument::FunctionArgument(fn_arg) => (),
+                AbstractArgument::FunctionArgument(_fn_arg) => (),
                 AbstractArgument::ValueArgument(AbstractValueArg {
-                    name,
+                    name: _,
                     data_type,
-                    mutable,
+                    mutable: _,
                 }) => data_type.resolve_custom_types(declared_structs),
             }
         }
