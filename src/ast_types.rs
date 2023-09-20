@@ -88,7 +88,7 @@ impl DataType {
             Digest => "Digest".to_string(),
             List(ty, _list_type) => format!("Vec_R{}_L", ty.label_friendly_name()),
             Tuple(tys) => format!(
-                "({})",
+                "tuple_L_{}_R",
                 tys.into_iter().map(|x| x.label_friendly_name()).join("_")
             ),
             VoidPointer => "void_pointer".to_string(),
@@ -229,13 +229,14 @@ impl DataType {
                     1
                 }
             }
-            Self::MemPointer(inner_type) => {
-                if inner_type.is_copy() {
-                    inner_type.stack_size()
-                } else {
-                    1
-                }
-            }
+            Self::MemPointer(inner_type) => 1,
+            // Self::MemPointer(inner_type) => {
+            //     if inner_type.is_copy() {
+            //         inner_type.stack_size()
+            //     } else {
+            //         1
+            //     }
+            // }
         }
     }
 }

@@ -157,7 +157,11 @@ pub fn execute_compiled_with_stack_memory_and_ins_for_test(
                 },
             })
         }
-        Err((err, _last_vm_state)) => anyhow::bail!("VM execution failed with error: {}", err),
+        Err((err, last_vm_state)) => anyhow::bail!(
+            "VM execution failed with error: {}\n Last VM state\n: {}",
+            err,
+            last_vm_state
+        ),
     }
 }
 

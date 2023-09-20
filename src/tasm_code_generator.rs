@@ -1673,17 +1673,17 @@ fn compile_expr(
 
         ast::Expr::MethodCall(method_call) => compile_method_call(method_call, state),
 
-        ast::Expr::Unary(unaryop, inner_expr, _known_type) => {
-            let inner_type = inner_expr.get_type();
-            let (_inner_expr_addr, inner_expr_code) =
-                compile_expr(inner_expr, "unop_operand", state);
+        ast::Expr::Unary(unaryop, rhs_expr, _known_type) => {
+            let rhs_type = rhs_expr.get_type();
+            // panic!("Hi from `Unary`:\n rhs_type: {rhs_type:?}\n unaryop: {unaryop:?}\n inner_expr: {unaryop:?}\n _known_type: {_known_type:?}");
+            let (_inner_expr_addr, inner_expr_code) = compile_expr(rhs_expr, "unop_operand", state);
             let code = match unaryop {
-                ast::UnaryOp::Neg => match inner_type {
+                ast::UnaryOp::Neg => match rhs_type {
                     ast_types::DataType::BFE => triton_asm!(push -1 mul),
                     ast_types::DataType::XFE => triton_asm!(push -1 xbmul),
-                    _ => panic!("Unsupported negation of type {inner_type}"),
+                    _ => panic!("Unsupported negation of type {rhs_type}"),
                 },
-                ast::UnaryOp::Not => match inner_type {
+                ast::UnaryOp::Not => match rhs_type {
                     ast_types::DataType::Bool => triton_asm!(push 0 eq),
                     ast_types::DataType::U32 => triton_asm!(push {u32::MAX as u64} xor),
                     ast_types::DataType::U64 => triton_asm!(
@@ -1694,9 +1694,18 @@ fn compile_expr(
                         push {u32::MAX as u64}
                         xor
                     ),
-                    _ => panic!("Unsupported not of type {inner_type}"),
+                    _ => panic!("Unsupported not of type {rhs_type}"),
                 },
-                ast::UnaryOp::Deref => dereference(&inner_type),
+                ast::UnaryOp::Deref => {
+                    if let ast_types::DataType::MemPointer(inner_type) = rhs_type {
+                        println!("inner type for deref is: {inner_type}");
+                        println!("result_type is {result_type}");
+                        println!("expression is: {expr}");
+                        dereference(&inner_type)
+                    } else {
+                        panic!("Cannot dereference non-pointers. Type was: {rhs_type}")
+                    }
+                }
 
                 // This reference only works for `Vec<T>` and `MemPointer<U>`, for these data types `S` it
                 // holds that `eval(MemPointer<S>) == eval(S)`, so we don't need to do anything here. For
@@ -2575,7 +2584,7 @@ fn copy_value_to_memory(
 /// If no static memory pointer is provided, pointer is assumed to be on
 /// top of the stack, above the value that is moved to memory, in
 /// which case this address is also popped from the stack.
-fn move_top_stack_value_to_memory(
+pub fn move_top_stack_value_to_memory(
     static_memory_location: Option<u32>,
     top_value_size: usize,
 ) -> Vec<LabelledInstruction> {

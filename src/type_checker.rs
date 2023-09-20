@@ -68,7 +68,7 @@ impl<T: GetType + std::fmt::Debug> GetType for ast::Expr<T> {
             ast::Expr::Binop(_, _, _, t) => t.get_type(),
             ast::Expr::If(if_expr) => if_expr.get_type(),
             ast::Expr::Cast(_expr, t) => t.to_owned(),
-            ast::Expr::Unary(_unaryop, inner_expr, _) => inner_expr.get_type(),
+            ast::Expr::Unary(_, _, t) => t.get_type(),
             ast::Expr::ReturningBlock(ret_block) => ret_block.get_type(),
         }
     }
@@ -709,7 +709,7 @@ fn get_fn_signature(
                 Some(function) => function.signature.to_owned(),
                 None => panic!("Don't know associated function '{fn_name}' for type {associated_type_name}"),
             }},
-            None => panic!("Don't know type {associated_type_name} for which an associated function {fn_name} is made"),
+            None => panic!("Don't know type {associated_type_name} for which an associated function call {fn_name} is made"),
         };
         return ret_value;
     }

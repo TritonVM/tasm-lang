@@ -52,7 +52,7 @@ impl<'a> Graft<'a> {
             let mut ast_fields: Vec<(String, ast_types::DataType)> = vec![];
             for field in fields.into_iter() {
                 let field_name = field.ident.unwrap().to_string();
-                let datatype = graft_config.rust_type_to_data_type(&field.ty);
+                let datatype = graft_config.syn_type_to_ast_type(&field.ty);
                 ast_fields.push((field_name, datatype));
             }
 
@@ -65,7 +65,7 @@ impl<'a> Graft<'a> {
         fn graft_tuple_struct(graft_config: &Graft, fields: syn::Fields) -> ast_types::Tuple {
             let mut ast_fields: Vec<ast_types::DataType> = vec![];
             for field in fields {
-                ast_fields.push(graft_config.rust_type_to_data_type(&field.ty));
+                ast_fields.push(graft_config.syn_type_to_ast_type(&field.ty));
             }
 
             ast_fields.into()
@@ -289,21 +289,28 @@ impl<'a> Graft<'a> {
             return self.rust_vec_to_data_type(&rust_type_path.path.segments[0].arguments);
         }
 
-        // Handling `Box<T>`. It would be cool if this could be handled same place as
-        // the handling of `&`. `Box<T>` means `MemPointer<T>` in this compiler.
+        // Handling `Box<T>`
         if rust_type_as_string == "Box" {
             let inner_type = if let syn::PathArguments::AngleBracketed(ab) =
                 &rust_type_path.path.segments[0].arguments
             {
                 assert_eq!(1, ab.args.len(), "Must be Box<T> for *one* generic T.");
                 match &ab.args[0] {
-                    syn::GenericArgument::Type(syn::Type::Path(path)) => {
-                        self.rust_type_path_to_data_type(path)
+                    syn::GenericArgument::Type(inner) => {
+                        // self.rust_type_path_to_data_type(path)
+                        self.syn_type_to_ast_type(inner)
                     }
+                    // syn::GenericArgument::Type(syn::Type::Path(path)) => {
+                    //     self.rust_type_path_to_data_type(path)
+                    // },
+                    // syn::GenericArgument::Lifetime(_) => todo!(),
+                    // syn::GenericArgument::Const(_) => todo!(),
+                    // syn::GenericArgument::Binding(_) => todo!(),
+                    // syn::GenericArgument::Constraint(_) => todo!(),
                     other => panic!("Unsupported type {other:#?}"),
                 }
             } else {
-                panic!("Box must be followed by `<T>`");
+                panic!("Box must be followed by its type parameter `<T>`");
             };
             return ast_types::DataType::MemPointer(Box::new(inner_type));
         }
@@ -339,10 +346,37 @@ impl<'a> Graft<'a> {
         }
     }
 
-    pub fn rust_type_to_data_type(&self, x: &syn::Type) -> ast_types::DataType {
-        match x {
-            syn::Type::Path(data_type) => self.rust_type_path_to_data_type(data_type),
-            ty => panic!("Unsupported type {ty:#?}"),
+    // pub fn rust_type_to_data_type(&self, x: &syn::Type) -> ast_types::DataType {
+    //     match x {
+    //         syn::Type::Path(data_type) => self.rust_type_path_to_data_type(data_type),
+    //         ty => panic!("Unsupported type {ty:#?}"),
+    //     }
+    // }
+    pub fn syn_type_to_ast_type(&self, syn_type: &syn::Type) -> ast_types::DataType {
+        match syn_type {
+            syn::Type::Path(path) => self.rust_type_path_to_data_type(path),
+            syn::Type::Tuple(tuple) => {
+                let element_types = tuple
+                    .elems
+                    .iter()
+                    .map(|x| self.syn_type_to_ast_type(x))
+                    .collect_vec();
+
+                ast_types::DataType::Tuple(element_types.into())
+            }
+            syn::Type::Reference(syn::TypeReference {
+                and_token: _,
+                lifetime: _,
+                mutability: _,
+                elem,
+            }) => match *elem.to_owned() {
+                syn::Type::Path(type_path) => {
+                    let inner_type = self.rust_type_path_to_data_type(&type_path);
+                    ast_types::DataType::MemPointer(Box::new(inner_type))
+                }
+                _ => todo!(),
+            },
+            other_type => panic!("Unsupported {other_type:#?}"),
         }
     }
 
@@ -351,34 +385,6 @@ impl<'a> Graft<'a> {
         &self,
         rust_type_path: &syn::PatType,
     ) -> (ast_types::DataType, bool) {
-        fn syn_type_to_ast_type(graft_config: &Graft, syn_type: &syn::Type) -> ast_types::DataType {
-            match syn_type {
-                syn::Type::Path(path) => graft_config.rust_type_path_to_data_type(path),
-                syn::Type::Tuple(tuple) => {
-                    let element_types = tuple
-                        .elems
-                        .iter()
-                        .map(|x| syn_type_to_ast_type(graft_config, x))
-                        .collect_vec();
-
-                    ast_types::DataType::Tuple(element_types.into())
-                }
-                syn::Type::Reference(syn::TypeReference {
-                    and_token: _,
-                    lifetime: _,
-                    mutability: _,
-                    elem,
-                }) => match *elem.to_owned() {
-                    syn::Type::Path(type_path) => {
-                        let inner_type = graft_config.rust_type_path_to_data_type(&type_path);
-                        ast_types::DataType::MemPointer(Box::new(inner_type))
-                    }
-                    _ => todo!(),
-                },
-                other_type => panic!("Unsupported {other_type:#?}"),
-            }
-        }
-
         let mutable = match *rust_type_path.pat.to_owned() {
             syn::Pat::Ident(syn::PatIdent {
                 attrs: _,
@@ -389,7 +395,7 @@ impl<'a> Graft<'a> {
             }) => mutability.is_some(),
             other_type => panic!("Unsupported {other_type:#?}"),
         };
-        let ast_type = syn_type_to_ast_type(self, rust_type_path.ty.as_ref());
+        let ast_type = self.syn_type_to_ast_type(rust_type_path.ty.as_ref());
 
         (ast_type, mutable)
     }
@@ -457,7 +463,7 @@ impl<'a> Graft<'a> {
                     let output_elements = tuple_type
                         .elems
                         .iter()
-                        .map(|x| self.rust_type_to_data_type(x))
+                        .map(|x| self.syn_type_to_ast_type(x))
                         .collect_vec();
 
                     ast_types::DataType::Tuple(output_elements.into())
@@ -485,7 +491,7 @@ impl<'a> Graft<'a> {
                             type_parameter.is_none(),
                             "only one type parameter supported"
                         );
-                        type_parameter = Some(self.rust_type_to_data_type(rdt));
+                        type_parameter = Some(self.syn_type_to_ast_type(rdt));
                     } else {
                         panic!("unsupported GenericArgument: {:#?}", abga.args[0]);
                     }
@@ -812,7 +818,7 @@ impl<'a> Graft<'a> {
                 ty,
             }) => {
                 let unboxed_ty: syn::Type = *(*ty).to_owned();
-                let as_type = self.rust_type_to_data_type(&unboxed_ty);
+                let as_type = self.syn_type_to_ast_type(&unboxed_ty);
                 let ast_expr = self.graft_expr(expr);
                 ast::Expr::Cast(Box::new(ast_expr), as_type)
             }

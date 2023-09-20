@@ -36,7 +36,7 @@ fn extract_types_and_main(parsed_file: syn::File) -> (StructsAndMethods, Option<
         if let syn::Item::Impl(item_impl) = &item {
             get_standard_setup!(ast_types::ListType::Unsafe, graft_config, _lib);
             let type_name = graft_config
-                .rust_type_to_data_type(&item_impl.self_ty)
+                .syn_type_to_ast_type(&item_impl.self_ty)
                 .to_string();
             for impl_item in item_impl.items.iter() {
                 if let syn::ImplItem::Method(struct_method) = impl_item {
@@ -93,6 +93,7 @@ pub(crate) fn compile_for_test(
 
     let (rust_main_ast, rust_struct_asts, _) = parse_main_and_structs(directory, module_name);
     let mut oil_ast = graft_config.graft_fn_decl(&rust_main_ast);
+    println!("oil_ast: {oil_ast:#?}");
     let (structs, mut methods, mut associated_functions) =
         graft_config.graft_structs_methods_and_associated_functions(rust_struct_asts);
 
@@ -111,6 +112,7 @@ pub(crate) fn compile_for_test(
         &mut associated_functions,
         &libraries,
     );
+    println!("typed oil_ast: {oil_ast:#?}");
 
     // compile
     println!(
