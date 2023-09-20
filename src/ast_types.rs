@@ -19,7 +19,8 @@ pub enum DataType {
     Struct(StructType),
     VoidPointer,
     Function(Box<FunctionType>),
-    MemPointer(Box<DataType>),
+    Boxed(Box<DataType>),
+    Reference(Box<DataType>),
     Unresolved(String),
 }
 
@@ -36,7 +37,21 @@ impl DataType {
                 StructVariant::NamedFields(_) => todo!(),
             },
             // TODO: Get rid of this mess by using `FieldId` in `Identifier` instead
-            DataType::MemPointer(inner) => {
+            DataType::Boxed(inner) => {
+                let inner = *inner.to_owned();
+                match inner {
+                    DataType::Struct(StructType {
+                        name: _,
+                        is_copy: _,
+                        variant,
+                    }) => match variant {
+                        StructVariant::TupleStruct(ts) => ts.to_owned(),
+                        StructVariant::NamedFields(_) => todo!(),
+                    },
+                    _ => panic!("Type is not unnamed or named tuple. Type was: {self}"),
+                }
+            }
+            DataType::Reference(inner) => {
                 let inner = *inner.to_owned();
                 match inner {
                     DataType::Struct(StructType {
@@ -71,7 +86,8 @@ impl DataType {
             DataType::Function(_) => false,
             DataType::Struct(struct_type) => struct_type.is_copy,
             DataType::Unresolved(_) => false,
-            DataType::MemPointer(_) => false,
+            DataType::Boxed(_) => false,
+            DataType::Reference(_) => false,
         }
     }
 
@@ -99,7 +115,8 @@ impl DataType {
             }
             Struct(struct_type) => struct_type.name.to_owned(),
             Unresolved(name) => name.to_string(),
-            MemPointer(ty) => format!("mempointer_L{}R", ty.label_friendly_name()),
+            Boxed(ty) => format!("boxed_L{}R", ty.label_friendly_name()),
+            Reference(ty) => format!("reference_to_L{}R", ty.label_friendly_name()),
         }
     }
 
@@ -136,7 +153,7 @@ impl DataType {
         match &self {
             // If something is a `MemPointer`, it stays a `MemPointer` after field access,
             // unless the field is a copy type.
-            DataType::MemPointer(inner_type) => {
+            DataType::Boxed(inner_type) => {
                 let struct_type = match &**inner_type {
                     DataType::Struct(struct_type) => struct_type,
                     _ => panic!("Field access can only be performed on structs"),
@@ -146,7 +163,7 @@ impl DataType {
                 if field_type.is_copy() {
                     field_type
                 } else {
-                    DataType::MemPointer(Box::new(field_type))
+                    DataType::Boxed(Box::new(field_type))
                 }
             }
             DataType::Struct(struct_type) => {
@@ -194,10 +211,11 @@ impl DataType {
                 .try_fold(0, |acc: usize, field_type| {
                     field_type.bfield_codec_length().map(|v| acc + v)
                 }),
-            DataType::MemPointer(inner_type) => inner_type.bfield_codec_length(),
+            DataType::Boxed(inner_type) => inner_type.bfield_codec_length(),
             DataType::VoidPointer => todo!(),
             DataType::Function(_) => todo!(),
             DataType::Unresolved(_) => todo!(),
+            DataType::Reference(inner) => inner.bfield_codec_length(),
         }
     }
 
@@ -233,7 +251,8 @@ impl DataType {
                 //     1
                 // }
             }
-            Self::MemPointer(inner_type) => 1,
+            Self::Boxed(_inner) => 1,
+            Self::Reference(inner) => inner.stack_size(),
             // Self::MemPointer(inner_type) => {
             //     if inner_type.is_copy() {
             //         inner_type.stack_size()
@@ -270,13 +289,14 @@ impl TryFrom<DataType> for tasm_lib::snippet::DataType {
             DataType::Function(_) => todo!(),
             DataType::Struct(_) => todo!(),
             DataType::Unresolved(name) => panic!("cannot convert unresolved type {name}"),
-            DataType::MemPointer(value) => match *value {
-                // A MemPointer to a list is just a list
+            DataType::Boxed(value) => match *value {
+                // A Boxed list is just a list
                 // TODO: Default to `Unsafe` list here??
                 DataType::List(_, ListType::Unsafe) => (*value).try_into(),
                 DataType::Unresolved(_) => todo!(),
                 _ => Ok(tasm_lib::snippet::DataType::VoidPointer),
             }
+            DataType::Reference(inner) => (*inner).try_into(),
         }
     }
 }
@@ -322,7 +342,8 @@ impl Display for DataType {
             }
             Struct(struct_type) => struct_type.name.to_owned(),
             Unresolved(name) => name.to_string(),
-            MemPointer(ty) => format!("*{ty}"),
+            Boxed(ty) => format!("Boxed<{ty}>"),
+            Reference(ty) => format!("*{ty}"),
         };
         write!(f, "{str}",)
     }

@@ -1,8 +1,5 @@
 use super::Library;
-use crate::{
-    ast, ast_types, libraries::LibraryFunction, tasm_code_generator::subroutine::SubRoutine,
-    type_checker::GetType,
-};
+use crate::{ast, ast_types, tasm_code_generator::subroutine::SubRoutine};
 use num::One;
 use triton_vm::{instruction::LabelledInstruction, triton_asm, triton_instr};
 
@@ -152,7 +149,7 @@ fn new_box_function_signature(inner_type: &ast_types::DataType) -> ast::FnSignat
                 mutable: false,
             },
         )],
-        output: ast_types::DataType::MemPointer(Box::new(inner_type.to_owned())),
+        output: ast_types::DataType::Boxed(Box::new(inner_type.to_owned())),
         arg_evaluation_order: Default::default(),
     }
 }

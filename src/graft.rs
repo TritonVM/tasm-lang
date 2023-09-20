@@ -162,7 +162,7 @@ impl<'a> Graft<'a> {
                 ..
             } = receiver;
             let receiver_data_type = match reference {
-                Some(_) => ast_types::DataType::MemPointer(Box::new(ast_types::DataType::Struct(
+                Some(_) => ast_types::DataType::Reference(Box::new(ast_types::DataType::Struct(
                     struct_type.to_owned(),
                 ))),
                 None => ast_types::DataType::Struct(struct_type.to_owned()),
@@ -312,7 +312,7 @@ impl<'a> Graft<'a> {
             } else {
                 panic!("Box must be followed by its type parameter `<T>`");
             };
-            return ast_types::DataType::MemPointer(Box::new(inner_type));
+            return ast_types::DataType::Boxed(Box::new(inner_type));
         }
 
         // We only allow the user to use types that are capitalized
@@ -372,7 +372,7 @@ impl<'a> Graft<'a> {
             }) => match *elem.to_owned() {
                 syn::Type::Path(type_path) => {
                     let inner_type = self.rust_type_path_to_data_type(&type_path);
-                    ast_types::DataType::MemPointer(Box::new(inner_type))
+                    ast_types::DataType::Reference(Box::new(inner_type))
                 }
                 _ => todo!(),
             },
@@ -434,7 +434,7 @@ impl<'a> Graft<'a> {
                         elem,
                     }) => match *elem.to_owned() {
                         syn::Type::Path(type_path) => (
-                            ast_types::DataType::MemPointer(Box::new(
+                            ast_types::DataType::Reference(Box::new(
                                 self.rust_type_path_to_data_type(&type_path),
                             )),
                             mutability.is_some(),

@@ -590,7 +590,22 @@ pub fn annotate_identifier_type(
                         "Cannot index non-tuple with tuple index {index}. Type was {tuple_type}"
                     ),
                 },
-                ast_types::DataType::MemPointer(inner_type) => match *inner_type.to_owned() {
+                ast_types::DataType::Boxed(inner_type) => match *inner_type.to_owned() {
+                    ast_types::DataType::Struct(ast_types::StructType {
+                        name: _,
+                        is_copy: _,
+                        variant,
+                    }) => match variant {
+                        ast_types::StructVariant::TupleStruct(tuple) => tuple,
+                        ast_types::StructVariant::NamedFields(_) => panic!(
+                            "Cannot index non-tuple with tuple index {index}. Type was {tuple_type}"
+                        ),
+                    },
+                    _ => {
+                        panic!("Cannot index non-tuple with tuple index {index}. Type was {tuple_type}")
+                    }
+                },
+                ast_types::DataType::Reference(inner_type) => match *inner_type.to_owned() {
                     ast_types::DataType::Struct(ast_types::StructType {
                         name: _,
                         is_copy: _,
@@ -646,7 +661,9 @@ pub fn annotate_identifier_type(
             let element_type = loop {
                 if let ast_types::DataType::List(elem_ty, _) = &forced_list_type {
                     break elem_ty;
-                } else if let ast_types::DataType::MemPointer(inner_type) = forced_list_type {
+                } else if let ast_types::DataType::Reference(inner_type) = forced_list_type {
+                    forced_list_type = *inner_type.to_owned();
+                } else if let ast_types::DataType::Boxed(inner_type) = forced_list_type {
                     forced_list_type = *inner_type.to_owned();
                 } else {
                     panic!("Cannot index into {list_identifier} of type {maybe_list_type}");
@@ -655,11 +672,11 @@ pub fn annotate_identifier_type(
 
             // If list_identifier is a MemPointer, and the element type is not copyable,
             // then the element type statys a MemPointer.
-            let element_type = if let ast_types::DataType::MemPointer(_) = maybe_list_type {
+            let element_type = if let ast_types::DataType::Boxed(_) = maybe_list_type {
                 if element_type.is_copy() {
                     *element_type.to_owned()
                 } else {
-                    ast_types::DataType::MemPointer(element_type.to_owned())
+                    ast_types::DataType::Boxed(element_type.to_owned())
                 }
             } else {
                 *element_type.to_owned()
@@ -766,7 +783,7 @@ fn get_method_signature(
 
         // 2. therwise, add one auto-ref (take & or &mut of the receiver), and,
         // if some method's receiver matches &U, use it (an "autorefd method")
-        let auto_refd_forced_type = ast_types::DataType::MemPointer(Box::new(forced_type.clone()));
+        let auto_refd_forced_type = ast_types::DataType::Reference(Box::new(forced_type.clone()));
         for declared_method in state.declared_methods.iter() {
             if declared_method.signature.name == name {
                 let method_receiver_type = args[0].get_type();
@@ -794,8 +811,10 @@ fn get_method_signature(
             }
         }
 
-        // Keep stripping `MemPointer` until we find a match
-        if let ast_types::DataType::MemPointer(inner_type) = forced_type {
+        // Keep stripping `References` until we find a match
+        if let ast_types::DataType::Reference(inner_type) = forced_type {
+            forced_type = *inner_type.to_owned();
+        } else if let ast_types::DataType::Boxed(inner_type) = forced_type {
             forced_type = *inner_type.to_owned();
         } else {
             try_again = false;
@@ -890,8 +909,7 @@ fn derive_annotate_expr_type(
             mem_pointer_declared_type,
             resolved_type,
         })) => {
-            let ret =
-                ast_types::DataType::MemPointer(Box::new(mem_pointer_declared_type.to_owned()));
+            let ret = ast_types::DataType::Boxed(Box::new(mem_pointer_declared_type.to_owned()));
             *resolved_type = Typing::KnownType(ret.clone());
             ret
         }
@@ -993,61 +1011,67 @@ fn derive_annotate_expr_type(
             callees_method_signature.output
         }
 
-        ast::Expr::Unary(unaryop, inner_expr, unaryop_type) => {
+        ast::Expr::Unary(unaryop, rhs_expr, unaryop_type) => {
             use ast::UnaryOp::*;
-            let inner_expr_type =
-                derive_annotate_expr_type(inner_expr, hint, state, env_fn_signature);
+            let rhs_type = derive_annotate_expr_type(rhs_expr, hint, state, env_fn_signature);
             match unaryop {
                 Neg => {
                     assert!(
-                        is_negatable_type(&inner_expr_type),
-                        "Cannot negate type '{inner_expr_type}'",
+                        is_negatable_type(&rhs_type),
+                        "Cannot negate type '{rhs_type}'",
                     );
-                    *unaryop_type = Typing::KnownType(inner_expr_type.clone());
-                    inner_expr_type
+                    *unaryop_type = Typing::KnownType(rhs_type.clone());
+                    rhs_type
                 }
                 Not => {
                     assert!(
-                        type_compatible_with_not(&inner_expr_type),
-                        "Cannot negate type '{inner_expr_type}'",
+                        type_compatible_with_not(&rhs_type),
+                        "Cannot negate type '{rhs_type}'",
                     );
-                    *unaryop_type = Typing::KnownType(inner_expr_type.clone());
-                    inner_expr_type
+                    *unaryop_type = Typing::KnownType(rhs_type.clone());
+                    rhs_type
                 }
                 Deref => {
-                    match inner_expr_type {
-                        ast_types::DataType::MemPointer(inner_inner_type) => {
+                    match rhs_type {
+                        ast_types::DataType::Reference(inner_inner_type) => {
                             *unaryop_type = Typing::KnownType(*inner_inner_type.clone());
                             *inner_inner_type
                         },
-                        _ =>  panic!("Cannot dereference type of `{inner_expr_type}` as this expression has:\n{inner_expr:#?}")
+                        ast_types::DataType::Boxed(inner_inner_type) => {
+                            *unaryop_type = Typing::KnownType(*inner_inner_type.clone());
+                            *inner_inner_type
+                        },
+                        _ =>  panic!("Cannot dereference type of `{rhs_type}` as this expression has:\n{rhs_expr:#?}")
                     }
                 }
                 Ref(_mutable) => {
-                    if inner_expr_type.is_copy() {
-                        let resulting_type = ast_types::DataType::MemPointer(Box::new(inner_expr_type));
-                        *unaryop_type = Typing::KnownType(resulting_type.clone());
-                        resulting_type
-                    } else {
-                        match inner_expr_type {
-                            ast_types::DataType::List(_, _) => {
-                                let resulting_type = ast_types::DataType::MemPointer(Box::new(inner_expr_type));
-                                *unaryop_type = Typing::KnownType(resulting_type.clone());
-                                resulting_type
-                            }
-                            ast_types::DataType::MemPointer(inner_inner_expr_type) => {
-                                match *inner_inner_expr_type {
-                                    ast_types::DataType::List(_, _) => {
-                                        let resulting_type = ast_types::DataType::MemPointer(Box::new(*inner_inner_expr_type));
-                                        *unaryop_type = Typing::KnownType(resulting_type.clone());
-                                        resulting_type
-                                    },
-                                    _ => panic!("Can only reference Copy types or `Vec<T>` for now. Got: {inner_expr:?}")
-                                }
-                            },
-                            _ => panic!("Can only reference Copy types or `Vec<T>` for now. Got: {inner_expr:?}")
-                    }
-                }
+                    let resulting_type = ast_types::DataType::Reference(Box::new(rhs_type));
+                    *unaryop_type = Typing::KnownType(resulting_type.clone());
+                    resulting_type
+                    // if inner_expr_type.is_copy() {
+                    //     let resulting_type = ast_types::DataType::Boxed(Box::new(inner_expr_type));
+                    //     *unaryop_type = Typing::KnownType(resulting_type.clone());
+                    //     resulting_type
+                    // } else {
+                    //     match inner_expr_type {
+                    //         ast_types::DataType::List(_, _) => {
+                    //             let resulting_type = ast_types::DataType::Boxed(Box::new(inner_expr_type));
+                    //             *unaryop_type = Typing::KnownType(resulting_type.clone());
+                    //             resulting_type
+                    //         }
+                    //         ast_types::DataType::Boxed(inner_inner_expr_type) => {
+                    //             match *inner_inner_expr_type {
+                    //                 ast_types::DataType::List(_, _) => {
+                    //                     let resulting_type = ast_types::DataType::Boxed(Box::new(*inner_inner_expr_type));
+                    //                     *unaryop_type = Typing::KnownType(resulting_type.clone());
+                    //                     resulting_type
+                    //                 },
+                    //                 _ => panic!("Can only reference Copy types or `Vec<T>` for now. Got: {inner_expr:?}")
+                    //             }
+                    //         },
+                    //         _ => panic!("Can only reference Copy types or `Vec<T>` for now. Got: {inner_expr:?}")
+                    // }
+                // }
                 },
             }
         }

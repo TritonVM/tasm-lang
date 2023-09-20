@@ -1,5 +1,4 @@
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
-use triton_vm::BFieldElement;
 use triton_vm::Digest;
 
 fn main() {

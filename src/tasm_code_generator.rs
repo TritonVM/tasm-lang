@@ -515,7 +515,7 @@ impl<'a> CompilerState<'a> {
                 // limited field support for now
                 let ident_type = ident.get_type();
                 let get_field_pointer_from_struct_pointer = match ident.get_type() {
-                    ast_types::DataType::MemPointer(inner_type) => match *inner_type {
+                    ast_types::DataType::Boxed(inner_type) => match *inner_type {
                         ast_types::DataType::Struct(inner_struct) => {
                             inner_struct.get_field_accessor_code(&field_name.into())
                         }
@@ -1469,7 +1469,7 @@ fn compile_method_call(
         if method_call.method_name == declared_method.signature.name
             && (receiver_type == declared_method.receiver_type() ||
             // TODO: Type checker should handle this. Remove this extra condition!
-            ast_types::DataType::MemPointer(Box::new(receiver_type.clone())) == declared_method.receiver_type())
+            ast_types::DataType::Boxed(Box::new(receiver_type.clone())) == declared_method.receiver_type())
         {
             let method_label = declared_method.get_tasm_label();
             if !state
@@ -1697,7 +1697,7 @@ fn compile_expr(
                     _ => panic!("Unsupported not of type {rhs_type}"),
                 },
                 ast::UnaryOp::Deref => {
-                    if let ast_types::DataType::MemPointer(inner_type) = rhs_type {
+                    if let ast_types::DataType::Boxed(inner_type) = rhs_type {
                         println!("inner type for deref is: {inner_type}");
                         println!("result_type is {result_type}");
                         println!("expression is: {expr}");
@@ -2652,7 +2652,7 @@ fn dereference(data_type: &ast_types::DataType) -> Vec<LabelledInstruction> {
     match data_type {
         // From the TASM perspective, a mempointer to a list is the same as a list
         ast_types::DataType::List(_, _) => triton_asm!(),
-        ast_types::DataType::MemPointer(_) => triton_asm!(),
+        ast_types::DataType::Boxed(_) => triton_asm!(),
 
         // No idea how to handle these yet
         ast_types::DataType::VoidPointer => todo!(),
@@ -2767,8 +2767,9 @@ fn compile_eq_code(
         Tuple(_) => todo!(),
         Function(_) => todo!(),
         Struct(_) => todo!(),
-        MemPointer(_) => todo!("Comparison of MemPointer not supported yet"),
+        Boxed(_) => todo!("Comparison of MemPointer not supported yet"),
         Unresolved(name) => panic!("Cannot compare unresolved type {name}"),
+        Reference(_) => panic!("Cannot compare references. Got {lhs_type}"),
     }
 }
 

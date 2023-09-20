@@ -1,5 +1,3 @@
-use tasm_lib::Digest;
-
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
 #[derive(Clone, Copy)]

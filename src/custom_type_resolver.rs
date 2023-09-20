@@ -220,7 +220,7 @@ impl DataType {
     pub fn is_unresolved(&self) -> bool {
         match self {
             DataType::Unresolved(_) => true,
-            DataType::MemPointer(inner) => inner.is_unresolved(),
+            DataType::Boxed(inner) => inner.is_unresolved(),
             DataType::Tuple(inners) => inners.into_iter().any(|inner| inner.is_unresolved()),
             DataType::List(element, _) => element.is_unresolved(),
             DataType::Struct(struct_type) => struct_type
@@ -261,7 +261,7 @@ impl DataType {
                     .resolve_custom_types(declared_structs);
                 function_type.output.resolve_custom_types(declared_structs);
             }
-            DataType::MemPointer(inner) => {
+            DataType::Boxed(inner) => {
                 inner.resolve_custom_types(declared_structs);
             }
             DataType::Struct(struct_type) => {

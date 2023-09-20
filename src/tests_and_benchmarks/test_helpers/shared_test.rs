@@ -273,7 +273,7 @@ pub fn compare_compiled_prop_with_stack_and_memory_and_ins(
             .skip(DIGEST_LENGTH)
             .cloned()
             .collect_vec(),
-        "Code execution must produce expected stack `{}`. \n\nTVM:\n{}\n\nExpected:\n{}\n",
+        "Code execution must produce expected stack `{}`. \n\nTVM:\n{}\n\nExpected:\n{}\n\nCode was:\n{}",
         function_name,
         exec_result
             .final_stack
@@ -286,6 +286,7 @@ pub fn compare_compiled_prop_with_stack_and_memory_and_ins(
             .map(|x| x.to_string())
             .collect_vec()
             .join(","),
+        code.iter().join("\n")
     );
 
     // Verify that memory behaves as expected, if expected value is set. Don't bother verifying the value

@@ -10,7 +10,7 @@ fn main() {
     let elements: Box<Vec<BFieldElement>> =
         Vec::<BFieldElement>::decode(&tasm::load_from_memory(BFieldElement::new(2000))).unwrap();
 
-    let digest: Digest = H::hash_varlen(&elements);
+    let digest: Digest = H::hash_varlen(&(*elements));
 
     tasm::tasm_io_write_to_stdout_digest(digest);
 
