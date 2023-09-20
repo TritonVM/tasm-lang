@@ -78,6 +78,37 @@ pub(super) fn tasm_io_read_stdin_bfe() -> BFieldElement {
     PUB_INPUT.with(|v| v.borrow_mut().pop().unwrap())
 }
 
+pub(super) fn tasm_io_read_stdin_u128() -> u128 {
+    #[allow(clippy::unwrap_used)]
+    let e3: u32 = PUB_INPUT
+        .with(|v| v.borrow_mut().pop().unwrap())
+        .try_into()
+        .unwrap();
+    let e2: u32 = PUB_INPUT
+        .with(|v| v.borrow_mut().pop().unwrap())
+        .try_into()
+        .unwrap();
+    let e1: u32 = PUB_INPUT
+        .with(|v| v.borrow_mut().pop().unwrap())
+        .try_into()
+        .unwrap();
+    let e0: u32 = PUB_INPUT
+        .with(|v| v.borrow_mut().pop().unwrap())
+        .try_into()
+        .unwrap();
+    ((e3 as u128) << 96) + ((e2 as u128) << 64) + ((e1 as u128) << 32) + e0 as u128
+}
+
+pub(super) fn tasm_io_read_stdin_digest() -> Digest {
+    #[allow(clippy::unwrap_used)]
+    let e4 = PUB_INPUT.with(|v| v.borrow_mut().pop().unwrap());
+    let e3 = PUB_INPUT.with(|v| v.borrow_mut().pop().unwrap());
+    let e2 = PUB_INPUT.with(|v| v.borrow_mut().pop().unwrap());
+    let e1 = PUB_INPUT.with(|v| v.borrow_mut().pop().unwrap());
+    let e0 = PUB_INPUT.with(|v| v.borrow_mut().pop().unwrap());
+    Digest::new([e0, e1, e2, e3, e4])
+}
+
 pub(super) fn tasm_io_write_to_stdout_bfe(x: BFieldElement) {
     PUB_OUTPUT.with(|v| v.borrow_mut().push(x));
 }
@@ -104,17 +135,6 @@ pub(super) fn tasm_io_write_to_stdout_u64(x: u64) {
 
 pub(super) fn tasm_io_write_to_stdout_u128(x: u128) {
     PUB_OUTPUT.with(|v| v.borrow_mut().append(&mut x.encode()));
-}
-
-pub(super) fn tasm_io_read_stdin_digest() -> Digest {
-    #[allow(clippy::unwrap_used)]
-    // ND_DIGESTS.with(|v| v.borrow_mut().pop().unwrap())
-    let e4 = PUB_INPUT.with(|v| v.borrow_mut().pop().unwrap());
-    let e3 = PUB_INPUT.with(|v| v.borrow_mut().pop().unwrap());
-    let e2 = PUB_INPUT.with(|v| v.borrow_mut().pop().unwrap());
-    let e1 = PUB_INPUT.with(|v| v.borrow_mut().pop().unwrap());
-    let e0 = PUB_INPUT.with(|v| v.borrow_mut().pop().unwrap());
-    Digest::new([e0, e1, e2, e3, e4])
 }
 
 pub(super) fn tasm_arithmetic_u64_mul_two_u64s_to_u128_u64(lhs: u64, rhs: u64) -> u128 {

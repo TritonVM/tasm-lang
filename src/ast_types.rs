@@ -220,14 +220,18 @@ impl DataType {
             Self::Function(_) => todo!(),
             Self::Unresolved(name) => panic!("cannot get size of unresolved type {name}"),
             Self::Struct(inner_type) => {
-                if inner_type.is_copy {
-                    match &inner_type.variant {
-                        StructVariant::TupleStruct(tuple) => tuple.stack_size(),
-                        StructVariant::NamedFields(_) => todo!(),
-                    }
-                } else {
-                    1
+                match &inner_type.variant {
+                    StructVariant::TupleStruct(tuple) => tuple.stack_size(),
+                    StructVariant::NamedFields(_) => todo!(),
                 }
+                // if inner_type.is_copy {
+                //     match &inner_type.variant {
+                //         StructVariant::TupleStruct(tuple) => tuple.stack_size(),
+                //         StructVariant::NamedFields(_) => todo!(),
+                //     }
+                // } else {
+                //     1
+                // }
             }
             Self::MemPointer(inner_type) => 1,
             // Self::MemPointer(inner_type) => {

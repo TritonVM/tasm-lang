@@ -108,7 +108,7 @@ impl Library for AllocBoxed {
         _graft_config: &crate::graft::Graft,
         _rust_method_call: &syn::ExprMethodCall,
     ) -> Option<crate::ast::Expr<super::Annotation>> {
-        panic!("AllocBoxed cannot graft methods")
+        None
     }
 }
 

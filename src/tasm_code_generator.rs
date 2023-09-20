@@ -2657,10 +2657,10 @@ fn dereference(data_type: &ast_types::DataType) -> Vec<LabelledInstruction> {
         // No idea how to handle these yet
         ast_types::DataType::VoidPointer => todo!(),
         ast_types::DataType::Function(_) => todo!(),
-        ast_types::DataType::Struct(_) => todo!(),
         ast_types::DataType::Unresolved(_) => todo!(),
 
         // Simple data types are simple read from memory and placed on the stack
+        ast_types::DataType::Struct(_) => load_from_memory(None, data_type.stack_size()),
         _ => load_from_memory(None, data_type.stack_size()),
     }
 }
