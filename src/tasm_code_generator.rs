@@ -390,30 +390,6 @@ impl<'a> CompilerState<'a> {
                     None => ValueLocation::OpStack(position),
                 }
             }
-            ast::Identifier::TupleIndex(lhs_id, tuple_index, _known_type) => {
-                let lhs_location = self.locate_identifier(lhs_id);
-                let lhs_type = lhs_id.get_type();
-                let element_types = lhs_type.get_tuple_elements();
-
-                // Last element of the tuple is stored on top of the stack
-                let tuple_depth: usize = element_types
-                    .into_iter()
-                    .enumerate()
-                    .filter(|(i, _x)| *i > *tuple_index)
-                    .map(|(_i, x)| x.stack_size())
-                    .sum::<usize>();
-
-                match lhs_location {
-                    ValueLocation::OpStack(n) => ValueLocation::OpStack(n + tuple_depth),
-                    ValueLocation::StaticMemoryAddress(p) => {
-                        ValueLocation::StaticMemoryAddress(p + tuple_depth as u32)
-                    }
-                    ValueLocation::DynamicMemoryAddress(code) => {
-                        let new_code = [code, triton_asm!(push {tuple_depth} add)].concat();
-                        ValueLocation::DynamicMemoryAddress(new_code)
-                    }
-                }
-            }
             ast::Identifier::ListIndex(ident, index_expr, element_type) => {
                 let element_type = element_type.get_type();
                 let lhs_location = self.locate_identifier(ident);
@@ -505,31 +481,71 @@ impl<'a> CompilerState<'a> {
 
                 ValueLocation::DynamicMemoryAddress(element_address)
             }
-            ast::Identifier::Field(ident, field_name, known_type) => {
+            ast::Identifier::Field(ident, field_id, known_type) => {
                 let lhs_location = self.locate_identifier(ident);
+                let lhs_type = ident.get_type();
 
-                let get_struct_pointer =
+                let get_ident_code =
                     get_lhs_address_code(self, &lhs_location, &known_type.get_type(), ident);
-                // stack: _ struct_pointer
+                // stack: _ struct/tuple
+
+                fn handle_tuple(
+                    tuple: ast_types::Tuple,
+                    field_id: &ast_types::FieldId,
+                    lhs_location: ValueLocation,
+                ) -> ValueLocation {
+                    let tuple_index: usize = field_id.try_into().unwrap();
+                    let tuple_depth: usize = tuple
+                        .into_iter()
+                        .enumerate()
+                        .filter(|(i, _x)| *i > tuple_index)
+                        .map(|(_i, x)| x.stack_size())
+                        .sum::<usize>();
+                    match lhs_location {
+                        ValueLocation::OpStack(n) => ValueLocation::OpStack(n + tuple_depth),
+                        ValueLocation::StaticMemoryAddress(p) => {
+                            ValueLocation::StaticMemoryAddress(p + tuple_depth as u32)
+                        }
+                        ValueLocation::DynamicMemoryAddress(code) => {
+                            let new_code = [code, triton_asm!(push {tuple_depth} add)].concat();
+                            ValueLocation::DynamicMemoryAddress(new_code)
+                        }
+                    }
+                }
 
                 // limited field support for now
-                let ident_type = ident.get_type();
-                let get_field_pointer_from_struct_pointer = match ident.get_type() {
+                match ident.get_type() {
                     ast_types::DataType::Boxed(inner_type) => match *inner_type {
                         ast_types::DataType::Struct(inner_struct) => {
-                            inner_struct.get_field_accessor_code(&field_name.into())
+                            let get_field_pointer_from_struct_pointer =
+                                inner_struct.get_field_accessor_code(field_id);
+                            ValueLocation::DynamicMemoryAddress(triton_asm!(
+                                {&get_ident_code}
+                                {&get_field_pointer_from_struct_pointer}
+                            ))
                         }
-                        _ => todo!("ident_type: {ident_type}"),
+                        _ => todo!("lhs_type: {lhs_type}"),
                     },
-                    _ => todo!("ident_type: {ident_type}"),
-                };
-
-                // stack: _ field_pointer
-
-                ValueLocation::DynamicMemoryAddress(triton_asm!(
-                    {&get_struct_pointer}
-                    {&get_field_pointer_from_struct_pointer}
-                ))
+                    ast_types::DataType::Tuple(tuple) => {
+                        handle_tuple(tuple, field_id, lhs_location)
+                    }
+                    ast_types::DataType::Struct(struct_type) => match struct_type.variant {
+                        StructVariant::TupleStruct(tuple) => {
+                            handle_tuple(tuple, field_id, lhs_location)
+                        }
+                        StructVariant::NamedFields(_) => todo!(),
+                    },
+                    ast_types::DataType::Reference(inner_type) => match *inner_type {
+                        ast_types::DataType::Struct(struct_type) => match struct_type.variant {
+                            StructVariant::TupleStruct(tuple) => {
+                                handle_tuple(tuple, field_id, lhs_location)
+                            }
+                            StructVariant::NamedFields(_) => todo!(),
+                        },
+                        _ => todo!("lhs_type: {lhs_type}"),
+                    },
+                    _ => todo!("lhs_type: {lhs_type}"),
+                }
             }
         }
     }

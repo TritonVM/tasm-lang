@@ -84,9 +84,6 @@ impl Identifier<Typing> {
                 inner_id.resolve_custom_types(declared_structs);
                 index_expr.resolve_custom_types(declared_structs);
             }
-            Identifier::TupleIndex(inner_id, _, _) => {
-                inner_id.resolve_custom_types(declared_structs)
-            }
             Identifier::Field(inner_id, _, _) => inner_id.resolve_custom_types(declared_structs),
         }
     }

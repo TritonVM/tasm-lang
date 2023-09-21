@@ -7,7 +7,7 @@ use twenty_first::shared_math::bfield_codec::BFieldCodec;
 use twenty_first::shared_math::x_field_element::XFieldElement;
 
 use crate::{
-    ast_types::{AbstractArgument, DataType},
+    ast_types::{AbstractArgument, DataType, FieldId},
     type_checker::Typing,
 };
 
@@ -324,17 +324,13 @@ pub struct SymTable(HashMap<String, (u8, DataType)>);
 pub enum Identifier<T> {
     String(String, T),                              // x
     ListIndex(Box<Identifier<T>>, Box<Expr<T>>, T), // x[0]
-
-    // TODO: Collapse `TupleIndex` and `Field` into one
-    TupleIndex(Box<Identifier<T>>, usize, T), // x.0
-    Field(Box<Identifier<T>>, String, T),
+    Field(Box<Identifier<T>>, FieldId, T),
 }
 
 impl<T> Display for Identifier<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let output = match self {
             Identifier::String(name, _) => name.to_string(),
-            Identifier::TupleIndex(inner, index, _) => format!("{inner}.{index}"),
             Identifier::ListIndex(inner, index, _) => format!("{inner}[{index}]"),
             Identifier::Field(inner, field_name, _) => format!("{inner}.{field_name}"),
         };
@@ -348,9 +344,6 @@ impl Identifier<Typing> {
         println!("Forcing {self} to {forced_type}");
         match self {
             Identifier::String(_, t) => *t = crate::type_checker::Typing::KnownType(forced_type),
-            Identifier::TupleIndex(_, _, t) => {
-                *t = crate::type_checker::Typing::KnownType(forced_type)
-            }
             Identifier::ListIndex(_, _, t) => {
                 *t = crate::type_checker::Typing::KnownType(forced_type)
             }
@@ -361,7 +354,6 @@ impl Identifier<Typing> {
     pub fn resolved(&self) -> Option<DataType> {
         let t = match self {
             Identifier::String(_, t) => t,
-            Identifier::TupleIndex(_, _, t) => t,
             Identifier::ListIndex(_, _, t) => t,
             Identifier::Field(_, _, t) => t,
         };
@@ -377,7 +369,6 @@ impl<T> Identifier<T> {
     pub fn binding_name(&self) -> String {
         match self {
             Identifier::String(name, _) => name.to_owned(),
-            Identifier::TupleIndex(inner_id, _, _) => inner_id.binding_name(),
             Identifier::ListIndex(inner_id, _, _) => inner_id.binding_name(),
             Identifier::Field(inner_id, _, _) => inner_id.binding_name(),
         }
@@ -388,9 +379,6 @@ impl<T> Identifier<T> {
             Identifier::String(name, _) => name.to_string(),
             Identifier::ListIndex(inner_id, l_index_expr, _) => {
                 format!("{}_{l_index_expr}", inner_id.label_friendly_name(),)
-            }
-            Identifier::TupleIndex(inner_id, t_index, _) => {
-                format!("{}___{t_index}", inner_id.label_friendly_name())
             }
             Identifier::Field(inner_id, field_name, _) => {
                 format!("{}___{field_name}", inner_id.label_friendly_name())

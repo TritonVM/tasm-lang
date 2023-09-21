@@ -149,28 +149,53 @@ impl DataType {
     }
 
     /// What type is returned when type is accessed with a field of name `field_name`?
-    pub fn field_access_returned_type(&self, field_name: &str) -> Self {
+    pub fn field_access_returned_type(&self, field_id: &FieldId) -> Self {
         match &self {
-            // If something is a `MemPointer`, it stays a `MemPointer` after field access,
-            // unless the field is a copy type.
-            DataType::Boxed(inner_type) => {
-                let struct_type = match &**inner_type {
-                    DataType::Struct(struct_type) => struct_type,
-                    _ => panic!("Field access can only be performed on structs"),
-                };
-
-                let field_type = struct_type.get_field_type(field_name.into());
-                if field_type.is_copy() {
-                    field_type
-                } else {
-                    DataType::Boxed(Box::new(field_type))
+            DataType::Reference(inner_type) => match &**inner_type {
+                DataType::Tuple(tuple) => {
+                    let tuple_index: usize = field_id.try_into().expect("Tuple must be accessed with a tuple index");
+                    tuple.fields[tuple_index].clone()
+                },
+                DataType::Struct(struct_type) => {
+                    let field_type = struct_type.get_field_type(field_id);
+                    if field_type.is_copy() {
+                        field_type
+                    } else {
+                        DataType::Boxed(Box::new(field_type))
+                    }
                 }
-            }
-            DataType::Struct(struct_type) => {
-                struct_type.get_field_type(field_name.into())
+                _ => todo!("type was: {self}"),
             },
-            _ => panic!("Field getter can only operate on type of struct or pointer to struct. Attempted to access field `{field_name}` on type `{self}`")
-        }
+            DataType::Boxed(inner_type) => match &**inner_type {
+                DataType::Struct(struct_type) => {
+                    let field_type = struct_type.get_field_type(field_id);
+                    if field_type.is_copy() {
+                        field_type
+                    } else {
+                        DataType::Boxed(Box::new(field_type))
+                    }
+                }
+                // TODO: We probably also want to allow field access to `Reference` types here
+                DataType::Tuple(tuple) => {
+                    let tuple_index: usize = field_id.try_into().expect("Tuple must be accessed with a tuple index");
+                    let field_type = tuple.fields[tuple_index].clone();
+                    if field_type.is_copy() {
+                        field_type
+                    } else {
+                        DataType::Boxed(Box::new(field_type))
+                    }
+                },
+                _ => panic!("Field getter can only operate on type of struct or pointer to struct. Attempted to access field `{field_id}` on type `{self}`")
+            },
+            DataType::Struct(struct_type) => {
+                struct_type.get_field_type(field_id)
+            },
+            DataType::Tuple(tuple) => {
+                let tuple_index: usize = field_id.try_into().expect("Tuple must be accessed with a tuple index");
+                tuple.fields[tuple_index].clone()
+            },
+            _ => panic!("Field getter can only operate on type of struct or pointer to struct. Attempted to access field `{field_id}` on type `{self}`")
+            }
     }
 
     // TODO: Consider getting rid of this method
@@ -434,21 +459,24 @@ impl StructType {
         LibraryFunction { signature, body }
     }
 
-    pub fn get_field_type(&self, field_id: FieldId) -> DataType {
+    pub fn get_field_type(&self, field_id: &FieldId) -> DataType {
         let res = match &self.variant {
-            StructVariant::TupleStruct(ts) => match &field_id {
-                FieldId::NamedField(_) => todo!(),
+            StructVariant::TupleStruct(ts) => match field_id {
+                FieldId::NamedField(_) => {
+                    panic!("Cannot access tuple struct with named field '{field_id}'.")
+                }
+
                 FieldId::UnnamedField(tuple_index) => {
                     ts.fields.get(*tuple_index).map(|x| x.to_owned())
                 }
             },
-            StructVariant::NamedFields(nfs) => match &field_id {
+            StructVariant::NamedFields(nfs) => match field_id {
                 FieldId::NamedField(field_name) => nfs
                     .fields
                     .iter()
                     .find(|&field| field.0 == *field_name)
                     .map(|x| x.1.to_owned()),
-                FieldId::UnnamedField(_) => todo!(),
+                FieldId::UnnamedField(tuple_index) => panic!("Cannot access struct with named fields with a tuple index. Got tuple index '{tuple_index}'.")
             },
         };
 
@@ -580,6 +608,12 @@ impl From<&String> for FieldId {
     }
 }
 
+impl From<String> for FieldId {
+    fn from(value: String) -> Self {
+        Self::NamedField(value)
+    }
+}
+
 impl From<&usize> for FieldId {
     fn from(value: &usize) -> Self {
         Self::UnnamedField(*value)
@@ -589,6 +623,23 @@ impl From<&usize> for FieldId {
 impl From<usize> for FieldId {
     fn from(value: usize) -> Self {
         Self::UnnamedField(value)
+    }
+}
+
+impl From<u32> for FieldId {
+    fn from(value: u32) -> Self {
+        Self::UnnamedField(value as usize)
+    }
+}
+
+impl TryFrom<&FieldId> for usize {
+    type Error = anyhow::Error;
+
+    fn try_from(value: &FieldId) -> Result<Self, Self::Error> {
+        match value {
+            FieldId::NamedField(_) => bail!("Cannot convert named field to usize"),
+            FieldId::UnnamedField(tuple_index) => Ok(*tuple_index),
+        }
     }
 }
 

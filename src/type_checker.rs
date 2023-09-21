@@ -91,7 +91,6 @@ impl<T: GetType> GetType for ast::Identifier<T> {
         match self {
             ast::Identifier::String(_, t) => t.get_type(),
             ast::Identifier::ListIndex(_, _, t) => t.get_type(),
-            ast::Identifier::TupleIndex(_, _, t) => t.get_type(),
             ast::Identifier::Field(_, _, t) => t.get_type(),
         }
     }
@@ -570,78 +569,6 @@ pub fn annotate_identifier_type(
             },
         },
 
-        // x.0
-        ast::Identifier::TupleIndex(tuple_identifier, index, known_type) => {
-            // For syntax like 'x.0.1', find the type of 'x.0'; we don't currently
-            // generate ASTs with nested tuple indexing, but it's easier to solve
-            // the type inference generally here.
-            let (tuple_type, mutable) =
-                annotate_identifier_type(tuple_identifier, state, fn_signature);
-
-            let tuple = match &tuple_type {
-                ast_types::DataType::Tuple(tuple) => tuple.to_owned(),
-                ast_types::DataType::Struct(ast_types::StructType {
-                    name: _,
-                    is_copy: _,
-                    variant,
-                }) => match variant {
-                    ast_types::StructVariant::TupleStruct(tuple) => tuple.to_owned(),
-                    ast_types::StructVariant::NamedFields(_) => panic!(
-                        "Cannot index non-tuple with tuple index {index}. Type was {tuple_type}"
-                    ),
-                },
-                ast_types::DataType::Boxed(inner_type) => match *inner_type.to_owned() {
-                    ast_types::DataType::Struct(ast_types::StructType {
-                        name: _,
-                        is_copy: _,
-                        variant,
-                    }) => match variant {
-                        ast_types::StructVariant::TupleStruct(tuple) => tuple,
-                        ast_types::StructVariant::NamedFields(_) => panic!(
-                            "Cannot index non-tuple with tuple index {index}. Type was {tuple_type}"
-                        ),
-                    },
-                    _ => {
-                        panic!("Cannot index non-tuple with tuple index {index}. Type was {tuple_type}")
-                    }
-                },
-                ast_types::DataType::Reference(inner_type) => match *inner_type.to_owned() {
-                    ast_types::DataType::Struct(ast_types::StructType {
-                        name: _,
-                        is_copy: _,
-                        variant,
-                    }) => match variant {
-                        ast_types::StructVariant::TupleStruct(tuple) => tuple,
-                        ast_types::StructVariant::NamedFields(_) => panic!(
-                            "Cannot index non-tuple with tuple index {index}. Type was {tuple_type}"
-                        ),
-                    },
-                    _ => {
-                        panic!("Cannot index non-tuple with tuple index {index}. Type was {tuple_type}")
-                    }
-                },
-                _ => {
-                    panic!("Cannot index non-tuple with tuple index {index}. Type was {tuple_type}")
-                }
-            };
-
-            let element_type = {
-                if tuple.len() > *index {
-                    tuple[*index].clone()
-                } else {
-                    panic!(
-                        "Cannot index tuple of {} elements with index {}",
-                        tuple.len(),
-                        index
-                    );
-                }
-            };
-
-            *known_type = Typing::KnownType(element_type.clone());
-
-            (element_type, mutable)
-        }
-
         // x[e]
         ast::Identifier::ListIndex(list_identifier, index_expr, known_type) => {
             let index_hint = ast_types::DataType::U32;
@@ -689,10 +616,10 @@ pub fn annotate_identifier_type(
         }
 
         // x.foo
-        ast::Identifier::Field(ident, field_name, annot) => {
+        ast::Identifier::Field(ident, field_id, annot) => {
             let (receiver_type, mutable) = annotate_identifier_type(ident, state, fn_signature);
             // Only structs have fields, so receiver_type must be a struct, or a pointer to a struct.
-            let data_type = receiver_type.field_access_returned_type(field_name);
+            let data_type = receiver_type.field_access_returned_type(field_id);
             *annot = Typing::KnownType(data_type.clone());
 
             (data_type, mutable)

@@ -543,52 +543,29 @@ impl<'a> Graft<'a> {
         })
     }
 
-    /// Return identifier if expression is a Path/identifier
-    fn expr_to_maybe_ident(rust_exp: &syn::Expr) -> Option<String> {
-        match rust_exp {
-            syn::Expr::Path(path_expr) => Some(Self::path_to_ident(&path_expr.path)),
-            _ => None,
-        }
-    }
+    fn graft_field_expression(
+        &self,
+        syn::ExprField {
+            attrs: _,
+            base,
+            dot_token: _,
+            member,
+        }: &syn::ExprField,
+    ) -> ast::Identifier<Annotation> {
+        let base_expression = self.graft_expr(base);
+        let base_ident = match base_expression {
+            ast::Expr::Var(ident) => ident,
+            _ => {
+                panic!("Left-hand-side of tuple operator must be a declared variable. Declare more bindings if needed. Failed to parse expression: {base_expression} as an identifier");
+            }
+        };
 
-    /// Interpret an expression as an identifier
-    fn expr_as_identifier(&self, rust_exp: &syn::Expr) -> ast::Identifier<Annotation> {
-        match rust_exp {
-            syn::Expr::Path(path) => {
-                ast::Identifier::String(Self::path_to_ident(&path.path), Default::default())
-            }
-            syn::Expr::Field(field_expr) => {
-                // This is for tuple support. E.g.: `a.2 = 14u32;`
-                let path = field_expr.base.as_ref();
-                let ident = match Self::expr_to_maybe_ident(path) {
-                    Some(ident) => ident,
-                    None => panic!("unsupported: {field_expr:?}"),
-                };
-                let tuple_index = match &field_expr.member {
-                    syn::Member::Named(_) => panic!("unsupported: {field_expr:?}"),
-                    syn::Member::Unnamed(tuple_index) => tuple_index,
-                };
+        let field_id = match &member {
+            syn::Member::Named(field_name) => field_name.to_string().into(),
+            syn::Member::Unnamed(tuple_index) => tuple_index.index.into(),
+        };
 
-                ast::Identifier::TupleIndex(
-                    Box::new(ast::Identifier::String(ident, Default::default())),
-                    tuple_index.index as usize,
-                    Default::default(),
-                )
-            }
-            syn::Expr::Index(index_expr) => {
-                let ident = match Self::expr_to_maybe_ident(&index_expr.expr) {
-                    Some(ident) => ident,
-                    None => panic!("unsupported: {index_expr:?}"),
-                };
-                let index_expr = self.graft_expr(index_expr.index.as_ref());
-                ast::Identifier::ListIndex(
-                    Box::new(ast::Identifier::String(ident, Default::default())),
-                    Box::new(index_expr),
-                    Default::default(),
-                )
-            }
-            other => panic!("unsupported: {other:?}"),
-        }
+        ast::Identifier::Field(Box::new(base_ident), field_id, Default::default())
     }
 
     pub(crate) fn graft_method_call(
@@ -765,38 +742,7 @@ impl<'a> Graft<'a> {
                 })
             }
             syn::Expr::MethodCall(method_call_expr) => self.graft_method_call(method_call_expr),
-            syn::Expr::Field(syn::ExprField {
-                attrs: _,
-                base,
-                dot_token: _,
-                member,
-            }) => {
-                // This branch is for tuple support.
-                let base_expression = self.graft_expr(base);
-                let base_ident = match base_expression {
-                    ast::Expr::Var(ident) => ident,
-                    _ => {
-                        panic!("Left-hand-side of tuple operator must be a declared variable. Declare more bindings if needed. Failed to parse expression: {base_expression} as an identifier");
-                    }
-                };
-
-                match &member {
-                    // named field `foo.bar`
-                    syn::Member::Named(field_name) => ast::Expr::Var(ast::Identifier::Field(
-                        Box::new(base_ident),
-                        field_name.to_string(),
-                        Default::default(),
-                    )),
-                    // unnamed field `tuple.2`
-                    syn::Member::Unnamed(tuple_index) => {
-                        ast::Expr::Var(ast::Identifier::TupleIndex(
-                            Box::new(base_ident),
-                            tuple_index.index as usize,
-                            Default::default(),
-                        ))
-                    }
-                }
-            }
+            syn::Expr::Field(field_expr) => ast::Expr::Var(self.graft_field_expression(field_expr)),
             syn::Expr::Index(index_expr) => {
                 let expr = self.graft_expr(&index_expr.expr);
                 let index = self.graft_expr(&index_expr.index);
@@ -1102,8 +1048,14 @@ impl<'a> Graft<'a> {
                     op,
                     right,
                 }) => {
-                    let identifier_expr = left.as_ref();
-                    let identifier = graft_config.expr_as_identifier(identifier_expr);
+                    // let identifier_expr = assign.left.as_ref();
+                    let identifier_expr = graft_config.graft_expr(left);
+                    let identifier = match identifier_expr {
+                        ast::Expr::Var(ident) => ident,
+                        _ => {
+                            panic!("Left-hand-side of tuple operator must be a declared variable. Declare more bindings if needed. Failed to parse expression: {identifier_expr} as an identifier");
+                        }
+                    };
                     let assign_expr = graft_config.graft_binop_eq_expr(left, op, right);
                     let assign_stmt = ast::AssignStmt {
                         identifier,
