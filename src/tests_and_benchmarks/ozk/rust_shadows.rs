@@ -78,6 +78,19 @@ pub(super) fn tasm_io_read_stdin_bfe() -> BFieldElement {
     PUB_INPUT.with(|v| v.borrow_mut().pop().unwrap())
 }
 
+pub(super) fn tasm_io_read_stdin_u64() -> u64 {
+    #[allow(clippy::unwrap_used)]
+    let hi: u32 = PUB_INPUT
+        .with(|v| v.borrow_mut().pop().unwrap())
+        .try_into()
+        .unwrap();
+    let lo: u32 = PUB_INPUT
+        .with(|v| v.borrow_mut().pop().unwrap())
+        .try_into()
+        .unwrap();
+    ((hi as u64) << 32) + lo as u64
+}
+
 pub(super) fn tasm_io_read_stdin_u128() -> u128 {
     #[allow(clippy::unwrap_used)]
     let e3: u32 = PUB_INPUT

@@ -44,7 +44,7 @@ mod tests {
     use twenty_first::shared_math::bfield_codec::BFieldCodec;
 
     #[test]
-    fn boxed_tuple_struct_test() {
+    fn tuple_struct_test() {
         // Test function on host machine
         let a: u128 = random();
         let b: u128 = random();

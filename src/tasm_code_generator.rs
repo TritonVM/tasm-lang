@@ -481,12 +481,12 @@ impl<'a> CompilerState<'a> {
 
                 ValueLocation::DynamicMemoryAddress(element_address)
             }
-            ast::Identifier::Field(ident, field_id, known_type) => {
-                let lhs_location = self.locate_identifier(ident);
-                let lhs_type = ident.get_type();
+            ast::Identifier::Field(lhs, field_id, known_type) => {
+                let lhs_location = self.locate_identifier(lhs);
+                let lhs_type = lhs.get_type();
 
                 let get_ident_code =
-                    get_lhs_address_code(self, &lhs_location, &known_type.get_type(), ident);
+                    get_lhs_address_code(self, &lhs_location, &known_type.get_type(), lhs);
                 // stack: _ struct/tuple
 
                 fn handle_tuple(
@@ -514,7 +514,7 @@ impl<'a> CompilerState<'a> {
                 }
 
                 // limited field support for now
-                match ident.get_type() {
+                match lhs.get_type() {
                     ast_types::DataType::Boxed(inner_type) => match *inner_type {
                         ast_types::DataType::Struct(inner_struct) => {
                             let get_field_pointer_from_struct_pointer =
@@ -522,6 +522,22 @@ impl<'a> CompilerState<'a> {
                             ValueLocation::DynamicMemoryAddress(triton_asm!(
                                 {&get_ident_code}
                                 {&get_field_pointer_from_struct_pointer}
+                            ))
+                        }
+                        ast_types::DataType::Tuple(tuple) => {
+                            // TODO: Pretty sure the problem is here
+                            let tuple_index: usize = field_id.try_into().unwrap();
+                            let tuple_depth: usize = tuple
+                                .into_iter()
+                                .enumerate()
+                                .filter(|(i, _x)| *i > tuple_index)
+                                .map(|(_i, x)| x.stack_size())
+                                .sum::<usize>();
+
+                            ValueLocation::DynamicMemoryAddress(triton_asm!(
+                                {&get_ident_code}
+                                push {tuple_depth}
+                                add
                             ))
                         }
                         _ => todo!("lhs_type: {lhs_type}"),
@@ -2820,7 +2836,7 @@ impl ast_types::StructType {
         let mut static_pointer_addition = 0;
         let needle_id = field_id;
         let mut needle_type: Option<ast_types::DataType> = None;
-        for (haystack_field_id, haystack_type) in self.field_ids_and_types() {
+        for (haystack_field_id, haystack_type) in self.field_ids_and_types_reversed_for_tuples() {
             if haystack_field_id == *needle_id {
                 // If we've found the field the accumulators are in the right state.
                 // return them.

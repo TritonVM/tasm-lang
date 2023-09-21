@@ -521,6 +521,28 @@ impl StructType {
             ),
         }
     }
+
+    /// Iterate over all fields in a type, but in reverse order if this is a
+    /// tuple struct. This function exists since tuple structs are stored with
+    /// fields in reversed order in memory (highest tuple index at lowest address)
+    pub fn field_ids_and_types_reversed_for_tuples<'a>(
+        &'a self,
+    ) -> Box<dyn Iterator<Item = (FieldId, &'a DataType)> + 'a> {
+        match &self.variant {
+            StructVariant::TupleStruct(ts) => Box::new(
+                ts.fields
+                    .iter()
+                    .enumerate()
+                    .rev()
+                    .map(|(tuple_idx, element_type)| (tuple_idx.into(), element_type)),
+            ),
+            StructVariant::NamedFields(nfs) => Box::new(
+                nfs.fields
+                    .iter()
+                    .map(|(field_name, element_type)| (field_name.into(), element_type)),
+            ),
+        }
+    }
 }
 
 impl Display for StructType {
