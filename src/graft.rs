@@ -673,10 +673,16 @@ impl<'a> Graft<'a> {
                 // TODO: Put this into `unsigned` library
                 if ident == "u32::MAX" {
                     ast::Expr::Lit(ast::ExprLit::U32(u32::MAX))
+                } else if ident == "u32::BITS" {
+                    ast::Expr::Lit(ast::ExprLit::U32(u32::BITS))
                 } else if ident == "u64::MAX" {
                     ast::Expr::Lit(ast::ExprLit::U64(u64::MAX))
+                } else if ident == "u64::BITS" {
+                    ast::Expr::Lit(ast::ExprLit::U32(u64::BITS))
                 } else if ident == "u128::MAX" {
                     ast::Expr::Lit(ast::ExprLit::U128(u128::MAX))
+                } else if ident == "u128::BITS" {
+                    ast::Expr::Lit(ast::ExprLit::U32(u128::BITS))
                 } else {
                     ast::Expr::Var(ast::Identifier::String(ident, Default::default()))
                 }

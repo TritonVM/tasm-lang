@@ -6,6 +6,28 @@ mod run_tests {
     use crate::{graft::item_fn, tests_and_benchmarks::test_helpers::shared_test::*};
 
     #[test]
+    fn declare_u128_max_and_bits_test() {
+        compare_prop_with_stack_safe_lists(
+            &declare_u128_max_and_bits_rast(),
+            vec![],
+            vec![
+                u128_lit(0xffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff),
+                u32_lit(0x0000_0080),
+            ],
+        );
+
+        fn declare_u128_max_and_bits_rast() -> syn::ItemFn {
+            item_fn(parse_quote! {
+                fn declare_u128_max_and_bits() -> (u128, u32) {
+                    let a: u128 = u128::MAX;
+                    let b: u32 = u128::BITS;
+                    return (a, b);
+                }
+            })
+        }
+    }
+
+    #[test]
     fn mul_two_u64s_run_test() {
         let mut test_cases = vec![
             InputOutputTestCase::new(vec![u64_lit(0), u64_lit(0)], vec![u128_lit(0)]),
