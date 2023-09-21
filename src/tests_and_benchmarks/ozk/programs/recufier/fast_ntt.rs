@@ -152,8 +152,8 @@ mod tests {
     };
 
     #[test]
-    fn xfe_ntt_test() {
-        for input_length in [2, 4, 8, 16, 32, 64] {
+    fn fast_xfe_ntt_test() {
+        for input_length in [2, 4, 8, 16, 32, 64, 128] {
             let xfes: Vec<XFieldElement> = random_elements(input_length);
             let omega = BFieldElement::primitive_root_of_unity(input_length as u64).unwrap();
             let stdin = vec![omega];
