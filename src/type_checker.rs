@@ -305,7 +305,7 @@ pub fn annotate_fn_outer(
         if let ast_types::StructVariant::TupleStruct(_) = &declared_struct.variant {
             ftable.insert(
                 struct_name.to_owned(),
-                declared_struct.constructor().signature,
+                declared_struct.constructor(declared_structs).signature,
             );
         }
     }

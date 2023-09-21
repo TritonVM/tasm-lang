@@ -1,6 +1,6 @@
 use anyhow::bail;
 use itertools::Itertools;
-use std::{fmt::Display, str::FromStr};
+use std::{collections::HashMap, fmt::Display, str::FromStr};
 use triton_vm::triton_asm;
 
 use crate::{ast::FnSignature, libraries::LibraryFunction};
@@ -426,7 +426,7 @@ impl From<&StructType> for DataType {
 
 impl StructType {
     /// Only named tuples, i.e. tuple structs should use this constructor.
-    pub fn constructor(&self) -> LibraryFunction {
+    pub fn constructor(&self, declared_structs: &HashMap<String, StructType>) -> LibraryFunction {
         let tuple = if let StructVariant::TupleStruct(tuple) = &self.variant {
             tuple
         } else {
@@ -444,12 +444,15 @@ impl StructType {
                 })
             })
             .collect_vec();
-        let signature = FnSignature {
+        let mut signature = FnSignature {
             name: self.name.to_owned(),
             args,
             output: DataType::Struct(self.to_owned()),
             arg_evaluation_order: Default::default(),
         };
+
+        // Resolve type in case of nested tuple structs
+        signature.resolve_types(declared_structs);
 
         // Function body of the tuple-struct constructor is empty, since
         // the construction simply corresponds to the evaluation of arguments

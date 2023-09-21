@@ -1457,7 +1457,12 @@ fn compile_fn_call(
                 matches!(struct_type.variant, StructVariant::TupleStruct(_)),
                 "Can only call tuple constructor of tuple struct. Got: {struct_type}"
             );
-            call_fn_code.append(&mut struct_type.constructor().body.clone());
+            call_fn_code.append(
+                &mut struct_type
+                    .constructor(&state.declared_structs)
+                    .body
+                    .clone(),
+            );
         } else {
             // Function is not a library function, but type checker has guaranteed that it is in
             // scope. So we just call it.
