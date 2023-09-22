@@ -425,7 +425,21 @@ impl<'a> Graft<'a> {
         match rust_fn_arg {
             syn::FnArg::Typed(pat_type) => {
                 let name = Self::pat_to_name(&pat_type.pat);
-                let (data_type, mutable) = self.pat_type_to_data_type_and_mutability(pat_type);
+                let (data_type, mut mutable) = self.pat_type_to_data_type_and_mutability(pat_type);
+
+                // Sloppy way of handling mutability. But it's what we got for now.
+                // we say an fn arg is mutable if it's either declared as such *or*
+                // if it is of the `&mut` reference.
+                if let syn::Type::Reference(syn::TypeReference {
+                    and_token: _,
+                    lifetime: _,
+                    mutability,
+                    elem: _,
+                }) = pat_type.ty.as_ref()
+                {
+                    mutable = mutable || mutability.is_some();
+                }
+
                 ast_types::AbstractValueArg {
                     name,
                     data_type,
