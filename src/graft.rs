@@ -374,10 +374,12 @@ impl<'a> Graft<'a> {
             }) => match *elem.to_owned() {
                 syn::Type::Path(type_path) => {
                     let inner_type = self.rust_type_path_to_data_type(&type_path);
-                    if inner_type.is_copy() {
-                        ast_types::DataType::Reference(Box::new(inner_type))
-                    } else {
+                    // Structs that are not copy must be Boxed for reference arguments to work
+                    if matches!(inner_type, ast_types::DataType::Struct(_)) && !inner_type.is_copy()
+                    {
                         ast_types::DataType::Boxed(Box::new(inner_type))
+                    } else {
+                        ast_types::DataType::Reference(Box::new(inner_type))
                     }
                 }
                 _ => todo!(),

@@ -1,8 +1,7 @@
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
-// Since struct is copy, you cannot call `&self` methods
+// Since struct is not copy, you cannot just call `&self` methods
 // without explicitly creating a `Box<NonCopyStruct>` value.
-#[derive(Clone, Copy)]
 struct NonCopyStruct(u64);
 
 impl NonCopyStruct {
@@ -18,7 +17,8 @@ impl NonCopyStruct {
 #[allow(dead_code)]
 fn main() {
     let a: NonCopyStruct = NonCopyStruct::new(tasm::tasm_io_read_stdin_u64());
-    tasm::tasm_io_write_to_stdout_u64((&a).valued());
+    let boxed_a: Box<NonCopyStruct> = Box::<NonCopyStruct>::new(a);
+    tasm::tasm_io_write_to_stdout_u64(boxed_a.valued());
     return;
 }
 
@@ -37,11 +37,11 @@ mod tests {
     };
 
     #[test]
-    fn ref_struct_typecheck_succeed_test() {
+    fn ref_struct_typecheck_succeed_bc_boxed_test() {
         // Verify compilation works
         let test_program = ozk_parsing::compile_for_test(
             "boxed",
-            "ref_struct_typecheck_succeed",
+            "ref_struct_typecheck_succeed_bc_boxed",
             crate::ast_types::ListType::Unsafe,
         );
 
