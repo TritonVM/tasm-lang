@@ -255,7 +255,7 @@ mod tests {
             vec![],
             &mut HashMap::default(),
             stdin,
-            NonDeterminism::new(vec![]),
+            non_determinism,
             expected_stack_diff,
         )
         .unwrap();

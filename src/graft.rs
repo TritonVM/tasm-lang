@@ -162,9 +162,17 @@ impl<'a> Graft<'a> {
                 ..
             } = receiver;
             let receiver_data_type = match reference {
-                Some(_) => ast_types::DataType::Reference(Box::new(ast_types::DataType::Struct(
-                    struct_type.to_owned(),
-                ))),
+                Some(_) => {
+                    if struct_type.is_copy {
+                        ast_types::DataType::Reference(Box::new(ast_types::DataType::Struct(
+                            struct_type.to_owned(),
+                        )))
+                    } else {
+                        ast_types::DataType::Boxed(Box::new(ast_types::DataType::Struct(
+                            struct_type.to_owned(),
+                        )))
+                    }
+                }
                 None => ast_types::DataType::Struct(struct_type.to_owned()),
             };
             ast_types::AbstractValueArg {
@@ -346,12 +354,6 @@ impl<'a> Graft<'a> {
         }
     }
 
-    // pub fn rust_type_to_data_type(&self, x: &syn::Type) -> ast_types::DataType {
-    //     match x {
-    //         syn::Type::Path(data_type) => self.rust_type_path_to_data_type(data_type),
-    //         ty => panic!("Unsupported type {ty:#?}"),
-    //     }
-    // }
     pub fn syn_type_to_ast_type(&self, syn_type: &syn::Type) -> ast_types::DataType {
         match syn_type {
             syn::Type::Path(path) => self.rust_type_path_to_data_type(path),
@@ -372,7 +374,11 @@ impl<'a> Graft<'a> {
             }) => match *elem.to_owned() {
                 syn::Type::Path(type_path) => {
                     let inner_type = self.rust_type_path_to_data_type(&type_path);
-                    ast_types::DataType::Reference(Box::new(inner_type))
+                    if inner_type.is_copy() {
+                        ast_types::DataType::Reference(Box::new(inner_type))
+                    } else {
+                        ast_types::DataType::Boxed(Box::new(inner_type))
+                    }
                 }
                 _ => todo!(),
             },
@@ -417,33 +423,7 @@ impl<'a> Graft<'a> {
         match rust_fn_arg {
             syn::FnArg::Typed(pat_type) => {
                 let name = Self::pat_to_name(&pat_type.pat);
-                let (data_type, mutable): (ast_types::DataType, bool) = match pat_type.ty.as_ref() {
-                    syn::Type::Path(type_path) => {
-                        let mutable = match *pat_type.pat.to_owned() {
-                            syn::Pat::Ident(pi) => pi.mutability.is_some(),
-                            _ => todo!(),
-                        };
-                        (self.rust_type_path_to_data_type(type_path), mutable)
-                    }
-
-                    // Input is a reference
-                    syn::Type::Reference(syn::TypeReference {
-                        and_token: _,
-                        lifetime: _,
-                        mutability,
-                        elem,
-                    }) => match *elem.to_owned() {
-                        syn::Type::Path(type_path) => (
-                            ast_types::DataType::Reference(Box::new(
-                                self.rust_type_path_to_data_type(&type_path),
-                            )),
-                            mutability.is_some(),
-                        ),
-                        _ => todo!(),
-                    },
-                    other => panic!("unsupported: {other:?}"),
-                };
-
+                let (data_type, mutable) = self.pat_type_to_data_type_and_mutability(pat_type);
                 ast_types::AbstractValueArg {
                     name,
                     data_type,

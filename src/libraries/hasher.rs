@@ -139,7 +139,7 @@ impl HasherLib {
             args: vec![ast_types::AbstractArgument::ValueArgument(
                 ast_types::AbstractValueArg {
                     name: "list".to_owned(),
-                    data_type: ast_types::DataType::Reference(Box::new(ast_types::DataType::List(
+                    data_type: ast_types::DataType::Boxed(Box::new(ast_types::DataType::List(
                         Box::new(ast_types::DataType::BFE),
                         self.list_type,
                     ))),
