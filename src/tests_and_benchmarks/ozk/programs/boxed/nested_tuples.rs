@@ -1,4 +1,3 @@
-#![allow(clippy::type_complexity)]
 use triton_vm::{BFieldElement, Digest};
 
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
@@ -9,6 +8,7 @@ struct TupleStructDinner(u64, BFieldElement);
 #[derive(Clone, Copy)]
 struct TupleStructDoubter(TupleStructDinner, Digest, TupleStructDinner);
 
+#[allow(clippy::type_complexity)]
 fn main() {
     let a_dinner_0: u64 = tasm::tasm_io_read_stdin_u64();
     let a_dinner_1: BFieldElement = tasm::tasm_io_read_stdin_bfe();

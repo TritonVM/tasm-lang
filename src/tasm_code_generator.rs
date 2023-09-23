@@ -525,7 +525,6 @@ impl<'a> CompilerState<'a> {
                             ))
                         }
                         ast_types::DataType::Tuple(tuple) => {
-                            // TODO: Pretty sure the problem is here
                             let tuple_index: usize = field_id.try_into().unwrap();
                             let tuple_depth: usize = tuple
                                 .into_iter()
@@ -2659,6 +2658,7 @@ fn copy_top_stack_value_to_memory(
     // address.
     let mut ret = triton_asm!(push {memory_location as u64});
 
+    println!("top_value_size: {top_value_size}");
     for i in 0..top_value_size {
         ret.append(&mut triton_asm!(dup {1 + i as u64}));
         // _ [elements] mem_address element
