@@ -1,3 +1,4 @@
+#![allow(clippy::needless_borrow)]
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
 // Since struct is not copy, you cannot just call `&self` methods

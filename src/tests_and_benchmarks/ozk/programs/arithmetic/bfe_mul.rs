@@ -1,3 +1,4 @@
+#![allow(clippy::needless_borrow)]
 use triton_vm::BFieldElement;
 
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;

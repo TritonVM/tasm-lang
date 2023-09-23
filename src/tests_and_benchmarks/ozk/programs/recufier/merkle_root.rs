@@ -1,3 +1,4 @@
+#![allow(clippy::explicit_auto_deref)]
 // Allows the use of input/output on the native architecture
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 use triton_vm::{BFieldElement, Digest};

@@ -1,3 +1,4 @@
+#![allow(clippy::type_complexity)]
 use triton_vm::{BFieldElement, Digest};
 
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
