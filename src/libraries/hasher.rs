@@ -177,7 +177,8 @@ impl Library for HasherLib {
                             "Digest initialization must happen with {DIGEST_LENGTH} BFEs. Got {}",
                             bfe_literals.len(),)
                         });
-                    return ast::Expr::Lit(ast::ExprLit::Digest(Digest::new(bfe_literals)));
+
+                    ast::Expr::Lit(ast::ExprLit::Digest(Digest::new(bfe_literals)))
                 }
                 _ => panic!("Digest instantiation must happen with an array"),
             }

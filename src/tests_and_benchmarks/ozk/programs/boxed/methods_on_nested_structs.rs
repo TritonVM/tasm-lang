@@ -13,7 +13,7 @@ impl OuterStruct {
 struct MiddleStruct(Digest, InnerStruct, u32);
 
 impl MiddleStruct {
-    fn add(&self) -> u128 {
+    fn add1(&self) -> u128 {
         return self.1 .0 as u128 + self.2 as u128 + 4;
     }
 }
@@ -21,9 +21,9 @@ impl MiddleStruct {
 struct InnerStruct(u64, u32);
 
 impl InnerStruct {
-    fn add(&self, extra_arg: u128) -> u128 {
+    fn add2(&self, extra_arg: u128) -> u128 {
         let mid: u128 = self.0 as u128 + 14;
-        return mid + self.1 as u128;
+        return mid + self.1 as u128 - extra_arg;
     }
 }
 
@@ -55,8 +55,8 @@ fn main() {
     assert!(1u32 << 31 == outer_struct_boxed.1 .2);
 
     tasm::tasm_io_write_to_stdout_u128(outer_struct_boxed.add(200));
-    tasm::tasm_io_write_to_stdout_u128(outer_struct_boxed.1.add());
-    tasm::tasm_io_write_to_stdout_u128(outer_struct_boxed.1.add());
+    tasm::tasm_io_write_to_stdout_u128(outer_struct_boxed.1.add1());
+    tasm::tasm_io_write_to_stdout_u128(outer_struct_boxed.2.add2(300));
 
     return;
 }
@@ -71,13 +71,19 @@ mod tests {
     };
     use itertools::Itertools;
     use triton_vm::NonDeterminism;
+    use twenty_first::shared_math::bfield_codec::BFieldCodec;
 
     #[test]
     fn methods_on_nested_structs_test() {
         // Test function on host machine
         let stdin = vec![];
         let non_determinism = NonDeterminism::new(vec![]);
-        let expected_output = vec![(200 + 44 + )];
+        let expected_output = [
+            (44u128 + (1u128 << 31) + 200).encode(),
+            ((1u128 << 42) + (1 << 31) + 4).encode(),
+            ((1u128 << 41) + 14 + (1 << 21) - 300).encode(),
+        ]
+        .concat();
         let native_output =
             rust_shadows::wrap_main_with_io(&main)(stdin.clone(), non_determinism.clone());
         assert_eq!(native_output, expected_output);
