@@ -1,7 +1,11 @@
+use itertools::Itertools;
 use std::{collections::HashMap, fs};
 use triton_vm::instruction::LabelledInstruction;
 
-use crate::{ast_types, tasm_code_generator::compile_function, type_checker::annotate_fn_outer};
+use crate::{
+    ast_types, custom_type_resolver::resolve_custom_types, tasm_code_generator::compile_function,
+    type_checker::annotate_fn_outer,
+};
 
 pub type StructsAndMethods = HashMap<String, (syn::ItemStruct, Vec<syn::ImplItemMethod>)>;
 
@@ -28,11 +32,11 @@ fn extract_types_and_main(parsed_file: syn::File) -> (StructsAndMethods, Option<
             }
         }
 
-        // Get all struct methods
+        // Get all struct methods and associated functions
         if let syn::Item::Impl(item_impl) = &item {
             get_standard_setup!(ast_types::ListType::Unsafe, graft_config, _lib);
             let type_name = graft_config
-                .rust_type_to_data_type(&item_impl.self_ty)
+                .syn_type_to_ast_type(&item_impl.self_ty)
                 .to_string();
             for impl_item in item_impl.items.iter() {
                 if let syn::ImplItem::Method(struct_method) = impl_item {
@@ -87,15 +91,49 @@ pub(crate) fn compile_for_test(
 ) -> Vec<LabelledInstruction> {
     get_standard_setup!(list_type, graft_config, libraries);
 
-    let (parsed_main, parsed_structs, _) = parse_main_and_structs(directory, module_name);
-    let mut function = graft_config.graft_fn_decl(&parsed_main);
-    let (structs, mut methods) = graft_config.graft_structs(parsed_structs);
+    let (rust_main_ast, rust_struct_asts, _) = parse_main_and_structs(directory, module_name);
+    let mut oil_ast = graft_config.graft_fn_decl(&rust_main_ast);
+    println!("oil_ast: {oil_ast:#?}");
+    let (structs, mut methods, mut associated_functions) =
+        graft_config.graft_structs_methods_and_associated_functions(rust_struct_asts);
+
+    resolve_custom_types(
+        &mut oil_ast,
+        &structs,
+        &mut methods,
+        &mut associated_functions,
+    );
 
     // type-check and annotate
-    annotate_fn_outer(&mut function, structs, &mut methods, &libraries);
+    annotate_fn_outer(
+        &mut oil_ast,
+        &structs,
+        &mut methods,
+        &mut associated_functions,
+        &libraries,
+    );
+    println!("typed oil_ast: {oil_ast:#?}");
 
     // compile
-    let tasm = compile_function(&function, &libraries, methods);
+    println!(
+        "compile_for_test: methods:\n{} ",
+        methods.iter().map(|x| &x.signature.name).join(",")
+    );
+    println!(
+        "compile_for_test: associated_functions:\n{} ",
+        associated_functions
+            .values()
+            .map(|x| x.iter().map(|y| &y.1.signature.name).join(","))
+            .join(";")
+    );
+
+    let tasm = compile_function(
+        &oil_ast,
+        &libraries,
+        methods,
+        &associated_functions,
+        &structs,
+    );
 
     // compose
     tasm.compose()

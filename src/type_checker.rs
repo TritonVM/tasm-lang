@@ -37,6 +37,7 @@ impl<T: GetType> GetType for ast::ExprLit<T> {
             ast::ExprLit::Bool(_) => ast_types::DataType::Bool,
             ast::ExprLit::U32(_) => ast_types::DataType::U32,
             ast::ExprLit::U64(_) => ast_types::DataType::U64,
+            ast::ExprLit::U128(_) => ast_types::DataType::U128,
             ast::ExprLit::BFE(_) => ast_types::DataType::BFE,
             ast::ExprLit::XFE(_) => ast_types::DataType::XFE,
             ast::ExprLit::Digest(_) => ast_types::DataType::Digest,
@@ -55,15 +56,19 @@ impl<T: GetType + std::fmt::Debug> GetType for ast::Expr<T> {
         match self {
             ast::Expr::Lit(lit) => lit.get_type(),
             ast::Expr::Var(id) => id.get_type(),
-            ast::Expr::Tuple(t_list) => {
-                ast_types::DataType::Tuple(t_list.iter().map(|elem| elem.get_type()).collect())
-            }
+            ast::Expr::Tuple(t_list) => ast_types::DataType::Tuple(
+                t_list
+                    .iter()
+                    .map(|elem| elem.get_type())
+                    .collect_vec()
+                    .into(),
+            ),
             ast::Expr::FnCall(fn_call) => fn_call.get_type(),
             ast::Expr::MethodCall(method_call) => method_call.get_type(),
             ast::Expr::Binop(_, _, _, t) => t.get_type(),
             ast::Expr::If(if_expr) => if_expr.get_type(),
             ast::Expr::Cast(_expr, t) => t.to_owned(),
-            ast::Expr::Unary(_unaryop, inner_expr, _) => inner_expr.get_type(),
+            ast::Expr::Unary(_, _, t) => t.get_type(),
             ast::Expr::ReturningBlock(ret_block) => ret_block.get_type(),
         }
     }
@@ -86,7 +91,6 @@ impl<T: GetType> GetType for ast::Identifier<T> {
         match self {
             ast::Identifier::String(_, t) => t.get_type(),
             ast::Identifier::ListIndex(_, _, t) => t.get_type(),
-            ast::Identifier::TupleIndex(_, _, t) => t.get_type(),
             ast::Identifier::Field(_, _, t) => t.get_type(),
         }
     }
@@ -118,9 +122,10 @@ pub struct CheckState<'a> {
     /// This is used for determining the type of function calls in expressions.
     pub ftable: HashMap<String, ast::FnSignature>,
 
-    pub declared_structs: HashMap<String, ast_types::StructType>,
-
     pub declared_methods: Vec<ast::Method<Typing>>,
+
+    /// Functions declared in `impl` blocks, without a `&self` argument
+    pub associated_functions: HashMap<String, HashMap<String, ast::Fn<Typing>>>,
 }
 
 #[derive(Clone, Debug)]
@@ -150,23 +155,22 @@ impl DataTypeAndMutability {
 // TODO: Delete `annotate_method`, use `annotate_function` instead
 pub fn annotate_method(
     method: &mut ast::Method<Typing>,
-    declared_structs: HashMap<String, ast_types::StructType>,
     declared_methods: Vec<ast::Method<Typing>>,
+    associated_functions: &HashMap<String, HashMap<String, ast::Fn<Typing>>>,
     libraries: &[Box<dyn libraries::Library>],
+    ftable: HashMap<String, ast::FnSignature>,
 ) {
     // Initialize `CheckState`
     let vtable: HashMap<String, DataTypeAndMutability> =
         HashMap::with_capacity(method.signature.args.len());
-    let mut ftable: HashMap<String, ast::FnSignature> = HashMap::new();
 
     // Insert self into ftable
-    ftable.insert(method.signature.name.clone(), method.signature.clone());
     let mut state = CheckState {
         libraries,
         vtable,
         ftable,
-        declared_structs,
         declared_methods,
+        associated_functions: associated_functions.to_owned(),
     };
 
     // Populate vtable with function arguments
@@ -218,8 +222,8 @@ pub fn annotate_method(
 
 pub fn annotate_fn_inner(
     function: &mut ast::Fn<Typing>,
-    declared_structs: HashMap<String, ast_types::StructType>,
     declared_methods: Vec<ast::Method<Typing>>,
+    associated_functions: &HashMap<String, HashMap<String, ast::Fn<Typing>>>,
     libraries: &[Box<dyn libraries::Library>],
     mut ftable: HashMap<String, ast::FnSignature>,
 ) {
@@ -233,8 +237,8 @@ pub fn annotate_fn_inner(
         libraries,
         vtable,
         ftable,
-        declared_structs,
         declared_methods: declared_methods.to_owned(),
+        associated_functions: associated_functions.to_owned(),
     };
 
     // Populate vtable with function arguments
@@ -286,29 +290,58 @@ pub fn annotate_fn_inner(
 
 pub fn annotate_fn_outer(
     function: &mut ast::Fn<Typing>,
-    declared_structs: HashMap<String, ast_types::StructType>,
+    declared_structs: &HashMap<String, ast_types::StructType>,
     declared_methods: &mut [ast::Method<Typing>],
+    associated_functions: &mut HashMap<String, HashMap<String, ast::Fn<Typing>>>,
     libraries: &[Box<dyn libraries::Library>],
 ) {
     let untyped_declared_methods = declared_methods.to_owned();
 
+    // Populate `ftable` with tuple constructors, allowing initialization of tuple structs
+    // using `struct Foo(u32); let a = Foo(200);`
+    let mut ftable: HashMap<String, ast::FnSignature> = HashMap::default();
+    for (struct_name, declared_struct) in declared_structs.iter() {
+        if let ast_types::StructVariant::TupleStruct(_) = &declared_struct.variant {
+            ftable.insert(
+                struct_name.to_owned(),
+                declared_struct.constructor(declared_structs).signature,
+            );
+        }
+    }
+
     // Type annotate the function
+    let ftable_outer = ftable.clone();
     annotate_fn_inner(
         function,
-        declared_structs.clone(),
         untyped_declared_methods.clone(),
+        associated_functions,
         libraries,
-        HashMap::default(),
+        ftable,
     );
 
     // Type annotate all declared methods
+    let untyped_assoc_functions = associated_functions.clone();
     for declared_method in declared_methods.iter_mut() {
         annotate_method(
             declared_method,
-            declared_structs.clone(),
             untyped_declared_methods.clone(),
+            &untyped_assoc_functions,
             libraries,
+            ftable_outer.clone(),
         )
+    }
+
+    // Type annotate all associated functions
+    for (_, functions) in associated_functions.iter_mut() {
+        for (_, afunc) in functions.iter_mut() {
+            annotate_fn_inner(
+                afunc,
+                untyped_declared_methods.clone(),
+                &untyped_assoc_functions,
+                libraries,
+                ftable_outer.clone(),
+            )
+        }
     }
 }
 
@@ -327,9 +360,6 @@ fn annotate_stmt(
             if state.vtable.contains_key(var_name) {
                 panic!("let-assign cannot shadow existing variable '{var_name}'!");
             }
-
-            // Map types to those declared in program, i.e. resolve local `struct` declarations
-            *data_type = data_type.resolve_types(&state.declared_structs);
 
             let let_expr_hint: Option<&ast_types::DataType> = Some(data_type);
             let derived_type =
@@ -478,8 +508,8 @@ fn annotate_stmt(
             // A local function can see all functions available in the outer scope.
             annotate_fn_inner(
                 function,
-                state.declared_structs.clone(),
                 state.declared_methods.clone(),
+                &state.associated_functions,
                 state.libraries,
                 state.ftable.clone(),
             );
@@ -510,7 +540,7 @@ pub fn assert_type_equals(
 ) {
     if derived_type != data_type {
         panic!(
-            "Type mismatch between type\n'{data_type}'\n and derived type\n'{derived_type}'\n for {context}",
+            "Type mismatch between type\n'{data_type:?}'\n and derived type\n'{derived_type:?}'\n for {context}",
         );
     }
 }
@@ -538,33 +568,6 @@ pub fn annotate_identifier_type(
             },
         },
 
-        // x.0
-        ast::Identifier::TupleIndex(tuple_identifier, index, known_type) => {
-            // For syntax like 'x.0.1', find the type of 'x.0'; we don't currently
-            // generate ASTs with nested tuple indexing, but it's easier to solve
-            // the type inference generally here.
-            let (tuple_type, mutable) =
-                annotate_identifier_type(tuple_identifier, state, fn_signature);
-
-            let element_type = if let ast_types::DataType::Tuple(elem_types) = tuple_type {
-                if elem_types.len() > *index {
-                    elem_types[*index].clone()
-                } else {
-                    panic!(
-                        "Cannot index tuple of {} elements with index {}",
-                        elem_types.len(),
-                        index
-                    );
-                }
-            } else {
-                panic!("Cannot index non-tuple with tuple index {index}");
-            };
-
-            *known_type = Typing::KnownType(element_type.clone());
-
-            (element_type, mutable)
-        }
-
         // x[e]
         ast::Identifier::ListIndex(list_identifier, index_expr, known_type) => {
             let index_hint = ast_types::DataType::U32;
@@ -584,7 +587,9 @@ pub fn annotate_identifier_type(
             let element_type = loop {
                 if let ast_types::DataType::List(elem_ty, _) = &forced_list_type {
                     break elem_ty;
-                } else if let ast_types::DataType::MemPointer(inner_type) = forced_list_type {
+                } else if let ast_types::DataType::Reference(inner_type) = forced_list_type {
+                    forced_list_type = *inner_type.to_owned();
+                } else if let ast_types::DataType::Boxed(inner_type) = forced_list_type {
                     forced_list_type = *inner_type.to_owned();
                 } else {
                     panic!("Cannot index into {list_identifier} of type {maybe_list_type}");
@@ -593,11 +598,11 @@ pub fn annotate_identifier_type(
 
             // If list_identifier is a MemPointer, and the element type is not copyable,
             // then the element type statys a MemPointer.
-            let element_type = if let ast_types::DataType::MemPointer(_) = maybe_list_type {
+            let element_type = if let ast_types::DataType::Boxed(_) = maybe_list_type {
                 if element_type.is_copy() {
                     *element_type.to_owned()
                 } else {
-                    ast_types::DataType::MemPointer(element_type.to_owned())
+                    ast_types::DataType::Boxed(element_type.to_owned())
                 }
             } else {
                 *element_type.to_owned()
@@ -610,10 +615,10 @@ pub fn annotate_identifier_type(
         }
 
         // x.foo
-        ast::Identifier::Field(ident, field_name, annot) => {
+        ast::Identifier::Field(ident, field_id, annot) => {
             let (receiver_type, mutable) = annotate_identifier_type(ident, state, fn_signature);
             // Only structs have fields, so receiver_type must be a struct, or a pointer to a struct.
-            let data_type = receiver_type.field_access_returned_type(field_name);
+            let data_type = receiver_type.field_access_returned_type(field_id);
             *annot = Typing::KnownType(data_type.clone());
 
             (data_type, mutable)
@@ -633,6 +638,23 @@ fn get_fn_signature(
         if let Some(fn_name) = lib.get_function_name(name) {
             return lib.function_name_to_signature(&fn_name, type_parameter.to_owned(), args);
         }
+    }
+
+    // Associated functions are in scope, they must be called with `<Type>::<function_name>`
+    let split_name = name.split("::").collect_vec();
+    if split_name.len() > 1 {
+        let associated_type_name = split_name[0];
+        let fn_name = split_name[1];
+
+        let ret_value = match state.associated_functions.get(associated_type_name) {
+            Some(entry) => {
+                match entry.get(fn_name) {
+                Some(function) => function.signature.to_owned(),
+                None => panic!("Don't know associated function '{fn_name}' for type {associated_type_name}"),
+            }},
+            None => panic!("Don't know type {associated_type_name} for which an associated function call {fn_name} is made"),
+        };
+        return ret_value;
     }
 
     state
@@ -661,11 +683,12 @@ fn get_method_signature(
         // in the method) matches `forced_type` exactly , use it (a "by value method")
         for declared_method in state.declared_methods.iter() {
             if declared_method.signature.name == name {
-                let method_receiver_type = args[0].get_type();
+                let method_receiver_type = declared_method.receiver_type();
                 if method_receiver_type == forced_type {
-                    if let ast::Expr::Var(var) = &mut args[0] {
+                    if let ast::Expr::Var(ref mut var) = &mut args[0] {
                         var.force_type(&forced_type);
                     }
+
                     return declared_method.signature.clone();
                 }
             }
@@ -683,14 +706,15 @@ fn get_method_signature(
 
         // 2. therwise, add one auto-ref (take & or &mut of the receiver), and,
         // if some method's receiver matches &U, use it (an "autorefd method")
-        let auto_refd_forced_type = ast_types::DataType::MemPointer(Box::new(forced_type.clone()));
+        let auto_refd_forced_type = ast_types::DataType::Reference(Box::new(forced_type.clone()));
         for declared_method in state.declared_methods.iter() {
             if declared_method.signature.name == name {
-                let method_receiver_type = args[0].get_type();
+                let method_receiver_type = declared_method.receiver_type();
                 if method_receiver_type == auto_refd_forced_type {
                     if let ast::Expr::Var(var) = &mut args[0] {
                         var.force_type(&auto_refd_forced_type);
                     }
+
                     return declared_method.signature.clone();
                 }
             }
@@ -710,8 +734,10 @@ fn get_method_signature(
             }
         }
 
-        // Keep stripping `MemPointer` until we find a match
-        if let ast_types::DataType::MemPointer(inner_type) = forced_type {
+        // Keep stripping `References` until we find a match
+        if let ast_types::DataType::Reference(inner_type) = forced_type {
+            forced_type = *inner_type.to_owned();
+        } else if let ast_types::DataType::Boxed(inner_type) = forced_type {
             forced_type = *inner_type.to_owned();
         } else {
             try_again = false;
@@ -797,6 +823,7 @@ fn derive_annotate_expr_type(
         ast::Expr::Lit(ast::ExprLit::Bool(_)) => ast_types::DataType::Bool,
         ast::Expr::Lit(ast::ExprLit::U32(_)) => ast_types::DataType::U32,
         ast::Expr::Lit(ast::ExprLit::U64(_)) => ast_types::DataType::U64,
+        ast::Expr::Lit(ast::ExprLit::U128(_)) => ast_types::DataType::U128,
         ast::Expr::Lit(ast::ExprLit::BFE(_)) => ast_types::DataType::BFE,
         ast::Expr::Lit(ast::ExprLit::XFE(_)) => ast_types::DataType::XFE,
         ast::Expr::Lit(ast::ExprLit::Digest(_)) => ast_types::DataType::Digest,
@@ -805,24 +832,8 @@ fn derive_annotate_expr_type(
             mem_pointer_declared_type,
             resolved_type,
         })) => {
-            // First get the type from the declared structs list, then
-            // resolve types on the declared struct in case of nested
-            // structs.
-            let resolved_inner_type = match mem_pointer_declared_type {
-                ast_types::DataType::Unresolved(struct_name) => {
-                    let resolved_inner_type = state
-                        .declared_structs
-                        .get(struct_name)
-                        .unwrap_or_else(|| panic!("{struct_name} not known to type checker"));
-                    ast_types::DataType::Struct(resolved_inner_type.to_owned())
-                        .resolve_types(&state.declared_structs)
-                }
-                ast_types::DataType::List(_, _) => mem_pointer_declared_type.to_owned(),
-                _ => todo!(),
-            };
-            let ret = ast_types::DataType::MemPointer(Box::new(resolved_inner_type));
+            let ret = ast_types::DataType::Boxed(Box::new(mem_pointer_declared_type.to_owned()));
             *resolved_type = Typing::KnownType(ret.clone());
-
             ret
         }
         ast::Expr::Lit(ast::ExprLit::GenericNum(n, _t)) => {
@@ -838,6 +849,10 @@ fn derive_annotate_expr_type(
                 Some(&U64) => {
                     *expr = ast::Expr::Lit(ast::ExprLit::U64(TryInto::<u64>::try_into(*n).unwrap()));
                     U64
+                }
+                Some(&U128) => {
+                    *expr = ast::Expr::Lit(ast::ExprLit::U128(TryInto::<u128>::try_into(*n).unwrap()));
+                    U128
                 }
                 Some(&BFE) => {
                     assert!(*n <= BFieldElement::MAX as u128);
@@ -871,7 +886,7 @@ fn derive_annotate_expr_type(
                 .iter_mut()
                 .map(|expr| derive_annotate_expr_type(expr, no_hint, state, env_fn_signature))
                 .collect();
-            ast_types::DataType::Tuple(tuple_types)
+            ast_types::DataType::Tuple(tuple_types.into())
         }
 
         ast::Expr::FnCall(ast::FnCall {
@@ -919,60 +934,67 @@ fn derive_annotate_expr_type(
             callees_method_signature.output
         }
 
-        ast::Expr::Unary(unaryop, inner_expr, unaryop_type) => {
+        ast::Expr::Unary(unaryop, rhs_expr, unaryop_type) => {
             use ast::UnaryOp::*;
-            let inner_expr_type =
-                derive_annotate_expr_type(inner_expr, hint, state, env_fn_signature);
+            let rhs_type = derive_annotate_expr_type(rhs_expr, hint, state, env_fn_signature);
             match unaryop {
                 Neg => {
                     assert!(
-                        is_negatable_type(&inner_expr_type),
-                        "Cannot negate type '{inner_expr_type}'",
+                        is_negatable_type(&rhs_type),
+                        "Cannot negate type '{rhs_type}'",
                     );
-                    *unaryop_type = Typing::KnownType(inner_expr_type.clone());
-                    inner_expr_type
+                    *unaryop_type = Typing::KnownType(rhs_type.clone());
+                    rhs_type
                 }
                 Not => {
                     assert!(
-                        type_compatible_with_not(&inner_expr_type),
-                        "Cannot negate type '{inner_expr_type}'",
+                        type_compatible_with_not(&rhs_type),
+                        "Cannot negate type '{rhs_type}'",
                     );
-                    *unaryop_type = Typing::KnownType(inner_expr_type.clone());
-                    inner_expr_type
+                    *unaryop_type = Typing::KnownType(rhs_type.clone());
+                    rhs_type
                 }
                 Deref => {
-                    match inner_expr_type {
-                        ast_types::DataType::MemPointer(inner_inner_type) => {
+                    match rhs_type {
+                        ast_types::DataType::Reference(inner_inner_type) => {
                             *unaryop_type = Typing::KnownType(*inner_inner_type.clone());
                             *inner_inner_type
                         },
-                        _ =>  panic!("Cannot dereference type of `{inner_expr_type}` as this expression has:\n{inner_expr:#?}")
+                        ast_types::DataType::Boxed(inner_inner_type) => {
+                            *unaryop_type = Typing::KnownType(*inner_inner_type.clone());
+                            *inner_inner_type
+                        },
+                        _ =>  panic!("Cannot dereference type of `{rhs_type}` as this expression has:\n{rhs_expr:#?}")
                     }
                 }
                 Ref(_mutable) => {
-                    if inner_expr_type.is_copy() {
-                        *unaryop_type = Typing::KnownType(inner_expr_type.clone());
-                        inner_expr_type
-                    } else {
-                        match inner_expr_type {
-                            ast_types::DataType::List(_, _) => {
-                                let resulting_type = ast_types::DataType::MemPointer(Box::new(inner_expr_type));
-                                *unaryop_type = Typing::KnownType(resulting_type.clone());
-                                resulting_type
-                            }
-                            ast_types::DataType::MemPointer(inner_inner_expr_type) => {
-                                match *inner_inner_expr_type {
-                                    ast_types::DataType::List(_, _) => {
-                                        let resulting_type = ast_types::DataType::MemPointer(Box::new(*inner_inner_expr_type));
-                                        *unaryop_type = Typing::KnownType(resulting_type.clone());
-                                        resulting_type
-                                    },
-                                    _ => panic!("Can only reference Copy types or `Vec<T>` for now. Got: {inner_expr:?}")
-                                }
-                            },
-                            _ => panic!("Can only reference Copy types or `Vec<T>` for now. Got: {inner_expr:?}")
-                    }
-                }
+                    let resulting_type = ast_types::DataType::Reference(Box::new(rhs_type));
+                    *unaryop_type = Typing::KnownType(resulting_type.clone());
+                    resulting_type
+                    // if inner_expr_type.is_copy() {
+                    //     let resulting_type = ast_types::DataType::Boxed(Box::new(inner_expr_type));
+                    //     *unaryop_type = Typing::KnownType(resulting_type.clone());
+                    //     resulting_type
+                    // } else {
+                    //     match inner_expr_type {
+                    //         ast_types::DataType::List(_, _) => {
+                    //             let resulting_type = ast_types::DataType::Boxed(Box::new(inner_expr_type));
+                    //             *unaryop_type = Typing::KnownType(resulting_type.clone());
+                    //             resulting_type
+                    //         }
+                    //         ast_types::DataType::Boxed(inner_inner_expr_type) => {
+                    //             match *inner_inner_expr_type {
+                    //                 ast_types::DataType::List(_, _) => {
+                    //                     let resulting_type = ast_types::DataType::Boxed(Box::new(*inner_inner_expr_type));
+                    //                     *unaryop_type = Typing::KnownType(resulting_type.clone());
+                    //                     resulting_type
+                    //                 },
+                    //                 _ => panic!("Can only reference Copy types or `Vec<T>` for now. Got: {inner_expr:?}")
+                    //             }
+                    //         },
+                    //         _ => panic!("Can only reference Copy types or `Vec<T>` for now. Got: {inner_expr:?}")
+                    // }
+                // }
                 },
             }
         }
@@ -1392,7 +1414,7 @@ pub fn is_u32_based_type(data_type: &ast_types::DataType) -> bool {
 /// A non-composite fixed-length type.
 pub fn is_primitive_type(data_type: &ast_types::DataType) -> bool {
     use ast_types::DataType::*;
-    matches!(data_type, Bool | U32 | U64 | BFE | XFE | Digest)
+    matches!(data_type, Bool | U32 | U64 | U128 | BFE | XFE | Digest)
 }
 
 pub fn is_void_type(data_type: &ast_types::DataType) -> bool {

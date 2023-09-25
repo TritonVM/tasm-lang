@@ -73,13 +73,20 @@ pub fn graft_check_compile_prop(
     // type-check and annotate. Doesn't handle structs and methods yet.
     annotate_fn_outer(
         &mut intermediate_language_ast,
-        HashMap::default(),
+        &HashMap::default(),
         &mut Vec::default(),
+        &mut HashMap::default(),
         &libraries,
     );
 
     // compile
-    let tasm = compile_function(&intermediate_language_ast, &libraries, Vec::default());
+    let tasm = compile_function(
+        &intermediate_language_ast,
+        &libraries,
+        Vec::default(),
+        &HashMap::default(),
+        &HashMap::default(),
+    );
     tasm.compose()
 }
 
@@ -150,7 +157,11 @@ pub fn execute_compiled_with_stack_memory_and_ins_for_test(
                 },
             })
         }
-        Err((err, _last_vm_state)) => anyhow::bail!("VM execution failed with error: {}", err),
+        Err((err, last_vm_state)) => anyhow::bail!(
+            "VM execution failed with error: {}\n Last VM state\n: {}",
+            err,
+            last_vm_state
+        ),
     }
 }
 
@@ -262,7 +273,7 @@ pub fn compare_compiled_prop_with_stack_and_memory_and_ins(
             .skip(DIGEST_LENGTH)
             .cloned()
             .collect_vec(),
-        "Code execution must produce expected stack `{}`. \n\nTVM:\n{}\n\nExpected:\n{}\n",
+        "Code execution must produce expected stack `{}`. \n\nTVM:\n{}\n\nExpected:\n{}\n\nCode was:\n{}",
         function_name,
         exec_result
             .final_stack
@@ -275,6 +286,7 @@ pub fn compare_compiled_prop_with_stack_and_memory_and_ins(
             .map(|x| x.to_string())
             .collect_vec()
             .join(","),
+        code.iter().join("\n")
     );
 
     // Verify that memory behaves as expected, if expected value is set. Don't bother verifying the value
@@ -520,6 +532,10 @@ pub fn u32_lit(value: u32) -> ast::ExprLit<type_checker::Typing> {
 
 pub fn u64_lit(value: u64) -> ast::ExprLit<type_checker::Typing> {
     ast::ExprLit::U64(value)
+}
+
+pub fn u128_lit(value: u128) -> ast::ExprLit<type_checker::Typing> {
+    ast::ExprLit::U128(value)
 }
 
 pub fn bfe_lit(value: BFieldElement) -> ast::ExprLit<type_checker::Typing> {

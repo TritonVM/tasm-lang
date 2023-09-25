@@ -154,7 +154,7 @@ mod tests {
     };
 
     #[test]
-    fn xfe_ntt_test() {
+    fn recursive_xfe_ntt_test() {
         // Test function on host machine
         for input_length in [2, 4, 8, 16, 32, 64] {
             let xfes: Vec<XFieldElement> = random_elements(input_length);

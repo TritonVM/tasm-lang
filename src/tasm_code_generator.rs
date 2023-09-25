@@ -16,7 +16,7 @@ use twenty_first::shared_math::b_field_element::BFieldElement;
 use twenty_first::shared_math::bfield_codec::BFieldCodec;
 
 use self::subroutine::SubRoutine;
-use crate::ast_types;
+use crate::ast_types::{self, StructVariant};
 use crate::libraries::{self};
 use crate::stack::Stack;
 use crate::type_checker::GetType;
@@ -220,6 +220,7 @@ pub struct GlobalCodeGeneratorState {
     counter: usize,
     snippet_state: SnippetState,
     compiled_methods: HashMap<String, InnerFunctionTasmCode>,
+    compiled_associated_functions: HashMap<String, InnerFunctionTasmCode>,
 }
 
 // TODO: Maybe this needs a new lifetime specifier, `'b`?
@@ -233,7 +234,11 @@ pub struct CompilerState<'a> {
 
     libraries: &'a [Box<dyn libraries::Library>],
 
+    declared_structs: &'a HashMap<String, ast_types::StructType>,
+
     declared_methods: &'a [ast::Method<type_checker::Typing>],
+
+    associated_functions: &'a HashMap<String, HashMap<String, ast::Fn<type_checker::Typing>>>,
 }
 
 impl<'a> CompilerState<'a> {
@@ -251,12 +256,16 @@ impl<'a> CompilerState<'a> {
         global_compiler_state: GlobalCodeGeneratorState,
         libraries: &'a [Box<dyn libraries::Library>],
         declared_methods: &'a [ast::Method<type_checker::Typing>],
+        associated_functions: &'a HashMap<String, HashMap<String, ast::Fn<type_checker::Typing>>>,
+        declared_structs: &'a HashMap<String, ast_types::StructType>,
     ) -> Self {
         Self {
             global_compiler_state,
             function_state: FunctionState::default(),
             libraries,
             declared_methods,
+            associated_functions,
+            declared_structs,
         }
     }
 
@@ -267,6 +276,8 @@ impl<'a> CompilerState<'a> {
         required_spills: HashSet<ValueIdentifier>,
         libraries: &'a [Box<dyn libraries::Library>],
         declared_methods: &'a [ast::Method<type_checker::Typing>],
+        associated_functions: &'a HashMap<String, HashMap<String, ast::Fn<type_checker::Typing>>>,
+        declared_structs: &'a HashMap<String, ast_types::StructType>,
     ) -> Self {
         Self {
             global_compiler_state,
@@ -278,6 +289,8 @@ impl<'a> CompilerState<'a> {
             },
             libraries,
             declared_methods,
+            associated_functions,
+            declared_structs,
         }
     }
 
@@ -377,34 +390,6 @@ impl<'a> CompilerState<'a> {
                     None => ValueLocation::OpStack(position),
                 }
             }
-            ast::Identifier::TupleIndex(lhs_id, tuple_index, _known_type) => {
-                let lhs_location = self.locate_identifier(lhs_id);
-                let lhs_type = lhs_id.get_type();
-                let element_types = if let ast_types::DataType::Tuple(ets) = lhs_type {
-                    ets
-                } else {
-                    panic!("Expected type was tuple. Got {lhs_type}.")
-                };
-
-                // Last element of the tuple is stored on top of the stack
-                let tuple_depth: usize = element_types
-                    .iter()
-                    .enumerate()
-                    .filter(|(i, _x)| *i > *tuple_index)
-                    .map(|(_i, x)| x.stack_size())
-                    .sum::<usize>();
-
-                match lhs_location {
-                    ValueLocation::OpStack(n) => ValueLocation::OpStack(n + tuple_depth),
-                    ValueLocation::StaticMemoryAddress(p) => {
-                        ValueLocation::StaticMemoryAddress(p + tuple_depth as u32)
-                    }
-                    ValueLocation::DynamicMemoryAddress(code) => {
-                        let new_code = [code, triton_asm!(push {tuple_depth} add)].concat();
-                        ValueLocation::DynamicMemoryAddress(new_code)
-                    }
-                }
-            }
             ast::Identifier::ListIndex(ident, index_expr, element_type) => {
                 let element_type = element_type.get_type();
                 let lhs_location = self.locate_identifier(ident);
@@ -496,31 +481,86 @@ impl<'a> CompilerState<'a> {
 
                 ValueLocation::DynamicMemoryAddress(element_address)
             }
-            ast::Identifier::Field(ident, field_name, known_type) => {
-                let lhs_location = self.locate_identifier(ident);
+            ast::Identifier::Field(lhs, field_id, known_type) => {
+                let lhs_location = self.locate_identifier(lhs);
+                let lhs_type = lhs.get_type();
 
-                let get_struct_pointer =
-                    get_lhs_address_code(self, &lhs_location, &known_type.get_type(), ident);
-                // stack: _ struct_pointer
+                let get_ident_code =
+                    get_lhs_address_code(self, &lhs_location, &known_type.get_type(), lhs);
+                // stack: _ struct/tuple
+
+                fn handle_tuple(
+                    tuple: ast_types::Tuple,
+                    field_id: &ast_types::FieldId,
+                    lhs_location: ValueLocation,
+                ) -> ValueLocation {
+                    let tuple_index: usize = field_id.try_into().unwrap();
+                    let tuple_depth: usize = tuple
+                        .into_iter()
+                        .enumerate()
+                        .filter(|(i, _x)| *i > tuple_index)
+                        .map(|(_i, x)| x.stack_size())
+                        .sum::<usize>();
+                    match lhs_location {
+                        ValueLocation::OpStack(n) => ValueLocation::OpStack(n + tuple_depth),
+                        ValueLocation::StaticMemoryAddress(p) => {
+                            ValueLocation::StaticMemoryAddress(p + tuple_depth as u32)
+                        }
+                        ValueLocation::DynamicMemoryAddress(code) => {
+                            let new_code = [code, triton_asm!(push {tuple_depth} add)].concat();
+                            ValueLocation::DynamicMemoryAddress(new_code)
+                        }
+                    }
+                }
 
                 // limited field support for now
-                let ident_type = ident.get_type();
-                let get_field_pointer_from_struct_pointer = match ident.get_type() {
-                    ast_types::DataType::MemPointer(inner_type) => match *inner_type {
+                match lhs.get_type() {
+                    ast_types::DataType::Boxed(inner_type) => match *inner_type {
                         ast_types::DataType::Struct(inner_struct) => {
-                            inner_struct.get_field_accessor_code(field_name)
+                            let get_field_pointer_from_struct_pointer =
+                                inner_struct.get_field_accessor_code(field_id);
+                            ValueLocation::DynamicMemoryAddress(triton_asm!(
+                                {&get_ident_code}
+                                {&get_field_pointer_from_struct_pointer}
+                            ))
                         }
-                        _ => todo!("ident_type: {ident_type}"),
+                        ast_types::DataType::Tuple(tuple) => {
+                            let tuple_index: usize = field_id.try_into().unwrap();
+                            let tuple_depth: usize = tuple
+                                .into_iter()
+                                .enumerate()
+                                .filter(|(i, _x)| *i > tuple_index)
+                                .map(|(_i, x)| x.stack_size())
+                                .sum::<usize>();
+
+                            ValueLocation::DynamicMemoryAddress(triton_asm!(
+                                {&get_ident_code}
+                                push {tuple_depth}
+                                add
+                            ))
+                        }
+                        _ => todo!("lhs_type: {lhs_type}"),
                     },
-                    _ => todo!("ident_type: {ident_type}"),
-                };
-
-                // stack: _ field_pointer
-
-                ValueLocation::DynamicMemoryAddress(triton_asm!(
-                    {&get_struct_pointer}
-                    {&get_field_pointer_from_struct_pointer}
-                ))
+                    ast_types::DataType::Tuple(tuple) => {
+                        handle_tuple(tuple, field_id, lhs_location)
+                    }
+                    ast_types::DataType::Struct(struct_type) => match struct_type.variant {
+                        StructVariant::TupleStruct(tuple) => {
+                            handle_tuple(tuple, field_id, lhs_location)
+                        }
+                        StructVariant::NamedFields(_) => todo!(),
+                    },
+                    ast_types::DataType::Reference(inner_type) => match *inner_type {
+                        ast_types::DataType::Struct(struct_type) => match struct_type.variant {
+                            StructVariant::TupleStruct(tuple) => {
+                                handle_tuple(tuple, field_id, lhs_location)
+                            }
+                            StructVariant::NamedFields(_) => todo!(),
+                        },
+                        _ => todo!("lhs_type: {lhs_type}"),
+                    },
+                    _ => todo!("lhs_type: {lhs_type}"),
+                }
             }
         }
     }
@@ -582,6 +622,9 @@ impl<'a> CompilerState<'a> {
             .into_iter()
             .map(|(_name, code)| code)
             .collect_vec();
+
+        // Compile all associated functions
+        // self.associated_functions.values().map(|x| x.values().map(|y| compi))
 
         OuterFunctionTasmCode {
             function_data: inner_function,
@@ -940,6 +983,8 @@ fn compile_function_inner(
     global_compiler_state: &mut GlobalCodeGeneratorState,
     libraries: &[Box<dyn libraries::Library>],
     declared_methods: &[ast::Method<type_checker::Typing>],
+    associated_functions: &HashMap<String, HashMap<String, ast::Fn<type_checker::Typing>>>,
+    declared_structs: &HashMap<String, ast_types::StructType>,
 ) -> InnerFunctionTasmCode {
     let fn_name = &function.signature.name;
     let _fn_stack_output_sig = format!("{}", function.signature.output);
@@ -950,6 +995,8 @@ fn compile_function_inner(
             global_compiler_state.to_owned(),
             libraries,
             declared_methods,
+            associated_functions,
+            declared_structs,
         );
         let fn_arg_spilling = temporary_fn_state
             .add_input_arguments_to_vstack_and_return_spilled_fn_args(&function.signature.args);
@@ -974,6 +1021,8 @@ fn compile_function_inner(
         spills,
         libraries,
         declared_methods,
+        associated_functions,
+        declared_structs,
     );
 
     // Add function arguments to the compiler's view of the stack.
@@ -1007,17 +1056,23 @@ pub(crate) fn compile_function(
     function: &ast::Fn<type_checker::Typing>,
     libraries: &[Box<dyn libraries::Library>],
     declared_methods: Vec<ast::Method<type_checker::Typing>>,
+    associated_functions: &HashMap<String, HashMap<String, ast::Fn<type_checker::Typing>>>,
+    declared_structs: &HashMap<String, ast_types::StructType>,
 ) -> OuterFunctionTasmCode {
     let mut state = CompilerState::new(
         GlobalCodeGeneratorState::default(),
         libraries,
         &declared_methods,
+        associated_functions,
+        declared_structs,
     );
     let compiled_function = compile_function_inner(
         function,
         &mut state.global_compiler_state,
         libraries,
         &declared_methods,
+        associated_functions,
+        declared_structs,
     );
 
     state.compose_code_for_outer_function(compiled_function)
@@ -1297,6 +1352,8 @@ fn compile_stmt(
                 &mut state.global_compiler_state,
                 state.libraries,
                 state.declared_methods,
+                state.associated_functions,
+                state.declared_structs,
             );
             state
                 .function_state
@@ -1343,10 +1400,68 @@ fn compile_fn_call(
         }
     }
 
+    // Associated functions are in scope, they must be called with `<Type>::<function_name>`
     if call_fn_code.is_empty() {
-        // Function is not a library function, but type checker has guaranteed that it is in
-        // scope. So we just call it.
-        call_fn_code.append(&mut triton_asm!(call { name }));
+        let split_name = name.split("::").collect_vec();
+        if split_name.len() > 1 {
+            let associated_type_name = split_name[0];
+            let fn_name = split_name[1];
+
+            let assoc_fun = match state.associated_functions.get(associated_type_name) {
+                Some(entry) => {
+                    match entry.get(fn_name) {
+                        Some(function) => function.to_owned(),
+                        None => panic!("Don't know associated function '{fn_name}' for type {associated_type_name}"),
+                    }},
+                    None => panic!("Don't know type {associated_type_name} for which an associated function {fn_name} is made"),
+                };
+
+            let function_label: String = assoc_fun.get_tasm_label();
+            call_fn_code.append(&mut triton_asm!(call { function_label }));
+
+            if !state
+                .global_compiler_state
+                .compiled_associated_functions
+                .contains_key(&function_label)
+            {
+                // Insert something with the right label *before* compiling,
+                // otherwise the methods cannot handle recursion.
+                state.global_compiler_state.compiled_methods.insert(
+                    function_label.clone(),
+                    InnerFunctionTasmCode::dummy_value(&function_label),
+                );
+
+                // Compile the method as a function and add it to compiled methods
+                let compiled_function = compile_function_inner(
+                    &assoc_fun,
+                    &mut state.global_compiler_state,
+                    state.libraries,
+                    state.declared_methods,
+                    state.associated_functions,
+                    state.declared_structs,
+                );
+
+                state
+                    .global_compiler_state
+                    .compiled_methods
+                    .insert(function_label.clone(), compiled_function);
+            }
+        }
+    }
+
+    if call_fn_code.is_empty() {
+        // Is the function a tuple constuctor? `struct Foo(u32); let a = Foo(200);`
+        if let Some(struct_type) = state.declared_structs.get(&name) {
+            assert!(
+                matches!(struct_type.variant, StructVariant::TupleStruct(_)),
+                "Can only call tuple constructor of tuple struct. Got: {struct_type}"
+            );
+            call_fn_code.append(&mut struct_type.constructor(state.declared_structs).body.clone());
+        } else {
+            // Function is not a library function, but type checker has guaranteed that it is in
+            // scope. So we just call it.
+            call_fn_code.append(&mut triton_asm!(call { name }));
+        }
     }
 
     // Remove function arguments from vstack since they're not visible after the function call
@@ -1379,11 +1494,13 @@ fn compile_method_call(
             })
             .unzip();
 
-    // First check if this is a locally declared method
+    // First check if this is a declared method
     let mut call_code = vec![];
     for declared_method in state.declared_methods.iter() {
         if method_call.method_name == declared_method.signature.name
-            && receiver_type == declared_method.receiver_type()
+            && (receiver_type == declared_method.receiver_type() ||
+            // TODO: Type checker should handle this. Remove this extra condition!
+            ast_types::DataType::Boxed(Box::new(receiver_type.clone())) == declared_method.receiver_type())
         {
             let method_label = declared_method.get_tasm_label();
             if !state
@@ -1404,6 +1521,8 @@ fn compile_method_call(
                     &mut state.global_compiler_state,
                     state.libraries,
                     state.declared_methods,
+                    state.associated_functions,
+                    state.declared_structs,
                 );
 
                 state
@@ -1428,7 +1547,10 @@ fn compile_method_call(
         }
     }
 
-    assert!(!call_code.is_empty(), "Unknown method: {method_name}");
+    assert!(
+        !call_code.is_empty(),
+        "Unknown method: \"{method_name}\" for receiver type \"{receiver_type}\""
+    );
 
     // Update vstack to reflect that all input arguments, including receiver
     // were consumed.
@@ -1464,6 +1586,17 @@ fn compile_expr(
                 let code = stack_serialized
                     .iter()
                     .flat_map(|bfe| triton_asm!(push {**bfe}))
+                    .collect_vec();
+
+                code
+            }
+
+            ast::ExprLit::U128(value) => {
+                let mut stack_serialized = value.encode();
+                stack_serialized.reverse();
+                let code = stack_serialized
+                    .iter()
+                    .flat_map(|bfe| triton_asm!(push {*bfe}))
                     .collect_vec();
 
                 code
@@ -1571,17 +1704,17 @@ fn compile_expr(
 
         ast::Expr::MethodCall(method_call) => compile_method_call(method_call, state),
 
-        ast::Expr::Unary(unaryop, inner_expr, _known_type) => {
-            let inner_type = inner_expr.get_type();
-            let (_inner_expr_addr, inner_expr_code) =
-                compile_expr(inner_expr, "unop_operand", state);
+        ast::Expr::Unary(unaryop, rhs_expr, _known_type) => {
+            let rhs_type = rhs_expr.get_type();
+            // panic!("Hi from `Unary`:\n rhs_type: {rhs_type:?}\n unaryop: {unaryop:?}\n inner_expr: {unaryop:?}\n _known_type: {_known_type:?}");
+            let (_inner_expr_addr, inner_expr_code) = compile_expr(rhs_expr, "unop_operand", state);
             let code = match unaryop {
-                ast::UnaryOp::Neg => match inner_type {
+                ast::UnaryOp::Neg => match rhs_type {
                     ast_types::DataType::BFE => triton_asm!(push -1 mul),
                     ast_types::DataType::XFE => triton_asm!(push -1 xbmul),
-                    _ => panic!("Unsupported negation of type {inner_type}"),
+                    _ => panic!("Unsupported negation of type {rhs_type}"),
                 },
-                ast::UnaryOp::Not => match inner_type {
+                ast::UnaryOp::Not => match rhs_type {
                     ast_types::DataType::Bool => triton_asm!(push 0 eq),
                     ast_types::DataType::U32 => triton_asm!(push {u32::MAX as u64} xor),
                     ast_types::DataType::U64 => triton_asm!(
@@ -1592,9 +1725,18 @@ fn compile_expr(
                         push {u32::MAX as u64}
                         xor
                     ),
-                    _ => panic!("Unsupported not of type {inner_type}"),
+                    _ => panic!("Unsupported not of type {rhs_type}"),
                 },
-                ast::UnaryOp::Deref => dereference(&inner_type),
+                ast::UnaryOp::Deref => {
+                    if let ast_types::DataType::Boxed(inner_type) = rhs_type {
+                        println!("inner type for deref is: {inner_type}");
+                        println!("result_type is {result_type}");
+                        println!("expression is: {expr}");
+                        dereference(&inner_type)
+                    } else {
+                        panic!("Cannot dereference non-pointers. Type was: {rhs_type}")
+                    }
+                }
 
                 // This reference only works for `Vec<T>` and `MemPointer<U>`, for these data types `S` it
                 // holds that `eval(MemPointer<S>) == eval(S)`, so we don't need to do anything here. For
@@ -2026,6 +2168,17 @@ fn compile_expr(
                                 call {fn_name}
                             )
                         }
+                        (U128, U128) => {
+                            let fn_name = state.import_snippet(Box::new(
+                                arithmetic::u128::safe_mul_u128::SafeMulU128,
+                            ));
+
+                            triton_asm!(
+                                {&lhs_expr_code}
+                                {&rhs_expr_code}
+                                call {fn_name}
+                            )
+                        }
                         (BFE, BFE) => triton_asm!(
                             {&lhs_expr_code}
                             {&rhs_expr_code}
@@ -2100,13 +2253,15 @@ fn compile_expr(
                         compile_expr(rhs_expr, "_binop_rhs", state);
 
                     let lhs_type = lhs_expr.get_type();
-                    let shl = if matches!(lhs_type, ast_types::DataType::U32) {
-                        state.import_snippet(Box::new(arithmetic::u32::shift_left::ShiftLeftU32))
-                    } else if matches!(lhs_type, ast_types::DataType::U64) {
-                        state
-                            .import_snippet(Box::new(arithmetic::u64::shift_left_u64::ShiftLeftU64))
-                    } else {
-                        panic!("Unsupported SHL of type {lhs_type}");
+                    let shl = match lhs_type {
+                        ast_types::DataType::U32 => state.import_snippet(Box::new(arithmetic::u32::shift_left::ShiftLeftU32)),
+                        ast_types::DataType::U64 => state.import_snippet(Box::new(
+                                    arithmetic::u64::shift_left_u64::ShiftLeftU64,
+                                )),
+                        ast_types::DataType::U128 => state.import_snippet(Box::new(
+                            arithmetic::u128::shift_left_u128::ShiftLeftU128,
+                        )),
+                        _ => panic!("Unsupported SHL of type {lhs_type}. Expression was `{lhs_expr}: >> {rhs_expr}`; types: `{lhs_type}`, {}.", rhs_expr.get_type()),
                     };
 
                     state.function_state.vstack.pop();
@@ -2127,14 +2282,17 @@ fn compile_expr(
                         compile_expr(rhs_expr, "_binop_rhs", state);
 
                     let lhs_type = lhs_expr.get_type();
-                    let shr = if matches!(lhs_type, ast_types::DataType::U32) {
-                        state.import_snippet(Box::new(arithmetic::u32::shift_right::ShiftRightU32))
-                    } else if matches!(lhs_type, ast_types::DataType::U64) {
-                        state.import_snippet(Box::new(
-                            arithmetic::u64::shift_right_u64::ShiftRightU64,
-                        ))
-                    } else {
-                        panic!("Unsupported SHL of type {lhs_type}");
+                    // TODO: add optimization where RHS is a literal. Also applies for `Binop::Shl`. We have code snippets
+                    // for left/right shifting u128s with statically known bits.
+                    let shr = match lhs_type {
+                        ast_types::DataType::U32 => state.import_snippet(Box::new(arithmetic::u32::shift_right::ShiftRightU32)),
+                        ast_types::DataType::U64 => state.import_snippet(Box::new(
+                                    arithmetic::u64::shift_right_u64::ShiftRightU64,
+                                )),
+                        ast_types::DataType::U128 => state.import_snippet(Box::new(
+                            arithmetic::u128::shift_right_u128::ShiftRightU128,
+                        )),
+                        _ => panic!("Unsupported SHR of type {lhs_type}. Expression was `{lhs_expr}: >> {rhs_expr}`; types: `{lhs_type}`, {}.", rhs_expr.get_type()),
                     };
 
                     state.function_state.vstack.pop();
@@ -2175,6 +2333,35 @@ fn compile_expr(
                                 swap 3
                                 swap 2
                                 call {sub_u64}
+                            )
+                        }
+                        ast_types::DataType::U128 => {
+                            // As standard, we use safe arithmetic that crashes on overflow
+                            let sub_u128 =
+                                state.import_snippet(Box::new(arithmetic::u128::sub_u128::SubU128));
+                            triton_asm!(
+                                // _ lhs_3 lhs_2 lhs_1 lhs_0 rhs_3 rhs_2 rhs_1 rhs_0
+                                swap 7
+                                // _ rhs_0 lhs_2 lhs_1 lhs_0 rhs_3 rhs_2 rhs_1 lhs_3
+                                swap 6
+                                // _ rhs_0 lhs_3 lhs_1 lhs_0 rhs_3 rhs_2 rhs_1 lhs_2
+                                swap 2
+                                // _ rhs_0 lhs_3 lhs_1 lhs_0 rhs_3 lhs_2 rhs_1 rhs_2
+                                swap 6
+                                // _ rhs_0 rhs_2 lhs_1 lhs_0 rhs_3 lhs_2 rhs_1 lhs_3
+                                swap 3
+                                // _ rhs_0 rhs_2 lhs_1 lhs_0 lhs_3 lhs_2 rhs_1 rhs_3
+                                swap 7
+                                // _ rhs_3 rhs_2 lhs_1 lhs_0 lhs_3 lhs_2 rhs_1 rhs_0
+                                swap 1
+                                // _ rhs_3 rhs_2 lhs_1 lhs_0 lhs_3 lhs_2 rhs_0 rhs_1
+                                swap 5
+                                // _ rhs_3 rhs_2 rhs_1 lhs_0 lhs_3 lhs_2 rhs_0 lhs_1
+                                swap 1
+                                // _ rhs_3 rhs_2 rhs_1 lhs_0 lhs_3 lhs_2 lhs_1 rhs_0
+                                swap 4
+                                // _ rhs_3 rhs_2 rhs_1 rhs_0 lhs_3 lhs_2 lhs_1 lhs_0
+                                call {sub_u128}
                             )
                         }
                         ast_types::DataType::BFE => {
@@ -2331,6 +2518,15 @@ fn compile_expr(
                 }
                 (ast_types::DataType::Bool, ast_types::DataType::U32) => expr_code,
                 (ast_types::DataType::Bool, ast_types::DataType::BFE) => expr_code,
+                (ast_types::DataType::U128, ast_types::DataType::U64) => {
+                    triton_asm!(
+                    {&expr_code}
+                    swap 2
+                    pop
+                    swap 2
+                    pop
+                    )
+                }
                 _ => todo!("previous_type: {previous_type}; result_type: {result_type}"),
             }
         }
@@ -2419,7 +2615,7 @@ fn copy_value_to_memory(
 /// If no static memory pointer is provided, pointer is assumed to be on
 /// top of the stack, above the value that is moved to memory, in
 /// which case this address is also popped from the stack.
-fn move_top_stack_value_to_memory(
+pub fn move_top_stack_value_to_memory(
     static_memory_location: Option<u32>,
     top_value_size: usize,
 ) -> Vec<LabelledInstruction> {
@@ -2462,6 +2658,7 @@ fn copy_top_stack_value_to_memory(
     // address.
     let mut ret = triton_asm!(push {memory_location as u64});
 
+    println!("top_value_size: {top_value_size}");
     for i in 0..top_value_size {
         ret.append(&mut triton_asm!(dup {1 + i as u64}));
         // _ [elements] mem_address element
@@ -2487,15 +2684,15 @@ fn dereference(data_type: &ast_types::DataType) -> Vec<LabelledInstruction> {
     match data_type {
         // From the TASM perspective, a mempointer to a list is the same as a list
         ast_types::DataType::List(_, _) => triton_asm!(),
-        ast_types::DataType::MemPointer(_) => triton_asm!(),
+        ast_types::DataType::Boxed(_) => triton_asm!(),
 
         // No idea how to handle these yet
         ast_types::DataType::VoidPointer => todo!(),
         ast_types::DataType::Function(_) => todo!(),
-        ast_types::DataType::Struct(_) => todo!(),
         ast_types::DataType::Unresolved(_) => todo!(),
 
         // Simple data types are simple read from memory and placed on the stack
+        ast_types::DataType::Struct(_) => load_from_memory(None, data_type.stack_size()),
         _ => load_from_memory(None, data_type.stack_size()),
     }
 }
@@ -2563,7 +2760,25 @@ fn compile_eq_code(
             eq
             mul
         ),
-        U128 => todo!(),
+        U128 => triton_asm!(
+            // _ a_3 a_2 a_1 a_0 b_3 b_2 b_1 b_0
+            swap 5
+            eq
+            // _ a_3 a_2 b_0 a_0 b_3 b_2 (b_1 == a_1)
+            swap 5
+            eq
+            // _ a_3 (b_1 == a_1) b_0 a_0 b_3 (b_2 == a_2)
+            swap 5
+            eq
+            // _ (b_2 == a_2) (b_1 == a_1) b_0 a_0 (b_3 == a_3)
+            swap 2
+            eq
+            // _ (b_2 == a_2) (b_1 == a_1) (b_3 == a_3) (b_0 == a_0)
+            mul
+            mul
+            mul
+            // _ (b_2 == a_2) * (b_1 == a_1) * (b_3 == a_3) * (b_0 == a_0)
+        ),
 
         XFE => triton_asm!(
              // _ a_2 a_1 a_0 b_2 b_1 b_0
@@ -2584,8 +2799,9 @@ fn compile_eq_code(
         Tuple(_) => todo!(),
         Function(_) => todo!(),
         Struct(_) => todo!(),
-        MemPointer(_) => todo!("Comparison of MemPointer not supported yet"),
+        Boxed(_) => todo!("Comparison of MemPointer not supported yet"),
         Unresolved(name) => panic!("Cannot compare unresolved type {name}"),
+        Reference(_) => panic!("Cannot compare references. Got {lhs_type}"),
     }
 }
 
@@ -2611,14 +2827,17 @@ impl ast_types::StructType {
     /// stack element is consumed and the returned value is a pointer to the requested
     /// field in the struct. Note that the top of the stack is where the field begins,
     /// not the size indication of that field.
-    pub fn get_field_accessor_code(&self, field_name: &str) -> Vec<LabelledInstruction> {
+    pub fn get_field_accessor_code(
+        &self,
+        field_id: &ast_types::FieldId,
+    ) -> Vec<LabelledInstruction> {
         // This implementation must match `BFieldCodec` for the equivalent Rust types
         let mut instructions = vec![];
         let mut static_pointer_addition = 0;
-        let needle_name = field_name;
+        let needle_id = field_id;
         let mut needle_type: Option<ast_types::DataType> = None;
-        for (haystack_field_name, haystack_type) in self.fields.iter() {
-            if haystack_field_name == needle_name {
+        for (haystack_field_id, haystack_type) in self.field_ids_and_types_reversed_for_tuples() {
+            if haystack_field_id == *needle_id {
                 // If we've found the field the accumulators are in the right state.
                 // return them.
                 needle_type = Some(haystack_type.to_owned());

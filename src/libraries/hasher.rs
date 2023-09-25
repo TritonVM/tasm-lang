@@ -1,9 +1,11 @@
 use tasm_lib::Digest;
-use triton_vm::{instruction::LabelledInstruction, triton_asm};
+use triton_vm::{instruction::LabelledInstruction, triton_asm, BFieldElement};
+use twenty_first::shared_math::tip5::DIGEST_LENGTH;
 
 use crate::{
     ast, ast_types,
     graft::Graft,
+    libraries::bfe::BfeLibrary,
     tasm_code_generator::{subroutine::SubRoutine, CompilerState},
 };
 
@@ -13,6 +15,7 @@ const HASHER_LIB_INDICATOR: &str = "H::";
 const HASH_PAIR_FUNCTION_NAME: &str = "H::hash_pair";
 const HASH_VARLEN_FUNCTION_NAME: &str = "H::hash_varlen";
 const DEFAULT_DIGEST_FUNCTION: &str = "Digest::default";
+const NEW_DIGEST_FUNCTION: &str = "Digest::new";
 
 #[derive(Clone, Debug)]
 pub struct HasherLib {
@@ -97,7 +100,7 @@ impl Library for HasherLib {
     }
 
     fn get_graft_function_name(&self, full_name: &str) -> Option<String> {
-        if full_name == DEFAULT_DIGEST_FUNCTION {
+        if full_name == DEFAULT_DIGEST_FUNCTION || full_name == NEW_DIGEST_FUNCTION {
             return Some(full_name.to_owned());
         }
 
@@ -106,21 +109,95 @@ impl Library for HasherLib {
 
     fn graft_function(
         &self,
-        _graft_config: &Graft,
+        graft_config: &Graft,
         full_name: &str,
         args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
         _function_type_parameter: Option<ast_types::DataType>,
     ) -> Option<ast::Expr<super::Annotation>> {
-        if full_name != DEFAULT_DIGEST_FUNCTION {
-            panic!("HasherLib cannot graft")
+        fn graft_digest_new(
+            arg_0: &syn::Expr,
+            graft_config: &Graft,
+        ) -> ast::Expr<super::Annotation> {
+            match arg_0 {
+                syn::Expr::Array(syn::ExprArray {
+                    attrs: _,
+                    bracket_token: _,
+                    elems,
+                }) => {
+                    let mut initializer_exprs = vec![];
+                    for elem in elems {
+                        match elem {
+                            syn::Expr::Call(syn::ExprCall {
+                                attrs: _,
+                                func,
+                                paren_token: _,
+                                args,
+                            }) => {
+                                let (name, _type_parameter) = match func.as_ref() {
+                                    syn::Expr::Path(path) => (
+                                        Graft::path_to_ident(&path.path),
+                                        graft_config.path_to_type_parameter(&path.path),
+                                    ),
+                                    other => panic!("unsupported: {other:?}"),
+                                };
+
+                                if let Some(bfe_fn_name) = BfeLibrary.get_graft_function_name(&name)
+                                {
+                                    initializer_exprs.push(
+                                        BfeLibrary
+                                            .graft_function(graft_config, &bfe_fn_name, args, None)
+                                            .unwrap(),
+                                    );
+                                } else {
+                                    panic!();
+                                }
+                            }
+                            _ => panic!("unsupported: {elem:?}"),
+                        }
+                    }
+
+                    let mut bfe_literals = vec![];
+                    for expr in initializer_exprs {
+                        match expr {
+                            ast::Expr::Lit(ast::ExprLit::BFE(bfe)) => {
+                                bfe_literals.push(bfe);
+                            }
+                            _ => {
+                                unreachable!(
+                                    "BFE grafting must return BFE literals. Got: {:#?}",
+                                    expr
+                                )
+                            }
+                        }
+                    }
+
+                    let bfe_literals: [BFieldElement; DIGEST_LENGTH] =
+                        bfe_literals.clone().try_into().unwrap_or_else(|_| {
+                            panic!(
+                            "Digest initialization must happen with {DIGEST_LENGTH} BFEs. Got {}",
+                            bfe_literals.len(),)
+                        });
+
+                    ast::Expr::Lit(ast::ExprLit::Digest(Digest::new(bfe_literals)))
+                }
+                _ => panic!("Digest instantiation must happen with an array"),
+            }
         }
 
-        assert!(
-            args.is_empty(),
-            "Digest::default() should not have any arguments"
-        );
+        if full_name == DEFAULT_DIGEST_FUNCTION {
+            assert!(
+                args.is_empty(),
+                "Digest::default() should not have any arguments"
+            );
 
-        Some(ast::Expr::Lit(ast::ExprLit::Digest(Digest::default())))
+            return Some(ast::Expr::Lit(ast::ExprLit::Digest(Digest::default())));
+        }
+
+        if full_name == NEW_DIGEST_FUNCTION {
+            return Some(graft_digest_new(&args[0], graft_config));
+        }
+
+        panic!("HasherLib cannot graft function {full_name}")
     }
 
     fn graft_method(
@@ -139,12 +216,10 @@ impl HasherLib {
             args: vec![ast_types::AbstractArgument::ValueArgument(
                 ast_types::AbstractValueArg {
                     name: "list".to_owned(),
-                    data_type: ast_types::DataType::MemPointer(Box::new(
-                        ast_types::DataType::List(
-                            Box::new(ast_types::DataType::BFE),
-                            self.list_type,
-                        ),
-                    )),
+                    data_type: ast_types::DataType::Reference(Box::new(ast_types::DataType::List(
+                        Box::new(ast_types::DataType::BFE),
+                        self.list_type,
+                    ))),
                     mutable: false,
                 },
             )],
@@ -191,12 +266,12 @@ fn get_hash_pair_function() -> LibraryFunction {
         args: vec![
             ast_types::AbstractArgument::ValueArgument(ast_types::AbstractValueArg {
                 name: "left".to_owned(),
-                data_type: ast_types::DataType::Digest,
+                data_type: ast_types::DataType::Reference(Box::new(ast_types::DataType::Digest)),
                 mutable: false,
             }),
             ast_types::AbstractArgument::ValueArgument(ast_types::AbstractValueArg {
                 name: "right".to_owned(),
-                data_type: ast_types::DataType::Digest,
+                data_type: ast_types::DataType::Reference(Box::new(ast_types::DataType::Digest)),
                 mutable: false,
             }),
         ],

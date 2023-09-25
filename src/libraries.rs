@@ -7,6 +7,7 @@ use crate::{
 };
 use std::fmt::Debug;
 
+pub mod alloc_boxed;
 pub mod bfe;
 pub mod bfield_codec;
 pub mod hasher;
@@ -28,6 +29,7 @@ pub struct LibraryConfig {
 
 pub fn all_libraries<'a>(config: LibraryConfig) -> Vec<Box<dyn Library + 'a>> {
     vec![
+        Box::new(alloc_boxed::AllocBoxed),
         Box::new(bfe::BfeLibrary),
         Box::new(bfield_codec::BFieldCodecLib {
             list_type: config.list_type,

@@ -35,13 +35,42 @@ impl<'a> Graft<'a> {
         }
     }
 
-    pub fn graft_structs(
+    #[allow(clippy::type_complexity)]
+    pub fn graft_structs_methods_and_associated_functions(
         &self,
         structs_and_methods: HashMap<String, (syn::ItemStruct, Vec<syn::ImplItemMethod>)>,
     ) -> (
         HashMap<String, ast_types::StructType>,
         Vec<ast::Method<Annotation>>,
+        HashMap<String, HashMap<String, ast::Fn<Annotation>>>,
     ) {
+        fn graft_struct_with_named_fields(
+            graft_config: &Graft,
+            struct_name: &str,
+            fields: syn::Fields,
+        ) -> ast_types::NamedFieldsStruct {
+            let mut ast_fields: Vec<(String, ast_types::DataType)> = vec![];
+            for field in fields.into_iter() {
+                let field_name = field.ident.unwrap().to_string();
+                let datatype = graft_config.syn_type_to_ast_type(&field.ty);
+                ast_fields.push((field_name, datatype));
+            }
+
+            ast_types::NamedFieldsStruct {
+                fields: ast_fields,
+                name: struct_name.to_owned(),
+            }
+        }
+
+        fn graft_tuple_struct(graft_config: &Graft, fields: syn::Fields) -> ast_types::Tuple {
+            let mut ast_fields: Vec<ast_types::DataType> = vec![];
+            for field in fields {
+                ast_fields.push(graft_config.syn_type_to_ast_type(&field.ty));
+            }
+
+            ast_fields.into()
+        }
+
         let mut struct_types = HashMap::default();
 
         // Handle structs
@@ -52,7 +81,7 @@ impl<'a> Graft<'a> {
             .collect_vec();
         for struct_ in structs {
             let syn::ItemStruct {
-                attrs: _,
+                attrs,
                 vis: _,
                 struct_token: _,
                 ident,
@@ -61,38 +90,62 @@ impl<'a> Graft<'a> {
                 semi_token: _,
             } = struct_;
             let name = ident.to_string();
-            let mut ast_fields: Vec<(String, ast_types::DataType)> = vec![];
 
-            for field in fields.into_iter() {
-                let field_name = field.ident.unwrap().to_string();
-                let datatype = self.rust_type_to_data_type(&field.ty);
-                ast_fields.push((field_name, datatype));
-            }
+            let is_copy = match attrs.len() {
+                1 => attrs[0].tokens.to_string().contains("Copy"),
+                0 => false,
+                _ => panic!("Can only handl eone line of attributes for now."),
+            };
 
-            struct_types.insert(
-                name.clone(),
-                ast_types::StructType {
-                    name,
-                    fields: ast_fields,
-                },
-            );
+            // Rust structs come in three forms: with named fields, tuple structs, and
+            // unit structs. We don't yet support unit structs, so we can assume that
+            // the struct has at least *one* field.
+            let struct_type = match fields.iter().next().unwrap().ident {
+                Some(_) => ast_types::StructVariant::NamedFields(graft_struct_with_named_fields(
+                    self, &name, fields,
+                )),
+                None => ast_types::StructVariant::TupleStruct(graft_tuple_struct(self, fields)),
+            };
+            let struct_type = ast_types::StructType {
+                is_copy,
+                variant: struct_type,
+                name: name.clone(),
+            };
+
+            struct_types.insert(name.clone(), struct_type);
         }
 
         // Handle methods
-        let struct_names_and_methods = structs_and_methods
+        let struct_names_and_associated_functions = structs_and_methods
             .clone()
             .into_iter()
-            // .flat_map(|(struct_name, (_syn_struct, methods))| methods)
             .map(|(struct_name, (_syn_struct, methods))| (struct_name, methods))
             .collect_vec();
         let mut methods = vec![];
-        for (struct_name, syn_methods) in struct_names_and_methods {
-            for syn_method in syn_methods {
-                methods.push(self.graft_method(&syn_method, &struct_types[&struct_name]));
+        let mut associated_functions = HashMap::default();
+        for (struct_name, assoc_function) in struct_names_and_associated_functions {
+            for syn_method in assoc_function {
+                if syn_method.sig.receiver().is_some() {
+                    // Associated function is a method
+                    methods.push(self.graft_method(&syn_method, &struct_types[&struct_name]));
+                } else {
+                    // Associated function is *not* a method, i.e., does not take `self` argument
+                    let grafted_assoc_function = self.graft_associated_function(&syn_method);
+                    let new_entry = (
+                        grafted_assoc_function.signature.name.clone(),
+                        grafted_assoc_function.clone(),
+                    );
+                    associated_functions
+                        .entry(struct_name.clone())
+                        .and_modify(|x: &mut HashMap<String, ast::Fn<Annotation>>| {
+                            x.insert(new_entry.0.clone(), new_entry.1.clone());
+                        })
+                        .or_insert(HashMap::from([new_entry]));
+                }
             }
         }
 
-        (struct_types, methods)
+        (struct_types, methods, associated_functions)
     }
 
     fn graft_method(
@@ -108,15 +161,23 @@ impl<'a> Graft<'a> {
                 mutability,
                 ..
             } = receiver;
-            assert!(
-                reference.is_some(),
-                "Can only handle &self as receiver for now"
-            );
+            let receiver_data_type = match reference {
+                Some(_) => {
+                    if struct_type.is_copy {
+                        ast_types::DataType::Reference(Box::new(ast_types::DataType::Struct(
+                            struct_type.to_owned(),
+                        )))
+                    } else {
+                        ast_types::DataType::Boxed(Box::new(ast_types::DataType::Struct(
+                            struct_type.to_owned(),
+                        )))
+                    }
+                }
+                None => ast_types::DataType::Struct(struct_type.to_owned()),
+            };
             ast_types::AbstractValueArg {
                 name: "self".to_string(),
-                data_type: ast_types::DataType::MemPointer(Box::new(ast_types::DataType::Struct(
-                    struct_type.to_owned(),
-                ))),
+                data_type: receiver_data_type,
                 mutable: mutability.is_some(),
             }
         } else {
@@ -135,8 +196,6 @@ impl<'a> Graft<'a> {
             .map(ast_types::AbstractArgument::ValueArgument)
             .collect_vec();
 
-        // TODO: Also handle owned `self` as receiver. Now we only allow
-        // `&self`.
         let output = self.graft_return_type(&method.sig.output);
         let signature = ast::FnSignature {
             name: method_name,
@@ -152,6 +211,40 @@ impl<'a> Graft<'a> {
             .collect_vec();
 
         ast::Method { signature, body }
+    }
+
+    /// Graft a function declaration inside an `impl` block of a custom-defined
+    /// structure. The function does not take a `self` as input argument.
+    pub fn graft_associated_function(&self, input: &syn::ImplItemMethod) -> ast::Fn<Annotation> {
+        let function_name = input.sig.ident.to_string();
+        let args = input
+            .sig
+            .inputs
+            .iter()
+            .map(|x| self.graft_fn_arg(x))
+            .collect_vec();
+        let args = args
+            .into_iter()
+            .map(ast_types::AbstractArgument::ValueArgument)
+            .collect_vec();
+        let output = self.graft_return_type(&input.sig.output);
+        println!("output return type: {output:?}");
+        let body = input
+            .block
+            .stmts
+            .iter()
+            .map(|x| self.graft_stmt(x))
+            .collect_vec();
+
+        ast::Fn {
+            signature: ast::FnSignature {
+                name: function_name,
+                args,
+                output,
+                arg_evaluation_order: Default::default(),
+            },
+            body,
+        }
     }
 
     pub fn graft_fn_decl(&self, input: &syn::ItemFn) -> ast::Fn<Annotation> {
@@ -204,23 +297,30 @@ impl<'a> Graft<'a> {
             return self.rust_vec_to_data_type(&rust_type_path.path.segments[0].arguments);
         }
 
-        // Handling `Box<T>`. It would be cool if this could be handled same place as
-        // the handling of `&`. `Box<T>` means `MemPointer<T>` in this compiler.
+        // Handling `Box<T>`
         if rust_type_as_string == "Box" {
             let inner_type = if let syn::PathArguments::AngleBracketed(ab) =
                 &rust_type_path.path.segments[0].arguments
             {
                 assert_eq!(1, ab.args.len(), "Must be Box<T> for *one* generic T.");
                 match &ab.args[0] {
-                    syn::GenericArgument::Type(syn::Type::Path(path)) => {
-                        self.rust_type_path_to_data_type(path)
+                    syn::GenericArgument::Type(inner) => {
+                        // self.rust_type_path_to_data_type(path)
+                        self.syn_type_to_ast_type(inner)
                     }
+                    // syn::GenericArgument::Type(syn::Type::Path(path)) => {
+                    //     self.rust_type_path_to_data_type(path)
+                    // },
+                    // syn::GenericArgument::Lifetime(_) => todo!(),
+                    // syn::GenericArgument::Const(_) => todo!(),
+                    // syn::GenericArgument::Binding(_) => todo!(),
+                    // syn::GenericArgument::Constraint(_) => todo!(),
                     other => panic!("Unsupported type {other:#?}"),
                 }
             } else {
-                panic!("Box must be followed by `<T>`");
+                panic!("Box must be followed by its type parameter `<T>`");
             };
-            return ast_types::DataType::MemPointer(Box::new(inner_type));
+            return ast_types::DataType::Boxed(Box::new(inner_type));
         }
 
         // We only allow the user to use types that are capitalized
@@ -229,6 +329,9 @@ impl<'a> Graft<'a> {
             .next()
             .map_or(false, |c| c.is_uppercase())
         {
+            // Note that `Unresolved` handles `Self` as well.
+            // The `custom_type_resolver` translates `Self` to its
+            // associated type.
             ast_types::DataType::Unresolved(rust_type_as_string)
         } else {
             panic!("Does not know type {rust_type_as_string}");
@@ -251,10 +354,37 @@ impl<'a> Graft<'a> {
         }
     }
 
-    pub fn rust_type_to_data_type(&self, x: &syn::Type) -> ast_types::DataType {
-        match x {
-            syn::Type::Path(data_type) => self.rust_type_path_to_data_type(data_type),
-            ty => panic!("Unsupported type {ty:#?}"),
+    pub fn syn_type_to_ast_type(&self, syn_type: &syn::Type) -> ast_types::DataType {
+        match syn_type {
+            syn::Type::Path(path) => self.rust_type_path_to_data_type(path),
+            syn::Type::Tuple(tuple) => {
+                let element_types = tuple
+                    .elems
+                    .iter()
+                    .map(|x| self.syn_type_to_ast_type(x))
+                    .collect_vec();
+
+                ast_types::DataType::Tuple(element_types.into())
+            }
+            syn::Type::Reference(syn::TypeReference {
+                and_token: _,
+                lifetime: _,
+                mutability: _,
+                elem,
+            }) => match *elem.to_owned() {
+                syn::Type::Path(type_path) => {
+                    let inner_type = self.rust_type_path_to_data_type(&type_path);
+                    // Structs that are not copy must be Boxed for reference arguments to work
+                    if matches!(inner_type, ast_types::DataType::Struct(_)) && !inner_type.is_copy()
+                    {
+                        ast_types::DataType::Boxed(Box::new(inner_type))
+                    } else {
+                        ast_types::DataType::Reference(Box::new(inner_type))
+                    }
+                }
+                _ => todo!(),
+            },
+            other_type => panic!("Unsupported {other_type:#?}"),
         }
     }
 
@@ -263,34 +393,6 @@ impl<'a> Graft<'a> {
         &self,
         rust_type_path: &syn::PatType,
     ) -> (ast_types::DataType, bool) {
-        fn syn_type_to_ast_type(graft_config: &Graft, syn_type: &syn::Type) -> ast_types::DataType {
-            match syn_type {
-                syn::Type::Path(path) => graft_config.rust_type_path_to_data_type(path),
-                syn::Type::Tuple(tuple) => {
-                    let element_types = tuple
-                        .elems
-                        .iter()
-                        .map(|x| syn_type_to_ast_type(graft_config, x))
-                        .collect_vec();
-
-                    ast_types::DataType::Tuple(element_types)
-                }
-                syn::Type::Reference(syn::TypeReference {
-                    and_token: _,
-                    lifetime: _,
-                    mutability: _,
-                    elem,
-                }) => match *elem.to_owned() {
-                    syn::Type::Path(type_path) => {
-                        let inner_type = graft_config.rust_type_path_to_data_type(&type_path);
-                        ast_types::DataType::MemPointer(Box::new(inner_type))
-                    }
-                    _ => todo!(),
-                },
-                other_type => panic!("Unsupported {other_type:#?}"),
-            }
-        }
-
         let mutable = match *rust_type_path.pat.to_owned() {
             syn::Pat::Ident(syn::PatIdent {
                 attrs: _,
@@ -301,7 +403,7 @@ impl<'a> Graft<'a> {
             }) => mutability.is_some(),
             other_type => panic!("Unsupported {other_type:#?}"),
         };
-        let ast_type = syn_type_to_ast_type(self, rust_type_path.ty.as_ref());
+        let ast_type = self.syn_type_to_ast_type(rust_type_path.ty.as_ref());
 
         (ast_type, mutable)
     }
@@ -323,32 +425,20 @@ impl<'a> Graft<'a> {
         match rust_fn_arg {
             syn::FnArg::Typed(pat_type) => {
                 let name = Self::pat_to_name(&pat_type.pat);
-                let (data_type, mutable): (ast_types::DataType, bool) = match pat_type.ty.as_ref() {
-                    syn::Type::Path(type_path) => {
-                        let mutable = match *pat_type.pat.to_owned() {
-                            syn::Pat::Ident(pi) => pi.mutability.is_some(),
-                            _ => todo!(),
-                        };
-                        (self.rust_type_path_to_data_type(type_path), mutable)
-                    }
+                let (data_type, mut mutable) = self.pat_type_to_data_type_and_mutability(pat_type);
 
-                    // Input is a reference
-                    syn::Type::Reference(syn::TypeReference {
-                        and_token: _,
-                        lifetime: _,
-                        mutability,
-                        elem,
-                    }) => match *elem.to_owned() {
-                        syn::Type::Path(type_path) => (
-                            ast_types::DataType::MemPointer(Box::new(
-                                self.rust_type_path_to_data_type(&type_path),
-                            )),
-                            mutability.is_some(),
-                        ),
-                        _ => todo!(),
-                    },
-                    other => panic!("unsupported: {other:?}"),
-                };
+                // Sloppy way of handling mutability. But it's what we got for now.
+                // we say an fn arg is mutable if it's either declared as such *or*
+                // if it is of the `&mut` reference.
+                if let syn::Type::Reference(syn::TypeReference {
+                    and_token: _,
+                    lifetime: _,
+                    mutability,
+                    elem: _,
+                }) = pat_type.ty.as_ref()
+                {
+                    mutable = mutable || mutability.is_some();
+                }
 
                 ast_types::AbstractValueArg {
                     name,
@@ -369,14 +459,14 @@ impl<'a> Graft<'a> {
                     let output_elements = tuple_type
                         .elems
                         .iter()
-                        .map(|x| self.rust_type_to_data_type(x))
+                        .map(|x| self.syn_type_to_ast_type(x))
                         .collect_vec();
 
-                    ast_types::DataType::Tuple(output_elements)
+                    ast_types::DataType::Tuple(output_elements.into())
                 }
                 _ => panic!("unsupported: {path:?}"),
             },
-            syn::ReturnType::Default => ast_types::DataType::Tuple(vec![]),
+            syn::ReturnType::Default => ast_types::DataType::Tuple(vec![].into()),
         }
     }
 
@@ -397,7 +487,7 @@ impl<'a> Graft<'a> {
                             type_parameter.is_none(),
                             "only one type parameter supported"
                         );
-                        type_parameter = Some(self.rust_type_to_data_type(rdt));
+                        type_parameter = Some(self.syn_type_to_ast_type(rdt));
                     } else {
                         panic!("unsupported GenericArgument: {:#?}", abga.args[0]);
                     }
@@ -449,52 +539,29 @@ impl<'a> Graft<'a> {
         })
     }
 
-    /// Return identifier if expression is a Path/identifier
-    fn expr_to_maybe_ident(rust_exp: &syn::Expr) -> Option<String> {
-        match rust_exp {
-            syn::Expr::Path(path_expr) => Some(Self::path_to_ident(&path_expr.path)),
-            _ => None,
-        }
-    }
+    fn graft_field_expression(
+        &self,
+        syn::ExprField {
+            attrs: _,
+            base,
+            dot_token: _,
+            member,
+        }: &syn::ExprField,
+    ) -> ast::Identifier<Annotation> {
+        let base_expression = self.graft_expr(base);
+        let base_ident = match base_expression {
+            ast::Expr::Var(ident) => ident,
+            _ => {
+                panic!("Left-hand-side of tuple operator must be a declared variable. Declare more bindings if needed. Failed to parse expression: {base_expression} as an identifier");
+            }
+        };
 
-    /// Interpret an expression as an identifier
-    fn expr_as_identifier(&self, rust_exp: &syn::Expr) -> ast::Identifier<Annotation> {
-        match rust_exp {
-            syn::Expr::Path(path) => {
-                ast::Identifier::String(Self::path_to_ident(&path.path), Default::default())
-            }
-            syn::Expr::Field(field_expr) => {
-                // This is for tuple support. E.g.: `a.2 = 14u32;`
-                let path = field_expr.base.as_ref();
-                let ident = match Self::expr_to_maybe_ident(path) {
-                    Some(ident) => ident,
-                    None => panic!("unsupported: {field_expr:?}"),
-                };
-                let tuple_index = match &field_expr.member {
-                    syn::Member::Named(_) => panic!("unsupported: {field_expr:?}"),
-                    syn::Member::Unnamed(tuple_index) => tuple_index,
-                };
+        let field_id = match &member {
+            syn::Member::Named(field_name) => field_name.to_string().into(),
+            syn::Member::Unnamed(tuple_index) => tuple_index.index.into(),
+        };
 
-                ast::Identifier::TupleIndex(
-                    Box::new(ast::Identifier::String(ident, Default::default())),
-                    tuple_index.index as usize,
-                    Default::default(),
-                )
-            }
-            syn::Expr::Index(index_expr) => {
-                let ident = match Self::expr_to_maybe_ident(&index_expr.expr) {
-                    Some(ident) => ident,
-                    None => panic!("unsupported: {index_expr:?}"),
-                };
-                let index_expr = self.graft_expr(index_expr.index.as_ref());
-                ast::Identifier::ListIndex(
-                    Box::new(ast::Identifier::String(ident, Default::default())),
-                    Box::new(index_expr),
-                    Default::default(),
-                )
-            }
-            other => panic!("unsupported: {other:?}"),
-        }
+        ast::Identifier::Field(Box::new(base_ident), field_id, Default::default())
     }
 
     pub(crate) fn graft_method_call(
@@ -602,8 +669,16 @@ impl<'a> Graft<'a> {
                 // TODO: Put this into `unsigned` library
                 if ident == "u32::MAX" {
                     ast::Expr::Lit(ast::ExprLit::U32(u32::MAX))
+                } else if ident == "u32::BITS" {
+                    ast::Expr::Lit(ast::ExprLit::U32(u32::BITS))
                 } else if ident == "u64::MAX" {
                     ast::Expr::Lit(ast::ExprLit::U64(u64::MAX))
+                } else if ident == "u64::BITS" {
+                    ast::Expr::Lit(ast::ExprLit::U32(u64::BITS))
+                } else if ident == "u128::MAX" {
+                    ast::Expr::Lit(ast::ExprLit::U128(u128::MAX))
+                } else if ident == "u128::BITS" {
+                    ast::Expr::Lit(ast::ExprLit::U32(u128::BITS))
                 } else {
                     ast::Expr::Var(ast::Identifier::String(ident, Default::default()))
                 }
@@ -669,38 +744,7 @@ impl<'a> Graft<'a> {
                 })
             }
             syn::Expr::MethodCall(method_call_expr) => self.graft_method_call(method_call_expr),
-            syn::Expr::Field(syn::ExprField {
-                attrs: _,
-                base,
-                dot_token: _,
-                member,
-            }) => {
-                // This branch is for tuple support.
-                let base_expression = self.graft_expr(base);
-                let base_ident = match base_expression {
-                    ast::Expr::Var(ident) => ident,
-                    _ => {
-                        panic!("Left-hand-side of tuple operator must be a declared variable. Declare more bindings if needed. Failed to parse expression: {base_expression} as an identifier");
-                    }
-                };
-
-                match &member {
-                    // named field `foo.bar`
-                    syn::Member::Named(field_name) => ast::Expr::Var(ast::Identifier::Field(
-                        Box::new(base_ident),
-                        field_name.to_string(),
-                        Default::default(),
-                    )),
-                    // unnamed field `tuple.2`
-                    syn::Member::Unnamed(tuple_index) => {
-                        ast::Expr::Var(ast::Identifier::TupleIndex(
-                            Box::new(base_ident),
-                            tuple_index.index as usize,
-                            Default::default(),
-                        ))
-                    }
-                }
-            }
+            syn::Expr::Field(field_expr) => ast::Expr::Var(self.graft_field_expression(field_expr)),
             syn::Expr::Index(index_expr) => {
                 let expr = self.graft_expr(&index_expr.expr);
                 let index = self.graft_expr(&index_expr.index);
@@ -722,7 +766,7 @@ impl<'a> Graft<'a> {
                 ty,
             }) => {
                 let unboxed_ty: syn::Type = *(*ty).to_owned();
-                let as_type = self.rust_type_to_data_type(&unboxed_ty);
+                let as_type = self.syn_type_to_ast_type(&unboxed_ty);
                 let ast_expr = self.graft_expr(expr);
                 ast::Expr::Cast(Box::new(ast_expr), as_type)
             }
@@ -796,6 +840,12 @@ impl<'a> Graft<'a> {
                 if let Some(_int_lit_stripped) = int_lit_str.strip_suffix("u64") {
                     if let Ok(int_u64) = int_lit.base10_parse::<u64>() {
                         return ast::ExprLit::U64(int_u64);
+                    }
+                }
+
+                if let Some(_int_lit_stripped) = int_lit_str.strip_suffix("u128") {
+                    if let Ok(int_u128) = int_lit.base10_parse::<u128>() {
+                        return ast::ExprLit::U128(int_u128);
                     }
                 }
 
@@ -1000,8 +1050,14 @@ impl<'a> Graft<'a> {
                     op,
                     right,
                 }) => {
-                    let identifier_expr = left.as_ref();
-                    let identifier = graft_config.expr_as_identifier(identifier_expr);
+                    // let identifier_expr = assign.left.as_ref();
+                    let identifier_expr = graft_config.graft_expr(left);
+                    let identifier = match identifier_expr {
+                        ast::Expr::Var(ident) => ident,
+                        _ => {
+                            panic!("Left-hand-side of tuple operator must be a declared variable. Declare more bindings if needed. Failed to parse expression: {identifier_expr} as an identifier");
+                        }
+                    };
                     let assign_expr = graft_config.graft_binop_eq_expr(left, op, right);
                     let assign_stmt = ast::AssignStmt {
                         identifier,

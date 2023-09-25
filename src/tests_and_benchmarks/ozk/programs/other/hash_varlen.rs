@@ -1,3 +1,6 @@
+#![allow(clippy::explicit_auto_deref)]
+#![allow(clippy::needless_borrow)]
+
 // Allows the use of input/output on the native architecture
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 use triton_vm::{BFieldElement, Digest};
@@ -10,7 +13,7 @@ fn main() {
     let elements: Box<Vec<BFieldElement>> =
         Vec::<BFieldElement>::decode(&tasm::load_from_memory(BFieldElement::new(2000))).unwrap();
 
-    let digest: Digest = H::hash_varlen(&elements);
+    let digest: Digest = H::hash_varlen(&(*elements));
 
     tasm::tasm_io_write_to_stdout_digest(digest);
 

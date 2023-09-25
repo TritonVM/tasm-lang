@@ -53,18 +53,19 @@ mod run_tests {
     }
 
     #[test]
-    fn declare_u32_max_test() {
+    fn declare_u32_max_and_bits_test() {
         compare_prop_with_stack_safe_lists(
             &declare_u32_max_rast(),
             vec![],
-            vec![u32_lit(0xffff_ffff)],
+            vec![u32_lit(0xffff_ffff), u32_lit(0x0000_0020)],
         );
 
         fn declare_u32_max_rast() -> syn::ItemFn {
             item_fn(parse_quote! {
-                fn declare_u32_max() -> u32 {
+                fn declare_u32_max() -> (u32, u32) {
                     let a: u32 = u32::MAX;
-                    return a;
+                    let b: u32 = u32::BITS;
+                    return (a, b);
                 }
             })
         }

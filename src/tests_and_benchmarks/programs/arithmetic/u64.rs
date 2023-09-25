@@ -61,6 +61,25 @@ mod run_tests {
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 
     #[test]
+    fn declare_u64_max_and_bits_test() {
+        compare_prop_with_stack_safe_lists(
+            &declare_u64_max_rast(),
+            vec![],
+            vec![u64_lit(0xffff_ffff_ffff_ffff), u32_lit(0x0000_0040)],
+        );
+
+        fn declare_u64_max_rast() -> syn::ItemFn {
+            item_fn(parse_quote! {
+                fn declare_u64_max() -> (u64, u32) {
+                    let a: u64 = u64::MAX;
+                    let b: u32 = u64::BITS;
+                    return (a, b);
+                }
+            })
+        }
+    }
+
+    #[test]
     fn add_u64_run_test() {
         compare_prop_with_stack_safe_lists(
             &add_u64_rast(),

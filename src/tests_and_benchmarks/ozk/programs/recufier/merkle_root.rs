@@ -1,3 +1,4 @@
+#![allow(clippy::explicit_auto_deref)]
 // Allows the use of input/output on the native architecture
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 use triton_vm::{BFieldElement, Digest};
@@ -25,7 +26,7 @@ fn main() {
     let elements: Box<Vec<Digest>> =
         Vec::<Digest>::decode(&tasm::load_from_memory(BFieldElement::new(2000))).unwrap();
 
-    let root: Digest = merkle_root(&elements, 0usize, 64usize);
+    let root: Digest = merkle_root(&(*elements), 0usize, 64usize);
     tasm::tasm_io_write_to_stdout_digest(root);
 
     return;

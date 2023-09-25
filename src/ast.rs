@@ -7,7 +7,7 @@ use twenty_first::shared_math::bfield_codec::BFieldCodec;
 use twenty_first::shared_math::x_field_element::XFieldElement;
 
 use crate::{
-    ast_types::{AbstractArgument, DataType},
+    ast_types::{AbstractArgument, DataType, FieldId},
     type_checker::Typing,
 };
 
@@ -54,7 +54,14 @@ impl<T> Method<T> {
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct Fn<T> {
     pub signature: FnSignature,
+    // TODO: Should probably be a BlockStmt<T> instead of Vec<Stmt>
     pub body: Vec<Stmt<T>>,
+}
+
+impl<T> Fn<T> {
+    pub fn get_tasm_label(&self) -> String {
+        self.signature.name.replace("::", "_assoc_funciton___of___")
+    }
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
@@ -115,6 +122,7 @@ pub enum ExprLit<T> {
     Bool(bool),
     U32(u32),
     U64(u64),
+    U128(u128),
     BFE(BFieldElement),
     XFE(XFieldElement),
     Digest(Digest),
@@ -128,6 +136,7 @@ impl<T> ExprLit<T> {
             ExprLit::Bool(b) => b.to_string(),
             ExprLit::U32(u32) => u32.to_string(),
             ExprLit::U64(val) => val.to_string(),
+            ExprLit::U128(val) => val.to_string(),
             ExprLit::BFE(val) => val.to_string(),
             ExprLit::XFE(val) => val.to_string(),
             ExprLit::Digest(val) => val.to_string(),
@@ -143,6 +152,7 @@ impl<T> Display for ExprLit<T> {
             ExprLit::Bool(b) => b.to_string(),
             ExprLit::U32(u32) => u32.to_string(),
             ExprLit::U64(val) => val.to_string(),
+            ExprLit::U128(val) => val.to_string(),
             ExprLit::BFE(val) => val.to_string(),
             ExprLit::XFE(val) => val.to_string(),
             ExprLit::Digest(val) => val.to_string(),
@@ -155,8 +165,13 @@ impl<T> Display for ExprLit<T> {
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct MemPointerLiteral<T> {
+    /// Where in memory does the struct start?
     pub mem_pointer_address: BFieldElement,
+
+    /// What type was used in the declaration of the memory pointer?
     pub mem_pointer_declared_type: DataType,
+
+    // Resolved type for binding
     pub resolved_type: T,
 }
 
@@ -175,10 +190,8 @@ impl<T> BFieldCodec for ExprLit<T> {
         match self {
             ExprLit::Bool(value) => vec![BFieldElement::new(*value as u64)],
             ExprLit::U32(value) => value.encode(),
-            ExprLit::U64(value) => vec![
-                BFieldElement::new(value & 0xffff_ffff),
-                BFieldElement::new(value >> 32),
-            ],
+            ExprLit::U64(value) => value.encode(),
+            ExprLit::U128(val) => val.encode(),
             ExprLit::BFE(value) => value.encode(),
             ExprLit::XFE(value) => value.encode(),
             ExprLit::Digest(value) => value.encode(),
@@ -310,16 +323,14 @@ pub struct SymTable(HashMap<String, (u8, DataType)>);
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum Identifier<T> {
     String(String, T),                              // x
-    TupleIndex(Box<Identifier<T>>, usize, T),       // x.0
     ListIndex(Box<Identifier<T>>, Box<Expr<T>>, T), // x[0]
-    Field(Box<Identifier<T>>, String, T),
+    Field(Box<Identifier<T>>, FieldId, T),
 }
 
 impl<T> Display for Identifier<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let output = match self {
             Identifier::String(name, _) => name.to_string(),
-            Identifier::TupleIndex(inner, index, _) => format!("{inner}.{index}"),
             Identifier::ListIndex(inner, index, _) => format!("{inner}[{index}]"),
             Identifier::Field(inner, field_name, _) => format!("{inner}.{field_name}"),
         };
@@ -333,9 +344,6 @@ impl Identifier<Typing> {
         println!("Forcing {self} to {forced_type}");
         match self {
             Identifier::String(_, t) => *t = crate::type_checker::Typing::KnownType(forced_type),
-            Identifier::TupleIndex(_, _, t) => {
-                *t = crate::type_checker::Typing::KnownType(forced_type)
-            }
             Identifier::ListIndex(_, _, t) => {
                 *t = crate::type_checker::Typing::KnownType(forced_type)
             }
@@ -346,7 +354,6 @@ impl Identifier<Typing> {
     pub fn resolved(&self) -> Option<DataType> {
         let t = match self {
             Identifier::String(_, t) => t,
-            Identifier::TupleIndex(_, _, t) => t,
             Identifier::ListIndex(_, _, t) => t,
             Identifier::Field(_, _, t) => t,
         };
@@ -362,7 +369,6 @@ impl<T> Identifier<T> {
     pub fn binding_name(&self) -> String {
         match self {
             Identifier::String(name, _) => name.to_owned(),
-            Identifier::TupleIndex(inner_id, _, _) => inner_id.binding_name(),
             Identifier::ListIndex(inner_id, _, _) => inner_id.binding_name(),
             Identifier::Field(inner_id, _, _) => inner_id.binding_name(),
         }
@@ -373,9 +379,6 @@ impl<T> Identifier<T> {
             Identifier::String(name, _) => name.to_string(),
             Identifier::ListIndex(inner_id, l_index_expr, _) => {
                 format!("{}_{l_index_expr}", inner_id.label_friendly_name(),)
-            }
-            Identifier::TupleIndex(inner_id, t_index, _) => {
-                format!("{}___{t_index}", inner_id.label_friendly_name())
             }
             Identifier::Field(inner_id, field_name, _) => {
                 format!("{}___{field_name}", inner_id.label_friendly_name())
