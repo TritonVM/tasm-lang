@@ -158,14 +158,13 @@ pub fn annotate_method(
     declared_methods: Vec<ast::Method<Typing>>,
     associated_functions: &HashMap<String, HashMap<String, ast::Fn<Typing>>>,
     libraries: &[Box<dyn libraries::Library>],
-    mut ftable: HashMap<String, ast::FnSignature>,
+    ftable: HashMap<String, ast::FnSignature>,
 ) {
     // Initialize `CheckState`
     let vtable: HashMap<String, DataTypeAndMutability> =
         HashMap::with_capacity(method.signature.args.len());
 
     // Insert self into ftable
-    ftable.insert(method.signature.name.clone(), method.signature.clone());
     let mut state = CheckState {
         libraries,
         vtable,
@@ -684,14 +683,11 @@ fn get_method_signature(
         // in the method) matches `forced_type` exactly , use it (a "by value method")
         for declared_method in state.declared_methods.iter() {
             if declared_method.signature.name == name {
-                let method_receiver_type = args[0].get_type();
+                let method_receiver_type = declared_method.receiver_type();
                 if method_receiver_type == forced_type {
-                    println!("args[0].get_type() was: {}", args[0].get_type());
                     if let ast::Expr::Var(ref mut var) = &mut args[0] {
-                        println!("type checker forcing for expression {}", var);
                         var.force_type(&forced_type);
                     }
-                    println!("args[0].get_type() is now: {}", args[0].get_type());
 
                     return declared_method.signature.clone();
                 }
@@ -713,7 +709,7 @@ fn get_method_signature(
         let auto_refd_forced_type = ast_types::DataType::Reference(Box::new(forced_type.clone()));
         for declared_method in state.declared_methods.iter() {
             if declared_method.signature.name == name {
-                let method_receiver_type = args[0].get_type();
+                let method_receiver_type = declared_method.receiver_type();
                 if method_receiver_type == auto_refd_forced_type {
                     if let ast::Expr::Var(var) = &mut args[0] {
                         var.force_type(&auto_refd_forced_type);
