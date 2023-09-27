@@ -1,4 +1,3 @@
-use itertools::Itertools;
 use std::{collections::HashMap, fs};
 use triton_vm::instruction::LabelledInstruction;
 
@@ -93,7 +92,6 @@ pub(crate) fn compile_for_test(
 
     let (rust_main_ast, rust_struct_asts, _) = parse_main_and_structs(directory, module_name);
     let mut oil_ast = graft_config.graft_fn_decl(&rust_main_ast);
-    println!("oil_ast: {oil_ast:#?}");
     let (structs, mut methods, mut associated_functions) =
         graft_config.graft_structs_methods_and_associated_functions(rust_struct_asts);
 
@@ -111,20 +109,6 @@ pub(crate) fn compile_for_test(
         &mut methods,
         &mut associated_functions,
         &libraries,
-    );
-    println!("typed oil_ast: {oil_ast:#?}");
-
-    // compile
-    println!(
-        "compile_for_test: methods:\n{} ",
-        methods.iter().map(|x| &x.signature.name).join(",")
-    );
-    println!(
-        "compile_for_test: associated_functions:\n{} ",
-        associated_functions
-            .values()
-            .map(|x| x.iter().map(|y| &y.1.signature.name).join(","))
-            .join(";")
     );
 
     let tasm = compile_function(

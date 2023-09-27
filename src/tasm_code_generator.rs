@@ -1,3 +1,5 @@
+mod inner_function_tasm_code;
+mod outer_function_tasm_code;
 pub mod subroutine;
 
 use itertools::{Either, Itertools};
@@ -5,16 +7,17 @@ use num::{One, Zero};
 use std::collections::{HashMap, HashSet};
 use std::fmt::Display;
 use tasm_lib::library::Library as SnippetState;
-use tasm_lib::memory::dyn_malloc::DynMalloc;
 use tasm_lib::snippet::BasicSnippet;
 use tasm_lib::{arithmetic, hashing};
 use triton_vm::instruction::LabelledInstruction;
 use triton_vm::op_stack::OpStackElement;
-use triton_vm::{triton_asm, triton_instr, Program};
+use triton_vm::{triton_asm, triton_instr};
 use twenty_first::amount::u32s::U32s;
 use twenty_first::shared_math::b_field_element::BFieldElement;
 use twenty_first::shared_math::bfield_codec::BFieldCodec;
 
+use self::inner_function_tasm_code::InnerFunctionTasmCode;
+use self::outer_function_tasm_code::OuterFunctionTasmCode;
 use self::subroutine::SubRoutine;
 use crate::ast_types::{self, StructVariant};
 use crate::libraries::{self};
@@ -93,102 +96,6 @@ impl FunctionState {
     fn add_compiled_fn_to_subroutines(&mut self, mut function: InnerFunctionTasmCode) {
         self.subroutines.append(&mut function.sub_routines);
         self.subroutines.push(function.call_depth_zero_code);
-    }
-}
-
-#[derive(Clone, Debug)]
-struct InnerFunctionTasmCode {
-    name: String,
-    call_depth_zero_code: SubRoutine,
-    sub_routines: Vec<SubRoutine>,
-}
-
-impl InnerFunctionTasmCode {
-    /// Return a dummy value, needed to allow recursive calls for methods.
-    fn dummy_value(name: &str) -> Self {
-        Self {
-            name: name.to_owned(),
-            call_depth_zero_code: triton_asm!({name}: return).try_into().unwrap(),
-            sub_routines: vec![],
-        }
-    }
-}
-
-pub struct OuterFunctionTasmCode {
-    function_data: InnerFunctionTasmCode,
-    snippet_state: SnippetState,
-    compiled_method_calls: Vec<InnerFunctionTasmCode>,
-}
-
-impl OuterFunctionTasmCode {
-    pub fn compose(&self) -> Vec<LabelledInstruction> {
-        let inner_body = match self
-            .function_data
-            .call_depth_zero_code
-            .get_function_body_for_inlining()
-        {
-            Some(inner) => inner,
-            None => panic!(
-                "Inner function must conform to: <label>: <body> return.\nGot:\n{}",
-                self.function_data.call_depth_zero_code
-            ),
-        };
-
-        // `methods` list must be sorted at this point to produce deterministic programs
-        let methods_call_depth_zero = self
-            .compiled_method_calls
-            .iter()
-            .map(|x| x.call_depth_zero_code.clone())
-            .collect_vec();
-        let method_subroutines = self
-            .compiled_method_calls
-            .iter()
-            .flat_map(|x| x.sub_routines.clone())
-            .collect_vec();
-
-        let name = &self.function_data.name;
-        let dyn_malloc_init = DynMalloc::get_initialization_code(
-            self.snippet_state
-                .get_next_free_address()
-                .try_into()
-                .unwrap(),
-        );
-        let external_dependencies: Vec<SubRoutine> = self
-            .snippet_state
-            .all_external_dependencies()
-            .into_iter()
-            .map(|x| x.try_into().unwrap())
-            .collect_vec();
-        let external_dependencies = external_dependencies
-            .iter()
-            .map(|x| x.get_whole_function())
-            .concat();
-        let subroutines = self
-            .function_data
-            .sub_routines
-            .iter()
-            .map(|sr| sr.get_whole_function())
-            .concat();
-
-        // Wrap entire execution in a call such that `recurse` can be used on the outermost layer, i.e. in `inner_body`.
-        let ret = triton_asm!(
-            {&dyn_malloc_init}
-            call {name}
-            halt
-            {name}:
-                {&inner_body}
-                return
-            {&subroutines}
-            {&methods_call_depth_zero}
-            {&method_subroutines}
-            {&external_dependencies}
-        );
-
-        // Verify that code parses by wrapping it in a program, panics
-        // if assembly is invalid.
-        let _program = Program::new(&ret);
-
-        ret
     }
 }
 
