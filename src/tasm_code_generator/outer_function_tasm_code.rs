@@ -22,6 +22,15 @@ pub(crate) struct OuterFunctionTasmCode {
 }
 
 impl OuterFunctionTasmCode {
+    fn get_inputs_function(&self) -> String {
+        // fn inputs(&self) -> Vec<(crate::snippet::DataType, String)> {
+        //     vec![
+        //         (DataType::U64, "lhs".to_string()),
+        //         (DataType::U64, "rhs".to_string()),
+        //     ]
+        // }
+    }
+
     fn get_outputs_function(&self) -> String {
         // TODO: Convert type to `tasm-lib` type here
         let output_description = format!(
@@ -85,6 +94,8 @@ impl OuterFunctionTasmCode {
             .concat();
 
         let entrypoint_function = self.get_entrypoint_function();
+        let outputs_function = self.get_outputs_function();
+        let inputs_function = self.get_inputs_function();
 
         todo!()
     }
