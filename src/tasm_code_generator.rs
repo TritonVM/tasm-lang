@@ -116,8 +116,7 @@ impl InnerFunctionTasmCode {
 
 pub struct OuterFunctionTasmCode {
     function_data: InnerFunctionTasmCode,
-    external_dependencies: Vec<SubRoutine>,
-    dyn_malloc_init_code: Vec<LabelledInstruction>,
+    snippet_state: SnippetState,
     compiled_method_calls: Vec<InnerFunctionTasmCode>,
 }
 
@@ -148,9 +147,19 @@ impl OuterFunctionTasmCode {
             .collect_vec();
 
         let name = &self.function_data.name;
-        let dyn_malloc_init = self.dyn_malloc_init_code.clone();
-        let external_dependencies_code = self
-            .external_dependencies
+        let dyn_malloc_init = DynMalloc::get_initialization_code(
+            self.snippet_state
+                .get_next_free_address()
+                .try_into()
+                .unwrap(),
+        );
+        let external_dependencies: Vec<SubRoutine> = self
+            .snippet_state
+            .all_external_dependencies()
+            .into_iter()
+            .map(|x| x.try_into().unwrap())
+            .collect_vec();
+        let external_dependencies = external_dependencies
             .iter()
             .map(|x| x.get_whole_function())
             .concat();
@@ -172,7 +181,7 @@ impl OuterFunctionTasmCode {
             {&subroutines}
             {&methods_call_depth_zero}
             {&method_subroutines}
-            {&external_dependencies_code}
+            {&external_dependencies}
         );
 
         // Verify that code parses by wrapping it in a program, panics
@@ -219,7 +228,7 @@ impl ValueLocation {
 pub struct GlobalCodeGeneratorState {
     counter: usize,
     snippet_state: SnippetState,
-    compiled_methods: HashMap<String, InnerFunctionTasmCode>,
+    compiled_methods_and_afs: HashMap<String, InnerFunctionTasmCode>,
     compiled_associated_functions: HashMap<String, InnerFunctionTasmCode>,
 }
 
@@ -592,33 +601,18 @@ impl<'a> CompilerState<'a> {
         inner_function: InnerFunctionTasmCode,
     ) -> OuterFunctionTasmCode {
         // After the spilling has been done, and after all dependencies have been loaded, the `library` field
-        // in the `state` now contains the information about how to initialize the dynamic memory allocator
-        // such that dynamically allocated memory does not overwrite statically allocated memory. The `library`
-        // field contains the number of words that were statically allocated.
-        let dyn_malloc_init_code = DynMalloc::get_initialization_code(
-            self.global_compiler_state
-                .snippet_state
-                .get_next_free_address()
-                .try_into()
-                .unwrap(),
-        );
+        // in the `state` contains info about how much static memory has been allocated and which
+        // code snippets that have been importer.
+        let final_snippet_state = self.global_compiler_state.snippet_state.clone();
 
-        let external_dependencies: Vec<SubRoutine> = self
+        let mut methods_sorted = self
             .global_compiler_state
-            .snippet_state
-            .all_external_dependencies()
-            .into_iter()
-            .map(|x| x.try_into().unwrap())
-            .collect_vec();
-
-        let mut method_calls_sorted = self
-            .global_compiler_state
-            .compiled_methods
+            .compiled_methods_and_afs
             .clone()
             .into_iter()
             .collect_vec();
-        method_calls_sorted.sort_by_key(|x| x.0.clone());
-        let compiled_method_calls = method_calls_sorted
+        methods_sorted.sort_by_key(|x| x.0.clone());
+        let compiled_method_calls = methods_sorted
             .into_iter()
             .map(|(_name, code)| code)
             .collect_vec();
@@ -628,9 +622,8 @@ impl<'a> CompilerState<'a> {
 
         OuterFunctionTasmCode {
             function_data: inner_function,
-            external_dependencies,
-            dyn_malloc_init_code,
             compiled_method_calls,
+            snippet_state: final_snippet_state,
         }
     }
 }
@@ -1426,7 +1419,7 @@ fn compile_fn_call(
             {
                 // Insert something with the right label *before* compiling,
                 // otherwise the methods cannot handle recursion.
-                state.global_compiler_state.compiled_methods.insert(
+                state.global_compiler_state.compiled_methods_and_afs.insert(
                     function_label.clone(),
                     InnerFunctionTasmCode::dummy_value(&function_label),
                 );
@@ -1443,7 +1436,7 @@ fn compile_fn_call(
 
                 state
                     .global_compiler_state
-                    .compiled_methods
+                    .compiled_methods_and_afs
                     .insert(function_label.clone(), compiled_function);
             }
         }
@@ -1505,12 +1498,12 @@ fn compile_method_call(
             let method_label = declared_method.get_tasm_label();
             if !state
                 .global_compiler_state
-                .compiled_methods
+                .compiled_methods_and_afs
                 .contains_key(&method_label)
             {
                 // Insert something with the right label *before* compiling,
                 // otherwise the methods cannot handle recursion.
-                state.global_compiler_state.compiled_methods.insert(
+                state.global_compiler_state.compiled_methods_and_afs.insert(
                     method_label.clone(),
                     InnerFunctionTasmCode::dummy_value(&method_label),
                 );
@@ -1527,7 +1520,7 @@ fn compile_method_call(
 
                 state
                     .global_compiler_state
-                    .compiled_methods
+                    .compiled_methods_and_afs
                     .insert(method_label.clone(), compiled_method);
             }
 
