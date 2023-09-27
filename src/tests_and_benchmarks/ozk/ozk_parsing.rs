@@ -122,3 +122,41 @@ pub(crate) fn compile_for_test(
     // compose
     tasm.compose()
 }
+
+#[allow(dead_code)]
+pub(crate) fn compile_to_basic_snippet(
+    rust_ast: syn::ItemFn,
+    structs_and_methods: StructsAndMethods,
+    list_type: ast_types::ListType,
+) -> String {
+    get_standard_setup!(list_type, graft_config, libraries);
+    let mut oil_ast = graft_config.graft_fn_decl(&rust_ast);
+    let (structs, mut methods, mut associated_functions) =
+        graft_config.graft_structs_methods_and_associated_functions(structs_and_methods);
+
+    resolve_custom_types(
+        &mut oil_ast,
+        &structs,
+        &mut methods,
+        &mut associated_functions,
+    );
+
+    // type-check and annotate
+    annotate_fn_outer(
+        &mut oil_ast,
+        &structs,
+        &mut methods,
+        &mut associated_functions,
+        &libraries,
+    );
+
+    let _tasm = compile_function(
+        &oil_ast,
+        &libraries,
+        methods,
+        &associated_functions,
+        &structs,
+    );
+
+    todo!()
+}
