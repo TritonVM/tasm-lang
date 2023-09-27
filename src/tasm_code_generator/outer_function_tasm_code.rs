@@ -22,6 +22,23 @@ pub(crate) struct OuterFunctionTasmCode {
 }
 
 impl OuterFunctionTasmCode {
+    fn get_outputs_function(&self) -> String {
+        // TODO: Convert type to `tasm-lib` type here
+        let output_description = format!(
+            "(DataType::{}, \"result\".to_owned())",
+            self.outer_function_signature.output
+        );
+
+        // for output in self.outer_function_signature.output
+        format!(
+            "
+            fn outputs(&self) -> Vec<(DataType, String)> {{
+                vec![{output_description}]
+            }}
+            "
+        )
+    }
+
     fn get_entrypoint_function(&self) -> String {
         let own_fn_name = &self.function_data.name;
         format!(
