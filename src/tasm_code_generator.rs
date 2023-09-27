@@ -135,8 +135,21 @@ impl ValueLocation {
 pub struct GlobalCodeGeneratorState {
     counter: usize,
     snippet_state: SnippetState,
+    static_allocations: HashMap<ValueIdentifier, usize>,
     compiled_methods_and_afs: HashMap<String, InnerFunctionTasmCode>,
-    compiled_associated_functions: HashMap<String, InnerFunctionTasmCode>,
+}
+
+impl GlobalCodeGeneratorState {
+    fn statically_allocate(
+        &mut self,
+        value_identifier: &ValueIdentifier,
+        data_type: &ast_types::DataType,
+    ) -> usize {
+        let new_address = self.snippet_state.kmalloc(data_type.stack_size());
+        self.static_allocations
+            .insert(value_identifier.to_owned(), new_address);
+        new_address
+    }
 }
 
 // TODO: Maybe this needs a new lifetime specifier, `'b`?
@@ -505,7 +518,8 @@ impl<'a> CompilerState<'a> {
     /// - importing of all external dependencies
     fn compose_code_for_outer_function(
         &self,
-        inner_function: InnerFunctionTasmCode,
+        compiled: InnerFunctionTasmCode,
+        outer_function_signature: &ast::FnSignature,
     ) -> OuterFunctionTasmCode {
         // After the spilling has been done, and after all dependencies have been loaded, the `library` field
         // in the `state` contains info about how much static memory has been allocated and which
@@ -528,9 +542,10 @@ impl<'a> CompilerState<'a> {
         // self.associated_functions.values().map(|x| x.values().map(|y| compi))
 
         OuterFunctionTasmCode {
-            function_data: inner_function,
+            function_data: compiled,
             compiled_method_calls,
             snippet_state: final_snippet_state,
+            outer_function_signature: outer_function_signature.to_owned(),
         }
     }
 }
@@ -597,8 +612,7 @@ impl<'a> CompilerState<'a> {
         let spilled = if self.function_state.spill_required.contains(&address) {
             let spill_address = self
                 .global_compiler_state
-                .snippet_state
-                .kmalloc(data_type.stack_size())
+                .statically_allocate(&address, &data_type)
                 .try_into()
                 .unwrap();
             eprintln!("Warning: spill required of {address}. Spilling to address: {spill_address}");
@@ -810,10 +824,12 @@ impl<'a> CompilerState<'a> {
             // In this case, we have to clear more elements from the stack than we can
             // access with dup15/swap15. Our solution is to store the return value in
             // memory, clear the stack, and read it back from memory.
+            let (value_identifier_for_spill_value, _spill) =
+                self.new_value_identifier("memory_return_spilling", &top_element_type);
+            assert!(_spill.is_none(), "Cannot spill while spilling");
             let memory_location: u32 = self
                 .global_compiler_state
-                .snippet_state
-                .kmalloc(top_value_size)
+                .statically_allocate(&value_identifier_for_spill_value, &top_element_type)
                 .try_into()
                 .unwrap();
             let mut code = copy_top_stack_value_to_memory(memory_location, top_value_size);
@@ -975,7 +991,7 @@ pub(crate) fn compile_function(
         declared_structs,
     );
 
-    state.compose_code_for_outer_function(compiled_function)
+    state.compose_code_for_outer_function(compiled_function, &function.signature)
 }
 
 /// Produce the code and handle the `vstack` for a statement. `env_fn_signature` is the
@@ -1321,7 +1337,7 @@ fn compile_fn_call(
 
             if !state
                 .global_compiler_state
-                .compiled_associated_functions
+                .compiled_methods_and_afs
                 .contains_key(&function_label)
             {
                 // Insert something with the right label *before* compiling,

@@ -1,3 +1,5 @@
+use crate::ast;
+use crate::ast_types;
 use crate::tasm_code_generator::inner_function_tasm_code::InnerFunctionTasmCode;
 use crate::tasm_code_generator::SubRoutine;
 use itertools::Itertools;
@@ -8,16 +10,58 @@ use triton_vm::triton_asm;
 use triton_vm::Program;
 
 pub(crate) struct OuterFunctionTasmCode {
-    // TODO: Remove these attributes once we have a sane `main` function that uses this step
+    // TODO: Remove these attributes once we have a sane `main` function that uses these fields
     #[allow(dead_code)]
     pub function_data: InnerFunctionTasmCode,
     #[allow(dead_code)]
     pub snippet_state: SnippetState,
     #[allow(dead_code)]
     pub compiled_method_calls: Vec<InnerFunctionTasmCode>,
+    #[allow(dead_code)]
+    pub outer_function_signature: ast::FnSignature,
 }
 
+// fn get_entrypoint_function() ->
+
 impl OuterFunctionTasmCode {
+    #[allow(dead_code)]
+    pub(crate) fn to_basic_snippet(&self) -> String {
+        let inner_body = match self
+            .function_data
+            .call_depth_zero_code
+            .get_function_body_for_inlining()
+        {
+            Some(inner) => inner,
+            None => panic!(
+                "Inner function must conform to: <label>: <body> return.\nGot:\n{}",
+                self.function_data.call_depth_zero_code
+            ),
+        };
+        let name = &self.function_data.name;
+
+        // `methods` list must be sorted to produce deterministic programs
+        let mut compiled_methods_sorted = self.compiled_method_calls.clone();
+        compiled_methods_sorted.sort_by_cached_key(|x| x.name.to_owned());
+        let methods_call_depth_zero = self
+            .compiled_method_calls
+            .iter()
+            .map(|x| x.call_depth_zero_code.clone())
+            .collect_vec();
+        let method_subroutines = self
+            .compiled_method_calls
+            .iter()
+            .flat_map(|x| x.sub_routines.clone())
+            .collect_vec();
+        let subroutines = self
+            .function_data
+            .sub_routines
+            .iter()
+            .map(|sr| sr.get_whole_function())
+            .concat();
+
+        todo!()
+    }
+
     #[allow(dead_code)]
     pub(crate) fn compose(&self) -> Vec<LabelledInstruction> {
         let inner_body = match self
@@ -32,7 +76,9 @@ impl OuterFunctionTasmCode {
             ),
         };
 
-        // `methods` list must be sorted at this point to produce deterministic programs
+        // `methods` list must be sorted to produce deterministic programs
+        let mut compiled_methods_sorted = self.compiled_method_calls.clone();
+        compiled_methods_sorted.sort_by_cached_key(|x| x.name.to_owned());
         let methods_call_depth_zero = self
             .compiled_method_calls
             .iter()
