@@ -21,9 +21,17 @@ pub(crate) struct OuterFunctionTasmCode {
     pub outer_function_signature: ast::FnSignature,
 }
 
-// fn get_entrypoint_function() ->
-
 impl OuterFunctionTasmCode {
+    fn get_entrypoint_function(&self) -> String {
+        let own_fn_name = &self.function_data.name;
+        format!(
+            "
+                fn entrypoint(&self) -> String {{
+                    {own_fn_name}
+        }}"
+        )
+    }
+
     #[allow(dead_code)]
     pub(crate) fn to_basic_snippet(&self) -> String {
         let inner_body = match self
@@ -58,6 +66,8 @@ impl OuterFunctionTasmCode {
             .iter()
             .map(|sr| sr.get_whole_function())
             .concat();
+
+        let entrypoint_function = self.get_entrypoint_function();
 
         todo!()
     }
