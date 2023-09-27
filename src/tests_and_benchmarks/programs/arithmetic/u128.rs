@@ -73,6 +73,23 @@ mod run_tests {
     }
 
     #[test]
+    fn u128_add_overflow_test() {
+        let vm_res = execute_with_stack_safe_lists(
+            &u128_add_rast(),
+            vec![u128_lit(1 << 127), u128_lit(1 << 127)],
+            -4,
+        );
+        assert!(vm_res.is_err(), "Addition with overflow must return error");
+        fn u128_add_rast() -> syn::ItemFn {
+            item_fn(parse_quote! {
+                fn u128_add_test_fn(lhs: u128, rhs: u128) -> u128 {
+                    return lhs + rhs;
+                }
+            })
+        }
+    }
+
+    #[test]
     fn u128_sub_test() {
         let values_lhs: Vec<u128> = random_elements::<u64>(10)
             .into_iter()
@@ -215,6 +232,10 @@ mod run_tests {
             ));
             test_cases.push(InputOutputTestCase::new(
                 vec![u128_lit(1 << i), u128_lit((1 << i) + 1)],
+                vec![bool_lit(false), bool_lit(true)],
+            ));
+            test_cases.push(InputOutputTestCase::new(
+                vec![u128_lit(1 << i), u128_lit((1 << i) - 1)],
                 vec![bool_lit(false), bool_lit(true)],
             ));
         }
