@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::str::FromStr;
 
 use crate::ast;
@@ -10,7 +11,6 @@ use tasm_lib::memory::dyn_malloc::DynMalloc;
 use triton_vm::instruction;
 use triton_vm::instruction::LabelledInstruction;
 use triton_vm::triton_asm;
-use triton_vm::triton_instr;
 use triton_vm::Program;
 
 pub(crate) struct OuterFunctionTasmCode {
@@ -23,6 +23,8 @@ pub(crate) struct OuterFunctionTasmCode {
     pub compiled_method_calls: Vec<InnerFunctionTasmCode>,
     #[allow(dead_code)]
     pub outer_function_signature: ast::FnSignature,
+    #[allow(dead_code)]
+    pub library_snippets: HashMap<String, SubRoutine>,
 }
 
 impl OuterFunctionTasmCode {
@@ -271,6 +273,14 @@ impl BasicSnippet for {snippet_struct_name} {{
             .flat_map(|x| x.sub_routines.clone())
             .collect_vec();
 
+        // Add all library functions, sorted such that produced code is deterministic
+        let mut library_snippets = self.library_snippets.clone().into_iter().collect_vec();
+        library_snippets.sort_unstable_by_key(|(name, _code)| name.to_owned());
+        let library_snippets: Vec<LabelledInstruction> = library_snippets
+            .into_iter()
+            .flat_map(|(_name, code)| code.get_whole_function())
+            .collect_vec();
+
         let name = &self.function_data.name;
         let dyn_malloc_init = DynMalloc::get_initialization_code(
             self.snippet_state
@@ -306,6 +316,7 @@ impl BasicSnippet for {snippet_struct_name} {{
             {&subroutines}
             {&methods_call_depth_zero}
             {&method_subroutines}
+            {&library_snippets}
             {&external_dependencies}
         );
 

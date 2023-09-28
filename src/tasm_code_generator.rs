@@ -137,6 +137,7 @@ pub struct GlobalCodeGeneratorState {
     snippet_state: SnippetState,
     static_allocations: HashMap<ValueIdentifier, usize>,
     compiled_methods_and_afs: HashMap<String, InnerFunctionTasmCode>,
+    library_snippets: HashMap<String, SubRoutine>,
 }
 
 impl GlobalCodeGeneratorState {
@@ -175,7 +176,9 @@ impl<'a> CompilerState<'a> {
     pub(crate) fn add_library_function(&mut self, subroutine: SubRoutine) {
         // TODO: Can't we include this in a nicer way by e.g. unwrapping inner
         // subroutines?
-        self.function_state.subroutines.push(subroutine);
+        self.global_compiler_state
+            .library_snippets
+            .insert(subroutine.get_label(), subroutine);
     }
 
     /// Construct a new compiler state with no known values that must be spilled.
@@ -544,6 +547,7 @@ impl<'a> CompilerState<'a> {
             compiled_method_calls,
             snippet_state: final_snippet_state,
             outer_function_signature: outer_function_signature.to_owned(),
+            library_snippets: self.global_compiler_state.library_snippets.clone(),
         }
     }
 }
