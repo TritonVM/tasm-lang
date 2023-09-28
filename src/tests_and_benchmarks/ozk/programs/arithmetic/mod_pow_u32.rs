@@ -15,7 +15,7 @@ fn main() {
         exponent += 1;
     }
 
-    tasm::tasm_io_write_to_stdout_bfe(base_number.mod_pow_u32(exponent));
+    tasm::tasm_io_write_to_stdout___bfe(base_number.mod_pow_u32(exponent));
 
     return;
 }

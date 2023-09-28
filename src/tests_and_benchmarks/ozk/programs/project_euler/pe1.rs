@@ -16,7 +16,7 @@ fn main() {
         i += 1;
     }
 
-    tasm::tasm_io_write_to_stdout_u32(acc);
+    tasm::tasm_io_write_to_stdout___u32(acc);
 
     return;
 }

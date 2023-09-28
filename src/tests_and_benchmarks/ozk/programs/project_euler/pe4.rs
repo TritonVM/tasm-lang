@@ -56,7 +56,7 @@ fn main() {
         lhs += 1;
     }
 
-    tasm::tasm_io_write_to_stdout_u32(max_palindrome);
+    tasm::tasm_io_write_to_stdout___u32(max_palindrome);
 
     return;
 }

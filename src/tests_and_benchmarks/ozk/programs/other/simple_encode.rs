@@ -5,17 +5,17 @@ use triton_vm::Digest;
 use twenty_first::shared_math::bfield_codec::BFieldCodec;
 
 fn main() {
-    let a: Digest = tasm::tasm_io_read_stdin_digest();
-    let b: Digest = tasm::tasm_io_read_stdin_digest();
+    let a: Digest = tasm::tasm_io_read_stdin___digest();
+    let b: Digest = tasm::tasm_io_read_stdin___digest();
 
     let a_list: Vec<BFieldElement> = a.encode();
     let b_list: Vec<BFieldElement> = b.encode();
 
-    tasm::tasm_io_write_to_stdout_bfe(a_list[3]);
-    tasm::tasm_io_write_to_stdout_bfe(b_list[4]);
-    tasm::tasm_io_write_to_stdout_bfe(a_list[4]);
-    tasm::tasm_io_write_to_stdout_bfe(a_list[1]);
-    tasm::tasm_io_write_to_stdout_bfe(b_list[0]);
+    tasm::tasm_io_write_to_stdout___bfe(a_list[3]);
+    tasm::tasm_io_write_to_stdout___bfe(b_list[4]);
+    tasm::tasm_io_write_to_stdout___bfe(a_list[4]);
+    tasm::tasm_io_write_to_stdout___bfe(a_list[1]);
+    tasm::tasm_io_write_to_stdout___bfe(b_list[0]);
 
     return;
 }

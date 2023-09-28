@@ -3,17 +3,17 @@ use triton_vm::BFieldElement;
 
 fn main() {
     // Store two BFieldElements in memory. Then read them out again.
-    let a: BFieldElement = tasm::tasm_io_read_stdin_bfe();
-    let b: BFieldElement = tasm::tasm_io_read_stdin_bfe();
+    let a: BFieldElement = tasm::tasm_io_read_stdin___bfe();
+    let b: BFieldElement = tasm::tasm_io_read_stdin___bfe();
     let boxed_ab: Box<(BFieldElement, BFieldElement)> =
         Box::<(BFieldElement, BFieldElement)>::new((a, b));
     let e: (BFieldElement, BFieldElement) = *boxed_ab;
     assert!(a == e.0);
     assert!(b == e.1);
 
-    tasm::tasm_io_write_to_stdout_bfe(e.1);
-    tasm::tasm_io_write_to_stdout_bfe(e.0);
-    tasm::tasm_io_write_to_stdout_bfe(e.0);
+    tasm::tasm_io_write_to_stdout___bfe(e.1);
+    tasm::tasm_io_write_to_stdout___bfe(e.0);
+    tasm::tasm_io_write_to_stdout___bfe(e.0);
 
     return;
 }

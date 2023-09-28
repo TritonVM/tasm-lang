@@ -9,10 +9,10 @@ fn main() {
     }
     let mut input_values: Vec<BFieldElement> = Vec::<BFieldElement>::with_capacity(200);
 
-    let length_indication: usize = tasm::tasm_io_read_stdin_bfe().value() as usize;
+    let length_indication: usize = tasm::tasm_io_read_stdin___bfe().value() as usize;
     let mut i: usize = 0;
     while i < length_indication {
-        input_values.push(tasm::tasm_io_read_stdin_bfe());
+        input_values.push(tasm::tasm_io_read_stdin___bfe());
         i += 1;
     }
     let output_values: Vec<BFieldElement> =
@@ -20,7 +20,7 @@ fn main() {
 
     let mut j: usize = 0;
     while j < length_indication {
-        tasm::tasm_io_write_to_stdout_bfe(output_values[j]);
+        tasm::tasm_io_write_to_stdout___bfe(output_values[j]);
         j += 1;
     }
 

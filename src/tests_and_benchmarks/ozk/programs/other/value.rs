@@ -5,12 +5,12 @@ fn main() {
     let a: BFieldElement = BFieldElement::new(17u64);
     let a_u64: u64 = a.value();
     let b: BFieldElement = BFieldElement::new(a_u64);
-    tasm::tasm_io_write_to_stdout_bfe(b);
+    tasm::tasm_io_write_to_stdout___bfe(b);
 
     let c: BFieldElement = BFieldElement::new((1 << 32) + 17u64);
     let c_u64: u64 = c.value();
     let d: BFieldElement = BFieldElement::new(c_u64);
-    tasm::tasm_io_write_to_stdout_bfe(d);
+    tasm::tasm_io_write_to_stdout___bfe(d);
     return;
 }
 

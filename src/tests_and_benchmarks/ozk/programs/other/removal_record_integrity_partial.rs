@@ -62,7 +62,7 @@ impl TransactionKernel {
 
 fn main() {
     // get hash of tx kernel from standard-in
-    let hash_of_kernel: Digest = tasm::tasm_io_read_stdin_digest();
+    let hash_of_kernel: Digest = tasm::tasm_io_read_stdin___digest();
 
     let witness: Box<RemovalRecordsIntegrityWitness> =
         RemovalRecordsIntegrityWitness::decode(&tasm::load_from_memory(BFieldElement::new(12000)))
@@ -75,7 +75,7 @@ fn main() {
     return;
 
     // // Read transaction kernel hash
-    // let _s5: Digest = tasm::tasm_io_read_stdin_digest();
+    // let _s5: Digest = tasm::tasm_io_read_stdin___digest();
 
     // Calling `decode` could load a struct, but from where?
     // If the struct is already present in memory, we probaly only need a pointer to it.

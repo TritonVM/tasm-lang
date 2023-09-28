@@ -18,7 +18,7 @@ fn main() {
         }
     }
 
-    tasm::tasm_io_write_to_stdout_u64(composite_number);
+    tasm::tasm_io_write_to_stdout___u64(composite_number);
 
     return;
 }

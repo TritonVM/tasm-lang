@@ -4,8 +4,8 @@ use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 struct TupleStruct1(u128);
 
 fn main() {
-    let a: u128 = tasm::tasm_io_read_stdin_u128();
-    let b: u128 = tasm::tasm_io_read_stdin_u128();
+    let a: u128 = tasm::tasm_io_read_stdin___u128();
+    let b: u128 = tasm::tasm_io_read_stdin___u128();
     let a_copied: u128 = a;
     let ts_a: TupleStruct1 = TupleStruct1(a);
     let ts_b: TupleStruct1 = TupleStruct1(b);
@@ -20,12 +20,12 @@ fn main() {
     let a_again: u128 = ts_again_a.0;
 
     assert!(a == a_again);
-    tasm::tasm_io_write_to_stdout_u128(a);
-    tasm::tasm_io_write_to_stdout_u128(a_again);
+    tasm::tasm_io_write_to_stdout___u128(a);
+    tasm::tasm_io_write_to_stdout___u128(a_again);
     assert!(b == b_again);
 
-    tasm::tasm_io_write_to_stdout_u128(b);
-    tasm::tasm_io_write_to_stdout_u128(b_again);
+    tasm::tasm_io_write_to_stdout___u128(b);
+    tasm::tasm_io_write_to_stdout___u128(b_again);
 
     return;
 }

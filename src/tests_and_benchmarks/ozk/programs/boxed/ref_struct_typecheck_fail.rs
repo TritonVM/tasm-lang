@@ -19,8 +19,8 @@ impl NonCopyStruct {
 
 #[allow(dead_code)]
 fn main() {
-    let a: NonCopyStruct = NonCopyStruct::new(tasm::tasm_io_read_stdin_u64());
-    tasm::tasm_io_write_to_stdout_u64((&a).valued());
+    let a: NonCopyStruct = NonCopyStruct::new(tasm::tasm_io_read_stdin___u64());
+    tasm::tasm_io_write_to_stdout___u64((&a).valued());
     return;
 }
 

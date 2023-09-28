@@ -27,7 +27,7 @@ fn main() {
         Vec::<Digest>::decode(&tasm::load_from_memory(BFieldElement::new(2000))).unwrap();
 
     let root: Digest = merkle_root(&(*elements), 0usize, 64usize);
-    tasm::tasm_io_write_to_stdout_digest(root);
+    tasm::tasm_io_write_to_stdout___digest(root);
 
     return;
 }

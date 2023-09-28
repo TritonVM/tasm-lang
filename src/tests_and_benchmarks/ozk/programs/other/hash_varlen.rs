@@ -15,7 +15,7 @@ fn main() {
 
     let digest: Digest = H::hash_varlen(&(*elements));
 
-    tasm::tasm_io_write_to_stdout_digest(digest);
+    tasm::tasm_io_write_to_stdout___digest(digest);
 
     return;
 }
