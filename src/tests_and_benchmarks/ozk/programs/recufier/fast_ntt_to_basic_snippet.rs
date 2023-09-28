@@ -22,7 +22,7 @@ fn xfe_ntt(x: &mut Vec<XFieldElement>, omega: BFieldElement) {
     }
 
     let size: u32 = x.len() as u32;
-    let log_2_size: u32 = u32::BITS - (size as u32).leading_zeros() - 1;
+    let log_2_size: u32 = u32::BITS - size.leading_zeros() - 1;
 
     {
         let mut k: u32 = 0;
@@ -75,8 +75,43 @@ fn xfe_ntt(x: &mut Vec<XFieldElement>, omega: BFieldElement) {
 }
 
 mod tests {
+    use std::collections::HashMap;
+
+    use triton_vm::{BFieldElement, NonDeterminism};
+
+    use crate::tests_and_benchmarks::test_helpers::shared_test::{
+        bfe_lit, compare_compiled_prop_with_stack_and_memory_and_ins,
+    };
+
     #[test]
     fn fast_xfe_ntt_to_basic_snippet_test() {
+        // This first test is only added to illustrate that it is possible to test these OZK functions
+        // before generating a `BasicSnippet` implementation from it.
+        let compiled = crate::tests_and_benchmarks::ozk::ozk_parsing::compile_for_test(
+            "recufier",
+            "fast_ntt_to_basic_snippet",
+            "xfe_ntt",
+            crate::ast_types::ListType::Unsafe,
+        );
+        let init_memory: HashMap<BFieldElement, BFieldElement> = [
+            (BFieldElement::new(100), BFieldElement::new(1)),
+            (BFieldElement::new(101), BFieldElement::new(500)),
+        ]
+        .iter()
+        .cloned()
+        .collect();
+        compare_compiled_prop_with_stack_and_memory_and_ins(
+            &compiled,
+            "xfe_ntt",
+            vec![bfe_lit(1u64.into()), bfe_lit(1u64.into())],
+            vec![],
+            init_memory,
+            None,
+            vec![],
+            NonDeterminism::new(vec![]),
+        );
+
+        // Output what we came for: A `BasicSnippet` implementation constructed by the compiler
         let (rust_ast, _, _) =
             crate::tests_and_benchmarks::ozk::ozk_parsing::parse_function_and_structs(
                 "recufier",

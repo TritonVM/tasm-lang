@@ -617,7 +617,7 @@ impl<'a> CompilerState<'a> {
         let spilled = if self.function_state.spill_required.contains(&address) {
             let spill_address = self
                 .global_compiler_state
-                .statically_allocate(&address, &data_type)
+                .statically_allocate(&address, data_type)
                 .try_into()
                 .unwrap();
             eprintln!("Warning: spill required of {address}. Spilling to address: {spill_address}");

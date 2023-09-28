@@ -164,5 +164,5 @@ pub(crate) fn compile_to_basic_snippet(
         &structs,
     );
 
-    tasm.to_basic_snippet()
+    tasm.generate_basic_snippet_implementation()
 }
