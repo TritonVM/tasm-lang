@@ -15,7 +15,7 @@ fn main() {
         exponent += 1;
     }
 
-    tasm::tasm_io_write_to_stdout_bfe(base_number.mod_pow_u32(exponent));
+    tasm::tasm_io_write_to_stdout___bfe(base_number.mod_pow_u32(exponent));
 
     return;
 }
@@ -39,7 +39,8 @@ mod tests {
         assert_eq!(native_output, expected_output);
 
         // Test function in Triton VM
-        let (parsed, _, _) = ozk_parsing::parse_main_and_structs("arithmetic", "mod_pow_u32");
+        let (parsed, _, _) =
+            ozk_parsing::parse_function_and_structs("arithmetic", "mod_pow_u32", "main");
         let expected_stack_diff = 0;
         let stack_start = vec![];
         let vm_output =

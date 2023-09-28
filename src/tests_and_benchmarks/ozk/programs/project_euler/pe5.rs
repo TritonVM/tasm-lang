@@ -8,7 +8,7 @@ fn main() {
     // 7 = 7, 8 = 2^3, 9 = 3^2, 10 = 2*5, 11 = 11, 12 = 3*2^2, 13 = 13, 14 = 2*7, 15 = 3 * 5,
     // 16 = 2^4, 17 = 17, 18 = 2*3^2, 19 = 19, 20 = 2^2*5
     let ret: u32 = 2u32.pow(4) * 3u32.pow(2) * 5 * 7 * 11 * 13 * 17 * 19;
-    tasm::tasm_io_write_to_stdout_u32(ret);
+    tasm::tasm_io_write_to_stdout___u32(ret);
 
     return;
 }
@@ -31,7 +31,8 @@ mod tests {
             rust_shadows::wrap_main_with_io(&main)(stdin.clone(), non_determinism.clone());
 
         // Test function in Triton VM
-        let (parsed, _, _) = ozk_parsing::parse_main_and_structs("project_euler", "pe5");
+        let (parsed, _, _) =
+            ozk_parsing::parse_function_and_structs("project_euler", "pe5", "main");
         let expected_stack_diff = 0;
         let stack_start = vec![];
         let vm_output =

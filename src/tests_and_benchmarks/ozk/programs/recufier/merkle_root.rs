@@ -27,7 +27,7 @@ fn main() {
         Vec::<Digest>::decode(&tasm::load_from_memory(BFieldElement::new(2000))).unwrap();
 
     let root: Digest = merkle_root(&(*elements), 0usize, 64usize);
-    tasm::tasm_io_write_to_stdout_digest(root);
+    tasm::tasm_io_write_to_stdout___digest(root);
 
     return;
 }
@@ -61,7 +61,8 @@ mod tests {
         assert_eq!(native_output, expected_output);
 
         // Test function in Triton VM
-        let (rust_ast, _, _) = ozk_parsing::parse_main_and_structs("recufier", "merkle_root");
+        let (rust_ast, _, _) =
+            ozk_parsing::parse_function_and_structs("recufier", "merkle_root", "main");
         let expected_stack_diff = 0;
         let (code, _fn_name) = compile_for_run_test(&rust_ast, ast_types::ListType::Unsafe);
         let vm_output = execute_compiled_with_stack_memory_and_ins_for_test(

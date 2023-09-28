@@ -3,7 +3,7 @@ use triton_vm::BFieldElement;
 
 fn main() {
     // Store two BFieldElements in memory. Then read them out again.
-    let a: BFieldElement = tasm::tasm_io_read_stdin_bfe();
+    let a: BFieldElement = tasm::tasm_io_read_stdin___bfe();
     let b: BFieldElement = BFieldElement::new((1u64 << 40) + 132);
     let boxed_a: Box<BFieldElement> = Box::<BFieldElement>::new(a);
     let boxed_b: Box<BFieldElement> = Box::<BFieldElement>::new(b);
@@ -11,8 +11,8 @@ fn main() {
     assert!(a == *boxed_a);
     assert!(b == *boxed_b);
 
-    tasm::tasm_io_write_to_stdout_bfe(*boxed_b);
-    tasm::tasm_io_write_to_stdout_bfe(*boxed_a);
+    tasm::tasm_io_write_to_stdout___bfe(*boxed_b);
+    tasm::tasm_io_write_to_stdout___bfe(*boxed_a);
 
     return;
 }
@@ -41,8 +41,12 @@ mod tests {
         assert_eq!(native_output, expected_output);
 
         // Test function in Triton VM
-        let test_program =
-            ozk_parsing::compile_for_test("boxed", "bfe", crate::ast_types::ListType::Unsafe);
+        let test_program = ozk_parsing::compile_for_test(
+            "boxed",
+            "bfe",
+            "main",
+            crate::ast_types::ListType::Unsafe,
+        );
         let expected_stack_diff = 0;
         println!("test_program:\n{}", test_program.iter().join("\n"));
         let vm_output = execute_compiled_with_stack_memory_and_ins_for_test(

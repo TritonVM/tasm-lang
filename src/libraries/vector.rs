@@ -372,36 +372,36 @@ impl VectorLib {
         match public_name {
             "default" => panic!("Change `Vec::default()` to `Vec::with_capacity(n)`."),
             "with_capacity" => match self.list_type {
-                ListType::Safe => Some(Box::new(tasm_lib::list::safe_u32::new::SafeNew(
+                ListType::Safe => Some(Box::new(tasm_lib::list::safeimplu32::new::SafeNew(
                     tasm_type.unwrap(),
                 ))),
-                ListType::Unsafe => Some(Box::new(tasm_lib::list::unsafe_u32::new::UnsafeNew(
+                ListType::Unsafe => Some(Box::new(tasm_lib::list::unsafeimplu32::new::UnsafeNew(
                     tasm_type.unwrap(),
                 ))),
             },
             "push" => match self.list_type {
-                ListType::Safe => Some(Box::new(tasm_lib::list::safe_u32::push::SafePush(
+                ListType::Safe => Some(Box::new(tasm_lib::list::safeimplu32::push::SafePush(
                     tasm_type.unwrap(),
                 ))),
-                ListType::Unsafe => Some(Box::new(tasm_lib::list::unsafe_u32::push::UnsafePush(
-                    tasm_type.unwrap(),
-                ))),
+                ListType::Unsafe => Some(Box::new(
+                    tasm_lib::list::unsafeimplu32::push::UnsafePush(tasm_type.unwrap()),
+                )),
             },
             "pop" => match self.list_type {
-                ListType::Safe => Some(Box::new(tasm_lib::list::safe_u32::pop::SafePop(
+                ListType::Safe => Some(Box::new(tasm_lib::list::safeimplu32::pop::SafePop(
                     tasm_type.unwrap(),
                 ))),
-                ListType::Unsafe => Some(Box::new(tasm_lib::list::unsafe_u32::pop::UnsafePop(
+                ListType::Unsafe => Some(Box::new(tasm_lib::list::unsafeimplu32::pop::UnsafePop(
                     tasm_type.unwrap(),
                 ))),
             },
             "len" => match self.list_type {
-                ListType::Safe => Some(Box::new(tasm_lib::list::safe_u32::length::SafeLength(
+                ListType::Safe => Some(Box::new(tasm_lib::list::safeimplu32::length::Length(
                     tasm_type.unwrap(),
                 ))),
-                ListType::Unsafe => Some(Box::new(
-                    tasm_lib::list::unsafe_u32::length::UnsafeLength(tasm_type.unwrap()),
-                )),
+                ListType::Unsafe => Some(Box::new(tasm_lib::list::unsafeimplu32::length::Length(
+                    tasm_type.unwrap(),
+                ))),
             },
             "map" => {
                 let inner_function_type =

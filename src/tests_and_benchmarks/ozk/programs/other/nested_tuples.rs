@@ -20,11 +20,11 @@ fn main() {
         ),
     );
 
-    tasm::tasm_io_write_to_stdout_xfe(a.1 .1);
-    tasm::tasm_io_write_to_stdout_bfe(a.0);
-    tasm::tasm_io_write_to_stdout_xfe(a.1 .0);
-    tasm::tasm_io_write_to_stdout_xfe(a.1 .0);
-    tasm::tasm_io_write_to_stdout_bfe(a.0);
+    tasm::tasm_io_write_to_stdout___xfe(a.1 .1);
+    tasm::tasm_io_write_to_stdout___bfe(a.0);
+    tasm::tasm_io_write_to_stdout___xfe(a.1 .0);
+    tasm::tasm_io_write_to_stdout___xfe(a.1 .0);
+    tasm::tasm_io_write_to_stdout___bfe(a.0);
 
     a.1 .0 = XFieldElement::new([
         BFieldElement::new(0xffff_0000_0001_0002),
@@ -32,9 +32,9 @@ fn main() {
         BFieldElement::new(0xffff_0000_0001_0004),
     ]);
     a.0 = BFieldElement::new(900);
-    tasm::tasm_io_write_to_stdout_bfe(a.0);
-    tasm::tasm_io_write_to_stdout_xfe(a.1 .0);
-    tasm::tasm_io_write_to_stdout_xfe(a.1 .0);
+    tasm::tasm_io_write_to_stdout___bfe(a.0);
+    tasm::tasm_io_write_to_stdout___xfe(a.1 .0);
+    tasm::tasm_io_write_to_stdout___xfe(a.1 .0);
 
     return;
 }
@@ -113,6 +113,7 @@ mod tests {
         let test_program = ozk_parsing::compile_for_test(
             "other",
             "nested_tuples",
+            "main",
             crate::ast_types::ListType::Safe,
         );
         println!("test_program is:\n{}", test_program.iter().join("\n"));

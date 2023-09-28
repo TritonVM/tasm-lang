@@ -12,7 +12,7 @@ mod run_tests {
     fn stdin_rast() -> syn::ItemFn {
         item_fn(parse_quote! {
             fn stdin() -> BFieldElement {
-                let from_stdin: BFieldElement = tasm::tasm_io_read_stdin_bfe();
+                let from_stdin: BFieldElement = tasm::tasm_io_read_stdin___bfe();
                 return from_stdin;
             }
         })
@@ -21,8 +21,8 @@ mod run_tests {
     fn stdin_rast_pair() -> syn::ItemFn {
         item_fn(parse_quote! {
             fn stdin() -> (BFieldElement, BFieldElement) {
-                let res1: BFieldElement = tasm::tasm_io_read_stdin_bfe();
-                let res2: BFieldElement = tasm::tasm_io_read_stdin_bfe();
+                let res1: BFieldElement = tasm::tasm_io_read_stdin___bfe();
+                let res2: BFieldElement = tasm::tasm_io_read_stdin___bfe();
                 return (res1, res2);
             }
         })
@@ -31,7 +31,7 @@ mod run_tests {
     fn secretin_rast() -> syn::ItemFn {
         item_fn(parse_quote! {
             fn secretin() -> BFieldElement {
-                let res: BFieldElement = tasm::tasm_io_read_secret_bfe();
+                let res: BFieldElement = tasm::tasm_io_read_secret___bfe();
                 return res;
             }
         })
@@ -40,14 +40,14 @@ mod run_tests {
     fn secretin_rast_10() -> syn::ItemFn {
         item_fn(parse_quote! {
             fn secretin() -> (BFieldElement, BFieldElement, BFieldElement, BFieldElement, BFieldElement, BFieldElement, BFieldElement, BFieldElement) {
-                let r0: BFieldElement = tasm::tasm_io_read_secret_bfe();
-                let r1: BFieldElement = tasm::tasm_io_read_secret_bfe();
-                let r2: BFieldElement = tasm::tasm_io_read_secret_bfe();
-                let r3: BFieldElement = tasm::tasm_io_read_secret_bfe();
-                let r4: BFieldElement = tasm::tasm_io_read_secret_bfe();
-                let r5: BFieldElement = tasm::tasm_io_read_secret_bfe();
-                let r6: BFieldElement = tasm::tasm_io_read_secret_bfe();
-                let r7: BFieldElement = tasm::tasm_io_read_secret_bfe();
+                let r0: BFieldElement = tasm::tasm_io_read_secret___bfe();
+                let r1: BFieldElement = tasm::tasm_io_read_secret___bfe();
+                let r2: BFieldElement = tasm::tasm_io_read_secret___bfe();
+                let r3: BFieldElement = tasm::tasm_io_read_secret___bfe();
+                let r4: BFieldElement = tasm::tasm_io_read_secret___bfe();
+                let r5: BFieldElement = tasm::tasm_io_read_secret___bfe();
+                let r6: BFieldElement = tasm::tasm_io_read_secret___bfe();
+                let r7: BFieldElement = tasm::tasm_io_read_secret___bfe();
                 return (r0,r1,r2,r3,r4,r5,r6,r7);
             }
         })
@@ -56,11 +56,11 @@ mod run_tests {
     fn stdin_rast_most_types() -> syn::ItemFn {
         item_fn(parse_quote! {
             fn mosttypes() -> (bool, u32, u64, BFieldElement, XFieldElement) {
-                let s0: bool = tasm::tasm_io_read_stdin_bool();
-                let s1: u32 = tasm::tasm_io_read_stdin_u32();
-                let s2: u64 = tasm::tasm_io_read_stdin_u64();
-                let s3: BFieldElement = tasm::tasm_io_read_stdin_bfe();
-                let s4: XFieldElement = tasm::tasm_io_read_stdin_xfe();
+                let s0: bool = tasm::tasm_io_read_stdin___bool();
+                let s1: u32 = tasm::tasm_io_read_stdin___u32();
+                let s2: u64 = tasm::tasm_io_read_stdin___u64();
+                let s3: BFieldElement = tasm::tasm_io_read_stdin___bfe();
+                let s4: XFieldElement = tasm::tasm_io_read_stdin___xfe();
                 return (s0,s1,s2,s3,s4);
             }
         })
@@ -69,12 +69,12 @@ mod run_tests {
     fn stdin_rast_all_types() -> syn::ItemFn {
         item_fn(parse_quote! {
             fn all_types() -> (bool, u32, u64, BFieldElement, XFieldElement, Digest) {
-                let s0: bool = tasm::tasm_io_read_stdin_bool();
-                let s1: u32 = tasm::tasm_io_read_stdin_u32();
-                let s2: u64 = tasm::tasm_io_read_stdin_u64();
-                let s3: BFieldElement = tasm::tasm_io_read_stdin_bfe();
-                let s4: XFieldElement = tasm::tasm_io_read_stdin_xfe();
-                let s5: Digest = tasm::tasm_io_read_stdin_digest();
+                let s0: bool = tasm::tasm_io_read_stdin___bool();
+                let s1: u32 = tasm::tasm_io_read_stdin___u32();
+                let s2: u64 = tasm::tasm_io_read_stdin___u64();
+                let s3: BFieldElement = tasm::tasm_io_read_stdin___bfe();
+                let s4: XFieldElement = tasm::tasm_io_read_stdin___xfe();
+                let s5: Digest = tasm::tasm_io_read_stdin___digest();
                 return (s0,s1,s2,s3,s4, s5);
             }
         })
@@ -84,12 +84,12 @@ mod run_tests {
         item_fn(parse_quote! {
             fn all_types_one_liner() -> (bool, u32, u64, BFieldElement, XFieldElement, Digest) {
                 return (
-                    tasm::tasm_io_read_stdin_bool(),
-                    tasm::tasm_io_read_stdin_u32(),
-                    tasm::tasm_io_read_stdin_u64(),
-                    tasm::tasm_io_read_stdin_bfe(),
-                    tasm::tasm_io_read_stdin_xfe(),
-                    tasm::tasm_io_read_stdin_digest()
+                    tasm::tasm_io_read_stdin___bool(),
+                    tasm::tasm_io_read_stdin___u32(),
+                    tasm::tasm_io_read_stdin___u64(),
+                    tasm::tasm_io_read_stdin___bfe(),
+                    tasm::tasm_io_read_stdin___xfe(),
+                    tasm::tasm_io_read_stdin___digest()
                 );
             }
         })
@@ -99,12 +99,12 @@ mod run_tests {
         item_fn(parse_quote! {
             fn all_types_one_liner() -> (bool, u32, u64, BFieldElement, XFieldElement, Digest) {
                 return (
-                    tasm::tasm_io_read_secret_bool(),
-                    tasm::tasm_io_read_secret_u32(),
-                    tasm::tasm_io_read_secret_u64(),
-                    tasm::tasm_io_read_secret_bfe(),
-                    tasm::tasm_io_read_secret_xfe(),
-                    tasm::tasm_io_read_secret_digest()
+                    tasm::tasm_io_read_secret___bool(),
+                    tasm::tasm_io_read_secret___u32(),
+                    tasm::tasm_io_read_secret___u64(),
+                    tasm::tasm_io_read_secret___bfe(),
+                    tasm::tasm_io_read_secret___xfe(),
+                    tasm::tasm_io_read_secret___digest()
                 );
             }
         })
@@ -113,7 +113,7 @@ mod run_tests {
     fn stdin_rast_digest() -> syn::ItemFn {
         item_fn(parse_quote! {
             fn get_digest() -> Digest {
-                let s: Digest = tasm::tasm_io_read_stdin_digest();
+                let s: Digest = tasm::tasm_io_read_stdin___digest();
                 return s;
             }
         })
@@ -122,11 +122,11 @@ mod run_tests {
     fn secretin_rast_most_types() -> syn::ItemFn {
         item_fn(parse_quote! {
             fn most_types() -> (bool, u32, u64, BFieldElement, XFieldElement) {
-                let r0: bool = tasm::tasm_io_read_secret_bool();
-                let r1: u32 = tasm::tasm_io_read_secret_u32();
-                let r2: u64 = tasm::tasm_io_read_secret_u64();
-                let r3: BFieldElement = tasm::tasm_io_read_secret_bfe();
-                let r4: XFieldElement = tasm::tasm_io_read_secret_xfe();
+                let r0: bool = tasm::tasm_io_read_secret___bool();
+                let r1: u32 = tasm::tasm_io_read_secret___u32();
+                let r2: u64 = tasm::tasm_io_read_secret___u64();
+                let r3: BFieldElement = tasm::tasm_io_read_secret___bfe();
+                let r4: XFieldElement = tasm::tasm_io_read_secret___xfe();
                 return (r0,r1,r2,r3,r4);
             }
         })
@@ -135,7 +135,7 @@ mod run_tests {
     fn secretin_rast_digest() -> syn::ItemFn {
         item_fn(parse_quote! {
             fn get_digest() -> Digest {
-                let s: Digest = tasm::tasm_io_read_secret_digest();
+                let s: Digest = tasm::tasm_io_read_secret___digest();
                 return s;
             }
         })

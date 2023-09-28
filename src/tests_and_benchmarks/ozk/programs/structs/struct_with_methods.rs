@@ -54,12 +54,12 @@ impl TestStruct {
 fn main() {
     let test_struct: Box<TestStruct> =
         TestStruct::decode(&tasm::load_from_memory(BFieldElement::new(200))).unwrap();
-    tasm::tasm_io_write_to_stdout_u32(test_struct.bc_count_ones_and_add(200));
-    tasm::tasm_io_write_to_stdout_u32(test_struct.bc_count_ones_and_add(8043));
-    tasm::tasm_io_write_to_stdout_u32(test_struct.a_length());
-    tasm::tasm_io_write_to_stdout_xfe(test_struct.lift_element_zero());
-    tasm::tasm_io_write_to_stdout_u32(test_struct.call_other_methods(4));
-    tasm::tasm_io_write_to_stdout_xfe(test_struct.call_all_methods(200, 7));
+    tasm::tasm_io_write_to_stdout___u32(test_struct.bc_count_ones_and_add(200));
+    tasm::tasm_io_write_to_stdout___u32(test_struct.bc_count_ones_and_add(8043));
+    tasm::tasm_io_write_to_stdout___u32(test_struct.a_length());
+    tasm::tasm_io_write_to_stdout___xfe(test_struct.lift_element_zero());
+    tasm::tasm_io_write_to_stdout___u32(test_struct.call_other_methods(4));
+    tasm::tasm_io_write_to_stdout___xfe(test_struct.call_all_methods(200, 7));
     return;
 }
 
@@ -117,6 +117,7 @@ mod tests {
         let test_program = ozk_parsing::compile_for_test(
             "structs",
             "struct_with_methods",
+            "main",
             crate::ast_types::ListType::Unsafe,
         );
         println!("executing:\n{}", test_program.iter().join("\n"));

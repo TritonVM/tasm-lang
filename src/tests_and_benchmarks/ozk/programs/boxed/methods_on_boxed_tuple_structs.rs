@@ -14,11 +14,11 @@ impl TupleStructA {
 }
 
 fn main() {
-    let a_0: u128 = tasm::tasm_io_read_stdin_u128();
-    let a_1: u64 = tasm::tasm_io_read_stdin_u64();
+    let a_0: u128 = tasm::tasm_io_read_stdin___u128();
+    let a_1: u64 = tasm::tasm_io_read_stdin___u64();
     let tsa: TupleStructA = TupleStructA(a_0, a_1);
     let tsa_boxed: Box<TupleStructA> = Box::<TupleStructA>::new(tsa);
-    tasm::tasm_io_write_to_stdout_u128(tsa_boxed.sum());
+    tasm::tasm_io_write_to_stdout___u128(tsa_boxed.sum());
 
     return;
 }
@@ -55,6 +55,7 @@ mod tests {
         let test_program = ozk_parsing::compile_for_test(
             "boxed",
             "methods_on_boxed_tuple_structs",
+            "main",
             crate::ast_types::ListType::Unsafe,
         );
         let expected_stack_diff = 0;

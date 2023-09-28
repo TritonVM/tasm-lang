@@ -23,49 +23,49 @@ fn main() {
 
     // Print `a`
     let a: BFieldElement = test_struct.a;
-    tasm::tasm_io_write_to_stdout_bfe(a);
+    tasm::tasm_io_write_to_stdout___bfe(a);
 
     // Print `b`
     let b: BFieldElement = test_struct.b;
-    tasm::tasm_io_write_to_stdout_bfe(b);
+    tasm::tasm_io_write_to_stdout___bfe(b);
 
     // Print length of `c` three times
     let c_vector_length_u64: u64 = test_struct.c.len() as u64;
     let c_vector_length: u32 = test_struct.c.len() as u32;
-    tasm::tasm_io_write_to_stdout_bfe(BFieldElement::new(c_vector_length as u64));
-    tasm::tasm_io_write_to_stdout_bfe(BFieldElement::new(c_vector_length_u64));
-    tasm::tasm_io_write_to_stdout_bfe(BFieldElement::new(test_struct.c.len() as u64));
+    tasm::tasm_io_write_to_stdout___bfe(BFieldElement::new(c_vector_length as u64));
+    tasm::tasm_io_write_to_stdout___bfe(BFieldElement::new(c_vector_length_u64));
+    tasm::tasm_io_write_to_stdout___bfe(BFieldElement::new(test_struct.c.len() as u64));
 
     // Print element 1 of `c`
-    tasm::tasm_io_write_to_stdout_digest(test_struct.c[1]);
+    tasm::tasm_io_write_to_stdout___digest(test_struct.c[1]);
 
     // Print element 7 of `g`
-    tasm::tasm_io_write_to_stdout_xfe(test_struct.g[7]);
+    tasm::tasm_io_write_to_stdout___xfe(test_struct.g[7]);
 
     // Print length of `e`
-    tasm::tasm_io_write_to_stdout_u32(test_struct.e.len() as u32);
+    tasm::tasm_io_write_to_stdout___u32(test_struct.e.len() as u32);
 
     // Print `d`
-    tasm::tasm_io_write_to_stdout_xfe(test_struct.d);
+    tasm::tasm_io_write_to_stdout___xfe(test_struct.d);
 
     // Print elements from `h`
-    tasm::tasm_io_write_to_stdout_xfe(test_struct.h[2][5]);
-    tasm::tasm_io_write_to_stdout_xfe(test_struct.h[2][5]);
-    tasm::tasm_io_write_to_stdout_xfe(test_struct.h[0][0]);
-    tasm::tasm_io_write_to_stdout_xfe(test_struct.h[3][10]);
-    tasm::tasm_io_write_to_stdout_bfe(BFieldElement::new(test_struct.h[3].len() as u64));
-    tasm::tasm_io_write_to_stdout_bfe(BFieldElement::new(test_struct.h[0].len() as u64));
-    tasm::tasm_io_write_to_stdout_bfe(BFieldElement::new(test_struct.h.len() as u64));
+    tasm::tasm_io_write_to_stdout___xfe(test_struct.h[2][5]);
+    tasm::tasm_io_write_to_stdout___xfe(test_struct.h[2][5]);
+    tasm::tasm_io_write_to_stdout___xfe(test_struct.h[0][0]);
+    tasm::tasm_io_write_to_stdout___xfe(test_struct.h[3][10]);
+    tasm::tasm_io_write_to_stdout___bfe(BFieldElement::new(test_struct.h[3].len() as u64));
+    tasm::tasm_io_write_to_stdout___bfe(BFieldElement::new(test_struct.h[0].len() as u64));
+    tasm::tasm_io_write_to_stdout___bfe(BFieldElement::new(test_struct.h.len() as u64));
 
     // Print elements from `i`
-    tasm::tasm_io_write_to_stdout_xfe(test_struct.i[2][3][4]);
-    tasm::tasm_io_write_to_stdout_xfe(test_struct.i[4][3][2]);
-    tasm::tasm_io_write_to_stdout_xfe(test_struct.i[0][0][0]);
-    tasm::tasm_io_write_to_stdout_xfe(test_struct.i[5][0][0]);
-    tasm::tasm_io_write_to_stdout_xfe(test_struct.i[0][5][0]);
-    tasm::tasm_io_write_to_stdout_xfe(test_struct.i[0][0][5]);
-    tasm::tasm_io_write_to_stdout_bfe(BFieldElement::new(test_struct.i[0][0].len() as u64));
-    tasm::tasm_io_write_to_stdout_bfe(BFieldElement::new(test_struct.i[4][3].len() as u64));
+    tasm::tasm_io_write_to_stdout___xfe(test_struct.i[2][3][4]);
+    tasm::tasm_io_write_to_stdout___xfe(test_struct.i[4][3][2]);
+    tasm::tasm_io_write_to_stdout___xfe(test_struct.i[0][0][0]);
+    tasm::tasm_io_write_to_stdout___xfe(test_struct.i[5][0][0]);
+    tasm::tasm_io_write_to_stdout___xfe(test_struct.i[0][5][0]);
+    tasm::tasm_io_write_to_stdout___xfe(test_struct.i[0][0][5]);
+    tasm::tasm_io_write_to_stdout___bfe(BFieldElement::new(test_struct.i[0][0].len() as u64));
+    tasm::tasm_io_write_to_stdout___bfe(BFieldElement::new(test_struct.i[4][3].len() as u64));
 
     return;
 }
@@ -176,6 +176,7 @@ mod tests {
         let test_program = ozk_parsing::compile_for_test(
             "structs",
             "struct_with_vecs",
+            "main",
             crate::ast_types::ListType::Unsafe,
         );
         println!("executing:\n{}", test_program.iter().join("\n"));

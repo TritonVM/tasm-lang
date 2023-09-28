@@ -16,9 +16,9 @@ impl NonCopyStruct {
 
 #[allow(dead_code)]
 fn main() {
-    let a: NonCopyStruct = NonCopyStruct::new(tasm::tasm_io_read_stdin_u64());
+    let a: NonCopyStruct = NonCopyStruct::new(tasm::tasm_io_read_stdin___u64());
     let boxed_a: Box<NonCopyStruct> = Box::<NonCopyStruct>::new(a);
-    tasm::tasm_io_write_to_stdout_u64(boxed_a.valued());
+    tasm::tasm_io_write_to_stdout___u64(boxed_a.valued());
     return;
 }
 
@@ -42,6 +42,7 @@ mod tests {
         let test_program = ozk_parsing::compile_for_test(
             "boxed",
             "ref_struct_typecheck_succeed_bc_boxed",
+            "main",
             crate::ast_types::ListType::Unsafe,
         );
 

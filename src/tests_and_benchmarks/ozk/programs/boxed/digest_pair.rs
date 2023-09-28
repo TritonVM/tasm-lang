@@ -2,14 +2,14 @@ use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 use triton_vm::Digest;
 
 fn main() {
-    let a: Digest = tasm::tasm_io_read_stdin_digest();
+    let a: Digest = tasm::tasm_io_read_stdin___digest();
     let boxed_a: Box<Digest> = { Box::<Digest>::new(a) };
 
-    let b: Digest = tasm::tasm_io_read_stdin_digest();
+    let b: Digest = tasm::tasm_io_read_stdin___digest();
     let boxed_b: Box<Digest> = { Box::<Digest>::new(b) };
-    let c: Digest = tasm::tasm_io_read_stdin_digest();
+    let c: Digest = tasm::tasm_io_read_stdin___digest();
     let boxed_c: Box<Digest> = { Box::<Digest>::new(c) };
-    let d: Digest = tasm::tasm_io_read_stdin_digest();
+    let d: Digest = tasm::tasm_io_read_stdin___digest();
     let boxed_d: Box<Digest> = { Box::<Digest>::new(d) };
     let boxed_e: Box<(Digest, Digest)> = Box::<(Digest, Digest)>::new((c, a));
 
@@ -23,14 +23,14 @@ fn main() {
     assert!(c == e.0);
     assert!(a == e.1);
 
-    tasm::tasm_io_write_to_stdout_digest(a);
-    tasm::tasm_io_write_to_stdout_digest(b);
-    tasm::tasm_io_write_to_stdout_digest(*boxed_c);
-    tasm::tasm_io_write_to_stdout_digest(d);
-    tasm::tasm_io_write_to_stdout_digest(*boxed_a);
-    tasm::tasm_io_write_to_stdout_digest(*boxed_b);
-    tasm::tasm_io_write_to_stdout_digest(c);
-    tasm::tasm_io_write_to_stdout_digest(*boxed_d);
+    tasm::tasm_io_write_to_stdout___digest(a);
+    tasm::tasm_io_write_to_stdout___digest(b);
+    tasm::tasm_io_write_to_stdout___digest(*boxed_c);
+    tasm::tasm_io_write_to_stdout___digest(d);
+    tasm::tasm_io_write_to_stdout___digest(*boxed_a);
+    tasm::tasm_io_write_to_stdout___digest(*boxed_b);
+    tasm::tasm_io_write_to_stdout___digest(c);
+    tasm::tasm_io_write_to_stdout___digest(*boxed_d);
 
     return;
 }
@@ -68,6 +68,7 @@ mod tests {
         let test_program = ozk_parsing::compile_for_test(
             "boxed",
             "digest_pair",
+            "main",
             crate::ast_types::ListType::Unsafe,
         );
         let expected_stack_diff = 0;

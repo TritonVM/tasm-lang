@@ -28,8 +28,8 @@ fn main() {
     let test_struct: Box<TestStruct> =
         TestStruct::decode(&tasm::load_from_memory(BFieldElement::new(2))).unwrap();
     let other_value: u64 = 2023;
-    tasm::tasm_io_write_to_stdout_bfe(test_struct.ab_sum());
-    tasm::tasm_io_write_to_stdout_u128(test_struct.cd_sum(other_value));
+    tasm::tasm_io_write_to_stdout___bfe(test_struct.ab_sum());
+    tasm::tasm_io_write_to_stdout___u128(test_struct.cd_sum(other_value));
     return;
 }
 
@@ -66,6 +66,7 @@ mod tests {
         let test_program = ozk_parsing::compile_for_test(
             "structs",
             "struct_with_simple_methods",
+            "main",
             crate::ast_types::ListType::Unsafe,
         );
         let vm_output = execute_compiled_with_stack_memory_and_ins_for_test(

@@ -13,9 +13,9 @@ struct TupleStructC(u32, u32);
 fn main() {
     // Construct a values
     // TODO: Also test where we pull the entire tuple/struct down to the stack again
-    let a_0: u128 = tasm::tasm_io_read_stdin_u128();
-    let a_1: u64 = tasm::tasm_io_read_stdin_u64();
-    let a_2: Digest = tasm::tasm_io_read_stdin_digest();
+    let a_0: u128 = tasm::tasm_io_read_stdin___u128();
+    let a_1: u64 = tasm::tasm_io_read_stdin___u64();
+    let a_2: Digest = tasm::tasm_io_read_stdin___digest();
     let ts_a: TupleStructA = TupleStructA(a_0, a_1, a_2);
     let boxed_ts_a: Box<TupleStructA> = Box::<TupleStructA>::new(ts_a);
     let bare_tuple_a: (u128, u64, Digest) = (a_0, a_1, a_2);
@@ -43,9 +43,9 @@ fn main() {
     let a_2_again_5: Digest = unboxed_bare_tuple_a.2;
 
     // Construct b values
-    let b_0: Digest = tasm::tasm_io_read_stdin_digest();
-    let b_1: Digest = tasm::tasm_io_read_stdin_digest();
-    let b_2: Digest = tasm::tasm_io_read_stdin_digest();
+    let b_0: Digest = tasm::tasm_io_read_stdin___digest();
+    let b_1: Digest = tasm::tasm_io_read_stdin___digest();
+    let b_2: Digest = tasm::tasm_io_read_stdin___digest();
     let ts_b: TupleStructB = TupleStructB(b_0, b_1, b_2);
     let boxed_ts_b: Box<TupleStructB> = Box::<TupleStructB>::new(ts_b);
     let bare_tuple_b: (Digest, Digest, Digest) = (b_0, b_1, b_2);
@@ -73,8 +73,8 @@ fn main() {
     let b_2_again_5: Digest = unboxed_bare_tuple_b.2;
 
     // Construct c values
-    let c_0: u32 = tasm::tasm_io_read_stdin_bfe().value() as u32;
-    let c_1: u32 = tasm::tasm_io_read_stdin_bfe().value() as u32;
+    let c_0: u32 = tasm::tasm_io_read_stdin___bfe().value() as u32;
+    let c_1: u32 = tasm::tasm_io_read_stdin___bfe().value() as u32;
     let ts_c: TupleStructC = TupleStructC(c_0, c_1);
     let boxed_ts_c: Box<TupleStructC> = Box::<TupleStructC>::new(ts_c);
     let bare_tuple_c: (u32, u32) = (c_0, c_1);
@@ -246,6 +246,7 @@ mod tests {
         let test_program = ozk_parsing::compile_for_test(
             "boxed",
             "flat_tuples",
+            "main",
             crate::ast_types::ListType::Unsafe,
         );
         let expected_stack_diff = 0;

@@ -37,16 +37,16 @@ fn main() {
     assert!(4294967297u64 == DazeFieldElement::montyred(u64::MAX as u128));
     assert!(8589934593u64 == DazeFieldElement::montyred(u64::MAX as u128 - 1));
 
-    tasm::tasm_io_write_to_stdout_u64(DazeFieldElement::montyred(1u128 << 90));
-    tasm::tasm_io_write_to_stdout_u64(DazeFieldElement::montyred(1));
-    tasm::tasm_io_write_to_stdout_u64(DazeFieldElement::montyred(1000));
-    tasm::tasm_io_write_to_stdout_u64(DazeFieldElement::montyred(u64::MAX as u128));
-    tasm::tasm_io_write_to_stdout_u64(DazeFieldElement::montyred(((1u128 << 40) as u64) as u128));
-    tasm::tasm_io_write_to_stdout_u64(DazeFieldElement::montyred(
+    tasm::tasm_io_write_to_stdout___u64(DazeFieldElement::montyred(1u128 << 90));
+    tasm::tasm_io_write_to_stdout___u64(DazeFieldElement::montyred(1));
+    tasm::tasm_io_write_to_stdout___u64(DazeFieldElement::montyred(1000));
+    tasm::tasm_io_write_to_stdout___u64(DazeFieldElement::montyred(u64::MAX as u128));
+    tasm::tasm_io_write_to_stdout___u64(DazeFieldElement::montyred(((1u128 << 40) as u64) as u128));
+    tasm::tasm_io_write_to_stdout___u64(DazeFieldElement::montyred(
         (((1u128 << 40) + 1) as u64) as u128,
     ));
-    tasm::tasm_io_write_to_stdout_u64(DazeFieldElement::montyred(0xFFFFFFFF00000000));
-    tasm::tasm_io_write_to_stdout_u64(DazeFieldElement::montyred(2u128 * 0xFFFFFFFE00000001u128));
+    tasm::tasm_io_write_to_stdout___u64(DazeFieldElement::montyred(0xFFFFFFFF00000000));
+    tasm::tasm_io_write_to_stdout___u64(DazeFieldElement::montyred(2u128 * 0xFFFFFFFE00000001u128));
 
     return;
 }
@@ -88,6 +88,7 @@ mod tests {
         let test_program = ozk_parsing::compile_for_test(
             "arithmetic",
             "montyred",
+            "main",
             crate::ast_types::ListType::Unsafe,
         );
         let expected_stack_diff = 0;

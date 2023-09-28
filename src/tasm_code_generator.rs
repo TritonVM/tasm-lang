@@ -1,3 +1,5 @@
+mod inner_function_tasm_code;
+mod outer_function_tasm_code;
 pub mod subroutine;
 
 use itertools::{Either, Itertools};
@@ -5,16 +7,17 @@ use num::{One, Zero};
 use std::collections::{HashMap, HashSet};
 use std::fmt::Display;
 use tasm_lib::library::Library as SnippetState;
-use tasm_lib::memory::dyn_malloc::DynMalloc;
 use tasm_lib::snippet::BasicSnippet;
 use tasm_lib::{arithmetic, hashing};
 use triton_vm::instruction::LabelledInstruction;
 use triton_vm::op_stack::OpStackElement;
-use triton_vm::{triton_asm, triton_instr, Program};
+use triton_vm::{triton_asm, triton_instr};
 use twenty_first::amount::u32s::U32s;
 use twenty_first::shared_math::b_field_element::BFieldElement;
 use twenty_first::shared_math::bfield_codec::BFieldCodec;
 
+use self::inner_function_tasm_code::InnerFunctionTasmCode;
+use self::outer_function_tasm_code::OuterFunctionTasmCode;
 use self::subroutine::SubRoutine;
 use crate::ast_types::{self, StructVariant};
 use crate::libraries::{self};
@@ -97,93 +100,6 @@ impl FunctionState {
 }
 
 #[derive(Clone, Debug)]
-struct InnerFunctionTasmCode {
-    name: String,
-    call_depth_zero_code: SubRoutine,
-    sub_routines: Vec<SubRoutine>,
-}
-
-impl InnerFunctionTasmCode {
-    /// Return a dummy value, needed to allow recursive calls for methods.
-    fn dummy_value(name: &str) -> Self {
-        Self {
-            name: name.to_owned(),
-            call_depth_zero_code: triton_asm!({name}: return).try_into().unwrap(),
-            sub_routines: vec![],
-        }
-    }
-}
-
-pub struct OuterFunctionTasmCode {
-    function_data: InnerFunctionTasmCode,
-    external_dependencies: Vec<SubRoutine>,
-    dyn_malloc_init_code: Vec<LabelledInstruction>,
-    compiled_method_calls: Vec<InnerFunctionTasmCode>,
-}
-
-impl OuterFunctionTasmCode {
-    pub fn compose(&self) -> Vec<LabelledInstruction> {
-        let inner_body = match self
-            .function_data
-            .call_depth_zero_code
-            .get_function_body_for_inlining()
-        {
-            Some(inner) => inner,
-            None => panic!(
-                "Inner function must conform to: <label>: <body> return.\nGot:\n{}",
-                self.function_data.call_depth_zero_code
-            ),
-        };
-
-        // `methods` list must be sorted at this point to produce deterministic programs
-        let methods_call_depth_zero = self
-            .compiled_method_calls
-            .iter()
-            .map(|x| x.call_depth_zero_code.clone())
-            .collect_vec();
-        let method_subroutines = self
-            .compiled_method_calls
-            .iter()
-            .flat_map(|x| x.sub_routines.clone())
-            .collect_vec();
-
-        let name = &self.function_data.name;
-        let dyn_malloc_init = self.dyn_malloc_init_code.clone();
-        let external_dependencies_code = self
-            .external_dependencies
-            .iter()
-            .map(|x| x.get_whole_function())
-            .concat();
-        let subroutines = self
-            .function_data
-            .sub_routines
-            .iter()
-            .map(|sr| sr.get_whole_function())
-            .concat();
-
-        // Wrap entire execution in a call such that `recurse` can be used on the outermost layer, i.e. in `inner_body`.
-        let ret = triton_asm!(
-            {&dyn_malloc_init}
-            call {name}
-            halt
-            {name}:
-                {&inner_body}
-                return
-            {&subroutines}
-            {&methods_call_depth_zero}
-            {&method_subroutines}
-            {&external_dependencies_code}
-        );
-
-        // Verify that code parses by wrapping it in a program, panics
-        // if assembly is invalid.
-        let _program = Program::new(&ret);
-
-        ret
-    }
-}
-
-#[derive(Clone, Debug)]
 pub enum ValueLocation {
     OpStack(usize),
     StaticMemoryAddress(u32),
@@ -219,8 +135,24 @@ impl ValueLocation {
 pub struct GlobalCodeGeneratorState {
     counter: usize,
     snippet_state: SnippetState,
-    compiled_methods: HashMap<String, InnerFunctionTasmCode>,
-    compiled_associated_functions: HashMap<String, InnerFunctionTasmCode>,
+    static_allocations: HashMap<ValueIdentifier, (usize, ast_types::DataType)>,
+    compiled_methods_and_afs: HashMap<String, InnerFunctionTasmCode>,
+    library_snippets: HashMap<String, SubRoutine>,
+}
+
+impl GlobalCodeGeneratorState {
+    fn statically_allocate(
+        &mut self,
+        value_identifier: &ValueIdentifier,
+        data_type: &ast_types::DataType,
+    ) -> usize {
+        let new_address = self.snippet_state.kmalloc(data_type.stack_size());
+        self.static_allocations.insert(
+            value_identifier.to_owned(),
+            (new_address, data_type.to_owned()),
+        );
+        new_address
+    }
 }
 
 // TODO: Maybe this needs a new lifetime specifier, `'b`?
@@ -244,11 +176,11 @@ pub struct CompilerState<'a> {
 impl<'a> CompilerState<'a> {
     /// Import a dependency in an idempotent manner, ensuring it's only ever imported once
     pub(crate) fn add_library_function(&mut self, subroutine: SubRoutine) {
-        let label = subroutine.get_label();
-        let instructions = subroutine.get_whole_function();
+        // TODO: Can't we include this in a nicer way by e.g. unwrapping inner
+        // subroutines?
         self.global_compiler_state
-            .snippet_state
-            .explicit_import(&label, &instructions);
+            .library_snippets
+            .insert(subroutine.get_label(), subroutine);
     }
 
     /// Construct a new compiler state with no known values that must be spilled.
@@ -589,36 +521,22 @@ impl<'a> CompilerState<'a> {
     /// - importing of all external dependencies
     fn compose_code_for_outer_function(
         &self,
-        inner_function: InnerFunctionTasmCode,
+        compiled: InnerFunctionTasmCode,
+        outer_function_signature: &ast::FnSignature,
     ) -> OuterFunctionTasmCode {
         // After the spilling has been done, and after all dependencies have been loaded, the `library` field
-        // in the `state` now contains the information about how to initialize the dynamic memory allocator
-        // such that dynamically allocated memory does not overwrite statically allocated memory. The `library`
-        // field contains the number of words that were statically allocated.
-        let dyn_malloc_init_code = DynMalloc::get_initialization_code(
-            self.global_compiler_state
-                .snippet_state
-                .get_next_free_address()
-                .try_into()
-                .unwrap(),
-        );
+        // in the `state` contains info about how much static memory has been allocated and which
+        // code snippets that have been importer.
+        let final_snippet_state = self.global_compiler_state.snippet_state.clone();
 
-        let external_dependencies: Vec<SubRoutine> = self
+        let mut methods_sorted = self
             .global_compiler_state
-            .snippet_state
-            .all_external_dependencies()
-            .into_iter()
-            .map(|x| x.try_into().unwrap())
-            .collect_vec();
-
-        let mut method_calls_sorted = self
-            .global_compiler_state
-            .compiled_methods
+            .compiled_methods_and_afs
             .clone()
             .into_iter()
             .collect_vec();
-        method_calls_sorted.sort_by_key(|x| x.0.clone());
-        let compiled_method_calls = method_calls_sorted
+        methods_sorted.sort_by_key(|x| x.0.clone());
+        let compiled_method_calls = methods_sorted
             .into_iter()
             .map(|(_name, code)| code)
             .collect_vec();
@@ -627,10 +545,12 @@ impl<'a> CompilerState<'a> {
         // self.associated_functions.values().map(|x| x.values().map(|y| compi))
 
         OuterFunctionTasmCode {
-            function_data: inner_function,
-            external_dependencies,
-            dyn_malloc_init_code,
+            function_data: compiled,
             compiled_method_calls,
+            snippet_state: final_snippet_state,
+            outer_function_signature: outer_function_signature.to_owned(),
+            library_snippets: self.global_compiler_state.library_snippets.clone(),
+            static_allocations: self.global_compiler_state.static_allocations.clone(),
         }
     }
 }
@@ -697,8 +617,7 @@ impl<'a> CompilerState<'a> {
         let spilled = if self.function_state.spill_required.contains(&address) {
             let spill_address = self
                 .global_compiler_state
-                .snippet_state
-                .kmalloc(data_type.stack_size())
+                .statically_allocate(&address, data_type)
                 .try_into()
                 .unwrap();
             eprintln!("Warning: spill required of {address}. Spilling to address: {spill_address}");
@@ -910,10 +829,12 @@ impl<'a> CompilerState<'a> {
             // In this case, we have to clear more elements from the stack than we can
             // access with dup15/swap15. Our solution is to store the return value in
             // memory, clear the stack, and read it back from memory.
+            let (value_identifier_for_spill_value, _spill) =
+                self.new_value_identifier("memory_return_spilling", &top_element_type);
+            assert!(_spill.is_none(), "Cannot spill while spilling");
             let memory_location: u32 = self
                 .global_compiler_state
-                .snippet_state
-                .kmalloc(top_value_size)
+                .statically_allocate(&value_identifier_for_spill_value, &top_element_type)
                 .try_into()
                 .unwrap();
             let mut code = copy_top_stack_value_to_memory(memory_location, top_value_size);
@@ -1075,7 +996,7 @@ pub(crate) fn compile_function(
         declared_structs,
     );
 
-    state.compose_code_for_outer_function(compiled_function)
+    state.compose_code_for_outer_function(compiled_function, &function.signature)
 }
 
 /// Produce the code and handle the `vstack` for a statement. `env_fn_signature` is the
@@ -1421,12 +1342,12 @@ fn compile_fn_call(
 
             if !state
                 .global_compiler_state
-                .compiled_associated_functions
+                .compiled_methods_and_afs
                 .contains_key(&function_label)
             {
                 // Insert something with the right label *before* compiling,
                 // otherwise the methods cannot handle recursion.
-                state.global_compiler_state.compiled_methods.insert(
+                state.global_compiler_state.compiled_methods_and_afs.insert(
                     function_label.clone(),
                     InnerFunctionTasmCode::dummy_value(&function_label),
                 );
@@ -1443,7 +1364,7 @@ fn compile_fn_call(
 
                 state
                     .global_compiler_state
-                    .compiled_methods
+                    .compiled_methods_and_afs
                     .insert(function_label.clone(), compiled_function);
             }
         }
@@ -1505,12 +1426,12 @@ fn compile_method_call(
             let method_label = declared_method.get_tasm_label();
             if !state
                 .global_compiler_state
-                .compiled_methods
+                .compiled_methods_and_afs
                 .contains_key(&method_label)
             {
                 // Insert something with the right label *before* compiling,
                 // otherwise the methods cannot handle recursion.
-                state.global_compiler_state.compiled_methods.insert(
+                state.global_compiler_state.compiled_methods_and_afs.insert(
                     method_label.clone(),
                     InnerFunctionTasmCode::dummy_value(&method_label),
                 );
@@ -1527,7 +1448,7 @@ fn compile_method_call(
 
                 state
                     .global_compiler_state
-                    .compiled_methods
+                    .compiled_methods_and_afs
                     .insert(method_label.clone(), compiled_method);
             }
 
@@ -1766,7 +1687,7 @@ fn compile_expr(
                         ast_types::DataType::U32 => {
                             // We use the safe, overflow-checking, add code as default
                             let safe_add_u32 =
-                                state.import_snippet(Box::new(arithmetic::u32::safe_add::SafeAdd));
+                                state.import_snippet(Box::new(arithmetic::u32::safeadd::Safeadd));
                             triton_asm!(call { safe_add_u32 })
                         }
                         ast_types::DataType::U64 => {
@@ -1871,7 +1792,7 @@ fn compile_expr(
 
                     let bitwise_or_code = match result_type {
                         U32 => {
-                            let or_u32 = state.import_snippet(Box::new(arithmetic::u32::or::OrU32));
+                            let or_u32 = state.import_snippet(Box::new(arithmetic::u32::or::Or));
                             triton_asm!(call { or_u32 })
                         }
                         U64 => {
@@ -2149,7 +2070,7 @@ fn compile_expr(
                     match (&lhs_type, &rhs_type) {
                         (U32, U32) => {
                             let fn_name =
-                                state.import_snippet(Box::new(arithmetic::u32::safe_mul::SafeMul));
+                                state.import_snippet(Box::new(arithmetic::u32::safemul::Safemul));
 
                             triton_asm!(
                                 {&lhs_expr_code}
@@ -2254,7 +2175,7 @@ fn compile_expr(
 
                     let lhs_type = lhs_expr.get_type();
                     let shl = match lhs_type {
-                        ast_types::DataType::U32 => state.import_snippet(Box::new(arithmetic::u32::shift_left::ShiftLeftU32)),
+                        ast_types::DataType::U32 => state.import_snippet(Box::new(arithmetic::u32::shiftleft::Shiftleft)),
                         ast_types::DataType::U64 => state.import_snippet(Box::new(
                                     arithmetic::u64::shift_left_u64::ShiftLeftU64,
                                 )),
@@ -2285,7 +2206,7 @@ fn compile_expr(
                     // TODO: add optimization where RHS is a literal. Also applies for `Binop::Shl`. We have code snippets
                     // for left/right shifting u128s with statically known bits.
                     let shr = match lhs_type {
-                        ast_types::DataType::U32 => state.import_snippet(Box::new(arithmetic::u32::shift_right::ShiftRightU32)),
+                        ast_types::DataType::U32 => state.import_snippet(Box::new(arithmetic::u32::shiftright::Shiftright)),
                         ast_types::DataType::U64 => state.import_snippet(Box::new(
                                     arithmetic::u64::shift_right_u64::ShiftRightU64,
                                 )),
@@ -2316,7 +2237,7 @@ fn compile_expr(
                         ast_types::DataType::U32 => {
                             // As standard, we use safe arithmetic that crashes on overflow
                             let safe_sub_u32 =
-                                state.import_snippet(Box::new(arithmetic::u32::safe_sub::SafeSub));
+                                state.import_snippet(Box::new(arithmetic::u32::safesub::Safesub));
                             triton_asm!(
                                 swap 1
                                 call {safe_sub_u32}

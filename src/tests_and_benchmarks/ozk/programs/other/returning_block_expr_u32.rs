@@ -2,18 +2,18 @@
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
 fn main() {
-    let i: u32 = tasm::tasm_io_read_stdin_bfe().value() as u32;
+    let i: u32 = tasm::tasm_io_read_stdin___bfe().value() as u32;
     let a: u32 = {
         let b: u32 = 100;
         let c: u32 = 200;
-        let j: u32 = tasm::tasm_io_read_stdin_bfe().value() as u32;
-        let k: u32 = tasm::tasm_io_read_stdin_bfe().value() as u32;
+        let j: u32 = tasm::tasm_io_read_stdin___bfe().value() as u32;
+        let k: u32 = tasm::tasm_io_read_stdin___bfe().value() as u32;
         let d: u32 = 400u32;
 
         b + c + d + i + j * k
     };
 
-    tasm::tasm_io_write_to_stdout_u32(a);
+    tasm::tasm_io_write_to_stdout___u32(a);
 
     return;
 }
@@ -47,7 +47,7 @@ mod tests {
 
         // Test function in Triton VM
         let (parsed, _, _) =
-            ozk_parsing::parse_main_and_structs("other", "returning_block_expr_u32");
+            ozk_parsing::parse_function_and_structs("other", "returning_block_expr_u32", "main");
         let expected_stack_diff = 0;
         let vm_output = execute_with_stack_memory_and_ins_safe_lists(
             &parsed,

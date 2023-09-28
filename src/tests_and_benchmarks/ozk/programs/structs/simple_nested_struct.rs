@@ -16,7 +16,7 @@ struct NestedStruct {
 fn main() {
     let test_struct: Box<NestedStruct> =
         NestedStruct::decode(&tasm::load_from_memory(BFieldElement::new(300))).unwrap();
-    tasm::tasm_io_write_to_stdout_u32(test_struct.a.b);
+    tasm::tasm_io_write_to_stdout___u32(test_struct.a.b);
 
     return;
 }
@@ -54,6 +54,7 @@ mod tests {
         let test_program = ozk_parsing::compile_for_test(
             "structs",
             "simple_nested_struct",
+            "main",
             crate::ast_types::ListType::Unsafe,
         );
         println!("executing:\n{}", test_program.iter().join("\n"));

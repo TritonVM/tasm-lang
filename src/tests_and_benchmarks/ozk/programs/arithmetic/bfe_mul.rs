@@ -46,11 +46,11 @@ impl DazeFieldElement {
 }
 
 fn main() {
-    let a: DazeFieldElement = DazeFieldElement::new(tasm::tasm_io_read_stdin_bfe().value());
-    let b: DazeFieldElement = DazeFieldElement::new(tasm::tasm_io_read_stdin_bfe().value());
+    let a: DazeFieldElement = DazeFieldElement::new(tasm::tasm_io_read_stdin___bfe().value());
+    let b: DazeFieldElement = DazeFieldElement::new(tasm::tasm_io_read_stdin___bfe().value());
     let res: DazeFieldElement = a.mul(b);
-    tasm::tasm_io_write_to_stdout_bfe(BFieldElement::new((&res).valued()));
-    tasm::tasm_io_write_to_stdout_u64((&res).valued());
+    tasm::tasm_io_write_to_stdout___bfe(BFieldElement::new((&res).valued()));
+    tasm::tasm_io_write_to_stdout___u64((&res).valued());
 
     return;
 }
@@ -87,6 +87,7 @@ mod tests {
             let test_program = ozk_parsing::compile_for_test(
                 "arithmetic",
                 "bfe_mul",
+                "main",
                 crate::ast_types::ListType::Unsafe,
             );
             let expected_stack_diff = 0;

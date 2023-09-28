@@ -125,20 +125,20 @@ fn long_expression_that_must_spill_2_rast() -> syn::ItemFn {
 fn spill_many_types() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn all_types() -> (bool, u32, u64, BFieldElement, XFieldElement, Digest, u32) {
-            let s0: bool = tasm::tasm_io_read_stdin_bool();
-            let s1: u32 = tasm::tasm_io_read_stdin_u32() * 2;
-            let s2: u64 = tasm::tasm_io_read_stdin_u64() * 2;
-            let s3: BFieldElement = tasm::tasm_io_read_stdin_bfe();
-            let s4: XFieldElement = tasm::tasm_io_read_stdin_xfe();
-            let s5: Digest = tasm::tasm_io_read_stdin_digest();
+            let s0: bool = tasm::tasm_io_read_stdin___bool();
+            let s1: u32 = tasm::tasm_io_read_stdin___u32() * 2;
+            let s2: u64 = tasm::tasm_io_read_stdin___u64() * 2;
+            let s3: BFieldElement = tasm::tasm_io_read_stdin___bfe();
+            let s4: XFieldElement = tasm::tasm_io_read_stdin___xfe();
+            let s5: Digest = tasm::tasm_io_read_stdin___digest();
             let s6: u32 = s1 * s1;
             let s7: u64 = s2 * s2;
-            let s8: Digest = tasm::tasm_io_read_stdin_digest();
-            let s9: Digest = tasm::tasm_io_read_stdin_digest();
-            let s10: Digest = tasm::tasm_io_read_stdin_digest();
-            let s11: Digest = tasm::tasm_io_read_stdin_digest();
-            let s12: Digest = tasm::tasm_io_read_stdin_digest();
-            let s13: Digest = tasm::tasm_io_read_stdin_digest();
+            let s8: Digest = tasm::tasm_io_read_stdin___digest();
+            let s9: Digest = tasm::tasm_io_read_stdin___digest();
+            let s10: Digest = tasm::tasm_io_read_stdin___digest();
+            let s11: Digest = tasm::tasm_io_read_stdin___digest();
+            let s12: Digest = tasm::tasm_io_read_stdin___digest();
+            let s13: Digest = tasm::tasm_io_read_stdin___digest();
 
             return (s0, s1, s2, s3, s4, s8, s6);
         }
@@ -149,10 +149,10 @@ fn spill_to_memory_overwrite_values() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn overwrite_values() -> (u32, u32) {
             let mut a: u32 = 100;
-            let s10: Digest = tasm::tasm_io_read_stdin_digest();
-            let s11: Digest = tasm::tasm_io_read_stdin_digest();
-            let s12: Digest = tasm::tasm_io_read_stdin_digest();
-            let s13: Digest = tasm::tasm_io_read_stdin_digest();
+            let s10: Digest = tasm::tasm_io_read_stdin___digest();
+            let s11: Digest = tasm::tasm_io_read_stdin___digest();
+            let s12: Digest = tasm::tasm_io_read_stdin___digest();
+            let s13: Digest = tasm::tasm_io_read_stdin___digest();
             a = a + 1;
 
             return (a, a + 1u32);

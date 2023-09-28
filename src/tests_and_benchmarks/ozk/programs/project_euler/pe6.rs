@@ -14,7 +14,7 @@ fn main() {
     // $b = N * (N + 1) * (2N + 1) / 6$
 
     let n: u32 = 100;
-    tasm::tasm_io_write_to_stdout_u32(
+    tasm::tasm_io_write_to_stdout___u32(
         n.pow(2) * (n + 1).pow(2) / 4 - n * (n + 1) * (n * 2 + 1) / 6,
     );
 
@@ -39,7 +39,8 @@ mod tests {
             rust_shadows::wrap_main_with_io(&main)(stdin.clone(), non_determinism.clone());
 
         // Test function in Triton VM
-        let (parsed, _, _) = ozk_parsing::parse_main_and_structs("project_euler", "pe6");
+        let (parsed, _, _) =
+            ozk_parsing::parse_function_and_structs("project_euler", "pe6", "main");
         let expected_stack_diff = 0;
         let stack_start = vec![];
         let vm_output =

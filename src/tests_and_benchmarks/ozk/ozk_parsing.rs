@@ -1,4 +1,3 @@
-use itertools::Itertools;
 use std::{collections::HashMap, fs};
 use triton_vm::instruction::LabelledInstruction;
 
@@ -9,8 +8,11 @@ use crate::{
 
 pub type StructsAndMethods = HashMap<String, (syn::ItemStruct, Vec<syn::ImplItemMethod>)>;
 
-fn extract_types_and_main(parsed_file: syn::File) -> (StructsAndMethods, Option<syn::ItemFn>) {
-    let mut main_func: Option<syn::ItemFn> = None;
+fn extract_types_and_function(
+    parsed_file: syn::File,
+    function_name: &str,
+) -> (StructsAndMethods, Option<syn::ItemFn>) {
+    let mut outer_function: Option<syn::ItemFn> = None;
     let mut structs: HashMap<String, (Option<syn::ItemStruct>, Vec<syn::ImplItemMethod>)> =
         HashMap::default();
     for item in parsed_file.items {
@@ -27,8 +29,8 @@ fn extract_types_and_main(parsed_file: syn::File) -> (StructsAndMethods, Option<
             };
         }
         if let syn::Item::Fn(func) = &item {
-            if func.sig.ident == "main" {
-                main_func = Some(func.to_owned());
+            if func.sig.ident == function_name {
+                outer_function = Some(func.to_owned());
             }
         }
 
@@ -61,14 +63,15 @@ fn extract_types_and_main(parsed_file: syn::File) -> (StructsAndMethods, Option<
         .map(|(struct_name, (option_struct, methods))| (struct_name.clone(), (option_struct.unwrap_or_else(|| panic!("Couldn't find struct definition for {struct_name} for which methods was defined")), methods)))
         .collect();
 
-    (structs, main_func)
+    (structs, outer_function)
 }
 
 /// Return the Rust-AST for the `main` function and all structs defined in the outermost
 /// module.
-pub(super) fn parse_main_and_structs(
+pub(super) fn parse_function_and_structs(
     directory: &str,
     module_name: &str,
+    function_name: &str,
 ) -> (syn::ItemFn, StructsAndMethods, String) {
     let path = format!(
         "{}/src/tests_and_benchmarks/ozk/programs/{directory}/{module_name}.rs",
@@ -76,7 +79,7 @@ pub(super) fn parse_main_and_structs(
     );
     let content = fs::read_to_string(&path).expect("Unable to read file {path}");
     let parsed_file: syn::File = syn::parse_str(&content).expect("Unable to parse rust code");
-    let (structs, main_parsed) = extract_types_and_main(parsed_file);
+    let (structs, main_parsed) = extract_types_and_function(parsed_file, function_name);
 
     match main_parsed {
         Some(main) => (main, structs, module_name.to_owned()),
@@ -87,13 +90,14 @@ pub(super) fn parse_main_and_structs(
 pub(crate) fn compile_for_test(
     directory: &str,
     module_name: &str,
+    function_name: &str,
     list_type: ast_types::ListType,
 ) -> Vec<LabelledInstruction> {
     get_standard_setup!(list_type, graft_config, libraries);
 
-    let (rust_main_ast, rust_struct_asts, _) = parse_main_and_structs(directory, module_name);
+    let (rust_main_ast, rust_struct_asts, _) =
+        parse_function_and_structs(directory, module_name, function_name);
     let mut oil_ast = graft_config.graft_fn_decl(&rust_main_ast);
-    println!("oil_ast: {oil_ast:#?}");
     let (structs, mut methods, mut associated_functions) =
         graft_config.graft_structs_methods_and_associated_functions(rust_struct_asts);
 
@@ -112,20 +116,6 @@ pub(crate) fn compile_for_test(
         &mut associated_functions,
         &libraries,
     );
-    println!("typed oil_ast: {oil_ast:#?}");
-
-    // compile
-    println!(
-        "compile_for_test: methods:\n{} ",
-        methods.iter().map(|x| &x.signature.name).join(",")
-    );
-    println!(
-        "compile_for_test: associated_functions:\n{} ",
-        associated_functions
-            .values()
-            .map(|x| x.iter().map(|y| &y.1.signature.name).join(","))
-            .join(";")
-    );
 
     let tasm = compile_function(
         &oil_ast,
@@ -137,4 +127,42 @@ pub(crate) fn compile_for_test(
 
     // compose
     tasm.compose()
+}
+
+#[allow(dead_code)]
+pub(crate) fn compile_to_basic_snippet(
+    rust_ast: syn::ItemFn,
+    structs_and_methods: StructsAndMethods,
+    list_type: ast_types::ListType,
+) -> String {
+    get_standard_setup!(list_type, graft_config, libraries);
+    let mut oil_ast = graft_config.graft_fn_decl(&rust_ast);
+    let (structs, mut methods, mut associated_functions) =
+        graft_config.graft_structs_methods_and_associated_functions(structs_and_methods);
+
+    resolve_custom_types(
+        &mut oil_ast,
+        &structs,
+        &mut methods,
+        &mut associated_functions,
+    );
+
+    // type-check and annotate
+    annotate_fn_outer(
+        &mut oil_ast,
+        &structs,
+        &mut methods,
+        &mut associated_functions,
+        &libraries,
+    );
+
+    let tasm = compile_function(
+        &oil_ast,
+        &libraries,
+        methods,
+        &associated_functions,
+        &structs,
+    );
+
+    tasm.generate_basic_snippet_implementation()
 }

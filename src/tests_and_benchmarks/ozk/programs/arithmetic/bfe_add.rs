@@ -6,15 +6,15 @@ fn main() {
     let a: BFieldElement = BFieldElement::new(14);
     let b: BFieldElement = BFieldElement::new(15);
     let c: BFieldElement = a + b;
-    tasm::tasm_io_write_to_stdout_bfe(c);
+    tasm::tasm_io_write_to_stdout___bfe(c);
 
     let d: u64 = 1001 + (1u64 << 32);
     let e: BFieldElement = BFieldElement::new(d);
-    tasm::tasm_io_write_to_stdout_bfe(e);
+    tasm::tasm_io_write_to_stdout___bfe(e);
 
     let f: u64 = 1001000 + (1u64 << 32);
     let g: BFieldElement = BFieldElement::new(f);
-    tasm::tasm_io_write_to_stdout_bfe(g);
+    tasm::tasm_io_write_to_stdout___bfe(g);
 
     return;
 }
@@ -42,7 +42,8 @@ mod tests {
         assert_eq!(native_output, expected_output);
 
         // Test function in Triton VM
-        let (parsed, _, _) = ozk_parsing::parse_main_and_structs("arithmetic", "bfe_add");
+        let (parsed, _, _) =
+            ozk_parsing::parse_function_and_structs("arithmetic", "bfe_add", "main");
         let expected_stack_diff = 0;
         let stack_start = vec![];
         let vm_output =

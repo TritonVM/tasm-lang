@@ -23,16 +23,16 @@ fn main() {
     let test_struct: Box<TestStruct> =
         TestStruct::decode(&tasm::load_from_memory(BFieldElement::new(84))).unwrap();
     let a: BFieldElement = test_struct.a; // Use 1 `&`, ignore the 2nd `&`.
-    tasm::tasm_io_write_to_stdout_u128(test_struct.h);
-    tasm::tasm_io_write_to_stdout_bfe(a); // Implement both `*` and method `to_owned` to mean put this onto the stack. We might need exceptions for list though.
+    tasm::tasm_io_write_to_stdout___u128(test_struct.h);
+    tasm::tasm_io_write_to_stdout___bfe(a); // Implement both `*` and method `to_owned` to mean put this onto the stack. We might need exceptions for list though.
 
-    tasm::tasm_io_write_to_stdout_bool(test_struct.e);
+    tasm::tasm_io_write_to_stdout___bool(test_struct.e);
     let b: BFieldElement = test_struct.b;
-    tasm::tasm_io_write_to_stdout_u64(test_struct.g);
-    tasm::tasm_io_write_to_stdout_bfe(b);
-    tasm::tasm_io_write_to_stdout_digest(test_struct.d);
-    tasm::tasm_io_write_to_stdout_xfe(test_struct.c);
-    tasm::tasm_io_write_to_stdout_u32(test_struct.f);
+    tasm::tasm_io_write_to_stdout___u64(test_struct.g);
+    tasm::tasm_io_write_to_stdout___bfe(b);
+    tasm::tasm_io_write_to_stdout___digest(test_struct.d);
+    tasm::tasm_io_write_to_stdout___xfe(test_struct.c);
+    tasm::tasm_io_write_to_stdout___u32(test_struct.f);
     return;
 }
 
@@ -86,6 +86,7 @@ mod tests {
         let test_program = ozk_parsing::compile_for_test(
             "structs",
             "simple_struct",
+            "main",
             crate::ast_types::ListType::Unsafe,
         );
         let vm_output = execute_compiled_with_stack_memory_and_ins_for_test(

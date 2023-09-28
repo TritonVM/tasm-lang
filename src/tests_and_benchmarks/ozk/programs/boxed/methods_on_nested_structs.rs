@@ -54,9 +54,9 @@ fn main() {
     assert!(1u32 << 21 == outer_struct_boxed.2 .1);
     assert!(1u32 << 31 == outer_struct_boxed.1 .2);
 
-    tasm::tasm_io_write_to_stdout_u128(outer_struct_boxed.add(200));
-    tasm::tasm_io_write_to_stdout_u128(outer_struct_boxed.1.add());
-    tasm::tasm_io_write_to_stdout_u128(outer_struct_boxed.2.add(300));
+    tasm::tasm_io_write_to_stdout___u128(outer_struct_boxed.add(200));
+    tasm::tasm_io_write_to_stdout___u128(outer_struct_boxed.1.add());
+    tasm::tasm_io_write_to_stdout___u128(outer_struct_boxed.2.add(300));
 
     return;
 }
@@ -92,6 +92,7 @@ mod tests {
         let test_program = ozk_parsing::compile_for_test(
             "boxed",
             "methods_on_nested_structs",
+            "main",
             crate::ast_types::ListType::Unsafe,
         );
         let expected_stack_diff = 0;
