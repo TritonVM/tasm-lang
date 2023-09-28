@@ -135,7 +135,7 @@ impl ValueLocation {
 pub struct GlobalCodeGeneratorState {
     counter: usize,
     snippet_state: SnippetState,
-    static_allocations: HashMap<ValueIdentifier, usize>,
+    static_allocations: HashMap<ValueIdentifier, (usize, ast_types::DataType)>,
     compiled_methods_and_afs: HashMap<String, InnerFunctionTasmCode>,
     library_snippets: HashMap<String, SubRoutine>,
 }
@@ -147,8 +147,10 @@ impl GlobalCodeGeneratorState {
         data_type: &ast_types::DataType,
     ) -> usize {
         let new_address = self.snippet_state.kmalloc(data_type.stack_size());
-        self.static_allocations
-            .insert(value_identifier.to_owned(), new_address);
+        self.static_allocations.insert(
+            value_identifier.to_owned(),
+            (new_address, data_type.to_owned()),
+        );
         new_address
     }
 }
@@ -548,6 +550,7 @@ impl<'a> CompilerState<'a> {
             snippet_state: final_snippet_state,
             outer_function_signature: outer_function_signature.to_owned(),
             library_snippets: self.global_compiler_state.library_snippets.clone(),
+            static_allocations: self.global_compiler_state.static_allocations.clone(),
         }
     }
 }

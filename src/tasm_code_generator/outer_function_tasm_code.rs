@@ -14,6 +14,8 @@ use crate::ast_types;
 use crate::tasm_code_generator::inner_function_tasm_code::InnerFunctionTasmCode;
 use crate::tasm_code_generator::SubRoutine;
 
+use super::ValueIdentifier;
+
 pub(crate) struct OuterFunctionTasmCode {
     // TODO: Remove these attributes once we have a sane `main` function that uses these fields
     #[allow(dead_code)]
@@ -26,6 +28,8 @@ pub(crate) struct OuterFunctionTasmCode {
     pub outer_function_signature: ast::FnSignature,
     #[allow(dead_code)]
     pub library_snippets: HashMap<String, SubRoutine>,
+    #[allow(dead_code)]
+    pub static_allocations: HashMap<ValueIdentifier, (usize, ast_types::DataType)>,
 }
 
 impl OuterFunctionTasmCode {
@@ -95,73 +99,17 @@ impl OuterFunctionTasmCode {
         )
     }
 
-    fn get_code_function(&self) -> String {
-        fn replace_hardcoded_snippet_names(
-            code: Vec<LabelledInstruction>,
-            imported_snippet_names: &[String],
-        ) -> String {
-            let all_possible_snippet_calls: Vec<LabelledInstruction> = imported_snippet_names
-                .iter()
-                .map(|name| triton_asm!(call { name }).first().unwrap().to_owned())
-                .collect_vec();
-            let mut ret = vec![];
-            for instruction in code.into_iter() {
-                // match all_possible_snippet_calls.into_iter().find(predicate)
-                if all_possible_snippet_calls.contains(&instruction) {
-                    let snippet_name = if let LabelledInstruction::Instruction(
-                        instruction::AnInstruction::Call(label),
-                    ) = instruction
-                    {
-                        label.to_string()
-                    } else {
-                        unreachable!()
-                    };
-                    ret.push(format!("call {{{snippet_name}}}"));
-                } else {
-                    ret.push(instruction.to_string());
-                }
-            }
-
-            ret.join("\n")
+    fn get_all_memory_spill_address_declarations(&self) -> String {
+        let mut declarations = vec![];
+        for (name, (_address, datatype)) in self.static_allocations.iter() {
+            let size = datatype.stack_size();
+            declarations.push(format!("let {name} = library.kmalloc({size});"));
         }
 
-        let inner_body = match self
-            .function_data
-            .call_depth_zero_code
-            .get_function_body_for_inlining()
-        {
-            Some(inner) => inner,
-            None => panic!(
-                "Inner function must conform to: <label>: <body> return.\nGot:\n{}",
-                self.function_data.call_depth_zero_code
-            ),
-        };
-        let name = &self.function_data.name;
+        declarations.join("\n")
+    }
 
-        // `methods` list must be sorted to produce deterministic programs
-        let mut compiled_methods_sorted = self.compiled_method_calls.clone();
-        compiled_methods_sorted.sort_by_cached_key(|x| x.name.to_owned());
-        let imported_snippet_names = self.snippet_state.get_all_snippet_names();
-        let methods_call_depth_zero = self
-            .compiled_method_calls
-            .iter()
-            .map(|x| x.call_depth_zero_code.clone())
-            .collect_vec();
-        let method_subroutines = self
-            .compiled_method_calls
-            .iter()
-            .flat_map(|x| x.sub_routines.clone())
-            .collect_vec();
-        let subroutines = self
-            .function_data
-            .sub_routines
-            .iter()
-            .map(|sr| sr.get_whole_function())
-            .concat();
-
-        let subroutines_as_string =
-            replace_hardcoded_snippet_names(subroutines, &imported_snippet_names);
-        let code_as_string = replace_hardcoded_snippet_names(inner_body, &imported_snippet_names);
+    fn get_all_import_snippet_statements(&self) -> String {
         let mut import_statements = vec![];
         for import in self.snippet_state.get_all_snippet_names().into_iter() {
             let split_at_type = import.split("___").collect_vec();
@@ -189,12 +137,159 @@ impl OuterFunctionTasmCode {
             };
             import_statements.push(import_snippet_statement);
         }
-        let import_snippets = import_statements.iter().join("\n");
+        import_statements.iter().join("\n")
+    }
+
+    fn get_code_function(&self) -> String {
+        fn replace_hardcoded_snippet_names_and_spill_addresses(
+            code: Vec<LabelledInstruction>,
+            imported_snippet_names: &[String],
+            static_allocations: &HashMap<ValueIdentifier, (usize, ast_types::DataType)>,
+        ) -> String {
+            use instruction::AnInstruction::*;
+            use instruction::LabelledInstruction::Instruction;
+            fn instrunction_triplet_looks_like_spill_writing(
+                instr_0: &LabelledInstruction,
+                instr_1: &LabelledInstruction,
+                instr_2: &LabelledInstruction,
+                static_allocations: &HashMap<ValueIdentifier, (usize, ast_types::DataType)>,
+            ) -> Option<(ValueIdentifier, usize)> {
+                if let Instruction(Push(n)) = instr_0 {
+                    if *instr_2 == Instruction(WriteMem) {
+                        let n = n.value() as usize;
+                        return static_allocations
+                            .into_iter()
+                            .find(|(val_id, (memory_spill_position, _))| {
+                                *memory_spill_position == n
+                            })
+                            .map(|x| (x.0.to_owned(), x.1 .0.to_owned()));
+                    }
+                }
+
+                None
+            }
+
+            fn instrunction_triplet_looks_like_spill_reading(
+                instr_0: &LabelledInstruction,
+                instr_1: &LabelledInstruction,
+                instr_2: &LabelledInstruction,
+                static_allocations: &HashMap<ValueIdentifier, (usize, ast_types::DataType)>,
+            ) -> Option<(ValueIdentifier, usize)> {
+                if let Instruction(Push(n)) = instr_0 {
+                    if *instr_1 == Instruction(ReadMem)
+                        && *instr_2 == Instruction(Swap(1u32.try_into().unwrap()))
+                    {
+                        let n = n.value() as usize;
+                        return static_allocations
+                            .into_iter()
+                            .find(|(val_id, (memory_spill_position, _))| {
+                                *memory_spill_position == n
+                            })
+                            .map(|x| (x.0.to_owned(), x.1 .0.to_owned()));
+                    }
+                }
+
+                None
+            }
+
+            let all_possible_snippet_calls: Vec<LabelledInstruction> = imported_snippet_names
+                .iter()
+                .map(|name| triton_asm!(call { name }).first().unwrap().to_owned())
+                .collect_vec();
+            let mut ret = vec![];
+            for (instr_0, instr_1, instr_2) in code.iter().tuple_windows() {
+                let maybe_spill_write = instrunction_triplet_looks_like_spill_writing(
+                    &instr_0,
+                    &instr_1,
+                    &instr_2,
+                    static_allocations,
+                );
+                let maybe_spill_read = instrunction_triplet_looks_like_spill_reading(
+                    &instr_0,
+                    &instr_1,
+                    &instr_2,
+                    static_allocations,
+                );
+                if let Some((spill_value, memory_address)) = maybe_spill_write {
+                    // Replace `push a` with `"push {a}"`
+                    ret.push(format!("push {{{spill_value}}}"));
+                } else if let Some((spill_value, memory_address)) = maybe_spill_read {
+                    // Replace `push a` with `"push {a}"`
+                    ret.push(format!("push {{{spill_value}}}"));
+                } else if all_possible_snippet_calls.contains(&instr_0) {
+                    // Replace `call tasm_foo_bar` with `"call {tasm_foo_bar}"`
+                    let snippet_name = if let Instruction(Call(label)) = instr_0 {
+                        label.to_string()
+                    } else {
+                        unreachable!()
+                    };
+                    ret.push(format!("call {{{snippet_name}}}"));
+                } else {
+                    // Do nothing
+                    ret.push(instr_0.to_string());
+                }
+            }
+
+            // Add the last two instructions that were not covered by the above
+            // window iteration
+            ret.push(code[code.len() - 2].to_string());
+            ret.push(code[code.len() - 1].to_string());
+
+            ret.join("\n")
+        }
+
+        let inner_body = match self
+            .function_data
+            .call_depth_zero_code
+            .get_function_body_for_inlining()
+        {
+            Some(inner) => inner,
+            None => panic!(
+                "Inner function must conform to: <label>: <body> return.\nGot:\n{}",
+                self.function_data.call_depth_zero_code
+            ),
+        };
+
+        // `methods` list must be sorted to produce deterministic programs
+        let mut compiled_methods_sorted = self.compiled_method_calls.clone();
+        compiled_methods_sorted.sort_by_cached_key(|x| x.name.to_owned());
+        let imported_snippet_names = self.snippet_state.get_all_snippet_names();
+        let methods_call_depth_zero = self
+            .compiled_method_calls
+            .iter()
+            .map(|x| x.call_depth_zero_code.clone())
+            .collect_vec();
+        let method_subroutines = self
+            .compiled_method_calls
+            .iter()
+            .flat_map(|x| x.sub_routines.clone())
+            .collect_vec();
+        let subroutines = self
+            .function_data
+            .sub_routines
+            .iter()
+            .map(|sr| sr.get_whole_function())
+            .concat();
+
+        let subroutines_as_string = replace_hardcoded_snippet_names_and_spill_addresses(
+            subroutines,
+            &imported_snippet_names,
+            &self.static_allocations,
+        );
+        let code_as_string = replace_hardcoded_snippet_names_and_spill_addresses(
+            inner_body,
+            &imported_snippet_names,
+            &self.static_allocations,
+        );
+        let import_snippet_statements = self.get_all_import_snippet_statements();
+        let memory_spill_address_declarations = self.get_all_memory_spill_address_declarations();
+
         format!(
             "
             fn code(&self, library: &mut Library) -> Vec<triton_vm::instruction::LabelledInstruction> {{
                 let entrypoint = self.entrypoint();
-                {import_snippets}
+                {import_snippet_statements}
+                {memory_spill_address_declarations}
                 triton_asm!(
                     {{entrypoint}}:
 
