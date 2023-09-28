@@ -41,7 +41,8 @@ mod tests {
             rust_shadows::wrap_main_with_io(&main)(stdin.clone(), non_determinism.clone());
 
         // Test function in Triton VM
-        let (parsed, _, _) = ozk_parsing::parse_main_and_structs("project_euler", "pe3");
+        let (parsed, _, _) =
+            ozk_parsing::parse_function_and_structs("project_euler", "pe3", "main");
         let expected_stack_diff = 0;
         let stack_start = vec![];
         let vm_output =

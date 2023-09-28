@@ -53,7 +53,8 @@ mod tests {
         assert_eq!(native_output, expected_output);
 
         // Test function in Triton VM
-        let (parsed, _, _) = ozk_parsing::parse_main_and_structs("other", "simple_map_on_bfe");
+        let (parsed, _, _) =
+            ozk_parsing::parse_function_and_structs("other", "simple_map_on_bfe", "main");
         let expected_stack_diff = 0;
         let vm_output = execute_with_stack_memory_and_ins_safe_lists(
             &parsed,
@@ -92,7 +93,7 @@ mod benches {
         };
 
         let (parsed_code, _, module_name) =
-            ozk_parsing::parse_main_and_structs("other", "simple_map_on_bfe");
+            ozk_parsing::parse_function_and_structs("other", "simple_map_on_bfe", "main");
         let (code, _fn_name) =
             compile_for_run_test(&parsed_code, crate::ast_types::ListType::Unsafe);
         execute_and_write_benchmark(module_name, code, common_case, worst_case, 0)

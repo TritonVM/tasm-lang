@@ -222,6 +222,7 @@ mod tests {
         let test_program = ozk_parsing::compile_for_test(
             "other",
             "removal_record_integrity_partial",
+            "main",
             crate::ast_types::ListType::Unsafe,
         );
         println!("executing:\n{}", test_program.iter().join("\n"));

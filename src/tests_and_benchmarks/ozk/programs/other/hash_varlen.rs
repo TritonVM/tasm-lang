@@ -46,7 +46,8 @@ mod tests {
         assert_eq!(native_output, expected_output);
 
         // Test function in Triton VM
-        let (rust_ast, _, _) = ozk_parsing::parse_main_and_structs("other", "hash_varlen");
+        let (rust_ast, _, _) =
+            ozk_parsing::parse_function_and_structs("other", "hash_varlen", "main");
         let expected_stack_diff = 0;
         let (code, _fn_name) = compile_for_run_test(&rust_ast, ast_types::ListType::Unsafe);
         let vm_output = execute_compiled_with_stack_memory_and_ins_for_test(

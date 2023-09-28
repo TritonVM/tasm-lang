@@ -113,6 +113,7 @@ mod tests {
         let test_program = ozk_parsing::compile_for_test(
             "other",
             "nested_tuples",
+            "main",
             crate::ast_types::ListType::Safe,
         );
         println!("test_program is:\n{}", test_program.iter().join("\n"));

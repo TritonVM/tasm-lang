@@ -231,6 +231,7 @@ mod tests {
         let test_program = ozk_parsing::compile_for_test(
             "structs",
             "nested_structs",
+            "main",
             crate::ast_types::ListType::Unsafe,
         );
         println!("executing:\n{}", test_program.iter().join("\n"));

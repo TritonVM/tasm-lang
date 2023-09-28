@@ -42,7 +42,8 @@ mod tests {
         assert_eq!(native_output, expected_output);
 
         // Test function in Triton VM
-        let (parsed, _, _) = ozk_parsing::parse_main_and_structs("arithmetic", "bfe_add");
+        let (parsed, _, _) =
+            ozk_parsing::parse_function_and_structs("arithmetic", "bfe_add", "main");
         let expected_stack_diff = 0;
         let stack_start = vec![];
         let vm_output =

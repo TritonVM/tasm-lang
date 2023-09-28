@@ -52,7 +52,8 @@ mod tests {
             rust_shadows::wrap_main_with_io(&main)(stdin.clone(), non_determinism.clone());
         assert_eq!(native_output, expected_output);
 
-        let (rust_ast, _, _) = ozk_parsing::parse_main_and_structs("other", "simple_encode");
+        let (rust_ast, _, _) =
+            ozk_parsing::parse_function_and_structs("other", "simple_encode", "main");
         let expected_stack_diff = 0;
         let vm_output = execute_with_stack_memory_and_ins_safe_lists(
             &rust_ast,

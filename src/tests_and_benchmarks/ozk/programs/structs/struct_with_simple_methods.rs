@@ -66,6 +66,7 @@ mod tests {
         let test_program = ozk_parsing::compile_for_test(
             "structs",
             "struct_with_simple_methods",
+            "main",
             crate::ast_types::ListType::Unsafe,
         );
         let vm_output = execute_compiled_with_stack_memory_and_ins_for_test(

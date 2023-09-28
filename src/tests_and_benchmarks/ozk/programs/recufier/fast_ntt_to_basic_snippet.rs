@@ -1,16 +1,14 @@
 #![allow(clippy::manual_swap)]
 
 // Allows the use of input/output on the native architecture
-use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 use num::One;
 use triton_vm::BFieldElement;
-use twenty_first::shared_math::{
-    bfield_codec::BFieldCodec, traits::ModPowU32, x_field_element::XFieldElement,
-};
+use twenty_first::shared_math::{traits::ModPowU32, x_field_element::XFieldElement};
 
 #[allow(clippy::ptr_arg)]
 #[allow(clippy::vec_init_then_push)]
-fn main(x: &mut Vec<XFieldElement>, omega: BFieldElement, log_2_of_n: u32) {
+#[allow(dead_code)]
+fn xfe_ntt(x: &mut Vec<XFieldElement>, omega: BFieldElement, log_2_of_n: u32) {
     fn bitreverse(mut n: u32, l: u32) -> u32 {
         let mut r: u32 = 0;
         let mut i: u32 = 0;
@@ -79,9 +77,10 @@ mod tests {
     #[test]
     fn fast_xfe_ntt_to_basic_snippet_test() {
         let (rust_ast, _, _) =
-            crate::tests_and_benchmarks::ozk::ozk_parsing::parse_main_and_structs(
+            crate::tests_and_benchmarks::ozk::ozk_parsing::parse_function_and_structs(
                 "recufier",
                 "fast_ntt_to_basic_snippet",
+                "xfe_ntt",
             );
         let as_bs = crate::tests_and_benchmarks::ozk::ozk_parsing::compile_to_basic_snippet(
             rust_ast,

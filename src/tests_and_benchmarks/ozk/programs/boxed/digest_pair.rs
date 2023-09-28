@@ -68,6 +68,7 @@ mod tests {
         let test_program = ozk_parsing::compile_for_test(
             "boxed",
             "digest_pair",
+            "main",
             crate::ast_types::ListType::Unsafe,
         );
         let expected_stack_diff = 0;

@@ -38,7 +38,7 @@ mod tests {
 
         // Test function in Triton VM
 
-        let (parsed, _, _) = ozk_parsing::parse_main_and_structs("other", "value");
+        let (parsed, _, _) = ozk_parsing::parse_function_and_structs("other", "value", "main");
         let expected_stack_diff = 0;
         let stack_start = vec![];
         let vm_output =

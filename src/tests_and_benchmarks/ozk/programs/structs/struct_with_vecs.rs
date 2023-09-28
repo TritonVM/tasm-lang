@@ -176,6 +176,7 @@ mod tests {
         let test_program = ozk_parsing::compile_for_test(
             "structs",
             "struct_with_vecs",
+            "main",
             crate::ast_types::ListType::Unsafe,
         );
         println!("executing:\n{}", test_program.iter().join("\n"));

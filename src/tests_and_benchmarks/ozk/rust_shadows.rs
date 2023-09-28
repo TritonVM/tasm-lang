@@ -73,11 +73,13 @@ pub(super) fn get_pub_output() -> Vec<BFieldElement> {
     PUB_OUTPUT.with(|v| v.borrow().clone())
 }
 
+#[allow(non_snake_case)]
 pub(super) fn tasm_io_read_stdin___bfe() -> BFieldElement {
     #[allow(clippy::unwrap_used)]
     PUB_INPUT.with(|v| v.borrow_mut().pop().unwrap())
 }
 
+#[allow(non_snake_case)]
 pub(super) fn tasm_io_read_stdin___u64() -> u64 {
     #[allow(clippy::unwrap_used)]
     let hi: u32 = PUB_INPUT
@@ -91,6 +93,7 @@ pub(super) fn tasm_io_read_stdin___u64() -> u64 {
     ((hi as u64) << 32) + lo as u64
 }
 
+#[allow(non_snake_case)]
 pub(super) fn tasm_io_read_stdin___u128() -> u128 {
     #[allow(clippy::unwrap_used)]
     let e3: u32 = PUB_INPUT
@@ -112,6 +115,7 @@ pub(super) fn tasm_io_read_stdin___u128() -> u128 {
     ((e3 as u128) << 96) + ((e2 as u128) << 64) + ((e1 as u128) << 32) + e0 as u128
 }
 
+#[allow(non_snake_case)]
 pub(super) fn tasm_io_read_stdin___digest() -> Digest {
     #[allow(clippy::unwrap_used)]
     let e4 = PUB_INPUT.with(|v| v.borrow_mut().pop().unwrap());
@@ -122,30 +126,37 @@ pub(super) fn tasm_io_read_stdin___digest() -> Digest {
     Digest::new([e0, e1, e2, e3, e4])
 }
 
+#[allow(non_snake_case)]
 pub(super) fn tasm_io_write_to_stdout___bfe(x: BFieldElement) {
     PUB_OUTPUT.with(|v| v.borrow_mut().push(x));
 }
 
+#[allow(non_snake_case)]
 pub(super) fn tasm_io_write_to_stdout___xfe(x: XFieldElement) {
     PUB_OUTPUT.with(|v| v.borrow_mut().append(&mut x.coefficients.to_vec()));
 }
 
+#[allow(non_snake_case)]
 pub(super) fn tasm_io_write_to_stdout___digest(x: Digest) {
     PUB_OUTPUT.with(|v| v.borrow_mut().append(&mut x.values().to_vec()));
 }
 
+#[allow(non_snake_case)]
 pub(super) fn tasm_io_write_to_stdout___bool(x: bool) {
     PUB_OUTPUT.with(|v| v.borrow_mut().push(BFieldElement::new(x as u64)));
 }
 
+#[allow(non_snake_case)]
 pub(super) fn tasm_io_write_to_stdout___u32(x: u32) {
     PUB_OUTPUT.with(|v| v.borrow_mut().push(BFieldElement::new(x as u64)));
 }
 
+#[allow(non_snake_case)]
 pub(super) fn tasm_io_write_to_stdout___u64(x: u64) {
     PUB_OUTPUT.with(|v| v.borrow_mut().append(&mut x.encode()));
 }
 
+#[allow(non_snake_case)]
 pub(super) fn tasm_io_write_to_stdout___u128(x: u128) {
     PUB_OUTPUT.with(|v| v.borrow_mut().append(&mut x.encode()));
 }

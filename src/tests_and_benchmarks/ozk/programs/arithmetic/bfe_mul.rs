@@ -87,6 +87,7 @@ mod tests {
             let test_program = ozk_parsing::compile_for_test(
                 "arithmetic",
                 "bfe_mul",
+                "main",
                 crate::ast_types::ListType::Unsafe,
             );
             let expected_stack_diff = 0;

@@ -43,6 +43,7 @@ mod tests {
         let test_program = ozk_parsing::compile_for_test(
             "boxed",
             "ref_struct_typecheck_succeed_bc_copy",
+            "main",
             crate::ast_types::ListType::Unsafe,
         );
 
