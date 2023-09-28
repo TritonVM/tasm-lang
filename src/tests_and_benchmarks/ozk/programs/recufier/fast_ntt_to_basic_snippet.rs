@@ -8,7 +8,7 @@ use twenty_first::shared_math::{traits::ModPowU32, x_field_element::XFieldElemen
 #[allow(clippy::ptr_arg)]
 #[allow(clippy::vec_init_then_push)]
 #[allow(dead_code)]
-fn xfe_ntt(x: &mut Vec<XFieldElement>, omega: BFieldElement, log_2_of_n: u32) {
+fn xfe_ntt(x: &mut Vec<XFieldElement>, omega: BFieldElement) {
     fn bitreverse(mut n: u32, l: u32) -> u32 {
         let mut r: u32 = 0;
         let mut i: u32 = 0;
@@ -21,12 +21,13 @@ fn xfe_ntt(x: &mut Vec<XFieldElement>, omega: BFieldElement, log_2_of_n: u32) {
         return r;
     }
 
-    let n: u32 = x.len() as u32;
+    let size: u32 = x.len() as u32;
+    let log_2_size: u32 = u32::BITS - (size as u32).leading_zeros() - 1;
 
     {
         let mut k: u32 = 0;
-        while k != n {
-            let rk: u32 = bitreverse(k, log_2_of_n);
+        while k != size {
+            let rk: u32 = bitreverse(k, log_2_size);
             if k < rk {
                 // TODO: Use `swap` here instead, once it's implemented in `tasm-lib`
                 // That will give us a shorter cycle count
@@ -43,11 +44,11 @@ fn xfe_ntt(x: &mut Vec<XFieldElement>, omega: BFieldElement, log_2_of_n: u32) {
     let mut m: u32 = 1;
 
     let mut outer_count: u32 = 0;
-    while outer_count != log_2_of_n {
+    while outer_count != log_2_size {
         // for _ in 0..log_2_of_n {
-        let w_m: BFieldElement = omega.mod_pow_u32(n / (2 * m));
+        let w_m: BFieldElement = omega.mod_pow_u32(size / (2 * m));
         let mut k: u32 = 0;
-        while k < n {
+        while k < size {
             let mut w: BFieldElement = BFieldElement::one();
             let mut j: u32 = 0;
             while j != m {

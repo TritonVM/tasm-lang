@@ -1,17 +1,18 @@
+use chrono::Local;
+use itertools::Itertools;
 use std::collections::HashMap;
 use std::str::FromStr;
-
-use crate::ast;
-use crate::ast_types;
-use crate::tasm_code_generator::inner_function_tasm_code::InnerFunctionTasmCode;
-use crate::tasm_code_generator::SubRoutine;
-use itertools::Itertools;
 use tasm_lib::library::Library as SnippetState;
 use tasm_lib::memory::dyn_malloc::DynMalloc;
 use triton_vm::instruction;
 use triton_vm::instruction::LabelledInstruction;
 use triton_vm::triton_asm;
 use triton_vm::Program;
+
+use crate::ast;
+use crate::ast_types;
+use crate::tasm_code_generator::inner_function_tasm_code::InnerFunctionTasmCode;
+use crate::tasm_code_generator::SubRoutine;
 
 pub(crate) struct OuterFunctionTasmCode {
     // TODO: Remove these attributes once we have a sane `main` function that uses these fields
@@ -222,6 +223,8 @@ impl OuterFunctionTasmCode {
         let code_function = self.get_code_function();
         let name = &self.function_data.name;
         let snippet_struct_name = inflections::case::to_pascal_case(name);
+        let date = Local::now();
+        let date = date.to_string();
 
         format!(
             "use crate::snippet::BasicSnippet;
@@ -232,6 +235,8 @@ use triton_vm::triton_asm;
 
 pub struct {snippet_struct_name};
 
+// This BasicSnippet implementation was autogenerate by the `tasm-lang` compiler
+// on {date}
 impl BasicSnippet for {snippet_struct_name} {{
     {entrypoint_function}
 
