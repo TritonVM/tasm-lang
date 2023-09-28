@@ -305,11 +305,19 @@ impl TryFrom<DataType> for tasm_lib::snippet::DataType {
                 let element_type = (*elem_type).try_into();
                 let element_type = match element_type {
                     Ok(e) => e,
-                    Err(err) => return Err(format!("Failed to convert element type of list: {err}")),
+                    Err(err) => {
+                        return Err(format!("Failed to convert element type of list: {err}"))
+                    }
                 };
                 Ok(tasm_lib::snippet::DataType::List(Box::new(element_type)))
-            },
-            DataType::Tuple(_) => Err("Tuple cannot be converted to a tasm_lib type. Try converting its individual elements".to_string()),
+            }
+            DataType::Tuple(tuple_elements) => {
+                let tuple_elements = tuple_elements
+                    .into_iter()
+                    .map(|x| x.try_into().unwrap())
+                    .collect_vec();
+                Ok(tasm_lib::snippet::DataType::Tuple(tuple_elements))
+            }
             DataType::VoidPointer => Ok(tasm_lib::snippet::DataType::VoidPointer),
             DataType::Function(_) => todo!(),
             DataType::Struct(_) => todo!(),
@@ -320,7 +328,7 @@ impl TryFrom<DataType> for tasm_lib::snippet::DataType {
                 DataType::List(_, ListType::Unsafe) => (*value).try_into(),
                 DataType::Unresolved(_) => todo!(),
                 _ => Ok(tasm_lib::snippet::DataType::VoidPointer),
-            }
+            },
             DataType::Reference(inner) => (*inner).try_into(),
         }
     }

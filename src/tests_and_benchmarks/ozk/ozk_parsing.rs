@@ -150,7 +150,7 @@ pub(crate) fn compile_to_basic_snippet(
         &libraries,
     );
 
-    let _tasm = compile_function(
+    let tasm = compile_function(
         &oil_ast,
         &libraries,
         methods,
@@ -158,5 +158,5 @@ pub(crate) fn compile_to_basic_snippet(
         &structs,
     );
 
-    todo!()
+    tasm.to_basic_snippet()
 }

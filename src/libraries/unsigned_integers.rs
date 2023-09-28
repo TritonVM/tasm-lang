@@ -187,7 +187,7 @@ fn name_to_tasm_lib_snippet(
     match public_name {
         LEADING_ZEROS_METHOD => match receiver_type {
             ast_types::DataType::U32 => Some(Box::new(
-                tasm_lib::arithmetic::u32::leading_zeros_u32::LeadingZerosU32,
+                tasm_lib::arithmetic::u32::leadingzeros::Leadingzeros,
             )),
             ast_types::DataType::U64 => Some(Box::new(
                 tasm_lib::arithmetic::u64::leading_zeros_u64::LeadingZerosU64,
@@ -201,9 +201,7 @@ fn name_to_tasm_lib_snippet(
             _ => panic!("Dont know `{public_name}` for {receiver_type}"),
         },
         POW_METHOD => match receiver_type {
-            ast_types::DataType::U32 => {
-                Some(Box::new(tasm_lib::arithmetic::u32::safe_pow::SafePow))
-            }
+            ast_types::DataType::U32 => Some(Box::new(tasm_lib::arithmetic::u32::safepow::Safepow)),
             _ => panic!("Dont know `{public_name}` for {receiver_type}"),
         },
         OVERFLOWING_ADD_METHOD => match receiver_type {

@@ -173,11 +173,9 @@ pub struct CompilerState<'a> {
 impl<'a> CompilerState<'a> {
     /// Import a dependency in an idempotent manner, ensuring it's only ever imported once
     pub(crate) fn add_library_function(&mut self, subroutine: SubRoutine) {
-        let label = subroutine.get_label();
-        let instructions = subroutine.get_whole_function();
-        self.global_compiler_state
-            .snippet_state
-            .explicit_import(&label, &instructions);
+        // TODO: Can't we include this in a nicer way by e.g. unwrapping inner
+        // subroutines?
+        self.function_state.subroutines.push(subroutine);
     }
 
     /// Construct a new compiler state with no known values that must be spilled.
@@ -1682,7 +1680,7 @@ fn compile_expr(
                         ast_types::DataType::U32 => {
                             // We use the safe, overflow-checking, add code as default
                             let safe_add_u32 =
-                                state.import_snippet(Box::new(arithmetic::u32::safe_add::SafeAdd));
+                                state.import_snippet(Box::new(arithmetic::u32::safeadd::Safeadd));
                             triton_asm!(call { safe_add_u32 })
                         }
                         ast_types::DataType::U64 => {
@@ -1787,7 +1785,7 @@ fn compile_expr(
 
                     let bitwise_or_code = match result_type {
                         U32 => {
-                            let or_u32 = state.import_snippet(Box::new(arithmetic::u32::or::OrU32));
+                            let or_u32 = state.import_snippet(Box::new(arithmetic::u32::or::Or));
                             triton_asm!(call { or_u32 })
                         }
                         U64 => {
@@ -2065,7 +2063,7 @@ fn compile_expr(
                     match (&lhs_type, &rhs_type) {
                         (U32, U32) => {
                             let fn_name =
-                                state.import_snippet(Box::new(arithmetic::u32::safe_mul::SafeMul));
+                                state.import_snippet(Box::new(arithmetic::u32::safemul::Safemul));
 
                             triton_asm!(
                                 {&lhs_expr_code}
@@ -2170,7 +2168,7 @@ fn compile_expr(
 
                     let lhs_type = lhs_expr.get_type();
                     let shl = match lhs_type {
-                        ast_types::DataType::U32 => state.import_snippet(Box::new(arithmetic::u32::shift_left::ShiftLeftU32)),
+                        ast_types::DataType::U32 => state.import_snippet(Box::new(arithmetic::u32::shiftleft::Shiftleft)),
                         ast_types::DataType::U64 => state.import_snippet(Box::new(
                                     arithmetic::u64::shift_left_u64::ShiftLeftU64,
                                 )),
@@ -2201,7 +2199,7 @@ fn compile_expr(
                     // TODO: add optimization where RHS is a literal. Also applies for `Binop::Shl`. We have code snippets
                     // for left/right shifting u128s with statically known bits.
                     let shr = match lhs_type {
-                        ast_types::DataType::U32 => state.import_snippet(Box::new(arithmetic::u32::shift_right::ShiftRightU32)),
+                        ast_types::DataType::U32 => state.import_snippet(Box::new(arithmetic::u32::shiftright::Shiftright)),
                         ast_types::DataType::U64 => state.import_snippet(Box::new(
                                     arithmetic::u64::shift_right_u64::ShiftRightU64,
                                 )),
@@ -2232,7 +2230,7 @@ fn compile_expr(
                         ast_types::DataType::U32 => {
                             // As standard, we use safe arithmetic that crashes on overflow
                             let safe_sub_u32 =
-                                state.import_snippet(Box::new(arithmetic::u32::safe_sub::SafeSub));
+                                state.import_snippet(Box::new(arithmetic::u32::safesub::Safesub));
                             triton_asm!(
                                 swap 1
                                 call {safe_sub_u32}

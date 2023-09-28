@@ -17,7 +17,8 @@ features = [
 anyhow = "1"
 # tasm-lib = { git = "https://github.com/TritonVM/tasm-lib" }
 # tasm-lib = { path = "../tasm-lib/tasm-lib" }
-tasm-lib = { git = "https://github.com/TritonVM/tasm-lib.git" }
+tasm-lib = { git = "https://github.com/TritonVM/tasm-lib.git", branch = "thv/for-tasm-lang-snippet-code-generator" }
+inflections = "1.1"
 itertools = "0.10"
 num = "0.4"
 rand = "0"
