@@ -4,7 +4,7 @@ fn main() {
     // https://projecteuler.net/problem=7
     // Find the 10_001st prime number.
 
-    let index_of_prime_to_find: u32 = 11;
+    let index_of_prime_to_find: u32 = 50;
     let log_of_desired_index: u32 = u32::BITS - index_of_prime_to_find.leading_zeros() - 1;
     let sieve_size: u32 = index_of_prime_to_find * log_of_desired_index;
     let mut primes: Vec<bool> = Vec::<bool>::with_capacity(sieve_size as usize);
