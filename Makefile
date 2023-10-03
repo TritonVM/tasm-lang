@@ -43,6 +43,9 @@ test: export RUST_BACKTRACE = 1
 test:
 	cargo test
 
+fast-tests:
+	RUSTFLAGS="-C opt-level=3 -C debug-assertions=no" cargo t
+
 bench:
 	cargo bench
 
