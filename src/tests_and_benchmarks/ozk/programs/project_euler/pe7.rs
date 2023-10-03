@@ -32,6 +32,7 @@ fn main() {
         prime_candidate += 2;
     }
 
+    tasm::tasm_io_write_to_stdout___u32(index_of_prime_to_find);
     tasm::tasm_io_write_to_stdout___u32(last_prime_found);
 
     return;
@@ -53,9 +54,10 @@ mod tests {
         let stdin = vec![];
         let non_determinism = NonDeterminism::new(vec![]);
         let native_output = rust_shadows::wrap_main_with_io(&main)(stdin, non_determinism);
-        let computed_element = native_output[0];
+        let prime_number_count: u32 = native_output[0].try_into().unwrap();
+        let computed_element = native_output[1];
         let time_passed = timer.elapsed();
-        println!("native_output (took {time_passed:?}): {computed_element}");
+        println!("native_output for prime number {prime_number_count} (took {time_passed:?}): {computed_element}");
 
         // Test function in Triton VM
         let (parsed, _, _) =
@@ -63,9 +65,12 @@ mod tests {
         let expected_stack_diff = 0;
         let stack_start = vec![];
         let vm_output =
-            execute_with_stack_safe_lists(&parsed, stack_start, expected_stack_diff).unwrap();
+            execute_with_stack_unsafe_lists(&parsed, stack_start, expected_stack_diff).unwrap();
         assert_eq!(native_output, vm_output.output);
 
-        println!("vm_output.output: {}", vm_output.output.iter().join(","));
+        println!(
+            "vm_output.output for prime number {prime_number_count}: {}",
+            vm_output.output.iter().skip(1).join("\n")
+        );
     }
 }

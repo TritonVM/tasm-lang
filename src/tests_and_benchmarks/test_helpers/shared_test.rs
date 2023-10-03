@@ -165,6 +165,24 @@ pub fn execute_compiled_with_stack_memory_and_ins_for_test(
     }
 }
 
+pub fn execute_with_stack_unsafe_lists(
+    rust_ast: &syn::ItemFn,
+    stack_start: Vec<ast::ExprLit<Typing>>,
+    expected_stack_diff: isize,
+) -> anyhow::Result<tasm_lib::VmOutputState> {
+    let (code, _fn_name) = compile_for_run_test(rust_ast, ast_types::ListType::Unsafe);
+
+    // Run and return final VM state
+    execute_compiled_with_stack_memory_and_ins_for_test(
+        &code,
+        stack_start,
+        &mut HashMap::default(),
+        vec![],
+        NonDeterminism::new(vec![]),
+        expected_stack_diff,
+    )
+}
+
 pub fn execute_with_stack_safe_lists(
     rust_ast: &syn::ItemFn,
     stack_start: Vec<ast::ExprLit<Typing>>,
