@@ -41,7 +41,7 @@ mod run_tests {
             item_fn(parse_quote! {
                 // Calling this `hash_pair` would result in a label collission
                 fn hash_pair_test(left: Digest, right: Digest) -> Digest {
-                    let ret: Digest = H::hash_pair(&left, &right);
+                    let ret: Digest = H::hash_pair(left, right);
                     return ret;
                 }
             })
@@ -56,7 +56,7 @@ mod run_tests {
             .map(|(left, right)| {
                 InputOutputTestCase::new(
                     vec![digest_lit(left), digest_lit(right)],
-                    vec![digest_lit(H::hash_pair(&left, &right))],
+                    vec![digest_lit(H::hash_pair(left, right))],
                 )
             })
             .collect_vec();
@@ -69,7 +69,7 @@ mod run_tests {
             item_fn(parse_quote! {
                 // Calling this `hash_pair` would result in a label collission
                 fn hash_pair_test(left: Digest, right: Digest) -> Digest {
-                    let ret: Digest = H::hash_pair(&left, &right);
+                    let ret: Digest = H::hash_pair(left, right);
                     return ret;
                 }
             })
@@ -79,7 +79,7 @@ mod run_tests {
         let right: Digest = random();
         let test_case = InputOutputTestCase::new(
             vec![digest_lit(left), digest_lit(right)],
-            vec![digest_lit(H::hash_pair(&left, &right))],
+            vec![digest_lit(H::hash_pair(left, right))],
         );
         multiple_compare_prop_with_stack_safe_lists(
             &hash_pair_with_references_rast(),

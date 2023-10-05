@@ -38,10 +38,10 @@ pub fn verify_authentication_path_with_local_function() -> syn::ItemFn {
                 let ap_element: Digest = auth_path[i];
                 if mt_index_and_peak_index.0 % 2u64 == 1u64 {
                     // Node with `acc_hash` is a right child
-                    acc_hash = H::hash_pair(&ap_element, &acc_hash);
+                    acc_hash = H::hash_pair(ap_element, acc_hash);
                 } else {
                     // Node with `acc_hash` is a left child
-                    acc_hash = H::hash_pair(&acc_hash, &ap_element);
+                    acc_hash = H::hash_pair(acc_hash, ap_element);
                 }
 
                 mt_index_and_peak_index.0 /= 2;
@@ -561,7 +561,7 @@ mod run_tests {
                         let new_hash: Digest = peaks.pop().unwrap();
                         let previous_peak: Digest = peaks.pop().unwrap();
                         auth_path.push(previous_peak);
-                        peaks.push(H::hash_pair(&previous_peak, &new_hash));
+                        peaks.push(H::hash_pair(previous_peak, new_hash));
                         right_lineage_count -= 1;
                     }
 
@@ -588,7 +588,7 @@ mod run_tests {
                         let new_hash: Digest = peaks.pop().unwrap();
                         let previous_peak: Digest = peaks.pop().unwrap();
                         auth_path.push(previous_peak);
-                        peaks.push(H::hash_pair(&previous_peak, &new_hash));
+                        peaks.push(H::hash_pair(previous_peak, new_hash));
                         right_lineage_count -= 1;
                     }
 
@@ -685,10 +685,10 @@ mod run_tests {
                         let ap_element: Digest = authentication_path[i];
                         if mt_index_and_peak_index.0 % 2u64 == 1u64 {
                             // Node with `acc_hash` is a right child
-                            acc_hash = H::hash_pair(&ap_element, &acc_hash);
+                            acc_hash = H::hash_pair(ap_element, acc_hash);
                         } else {
                             // Node with `acc_hash` is a left child
-                            acc_hash = H::hash_pair(&acc_hash, &ap_element);
+                            acc_hash = H::hash_pair(acc_hash, ap_element);
                         }
 
                         mt_index_and_peak_index.0 /= 2;
@@ -731,10 +731,10 @@ mod run_tests {
                     let ap_element: Digest = authentication_path[i];
                     if mt_index % 2u64 == 1u64 {
                         // Node with `acc_hash` is a right child
-                        acc_hash = H::hash_pair(&ap_element, &acc_hash);
+                        acc_hash = H::hash_pair(ap_element, acc_hash);
                     } else {
                         // Node with `acc_hash` is a left child
-                        acc_hash = H::hash_pair(&acc_hash, &ap_element);
+                        acc_hash = H::hash_pair(acc_hash, ap_element);
                     }
 
                     mt_index /= 2;
@@ -802,7 +802,7 @@ mod run_tests {
                 let expected_new_peaks = mmr::shared_basic::calculate_new_peaks_from_leaf_mutation::<
                     Tip5,
                 >(
-                    &old_peaks, &new_leaf, ammr.count_leaves(), &old_mp
+                    &old_peaks, new_leaf, ammr.count_leaves(), &old_mp
                 );
 
                 // Verify that the new peaks calculated in the VM match those calculated in Rust
@@ -881,7 +881,7 @@ mod run_tests {
                     Err(err) => panic!("VM execution must succeed. Got: {err}"),
                 };
 
-                let expected_result = mp.verify(&peaks, &own_leaf, ammr.count_leaves()).0;
+                let expected_result = mp.verify(&peaks, own_leaf, ammr.count_leaves()).0;
                 let vm_result: bool = vm_res.final_stack.last().unwrap().value() == 1;
                 assert_eq!(
                     expected_result, vm_result,
@@ -909,7 +909,7 @@ mod run_tests {
                     Ok(vm_res) => vm_res,
                     Err(err) => panic!("VM execution must succeed. Got: {err}"),
                 };
-                let expected_result_neg = mp.verify(&peaks, &bad_leaf, ammr.count_leaves()).0;
+                let expected_result_neg = mp.verify(&peaks, bad_leaf, ammr.count_leaves()).0;
                 let vm_result_neg: bool = vm_res_negative.final_stack.last().unwrap().value() == 1;
                 assert_eq!(
                     expected_result_neg, vm_result_neg,
@@ -950,10 +950,10 @@ mod run_tests {
                         let ap_element: Digest = auth_path[i];
                         if mt_index % 2u64 == 1u64 {
                             // Node with `acc_hash` is a right child
-                            acc_hash = H::hash_pair(&ap_element, &acc_hash);
+                            acc_hash = H::hash_pair(ap_element, acc_hash);
                         } else {
                             // Node with `acc_hash` is a left child
-                            acc_hash = H::hash_pair(&acc_hash, &ap_element);
+                            acc_hash = H::hash_pair(acc_hash, ap_element);
                         }
 
                         mt_index /= 2;

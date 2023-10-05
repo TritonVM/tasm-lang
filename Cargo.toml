@@ -3,6 +3,25 @@ name = "tasm-lang"
 version = "0.0.0"
 edition = "2021"
 
+[dependencies]
+anyhow = "1"
+chrono = "^0.4.31"
+inflections = "1.1"
+itertools = "0.11"
+num = "0.4"
+rand = "0"
+syn = { version = "1.0", features = ["full", "extra-traits"] }
+tasm-lib = { git = "https://github.com/TritonVM/tasm-lib.git" }
+triton-vm = "0.34"
+twenty-first = "0.34"
+
+[dev-dependencies]
+anyhow = "1"
+field_count = "0.1.1"
+serde = { version = "1", features = ["derive"] }
+serde_derive = "1"
+serde_json = "1"
+
 [dev-dependencies.cargo-husky]
 version = "1"
 default-features = false
@@ -12,27 +31,3 @@ features = [
     "run-cargo-clippy",
     "run-cargo-fmt",
 ]
-
-[dependencies]
-anyhow = "1"
-chrono = "^0.4.31"
-# tasm-lib = { git = "https://github.com/TritonVM/tasm-lib" }
-# tasm-lib = { path = "../tasm-lib/tasm-lib" }
-tasm-lib = { git = "https://github.com/TritonVM/tasm-lib.git" }
-inflections = "1.1"
-itertools = "0.10"
-num = "0.4"
-rand = "0"
-syn = { version = "1.0", features = ["full", "extra-traits"] }
-# triton-opcodes = "0.29.1"
-# triton-vm = "0.29.1"
-# triton-vm = {path = "../triton-vm/triton-vm"}
-triton-vm = "0.33.0"
-twenty-first = "0.32.1"
-
-[dev-dependencies]
-anyhow = "1"
-field_count = "0.1.1"
-serde = { version = "1", features = ["derive"] }
-serde_derive = "1"
-serde_json = "1"

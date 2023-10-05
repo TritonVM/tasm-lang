@@ -17,7 +17,7 @@ fn main() {
             let half: usize = (stop - start) / 2;
             let left: Digest = merkle_root(leafs, start, stop - half);
             let right: Digest = merkle_root(leafs, start + half, stop);
-            H::hash_pair(&left, &right)
+            H::hash_pair(left, right)
         };
 
         return result;

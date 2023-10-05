@@ -146,8 +146,8 @@ fn main() {
     // // 3. assert that the mutator set's MMRs in the witness match the kernel
     // // now we can trust all data in these MMRs as well
     // let mutator_set_hash = Hash::hash_pair(
-    //     &Hash::hash_pair(&witness.aocl.bag_peaks(), &witness.swbfi.bag_peaks()),
-    //     &Hash::hash_pair(&witness.swbfa_hash, &Digest::default()),
+    //     Hash::hash_pair(witness.aocl.bag_peaks(), witness.swbfi.bag_peaks()),
+    //     Hash::hash_pair(witness.swbfa_hash, Digest::default()),
     // );
     // assert_eq!(witness.kernel.mutator_set_hash, mutator_set_hash);
 }
@@ -353,8 +353,7 @@ mod tests {
                 if nodes.get(&wi_even).is_none() {
                     nodes.insert(wi_even, rng.gen::<Digest>());
                 }
-                let hash =
-                    VmHasher::hash_pair(nodes.get(&wi_even).unwrap(), nodes.get(&wi_odd).unwrap());
+                let hash = VmHasher::hash_pair(nodes[&wi_even], nodes[&wi_odd]);
                 nodes.insert(wi >> 1, hash);
             }
             depth -= 1;
@@ -383,11 +382,11 @@ mod tests {
         leaf: Digest,
     ) -> bool {
         let mut acc = leaf;
-        for (shift, p) in path.iter().enumerate() {
+        for (shift, &p) in path.iter().enumerate() {
             if (index >> shift) & 1 == 1 {
-                acc = VmHasher::hash_pair(p, &acc);
+                acc = VmHasher::hash_pair(p, acc);
             } else {
-                acc = VmHasher::hash_pair(&acc, p);
+                acc = VmHasher::hash_pair(acc, p);
             }
         }
         acc == root
@@ -495,7 +494,7 @@ mod tests {
                 .map(|_| rng.gen())
                 .collect_vec();
             let dummy_peaks = [peaks.clone(), dummy_remainder].concat();
-            for ((leaf, _mt_index, _original_index), mp) in
+            for (&(leaf, _mt_index, _original_index), mp) in
                 leafs_and_mt_indices.iter().zip(membership_proofs.iter())
             {
                 assert!(mp.verify(&dummy_peaks, leaf, leaf_count).0);
@@ -512,7 +511,7 @@ mod tests {
         let mmra = MmrAccumulator::<VmHasher>::init(peaks, leaf_count);
 
         // sanity check
-        for (leaf, mp) in leafs.iter().zip(mps.iter()) {
+        for (&leaf, mp) in leafs.iter().zip(mps.iter()) {
             assert!(mp.verify(&mmra.get_peaks(), leaf, mmra.count_leaves()).0);
         }
 
@@ -634,12 +633,12 @@ mod tests {
     }
 
     pub fn commit(
-        item: &Digest,
-        sender_randomness: &Digest,
-        receiver_digest: &Digest,
+        item: Digest,
+        sender_randomness: Digest,
+        receiver_digest: Digest,
     ) -> AdditionRecord {
         let canonical_commitment = VmHasher::hash_pair(
-            &VmHasher::hash_pair(item, sender_randomness),
+            VmHasher::hash_pair(item, sender_randomness),
             receiver_digest,
         );
 
@@ -791,9 +790,9 @@ mod tests {
     pub const WINDOW_SIZE: u32 = 1048576;
 
     pub fn get_swbf_indices(
-        item: &Digest,
-        sender_randomness: &Digest,
-        receiver_preimage: &Digest,
+        item: Digest,
+        sender_randomness: Digest,
+        receiver_preimage: Digest,
         aocl_leaf_index: u64,
     ) -> [u128; NUM_TRIALS as usize] {
         let batch_index: u128 = aocl_leaf_index as u128 / BATCH_SIZE as u128;
@@ -847,9 +846,9 @@ mod tests {
             .zip(membership_proofs.iter())
             .map(|(utxo, msmp)| {
                 commit(
-                    &VmHasher::hash(utxo),
-                    &msmp.sender_randomness,
-                    &msmp.receiver_preimage.hash::<VmHasher>(),
+                    VmHasher::hash(utxo),
+                    msmp.sender_randomness,
+                    msmp.receiver_preimage.hash::<VmHasher>(),
                 )
             })
             .collect_vec();
@@ -862,7 +861,7 @@ mod tests {
         assert_eq!(num_inputs, mmr_mps.len());
         assert_eq!(num_inputs, canonical_commitments.len());
 
-        for (mp, cc) in mmr_mps.iter().zip_eq(canonical_commitments.iter()) {
+        for (mp, &cc) in mmr_mps.iter().zip_eq(canonical_commitments.iter()) {
             assert!(
                 mp.verify(&aocl.get_peaks(), cc, aocl.count_leaves()).0,
                 "Returned MPs must be valid for returned AOCL"
@@ -877,8 +876,8 @@ mod tests {
         let mut kernel =
             pseudorandom_transaction_kernel(rng.gen(), num_inputs, num_outputs, num_pubscripts);
         kernel.mutator_set_hash = VmHasher::hash_pair(
-            &VmHasher::hash_pair(&aocl.bag_peaks(), &swbfi.bag_peaks()),
-            &VmHasher::hash_pair(&swbfa_hash, &Digest::default()),
+            VmHasher::hash_pair(aocl.bag_peaks(), swbfi.bag_peaks()),
+            VmHasher::hash_pair(swbfa_hash, Digest::default()),
         );
         // kernel.inputs = input_utxos
         //     .iter()
