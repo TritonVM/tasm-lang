@@ -455,7 +455,6 @@ impl<'a> Graft<'a> {
             syn::ReturnType::Type(_, path) => match path.as_ref() {
                 syn::Type::Path(type_path) => self.rust_type_path_to_data_type(type_path),
                 syn::Type::Tuple(tuple_type) => {
-                    let tuple_type = tuple_type;
                     let output_elements = tuple_type
                         .elems
                         .iter()
