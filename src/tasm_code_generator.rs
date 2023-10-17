@@ -1828,7 +1828,7 @@ fn compile_expr(
                                 {&lhs_expr_code}
                                 {&rhs_expr_code}
                                 swap 1
-                                div
+                                div_mod
                                 pop
                             )
                         }
@@ -1936,7 +1936,7 @@ fn compile_expr(
                                 {&lhs_expr_code}
                                 {&rhs_expr_code}
                                 swap 1
-                                div
+                                div_mod
                                 swap 1
                                 pop
                             )

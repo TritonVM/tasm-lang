@@ -12,7 +12,7 @@ num = "0.4"
 rand = "0"
 syn = { version = "1.0", features = ["full", "extra-traits"] }
 tasm-lib = { git = "https://github.com/TritonVM/tasm-lib.git" }
-triton-vm = "0.34"
+triton-vm = "0.35"
 twenty-first = "0.34"
 
 [dev-dependencies]

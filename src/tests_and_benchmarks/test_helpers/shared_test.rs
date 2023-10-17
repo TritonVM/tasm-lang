@@ -6,8 +6,7 @@ use itertools::Itertools;
 use std::collections::HashMap;
 use tasm_lib::memory::dyn_malloc::{self, DYN_MALLOC_ADDRESS};
 use tasm_lib::{
-    get_init_tvm_stack, program_with_state_preparation, rust_shadowing_helper_functions,
-    DIGEST_LENGTH,
+    empty_stack, program_with_state_preparation, rust_shadowing_helper_functions, DIGEST_LENGTH,
 };
 use triton_vm::instruction::LabelledInstruction;
 use triton_vm::{Digest, NonDeterminism, PublicInput};
@@ -98,7 +97,7 @@ pub fn execute_compiled_with_stack_memory_and_ins_for_bench(
     non_determinism: NonDeterminism<BFieldElement>,
     expected_stack_diff: isize,
 ) -> anyhow::Result<tasm_lib::ExecutionResult> {
-    let mut stack = get_init_tvm_stack();
+    let mut stack = empty_stack();
     for input_arg in input_args {
         let input_arg_seq = input_arg.encode();
         stack.append(&mut input_arg_seq.into_iter().rev().collect());
@@ -125,7 +124,7 @@ pub fn execute_compiled_with_stack_memory_and_ins_for_test(
     mut non_determinism: NonDeterminism<BFieldElement>,
     _expected_stack_diff: isize,
 ) -> anyhow::Result<tasm_lib::VmOutputState> {
-    let mut init_stack = get_init_tvm_stack();
+    let mut init_stack = empty_stack();
     for input_arg in input_args {
         let input_arg_seq = input_arg.encode();
         init_stack.append(&mut input_arg_seq.into_iter().rev().collect());
@@ -256,13 +255,13 @@ pub fn compare_compiled_prop_with_stack_and_memory_and_ins(
     std_in: Vec<BFieldElement>,
     non_determinism: NonDeterminism<BFieldElement>,
 ) {
-    let mut expected_final_stack = get_init_tvm_stack();
+    let mut expected_final_stack = empty_stack();
     for output in expected_outputs {
         let output_seq = output.encode();
         expected_final_stack.append(&mut output_seq.into_iter().rev().collect());
     }
 
-    let init_stack_length: usize = get_init_tvm_stack().len()
+    let init_stack_length: usize = empty_stack().len()
         + input_args
             .iter()
             .map(|arg| arg.get_type().stack_size())
