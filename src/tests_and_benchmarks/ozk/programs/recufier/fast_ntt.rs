@@ -201,3 +201,49 @@ mod tests {
         }
     }
 }
+
+mod benches {
+    use super::*;
+    use crate::tests_and_benchmarks::{
+        benchmarks::{execute_and_write_benchmark, BenchmarkInput},
+        ozk::ozk_parsing,
+        test_helpers::shared_test::*,
+    };
+    use triton_vm::BFieldElement;
+    use twenty_first::shared_math::{other::random_elements, traits::PrimitiveRootOfUnity};
+
+    #[test]
+    fn fast_ntt_bench() {
+        fn get_input(length: usize) -> BenchmarkInput {
+            let xfes: Vec<XFieldElement> = random_elements(length);
+            let omega = BFieldElement::primitive_root_of_unity(length as u64).unwrap();
+            let std_in = vec![omega];
+            let non_determinism =
+                init_memory_from(&xfes, BFieldElement::new(0x1000_0000_0000_0000u64));
+
+            BenchmarkInput {
+                std_in,
+                non_determinism,
+                ..Default::default()
+            }
+        }
+
+        let code = ozk_parsing::compile_for_test(
+            "recufier",
+            "fast_ntt",
+            "main",
+            crate::ast_types::ListType::Unsafe,
+        );
+
+        let common_case_input = get_input(32);
+        let worst_case_input = get_input(128);
+
+        execute_and_write_benchmark(
+            "fast_ntt".to_owned(),
+            code,
+            common_case_input,
+            worst_case_input,
+            0,
+        )
+    }
+}

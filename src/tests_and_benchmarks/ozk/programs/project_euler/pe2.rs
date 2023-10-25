@@ -1,13 +1,12 @@
 // Allows the use of input/output on the native architecture
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
-#[allow(clippy::needless_else)]
 fn main() {
     // https://projecteuler.net/problem=2
     let mut previous: u32 = 1;
     let mut current: u32 = 1;
     let mut acc: u32 = 0;
-    while current >= 4_000_000 {
+    while current <= 4_000_000 {
         if current % 2 == 0 {
             acc += current;
         }
@@ -47,7 +46,31 @@ mod tests {
         let vm_output =
             execute_with_stack_safe_lists(&parsed, stack_start, expected_stack_diff).unwrap();
         assert_eq!(native_output, vm_output.output);
+        assert_eq!(4613732, native_output[0].value());
 
         println!("vm_output.output: {}", vm_output.output.iter().join(","));
+    }
+}
+
+mod benches {
+    use crate::tests_and_benchmarks::{
+        benchmarks::{execute_and_write_benchmark, BenchmarkInput},
+        ozk::ozk_parsing,
+        test_helpers::shared_test::*,
+    };
+
+    #[test]
+    fn pe2_bench() {
+        let (parsed, _, _) =
+            ozk_parsing::parse_function_and_structs("project_euler", "pe2", "main");
+        let (code, _) = compile_for_run_test(&parsed, crate::ast_types::ListType::Safe);
+
+        execute_and_write_benchmark(
+            "project_euler_2".to_owned(),
+            code,
+            BenchmarkInput::default(),
+            BenchmarkInput::default(),
+            0,
+        )
     }
 }

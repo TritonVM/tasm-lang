@@ -8,9 +8,12 @@ fn main() {
     // but we use a smaller number here, since we don't want this test too take
     // too long.
     // let mut composite_number: u64 = 600851475143;
-    let mut composite_number: u64 = 60085;
+    let mut composite_number: u64 = 600851;
     let mut candidate_divisor: u64 = 2;
     while candidate_divisor * candidate_divisor <= composite_number {
+        // Notice that current div mod implementation could be sped up by using
+        // non-determinism and proving the result instead actually calculating
+        // the result of the `div_mod` operation as we do here.
         if composite_number % candidate_divisor == 0 {
             composite_number /= candidate_divisor;
         } else {
@@ -50,5 +53,28 @@ mod tests {
         assert_eq!(native_output, vm_output.output);
 
         println!("vm_output.output: {}", vm_output.output.iter().join(","));
+    }
+}
+
+mod benches {
+    use crate::tests_and_benchmarks::{
+        benchmarks::{execute_and_write_benchmark, BenchmarkInput},
+        ozk::ozk_parsing,
+        test_helpers::shared_test::*,
+    };
+
+    #[test]
+    fn pe3_bench() {
+        let (parsed, _, _) =
+            ozk_parsing::parse_function_and_structs("project_euler", "pe3", "main");
+        let (code, _) = compile_for_run_test(&parsed, crate::ast_types::ListType::Safe);
+
+        execute_and_write_benchmark(
+            "project_euler_3_i600851".to_owned(),
+            code,
+            BenchmarkInput::default(),
+            BenchmarkInput::default(),
+            0,
+        )
     }
 }

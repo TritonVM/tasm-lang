@@ -47,6 +47,8 @@ fn main() {
         while rhs != lhs + 1 {
             let prod: u32 = lhs * rhs;
             find_decimal_digits(prod, &mut decimal_digits);
+            // short-circuiting and better control-flow (e.g. `break`) would
+            // give this a *massive* speedup.
             if list_is_palindrome(&decimal_digits) && prod > max_palindrome {
                 max_palindrome = prod;
             }
@@ -88,5 +90,28 @@ mod tests {
         assert_eq!(native_output, vm_output.output);
 
         println!("vm_output.output: {}", vm_output.output.iter().join(","));
+    }
+}
+
+mod benches {
+    use crate::tests_and_benchmarks::{
+        benchmarks::{execute_and_write_benchmark, BenchmarkInput},
+        ozk::ozk_parsing,
+        test_helpers::shared_test::*,
+    };
+
+    #[test]
+    fn pe4_bench() {
+        let (parsed, _, _) =
+            ozk_parsing::parse_function_and_structs("project_euler", "pe4", "main");
+        let (code, _) = compile_for_run_test(&parsed, crate::ast_types::ListType::Unsafe);
+
+        execute_and_write_benchmark(
+            "project_euler_4_w_unsafe_lists_i10_to_100".to_owned(),
+            code,
+            BenchmarkInput::default(),
+            BenchmarkInput::default(),
+            0,
+        )
     }
 }

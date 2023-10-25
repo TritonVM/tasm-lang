@@ -4,7 +4,9 @@ fn main() {
     // https://projecteuler.net/problem=7
     // Find the 10_001st prime number.
 
-    let index_of_prime_to_find: u32 = 50;
+    // We reduce the problem size to 150 as this algorithm otherwise takes too
+    // long to run.
+    let index_of_prime_to_find: u32 = 150;
     let log_of_desired_index: u32 = u32::BITS - index_of_prime_to_find.leading_zeros() - 1;
     let sieve_size: u32 = index_of_prime_to_find * log_of_desired_index;
     let mut primes: Vec<bool> = Vec::<bool>::with_capacity(sieve_size as usize);
@@ -72,5 +74,28 @@ mod tests {
             "vm_output.output for prime number {prime_number_count}: {}",
             vm_output.output.iter().skip(1).join("\n")
         );
+    }
+}
+
+mod benches {
+    use crate::tests_and_benchmarks::{
+        benchmarks::{execute_and_write_benchmark, BenchmarkInput},
+        ozk::ozk_parsing,
+        test_helpers::shared_test::*,
+    };
+
+    #[test]
+    fn pe7_bench() {
+        let (parsed, _, _) =
+            ozk_parsing::parse_function_and_structs("project_euler", "pe7", "main");
+        let (code, _) = compile_for_run_test(&parsed, crate::ast_types::ListType::Safe);
+
+        execute_and_write_benchmark(
+            "project_euler_7_i150".to_owned(),
+            code,
+            BenchmarkInput::default(),
+            BenchmarkInput::default(),
+            0,
+        )
     }
 }

@@ -1,0 +1,16 @@
+[
+  {
+    "name": "project_euler_6",
+    "clock_cycle_count": 264,
+    "hash_table_height": 0,
+    "u32_table_height": 277,
+    "case": "CommonCase"
+  },
+  {
+    "name": "project_euler_6",
+    "clock_cycle_count": 264,
+    "hash_table_height": 0,
+    "u32_table_height": 277,
+    "case": "WorstCase"
+  }
+]

@@ -1,0 +1,16 @@
+[
+  {
+    "name": "project_euler_3_i600851",
+    "clock_cycle_count": 55982,
+    "hash_table_height": 0,
+    "u32_table_height": 15918,
+    "case": "CommonCase"
+  },
+  {
+    "name": "project_euler_3_i600851",
+    "clock_cycle_count": 55982,
+    "hash_table_height": 0,
+    "u32_table_height": 15918,
+    "case": "WorstCase"
+  }
+]

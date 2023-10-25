@@ -1,0 +1,16 @@
+[
+  {
+    "name": "recufier_merkle_root",
+    "clock_cycle_count": 2690,
+    "hash_table_height": 90,
+    "u32_table_height": 91,
+    "case": "CommonCase"
+  },
+  {
+    "name": "recufier_merkle_root",
+    "clock_cycle_count": 44210,
+    "hash_table_height": 1530,
+    "u32_table_height": 2113,
+    "case": "WorstCase"
+  }
+]

@@ -42,3 +42,26 @@ mod tests {
         println!("vm_output.output: {}", vm_output.output.iter().join(","));
     }
 }
+
+mod benches {
+    use crate::tests_and_benchmarks::{
+        benchmarks::{execute_and_write_benchmark, BenchmarkInput},
+        ozk::ozk_parsing,
+        test_helpers::shared_test::*,
+    };
+
+    #[test]
+    fn pe5_bench() {
+        let (parsed, _, _) =
+            ozk_parsing::parse_function_and_structs("project_euler", "pe5", "main");
+        let (code, _) = compile_for_run_test(&parsed, crate::ast_types::ListType::Safe);
+
+        execute_and_write_benchmark(
+            "project_euler_5".to_owned(),
+            code,
+            BenchmarkInput::default(),
+            BenchmarkInput::default(),
+            0,
+        )
+    }
+}

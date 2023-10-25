@@ -69,7 +69,7 @@ mod tests {
     use twenty_first::shared_math::bfield_codec::BFieldCodec;
 
     #[test]
-    fn bfe_mul_test() {
+    fn dazefield_element_test() {
         // Test function on host machine
         let non_determinism = NonDeterminism::new(vec![]);
 
@@ -86,7 +86,7 @@ mod tests {
             // Test function in Triton VM
             let test_program = ozk_parsing::compile_for_test(
                 "arithmetic",
-                "bfe_mul",
+                "dazefield_element_mul",
                 "main",
                 crate::ast_types::ListType::Unsafe,
             );
@@ -108,5 +108,47 @@ mod tests {
                 );
             }
         }
+    }
+}
+
+mod benches {
+    use triton_vm::BFieldElement;
+
+    use crate::tests_and_benchmarks::{
+        benchmarks::{execute_and_write_benchmark, BenchmarkInput},
+        ozk::ozk_parsing,
+    };
+
+    #[test]
+    fn dazefield_element_bench() {
+        let worst_case_input = BenchmarkInput {
+            std_in: vec![
+                BFieldElement::new(1u64 << 40),
+                BFieldElement::new(1u64 << 40),
+            ],
+            ..Default::default()
+        };
+        let common_case_input = BenchmarkInput {
+            std_in: vec![
+                BFieldElement::new(BFieldElement::MAX),
+                BFieldElement::new(BFieldElement::MAX),
+            ],
+            ..Default::default()
+        };
+
+        let code = ozk_parsing::compile_for_test(
+            "arithmetic",
+            "dazefield_element_mul",
+            "main",
+            crate::ast_types::ListType::Unsafe,
+        );
+
+        execute_and_write_benchmark(
+            "dazefield_element_mul".to_owned(),
+            code,
+            common_case_input,
+            worst_case_input,
+            0,
+        )
     }
 }
