@@ -7,7 +7,7 @@ use crate::{ast, type_checker::Typing};
 
 pub mod mmr;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Default, Clone)]
 pub struct BenchmarkInput {
     pub input_args: Vec<ast::ExprLit<Typing>>,
     pub memory: HashMap<BFieldElement, BFieldElement>,
