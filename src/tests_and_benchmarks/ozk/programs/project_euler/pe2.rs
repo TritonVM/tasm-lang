@@ -54,7 +54,7 @@ mod tests {
 
 mod benches {
     use crate::tests_and_benchmarks::{
-        benchmarks::{execute_and_write_benchmark, BenchmarkInput},
+        benchmarks::{execute_and_write_benchmark, profile, BenchmarkInput},
         ozk::ozk_parsing,
         test_helpers::shared_test::*,
     };
@@ -65,12 +65,16 @@ mod benches {
             ozk_parsing::parse_function_and_structs("project_euler", "pe2", "main");
         let (code, _) = compile_for_run_test(&parsed, crate::ast_types::ListType::Safe);
 
+        let common_case = BenchmarkInput::default();
+        let worst_case = BenchmarkInput::default();
+        let name = "project_euler_2".to_owned();
         execute_and_write_benchmark(
-            "project_euler_2".to_owned(),
-            code,
-            BenchmarkInput::default(),
-            BenchmarkInput::default(),
+            name.clone(),
+            code.clone(),
+            common_case.clone(),
+            worst_case,
             0,
-        )
+        );
+        profile(name, code, common_case);
     }
 }

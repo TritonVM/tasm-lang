@@ -82,7 +82,7 @@ mod tests {
 mod benches {
     use super::*;
     use crate::tests_and_benchmarks::{
-        benchmarks::{execute_and_write_benchmark, BenchmarkInput},
+        benchmarks::{execute_and_write_benchmark, profile, BenchmarkInput},
         ozk::ozk_parsing,
         test_helpers::shared_test::*,
     };
@@ -110,12 +110,14 @@ mod benches {
         let common_case_input = get_input(16);
         let worst_case_input = get_input(256);
 
+        let name = "recufier_merkle_root".to_owned();
         execute_and_write_benchmark(
-            "recufier_merkle_root".to_owned(),
-            code,
-            common_case_input,
+            name.clone(),
+            code.clone(),
+            common_case_input.clone(),
             worst_case_input,
             0,
-        )
+        );
+        profile(name, code, common_case_input);
     }
 }

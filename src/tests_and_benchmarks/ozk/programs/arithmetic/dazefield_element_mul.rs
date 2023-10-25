@@ -115,7 +115,7 @@ mod benches {
     use triton_vm::BFieldElement;
 
     use crate::tests_and_benchmarks::{
-        benchmarks::{execute_and_write_benchmark, BenchmarkInput},
+        benchmarks::{execute_and_write_benchmark, profile, BenchmarkInput},
         ozk::ozk_parsing,
     };
 
@@ -128,7 +128,7 @@ mod benches {
             ],
             ..Default::default()
         };
-        let common_case_input = BenchmarkInput {
+        let common_case = BenchmarkInput {
             std_in: vec![
                 BFieldElement::new(BFieldElement::MAX),
                 BFieldElement::new(BFieldElement::MAX),
@@ -143,12 +143,14 @@ mod benches {
             crate::ast_types::ListType::Unsafe,
         );
 
+        let name = "dazefield_element_mul".to_owned();
         execute_and_write_benchmark(
-            "dazefield_element_mul".to_owned(),
-            code,
-            common_case_input,
+            name.clone(),
+            code.clone(),
+            common_case.clone(),
             worst_case_input,
             0,
-        )
+        );
+        profile(name, code, common_case);
     }
 }

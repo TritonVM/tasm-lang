@@ -205,7 +205,7 @@ mod tests {
 mod benches {
     use super::*;
     use crate::tests_and_benchmarks::{
-        benchmarks::{execute_and_write_benchmark, BenchmarkInput},
+        benchmarks::{execute_and_write_benchmark, profile, BenchmarkInput},
         ozk::ozk_parsing,
         test_helpers::shared_test::*,
     };
@@ -238,12 +238,14 @@ mod benches {
         let common_case_input = get_input(32);
         let worst_case_input = get_input(128);
 
+        let name = "fast_ntt".to_owned();
         execute_and_write_benchmark(
-            "fast_ntt".to_owned(),
-            code,
-            common_case_input,
+            name.clone(),
+            code.clone(),
+            common_case_input.clone(),
             worst_case_input,
             0,
-        )
+        );
+        profile(name, code, common_case_input);
     }
 }
