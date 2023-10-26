@@ -1,4 +1,5 @@
 use itertools::Itertools;
+use num::One;
 use std::collections::HashMap;
 use twenty_first::shared_math::b_field_element::BFieldElement;
 use twenty_first::shared_math::x_field_element::XFieldElement;
@@ -63,6 +64,7 @@ impl<T: GetType + std::fmt::Debug> GetType for ast::Expr<T> {
                     .collect_vec()
                     .into(),
             ),
+            ast::Expr::Struct(struct_expr) => struct_expr.get_type(),
             ast::Expr::FnCall(fn_call) => fn_call.get_type(),
             ast::Expr::MethodCall(method_call) => method_call.get_type(),
             ast::Expr::Binop(_, _, _, t) => t.get_type(),
@@ -77,6 +79,12 @@ impl<T: GetType + std::fmt::Debug> GetType for ast::Expr<T> {
 impl<T: GetType + std::fmt::Debug> GetType for ast::ReturningBlock<T> {
     fn get_type(&self) -> ast_types::DataType {
         self.return_expr.get_type()
+    }
+}
+
+impl<T: GetType + std::fmt::Debug> GetType for ast::StructExpr<T> {
+    fn get_type(&self) -> ast_types::DataType {
+        self.struct_type.clone()
     }
 }
 
@@ -887,6 +895,69 @@ fn derive_annotate_expr_type(
                 .map(|expr| derive_annotate_expr_type(expr, no_hint, state, env_fn_signature))
                 .collect();
             ast_types::DataType::Tuple(tuple_types.into())
+        }
+
+        ast::Expr::Struct(struct_expr) => {
+            let struct_type =
+                if let ast_types::DataType::Struct(struct_type) = &struct_expr.struct_type {
+                    struct_type.to_owned()
+                } else {
+                    panic!("Type in struct declaration must be Struct type");
+                };
+            let struct_type =
+                if let ast_types::StructVariant::NamedFields(named_fields) = &struct_type.variant {
+                    named_fields.to_owned()
+                } else {
+                    panic!("Type in struct declaration must be struct with named fields");
+                };
+
+            // Perform type-checking of each field, ensure all fields are defined
+            let mut remaining_fields = struct_type.fields.clone();
+            for (field_name, expr) in struct_expr.field_names_and_values.iter_mut() {
+                let field_id = ast_types::FieldId::NamedField(field_name.to_owned());
+                let expected_field_type = struct_expr
+                    .struct_type
+                    .field_access_returned_type(&field_id);
+                let derived_field_type = derive_annotate_expr_type(
+                    expr,
+                    Some(&expected_field_type),
+                    state,
+                    env_fn_signature,
+                );
+                assert_type_equals(
+                    &derived_field_type,
+                    &expected_field_type,
+                    &format!("Struct initialization of {}", struct_expr.struct_type),
+                );
+
+                let m = remaining_fields
+                    .iter()
+                    .filter(|(name, _)| name == field_name)
+                    .collect_vec();
+                assert!(m.len().is_one());
+                remaining_fields.retain(|(name, _)| name != field_name);
+            }
+
+            assert!(
+                remaining_fields.is_empty(),
+                "Missing declarations of fields {remaining_fields:?} for struct {}",
+                struct_type.name
+            );
+
+            // Sort expression such that it matches type declaration, and ends up with the
+            // first-declared field on top of the stack.
+            struct_expr
+                .field_names_and_values
+                .sort_by_key(|(field_name, _)| {
+                    struct_type
+                        .fields
+                        .iter()
+                        .position(|(name, _)| name == field_name)
+                        .unwrap_or(usize::MAX)
+                });
+            struct_expr.field_names_and_values.reverse();
+
+            struct_expr.struct_type.clone()
         }
 
         ast::Expr::FnCall(ast::FnCall {

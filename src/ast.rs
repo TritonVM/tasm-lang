@@ -256,6 +256,7 @@ pub enum Expr<T> {
     If(ExprIf<T>),
     Cast(Box<Expr<T>>, DataType),
     ReturningBlock(Box<ReturningBlock<T>>),
+    Struct(StructExpr<T>),
     // Index(Box<Expr<T>>, Box<Expr<T>>), // a_expr[i_expr]    (a + 5)[3]
     // TODO: VM-specific intrinsics (hash, absorb, squeeze, etc.)
 }
@@ -276,6 +277,9 @@ impl<T> Expr<T> {
             Expr::If(_) => "if_else".to_owned(),
             Expr::Cast(_, dt) => format!("cast_{}", dt.label_friendly_name()),
             Expr::ReturningBlock(_) => "returning_block".to_owned(),
+            Expr::Struct(struct_expr) => {
+                format!("struct_expr:{}", struct_expr.label_friendly_name())
+            }
         }
     }
 }
@@ -299,9 +303,34 @@ impl<T> Display for Expr<T> {
             Expr::Cast(_, dt) => format!("cast_{dt}"),
             Expr::Unary(unaryop, _, _) => format!("unaryop_{unaryop:?}"),
             Expr::ReturningBlock(_) => "returning_block".to_owned(),
+            Expr::Struct(struct_expr) => {
+                format!(
+                    "struct_expression_for_{}",
+                    struct_expr.struct_type.label_friendly_name()
+                )
+            }
         };
 
         write!(f, "{str}")
+    }
+}
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub struct StructExpr<T> {
+    pub struct_type: DataType,
+    pub field_names_and_values: Vec<(String, Expr<T>)>,
+}
+
+impl<T> StructExpr<T> {
+    pub fn label_friendly_name(&self) -> String {
+        format!(
+            "struct_{}__{}",
+            self.struct_type.label_friendly_name(),
+            self.field_names_and_values
+                .iter()
+                .map(|(n, v)| format!("n_{n}_v_{v}"))
+                .join("__")
+        )
     }
 }
 

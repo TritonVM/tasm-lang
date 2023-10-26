@@ -445,12 +445,40 @@ impl<'a> CompilerState<'a> {
                     }
                 }
 
+                /// Return the position of a field for a struct which is `Copy`, implying
+                /// that its size is known at compile-time.
+                fn handle_named_fields_struct(
+                    struct_type: ast_types::NamedFieldsStruct,
+                    field_id: &ast_types::FieldId,
+                    lhs_location: ValueLocation,
+                ) -> ValueLocation {
+                    let needle_name: String = field_id.to_string();
+                    let mut field_depth: usize = 0;
+                    for (haystack_name, haystack_type) in struct_type.fields.iter() {
+                        if &needle_name == haystack_name {
+                            break;
+                        } else {
+                            field_depth += haystack_type.bfield_codec_length().unwrap();
+                        }
+                    }
+
+                    match lhs_location {
+                        ValueLocation::OpStack(n) => ValueLocation::OpStack(n + field_depth),
+                        ValueLocation::StaticMemoryAddress(p) => {
+                            ValueLocation::StaticMemoryAddress(p + field_depth as u32)
+                        }
+                        ValueLocation::DynamicMemoryAddress(_code) => unreachable!(
+                            "named struct was expected to live on stack, or be spilled"
+                        ),
+                    }
+                }
+
                 // limited field support for now
                 match lhs.get_type() {
                     ast_types::DataType::Boxed(inner_type) => match *inner_type {
                         ast_types::DataType::Struct(inner_struct) => {
                             let get_field_pointer_from_struct_pointer =
-                                inner_struct.get_field_accessor_code(field_id);
+                                inner_struct.get_field_accessor_code_for_reference(field_id);
                             ValueLocation::DynamicMemoryAddress(triton_asm!(
                                 {&get_ident_code}
                                 {&get_field_pointer_from_struct_pointer}
@@ -480,7 +508,9 @@ impl<'a> CompilerState<'a> {
                         StructVariant::TupleStruct(tuple) => {
                             handle_tuple(tuple, field_id, lhs_location)
                         }
-                        StructVariant::NamedFields(_) => todo!(),
+                        StructVariant::NamedFields(named_fields_struct) => {
+                            handle_named_fields_struct(named_fields_struct, field_id, lhs_location)
+                        }
                     },
                     ast_types::DataType::Reference(inner_type) => match *inner_type {
                         ast_types::DataType::Struct(struct_type) => match struct_type.variant {
@@ -1621,6 +1651,26 @@ fn compile_expr(
             code.concat()
         }
 
+        ast::Expr::Struct(struct_expr) => {
+            // It is assumed that the struct fields in the expression are sorted as that in the
+            // type declaration, after the type checker has run.
+            let (idents, code): (Vec<ValueIdentifier>, Vec<Vec<LabelledInstruction>>) = struct_expr
+                .field_names_and_values
+                .iter()
+                .map(|(field_name, arg_expr)| {
+                    let context = format!("_struct_{field_name}");
+                    compile_expr(arg_expr, &context, state)
+                })
+                .unzip();
+
+            // Combine vstack entries into one Struct entry
+            for _ in idents {
+                state.function_state.vstack.pop();
+            }
+
+            code.concat()
+        }
+
         ast::Expr::FnCall(fn_call) => compile_fn_call(fn_call, state),
 
         ast::Expr::MethodCall(method_call) => compile_method_call(method_call, state),
@@ -2748,7 +2798,7 @@ impl ast_types::StructType {
     /// stack element is consumed and the returned value is a pointer to the requested
     /// field in the struct. Note that the top of the stack is where the field begins,
     /// not the size indication of that field.
-    pub fn get_field_accessor_code(
+    pub fn get_field_accessor_code_for_reference(
         &self,
         field_id: &ast_types::FieldId,
     ) -> Vec<LabelledInstruction> {

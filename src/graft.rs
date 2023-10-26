@@ -1,4 +1,5 @@
 use itertools::Itertools;
+use num::One;
 use std::collections::HashMap;
 use syn::parse_quote;
 
@@ -690,6 +691,37 @@ impl<'a> Graft<'a> {
                     .collect_vec();
                 ast::Expr::Tuple(exprs)
             }
+            syn::Expr::Struct(syn::ExprStruct {
+                attrs: _,
+                path,
+                brace_token: _,
+                fields,
+                dot2_token: _,
+                rest: _,
+            }) => {
+                let mut oil_fields = vec![];
+                for field in fields.iter() {
+                    let oil_expr = self.graft_expr(&field.expr);
+                    let field_name = if let syn::Member::Named(ident) = &field.member {
+                        ident.to_string()
+                    } else {
+                        panic!("Field must be named in struct declaration")
+                    };
+                    oil_fields.push((field_name, oil_expr));
+                }
+
+                // Get name of struct from declaration
+                assert!(
+                    path.segments.len().is_one(),
+                    "Struct declaration must have path segment of length 1 for now"
+                );
+                let name_of_struct = path.segments[0].ident.to_string();
+
+                ast::Expr::Struct(ast::StructExpr {
+                    struct_type: ast_types::DataType::Unresolved(name_of_struct),
+                    field_names_and_values: oil_fields,
+                })
+            }
             syn::Expr::Lit(litexp) => {
                 let lit = &litexp.lit;
                 ast::Expr::Lit(self.graft_lit(lit))
@@ -921,7 +953,7 @@ impl<'a> Graft<'a> {
                 syn::Pat::Ident(d) => {
                     // This would indicate that the explicit type is missing
                     let ident = d.ident.to_string();
-                    panic!("Missing explicit type in declaration of {ident}");
+                    panic!("Missing explicit type in declaration of '{ident}'");
                 }
                 other => panic!("unsupported: {other:?}"),
             };

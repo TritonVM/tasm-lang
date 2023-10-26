@@ -265,7 +265,9 @@ impl DataType {
             Self::Struct(inner_type) => {
                 match &inner_type.variant {
                     StructVariant::TupleStruct(tuple) => tuple.stack_size(),
-                    StructVariant::NamedFields(_) => todo!(),
+                    StructVariant::NamedFields(struct_named_fields) => {
+                        struct_named_fields.stack_size()
+                    }
                 }
                 // if inner_type.is_copy {
                 //     match &inner_type.variant {
@@ -703,6 +705,15 @@ impl Display for NamedFieldsStruct {
                 .map(|(k, v)| format!("{k} => {v}"))
                 .join(",")
         )
+    }
+}
+
+impl NamedFieldsStruct {
+    pub fn stack_size(&self) -> usize {
+        self.fields
+            .iter()
+            .map(|(_, field_type)| field_type.stack_size())
+            .sum()
     }
 }
 

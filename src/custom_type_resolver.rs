@@ -72,6 +72,14 @@ impl Expr<Typing> {
                 lhs.resolve_custom_types(declared_structs);
                 rhs.resolve_custom_types(declared_structs);
             }
+            Expr::Struct(struct_expr) => {
+                struct_expr
+                    .struct_type
+                    .resolve_custom_types(declared_structs);
+                for (_field_name, value) in struct_expr.field_names_and_values.iter_mut() {
+                    value.resolve_custom_types(declared_structs);
+                }
+            }
         }
     }
 }
