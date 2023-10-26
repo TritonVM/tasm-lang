@@ -2620,6 +2620,7 @@ pub fn move_top_stack_value_to_memory(
 
 /// Return the code to store the top stack element at a
 /// specific memory address. Leaves the stack unchanged.
+/// Limitation: Can only copy values smaller than 16 for now
 fn copy_top_stack_value_to_memory(
     memory_location: u32,
     top_value_size: usize,
@@ -2629,7 +2630,10 @@ fn copy_top_stack_value_to_memory(
     // address.
     let mut ret = triton_asm!(push {memory_location as u64});
 
-    println!("top_value_size: {top_value_size}");
+    assert!(
+        top_value_size < SIZE_OF_ACCESSIBLE_STACK,
+        "Can only copy values of size less than 16 for now"
+    );
     for i in 0..top_value_size {
         ret.append(&mut triton_asm!(dup {1 + i as u64}));
         // _ [elements] mem_address element

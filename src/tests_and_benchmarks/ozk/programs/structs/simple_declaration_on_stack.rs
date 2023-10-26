@@ -17,7 +17,7 @@ struct TestStruct {
 }
 
 fn main() {
-    let test_struct: TestStruct = TestStruct {
+    let mut test_struct: TestStruct = TestStruct {
         b: BFieldElement::new(48u64 << 41),
         d: Digest::new([
             BFieldElement::new(2u64),
@@ -37,6 +37,11 @@ fn main() {
     tasm::tasm_io_write_to_stdout___bfe(a);
     tasm::tasm_io_write_to_stdout___bfe(test_struct.b);
     tasm::tasm_io_write_to_stdout___digest(test_struct.d);
+
+    // Change a field value in the struct
+    test_struct.a = BFieldElement::one();
+    tasm::tasm_io_write_to_stdout___bfe(test_struct.a);
+
     return;
 }
 
@@ -48,7 +53,7 @@ mod tests {
     use triton_vm::{BFieldElement, NonDeterminism};
 
     #[test]
-    fn simple_struct_declaration_test() {
+    fn simple_struct_declaration_on_stack_test() {
         // Test function on host machine
         let expected_output = [
             vec![BFieldElement::new(14u64 << 40)],
@@ -61,6 +66,7 @@ mod tests {
                 BFieldElement::new(16u64),
                 BFieldElement::new(32u64),
             ],
+            vec![BFieldElement::one()],
         ]
         .concat();
         let stdin = vec![];
@@ -74,7 +80,7 @@ mod tests {
         // Run on Triton-VM
         let test_program = ozk_parsing::compile_for_test(
             "structs",
-            "simple_declaration",
+            "simple_declaration_on_stack",
             "main",
             crate::ast_types::ListType::Unsafe,
         );
