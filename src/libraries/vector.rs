@@ -371,14 +371,17 @@ impl VectorLib {
             type_parameter.clone().map(|x| x.try_into().unwrap());
         match public_name {
             "default" => panic!("Change `Vec::default()` to `Vec::with_capacity(n)`."),
-            "with_capacity" => match self.list_type {
-                ListType::Safe => Some(Box::new(tasm_lib::list::safeimplu32::new::SafeNew(
-                    tasm_type.unwrap(),
-                ))),
-                ListType::Unsafe => Some(Box::new(tasm_lib::list::unsafeimplu32::new::UnsafeNew(
-                    tasm_type.unwrap(),
-                ))),
-            },
+            "with_capacity" => {
+                assert!(type_parameter.is_some(), "Type parameter must be set when instantiating a vector: `Vec::<T>::with_capacity(n)`");
+                match self.list_type {
+                    ListType::Safe => Some(Box::new(tasm_lib::list::safeimplu32::new::SafeNew(
+                        tasm_type.unwrap(),
+                    ))),
+                    ListType::Unsafe => Some(Box::new(
+                        tasm_lib::list::unsafeimplu32::new::UnsafeNew(tasm_type.unwrap()),
+                    )),
+                }
+            }
             "push" => match self.list_type {
                 ListType::Safe => Some(Box::new(tasm_lib::list::safeimplu32::push::SafePush(
                     tasm_type.unwrap(),

@@ -445,8 +445,8 @@ impl<'a> CompilerState<'a> {
                     }
                 }
 
-                /// Return the position of a field for a struct which is `Copy`, implying
-                /// that its size is known at compile-time.
+                /// Return the position of a field for a struct that lives on the stack,
+                /// or has been spilled. This does not work for boxed structs.
                 fn handle_named_fields_struct(
                     struct_type: ast_types::NamedFieldsStruct,
                     field_id: &ast_types::FieldId,
@@ -458,7 +458,7 @@ impl<'a> CompilerState<'a> {
                         if &needle_name == haystack_name {
                             break;
                         } else {
-                            field_depth += haystack_type.bfield_codec_length().unwrap();
+                            field_depth += haystack_type.stack_size();
                         }
                     }
 
