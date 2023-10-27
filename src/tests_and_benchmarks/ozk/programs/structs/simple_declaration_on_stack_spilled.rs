@@ -3,12 +3,13 @@ use tasm_lib::structure::tasm_object::TasmObject;
 use triton_vm::BFieldElement;
 use triton_vm::Digest;
 use twenty_first::shared_math::bfield_codec::BFieldCodec;
+use twenty_first::shared_math::x_field_element::XFieldElement;
 
 #[derive(TasmObject, BFieldCodec)]
 struct TestStruct {
     a: BFieldElement,
+    b: Vec<XFieldElement>,
     d: Digest,
-    f: u32,
     h: u128,
     i: u128,
 }
@@ -16,6 +17,7 @@ struct TestStruct {
 fn main() {
     let val_0: u128 = 14;
     let mut test_struct: TestStruct = TestStruct {
+        b: Vec::<XFieldElement>::with_capacity(14),
         d: Digest::new([
             BFieldElement::new(2u64),
             BFieldElement::new(4u64),
@@ -24,10 +26,14 @@ fn main() {
             BFieldElement::new(32u64),
         ]),
         a: BFieldElement::new(14u64 << 40),
-        f: 1 << 22,
         h: u128::MAX,
         i: u128::MAX - 4,
     };
+    test_struct.b.push(XFieldElement::new([
+        BFieldElement::new(0x0010000000000001u64),
+        BFieldElement::new(0x0020000000000004u64),
+        BFieldElement::new(0x0040000000000002u64),
+    ]));
     let val_1: u128 = 14 << 101;
     let val_2: u128 = 15 << 101;
     let val_3: u128 = 16 << 101;
@@ -56,6 +62,8 @@ fn main() {
         BFieldElement::new(64u64),
     ]);
     tasm::tasm_io_write_to_stdout___digest(test_struct.d);
+
+    tasm::tasm_io_write_to_stdout___xfe(test_struct.b[0]);
 
     return;
 }
@@ -97,6 +105,12 @@ mod tests {
                 BFieldElement::new(32u64),
                 BFieldElement::new(64u64),
             ],
+            XFieldElement::new([
+                BFieldElement::new(0x0010000000000001u64),
+                BFieldElement::new(0x0020000000000004u64),
+                BFieldElement::new(0x0040000000000002u64),
+            ])
+            .encode(),
         ]
         .concat();
         let stdin = vec![];
