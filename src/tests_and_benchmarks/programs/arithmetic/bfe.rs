@@ -7,7 +7,9 @@ mod run_tests {
     use itertools::Itertools;
     use num::{One, Zero};
     use rand::random;
-    use twenty_first::shared_math::{b_field_element::BFieldElement, other::random_elements};
+    use twenty_first::shared_math::{
+        b_field_element::BFieldElement, other::random_elements, traits::PrimitiveRootOfUnity,
+    };
 
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 
@@ -259,6 +261,62 @@ mod run_tests {
                 return (res0, res1, res2);
 
             }})
+        }
+    }
+
+    #[test]
+    fn primitive_root_finder_test() {
+        let test_cases = (0..=32)
+            .map(|x| {
+                InputOutputTestCase::new(
+                    vec![u64_lit(1 << x)],
+                    vec![bfe_lit(
+                        BFieldElement::primitive_root_of_unity(1 << x).unwrap(),
+                    )],
+                )
+            })
+            .collect_vec();
+        multiple_compare_prop_with_stack_safe_lists(&root_finder_rast(), test_cases);
+
+        fn root_finder_rast() -> syn::ItemFn {
+            item_fn(parse_quote! {
+                fn lift_and_return(input: u64) -> BFieldElement {
+                    return BFieldElement::primitive_root_of_unity(input).unwrap();
+                }
+            })
+        }
+
+        // Also test with hardcoded arguments to the root-finder function
+        compare_prop_with_stack_safe_lists(
+            &root_finder_const_rast_order_7(),
+            vec![],
+            vec![bfe_lit(
+                BFieldElement::primitive_root_of_unity(128).unwrap(),
+            )],
+        );
+
+        fn root_finder_const_rast_order_7() -> syn::ItemFn {
+            item_fn(parse_quote! {
+                fn lift_and_return() -> BFieldElement {
+                    return BFieldElement::primitive_root_of_unity(128).unwrap();
+                }
+            })
+        }
+
+        compare_prop_with_stack_safe_lists(
+            &root_finder_const_rast_order_19(),
+            vec![],
+            vec![bfe_lit(
+                BFieldElement::primitive_root_of_unity(536870912).unwrap(),
+            )],
+        );
+
+        fn root_finder_const_rast_order_19() -> syn::ItemFn {
+            item_fn(parse_quote! {
+                fn lift_and_return() -> BFieldElement {
+                    return BFieldElement::primitive_root_of_unity(536870912).unwrap();
+                }
+            })
         }
     }
 

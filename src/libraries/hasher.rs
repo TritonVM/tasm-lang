@@ -141,10 +141,14 @@ impl Library for HasherLib {
                                     other => panic!("unsupported: {other:?}"),
                                 };
 
-                                if let Some(bfe_fn_name) = BfeLibrary.get_graft_function_name(&name)
+                                let bfe_library = BfeLibrary {
+                                    list_type: graft_config.list_type,
+                                };
+                                if let Some(bfe_fn_name) =
+                                    bfe_library.get_graft_function_name(&name)
                                 {
                                     initializer_exprs.push(
-                                        BfeLibrary
+                                        bfe_library
                                             .graft_function(graft_config, &bfe_fn_name, args, None)
                                             .unwrap(),
                                     );

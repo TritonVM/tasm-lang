@@ -1,6 +1,6 @@
 use crate::{
     ast::{self, FnSignature},
-    ast_types::{self},
+    ast_types::{self, ListType},
     graft::Graft,
     tasm_code_generator::CompilerState,
     type_checker,
@@ -30,7 +30,9 @@ pub struct LibraryConfig {
 pub fn all_libraries<'a>(config: LibraryConfig) -> Vec<Box<dyn Library + 'a>> {
     vec![
         Box::new(alloc_boxed::AllocBoxed),
-        Box::new(bfe::BfeLibrary),
+        Box::new(bfe::BfeLibrary {
+            list_type: config.list_type,
+        }),
         Box::new(bfield_codec::BFieldCodecLib {
             list_type: config.list_type,
         }),
@@ -48,6 +50,41 @@ pub fn all_libraries<'a>(config: LibraryConfig) -> Vec<Box<dyn Library + 'a>> {
         }),
         Box::new(xfe::XfeLibrary),
     ]
+}
+
+pub fn tasm_lib_snippet_to_fn_signature(
+    list_type: ListType,
+    snippet: Box<dyn tasm_lib::snippet::BasicSnippet>,
+) -> ast::FnSignature {
+    let name = snippet.entrypoint();
+    let mut args: Vec<ast_types::AbstractArgument> = vec![];
+    for (ty, name) in snippet.inputs().into_iter() {
+        let fn_arg = ast_types::AbstractValueArg {
+            name,
+            data_type: ast_types::DataType::from_tasm_lib_datatype(ty, list_type),
+            // The tasm snippet input arguments are all considered mutable
+            mutable: true,
+        };
+        args.push(ast_types::AbstractArgument::ValueArgument(fn_arg));
+    }
+
+    let mut output_types: Vec<ast_types::DataType> = vec![];
+    for (ty, _name) in snippet.outputs() {
+        output_types.push(ast_types::DataType::from_tasm_lib_datatype(ty, list_type));
+    }
+
+    let output = match output_types.len() {
+        1 => output_types[0].clone(),
+        0 => ast_types::DataType::Tuple(vec![].into()),
+        _ => ast_types::DataType::Tuple(output_types.into()),
+    };
+
+    FnSignature {
+        name,
+        args,
+        output,
+        arg_evaluation_order: Default::default(),
+    }
 }
 
 pub trait Library: Debug {

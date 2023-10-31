@@ -1,11 +1,11 @@
 use triton_vm::triton_asm;
 
-use crate::ast::{self, FnSignature};
+use crate::ast::{self};
 use crate::ast_types;
 use crate::graft::Graft;
 use crate::tasm_code_generator::CompilerState;
 
-use super::Library;
+use super::{tasm_lib_snippet_to_fn_signature, Library};
 
 const TASM_LIB_INDICATOR: &str = "tasm::";
 
@@ -49,43 +49,11 @@ impl Library for TasmLibrary {
         _type_parameter: Option<ast_types::DataType>,
         _args: &[ast::Expr<super::Annotation>],
     ) -> ast::FnSignature {
-        // TODO:
         // Note that this function expects `fn_name` to be stripped of `tasm::`
         // Maybe that behavior should be changed though?
         let snippet = tasm_lib::exported_snippets::name_to_snippet(stripped_name);
 
-        let name = snippet.entrypoint();
-        let mut args: Vec<ast_types::AbstractArgument> = vec![];
-        for (ty, name) in snippet.inputs().into_iter() {
-            let fn_arg = ast_types::AbstractValueArg {
-                name,
-                data_type: ast_types::DataType::from_tasm_lib_datatype(ty, self.list_type),
-                // The tasm snippet input arguments are all considered mutable
-                mutable: true,
-            };
-            args.push(ast_types::AbstractArgument::ValueArgument(fn_arg));
-        }
-
-        let mut output_types: Vec<ast_types::DataType> = vec![];
-        for (ty, _name) in snippet.outputs() {
-            output_types.push(ast_types::DataType::from_tasm_lib_datatype(
-                ty,
-                self.list_type,
-            ));
-        }
-
-        let output = match output_types.len() {
-            1 => output_types[0].clone(),
-            0 => ast_types::DataType::Tuple(vec![].into()),
-            _ => ast_types::DataType::Tuple(output_types.into()),
-        };
-
-        FnSignature {
-            name,
-            args,
-            output,
-            arg_evaluation_order: Default::default(),
-        }
+        tasm_lib_snippet_to_fn_signature(self.list_type, snippet)
     }
 
     fn call_method(
