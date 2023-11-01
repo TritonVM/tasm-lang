@@ -2,10 +2,16 @@
 // Allows the use of input/output on the native architecture
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 use num::One;
-use tasm_lib::structure::tasm_object::TasmObject;
+use tasm_lib::{
+    recufier::proof_stream::vm_proof_stream::VmProofStream, structure::tasm_object::TasmObject,
+};
 use triton_vm::{BFieldElement, Digest};
 use twenty_first::{
-    shared_math::{bfield_codec::BFieldCodec, traits::PrimitiveRootOfUnity},
+    shared_math::{
+        bfield_codec::BFieldCodec,
+        traits::{ModPowU32, PrimitiveRootOfUnity},
+        x_field_element::XFieldElement,
+    },
     util_types::algebraic_hasher::AlgebraicHasher,
 };
 type H = twenty_first::shared_math::tip5::Tip5;
@@ -74,6 +80,70 @@ impl FriVerify {
             domain_offset: domain.offset,
             domain_generator: domain.generator,
         };
+    }
+
+    pub fn first_round_max_degree(&self) -> u32 {
+        assert!(self.domain_length >= self.expansion_factor);
+        return (self.domain_length / self.expansion_factor) - 1;
+    }
+
+    /// Computes the number of rounds
+    pub fn num_rounds(&self) -> u32 {
+        let first_round_code_dimension: u32 = self.first_round_max_degree() + 1;
+        let max_num_rounds: u32 =
+            tasm::tasm_arithmetic_u64_log_2_floor(first_round_code_dimension as u64);
+
+        // Skip rounds for which Merkle tree verification cost exceeds arithmetic cost,
+        // because more than half the codeword's locations are queried.
+        let num_rounds_checking_all_locations: u32 =
+            tasm::tasm_arithmetic_u64_log_2_floor(self.num_colinearity_checks as u64);
+        let num_rounds_checking_most_locations: u32 = num_rounds_checking_all_locations + 1;
+
+        return if max_num_rounds > num_rounds_checking_most_locations {
+            max_num_rounds - num_rounds_checking_most_locations
+        } else {
+            0
+        };
+    }
+
+    /// Computes the max degree of the codeword interpolant after the last round
+    pub fn last_round_max_degree(&self) -> u32 {
+        return self.first_round_max_degree() >> self.num_rounds();
+    }
+
+    fn get_colinearity_check_x(&self, idx: u32, round: usize) -> XFieldElement {
+        let domain_value: BFieldElement =
+            self.domain_offset * self.domain_generator.mod_pow_u32(idx);
+        // let round_exponent: u32 = 2u32.pow(round as u32);
+        let round_exponent: u32 = 1u32 << (round as u32);
+        let evaluation_argument: BFieldElement = domain_value.mod_pow_u32(round_exponent);
+
+        return evaluation_argument.lift();
+    }
+
+    // fn inner_verify(
+    //     &self,
+    //     proof_stream: &mut VmProofStream,
+    //     nondeterministic_digests: &mut Vec<Digest>,
+    // ) -> anyhow::Result<Vec<(u32, XFieldElement)>> {
+    fn inner_verify(
+        &self,
+        // proof_stream: &mut VmProofStream,
+        nondeterministic_digests: &mut Vec<Digest>,
+    ) {
+        let mut num_nondeterministic_digests_read: u32 = 0;
+        let num_rounds: u32 = self.num_rounds();
+        let last_round_max_degree: u32 = self.last_round_max_degree();
+
+        // Extract all roots and calculate alpha based on Fiat-Shamir challenge
+        let mut roots: Vec<Digest> = Vec::<Digest>::with_capacity(num_rounds as usize);
+        let mut alphas: Vec<XFieldElement> =
+            Vec::<XFieldElement>::with_capacity(num_rounds as usize);
+
+        // let first_root = proof_stream.dequeue().unwrap().as_merkle_root().unwrap();
+        // roots.push(first_root);
+
+        return;
     }
 }
 

@@ -1,3 +1,4 @@
+use num::Zero;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::thread_local;
@@ -77,6 +78,12 @@ pub(super) fn get_pub_output() -> Vec<BFieldElement> {
 pub(super) fn tasm_io_read_stdin___bfe() -> BFieldElement {
     #[allow(clippy::unwrap_used)]
     PUB_INPUT.with(|v| v.borrow_mut().pop().unwrap())
+}
+
+#[allow(non_snake_case)]
+pub(super) fn tasm_arithmetic_u64_log_2_floor(val: u64) -> u32 {
+    assert!(!val.is_zero());
+    u64::BITS - val.leading_zeros() - 1
 }
 
 #[allow(non_snake_case)]
