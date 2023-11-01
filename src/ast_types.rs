@@ -17,6 +17,7 @@ pub enum DataType {
     List(Box<DataType>, ListType),
     Tuple(Tuple),
     Struct(StructType),
+    Enum(Box<EnumType>),
     VoidPointer,
     Function(Box<FunctionType>),
     Boxed(Box<DataType>),
@@ -85,6 +86,7 @@ impl DataType {
             DataType::VoidPointer => false,
             DataType::Function(_) => false,
             DataType::Struct(struct_type) => struct_type.is_copy,
+            DataType::Enum(enum_type) => enum_type.is_copy,
             DataType::Unresolved(_) => false,
             DataType::Boxed(_) => false,
             DataType::Reference(_) => false,
@@ -114,6 +116,7 @@ impl DataType {
                 format!("function_from_L{}R__to_L{}R", input, output)
             }
             Struct(struct_type) => struct_type.name.to_owned(),
+            Enum(enum_type) => enum_type.name.to_owned(),
             Unresolved(name) => name.to_string(),
             Boxed(ty) => format!("boxed_L{}R", ty.label_friendly_name()),
             Reference(ty) => format!("reference_to_L{}R", ty.label_friendly_name()),
@@ -236,6 +239,34 @@ impl DataType {
                 .try_fold(0, |acc: usize, field_type| {
                     field_type.bfield_codec_length().map(|v| acc + v)
                 }),
+            DataType::Enum(enum_type) => {
+                if enum_type.variants.is_empty() {
+                    // No variants: length is 0
+                    Some(0)
+                } else if enum_type.variants.iter().all(|x| x.1 == DataType::unit()) {
+                    // No variants have associated data: 1,
+                    Some(1)
+                } else {
+                    // Some variants have associated data:
+                    //   - if all variants have associated data of the same statically known length =>
+                    //     Some(this_length)
+                    //   else:
+                    //     None
+                    let variant_lengths = enum_type
+                        .variants
+                        .iter()
+                        .map(|variant| variant.1.bfield_codec_length())
+                        .collect_vec();
+                    if variant_lengths
+                        .iter()
+                        .all(|x| x.is_some() && x.unwrap() == variant_lengths[0].unwrap())
+                    {
+                        variant_lengths[0]
+                    } else {
+                        None
+                    }
+                }
+            }
             DataType::Boxed(inner_type) => inner_type.bfield_codec_length(),
             DataType::VoidPointer => todo!(),
             DataType::Function(_) => todo!(),
@@ -278,6 +309,7 @@ impl DataType {
                 //     1
                 // }
             }
+            Self::Enum(_enum_type) => todo!(),
             Self::Boxed(_inner) => 1,
             Self::Reference(inner) => inner.stack_size(),
             // Self::MemPointer(inner_type) => {
@@ -323,6 +355,7 @@ impl TryFrom<DataType> for tasm_lib::snippet::DataType {
             DataType::VoidPointer => Ok(tasm_lib::snippet::DataType::VoidPointer),
             DataType::Function(_) => todo!(),
             DataType::Struct(_) => todo!(),
+            DataType::Enum(_) => todo!(),
             DataType::Unresolved(name) => panic!("cannot convert unresolved type {name}"),
             DataType::Boxed(value) => match *value {
                 // A Boxed list is just a list
@@ -376,6 +409,7 @@ impl Display for DataType {
                 format!("Function: {input} -> {output}")
             }
             Struct(struct_type) => struct_type.name.to_owned(),
+            Enum(enum_type) => enum_type.name.to_owned(),
             Unresolved(name) => name.to_string(),
             Boxed(ty) => format!("Boxed<{ty}>"),
             Reference(ty) => format!("*{ty}"),
@@ -407,6 +441,13 @@ impl Display for AbstractValueArg {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}: {}", self.name, self.data_type)
     }
+}
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub struct EnumType {
+    pub name: String,
+    pub is_copy: bool,
+    pub variants: Vec<(String, DataType)>,
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]

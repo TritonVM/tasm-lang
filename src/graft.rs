@@ -48,10 +48,18 @@ impl<'a> Graft<'a> {
             ),
         >,
     ) -> (
-        HashMap<String, ast_types::StructType>,
+        HashMap<String, Either<ast_types::StructType, ast_types::EnumType>>,
         Vec<ast::Method<Annotation>>,
         HashMap<String, HashMap<String, ast::Fn<Annotation>>>,
     ) {
+        fn graft_enum(
+            graft_config: &Graft,
+            struct_name: &str,
+            variants: Vec<syn::Variant>,
+        ) -> ast_types::EnumType {
+            todo!()
+        }
+
         fn graft_struct_with_named_fields(
             graft_config: &Graft,
             struct_name: &str,
@@ -98,7 +106,28 @@ impl<'a> Graft<'a> {
             .collect_vec();
         for struct_ in structs {
             match struct_ {
-                Either::Right(_enum_item) => todo!(),
+                Either::Right(enum_item) => {
+                    let syn::ItemEnum {
+                        attrs,
+                        vis: _,
+                        enum_token: _,
+                        ident,
+                        generics: _,
+                        brace_token: _,
+                        variants,
+                    } = enum_item;
+                    let name = ident.to_string();
+
+                    let is_copy = match attrs.len() {
+                        1 => attrs[0].tokens.to_string().contains("Copy"),
+                        0 => false,
+                        _ => panic!("Can only handle one line of attributes for now."),
+                    };
+
+                    let enum_type = graft_enum(self, &name, variants.into_iter().collect_vec());
+
+                    struct_types.insert(name.clone(), Either::Right(enum_type));
+                }
                 Either::Left(struct_item) => {
                     let syn::ItemStruct {
                         attrs,
@@ -134,7 +163,7 @@ impl<'a> Graft<'a> {
                         name: name.clone(),
                     };
 
-                    struct_types.insert(name.clone(), struct_type);
+                    struct_types.insert(name.clone(), Either::Left(struct_type));
                 }
             }
         }
@@ -175,7 +204,7 @@ impl<'a> Graft<'a> {
     fn graft_method(
         &self,
         method: &syn::ImplItemMethod,
-        struct_type: &ast_types::StructType,
+        custom_type: &Either<ast_types::StructType, ast_types::EnumType>,
     ) -> ast::Method<Annotation> {
         let method_name = method.sig.ident.to_string();
         let receiver = method.sig.receiver().unwrap().to_owned();
@@ -185,20 +214,37 @@ impl<'a> Graft<'a> {
                 mutability,
                 ..
             } = receiver;
-            let receiver_data_type = match reference {
-                Some(_) => {
-                    if struct_type.is_copy {
-                        ast_types::DataType::Reference(Box::new(ast_types::DataType::Struct(
-                            struct_type.to_owned(),
-                        )))
-                    } else {
-                        ast_types::DataType::Boxed(Box::new(ast_types::DataType::Struct(
-                            struct_type.to_owned(),
-                        )))
+            let receiver_data_type = match custom_type {
+                Either::Left(struct_type) => match reference {
+                    Some(_) => {
+                        if struct_type.is_copy {
+                            ast_types::DataType::Reference(Box::new(ast_types::DataType::Struct(
+                                struct_type.to_owned(),
+                            )))
+                        } else {
+                            ast_types::DataType::Boxed(Box::new(ast_types::DataType::Struct(
+                                struct_type.to_owned(),
+                            )))
+                        }
                     }
-                }
-                None => ast_types::DataType::Struct(struct_type.to_owned()),
+                    None => ast_types::DataType::Struct(struct_type.to_owned()),
+                },
+                Either::Right(enum_type) => match reference {
+                    Some(_) => {
+                        if enum_type.is_copy {
+                            ast_types::DataType::Reference(Box::new(ast_types::DataType::Enum(
+                                Box::new(enum_type.to_owned()),
+                            )))
+                        } else {
+                            ast_types::DataType::Boxed(Box::new(ast_types::DataType::Enum(
+                                Box::new(enum_type.to_owned()),
+                            )))
+                        }
+                    }
+                    None => ast_types::DataType::Enum(Box::new(enum_type.to_owned())),
+                },
             };
+
             ast_types::AbstractValueArg {
                 name: "self".to_string(),
                 data_type: receiver_data_type,
