@@ -1,3 +1,4 @@
+use itertools::Either;
 use itertools::Itertools;
 use num::{One, Zero};
 use std::collections::HashMap;
@@ -39,7 +40,13 @@ impl<'a> Graft<'a> {
     #[allow(clippy::type_complexity)]
     pub fn graft_structs_methods_and_associated_functions(
         &self,
-        structs_and_methods: HashMap<String, (syn::ItemStruct, Vec<syn::ImplItemMethod>)>,
+        structs_and_methods: HashMap<
+            String,
+            (
+                Either<syn::ItemStruct, syn::ItemEnum>,
+                Vec<syn::ImplItemMethod>,
+            ),
+        >,
     ) -> (
         HashMap<String, ast_types::StructType>,
         Vec<ast::Method<Annotation>>,
@@ -83,46 +90,53 @@ impl<'a> Graft<'a> {
 
         let mut struct_types = HashMap::default();
 
-        // Handle structs
+        // Handle custom data structures
         let structs = structs_and_methods
             .clone()
             .into_iter()
             .map(|(_, (syn_struct, _methods))| syn_struct)
             .collect_vec();
         for struct_ in structs {
-            let syn::ItemStruct {
-                attrs,
-                vis: _,
-                struct_token: _,
-                ident,
-                generics: _,
-                fields,
-                semi_token: _,
-            } = struct_;
-            let name = ident.to_string();
+            match struct_ {
+                Either::Right(_enum_item) => todo!(),
+                Either::Left(struct_item) => {
+                    let syn::ItemStruct {
+                        attrs,
+                        vis: _,
+                        struct_token: _,
+                        ident,
+                        generics: _,
+                        fields,
+                        semi_token: _,
+                    } = struct_item;
+                    let name = ident.to_string();
 
-            let is_copy = match attrs.len() {
-                1 => attrs[0].tokens.to_string().contains("Copy"),
-                0 => false,
-                _ => panic!("Can only handle one line of attributes for now."),
-            };
+                    let is_copy = match attrs.len() {
+                        1 => attrs[0].tokens.to_string().contains("Copy"),
+                        0 => false,
+                        _ => panic!("Can only handle one line of attributes for now."),
+                    };
 
-            // Rust structs come in three forms: with named fields, tuple structs, and
-            // unit structs. We don't yet support unit structs, so we can assume that
-            // the struct has at least *one* field.
-            let struct_type = match fields.iter().next().unwrap().ident {
-                Some(_) => ast_types::StructVariant::NamedFields(graft_struct_with_named_fields(
-                    self, &name, fields,
-                )),
-                None => ast_types::StructVariant::TupleStruct(graft_tuple_struct(self, fields)),
-            };
-            let struct_type = ast_types::StructType {
-                is_copy,
-                variant: struct_type,
-                name: name.clone(),
-            };
+                    // Rust structs come in three forms: with named fields, tuple structs, and
+                    // unit structs. We don't yet support unit structs, so we can assume that
+                    // the struct has at least *one* field.
+                    let struct_type = match fields.iter().next().unwrap().ident {
+                        Some(_) => ast_types::StructVariant::NamedFields(
+                            graft_struct_with_named_fields(self, &name, fields),
+                        ),
+                        None => {
+                            ast_types::StructVariant::TupleStruct(graft_tuple_struct(self, fields))
+                        }
+                    };
+                    let struct_type = ast_types::StructType {
+                        is_copy,
+                        variant: struct_type,
+                        name: name.clone(),
+                    };
 
-            struct_types.insert(name.clone(), struct_type);
+                    struct_types.insert(name.clone(), struct_type);
+                }
+            }
         }
 
         // Handle methods
