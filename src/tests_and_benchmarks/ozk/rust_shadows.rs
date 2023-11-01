@@ -1,11 +1,24 @@
+use anyhow::bail;
 use num::Zero;
+use rand::{rngs::StdRng, Rng, RngCore, SeedableRng};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::thread_local;
 use std::vec::Vec;
-use tasm_lib::Digest;
-use triton_vm::{BFieldElement, NonDeterminism};
-use twenty_first::shared_math::{bfield_codec::BFieldCodec, x_field_element::XFieldElement};
+use tasm_lib::{Digest, VmHasher};
+use triton_vm::{
+    proof_item::{FriResponse, ProofItem},
+    table::master_table::{NUM_BASE_COLUMNS, NUM_EXT_COLUMNS},
+    BFieldElement, NonDeterminism,
+};
+use twenty_first::{
+    shared_math::{
+        b_field_element::{BFIELD_ONE, BFIELD_ZERO},
+        bfield_codec::BFieldCodec,
+        x_field_element::XFieldElement,
+    },
+    util_types::algebraic_hasher::{AlgebraicHasher, SpongeHasher},
+};
 
 // This module contains functions for interacting with the input/output monad
 // implicit in a VM execution. It contains functions for mutating and verifying
@@ -80,6 +93,7 @@ pub(super) fn tasm_io_read_stdin___bfe() -> BFieldElement {
     PUB_INPUT.with(|v| v.borrow_mut().pop().unwrap())
 }
 
+#[allow(dead_code)]
 #[allow(non_snake_case)]
 pub(super) fn tasm_arithmetic_u64_log_2_floor(val: u64) -> u32 {
     assert!(!val.is_zero());
@@ -186,4 +200,147 @@ pub(super) fn wrap_main_with_io(
             get_pub_output()
         },
     )
+}
+
+// Shadowing of `VmProofStream` functionality
+
+use crate::tests_and_benchmarks::ozk::programs::recufier::vm_proof_stream::VmProofStreamCompiled;
+
+pub(super) fn tasm_recufier_proof_stream_dequeue(
+    proof_stream: &mut VmProofStreamCompiled,
+) -> Box<ProofItem> {
+    proof_stream.dequeue_internal().unwrap()
+}
+
+type _VmHasherState = twenty_first::shared_math::tip5::Tip5State;
+
+impl VmProofStreamCompiled {
+    fn _new_internal(items: &[triton_vm::proof_item::ProofItem]) -> Self {
+        Self {
+            word_index: 1,
+            data: items.to_vec().encode(),
+            sponge_state: _VmHasherState::new(
+                twenty_first::util_types::algebraic_hasher::Domain::VariableLength,
+            ),
+        }
+    }
+    fn dequeue_internal(&mut self) -> anyhow::Result<Box<triton_vm::proof_item::ProofItem>> {
+        if self.word_index as usize >= self.data.len() {
+            bail!("No more words left in stream.")
+        }
+        let size = self.data[self.word_index as usize].value() as usize;
+        println!("size: {size}");
+        let sequence =
+            &self.data[(self.word_index as usize + 1)..(self.word_index as usize + 1 + size)];
+        self.word_index += size as u32 + 1;
+        let item = *triton_vm::proof_item::ProofItem::decode(sequence)?;
+
+        if item.include_in_fiat_shamir_heuristic() {
+            self.fiat_shamir_internal(&item);
+        }
+
+        Ok(Box::new(item))
+    }
+
+    fn fiat_shamir_internal<T: BFieldCodec>(&mut self, item: &T) {
+        VmHasher::absorb_repeatedly(
+            &mut self.sponge_state,
+            Self::encode_and_pad_item_internal(item).iter(),
+        );
+    }
+
+    fn encode_and_pad_item_internal<T: BFieldCodec>(item: &T) -> Vec<BFieldElement> {
+        let encoding = item.encode();
+        let last_chunk_len = (encoding.len() + 1) % VmHasher::RATE;
+        let num_padding_zeros = match last_chunk_len {
+            0 => 0,
+            _ => VmHasher::RATE - last_chunk_len,
+        };
+        [
+            encoding,
+            vec![BFIELD_ONE],
+            vec![BFIELD_ZERO; num_padding_zeros],
+        ]
+        .concat()
+    }
+
+    fn _sample_scalars_internal(&mut self, number: usize) -> Vec<XFieldElement> {
+        VmHasher::sample_scalars(&mut self.sponge_state, number)
+    }
+
+    fn _sample_indices_internal(&mut self, upper_bound: u32, number: u32) -> Vec<u32> {
+        VmHasher::sample_indices(&mut self.sponge_state, upper_bound, number as usize)
+    }
+
+    fn _pseudorandom_items_list_internal(seed: [u8; 32]) -> Vec<ProofItem> {
+        let mut rng: StdRng = SeedableRng::from_seed(seed);
+        let num_iterations = rng.next_u32() % 5;
+        let mut proof_items = vec![];
+        for _ in 0..num_iterations {
+            if rng.next_u32() % 2 == 1 {
+                let authentication_structure: Vec<Digest> = (0..20).map(|_| rng.gen()).collect();
+                proof_items.push(ProofItem::AuthenticationStructure(authentication_structure));
+            }
+            if rng.next_u32() % 2 == 1 {
+                let fri_codeword: Vec<XFieldElement> = (0..20).map(|_| rng.gen()).collect();
+                proof_items.push(ProofItem::FriCodeword(fri_codeword));
+            }
+            if rng.next_u32() % 2 == 1 {
+                let auth_structure: Vec<Digest> = (0..20).map(|_| rng.gen()).collect();
+                let revealed_leaves: Vec<XFieldElement> = (0..20).map(|_| rng.gen()).collect();
+                let fri_response = FriResponse {
+                    auth_structure,
+                    revealed_leaves,
+                };
+                proof_items.push(ProofItem::FriResponse(fri_response));
+            }
+            if rng.next_u32() % 2 == 1 {
+                proof_items.push(ProofItem::Log2PaddedHeight(rng.next_u32()));
+            }
+            if rng.next_u32() % 2 == 1 {
+                let master_table_base_rows: Vec<Vec<BFieldElement>> = (0..20)
+                    .map(|_| {
+                        (0..20)
+                            .map(|_| rng.gen::<BFieldElement>())
+                            .collect::<Vec<BFieldElement>>()
+                    })
+                    .collect::<Vec<Vec<BFieldElement>>>();
+                proof_items.push(ProofItem::MasterBaseTableRows(master_table_base_rows));
+            }
+            if rng.next_u32() % 2 == 1 {
+                let master_table_ext_rows: Vec<Vec<XFieldElement>> = (0..20)
+                    .map(|_| {
+                        (0..20)
+                            .map(|_| rng.gen::<XFieldElement>())
+                            .collect::<Vec<XFieldElement>>()
+                    })
+                    .collect::<Vec<Vec<XFieldElement>>>();
+                proof_items.push(ProofItem::MasterExtTableRows(master_table_ext_rows));
+            }
+            if rng.next_u32() % 2 == 1 {
+                proof_items.push(ProofItem::MerkleRoot(rng.gen()));
+            }
+            if rng.next_u32() % 2 == 1 {
+                let ood_base_row = (0..NUM_BASE_COLUMNS).map(|_| rng.gen()).collect();
+                proof_items.push(ProofItem::OutOfDomainBaseRow(ood_base_row));
+            }
+            if rng.next_u32() % 2 == 1 {
+                let ood_ext_row = (0..NUM_EXT_COLUMNS).map(|_| rng.gen()).collect();
+                proof_items.push(ProofItem::OutOfDomainExtRow(ood_ext_row));
+            }
+            if rng.next_u32() % 2 == 1 {
+                let ood_quotient_segments = rng.gen();
+                proof_items.push(ProofItem::OutOfDomainQuotientSegments(
+                    ood_quotient_segments,
+                ));
+            }
+            if rng.next_u32() % 2 == 1 {
+                let quotient_segment_elements = (0..20).map(|_| rng.gen()).collect();
+                proof_items.push(ProofItem::QuotientSegmentsElements(
+                    quotient_segment_elements,
+                ));
+            }
+        }
+        proof_items
+    }
 }

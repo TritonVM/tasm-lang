@@ -2,5 +2,5 @@ mod arithmetic;
 mod boxed;
 mod other;
 mod project_euler;
-mod recufier;
+pub mod recufier;
 mod structs;

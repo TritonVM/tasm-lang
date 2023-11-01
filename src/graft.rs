@@ -1,5 +1,5 @@
 use itertools::Itertools;
-use num::One;
+use num::{One, Zero};
 use std::collections::HashMap;
 use syn::parse_quote;
 
@@ -52,6 +52,15 @@ impl<'a> Graft<'a> {
         ) -> ast_types::NamedFieldsStruct {
             let mut ast_fields: Vec<(String, ast_types::DataType)> = vec![];
             for field in fields.into_iter() {
+                // Ignore fields that are tagged as `tasm_object(ignore)`
+                if !field.attrs.len().is_zero()
+                    && field.attrs.iter().any(|x| {
+                        x.path.segments[0].ident == "tasm_object"
+                            && x.tokens.to_string() == "(ignore)"
+                    })
+                {
+                    continue;
+                }
                 let field_name = field.ident.unwrap().to_string();
                 let datatype = graft_config.syn_type_to_ast_type(&field.ty);
                 ast_fields.push((field_name, datatype));
@@ -95,7 +104,7 @@ impl<'a> Graft<'a> {
             let is_copy = match attrs.len() {
                 1 => attrs[0].tokens.to_string().contains("Copy"),
                 0 => false,
-                _ => panic!("Can only handl eone line of attributes for now."),
+                _ => panic!("Can only handle one line of attributes for now."),
             };
 
             // Rust structs come in three forms: with named fields, tuple structs, and
