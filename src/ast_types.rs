@@ -443,11 +443,37 @@ impl Display for AbstractValueArg {
     }
 }
 
+/// Helper-type used during parsing to handle all
+/// custom-types.
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub enum CustomTypeOil {
+    Struct(StructType),
+    Enum(EnumType),
+}
+
+impl CustomTypeOil {
+    pub fn field_or_variant_types_mut<'a>(
+        &'a mut self,
+    ) -> Box<dyn Iterator<Item = &'a mut DataType> + 'a> {
+        match self {
+            CustomTypeOil::Struct(struct_type) => struct_type.field_types_mut(),
+            CustomTypeOil::Enum(enum_type) => enum_type.variant_types_mut(),
+        }
+    }
+}
+
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct EnumType {
     pub name: String,
     pub is_copy: bool,
     pub variants: Vec<(String, DataType)>,
+}
+
+impl EnumType {
+    /// Return an iterator over mutable references to the type's nested datatypes
+    pub fn variant_types_mut<'a>(&'a mut self) -> Box<dyn Iterator<Item = &'a mut DataType> + 'a> {
+        Box::new(self.variants.iter_mut().map(|x| &mut x.1))
+    }
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
@@ -477,7 +503,7 @@ impl From<&StructType> for DataType {
 
 impl StructType {
     /// Only named tuples, i.e. tuple structs should use this constructor.
-    pub fn constructor(&self, declared_structs: &HashMap<String, StructType>) -> LibraryFunction {
+    pub fn constructor(&self, custom_types: &HashMap<String, CustomTypeOil>) -> LibraryFunction {
         let tuple = if let StructVariant::TupleStruct(tuple) = &self.variant {
             tuple
         } else {
@@ -503,7 +529,7 @@ impl StructType {
         };
 
         // Resolve type in case of nested tuple structs
-        signature.resolve_types(declared_structs);
+        signature.resolve_types(custom_types);
 
         // Function body of the tuple-struct constructor is empty, since
         // the construction simply corresponds to the evaluation of arguments

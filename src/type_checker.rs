@@ -298,7 +298,7 @@ pub fn annotate_fn_inner(
 
 pub fn annotate_fn_outer(
     function: &mut ast::Fn<Typing>,
-    declared_structs: &HashMap<String, ast_types::StructType>,
+    custom_types: &HashMap<String, ast_types::CustomTypeOil>,
     declared_methods: &mut [ast::Method<Typing>],
     associated_functions: &mut HashMap<String, HashMap<String, ast::Fn<Typing>>>,
     libraries: &[Box<dyn libraries::Library>],
@@ -308,12 +308,14 @@ pub fn annotate_fn_outer(
     // Populate `ftable` with tuple constructors, allowing initialization of tuple structs
     // using `struct Foo(u32); let a = Foo(200);`
     let mut ftable: HashMap<String, ast::FnSignature> = HashMap::default();
-    for (struct_name, declared_struct) in declared_structs.iter() {
-        if let ast_types::StructVariant::TupleStruct(_) = &declared_struct.variant {
-            ftable.insert(
-                struct_name.to_owned(),
-                declared_struct.constructor(declared_structs).signature,
-            );
+    for (type_name, custom_type) in custom_types.iter() {
+        if let ast_types::CustomTypeOil::Struct(struct_type) = custom_type {
+            if let ast_types::StructVariant::TupleStruct(_) = &struct_type.variant {
+                ftable.insert(
+                    type_name.to_owned(),
+                    struct_type.constructor(custom_types).signature,
+                );
+            }
         }
     }
 

@@ -19,7 +19,7 @@ use twenty_first::shared_math::bfield_codec::BFieldCodec;
 use self::inner_function_tasm_code::InnerFunctionTasmCode;
 use self::outer_function_tasm_code::OuterFunctionTasmCode;
 use self::subroutine::SubRoutine;
-use crate::ast_types::{self, StructVariant};
+use crate::ast_types::{self, CustomTypeOil, StructVariant};
 use crate::libraries::{self};
 use crate::stack::Stack;
 use crate::type_checker::GetType;
@@ -166,7 +166,7 @@ pub struct CompilerState<'a> {
 
     libraries: &'a [Box<dyn libraries::Library>],
 
-    declared_structs: &'a HashMap<String, ast_types::StructType>,
+    custom_types: &'a HashMap<String, ast_types::CustomTypeOil>,
 
     declared_methods: &'a [ast::Method<type_checker::Typing>],
 
@@ -189,7 +189,7 @@ impl<'a> CompilerState<'a> {
         libraries: &'a [Box<dyn libraries::Library>],
         declared_methods: &'a [ast::Method<type_checker::Typing>],
         associated_functions: &'a HashMap<String, HashMap<String, ast::Fn<type_checker::Typing>>>,
-        declared_structs: &'a HashMap<String, ast_types::StructType>,
+        custom_types: &'a HashMap<String, ast_types::CustomTypeOil>,
     ) -> Self {
         Self {
             global_compiler_state,
@@ -197,7 +197,7 @@ impl<'a> CompilerState<'a> {
             libraries,
             declared_methods,
             associated_functions,
-            declared_structs,
+            custom_types,
         }
     }
 
@@ -209,7 +209,7 @@ impl<'a> CompilerState<'a> {
         libraries: &'a [Box<dyn libraries::Library>],
         declared_methods: &'a [ast::Method<type_checker::Typing>],
         associated_functions: &'a HashMap<String, HashMap<String, ast::Fn<type_checker::Typing>>>,
-        declared_structs: &'a HashMap<String, ast_types::StructType>,
+        custom_types: &'a HashMap<String, ast_types::CustomTypeOil>,
     ) -> Self {
         Self {
             global_compiler_state,
@@ -222,7 +222,7 @@ impl<'a> CompilerState<'a> {
             libraries,
             declared_methods,
             associated_functions,
-            declared_structs,
+            custom_types,
         }
     }
 
@@ -935,7 +935,7 @@ fn compile_function_inner(
     libraries: &[Box<dyn libraries::Library>],
     declared_methods: &[ast::Method<type_checker::Typing>],
     associated_functions: &HashMap<String, HashMap<String, ast::Fn<type_checker::Typing>>>,
-    declared_structs: &HashMap<String, ast_types::StructType>,
+    custom_types: &HashMap<String, ast_types::CustomTypeOil>,
 ) -> InnerFunctionTasmCode {
     let fn_name = &function.signature.name;
     let _fn_stack_output_sig = format!("{}", function.signature.output);
@@ -947,7 +947,7 @@ fn compile_function_inner(
             libraries,
             declared_methods,
             associated_functions,
-            declared_structs,
+            custom_types,
         );
         let fn_arg_spilling = temporary_fn_state
             .add_input_arguments_to_vstack_and_return_spilled_fn_args(&function.signature.args);
@@ -973,7 +973,7 @@ fn compile_function_inner(
         libraries,
         declared_methods,
         associated_functions,
-        declared_structs,
+        custom_types,
     );
 
     // Add function arguments to the compiler's view of the stack.
@@ -1008,14 +1008,14 @@ pub(crate) fn compile_function(
     libraries: &[Box<dyn libraries::Library>],
     declared_methods: Vec<ast::Method<type_checker::Typing>>,
     associated_functions: &HashMap<String, HashMap<String, ast::Fn<type_checker::Typing>>>,
-    declared_structs: &HashMap<String, ast_types::StructType>,
+    custom_types: &HashMap<String, ast_types::CustomTypeOil>,
 ) -> OuterFunctionTasmCode {
     let mut state = CompilerState::new(
         GlobalCodeGeneratorState::default(),
         libraries,
         &declared_methods,
         associated_functions,
-        declared_structs,
+        custom_types,
     );
     let compiled_function = compile_function_inner(
         function,
@@ -1023,7 +1023,7 @@ pub(crate) fn compile_function(
         libraries,
         &declared_methods,
         associated_functions,
-        declared_structs,
+        custom_types,
     );
 
     state.compose_code_for_outer_function(compiled_function, &function.signature)
@@ -1304,7 +1304,7 @@ fn compile_stmt(
                 state.libraries,
                 state.declared_methods,
                 state.associated_functions,
-                state.declared_structs,
+                state.custom_types,
             );
             state
                 .function_state
@@ -1389,7 +1389,7 @@ fn compile_fn_call(
                     state.libraries,
                     state.declared_methods,
                     state.associated_functions,
-                    state.declared_structs,
+                    state.custom_types,
                 );
 
                 state
@@ -1402,12 +1402,16 @@ fn compile_fn_call(
 
     if call_fn_code.is_empty() {
         // Is the function a tuple constuctor? `struct Foo(u32); let a = Foo(200);`
-        if let Some(struct_type) = state.declared_structs.get(&name) {
-            assert!(
-                matches!(struct_type.variant, StructVariant::TupleStruct(_)),
-                "Can only call tuple constructor of tuple struct. Got: {struct_type}"
-            );
-            call_fn_code.append(&mut struct_type.constructor(state.declared_structs).body.clone());
+        if let Some(custom_type) = state.custom_types.get(&name) {
+            if let CustomTypeOil::Struct(struct_type) = custom_type {
+                assert!(
+                    matches!(custom_type.variant, StructVariant::TupleStruct(_)),
+                    "Can only call tuple constructor of tuple struct. Got: {struct_type}"
+                );
+                call_fn_code.append(&mut custom_type.constructor(state.custom_types).body.clone());
+            } else {
+                panic!("Can only call tuple constructor of tuple struct.");
+            }
         } else {
             // Function is not a library function, but type checker has guaranteed that it is in
             // scope. So we just call it.
@@ -1473,7 +1477,7 @@ fn compile_method_call(
                     state.libraries,
                     state.declared_methods,
                     state.associated_functions,
-                    state.declared_structs,
+                    state.custom_types,
                 );
 
                 state

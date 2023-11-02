@@ -1,61 +1,41 @@
-use itertools::Either;
 use std::{collections::HashMap, fs};
 use triton_vm::instruction::LabelledInstruction;
 
 use crate::{
-    ast_types, custom_type_resolver::resolve_custom_types, tasm_code_generator::compile_function,
-    type_checker::annotate_fn_outer,
+    ast_types, custom_type_resolver::resolve_custom_types, graft::CustomTypeRust,
+    tasm_code_generator::compile_function, type_checker::annotate_fn_outer,
 };
 
-pub type StructsAndMethods = HashMap<
-    String,
-    (
-        Either<syn::ItemStruct, syn::ItemEnum>,
-        Vec<syn::ImplItemMethod>,
-    ),
->;
+/// Mapping from name of a custom type to its type declaration and associated function
+/// and methods.
+pub type StructsAndMethods = HashMap<String, (CustomTypeRust, Vec<syn::ImplItemMethod>)>;
 
 fn extract_types_and_function(
     parsed_file: syn::File,
     function_name: &str,
 ) -> (StructsAndMethods, Option<syn::ItemFn>) {
+    get_standard_setup!(ast_types::ListType::Unsafe, graft_config, _lib);
     let mut outer_function: Option<syn::ItemFn> = None;
-    let mut custom_types: HashMap<
-        String,
-        (
-            Option<Either<syn::ItemStruct, syn::ItemEnum>>,
-            Vec<syn::ImplItemMethod>,
-        ),
-    > = HashMap::default();
+    let mut custom_types: HashMap<String, (Option<CustomTypeRust>, Vec<syn::ImplItemMethod>)> =
+        HashMap::default();
     for item in parsed_file.items {
         match item {
-            syn::Item::Enum(item_enum) => {
-                let key = item_enum.ident.to_string();
-                let entry_mut = custom_types.get_mut(&key);
-                match entry_mut {
-                    Some(value) => {
-                        value.0 = Some(Either::Right(item_enum.to_owned()));
-                    }
-                    None => {
-                        custom_types
-                            .insert(key, (Some(Either::Right(item_enum.to_owned())), vec![]));
-                    }
-                };
-            }
+            // Top-level function declaration
             syn::Item::Fn(func) => {
                 if func.sig.ident == function_name {
                     outer_function = Some(func.to_owned());
                 }
             }
+
+            // `impl` code block
             syn::Item::Impl(item_impl) => {
-                get_standard_setup!(ast_types::ListType::Unsafe, graft_config, _lib);
                 let type_name = graft_config
                     .syn_type_to_ast_type(&item_impl.self_ty)
                     .to_string();
                 for impl_item in item_impl.items.iter() {
                     if let syn::ImplItem::Method(struct_method) = impl_item {
-                        let hm_mut = custom_types.get_mut(&type_name);
-                        match hm_mut {
+                        let custom_type_entry = custom_types.get_mut(&type_name);
+                        match custom_type_entry {
                             Some(value) => {
                                 value.1.push(struct_method.to_owned());
                             }
@@ -69,16 +49,37 @@ fn extract_types_and_function(
                     }
                 }
             }
+
+            // Custom-type struct declaration
             syn::Item::Struct(item_struct) => {
                 let key = item_struct.ident.to_string();
                 let entry_mut = custom_types.get_mut(&key);
                 match entry_mut {
                     Some(value) => {
-                        value.0 = Some(Either::Left(item_struct.to_owned()));
+                        value.0 = Some(CustomTypeRust::Struct(item_struct.to_owned()));
                     }
                     None => {
-                        custom_types
-                            .insert(key, (Some(Either::Left(item_struct.to_owned())), vec![]));
+                        custom_types.insert(
+                            key,
+                            (Some(CustomTypeRust::Struct(item_struct.to_owned())), vec![]),
+                        );
+                    }
+                };
+            }
+
+            // Custom-type enum declaration
+            syn::Item::Enum(item_enum) => {
+                let key = item_enum.ident.to_string();
+                let entry_mut = custom_types.get_mut(&key);
+                match entry_mut {
+                    Some(value) => {
+                        value.0 = Some(CustomTypeRust::Enum(item_enum.to_owned()));
+                    }
+                    None => {
+                        custom_types.insert(
+                            key,
+                            (Some(CustomTypeRust::Enum(item_enum.to_owned())), vec![]),
+                        );
                     }
                 };
             }
@@ -86,7 +87,7 @@ fn extract_types_and_function(
         }
     }
 
-    // Each method must have a struct. So we can unwrap the Option type.
+    // Each method must have a struct after parsing all code. So we can unwrap the Option type.
     let structs: StructsAndMethods = custom_types
         .into_iter()
         .map(|(struct_name, (option_struct, methods))| (struct_name.clone(), (option_struct.unwrap_or_else(|| panic!("Couldn't find struct definition for {struct_name} for which methods was defined")), methods)))
@@ -95,8 +96,8 @@ fn extract_types_and_function(
     (structs, outer_function)
 }
 
-/// Return the Rust-AST for the `main` function and all structs defined in the outermost
-/// module.
+/// Return the Rust-AST for the `main` function and all custom types defined in the
+/// outermost module.
 pub(super) fn parse_function_and_structs(
     directory: &str,
     module_name: &str,
@@ -127,12 +128,12 @@ pub(crate) fn compile_for_test(
     let (rust_main_ast, rust_struct_asts, _) =
         parse_function_and_structs(directory, module_name, function_name);
     let mut oil_ast = graft_config.graft_fn_decl(&rust_main_ast);
-    let (structs, mut methods, mut associated_functions) =
-        graft_config.graft_structs_methods_and_associated_functions(rust_struct_asts);
+    let (custom_types, mut methods, mut associated_functions) =
+        graft_config.graft_custom_types_methods_and_associated_functions(rust_struct_asts);
 
     resolve_custom_types(
         &mut oil_ast,
-        &structs,
+        &custom_types,
         &mut methods,
         &mut associated_functions,
     );
@@ -140,7 +141,7 @@ pub(crate) fn compile_for_test(
     // type-check and annotate
     annotate_fn_outer(
         &mut oil_ast,
-        &structs,
+        &custom_types,
         &mut methods,
         &mut associated_functions,
         &libraries,
@@ -151,7 +152,7 @@ pub(crate) fn compile_for_test(
         &libraries,
         methods,
         &associated_functions,
-        &structs,
+        &custom_types,
     );
 
     // compose
@@ -167,7 +168,7 @@ pub(crate) fn compile_to_basic_snippet(
     get_standard_setup!(list_type, graft_config, libraries);
     let mut oil_ast = graft_config.graft_fn_decl(&rust_ast);
     let (structs, mut methods, mut associated_functions) =
-        graft_config.graft_structs_methods_and_associated_functions(structs_and_methods);
+        graft_config.graft_custom_types_methods_and_associated_functions(structs_and_methods);
 
     resolve_custom_types(
         &mut oil_ast,

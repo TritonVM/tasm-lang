@@ -1,4 +1,3 @@
-use itertools::Either;
 use itertools::Itertools;
 use num::{One, Zero};
 use std::collections::HashMap;
@@ -16,6 +15,12 @@ pub type Annotation = type_checker::Typing;
 pub struct Graft<'a> {
     pub list_type: ast_types::ListType,
     pub libraries: &'a [Box<dyn Library + 'a>],
+}
+
+#[derive(Debug, Clone)]
+pub enum CustomTypeRust {
+    Struct(syn::ItemStruct),
+    Enum(syn::ItemEnum),
 }
 
 #[allow(unused_macros)]
@@ -38,17 +43,11 @@ impl<'a> Graft<'a> {
     }
 
     #[allow(clippy::type_complexity)]
-    pub fn graft_structs_methods_and_associated_functions(
+    pub fn graft_custom_types_methods_and_associated_functions(
         &self,
-        structs_and_methods: HashMap<
-            String,
-            (
-                Either<syn::ItemStruct, syn::ItemEnum>,
-                Vec<syn::ImplItemMethod>,
-            ),
-        >,
+        structs_and_methods: HashMap<String, (CustomTypeRust, Vec<syn::ImplItemMethod>)>,
     ) -> (
-        HashMap<String, Either<ast_types::StructType, ast_types::EnumType>>,
+        HashMap<String, ast_types::CustomTypeOil>,
         Vec<ast::Method<Annotation>>,
         HashMap<String, HashMap<String, ast::Fn<Annotation>>>,
     ) {
@@ -67,7 +66,8 @@ impl<'a> Graft<'a> {
         ) -> ast_types::NamedFieldsStruct {
             let mut ast_fields: Vec<(String, ast_types::DataType)> = vec![];
             for field in fields.into_iter() {
-                // Ignore fields that are tagged as `tasm_object(ignore)`
+                // Ignore fields that are tagged as `tasm_object(ignore)`. These
+                // fields simply do not become part of the structure.
                 if !field.attrs.len().is_zero()
                     && field.attrs.iter().any(|x| {
                         x.path.segments[0].ident == "tasm_object"
@@ -76,6 +76,7 @@ impl<'a> Graft<'a> {
                 {
                     continue;
                 }
+
                 let field_name = field.ident.unwrap().to_string();
                 let datatype = graft_config.syn_type_to_ast_type(&field.ty);
                 ast_fields.push((field_name, datatype));
@@ -96,6 +97,14 @@ impl<'a> Graft<'a> {
             ast_fields.into()
         }
 
+        fn is_copy(attrs: &[syn::Attribute]) -> bool {
+            match attrs.len() {
+                1 => attrs[0].tokens.to_string().contains("Copy"),
+                0 => false,
+                _ => panic!("Can only handle one line of attributes for now."),
+            }
+        }
+
         let mut struct_types = HashMap::default();
 
         // Handle custom data structures
@@ -106,7 +115,7 @@ impl<'a> Graft<'a> {
             .collect_vec();
         for struct_ in structs {
             match struct_ {
-                Either::Right(enum_item) => {
+                CustomTypeRust::Enum(enum_item) => {
                     let syn::ItemEnum {
                         attrs,
                         vis: _,
@@ -118,17 +127,13 @@ impl<'a> Graft<'a> {
                     } = enum_item;
                     let name = ident.to_string();
 
-                    let is_copy = match attrs.len() {
-                        1 => attrs[0].tokens.to_string().contains("Copy"),
-                        0 => false,
-                        _ => panic!("Can only handle one line of attributes for now."),
-                    };
+                    let is_copy = is_copy(&attrs);
 
                     let enum_type = graft_enum(self, &name, variants.into_iter().collect_vec());
 
-                    struct_types.insert(name.clone(), Either::Right(enum_type));
+                    struct_types.insert(name.clone(), ast_types::CustomTypeOil::Enum(enum_type));
                 }
-                Either::Left(struct_item) => {
+                CustomTypeRust::Struct(struct_item) => {
                     let syn::ItemStruct {
                         attrs,
                         vis: _,
@@ -140,11 +145,7 @@ impl<'a> Graft<'a> {
                     } = struct_item;
                     let name = ident.to_string();
 
-                    let is_copy = match attrs.len() {
-                        1 => attrs[0].tokens.to_string().contains("Copy"),
-                        0 => false,
-                        _ => panic!("Can only handle one line of attributes for now."),
-                    };
+                    let is_copy = is_copy(&attrs);
 
                     // Rust structs come in three forms: with named fields, tuple structs, and
                     // unit structs. We don't yet support unit structs, so we can assume that
@@ -163,7 +164,8 @@ impl<'a> Graft<'a> {
                         name: name.clone(),
                     };
 
-                    struct_types.insert(name.clone(), Either::Left(struct_type));
+                    struct_types
+                        .insert(name.clone(), ast_types::CustomTypeOil::Struct(struct_type));
                 }
             }
         }
@@ -204,7 +206,7 @@ impl<'a> Graft<'a> {
     fn graft_method(
         &self,
         method: &syn::ImplItemMethod,
-        custom_type: &Either<ast_types::StructType, ast_types::EnumType>,
+        custom_type: &ast_types::CustomTypeOil,
     ) -> ast::Method<Annotation> {
         let method_name = method.sig.ident.to_string();
         let receiver = method.sig.receiver().unwrap().to_owned();
@@ -215,7 +217,7 @@ impl<'a> Graft<'a> {
                 ..
             } = receiver;
             let receiver_data_type = match custom_type {
-                Either::Left(struct_type) => match reference {
+                ast_types::CustomTypeOil::Struct(struct_type) => match reference {
                     Some(_) => {
                         if struct_type.is_copy {
                             ast_types::DataType::Reference(Box::new(ast_types::DataType::Struct(
@@ -229,7 +231,7 @@ impl<'a> Graft<'a> {
                     }
                     None => ast_types::DataType::Struct(struct_type.to_owned()),
                 },
-                Either::Right(enum_type) => match reference {
+                ast_types::CustomTypeOil::Enum(enum_type) => match reference {
                     Some(_) => {
                         if enum_type.is_copy {
                             ast_types::DataType::Reference(Box::new(ast_types::DataType::Enum(

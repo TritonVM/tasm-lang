@@ -2,12 +2,15 @@ use std::collections::HashMap;
 
 use crate::{
     ast::*,
-    ast_types::{self, AbstractArgument, AbstractValueArg, DataType, StructType},
+    ast_types::{self, AbstractArgument, AbstractValueArg, DataType},
     type_checker::Typing,
 };
 
 impl ReturningBlock<Typing> {
-    fn resolve_custom_types(&mut self, declared_structs: &HashMap<String, ast_types::StructType>) {
+    fn resolve_custom_types(
+        &mut self,
+        declared_structs: &HashMap<String, ast_types::CustomTypeOil>,
+    ) {
         let ReturningBlock { stmts, return_expr } = self;
         stmts
             .iter_mut()
@@ -17,7 +20,10 @@ impl ReturningBlock<Typing> {
 }
 
 impl Expr<Typing> {
-    fn resolve_custom_types(&mut self, declared_structs: &HashMap<String, ast_types::StructType>) {
+    fn resolve_custom_types(
+        &mut self,
+        declared_structs: &HashMap<String, ast_types::CustomTypeOil>,
+    ) {
         match self {
             Expr::MethodCall(MethodCall {
                 method_name: _,
@@ -85,7 +91,10 @@ impl Expr<Typing> {
 }
 
 impl Identifier<Typing> {
-    fn resolve_custom_types(&mut self, declared_structs: &HashMap<String, ast_types::StructType>) {
+    fn resolve_custom_types(
+        &mut self,
+        declared_structs: &HashMap<String, ast_types::CustomTypeOil>,
+    ) {
         match self {
             Identifier::String(_, _) => (),
             Identifier::ListIndex(inner_id, index_expr, _) => {
@@ -98,7 +107,10 @@ impl Identifier<Typing> {
 }
 
 impl Stmt<Typing> {
-    fn resolve_custom_types(&mut self, declared_structs: &HashMap<String, ast_types::StructType>) {
+    fn resolve_custom_types(
+        &mut self,
+        declared_structs: &HashMap<String, ast_types::CustomTypeOil>,
+    ) {
         match self {
             Stmt::Let(LetStmt {
                 var_name: _,
@@ -180,26 +192,26 @@ impl Stmt<Typing> {
 
 pub fn resolve_custom_types(
     function: &mut Fn<Typing>,
-    declared_structs: &HashMap<String, ast_types::StructType>,
+    declared_types: &HashMap<String, ast_types::CustomTypeOil>,
     declared_methods: &mut [Method<Typing>],
     associated_functions: &mut HashMap<String, HashMap<String, Fn<Typing>>>,
 ) {
-    function.resolve_custom_types(declared_structs);
+    function.resolve_custom_types(declared_types);
 
     declared_methods
         .iter_mut()
-        .for_each(|x| x.resolve_custom_types(declared_structs));
+        .for_each(|x| x.resolve_custom_types(declared_types));
 
     associated_functions.values_mut().for_each(|x| {
         x.values_mut()
-            .for_each(|x| x.resolve_custom_types(declared_structs))
+            .for_each(|x| x.resolve_custom_types(declared_types))
     });
 }
 
 impl Fn<Typing> {
     pub fn resolve_custom_types(
         &mut self,
-        declared_structs: &HashMap<String, ast_types::StructType>,
+        declared_structs: &HashMap<String, ast_types::CustomTypeOil>,
     ) {
         self.signature.resolve_types(declared_structs);
         self.body
@@ -211,7 +223,7 @@ impl Fn<Typing> {
 impl Method<Typing> {
     pub fn resolve_custom_types(
         &mut self,
-        declared_structs: &HashMap<String, ast_types::StructType>,
+        declared_structs: &HashMap<String, ast_types::CustomTypeOil>,
     ) {
         self.signature.resolve_types(declared_structs);
         self.body
@@ -238,7 +250,10 @@ impl DataType {
         }
     }
 
-    pub fn resolve_custom_types(&mut self, declared_structs: &HashMap<String, StructType>) {
+    pub fn resolve_custom_types(
+        &mut self,
+        declared_structs: &HashMap<String, ast_types::CustomTypeOil>,
+    ) {
         // TODO: Should this also mutate the structs in `declared_structs`? Currently
         // it only mutates `self` to the resolved type.
         match self {
@@ -250,9 +265,16 @@ impl DataType {
                     })
                     .to_owned();
                 outer_resolved
-                    .field_types_mut()
+                    .field_or_variant_types_mut()
                     .for_each(|x| x.resolve_custom_types(declared_structs));
-                *self = DataType::Struct(outer_resolved);
+                match outer_resolved {
+                    ast_types::CustomTypeOil::Struct(resolved_struct_type) => {
+                        *self = DataType::Struct(resolved_struct_type);
+                    }
+                    ast_types::CustomTypeOil::Enum(resolved_enum_type) => {
+                        *self = DataType::Enum(Box::new(resolved_enum_type));
+                    }
+                }
             }
             DataType::List(inner, _list_type) => {
                 inner.resolve_custom_types(declared_structs);
@@ -274,13 +296,18 @@ impl DataType {
                     .field_types_mut()
                     .for_each(|x| x.resolve_custom_types(declared_structs));
             }
+            DataType::Enum(enum_type) => {
+                enum_type
+                    .variant_types_mut()
+                    .for_each(|x| x.resolve_custom_types(declared_structs));
+            }
             _ => (),
         }
     }
 }
 
 impl FnSignature {
-    pub fn resolve_types(&mut self, declared_structs: &HashMap<String, StructType>) {
+    pub fn resolve_types(&mut self, declared_structs: &HashMap<String, ast_types::CustomTypeOil>) {
         self.output.resolve_custom_types(declared_structs);
         for input in self.args.iter_mut() {
             match input {
