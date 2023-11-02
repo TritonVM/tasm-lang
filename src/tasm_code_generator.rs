@@ -1405,12 +1405,12 @@ fn compile_fn_call(
         if let Some(custom_type) = state.custom_types.get(&name) {
             if let CustomTypeOil::Struct(struct_type) = custom_type {
                 assert!(
-                    matches!(custom_type.variant, StructVariant::TupleStruct(_)),
+                    matches!(struct_type.variant, StructVariant::TupleStruct(_)),
                     "Can only call tuple constructor of tuple struct. Got: {struct_type}"
                 );
-                call_fn_code.append(&mut custom_type.constructor(state.custom_types).body.clone());
+                call_fn_code.append(&mut struct_type.constructor(state.custom_types).body.clone());
             } else {
-                panic!("Can only call tuple constructor of tuple struct.");
+                panic!("Can only call tuple constructor of tuple struct. Got: {custom_type:?}");
             }
         } else {
             // Function is not a library function, but type checker has guaranteed that it is in
@@ -1675,13 +1675,51 @@ fn compile_expr(
             code.concat()
         }
 
+        ast::Expr::EnumInitializer(enum_decl) => {
+            // TODO: Pad with zeros
+            // First push the expression, and pad with zeros
+            // to match enum type's `stack_size`.
+            // Then push the variant's discriminant on top of the stack.
+            let expression_stack_size = enum_decl
+                .field_expression
+                .as_ref()
+                .map(|x| x.get_type().stack_size())
+                .unwrap_or_default();
+            let type_stack_size = enum_decl.enum_type.as_enum_type().stack_size();
+            assert_eq!(
+                expression_stack_size + 1,
+                type_stack_size,
+                "Unregular enum types not yet implemented"
+            );
+            let id_and_compiled_expr = enum_decl
+                .field_expression
+                .as_ref()
+                .map(|expr| compile_expr(expr, "enum declaration", state));
+            let field = id_and_compiled_expr
+                .as_ref()
+                .map(|x| x.1.to_owned())
+                .unwrap_or_default();
+            let discriminant = enum_decl
+                .enum_type
+                .as_enum_type()
+                .variant_discriminant(&enum_decl.variant_name);
+            let discriminant = triton_asm!(push { discriminant });
+
+            // Combine vstack entries into *one* enum entry
+            id_and_compiled_expr.map(|_| state.function_state.vstack.pop());
+
+            // println!("field: {}", field.iter().join("\n"));
+            // println!("discriminant: {}", discriminant.iter().join("\n"));
+
+            [field, discriminant].concat()
+        }
+
         ast::Expr::FnCall(fn_call) => compile_fn_call(fn_call, state),
 
         ast::Expr::MethodCall(method_call) => compile_method_call(method_call, state),
 
         ast::Expr::Unary(unaryop, rhs_expr, _known_type) => {
             let rhs_type = rhs_expr.get_type();
-            // panic!("Hi from `Unary`:\n rhs_type: {rhs_type:?}\n unaryop: {unaryop:?}\n inner_expr: {unaryop:?}\n _known_type: {_known_type:?}");
             let (_inner_expr_addr, inner_expr_code) = compile_expr(rhs_expr, "unop_operand", state);
             let code = match unaryop {
                 ast::UnaryOp::Neg => match rhs_type {
@@ -2781,6 +2819,7 @@ fn compile_eq_code(
         Boxed(_) => todo!("Comparison of MemPointer not supported yet"),
         Unresolved(name) => panic!("Cannot compare unresolved type {name}"),
         Reference(_) => panic!("Cannot compare references. Got {lhs_type}"),
+        Enum(_) => todo!("Equality for enums not yet implemented"),
     }
 }
 

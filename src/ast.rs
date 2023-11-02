@@ -7,7 +7,7 @@ use twenty_first::shared_math::bfield_codec::BFieldCodec;
 use twenty_first::shared_math::x_field_element::XFieldElement;
 
 use crate::{
-    ast_types::{AbstractArgument, DataType, FieldId},
+    ast_types::{self, AbstractArgument, DataType, FieldId},
     type_checker::Typing,
 };
 
@@ -247,6 +247,7 @@ impl UnaryOp {
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum Expr<T> {
     Lit(ExprLit<T>),
+    EnumInitializer(Box<EnumDeclaration<T>>),
     Var(Identifier<T>),
     Tuple(Vec<Expr<T>>),
     FnCall(FnCall<T>),
@@ -278,7 +279,10 @@ impl<T> Expr<T> {
             Expr::Cast(_, dt) => format!("cast_{}", dt.label_friendly_name()),
             Expr::ReturningBlock(_) => "returning_block".to_owned(),
             Expr::Struct(struct_expr) => {
-                format!("struct_expr:{}", struct_expr.label_friendly_name())
+                format!("struct_expr_{}", struct_expr.label_friendly_name())
+            }
+            Expr::EnumInitializer(enum_init) => {
+                format!("enum_init_{}", enum_init.label_friendly_name())
             }
         }
     }
@@ -309,9 +313,33 @@ impl<T> Display for Expr<T> {
                     struct_expr.struct_type.label_friendly_name()
                 )
             }
+            Expr::EnumInitializer(enum_decl) => {
+                format!(
+                    "enum_declaration_for_{}",
+                    enum_decl.enum_type.label_friendly_name()
+                )
+            }
         };
 
         write!(f, "{str}")
+    }
+}
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub struct EnumDeclaration<T> {
+    // Needs to be `DataType` since we populate it with `Unresolved` in grafter
+    pub enum_type: ast_types::DataType,
+    pub variant_name: String,
+    pub field_expression: Option<Expr<T>>,
+}
+
+impl<T> EnumDeclaration<T> {
+    pub fn label_friendly_name(&self) -> String {
+        format!(
+            "enum_{}__{}",
+            self.enum_type.label_friendly_name(),
+            self.variant_name,
+        )
     }
 }
 

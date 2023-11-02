@@ -51,12 +51,18 @@ impl<'a> Graft<'a> {
         Vec<ast::Method<Annotation>>,
         HashMap<String, HashMap<String, ast::Fn<Annotation>>>,
     ) {
-        fn graft_enum(
+        fn graft_enum_variants(
             graft_config: &Graft,
-            struct_name: &str,
             variants: Vec<syn::Variant>,
-        ) -> ast_types::EnumType {
-            todo!()
+        ) -> Vec<(String, ast_types::DataType)> {
+            let mut grafted_variants = vec![];
+            for variant in variants {
+                let variant_name = variant.ident.to_string();
+                let field_type = graft_tuple_struct(&graft_config, variant.fields);
+                grafted_variants.push((variant_name, ast_types::DataType::Tuple(field_type)));
+            }
+
+            return grafted_variants;
         }
 
         fn graft_struct_with_named_fields(
@@ -129,9 +135,14 @@ impl<'a> Graft<'a> {
 
                     let is_copy = is_copy(&attrs);
 
-                    let enum_type = graft_enum(self, &name, variants.into_iter().collect_vec());
+                    let variants = graft_enum_variants(self, variants.into_iter().collect_vec());
+                    let enum_type = ast_types::EnumType {
+                        name: name.clone(),
+                        is_copy,
+                        variants,
+                    };
 
-                    struct_types.insert(name.clone(), ast_types::CustomTypeOil::Enum(enum_type));
+                    struct_types.insert(name, ast_types::CustomTypeOil::Enum(enum_type));
                 }
                 CustomTypeRust::Struct(struct_item) => {
                     let syn::ItemStruct {
@@ -751,7 +762,22 @@ impl<'a> Graft<'a> {
                 } else if ident == "u128::BITS" {
                     ast::Expr::Lit(ast::ExprLit::U32(u128::BITS))
                 } else {
-                    ast::Expr::Var(ast::Identifier::String(ident, Default::default()))
+                    // if string name contains `::`, we assume this refers
+                    // to an enum variant.
+                    let enum_init = ident.split("::").collect_vec();
+                    if enum_init.len() > 1 {
+                        // Assume this is the initialization of a value of an enum type
+                        ast::Expr::EnumInitializer({
+                            Box::new(ast::EnumDeclaration {
+                                enum_type: ast_types::DataType::Unresolved(enum_init[0].to_owned()),
+                                variant_name: enum_init[1].to_owned(),
+                                field_expression: None,
+                            })
+                        })
+                    } else {
+                        // Assume this is a variable
+                        ast::Expr::Var(ast::Identifier::String(ident, Default::default()))
+                    }
                 }
             }
             syn::Expr::Tuple(tuple_expr) => {

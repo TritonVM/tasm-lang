@@ -86,6 +86,13 @@ impl Expr<Typing> {
                     value.resolve_custom_types(declared_structs);
                 }
             }
+            Expr::EnumInitializer(enum_decl) => {
+                enum_decl.enum_type.resolve_custom_types(declared_structs);
+                enum_decl
+                    .field_expression
+                    .as_mut()
+                    .map(|x| x.resolve_custom_types(declared_structs));
+            }
         }
     }
 }

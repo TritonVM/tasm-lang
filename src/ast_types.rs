@@ -309,7 +309,7 @@ impl DataType {
                 //     1
                 // }
             }
-            Self::Enum(_enum_type) => todo!(),
+            Self::Enum(enum_type) => enum_type.stack_size(),
             Self::Boxed(_inner) => 1,
             Self::Reference(inner) => inner.stack_size(),
             // Self::MemPointer(inner_type) => {
@@ -319,6 +319,13 @@ impl DataType {
             //         1
             //     }
             // }
+        }
+    }
+
+    pub fn as_enum_type(&self) -> EnumType {
+        match self {
+            DataType::Enum(enum_type) => *enum_type.to_owned(),
+            _ => panic!("Expected enum type. Got: {self}"),
         }
     }
 }
@@ -473,6 +480,52 @@ impl EnumType {
     /// Return an iterator over mutable references to the type's nested datatypes
     pub fn variant_types_mut<'a>(&'a mut self) -> Box<dyn Iterator<Item = &'a mut DataType> + 'a> {
         Box::new(self.variants.iter_mut().map(|x| &mut x.1))
+    }
+
+    pub fn has_variant_of_name(&self, variant_name: &str) -> bool {
+        self.variants.iter().any(|x| x.0 == variant_name)
+    }
+
+    pub fn variant_data_type(&self, variant_name: &str) -> DataType {
+        for type_variant in self.variants.iter() {
+            if type_variant.0 == variant_name {
+                return type_variant.1.clone();
+            }
+        }
+
+        panic!(
+            "variant name \"{variant_name}\" is not defined for enum {}",
+            self.name
+        );
+    }
+
+    /// Return the "discriminant" of an enum variant, an integer showing
+    /// what variant the enum type takes.
+    pub fn variant_discriminant(&self, variant_name: &str) -> usize {
+        self.variants
+            .iter()
+            .find_position(|x| x.0 == variant_name)
+            .unwrap_or_else(|| {
+                panic!(
+                    "Could not find variant {variant_name} in enum {}",
+                    self.name,
+                )
+            })
+            .0
+    }
+
+    pub fn label_friendly_name(&self) -> String {
+        self.name.clone()
+    }
+
+    /// Returns the stack size that this enum type always occupies, assuming
+    /// it's on the stack, and not boxed.
+    pub fn stack_size(&self) -> usize {
+        self.variants
+            .iter()
+            .max_by_key(|x| x.1.stack_size())
+            .map(|x| x.1.stack_size() + 1)
+            .unwrap_or_default()
     }
 }
 

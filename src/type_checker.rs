@@ -65,6 +65,7 @@ impl<T: GetType + std::fmt::Debug> GetType for ast::Expr<T> {
                     .into(),
             ),
             ast::Expr::Struct(struct_expr) => struct_expr.get_type(),
+            ast::Expr::EnumInitializer(enum_decl) => enum_decl.get_type(),
             ast::Expr::FnCall(fn_call) => fn_call.get_type(),
             ast::Expr::MethodCall(method_call) => method_call.get_type(),
             ast::Expr::Binop(_, _, _, t) => t.get_type(),
@@ -79,6 +80,12 @@ impl<T: GetType + std::fmt::Debug> GetType for ast::Expr<T> {
 impl<T: GetType + std::fmt::Debug> GetType for ast::ReturningBlock<T> {
     fn get_type(&self) -> ast_types::DataType {
         self.return_expr.get_type()
+    }
+}
+
+impl<T: GetType + std::fmt::Debug> GetType for ast::EnumDeclaration<T> {
+    fn get_type(&self) -> ast_types::DataType {
+        self.enum_type.clone()
     }
 }
 
@@ -960,6 +967,35 @@ fn derive_annotate_expr_type(
             struct_expr.field_names_and_values.reverse();
 
             struct_expr.struct_type.clone()
+        }
+
+        ast::Expr::EnumInitializer(enum_decl) => {
+            // 1. Verify that `variant_name` exists in `enum_type`
+            let enum_type = enum_decl.enum_type.as_enum_type();
+            assert!(
+                enum_type.has_variant_of_name(&enum_decl.variant_name),
+                "Variant name {} not known for enum type {}",
+                enum_decl.variant_name,
+                enum_type.name
+            );
+
+            // 2. Verify that `field_expression` evaluates to the field type of `variant_name`
+            let variant_data_type = enum_type.variant_data_type(&enum_decl.variant_name);
+            let expression_type = enum_decl.field_expression.as_mut().map_or_else(
+                || ast_types::DataType::unit(),
+                |expr| {
+                    derive_annotate_expr_type(
+                        expr,
+                        Some(&variant_data_type),
+                        state,
+                        env_fn_signature,
+                    )
+                },
+            );
+
+            assert_type_equals(&expression_type, &variant_data_type, "enum expression");
+
+            enum_decl.enum_type.clone()
         }
 
         ast::Expr::FnCall(ast::FnCall {
