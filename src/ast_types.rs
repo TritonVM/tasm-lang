@@ -3,7 +3,7 @@ use itertools::Itertools;
 use std::{collections::HashMap, fmt::Display, str::FromStr};
 use triton_vm::triton_asm;
 
-use crate::{ast::FnSignature, libraries::LibraryFunction};
+use crate::{ast::FnSignature, ast_types, libraries::LibraryFunction};
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum DataType {
@@ -279,6 +279,10 @@ impl DataType {
         Self::Tuple(vec![].into())
     }
 
+    pub fn is_unit(&self) -> bool {
+        *self == Self::unit()
+    }
+
     pub fn stack_size(&self) -> usize {
         match self {
             Self::Bool => 1,
@@ -527,6 +531,21 @@ impl EnumType {
             .map(|x| x.1.stack_size() + 1)
             .unwrap_or_default()
     }
+
+    pub fn variant_constructor(&self, variant_name: &str) -> LibraryFunction {
+        let variant_data_type = self.variant_data_type(variant_name);
+        assert!(
+            !variant_data_type.is_unit(),
+            "Variant {variant_name} in enum type {} does not carry data",
+            self.name
+        );
+        let tuple = if let ast_types::DataType::Tuple(tuple) = variant_data_type {
+            tuple
+        } else {
+            panic!("Variant data must have type of tuple");
+        };
+        todo!()
+    }
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
@@ -562,6 +581,7 @@ impl StructType {
         } else {
             panic!("Only tuple structs have constructor functions. Attempted to get constructor for struct {}", self.name);
         };
+        tuple.constructor(self.name, custom_types)
         let args = tuple
             .fields
             .iter()

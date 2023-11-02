@@ -316,14 +316,32 @@ pub fn annotate_fn_outer(
     // using `struct Foo(u32); let a = Foo(200);`
     let mut ftable: HashMap<String, ast::FnSignature> = HashMap::default();
     for (type_name, custom_type) in custom_types.iter() {
-        if let ast_types::CustomTypeOil::Struct(struct_type) = custom_type {
-            if let ast_types::StructVariant::TupleStruct(_) = &struct_type.variant {
-                ftable.insert(
-                    type_name.to_owned(),
-                    struct_type.constructor(custom_types).signature,
-                );
+        match custom_type {
+            ast_types::CustomTypeOil::Struct(struct_type) => {
+                if let ast_types::StructVariant::TupleStruct(_) = &struct_type.variant {
+                    ftable.insert(
+                        type_name.to_owned(),
+                        struct_type.constructor(custom_types).signature,
+                    );
+                }
+            }
+            ast_types::CustomTypeOil::Enum(enum_type) => {
+                for (variant_name, variant_type) in enum_type.variants {
+                    if variant_type != ast_types::DataType::unit() {
+                        let constructor_name = format!("{}::{variant_type}", enum_type.name);
+                        ftable.insert(constructor_name, enum_type.constructor())
+                    }
+                }
             }
         }
+        // if let ast_types::CustomTypeOil::Struct(struct_type) = custom_type {
+        //     if let ast_types::StructVariant::TupleStruct(_) = &struct_type.variant {
+        //         ftable.insert(
+        //             type_name.to_owned(),
+        //             struct_type.constructor(custom_types).signature,
+        //         );
+        //     }
+        // }
     }
 
     // Type annotate the function
