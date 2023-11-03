@@ -72,6 +72,20 @@ pub struct FnSignature {
     pub arg_evaluation_order: ArgEvaluationOrder,
 }
 
+impl FnSignature {
+    pub fn input_arguments_stack_size(&self) -> usize {
+        let mut input_args_stack_size = 0;
+        for arg in self.args.iter() {
+            input_args_stack_size += match arg {
+                AbstractArgument::FunctionArgument(_) => 0,
+                AbstractArgument::ValueArgument(val_arg) => val_arg.data_type.stack_size(),
+            }
+        }
+
+        input_args_stack_size
+    }
+}
+
 #[derive(Debug, Default, Clone, Hash, PartialEq, Eq)]
 pub enum ArgEvaluationOrder {
     #[default]
@@ -247,7 +261,7 @@ impl UnaryOp {
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum Expr<T> {
     Lit(ExprLit<T>),
-    EnumInitializer(Box<EnumDeclaration<T>>),
+    EnumDeclaration(EnumDeclaration),
     Var(Identifier<T>),
     Tuple(Vec<Expr<T>>),
     FnCall(FnCall<T>),
@@ -281,7 +295,7 @@ impl<T> Expr<T> {
             Expr::Struct(struct_expr) => {
                 format!("struct_expr_{}", struct_expr.label_friendly_name())
             }
-            Expr::EnumInitializer(enum_init) => {
+            Expr::EnumDeclaration(enum_init) => {
                 format!("enum_init_{}", enum_init.label_friendly_name())
             }
         }
@@ -313,7 +327,7 @@ impl<T> Display for Expr<T> {
                     struct_expr.struct_type.label_friendly_name()
                 )
             }
-            Expr::EnumInitializer(enum_decl) => {
+            Expr::EnumDeclaration(enum_decl) => {
                 format!(
                     "enum_declaration_for_{}",
                     enum_decl.enum_type.label_friendly_name()
@@ -325,15 +339,15 @@ impl<T> Display for Expr<T> {
     }
 }
 
+/// Represents an enum variant without data. `let a = Foo::Bar;`
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub struct EnumDeclaration<T> {
+pub struct EnumDeclaration {
     // Needs to be `DataType` since we populate it with `Unresolved` in grafter
     pub enum_type: ast_types::DataType,
     pub variant_name: String,
-    pub field_expression: Option<Expr<T>>,
 }
 
-impl<T> EnumDeclaration<T> {
+impl EnumDeclaration {
     pub fn label_friendly_name(&self) -> String {
         format!(
             "enum_{}__{}",

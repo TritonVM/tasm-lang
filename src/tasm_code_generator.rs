@@ -1702,40 +1702,21 @@ fn compile_expr(
             code.concat()
         }
 
-        ast::Expr::EnumInitializer(enum_decl) => {
-            // TODO: Pad with zeros
-            // First push the expression, and pad with zeros
-            // to match enum type's `stack_size`.
-            // Then push the variant's discriminant on top of the stack.
-            let this_expression_stack_size = enum_decl
-                .field_expression
-                .as_ref()
-                .map(|x| x.get_type().stack_size() + 1)
-                .unwrap_or_default();
-            let type_stack_size = enum_decl.enum_type.as_enum_type().stack_size();
-            let padding_needed: usize = type_stack_size - this_expression_stack_size;
+        ast::Expr::EnumDeclaration(enum_decl) => {
+            // Compile an enum-declaration without associated data
+            // Padding is done to ensure that all instances of this enum have
+            // the same size on the stack.
+            let this_expression_stack_size = 1;
+            let enum_stack_size = enum_decl.enum_type.as_enum_type().stack_size();
+            let padding_needed: usize = enum_stack_size - this_expression_stack_size;
             let padding = vec![triton_instr!(push 0); padding_needed];
-            let id_and_compiled_expr = enum_decl
-                .field_expression
-                .as_ref()
-                .map(|expr| compile_expr(expr, "enum declaration", state));
-            let field = id_and_compiled_expr
-                .as_ref()
-                .map(|x| x.1.to_owned())
-                .unwrap_or_default();
             let discriminant = enum_decl
                 .enum_type
                 .as_enum_type()
                 .variant_discriminant(&enum_decl.variant_name);
             let discriminant = triton_asm!(push { discriminant });
 
-            // Combine vstack entries into *one* enum entry
-            id_and_compiled_expr.map(|_| state.function_state.vstack.pop());
-
-            // println!("field: {}", field.iter().join("\n"));
-            // println!("discriminant: {}", discriminant.iter().join("\n"));
-
-            [padding, field, discriminant].concat()
+            [padding, discriminant].concat()
         }
 
         ast::Expr::FnCall(fn_call) => compile_fn_call(fn_call, state),

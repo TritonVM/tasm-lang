@@ -764,16 +764,22 @@ impl<'a> Graft<'a> {
                     ast::Expr::Lit(ast::ExprLit::U32(u128::BITS))
                 } else {
                     // if string name contains `::`, and we don't know the type,
-                    // we assume this refers to an enum variant.
+                    // we assume this refers to an enum variant, without
+                    // contained data: 'Foo::Bar'.
                     let enum_init = ident.split("::").collect_vec();
                     if enum_init.len() > 1 && ast_types::DataType::from_str(enum_init[0]).is_err() {
-                        // Assume this is the initialization of a value of an enum type
-                        ast::Expr::EnumInitializer({
-                            Box::new(ast::EnumDeclaration {
+                        assert_eq!(
+                            2,
+                            enum_init.len(),
+                            "Expected enum initialization to only contain one instance of '::'"
+                        );
+                        // Assume this is the initialization of a value of an enum type -- without
+                        // associated data.
+                        ast::Expr::EnumDeclaration({
+                            ast::EnumDeclaration {
                                 enum_type: ast_types::DataType::Unresolved(enum_init[0].to_owned()),
                                 variant_name: enum_init[1].to_owned(),
-                                field_expression: None,
-                            })
+                            }
                         })
                     } else {
                         // Assume this is a variable

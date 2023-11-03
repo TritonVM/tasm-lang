@@ -65,7 +65,7 @@ impl<T: GetType + std::fmt::Debug> GetType for ast::Expr<T> {
                     .into(),
             ),
             ast::Expr::Struct(struct_expr) => struct_expr.get_type(),
-            ast::Expr::EnumInitializer(enum_decl) => enum_decl.get_type(),
+            ast::Expr::EnumDeclaration(enum_decl) => enum_decl.get_type(),
             ast::Expr::FnCall(fn_call) => fn_call.get_type(),
             ast::Expr::MethodCall(method_call) => method_call.get_type(),
             ast::Expr::Binop(_, _, _, t) => t.get_type(),
@@ -83,7 +83,7 @@ impl<T: GetType + std::fmt::Debug> GetType for ast::ReturningBlock<T> {
     }
 }
 
-impl<T: GetType + std::fmt::Debug> GetType for ast::EnumDeclaration<T> {
+impl GetType for ast::EnumDeclaration {
     fn get_type(&self) -> ast_types::DataType {
         self.enum_type.clone()
     }
@@ -986,7 +986,7 @@ fn derive_annotate_expr_type(
             struct_expr.struct_type.clone()
         }
 
-        ast::Expr::EnumInitializer(enum_decl) => {
+        ast::Expr::EnumDeclaration(enum_decl) => {
             // 1. Verify that `variant_name` exists in `enum_type`
             let enum_type = enum_decl.enum_type.as_enum_type();
             assert!(
@@ -996,21 +996,11 @@ fn derive_annotate_expr_type(
                 enum_type.name
             );
 
-            // 2. Verify that `field_expression` evaluates to the field type of `variant_name`
             let variant_data_type = enum_type.variant_data_type(&enum_decl.variant_name);
-            let expression_type = enum_decl.field_expression.as_mut().map_or_else(
-                || ast_types::DataType::unit(),
-                |expr| {
-                    derive_annotate_expr_type(
-                        expr,
-                        Some(&variant_data_type),
-                        state,
-                        env_fn_signature,
-                    )
-                },
+            assert!(
+                variant_data_type.is_unit(),
+                "Declarations of data-carrying enum variants must contain data"
             );
-
-            assert_type_equals(&expression_type, &variant_data_type, "enum expression");
 
             enum_decl.enum_type.clone()
         }

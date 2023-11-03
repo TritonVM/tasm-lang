@@ -1,7 +1,7 @@
 use anyhow::bail;
 use itertools::Itertools;
 use std::{collections::HashMap, fmt::Display, str::FromStr};
-use triton_vm::triton_asm;
+use triton_vm::{triton_asm, triton_instr};
 
 use crate::{ast::FnSignature, ast_types, libraries::LibraryFunction};
 
@@ -553,7 +553,20 @@ impl EnumType {
 
         let constructor_name = format!("{}::{variant_name}", self.name);
         let constructor_return_type = DataType::Enum(Box::new(self.to_owned()));
-        tuple.constructor(&constructor_name, constructor_return_type, custom_types)
+        let mut constructor =
+            tuple.constructor(&constructor_name, constructor_return_type, custom_types);
+
+        // Prepend padding to code, to ensure that all enum values of this type have
+        // the same size on the stack
+        let type_stack_size = self.stack_size();
+        let this_expressions_stack_size = constructor.signature.input_arguments_stack_size();
+        let padding_needed: usize = type_stack_size - this_expressions_stack_size - 1;
+        let padding = vec![triton_instr!(push 0); padding_needed];
+        let discriminant = self.variant_discriminant(&variant_name);
+        let discriminant = triton_asm!(push { discriminant });
+
+        constructor.body = [padding, constructor.body, discriminant].concat();
+        constructor
     }
 }
 
