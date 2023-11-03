@@ -1351,10 +1351,11 @@ fn compile_fn_call(
         }
     }
 
-    // Associated functions are in scope, they must be called with `<Type>::<function_name>`
+    // Associated functions are in scope in `ftable`, they must be called with `<Type>::<function_name>`,
+    // where function_name must be lower-cased.
     if call_fn_code.is_empty() {
         let split_name = name.split("::").collect_vec();
-        if split_name.len() > 1 {
+        if split_name.len() > 1 && split_name[1].chars().next().unwrap().is_lowercase() {
             let associated_type_name = split_name[0];
             let fn_name = split_name[1];
 
@@ -1401,21 +1402,47 @@ fn compile_fn_call(
     }
 
     if call_fn_code.is_empty() {
-        // Is the function a tuple constuctor? `struct Foo(u32); let a = Foo(200);`
-        if let Some(custom_type) = state.custom_types.get(&name) {
-            if let CustomTypeOil::Struct(struct_type) = custom_type {
-                assert!(
-                    matches!(struct_type.variant, StructVariant::TupleStruct(_)),
-                    "Can only call tuple constructor of tuple struct. Got: {struct_type}"
-                );
-                call_fn_code.append(&mut struct_type.constructor(state.custom_types).body.clone());
+        // Is the function a enum-variant constructor? `enum Foo { Bar(u32) }; let a = Foo::Bar(42);`
+        let split_name = name.split("::").collect_vec();
+        if split_name.len() > 1
+            && split_name[1].chars().next().unwrap().is_uppercase()
+            && state.custom_types.contains_key(split_name[0])
+        {
+            let custom_type = state
+                .custom_types
+                .get(split_name[0])
+                .unwrap_or_else(|| panic!("Unknown enum-variant constructor: {name}"));
+            let enum_type = if let CustomTypeOil::Enum(enum_type) = custom_type {
+                enum_type
             } else {
-                panic!("Can only call tuple constructor of tuple struct. Got: {custom_type:?}");
-            }
+                panic!(
+                    "Can only call enum-variant constructor on enum type. Problem was with {name}"
+                );
+            };
+            call_fn_code.append(
+                &mut enum_type
+                    .variant_constructor(split_name[1], state.custom_types)
+                    .body
+                    .clone(),
+            );
         } else {
-            // Function is not a library function, but type checker has guaranteed that it is in
-            // scope. So we just call it.
-            call_fn_code.append(&mut triton_asm!(call { name }));
+            // Is the function a tuple constuctor? `struct Foo(u32); let a = Foo(200);`
+            if let Some(custom_type) = state.custom_types.get(&name) {
+                if let CustomTypeOil::Struct(struct_type) = custom_type {
+                    assert!(
+                        matches!(struct_type.variant, StructVariant::TupleStruct(_)),
+                        "Can only call tuple constructor of tuple struct. Got: {struct_type}"
+                    );
+                    call_fn_code
+                        .append(&mut struct_type.constructor(state.custom_types).body.clone());
+                } else {
+                    panic!("Can only call tuple constructor of tuple struct. Got: {custom_type:?}");
+                }
+            } else {
+                // Function is not a library function, but type checker has guaranteed that it is in
+                // scope. So we just call it.
+                call_fn_code.append(&mut triton_asm!(call { name }));
+            }
         }
     }
 
@@ -1680,17 +1707,14 @@ fn compile_expr(
             // First push the expression, and pad with zeros
             // to match enum type's `stack_size`.
             // Then push the variant's discriminant on top of the stack.
-            let expression_stack_size = enum_decl
+            let this_expression_stack_size = enum_decl
                 .field_expression
                 .as_ref()
-                .map(|x| x.get_type().stack_size())
+                .map(|x| x.get_type().stack_size() + 1)
                 .unwrap_or_default();
             let type_stack_size = enum_decl.enum_type.as_enum_type().stack_size();
-            assert_eq!(
-                expression_stack_size + 1,
-                type_stack_size,
-                "Unregular enum types not yet implemented"
-            );
+            let padding_needed: usize = type_stack_size - this_expression_stack_size;
+            let padding = vec![triton_instr!(push 0); padding_needed];
             let id_and_compiled_expr = enum_decl
                 .field_expression
                 .as_ref()
@@ -1711,7 +1735,7 @@ fn compile_expr(
             // println!("field: {}", field.iter().join("\n"));
             // println!("discriminant: {}", discriminant.iter().join("\n"));
 
-            [field, discriminant].concat()
+            [padding, field, discriminant].concat()
         }
 
         ast::Expr::FnCall(fn_call) => compile_fn_call(fn_call, state),

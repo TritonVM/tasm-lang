@@ -532,7 +532,13 @@ impl EnumType {
             .unwrap_or_default()
     }
 
-    pub fn variant_constructor(&self, variant_name: &str) -> LibraryFunction {
+    /// Return the constructor that is called by an expression evaluating to an
+    /// enum type. E.g.: `Foo::A(100u32);`
+    pub fn variant_constructor(
+        &self,
+        variant_name: &str,
+        custom_types: &HashMap<String, CustomTypeOil>,
+    ) -> LibraryFunction {
         let variant_data_type = self.variant_data_type(variant_name);
         assert!(
             !variant_data_type.is_unit(),
@@ -544,7 +550,10 @@ impl EnumType {
         } else {
             panic!("Variant data must have type of tuple");
         };
-        todo!()
+
+        let constructor_name = format!("{}::{variant_name}", self.name);
+        let constructor_return_type = DataType::Enum(Box::new(self.to_owned()));
+        tuple.constructor(&constructor_name, constructor_return_type, custom_types)
     }
 }
 
@@ -581,35 +590,7 @@ impl StructType {
         } else {
             panic!("Only tuple structs have constructor functions. Attempted to get constructor for struct {}", self.name);
         };
-        tuple.constructor(self.name, custom_types)
-        let args = tuple
-            .fields
-            .iter()
-            .enumerate()
-            .map(|(i, x)| {
-                AbstractArgument::ValueArgument(AbstractValueArg {
-                    name: format!("tuple_elem_{i}"),
-                    data_type: x.to_owned(),
-                    mutable: false,
-                })
-            })
-            .collect_vec();
-        let mut signature = FnSignature {
-            name: self.name.to_owned(),
-            args,
-            output: DataType::Struct(self.to_owned()),
-            arg_evaluation_order: Default::default(),
-        };
-
-        // Resolve type in case of nested tuple structs
-        signature.resolve_types(custom_types);
-
-        // Function body of the tuple-struct constructor is empty, since
-        // the construction simply corresponds to the evaluation of arguments
-        // from left-to-rigth, as this will leave the last element of the
-        // tuple on top of the stack.
-        let body = triton_asm!();
-        LibraryFunction { signature, body }
+        tuple.constructor(&self.name, DataType::Struct(self.to_owned()), custom_types)
     }
 
     pub fn get_field_type(&self, field_id: &FieldId) -> DataType {
@@ -762,6 +743,42 @@ impl Tuple {
 
     pub fn stack_size(&self) -> usize {
         self.into_iter().map(|x| x.stack_size()).sum()
+    }
+
+    pub fn constructor(
+        &self,
+        tuple_struct_name: &str,
+        tuple_struct_type: DataType,
+        custom_types: &HashMap<String, CustomTypeOil>,
+    ) -> LibraryFunction {
+        let args = self
+            .fields
+            .iter()
+            .enumerate()
+            .map(|(i, x)| {
+                AbstractArgument::ValueArgument(AbstractValueArg {
+                    name: format!("tuple_elem_{i}"),
+                    data_type: x.to_owned(),
+                    mutable: false,
+                })
+            })
+            .collect_vec();
+        let mut signature = FnSignature {
+            name: tuple_struct_name.to_owned(),
+            args,
+            output: tuple_struct_type.to_owned(),
+            arg_evaluation_order: Default::default(),
+        };
+
+        // Resolve type in case of nested tuple structs
+        signature.resolve_types(custom_types);
+
+        // Function body of the tuple-struct constructor is empty, since
+        // the construction simply corresponds to the evaluation of arguments
+        // from left-to-rigth, as this will leave the last element of the
+        // tuple on top of the stack.
+        let body = triton_asm!();
+        LibraryFunction { signature, body }
     }
 }
 

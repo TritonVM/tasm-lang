@@ -1,6 +1,7 @@
 use itertools::Itertools;
 use num::{One, Zero};
 use std::collections::HashMap;
+use std::str::FromStr;
 use syn::parse_quote;
 
 use crate::ast;
@@ -762,10 +763,10 @@ impl<'a> Graft<'a> {
                 } else if ident == "u128::BITS" {
                     ast::Expr::Lit(ast::ExprLit::U32(u128::BITS))
                 } else {
-                    // if string name contains `::`, we assume this refers
-                    // to an enum variant.
+                    // if string name contains `::`, and we don't know the type,
+                    // we assume this refers to an enum variant.
                     let enum_init = ident.split("::").collect_vec();
-                    if enum_init.len() > 1 {
+                    if enum_init.len() > 1 && ast_types::DataType::from_str(enum_init[0]).is_err() {
                         // Assume this is the initialization of a value of an enum type
                         ast::Expr::EnumInitializer({
                             Box::new(ast::EnumDeclaration {

@@ -313,7 +313,8 @@ pub fn annotate_fn_outer(
     let untyped_declared_methods = declared_methods.to_owned();
 
     // Populate `ftable` with tuple constructors, allowing initialization of tuple structs
-    // using `struct Foo(u32); let a = Foo(200);`
+    // using `struct Foo(u32); let a = Foo(200);` as well as data-carrying enum-type
+    // variants such as `Bar::A(200u32);`.
     let mut ftable: HashMap<String, ast::FnSignature> = HashMap::default();
     for (type_name, custom_type) in custom_types.iter() {
         match custom_type {
@@ -326,22 +327,19 @@ pub fn annotate_fn_outer(
                 }
             }
             ast_types::CustomTypeOil::Enum(enum_type) => {
-                for (variant_name, variant_type) in enum_type.variants {
-                    if variant_type != ast_types::DataType::unit() {
-                        let constructor_name = format!("{}::{variant_type}", enum_type.name);
-                        ftable.insert(constructor_name, enum_type.constructor())
+                for (variant_name, variant_type) in enum_type.variants.iter() {
+                    if !variant_type.is_unit() {
+                        let constructor_name = format!("{}::{variant_name}", enum_type.name);
+                        ftable.insert(
+                            constructor_name,
+                            enum_type
+                                .variant_constructor(variant_name, &custom_types)
+                                .signature,
+                        );
                     }
                 }
             }
         }
-        // if let ast_types::CustomTypeOil::Struct(struct_type) = custom_type {
-        //     if let ast_types::StructVariant::TupleStruct(_) = &struct_type.variant {
-        //         ftable.insert(
-        //             type_name.to_owned(),
-        //             struct_type.constructor(custom_types).signature,
-        //         );
-        //     }
-        // }
     }
 
     // Type annotate the function
@@ -675,9 +673,10 @@ fn get_fn_signature(
         }
     }
 
-    // Associated functions are in scope, they must be called with `<Type>::<function_name>`
+    // Associated functions are in scope, they must be called with `<Type>::<function_name>`, where `function_name`
+    // must be lower-cased.
     let split_name = name.split("::").collect_vec();
-    if split_name.len() > 1 {
+    if split_name.len() > 1 && split_name[1].chars().next().unwrap().is_lowercase() {
         let associated_type_name = split_name[0];
         let fn_name = split_name[1];
 
@@ -695,7 +694,7 @@ fn get_fn_signature(
     state
         .ftable
         .get(name)
-        .unwrap_or_else(|| panic!("Function call in {} Don't know what type of value '{name}' returns! Type parameter was: {type_parameter:?}", env_fn_signature.name))
+        .unwrap_or_else(|| panic!("Function call in {} Don't know what type of value '{name}' returns! Type parameter was: {type_parameter:?}. ftable is:\n{}", env_fn_signature.name, state.ftable.keys().join("\n")))
         .clone()
 }
 
