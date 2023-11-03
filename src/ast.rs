@@ -105,6 +105,21 @@ pub enum Stmt<T> {
     Block(BlockStmt<T>),
     Assert(AssertStmt<T>),
     FnDeclaration(Fn<T>),
+    Match(MatchStmt<T>),
+}
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub struct MatchStmt<T> {
+    pub match_expression: Expr<T>,
+    pub arms: Vec<MatchArm<T>>,
+}
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub struct MatchArm<T> {
+    // pub match_expression: Expr<T>,
+    // TODO: Change this from String to something else
+    pub match_condition: String,
+    pub body: Stmt<T>,
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]

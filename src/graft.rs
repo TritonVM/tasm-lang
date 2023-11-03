@@ -1226,6 +1226,45 @@ impl<'a> Graft<'a> {
                         expression: tokens_as_expr,
                     })
                 }
+                syn::Expr::Match(syn::ExprMatch {
+                    attrs: _,
+                    match_token: _,
+                    expr,
+                    brace_token: _,
+                    arms,
+                }) => {
+                    let match_expression = graft_config.graft_expr(expr);
+                    let mut match_arms = vec![];
+                    for arm in arms.iter() {
+                        let syn::Arm {
+                            attrs: _,
+                            pat,
+                            guard: _,
+                            fat_arrow_token: _,
+                            body,
+                            comma: _,
+                        }: &syn::Arm = &arm;
+                        let arm_body = graft_expr_stmt(graft_config, &body);
+                        let enum_case = if let syn::Pat::Path(match_condition) = pat {
+                            match_condition
+                        } else {
+                            todo!("Unsupported: {pat:#?}");
+                        };
+                        let enum_case = Graft::path_to_ident(&enum_case.path);
+                        println!("pat:\n{pat:#?}");
+                        println!("arm_body:\n{arm_body:#?}");
+                        println!("enum_case: {enum_case}");
+                        match_arms.push(ast::MatchArm {
+                            match_condition: enum_case,
+                            body: arm_body,
+                        });
+                    }
+
+                    ast::Stmt::Match(ast::MatchStmt {
+                        arms: match_arms,
+                        match_expression,
+                    })
+                }
                 other => panic!("unsupported: {other:#?}"),
             }
         }

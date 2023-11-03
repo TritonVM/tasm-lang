@@ -189,6 +189,14 @@ impl Stmt<Typing> {
                 body.iter_mut()
                     .for_each(|x| x.resolve_custom_types(declared_structs));
             }
+            Stmt::Match(MatchStmt {
+                match_expression,
+                arms,
+            }) => {
+                match_expression.resolve_custom_types(declared_structs);
+                arms.iter_mut()
+                    .for_each(|x| x.resolve_custom_types(declared_structs));
+            }
         }
     }
 }
@@ -209,6 +217,15 @@ pub fn resolve_custom_types(
         x.values_mut()
             .for_each(|x| x.resolve_custom_types(declared_types))
     });
+}
+
+impl MatchArm<Typing> {
+    pub fn resolve_custom_types(
+        &mut self,
+        declared_structs: &HashMap<String, ast_types::CustomTypeOil>,
+    ) {
+        self.body.resolve_custom_types(declared_structs);
+    }
 }
 
 impl Fn<Typing> {

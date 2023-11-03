@@ -1312,6 +1312,12 @@ fn compile_stmt(
 
             vec![]
         }
+        ast::Stmt::Match(ast::MatchStmt {
+            arms,
+            match_expression,
+        }) => {
+            todo!()
+        }
     }
 }
 

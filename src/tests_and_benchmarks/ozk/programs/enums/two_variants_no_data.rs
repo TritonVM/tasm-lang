@@ -6,6 +6,16 @@ pub enum SimpleEnum {
 fn main() {
     let _a: SimpleEnum = SimpleEnum::A;
     let _b: SimpleEnum = SimpleEnum::B;
+
+    match _a {
+        SimpleEnum::A => {
+            assert!(true);
+        }
+        SimpleEnum::B => {
+            assert!(false);
+        }
+    };
+
     return;
 }
 

@@ -550,6 +550,12 @@ fn annotate_stmt(
                 .ftable
                 .insert(function.signature.name.clone(), function.signature.clone());
         }
+        ast::Stmt::Match(ast::MatchStmt {
+            arms,
+            match_expression,
+        }) => {
+            todo!()
+        }
     }
 }
 
