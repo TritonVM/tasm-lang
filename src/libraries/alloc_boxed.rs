@@ -1,5 +1,6 @@
 use super::Library;
-use crate::{ast, ast_types, tasm_code_generator::subroutine::SubRoutine};
+use crate::subroutine::SubRoutine;
+use crate::{ast, ast_types};
 use num::One;
 use triton_vm::{instruction::LabelledInstruction, triton_asm, triton_instr};
 

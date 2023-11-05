@@ -4,14 +4,38 @@ pub enum SimpleEnum {
 }
 
 fn main() {
-    let _a: SimpleEnum = SimpleEnum::A;
-    let _b: SimpleEnum = SimpleEnum::B;
+    let a: SimpleEnum = SimpleEnum::A;
+    let b: SimpleEnum = SimpleEnum::B;
 
-    match _a {
+    match a {
         SimpleEnum::A => {
             assert!(true);
         }
         SimpleEnum::B => {
+            assert!(false);
+        }
+    };
+
+    match b {
+        SimpleEnum::A => {
+            assert!(false);
+        }
+        SimpleEnum::B => {
+            assert!(true);
+        }
+    };
+
+    match a {
+        _ => {
+            assert!(true);
+        }
+    };
+
+    match a {
+        SimpleEnum::A => {
+            assert!(true);
+        }
+        _ => {
             assert!(false);
         }
     };

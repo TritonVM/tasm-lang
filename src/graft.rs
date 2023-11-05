@@ -1245,17 +1245,76 @@ impl<'a> Graft<'a> {
                             comma: _,
                         }: &syn::Arm = &arm;
                         let arm_body = graft_expr_stmt(graft_config, &body);
-                        let enum_case = if let syn::Pat::Path(match_condition) = pat {
-                            match_condition
+
+                        // TODO: Add support for `_` matching
+                        let arm_body = if let ast::Stmt::Block(block_stmt) = arm_body {
+                            block_stmt
                         } else {
-                            todo!("Unsupported: {pat:#?}");
+                            panic!("Expected block statement for match-arm's body")
                         };
-                        let enum_case = Graft::path_to_ident(&enum_case.path);
-                        println!("pat:\n{pat:#?}");
-                        println!("arm_body:\n{arm_body:#?}");
-                        println!("enum_case: {enum_case}");
+
+                        let match_condition = match pat {
+                            syn::Pat::Box(_) => todo!(),
+                            syn::Pat::Ident(_) => todo!(),
+                            syn::Pat::Lit(_) => todo!(),
+                            syn::Pat::Macro(_) => todo!(),
+                            syn::Pat::Or(_) => todo!(),
+                            syn::Pat::Path(syn::PatPath {
+                                attrs: _,
+                                qself: _,
+                                path,
+                            }) => {
+                                //
+                                let enum_case = Graft::path_to_ident(path);
+                                let enum_case_split = enum_case.split("::").collect_vec();
+                                assert!(
+                                    2 == enum_case_split.len(),
+                                    "Expected <Type>::<VariantName> for enum match case"
+                                );
+                                ast::MatchCondition::EnumVariant(ast::EnumVariantSelector {
+                                    enum_name: enum_case_split[0].to_owned(),
+                                    variant_name: enum_case_split[1].to_owned(),
+                                    new_binding_name: None,
+                                })
+                            }
+                            syn::Pat::Range(_) => todo!(),
+                            syn::Pat::Reference(_) => todo!(),
+                            syn::Pat::Rest(_) => todo!(),
+                            syn::Pat::Slice(_) => todo!(),
+                            syn::Pat::Struct(_) => todo!(),
+                            syn::Pat::Tuple(_) => todo!(),
+                            syn::Pat::TupleStruct(syn::PatTupleStruct { attrs, pat, path }) => {
+                                let enum_case = Graft::path_to_ident(path);
+                                let enum_case_split = enum_case.split("::").collect_vec();
+                                assert!(
+                                    2 == enum_case_split.len(),
+                                    "Expected <Type>::<VariantName> for enum match case"
+                                );
+
+                                // Verify that only *one* binding is made
+                                assert!(
+                                    pat.elems.len().is_one(),
+                                    "Can only handle one binding in match-arm"
+                                );
+
+                                let new_binding_name = Graft::pat_to_name(&pat.elems[0]);
+
+                                ast::MatchCondition::EnumVariant(ast::EnumVariantSelector {
+                                    enum_name: enum_case_split[0].to_owned(),
+                                    variant_name: enum_case_split[1].to_owned(),
+                                    new_binding_name: Some(new_binding_name),
+                                })
+                            }
+                            syn::Pat::Type(_) => todo!(),
+                            syn::Pat::Verbatim(_) => todo!(),
+                            syn::Pat::Wild(syn::PatWild {
+                                attrs: _,
+                                underscore_token: _,
+                            }) => ast::MatchCondition::CatchAll,
+                            _ => todo!(),
+                        };
                         match_arms.push(ast::MatchArm {
-                            match_condition: enum_case,
+                            match_condition,
                             body: arm_body,
                         });
                     }

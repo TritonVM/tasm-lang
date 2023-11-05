@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use crate::{
-    ast::*,
+    ast::{self, *},
     ast_types::{self, AbstractArgument, AbstractValueArg, DataType},
     type_checker::Typing,
 };
@@ -176,10 +176,8 @@ impl Stmt<Typing> {
                     .iter_mut()
                     .for_each(|x| x.resolve_custom_types(declared_structs));
             }
-            Stmt::Block(BlockStmt { stmts }) => {
-                stmts
-                    .iter_mut()
-                    .for_each(|x| x.resolve_custom_types(declared_structs));
+            Stmt::Block(block_stmt) => {
+                block_stmt.resolve_custom_types(declared_structs);
             }
             Stmt::Assert(AssertStmt { expression }) => {
                 expression.resolve_custom_types(declared_structs)
@@ -225,6 +223,17 @@ impl MatchArm<Typing> {
         declared_structs: &HashMap<String, ast_types::CustomTypeOil>,
     ) {
         self.body.resolve_custom_types(declared_structs);
+    }
+}
+
+impl BlockStmt<Typing> {
+    pub fn resolve_custom_types(
+        &mut self,
+        declared_structs: &HashMap<String, ast_types::CustomTypeOil>,
+    ) {
+        self.stmts
+            .iter_mut()
+            .for_each(|x| x.resolve_custom_types(declared_structs));
     }
 }
 

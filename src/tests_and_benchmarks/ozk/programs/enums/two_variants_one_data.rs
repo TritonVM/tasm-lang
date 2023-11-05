@@ -1,4 +1,4 @@
-use num::One;
+use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 use twenty_first::shared_math::x_field_element::XFieldElement;
 
 pub enum SimpleEnum {
@@ -7,16 +7,38 @@ pub enum SimpleEnum {
 }
 
 fn main() {
-    let _a: SimpleEnum = SimpleEnum::A(XFieldElement::one());
-    let _b: SimpleEnum = SimpleEnum::B;
+    let a: SimpleEnum = SimpleEnum::A(tasm::tasm_io_read_stdin___xfe());
+    let b: SimpleEnum = SimpleEnum::B;
+
+    match b {
+        SimpleEnum::A(xfe) => {
+            assert!(false);
+        }
+        SimpleEnum::B => {
+            assert!(true);
+        }
+    };
+
+    match a {
+        SimpleEnum::A(xfe) => {
+            assert!(true);
+            tasm::tasm_io_write_to_stdout___xfe(xfe);
+        }
+        SimpleEnum::B => {
+            assert!(false);
+        }
+    };
+
     return;
 }
 
 mod tests {
     use super::*;
     use itertools::Itertools;
+    use rand::random;
     use std::collections::HashMap;
     use triton_vm::NonDeterminism;
+    use twenty_first::shared_math::bfield_codec::BFieldCodec;
 
     use crate::tests_and_benchmarks::ozk::{ozk_parsing, rust_shadows};
     use crate::tests_and_benchmarks::test_helpers::shared_test::execute_compiled_with_stack_memory_and_ins_for_test;
@@ -24,8 +46,11 @@ mod tests {
     #[test]
     fn two_variants_one_data_test() {
         let non_determinism = NonDeterminism::default();
-        let expected_output = vec![];
-        let std_in = vec![];
+        let random_xfe: XFieldElement = random();
+        let mut std_in = random_xfe.encode();
+        std_in.reverse();
+        let expected_output = random_xfe.encode();
+        // let expected_output = vec![];
 
         // Run test on host machine
         let native_output =

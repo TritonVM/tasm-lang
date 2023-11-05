@@ -116,10 +116,26 @@ pub struct MatchStmt<T> {
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct MatchArm<T> {
-    // pub match_expression: Expr<T>,
-    // TODO: Change this from String to something else
-    pub match_condition: String,
-    pub body: Stmt<T>,
+    pub match_condition: MatchCondition,
+    pub body: BlockStmt<T>,
+}
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub enum MatchCondition {
+    CatchAll,
+    EnumVariant(EnumVariantSelector),
+}
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub struct EnumVariantSelector {
+    // `Bar` in `Bar::Foo(baz)`
+    pub enum_name: String,
+
+    // `Foo`
+    pub variant_name: String,
+
+    // `baz`
+    pub new_binding_name: Option<String>,
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]

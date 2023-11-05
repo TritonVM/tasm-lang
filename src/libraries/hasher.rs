@@ -2,11 +2,9 @@ use tasm_lib::Digest;
 use triton_vm::{instruction::LabelledInstruction, triton_asm, BFieldElement};
 use twenty_first::shared_math::tip5::DIGEST_LENGTH;
 
+use crate::subroutine::SubRoutine;
 use crate::{
-    ast, ast_types,
-    graft::Graft,
-    libraries::bfe::BfeLibrary,
-    tasm_code_generator::{subroutine::SubRoutine, CompilerState},
+    ast, ast_types, graft::Graft, libraries::bfe::BfeLibrary, tasm_code_generator::CompilerState,
 };
 
 use super::{Library, LibraryFunction};

@@ -1,4 +1,4 @@
-use super::subroutine::SubRoutine;
+use crate::subroutine::SubRoutine;
 use triton_vm::triton_asm;
 
 #[derive(Clone, Debug)]

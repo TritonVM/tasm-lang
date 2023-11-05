@@ -93,6 +93,15 @@ pub(super) fn tasm_io_read_stdin___bfe() -> BFieldElement {
     PUB_INPUT.with(|v| v.borrow_mut().pop().unwrap())
 }
 
+#[allow(non_snake_case)]
+pub(super) fn tasm_io_read_stdin___xfe() -> XFieldElement {
+    #[allow(clippy::unwrap_used)]
+    let x2 = PUB_INPUT.with(|v| v.borrow_mut().pop().unwrap());
+    let x1 = PUB_INPUT.with(|v| v.borrow_mut().pop().unwrap());
+    let x0 = PUB_INPUT.with(|v| v.borrow_mut().pop().unwrap());
+    XFieldElement::new([x0, x1, x2])
+}
+
 #[allow(dead_code)]
 #[allow(non_snake_case)]
 pub(super) fn tasm_arithmetic_u64_log_2_floor(val: u64) -> u32 {

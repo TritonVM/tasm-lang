@@ -1,6 +1,7 @@
+mod function_state;
 mod inner_function_tasm_code;
 mod outer_function_tasm_code;
-pub mod subroutine;
+mod stack;
 
 use itertools::{Either, Itertools};
 use num::{One, Zero};
@@ -16,88 +17,15 @@ use twenty_first::amount::u32s::U32s;
 use twenty_first::shared_math::b_field_element::BFieldElement;
 use twenty_first::shared_math::bfield_codec::BFieldCodec;
 
+use self::function_state::{FunctionState, VarAddr};
 use self::inner_function_tasm_code::InnerFunctionTasmCode;
 use self::outer_function_tasm_code::OuterFunctionTasmCode;
-use self::subroutine::SubRoutine;
+use self::stack::VStack;
 use crate::ast_types::{self, CustomTypeOil, StructVariant};
 use crate::libraries::{self};
-use crate::stack::Stack;
+use crate::subroutine::SubRoutine;
 use crate::type_checker::GetType;
 use crate::{ast, type_checker};
-
-// the compiler's view of the stack, including information about whether value has been spilled to memory
-type VStack = Stack<(ValueIdentifier, (ast_types::DataType, Option<u32>))>;
-type VarAddr = HashMap<String, ValueIdentifier>;
-
-impl VStack {
-    /// Returns (stack_position, data_type, maybe_memory_location) where `stack_position` is the top of
-    /// the value on the stack, i.e. the most shallow part of the value. Top of stack has index 0.
-    /// May return a depth that exceeds the addressable space (16 elements) in which case spilling
-    /// may be required.
-    fn find_stack_value(
-        &self,
-        seek_addr: &ValueIdentifier,
-    ) -> (usize, ast_types::DataType, Option<u32>) {
-        let mut position: usize = 0;
-        for (_i, (found_addr, (data_type, spilled))) in self.inner.iter().rev().enumerate() {
-            if seek_addr == found_addr {
-                return (position, data_type.to_owned(), spilled.to_owned());
-            }
-
-            position += data_type.stack_size();
-
-            // By asserting after `+= data_type.size_of()`, we check that the deepest part
-            // of the sought value is addressable, not just the top part of the value.
-        }
-
-        panic!("Cannot find {seek_addr} on vstack")
-    }
-
-    fn get_stack_height(&self) -> usize {
-        self.inner
-            .iter()
-            .map(|(_, (data_type, _))| data_type.stack_size())
-            .sum()
-    }
-
-    fn get_code_to_spill_to_memory(
-        &self,
-        values_to_spill: &[ValueIdentifier],
-    ) -> Vec<LabelledInstruction> {
-        let mut code = vec![];
-        for value_to_spill in values_to_spill {
-            let (stack_position, data_type, memory_spill_address) =
-                self.find_stack_value(value_to_spill);
-            let memory_spill_address = memory_spill_address.unwrap();
-            let top_of_value = stack_position;
-            let mut spill_code =
-                copy_value_to_memory(memory_spill_address, data_type.stack_size(), top_of_value);
-            code.append(&mut spill_code);
-        }
-
-        code
-    }
-}
-
-/// State for managing the compilation of a single function
-#[derive(Clone, Debug, Default)]
-
-struct FunctionState {
-    vstack: VStack,
-    var_addr: VarAddr,
-    spill_required: HashSet<ValueIdentifier>,
-    subroutines: Vec<SubRoutine>,
-}
-
-impl FunctionState {
-    /// Add a compiled function and its subroutines to the list of subroutines, thus
-    /// preserving the structure that would get lost if lists of instructions were
-    /// simply concatenated.
-    fn add_compiled_fn_to_subroutines(&mut self, mut function: InnerFunctionTasmCode) {
-        self.subroutines.append(&mut function.sub_routines);
-        self.subroutines.push(function.call_depth_zero_code);
-    }
-}
 
 #[derive(Clone, Debug)]
 pub enum ValueLocation {
@@ -592,6 +520,12 @@ pub struct ValueIdentifier {
     pub name: String,
 }
 
+impl From<String> for ValueIdentifier {
+    fn from(value: String) -> Self {
+        Self { name: value }
+    }
+}
+
 impl std::fmt::Display for ValueIdentifier {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.name)
@@ -599,6 +533,41 @@ impl std::fmt::Display for ValueIdentifier {
 }
 
 impl<'a> CompilerState<'a> {
+    /// Change the compiler's view of a value, without changing anything on the stack. E.g.:
+    /// `(XFE, BField)` -> `XFE, BFE`. `new_types` must be provided such that its last
+    /// element will be closest to the top of the stack.
+    pub(crate) fn split_value(
+        &mut self,
+        seek_addr: &ValueIdentifier,
+        new_types: Vec<ast_types::DataType>,
+    ) -> Vec<ValueIdentifier> {
+        let (_, old_type, spilled) = self.function_state.vstack.find_stack_value(seek_addr);
+        assert_eq!(
+            old_type.stack_size(),
+            new_types.iter().map(|x| x.stack_size()).sum::<usize>(),
+            "splitting values must keep size unchanged."
+        );
+
+        let index_removed = self.function_state.vstack.remove_by_id(seek_addr);
+        let mut size_acc: usize = 0;
+        let mut new_labels = vec![];
+        for (i, new_type) in new_types.into_iter().enumerate() {
+            let new_label: ValueIdentifier =
+                self.unique_label("split_value", Some(&new_type)).into();
+            new_labels.push(new_label.clone());
+            self.function_state.vstack.insert_at(
+                index_removed + i,
+                (
+                    new_label,
+                    (new_type.clone(), spilled.map(|x| x + size_acc as u32)),
+                ),
+            );
+            size_acc += new_type.stack_size();
+        }
+
+        new_labels
+    }
+
     fn get_binding_name(&self, value_identifier: &ValueIdentifier) -> String {
         match self
             .function_state
@@ -1316,7 +1285,162 @@ fn compile_stmt(
             arms,
             match_expression,
         }) => {
-            todo!()
+            let vstack_init = state.function_state.vstack.clone();
+            let var_addr_init = state.function_state.var_addr.clone();
+
+            // Evaluate match expression
+            let (match_expr_id, match_expr_evaluation) =
+                compile_expr(match_expression, "match-expr", state);
+            assert!(
+                !state.function_state.spill_required.contains(&match_expr_id),
+                "Cannot handle memory-spill of evaluated match expressions. But {match_expr_id} required memory spilling"
+            );
+
+            // Pop condition result from vstack as it's not on the stack inside the branches
+            // TODO: Change this when match-conditions can bind variables
+            // TODO: Ensure that the padding is taken into account when handling enum-types
+
+            // let body_codes = arms.iter().map(|x| compile_block_stmt(&x.body, state));
+            // let arm_subroutine_names = (0..arms.len()).map(|i| format!("{match_addr}_body_{i}"));
+
+            let mut match_code = triton_asm!({ &match_expr_evaluation });
+            let contains_wildcard = arms
+                .iter()
+                .any(|x| matches!(x.match_condition, ast::MatchCondition::CatchAll));
+
+            if contains_wildcard {
+                // Indicate that no arm body has been executed yet. For wildcard arm-conditions.
+                match_code.push(triton_instr!(push 1));
+            }
+
+            let match_expression_enum_type = match_expression.get_type().as_enum_type();
+            for (arm_counter, arm) in arms.iter().enumerate() {
+                println!("arm_counter: {arm_counter}"); // TODO: REMOVE
+
+                // At start of each loop-iternation, stack is:
+                // stack: _ [expression_variant_data] expression_variant_discriminant <no_arm_taken>
+
+                let arm_subroutine_label = format!("{match_expr_id}_body_{arm_counter}");
+
+                match &arm.match_condition {
+                    ast::MatchCondition::EnumVariant(enum_variant) => {
+                        // We know that variant discriminant is on top
+                        let arm_variant_discriminant = match_expression_enum_type
+                            .variant_discriminant(&enum_variant.variant_name);
+                        match_code.append(&mut triton_asm!(
+                            dup {contains_wildcard as u32}
+                            push {arm_variant_discriminant}
+                            eq
+                            skiz
+                            call {arm_subroutine_label}
+                        ));
+
+                        let remove_old_any_arm_taken_indicator = if contains_wildcard {
+                            triton_asm!(pop)
+                        } else {
+                            triton_asm!()
+                        };
+                        let set_new_no_arm_taken_indicator = if contains_wildcard {
+                            triton_asm!(push 0)
+                        } else {
+                            triton_asm!()
+                        };
+
+                        let enum_data_type = match_expression_enum_type
+                            .variant_data_type(&enum_variant.variant_name);
+                        let new_ids: Vec<ValueIdentifier> = state.split_value(
+                            &match_expr_id,
+                            vec![enum_data_type, ast_types::DataType::BFE],
+                        );
+
+                        // Remove discriminant from `vstack`
+                        let discriminant_removed = state.function_state.vstack.pop();
+                        assert_eq!(new_ids[1], discriminant_removed.unwrap().0);
+
+                        // Insert binding from pattern-match into stack view for arm-body
+                        enum_variant.new_binding_name.as_ref().map(|x| {
+                            state
+                                .function_state
+                                .var_addr
+                                .insert(x.to_owned(), new_ids[0].clone())
+                        });
+
+                        // Problem: We are not restoring the stack view for the next iteration of this loop
+
+                        let body_code = compile_block_stmt(&arm.body, state);
+                        let subroutine_code = triton_asm!(
+                            {arm_subroutine_label}:
+                                {&remove_old_any_arm_taken_indicator}
+                                // stack: _ [expression_variant_data] expression_variant_discriminant
+
+                                pop
+                                // stack: _ [expression_variant_data]
+
+                                // Do we want to pop the discriminant here? If we did, we would have to also
+                                // change the type of the top element on the stack.
+                                // If we pop the discriminant, we need another way to ensure that no later
+                                // arms are taken. So we would have to always set the arm-indicator, I guess.
+                                // What if we *don't* pop the discriminant? Then we would have to change the
+                                // type information about what's on the stack to: _ [binding] discriminant.
+                                // But don't we just want the binding on top of the stack when the body starts
+                                // executing? That seems efficient to me.
+                                // What if we *didn't* store the discriminant on top, but below?
+
+                                // We know that the evaluated expression is *not* spilled to memory.
+                                // So it should be sufficient to just pop the discriminator from the value,
+                                // and then you have the binding on top of the stack.
+
+                                // Do we maybe need a way to change the view of the `vstack`? Such that
+                                // we can see that we have discriminator on top and
+
+                                // We could ensure that the arms where sorted according to discriminants.
+
+                                {&body_code}
+                                {&set_new_no_arm_taken_indicator}
+                                return
+                        );
+
+                        state
+                            .function_state
+                            .subroutines
+                            .push(subroutine_code.try_into().unwrap());
+                    }
+                    ast::MatchCondition::CatchAll => {
+                        // CatchAll (`_`) is guaranteed to be the last arm. So we only have to check if any
+                        // previous arm was taken
+                        match_code.append(&mut triton_asm!(
+                            skiz
+                            call {arm_subroutine_label}
+                            push 0 // push 0 to make stack-cleanup code-path independent
+                        ));
+
+                        let body_code = compile_block_stmt(&arm.body, state);
+                        let subroutine_code = triton_asm!(
+                            {arm_subroutine_label}:
+                                {&body_code}
+                                return
+                        );
+                        state
+                            .function_state
+                            .subroutines
+                            .push(subroutine_code.try_into().unwrap());
+                        // stack: _  [expression_variant_data] expression_variant_discriminant <no_arm_taken>
+                    }
+                }
+            }
+
+            // Cleanup stack by removing evaluated expresison and `any_arm_taken_bool` indicator
+            if contains_wildcard {
+                match_code.push(triton_instr!(pop));
+            }
+
+            // Remove match-expression from stack
+            let restore_stack_code = state.restore_stack_code(&vstack_init, &var_addr_init);
+
+            triton_asm!(
+                {&match_code}
+                {&restore_stack_code}
+            )
         }
     }
 }
@@ -2601,37 +2725,6 @@ fn compile_returning_block_expr(
     state.verify_same_ordering_of_bindings(&start_vstack, &start_var_addr);
 
     (expr_add, [statement_code, expr_code, cleanup_code].concat())
-}
-
-/// Return the code to store a stack-value in memory
-fn copy_value_to_memory(
-    memory_location: u32,
-    value_size: usize,
-    stack_location_for_top_of_value: usize,
-) -> Vec<LabelledInstruction> {
-    // A stack value of the form `_ val2 val1 val0`, with `val0` being on the top of the stack
-    // is stored in memory as: `val0 val1 val2`, where `val0` is stored on the `memory_location`
-    // address.
-    let mut ret = triton_asm!(push {memory_location as u64});
-
-    for i in 0..value_size {
-        // ret.push(dup(1 + i as u64 + stack_location_for_top_of_value as u64));
-        ret.append(&mut triton_asm!(dup {1 + i as u64 + stack_location_for_top_of_value as u64}));
-        // _ [elements] mem_address element
-
-        ret.push(triton_instr!(write_mem));
-        // _ [elements] mem_address
-
-        if i != value_size - 1 {
-            ret.append(&mut triton_asm!(push 1 add));
-            // _ (mem_address + 1)
-        }
-    }
-
-    // remove memory address from top of stack
-    ret.push(triton_instr!(pop));
-
-    ret
 }
 
 /// Return the code to move the top stack element to a

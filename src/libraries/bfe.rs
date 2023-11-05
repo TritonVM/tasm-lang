@@ -3,7 +3,8 @@ use num::{One, Zero};
 use triton_vm::triton_asm;
 use twenty_first::shared_math::{b_field_element::BFieldElement, traits::PrimitiveRootOfUnity};
 
-use crate::{ast, ast_types, graft::Graft, tasm_code_generator::subroutine::SubRoutine};
+use crate::subroutine::SubRoutine;
+use crate::{ast, ast_types, graft::Graft};
 
 use super::{tasm_lib_snippet_to_fn_signature, Library, LibraryFunction};
 

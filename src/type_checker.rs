@@ -1,6 +1,6 @@
 use itertools::Itertools;
 use num::One;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use twenty_first::shared_math::b_field_element::BFieldElement;
 use twenty_first::shared_math::x_field_element::XFieldElement;
 
@@ -525,6 +525,75 @@ fn annotate_stmt(
             annotate_block_stmt(else_branch, env_fn_signature, state);
         }
 
+        ast::Stmt::Match(ast::MatchStmt {
+            arms,
+            match_expression,
+        }) => {
+            // Verify that match-expression returns an enum-type
+            let match_expression_type =
+                derive_annotate_expr_type(match_expression, None, state, env_fn_signature);
+            let enum_type = if let ast_types::DataType::Enum(enum_type) = match_expression_type {
+                enum_type
+            } else {
+                panic!("`match` statements are only supported on enum types. For now.");
+            };
+
+            // Verify that all arms match variants of enum type
+            // TODO: Add pattern-match binding to vtable scope here when variants are data-carying
+            let mut variants_encountered: HashSet<String> = HashSet::default();
+            let arm_count = arms.len();
+            for (i, arm) in arms.iter_mut().enumerate() {
+                match &arm.match_condition {
+                    ast::MatchCondition::CatchAll => {
+                        assert!(
+                            i == arm_count - 1,
+                            "When using wildcard in match statement, wildcard must be used in last match arm. Match expression was for type {}", enum_type.name
+                        );
+                    }
+                    ast::MatchCondition::EnumVariant(ast::EnumVariantSelector {
+                        enum_name,
+                        variant_name,
+                        new_binding_name,
+                    }) => {
+                        assert!(
+                            variants_encountered.insert(variant_name.clone()),
+                            "Repeated variant name {} in match statement on {} encounter",
+                            variant_name,
+                            enum_type.name
+                        );
+                        assert_eq!(
+                            &enum_type.name,
+                            enum_name,
+                            "Match conditions on type {} must all be of same type. Got bad type: {enum_name}", enum_type.name);
+                        assert!(
+                            new_binding_name.is_none()
+                                || !enum_type.variant_data_type(variant_name).is_unit(),
+                            "A match-arm binding can only be made for an enum variant that carries data"
+                        );
+
+                        new_binding_name.as_ref().map(|x| {
+                            let new_binding_type = enum_type
+                                .variant_data_type(variant_name)
+                                .get_tuple_elements()
+                                .fields[0]
+                                .to_owned();
+
+                            // TODO: Should we handle mutability here? Probably!
+                            state.vtable.insert(
+                                x.to_owned(),
+                                DataTypeAndMutability::new(&new_binding_type, false),
+                            )
+                        });
+
+                        annotate_block_stmt(&mut arm.body, env_fn_signature, state);
+
+                        // Remove binding new set in match-arm
+                        new_binding_name.as_ref().map(|x| state.vtable.remove(x));
+                    }
+                }
+            }
+        }
+
         ast::Stmt::Block(block_stmt) => {
             annotate_block_stmt(block_stmt, env_fn_signature, state);
         }
@@ -549,12 +618,6 @@ fn annotate_stmt(
             state
                 .ftable
                 .insert(function.signature.name.clone(), function.signature.clone());
-        }
-        ast::Stmt::Match(ast::MatchStmt {
-            arms,
-            match_expression,
-        }) => {
-            todo!()
         }
     }
 }
