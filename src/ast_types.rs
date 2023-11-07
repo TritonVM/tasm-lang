@@ -482,15 +482,17 @@ pub struct EnumType {
 
 impl EnumType {
     /// Return an iterator over mutable references to the type's nested datatypes
-    pub fn variant_types_mut<'a>(&'a mut self) -> Box<dyn Iterator<Item = &'a mut DataType> + 'a> {
+    pub(crate) fn variant_types_mut<'a>(
+        &'a mut self,
+    ) -> Box<dyn Iterator<Item = &'a mut DataType> + 'a> {
         Box::new(self.variants.iter_mut().map(|x| &mut x.1))
     }
 
-    pub fn has_variant_of_name(&self, variant_name: &str) -> bool {
+    pub(crate) fn has_variant_of_name(&self, variant_name: &str) -> bool {
         self.variants.iter().any(|x| x.0 == variant_name)
     }
 
-    pub fn variant_data_type(&self, variant_name: &str) -> DataType {
+    pub(crate) fn variant_data_type(&self, variant_name: &str) -> DataType {
         for type_variant in self.variants.iter() {
             if type_variant.0 == variant_name {
                 return type_variant.1.clone();
@@ -505,7 +507,7 @@ impl EnumType {
 
     /// Return the "discriminant" of an enum variant, an integer showing
     /// what variant the enum type takes.
-    pub fn variant_discriminant(&self, variant_name: &str) -> usize {
+    pub(crate) fn variant_discriminant(&self, variant_name: &str) -> usize {
         self.variants
             .iter()
             .find_position(|x| x.0 == variant_name)
@@ -518,13 +520,9 @@ impl EnumType {
             .0
     }
 
-    pub fn label_friendly_name(&self) -> String {
-        self.name.clone()
-    }
-
     /// Returns the stack size that this enum type always occupies, assuming
     /// it's on the stack, and not boxed.
-    pub fn stack_size(&self) -> usize {
+    pub(crate) fn stack_size(&self) -> usize {
         self.variants
             .iter()
             .max_by_key(|x| x.1.stack_size())
@@ -533,7 +531,7 @@ impl EnumType {
     }
 
     /// Return the words of padding used for a specific variant in this enum
-    pub fn padding_size(&self, variant_name: &str) -> usize {
+    pub(crate) fn padding_size(&self, variant_name: &str) -> usize {
         self.stack_size() - self.variant_data_type(variant_name).stack_size() - 1
     }
 
@@ -549,7 +547,7 @@ impl EnumType {
 
     /// Return the constructor that is called by an expression evaluating to an
     /// enum type. E.g.: `Foo::A(100u32);`
-    pub fn variant_constructor(
+    pub(crate) fn variant_constructor(
         &self,
         variant_name: &str,
         custom_types: &HashMap<String, CustomTypeOil>,

@@ -1,17 +1,13 @@
-use super::ValueIdentifier;
-use crate::ast_types;
-use crate::tasm_code_generator::InnerFunctionTasmCode;
-use crate::tasm_code_generator::SubRoutine;
-
 use itertools::Itertools;
-use std::collections::HashMap;
-use std::collections::HashSet;
 use triton_vm::instruction::LabelledInstruction;
 use triton_vm::triton_asm;
 use triton_vm::triton_instr;
 
+use super::ValueIdentifier;
+use crate::ast_types;
+
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Stack<T: Eq> {
+pub(crate) struct Stack<T: Eq> {
     pub inner: Vec<T>,
 }
 
@@ -23,50 +19,25 @@ impl<T: Eq> Default for Stack<T> {
 }
 
 impl<T: Eq> Stack<T> {
-    pub fn push(&mut self, elem: T) {
+    pub(crate) fn push(&mut self, elem: T) {
         self.inner.push(elem);
     }
 
-    pub fn pop(&mut self) -> Option<T> {
+    pub(crate) fn pop(&mut self) -> Option<T> {
         self.inner.pop()
     }
 
-    pub fn peek(&self) -> Option<&T> {
+    pub(crate) fn peek(&self) -> Option<&T> {
         self.inner.last()
-    }
-
-    pub fn replace_value(&mut self, seek_value: &T, new_value: T) {
-        let index_to_replace = self
-            .inner
-            .iter()
-            .find_position(|found_value| seek_value == *found_value)
-            .expect("Value must be present when removing from stack")
-            .0;
-
-        self.inner[index_to_replace] = new_value;
     }
 
     pub(crate) fn insert_at(&mut self, index: usize, value: T) {
         self.inner.insert(index, value);
     }
-
-    // /// Remove an element from stack. Returns the index of the value that was removed.
-    // pub fn remove_value(&mut self, seek_value: &T) -> usize {
-    //     let index_to_remove = self
-    //         .inner
-    //         .iter()
-    //         .find_position(|found_value| seek_value == *found_value)
-    //         .expect("Value must be present when removing from stack")
-    //         .0;
-
-    //     self.inner.remove(index_to_remove);
-
-    //     index_to_remove
-    // }
 }
 
 // the compiler's view of the stack, including information about whether value has been spilled to memory
-pub type VStack = Stack<(ValueIdentifier, (ast_types::DataType, Option<u32>))>;
+pub(crate) type VStack = Stack<(ValueIdentifier, (ast_types::DataType, Option<u32>))>;
 
 impl VStack {
     /// Returns (stack_position, data_type, maybe_memory_location) where `stack_position` is the top of

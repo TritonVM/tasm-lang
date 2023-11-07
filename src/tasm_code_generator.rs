@@ -535,12 +535,13 @@ impl std::fmt::Display for ValueIdentifier {
 impl<'a> CompilerState<'a> {
     /// Change the compiler's view of a value, without changing anything on the stack. E.g.:
     /// `(XFE, BField)` -> `XFE, BFE`. `new_types` must be provided such that its last
-    /// element will be closest to the top of the stack.
-    pub(crate) fn split_value(
+    /// element will be closest to the top of the stack. New value IDs are returned in the same
+    /// order.
+    pub(crate) fn split_value<const N: usize>(
         &mut self,
         seek_addr: &ValueIdentifier,
-        new_types: Vec<ast_types::DataType>,
-    ) -> Vec<ValueIdentifier> {
+        new_types: [ast_types::DataType; N],
+    ) -> [ValueIdentifier; N] {
         let (_, old_type, spilled) = self.function_state.vstack.find_stack_value(seek_addr);
         assert_eq!(
             old_type.stack_size(),
@@ -566,7 +567,7 @@ impl<'a> CompilerState<'a> {
             size_acc += new_type.stack_size();
         }
 
-        new_labels
+        new_labels.try_into().unwrap()
     }
 
     fn get_binding_name(&self, value_identifier: &ValueIdentifier) -> String {
@@ -1349,19 +1350,18 @@ fn compile_stmt(
                         // _ [enum_value]
                         // into
                         // _ [enum_data] [padding] discriminant
-                        let new_ids: Vec<ValueIdentifier> = state.split_value(
+                        let [_padding_id, data_id, _discriminant_id] = state.split_value(
                             &match_expr_id,
                             match_expression_enum_type
-                                .decompose_variant(&enum_variant.variant_name)
-                                .to_vec(),
+                                .decompose_variant(&enum_variant.variant_name),
                         );
 
                         // Insert binding from pattern-match into stack view for arm-body
-                        enum_variant.new_binding_name.as_ref().map(|x| {
+                        enum_variant.data_binding.as_ref().map(|x| {
                             state
                                 .function_state
                                 .var_addr
-                                .insert(x.to_owned(), new_ids[1].clone())
+                                .insert(x.name.to_owned(), data_id)
                         });
 
                         let body_code = compile_block_stmt(&arm.body, state);

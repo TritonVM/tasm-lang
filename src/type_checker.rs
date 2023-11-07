@@ -553,7 +553,7 @@ fn annotate_stmt(
                     ast::MatchCondition::EnumVariant(ast::EnumVariantSelector {
                         enum_name,
                         variant_name,
-                        new_binding_name,
+                        data_binding,
                     }) => {
                         assert!(
                             variants_encountered.insert(variant_name.clone()),
@@ -567,29 +567,28 @@ fn annotate_stmt(
                             enum_name,
                             "Match conditions on type {} must all be of same type. Got bad type: {enum_name}", enum_type.name);
                         assert!(
-                            new_binding_name.is_none()
+                            data_binding.is_none()
                                 || !enum_type.variant_data_type(variant_name).is_unit(),
                             "A match-arm binding can only be made for an enum variant that carries data"
                         );
 
-                        new_binding_name.as_ref().map(|x| {
+                        data_binding.as_ref().map(|x| {
                             let new_binding_type = enum_type
                                 .variant_data_type(variant_name)
                                 .get_tuple_elements()
                                 .fields[0]
                                 .to_owned();
 
-                            // TODO: Should we handle mutability here? Probably!
                             state.vtable.insert(
-                                x.to_owned(),
-                                DataTypeAndMutability::new(&new_binding_type, false),
+                                x.name.to_owned(),
+                                DataTypeAndMutability::new(&new_binding_type, x.mutable),
                             )
                         });
 
                         annotate_block_stmt(&mut arm.body, env_fn_signature, state);
 
-                        // Remove binding new set in match-arm
-                        new_binding_name.as_ref().map(|x| state.vtable.remove(x));
+                        // Remove binding set in match-arm after body's type check
+                        data_binding.as_ref().map(|x| state.vtable.remove(&x.name));
                     }
                 }
             }

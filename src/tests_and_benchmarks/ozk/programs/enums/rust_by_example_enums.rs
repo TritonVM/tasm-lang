@@ -1,5 +1,4 @@
 use num::One;
-use twenty_first::shared_math::x_field_element::XFieldElement;
 
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 

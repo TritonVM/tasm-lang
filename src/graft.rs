@@ -1274,7 +1274,7 @@ impl<'a> Graft<'a> {
                                 ast::MatchCondition::EnumVariant(ast::EnumVariantSelector {
                                     enum_name: enum_case_split[0].to_owned(),
                                     variant_name: enum_case_split[1].to_owned(),
-                                    new_binding_name: None,
+                                    data_binding: None,
                                 })
                             }
                             syn::Pat::Range(_) => todo!(),
@@ -1283,7 +1283,11 @@ impl<'a> Graft<'a> {
                             syn::Pat::Slice(_) => todo!(),
                             syn::Pat::Struct(_) => todo!(),
                             syn::Pat::Tuple(_) => todo!(),
-                            syn::Pat::TupleStruct(syn::PatTupleStruct { attrs, pat, path }) => {
+                            syn::Pat::TupleStruct(syn::PatTupleStruct {
+                                attrs: _,
+                                pat,
+                                path,
+                            }) => {
                                 let enum_case = Graft::path_to_ident(path);
                                 let enum_case_split = enum_case.split("::").collect_vec();
                                 assert!(
@@ -1297,12 +1301,20 @@ impl<'a> Graft<'a> {
                                     "Can only handle one binding in match-arm"
                                 );
 
-                                let new_binding_name = Graft::pat_to_name(&pat.elems[0]);
+                                let (new_binding_name, mutable) = match &pat.elems[0] {
+                                    syn::Pat::Ident(ident) => {
+                                        (ident.ident.to_string(), ident.mutability.is_some())
+                                    }
+                                    other => panic!("unsupported: {other:?}"),
+                                };
 
                                 ast::MatchCondition::EnumVariant(ast::EnumVariantSelector {
                                     enum_name: enum_case_split[0].to_owned(),
                                     variant_name: enum_case_split[1].to_owned(),
-                                    new_binding_name: Some(new_binding_name),
+                                    data_binding: Some(ast::PatternMatchedBinding {
+                                        mutable: mutable,
+                                        name: new_binding_name,
+                                    }),
                                 })
                             }
                             syn::Pat::Type(_) => todo!(),

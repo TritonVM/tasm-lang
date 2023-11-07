@@ -12,7 +12,7 @@ fn main() {
     let b: SimpleEnum = SimpleEnum::B;
 
     match b {
-        SimpleEnum::A(xfe) => {
+        SimpleEnum::A(_xfe) => {
             assert!(false);
         }
         SimpleEnum::B => {
@@ -27,6 +27,18 @@ fn main() {
             tasm::tasm_io_write_to_stdout___xfe(xfe);
             tasm::tasm_io_write_to_stdout___u32(i);
             tasm::tasm_io_write_to_stdout___xfe(xfe);
+
+            match a {
+                SimpleEnum::A(xfe_1) => {
+                    tasm::tasm_io_write_to_stdout___xfe(xfe_1);
+                    tasm::tasm_io_write_to_stdout___u32(i);
+                    tasm::tasm_io_write_to_stdout___xfe(xfe);
+                    tasm::tasm_io_write_to_stdout___xfe(xfe_1);
+                }
+                SimpleEnum::B => {
+                    assert!(false);
+                }
+            };
         }
         SimpleEnum::B => {
             assert!(false);
@@ -56,6 +68,10 @@ mod tests {
         let expected_output = [
             random_xfe.encode(),
             vec![BFieldElement::new(14)],
+            random_xfe.encode(),
+            random_xfe.encode(),
+            vec![BFieldElement::new(14)],
+            random_xfe.encode(),
             random_xfe.encode(),
         ]
         .concat();

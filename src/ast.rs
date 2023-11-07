@@ -135,7 +135,14 @@ pub struct EnumVariantSelector {
     pub variant_name: String,
 
     // `baz`
-    pub new_binding_name: Option<String>,
+    pub data_binding: Option<PatternMatchedBinding>,
+}
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub struct PatternMatchedBinding {
+    pub name: String,
+    pub mutable: bool,
+    // Add `ref` here also?
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]

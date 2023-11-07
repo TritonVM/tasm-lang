@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use crate::{
-    ast::{self, *},
+    ast::*,
     ast_types::{self, AbstractArgument, AbstractValueArg, DataType},
     type_checker::Typing,
 };
