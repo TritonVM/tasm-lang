@@ -1,6 +1,7 @@
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 use twenty_first::shared_math::x_field_element::XFieldElement;
 
+#[derive(Debug)]
 pub enum SimpleEnum {
     A(XFieldElement),
     B,
@@ -21,7 +22,10 @@ fn main() {
 
     match a {
         SimpleEnum::A(xfe) => {
+            let i: u32 = 14;
             assert!(true);
+            tasm::tasm_io_write_to_stdout___xfe(xfe);
+            tasm::tasm_io_write_to_stdout___u32(i);
             tasm::tasm_io_write_to_stdout___xfe(xfe);
         }
         SimpleEnum::B => {
@@ -37,7 +41,7 @@ mod tests {
     use itertools::Itertools;
     use rand::random;
     use std::collections::HashMap;
-    use triton_vm::NonDeterminism;
+    use triton_vm::{BFieldElement, NonDeterminism};
     use twenty_first::shared_math::bfield_codec::BFieldCodec;
 
     use crate::tests_and_benchmarks::ozk::{ozk_parsing, rust_shadows};
@@ -49,8 +53,12 @@ mod tests {
         let random_xfe: XFieldElement = random();
         let mut std_in = random_xfe.encode();
         std_in.reverse();
-        let expected_output = random_xfe.encode();
-        // let expected_output = vec![];
+        let expected_output = [
+            random_xfe.encode(),
+            vec![BFieldElement::new(14)],
+            random_xfe.encode(),
+        ]
+        .concat();
 
         // Run test on host machine
         let native_output =

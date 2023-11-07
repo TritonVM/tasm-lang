@@ -25,4 +25,14 @@ impl FunctionState {
         self.subroutines.append(&mut function.sub_routines);
         self.subroutines.push(function.call_depth_zero_code);
     }
+
+    /// Force the compiler's view of the stack and bindings to specific values
+    pub(crate) fn restore_stack_and_bindings(
+        &mut self,
+        previous_stack: &VStack,
+        previous_var_addr: &VarAddr,
+    ) {
+        self.vstack = previous_stack.to_owned();
+        self.var_addr = previous_var_addr.to_owned();
+    }
 }

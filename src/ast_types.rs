@@ -532,6 +532,21 @@ impl EnumType {
             .unwrap_or_default()
     }
 
+    /// Return the words of padding used for a specific variant in this enum
+    pub fn padding_size(&self, variant_name: &str) -> usize {
+        self.stack_size() - self.variant_data_type(variant_name).stack_size() - 1
+    }
+
+    /// Decompose the type of a variant into its three consituent parts:
+    /// padding, data, discriminant
+    pub fn decompose_variant(&self, variant_name: &str) -> [DataType; 3] {
+        [
+            DataType::Tuple(vec![DataType::BFE; self.padding_size(variant_name)].into()),
+            self.variant_data_type(variant_name),
+            DataType::BFE,
+        ]
+    }
+
     /// Return the constructor that is called by an expression evaluating to an
     /// enum type. E.g.: `Foo::A(100u32);`
     pub fn variant_constructor(
@@ -558,10 +573,7 @@ impl EnumType {
 
         // Prepend padding to code, to ensure that all enum values of this type have
         // the same size on the stack
-        let type_stack_size = self.stack_size();
-        let this_expressions_stack_size = constructor.signature.input_arguments_stack_size();
-        let padding_needed: usize = type_stack_size - this_expressions_stack_size - 1;
-        let padding = vec![triton_instr!(push 0); padding_needed];
+        let padding = vec![triton_instr!(push 0); self.padding_size(variant_name)];
         let discriminant = self.variant_discriminant(&variant_name);
         let discriminant = triton_asm!(push { discriminant });
 

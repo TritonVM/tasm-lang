@@ -538,10 +538,9 @@ fn annotate_stmt(
                 panic!("`match` statements are only supported on enum types. For now.");
             };
 
-            // Verify that all arms match variants of enum type
-            // TODO: Add pattern-match binding to vtable scope here when variants are data-carying
             let mut variants_encountered: HashSet<String> = HashSet::default();
             let arm_count = arms.len();
+            let mut contains_wildcard_arm = false;
             for (i, arm) in arms.iter_mut().enumerate() {
                 match &arm.match_condition {
                     ast::MatchCondition::CatchAll => {
@@ -549,6 +548,7 @@ fn annotate_stmt(
                             i == arm_count - 1,
                             "When using wildcard in match statement, wildcard must be used in last match arm. Match expression was for type {}", enum_type.name
                         );
+                        contains_wildcard_arm = true;
                     }
                     ast::MatchCondition::EnumVariant(ast::EnumVariantSelector {
                         enum_name,
@@ -561,6 +561,7 @@ fn annotate_stmt(
                             variant_name,
                             enum_type.name
                         );
+                        // Verify that arms match variant of enum type
                         assert_eq!(
                             &enum_type.name,
                             enum_name,
@@ -592,6 +593,19 @@ fn annotate_stmt(
                     }
                 }
             }
+
+            // Verify that all cases where covered, *or* a wildcard was encountered.
+            assert!(
+                variants_encountered.len() == enum_type.variants.len() || contains_wildcard_arm,
+                "All cases must be covered for match-expression for {}. Missing variants: {}.",
+                enum_type.name,
+                enum_type
+                    .variants
+                    .iter()
+                    .map(|x| &x.0)
+                    .filter(|x| !variants_encountered.contains(*x))
+                    .join(",")
+            );
         }
 
         ast::Stmt::Block(block_stmt) => {

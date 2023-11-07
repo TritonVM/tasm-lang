@@ -545,7 +545,8 @@ impl<'a> CompilerState<'a> {
         assert_eq!(
             old_type.stack_size(),
             new_types.iter().map(|x| x.stack_size()).sum::<usize>(),
-            "splitting values must keep size unchanged."
+            "splitting values must keep size unchanged. New types were:\n{}\n",
+            new_types.iter().join(", ")
         );
 
         let index_removed = self.function_state.vstack.remove_by_id(seek_addr);
@@ -714,7 +715,6 @@ impl<'a> CompilerState<'a> {
     ) -> Vec<LabelledInstruction> {
         // Clear stack, vstack, and var_addr of locally declared values for those that are on top of the stack
         let mut code = vec![];
-        self.show_vstack_values();
         loop {
             let (addr, (dt, spilled)) = self.function_state.vstack.peek().unwrap().to_owned();
             let binding_name = self
@@ -872,8 +872,8 @@ impl<'a> CompilerState<'a> {
     /// Helper function for debugging
     #[allow(dead_code)]
     fn show_vstack_values(&self) {
-        print!("vstack: ");
-        for (addr, (data_type, spilled)) in self.function_state.vstack.inner.iter() {
+        println!("vstack: ");
+        for (addr, (data_type, spilled)) in self.function_state.vstack.inner.iter().rev() {
             let var_names = self
                 .function_state
                 .var_addr
@@ -887,9 +887,11 @@ impl<'a> CompilerState<'a> {
             };
             match spilled {
                 Some(spilled_addr) => {
-                    println!("{addr}: {var_name} <{data_type}> spilled to: {spilled_addr}")
+                    println!(
+                        "{var_name: <10} <{data_type: <10}> -- ({addr: <30}); spilled to: {spilled_addr}"
+                    )
                 }
-                None => println!("{addr}: {var_name} <{data_type}>"),
+                None => println!("{var_name: <10} <{data_type: <10}> -- ({addr: <30})"),
             }
         }
         println!();
@@ -1296,13 +1298,6 @@ fn compile_stmt(
                 "Cannot handle memory-spill of evaluated match expressions. But {match_expr_id} required memory spilling"
             );
 
-            // Pop condition result from vstack as it's not on the stack inside the branches
-            // TODO: Change this when match-conditions can bind variables
-            // TODO: Ensure that the padding is taken into account when handling enum-types
-
-            // let body_codes = arms.iter().map(|x| compile_block_stmt(&x.body, state));
-            // let arm_subroutine_names = (0..arms.len()).map(|i| format!("{match_addr}_body_{i}"));
-
             let mut match_code = triton_asm!({ &match_expr_evaluation });
             let contains_wildcard = arms
                 .iter()
@@ -1314,9 +1309,10 @@ fn compile_stmt(
             }
 
             let match_expression_enum_type = match_expression.get_type().as_enum_type();
-            for (arm_counter, arm) in arms.iter().enumerate() {
-                println!("arm_counter: {arm_counter}"); // TODO: REMOVE
 
+            let outer_vstack = state.function_state.vstack.clone();
+            let outer_bindings = state.function_state.var_addr.clone();
+            for (arm_counter, arm) in arms.iter().enumerate() {
                 // At start of each loop-iternation, stack is:
                 // stack: _ [expression_variant_data] expression_variant_discriminant <no_arm_taken>
 
@@ -1329,7 +1325,10 @@ fn compile_stmt(
                             .variant_discriminant(&enum_variant.variant_name);
                         match_code.append(&mut triton_asm!(
                             dup {contains_wildcard as u32}
+                            // _ match_expr <no_arm_taken> match_expr_discriminant
                             push {arm_variant_discriminant}
+                            // _ match_expr <no_arm_taken> match_expr_discriminant needle_discriminant
+
                             eq
                             skiz
                             call {arm_subroutine_label}
@@ -1346,56 +1345,35 @@ fn compile_stmt(
                             triton_asm!()
                         };
 
-                        let enum_data_type = match_expression_enum_type
-                            .variant_data_type(&enum_variant.variant_name);
+                        // Split compiler's view of evaluated expression from
+                        // _ [enum_value]
+                        // into
+                        // _ [enum_data] [padding] discriminant
                         let new_ids: Vec<ValueIdentifier> = state.split_value(
                             &match_expr_id,
-                            vec![enum_data_type, ast_types::DataType::BFE],
+                            match_expression_enum_type
+                                .decompose_variant(&enum_variant.variant_name)
+                                .to_vec(),
                         );
-
-                        // Remove discriminant from `vstack`
-                        let discriminant_removed = state.function_state.vstack.pop();
-                        assert_eq!(new_ids[1], discriminant_removed.unwrap().0);
 
                         // Insert binding from pattern-match into stack view for arm-body
                         enum_variant.new_binding_name.as_ref().map(|x| {
                             state
                                 .function_state
                                 .var_addr
-                                .insert(x.to_owned(), new_ids[0].clone())
+                                .insert(x.to_owned(), new_ids[1].clone())
                         });
 
-                        // Problem: We are not restoring the stack view for the next iteration of this loop
-
                         let body_code = compile_block_stmt(&arm.body, state);
+
+                        // This arm-body changes the `arm_taken` bool but otherwise leaves the stack unchanged
                         let subroutine_code = triton_asm!(
                             {arm_subroutine_label}:
                                 {&remove_old_any_arm_taken_indicator}
-                                // stack: _ [expression_variant_data] expression_variant_discriminant
-
-                                pop
-                                // stack: _ [expression_variant_data]
-
-                                // Do we want to pop the discriminant here? If we did, we would have to also
-                                // change the type of the top element on the stack.
-                                // If we pop the discriminant, we need another way to ensure that no later
-                                // arms are taken. So we would have to always set the arm-indicator, I guess.
-                                // What if we *don't* pop the discriminant? Then we would have to change the
-                                // type information about what's on the stack to: _ [binding] discriminant.
-                                // But don't we just want the binding on top of the stack when the body starts
-                                // executing? That seems efficient to me.
-                                // What if we *didn't* store the discriminant on top, but below?
-
-                                // We know that the evaluated expression is *not* spilled to memory.
-                                // So it should be sufficient to just pop the discriminator from the value,
-                                // and then you have the binding on top of the stack.
-
-                                // Do we maybe need a way to change the view of the `vstack`? Such that
-                                // we can see that we have discriminator on top and
-
-                                // We could ensure that the arms where sorted according to discriminants.
+                                // stack: _ [expression_variant_data] [padding] expression_variant_discriminant
 
                                 {&body_code}
+
                                 {&set_new_no_arm_taken_indicator}
                                 return
                         );
@@ -1427,6 +1405,11 @@ fn compile_stmt(
                         // stack: _  [expression_variant_data] expression_variant_discriminant <no_arm_taken>
                     }
                 }
+
+                // Restore stack view and bindings view for next loop-iteration
+                state
+                    .function_state
+                    .restore_stack_and_bindings(&outer_vstack, &outer_bindings);
             }
 
             // Cleanup stack by removing evaluated expresison and `any_arm_taken_bool` indicator
@@ -1836,10 +1819,11 @@ fn compile_expr(
             // Compile an enum-declaration without associated data
             // Padding is done to ensure that all instances of this enum have
             // the same size on the stack.
-            let this_expression_stack_size = 1;
-            let enum_stack_size = enum_decl.enum_type.as_enum_type().stack_size();
-            let padding_needed: usize = enum_stack_size - this_expression_stack_size;
-            let padding = vec![triton_instr!(push 0); padding_needed];
+            let padding = enum_decl
+                .get_type()
+                .as_enum_type()
+                .padding_size(&enum_decl.variant_name);
+            let padding = vec![triton_instr!(push 0); padding];
             let discriminant = enum_decl
                 .enum_type
                 .as_enum_type()
