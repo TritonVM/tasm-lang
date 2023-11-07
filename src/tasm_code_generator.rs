@@ -537,11 +537,11 @@ impl<'a> CompilerState<'a> {
     /// `(XFE, BField)` -> `XFE, BFE`. `new_types` must be provided such that its last
     /// element will be closest to the top of the stack. New value IDs are returned in the same
     /// order.
-    pub(crate) fn split_value<const N: usize>(
+    pub(crate) fn split_value(
         &mut self,
         seek_addr: &ValueIdentifier,
-        new_types: [ast_types::DataType; N],
-    ) -> [ValueIdentifier; N] {
+        new_types: Vec<ast_types::DataType>,
+    ) -> Vec<ValueIdentifier> {
         let (_, old_type, spilled) = self.function_state.vstack.find_stack_value(seek_addr);
         assert_eq!(
             old_type.stack_size(),
@@ -567,7 +567,7 @@ impl<'a> CompilerState<'a> {
             size_acc += new_type.stack_size();
         }
 
-        new_labels.try_into().unwrap()
+        new_labels
     }
 
     fn get_binding_name(&self, value_identifier: &ValueIdentifier) -> String {
@@ -1350,19 +1350,22 @@ fn compile_stmt(
                         // _ [enum_value]
                         // into
                         // _ [enum_data] [padding] discriminant
-                        let [_padding_id, data_id, _discriminant_id] = state.split_value(
+                        let new_ids = state.split_value(
                             &match_expr_id,
                             match_expression_enum_type
                                 .decompose_variant(&enum_variant.variant_name),
                         );
-
-                        // Insert binding from pattern-match into stack view for arm-body
-                        enum_variant.data_binding.as_ref().map(|x| {
-                            state
-                                .function_state
-                                .var_addr
-                                .insert(x.name.to_owned(), data_id)
-                        });
+                        // Insert bindings from pattern-match into stack view for arm-body
+                        enum_variant
+                            .data_bindings
+                            .iter()
+                            .zip(new_ids.iter())
+                            .for_each(|(binding, new_id)| {
+                                state
+                                    .function_state
+                                    .var_addr
+                                    .insert(binding.name.to_owned(), new_id.clone());
+                            });
 
                         let body_code = compile_block_stmt(&arm.body, state);
 
@@ -1532,12 +1535,10 @@ fn compile_fn_call(
                     "Can only call enum-variant constructor on enum type. Problem was with {name}"
                 );
             };
-            call_fn_code.append(
-                &mut enum_type
-                    .variant_constructor(split_name[1], state.custom_types)
-                    .body
-                    .clone(),
-            );
+            let constructor = enum_type
+                .variant_constructor(split_name[1], state.custom_types)
+                .body;
+            call_fn_code.append(&mut constructor.clone());
         } else {
             // Is the function a tuple constuctor? `struct Foo(u32); let a = Foo(200);`
             if let Some(custom_type) = state.custom_types.get(&name) {
@@ -1861,9 +1862,6 @@ fn compile_expr(
                 },
                 ast::UnaryOp::Deref => {
                     if let ast_types::DataType::Boxed(inner_type) = rhs_type {
-                        println!("inner type for deref is: {inner_type}");
-                        println!("result_type is {result_type}");
-                        println!("expression is: {expr}");
                         dereference(&inner_type)
                     } else {
                         panic!("Cannot dereference non-pointers. Type was: {rhs_type}")

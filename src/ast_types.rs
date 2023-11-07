@@ -3,7 +3,7 @@ use itertools::Itertools;
 use std::{collections::HashMap, fmt::Display, str::FromStr};
 use triton_vm::{triton_asm, triton_instr};
 
-use crate::{ast::FnSignature, ast_types, libraries::LibraryFunction};
+use crate::{ast::FnSignature, libraries::LibraryFunction};
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum DataType {
@@ -332,6 +332,13 @@ impl DataType {
             _ => panic!("Expected enum type. Got: {self}"),
         }
     }
+
+    pub fn as_tuple_type(&self) -> Tuple {
+        match self {
+            DataType::Tuple(tuple_type) => tuple_type.to_owned(),
+            _ => panic!("Expected tuple type. Got: {self}"),
+        }
+    }
 }
 
 impl TryFrom<DataType> for tasm_lib::snippet::DataType {
@@ -492,10 +499,10 @@ impl EnumType {
         self.variants.iter().any(|x| x.0 == variant_name)
     }
 
-    pub(crate) fn variant_data_type(&self, variant_name: &str) -> DataType {
+    pub(crate) fn variant_data_type(&self, variant_name: &str) -> Tuple {
         for type_variant in self.variants.iter() {
             if type_variant.0 == variant_name {
-                return type_variant.1.clone();
+                return type_variant.1.clone().as_tuple_type();
             }
         }
 
@@ -536,13 +543,18 @@ impl EnumType {
     }
 
     /// Decompose the type of a variant into its three consituent parts:
-    /// padding, data, discriminant
-    pub fn decompose_variant(&self, variant_name: &str) -> [DataType; 3] {
+    /// data, padding, discriminant. Must match layout defined by constructor
+    /// which is:
+    /// stack: _ [data] [padding] discriminator
+    pub fn decompose_variant(&self, variant_name: &str) -> Vec<DataType> {
         [
-            DataType::Tuple(vec![DataType::BFE; self.padding_size(variant_name)].into()),
-            self.variant_data_type(variant_name),
-            DataType::BFE,
+            self.variant_data_type(variant_name).fields,
+            vec![DataType::Tuple(
+                vec![DataType::BFE; self.padding_size(variant_name)].into(),
+            )],
+            vec![DataType::BFE],
         ]
+        .concat()
     }
 
     /// Return the constructor that is called by an expression evaluating to an
@@ -552,30 +564,26 @@ impl EnumType {
         variant_name: &str,
         custom_types: &HashMap<String, CustomTypeOil>,
     ) -> LibraryFunction {
-        let variant_data_type = self.variant_data_type(variant_name);
+        let data_tuple = self.variant_data_type(variant_name);
         assert!(
-            !variant_data_type.is_unit(),
+            !data_tuple.is_unit(),
             "Variant {variant_name} in enum type {} does not carry data",
             self.name
         );
-        let tuple = if let ast_types::DataType::Tuple(tuple) = variant_data_type {
-            tuple
-        } else {
-            panic!("Variant data must have type of tuple");
-        };
 
         let constructor_name = format!("{}::{variant_name}", self.name);
         let constructor_return_type = DataType::Enum(Box::new(self.to_owned()));
         let mut constructor =
-            tuple.constructor(&constructor_name, constructor_return_type, custom_types);
+            data_tuple.constructor(&constructor_name, constructor_return_type, custom_types);
 
-        // Prepend padding to code, to ensure that all enum values of this type have
-        // the same size on the stack
+        // Append padding code to ensure that all enum variants have the same size
+        // on the stack.
         let padding = vec![triton_instr!(push 0); self.padding_size(variant_name)];
         let discriminant = self.variant_discriminant(&variant_name);
         let discriminant = triton_asm!(push { discriminant });
 
-        constructor.body = [padding, constructor.body, discriminant].concat();
+        constructor.body = [constructor.body, padding, discriminant].concat();
+
         constructor
     }
 }
@@ -760,7 +768,7 @@ impl Tuple {
         self.fields.len()
     }
 
-    pub fn is_empty(&self) -> bool {
+    pub(crate) fn is_unit(&self) -> bool {
         self.fields.is_empty()
     }
 

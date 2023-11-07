@@ -3,6 +3,7 @@ use num::One;
 use std::collections::{HashMap, HashSet};
 use twenty_first::shared_math::b_field_element::BFieldElement;
 use twenty_first::shared_math::x_field_element::XFieldElement;
+use twenty_first::utils::has_unique_elements;
 
 use crate::tasm_code_generator::SIZE_OF_ACCESSIBLE_STACK;
 use crate::{ast, ast_types, libraries};
@@ -454,7 +455,7 @@ fn annotate_stmt(
             let callees_fn_signature =
                 get_fn_signature(name, state, type_parameter, args, env_fn_signature);
             assert!(
-                is_void_type(&callees_fn_signature.output),
+                callees_fn_signature.output.is_unit(),
                 "Function call '{name}' at statement-level must return the unit type."
             );
 
@@ -480,7 +481,7 @@ fn annotate_stmt(
                 env_fn_signature,
             );
             assert!(
-                is_void_type(&callees_method_signature.output),
+                callees_method_signature.output.is_unit(),
                 "Method call {receiver_type}.'{method_name}' at statement-level must return the unit type."
             );
 
@@ -553,7 +554,7 @@ fn annotate_stmt(
                     ast::MatchCondition::EnumVariant(ast::EnumVariantSelector {
                         enum_name,
                         variant_name,
-                        data_binding,
+                        data_bindings,
                     }) => {
                         assert!(
                             variants_encountered.insert(variant_name.clone()),
@@ -566,29 +567,28 @@ fn annotate_stmt(
                             &enum_type.name,
                             enum_name,
                             "Match conditions on type {} must all be of same type. Got bad type: {enum_name}", enum_type.name);
+                        let variant_data_tuple = enum_type.variant_data_type(variant_name);
+                        assert_eq!(variant_data_tuple.len(), data_bindings.len(), "Number of bindings must match number of elements in variant data tuple");
                         assert!(
-                            data_binding.is_none()
-                                || !enum_type.variant_data_type(variant_name).is_unit(),
-                            "A match-arm binding can only be made for an enum variant that carries data"
+                            has_unique_elements(data_bindings.iter().map(|x| &x.name)),
+                            "Name repetition in pattern matching not allowed"
                         );
 
-                        data_binding.as_ref().map(|x| {
-                            let new_binding_type = enum_type
-                                .variant_data_type(variant_name)
-                                .get_tuple_elements()
-                                .fields[0]
-                                .to_owned();
+                        data_bindings.iter().enumerate().for_each(|(i, x)| {
+                            let new_binding_type = variant_data_tuple.fields[i].to_owned();
 
                             state.vtable.insert(
                                 x.name.to_owned(),
                                 DataTypeAndMutability::new(&new_binding_type, x.mutable),
-                            )
+                            );
                         });
 
                         annotate_block_stmt(&mut arm.body, env_fn_signature, state);
 
-                        // Remove binding set in match-arm after body's type check
-                        data_binding.as_ref().map(|x| state.vtable.remove(&x.name));
+                        // Remove bindings set in match-arm after body's type check
+                        data_bindings.iter().for_each(|x| {
+                            state.vtable.remove(&x.name);
+                        });
                     }
                 }
             }
@@ -1097,7 +1097,7 @@ fn derive_annotate_expr_type(
             let callees_fn_signature =
                 get_fn_signature(name, state, type_parameter, args, env_fn_signature);
             assert!(
-                !is_void_type(&callees_fn_signature.output),
+                !callees_fn_signature.output.is_unit(),
                 "Function calls in expressions cannot return the unit type"
             );
 
@@ -1118,7 +1118,7 @@ fn derive_annotate_expr_type(
             let callees_method_signature: ast::FnSignature =
                 get_method_signature(method_name, state, receiver_type, args, env_fn_signature);
             assert!(
-                !is_void_type(&callees_method_signature.output),
+                !callees_method_signature.output.is_unit(),
                 "Method calls in expressions cannot return the unit type"
             );
 
@@ -1613,12 +1613,4 @@ pub fn is_u32_based_type(data_type: &ast_types::DataType) -> bool {
 pub fn is_primitive_type(data_type: &ast_types::DataType) -> bool {
     use ast_types::DataType::*;
     matches!(data_type, Bool | U32 | U64 | U128 | BFE | XFE | Digest)
-}
-
-pub fn is_void_type(data_type: &ast_types::DataType) -> bool {
-    if let ast_types::DataType::Tuple(tys) = data_type {
-        tys.is_empty()
-    } else {
-        false
-    }
 }

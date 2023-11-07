@@ -1274,7 +1274,7 @@ impl<'a> Graft<'a> {
                                 ast::MatchCondition::EnumVariant(ast::EnumVariantSelector {
                                     enum_name: enum_case_split[0].to_owned(),
                                     variant_name: enum_case_split[1].to_owned(),
-                                    data_binding: None,
+                                    data_bindings: Vec::default(),
                                 })
                             }
                             syn::Pat::Range(_) => todo!(),
@@ -1295,26 +1295,25 @@ impl<'a> Graft<'a> {
                                     "Expected <Type>::<VariantName> for enum match case"
                                 );
 
-                                // Verify that only *one* binding is made
-                                assert!(
-                                    pat.elems.len().is_one(),
-                                    "Can only handle one binding in match-arm"
-                                );
-
-                                let (new_binding_name, mutable) = match &pat.elems[0] {
-                                    syn::Pat::Ident(ident) => {
-                                        (ident.ident.to_string(), ident.mutability.is_some())
+                                let mut data_bindings = vec![];
+                                for pat_elem in pat.elems.iter() {
+                                    match pat_elem {
+                                        syn::Pat::Ident(ident) => {
+                                            data_bindings.push(ast::PatternMatchedBinding {
+                                                mutable: ident.mutability.is_some(),
+                                                name: ident.ident.to_string(),
+                                            });
+                                        }
+                                        other => {
+                                            panic!("unsupported binding for match-arm: {other:?}")
+                                        }
                                     }
-                                    other => panic!("unsupported: {other:?}"),
-                                };
+                                }
 
                                 ast::MatchCondition::EnumVariant(ast::EnumVariantSelector {
                                     enum_name: enum_case_split[0].to_owned(),
                                     variant_name: enum_case_split[1].to_owned(),
-                                    data_binding: Some(ast::PatternMatchedBinding {
-                                        mutable: mutable,
-                                        name: new_binding_name,
-                                    }),
+                                    data_bindings,
                                 })
                             }
                             syn::Pat::Type(_) => todo!(),

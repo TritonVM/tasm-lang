@@ -23,8 +23,12 @@ fn main() {
     // returns nothing.
     fn inspect(event: WebEvent) {
         match event {
-            WebEvent::PageLoad => tasm::tasm_io_write_to_stdout___u32(0),
-            WebEvent::PageUnload => tasm::tasm_io_write_to_stdout___u32(1),
+            WebEvent::PageLoad => {
+                tasm::tasm_io_write_to_stdout___u32(0);
+            }
+            WebEvent::PageUnload => {
+                tasm::tasm_io_write_to_stdout___u32(1);
+            }
             // Destructure `c` from inside the `enum` variant.
             WebEvent::KeyPress(c) => {
                 tasm::tasm_io_write_to_stdout___u32(2);
@@ -40,17 +44,16 @@ fn main() {
                 tasm::tasm_io_write_to_stdout___u64(x);
                 tasm::tasm_io_write_to_stdout___u64(y);
             }
-        }
+        };
 
         return;
     }
 
-    let pressed = WebEvent::KeyPress(120);
-    // `to_owned()` creates an owned `String` from a string slice.
-    let pasted = WebEvent::Paste(1u128 << 99);
-    let click = WebEvent::Click(20, 80);
-    let load = WebEvent::PageLoad;
-    let unload = WebEvent::PageUnload;
+    let pressed: WebEvent = WebEvent::KeyPress(120);
+    let pasted: WebEvent = WebEvent::Paste(1u128 << 99);
+    let click: WebEvent = WebEvent::Click(20, 80);
+    let load: WebEvent = WebEvent::PageLoad;
+    let unload: WebEvent = WebEvent::PageUnload;
 
     inspect(load);
     inspect(unload);
@@ -113,7 +116,7 @@ mod tests {
         // assert_eq!(expected_output, vm_output.output);
         if expected_output != vm_output.output {
             panic!(
-                "expected_output:\n {}, got:\n{}. Code was:\n{}",
+                "expected_output:\n{}\ngot:\n{}. Code was:\n{}",
                 expected_output.iter().join(", "),
                 vm_output.output.iter().join(", "),
                 test_program.iter().join("\n")
