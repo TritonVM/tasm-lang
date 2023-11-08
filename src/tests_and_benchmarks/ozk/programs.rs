@@ -1,4 +1,5 @@
 mod arithmetic;
+mod arrays;
 mod boxed;
 mod enums;
 mod other;

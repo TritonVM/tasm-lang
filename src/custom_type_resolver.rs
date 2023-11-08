@@ -45,6 +45,11 @@ impl Expr<Typing> {
             Expr::Tuple(exprs) => exprs
                 .iter_mut()
                 .for_each(|x| x.resolve_custom_types(declared_structs)),
+            Expr::Array(array_expr, _) => match array_expr {
+                ArrayExpression::ElementsSpecified(elements_exprs) => elements_exprs
+                    .iter_mut()
+                    .for_each(|x| x.resolve_custom_types(declared_structs)),
+            },
             Expr::FnCall(FnCall {
                 name: _,
                 args,
@@ -93,6 +98,18 @@ impl Expr<Typing> {
     }
 }
 
+impl IndexExpr<Typing> {
+    fn resolve_custom_types(
+        &mut self,
+        declared_structs: &HashMap<String, ast_types::CustomTypeOil>,
+    ) {
+        match self {
+            IndexExpr::Dynamic(index_expr) => index_expr.resolve_custom_types(declared_structs),
+            IndexExpr::Static(_) => (),
+        }
+    }
+}
+
 impl Identifier<Typing> {
     fn resolve_custom_types(
         &mut self,
@@ -100,7 +117,7 @@ impl Identifier<Typing> {
     ) {
         match self {
             Identifier::String(_, _) => (),
-            Identifier::ListIndex(inner_id, index_expr, _) => {
+            Identifier::Index(inner_id, index_expr, _) => {
                 inner_id.resolve_custom_types(declared_structs);
                 index_expr.resolve_custom_types(declared_structs);
             }

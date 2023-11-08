@@ -296,6 +296,64 @@ mod compile_and_typecheck_tests {
         }
 
         #[test]
+        fn build_and_read_vector_in_while_loop_test() {
+            let mut vm_memory = HashMap::default();
+            let exec_result = execute_with_stack_memory_and_ins_safe_lists(
+                &build_and_read_u32_vector_in_while_loop_rast(),
+                vec![],
+                &mut vm_memory,
+                vec![],
+                NonDeterminism::new(vec![]),
+                1,
+            )
+            .unwrap();
+
+            // Verify that expected lists were built
+            let mut final_stack = exec_result.final_stack.clone();
+            let b_10 = final_stack.pop().unwrap();
+            assert_eq!(405, b_10.value());
+
+            let list_pointer_b = final_stack.pop().unwrap();
+            let expected_list_b = (400..416).map(u32_lit).rev().collect_vec();
+            assert_list_equal(expected_list_b, list_pointer_b, &vm_memory);
+
+            let list_pointer_a = final_stack.pop().unwrap();
+            let expected_list_a = (0..16).map(u32_lit).collect_vec();
+            assert_list_equal(expected_list_a, list_pointer_a, &vm_memory);
+
+            fn build_and_read_u32_vector_in_while_loop_rast() -> syn::ItemFn {
+                item_fn(parse_quote! {
+                    fn manage_vector() -> (Vec<u32>, Vec<u32>, u32) {
+                        let mut a: Vec<u32> = Vec::<u32>::with_capacity(16);
+
+                        let mut i: usize = 0;
+                        while i < 16usize {
+                            a.push(i);
+                            i = i + 1;
+                        }
+
+                        // Declare b vector
+                        i = 0;
+                        let mut b: Vec<u32> = Vec::<u32>::with_capacity(32);
+                        while i < 16 {
+                            b.push(0u32);
+                            i += 1;
+                        }
+
+                        // Construct b vector
+                        i = 0;
+                        while i < 16 {
+                            b[i] = a[15 - i] + 400;
+                            i += 1;
+                        }
+
+                        return (a, b, b[10]);
+                    }
+                })
+            }
+        }
+
+        #[test]
         fn build_vector_in_while_loop_test() {
             let mut vm_memory = HashMap::default();
             let mut exec_result = execute_with_stack_memory_and_ins_safe_lists(

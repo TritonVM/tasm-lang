@@ -468,6 +468,29 @@ impl<'a> Graft<'a> {
                 }
                 _ => todo!(),
             },
+            syn::Type::Array(syn::TypeArray {
+                bracket_token: _,
+                elem,
+                semi_token: _,
+                len,
+            }) => {
+                let element_type = self.syn_type_to_ast_type(elem);
+                let length = if let syn::Expr::Lit(expr_lit) = len {
+                    let grafted_lit = self.graft_lit(&expr_lit.lit);
+                    match grafted_lit {
+                        ast::ExprLit::U32(length) => length,
+                        ast::ExprLit::GenericNum(length, _) => length as u32,
+                        other => panic!("Bad type for length indication of array. Got {other:#?}"),
+                    }
+                } else {
+                    panic!("Bad type for length indication of array. Got {len:#?}");
+                };
+
+                ast_types::DataType::Array(ast_types::ArrayType {
+                    element_type: Box::new(element_type),
+                    length: length.try_into().unwrap(),
+                })
+            }
             other_type => panic!("Unsupported {other_type:#?}"),
         }
     }
@@ -883,9 +906,17 @@ impl<'a> Graft<'a> {
             syn::Expr::Index(index_expr) => {
                 let expr = self.graft_expr(&index_expr.expr);
                 let index = self.graft_expr(&index_expr.index);
+                let index = match index {
+                    ast::Expr::Lit(lit) => ast::IndexExpr::Static(match lit {
+                        ast::ExprLit::GenericNum(val, _) => val.try_into().unwrap(),
+                        ast::ExprLit::U32(val) => val.try_into().unwrap(),
+                        _ => unreachable!(),
+                    }),
+                    expr => ast::IndexExpr::Dynamic(expr),
+                };
 
                 if let ast::Expr::Var(identifier) = expr {
-                    ast::Expr::Var(ast::Identifier::ListIndex(
+                    ast::Expr::Var(ast::Identifier::Index(
                         Box::new(identifier),
                         Box::new(index),
                         Default::default(),
@@ -945,6 +976,17 @@ impl<'a> Graft<'a> {
 
                 let stmts = stmts.iter().map(|x| self.graft_stmt(x)).collect();
                 ast::Expr::ReturningBlock(Box::new(ast::ReturningBlock { stmts, return_expr }))
+            }
+            syn::Expr::Array(syn::ExprArray {
+                attrs: _,
+                bracket_token: _,
+                elems,
+            }) => {
+                let elements = elems.iter().map(|x| self.graft_expr(x));
+                ast::Expr::Array(
+                    ast::ArrayExpression::ElementsSpecified(elements.collect_vec()),
+                    Default::default(),
+                )
             }
             other => panic!("unsupported: {other:?}"),
         }

@@ -58,6 +58,7 @@ impl<T: GetType + std::fmt::Debug> GetType for ast::Expr<T> {
         match self {
             ast::Expr::Lit(lit) => lit.get_type(),
             ast::Expr::Var(id) => id.get_type(),
+            ast::Expr::Array(_, t) => t.get_type(),
             ast::Expr::Tuple(t_list) => ast_types::DataType::Tuple(
                 t_list
                     .iter()
@@ -106,7 +107,7 @@ impl<T: GetType> GetType for ast::Identifier<T> {
     fn get_type(&self) -> ast_types::DataType {
         match self {
             ast::Identifier::String(_, t) => t.get_type(),
-            ast::Identifier::ListIndex(_, _, t) => t.get_type(),
+            ast::Identifier::Index(_, _, t) => t.get_type(),
             ast::Identifier::Field(_, _, t) => t.get_type(),
         }
     }
@@ -684,35 +685,58 @@ pub fn annotate_identifier_type(
         },
 
         // x[e]
-        ast::Identifier::ListIndex(list_identifier, index_expr, known_type) => {
+        ast::Identifier::Index(list_identifier, index_expr, known_type) => {
             let index_hint = ast_types::DataType::U32;
-            let index_type =
-                derive_annotate_expr_type(index_expr, Some(&index_hint), state, fn_signature);
+            let index_type = match index_expr.as_mut() {
+                ast::IndexExpr::Dynamic(index_expr) => {
+                    derive_annotate_expr_type(index_expr, Some(&index_hint), state, fn_signature)
+                }
+                ast::IndexExpr::Static(_) => ast_types::DataType::U32,
+            };
             if !is_index_type(&index_type) {
                 panic!("Cannot index list with type '{index_type}'");
             }
 
-            // Only `a: Vec<T>` can be indexed, so if type is e.g. `MemPointer(Vec<T>)`, then the
+            // Only `Vec<T>` and `[T; n]` can be indexed, so if type is e.g. `MemPointer(Vec<T>)`, then the
             // type of `a` need to be forced to `Vec<T>`.
             // TODO: It's possible that the type of `list_identifier` needs to be forced to. But to
             // do that, this function probably needs the expression, and not just the identifier.
             let (maybe_list_type, mutable) =
                 annotate_identifier_type(list_identifier, state, fn_signature);
-            let mut forced_list_type = maybe_list_type.clone();
+            let mut forced_sequence_type = maybe_list_type.clone();
             let element_type = loop {
-                if let ast_types::DataType::List(elem_ty, _) = &forced_list_type {
+                if let ast_types::DataType::List(elem_ty, _) = &forced_sequence_type {
                     break elem_ty;
-                } else if let ast_types::DataType::Reference(inner_type) = forced_list_type {
-                    forced_list_type = *inner_type.to_owned();
-                } else if let ast_types::DataType::Boxed(inner_type) = forced_list_type {
-                    forced_list_type = *inner_type.to_owned();
+                } else if let ast_types::DataType::Array(array_type) = &forced_sequence_type {
+                    // If iterator type is array and *not* boxed, then index *must* be statically
+                    // known. Also ensure that this value is not out-of-bounds.
+                    let statically_known_index = match index_expr.as_ref() {
+                        ast::IndexExpr::Dynamic(index_expr) => {
+                            assert!(maybe_list_type.is_boxed(), "Array must be boxed for dynamically indices to work. Index expr was: {index_expr}");
+                            None
+                        }
+                        ast::IndexExpr::Static(index) => Some(index),
+                    };
+                    statically_known_index.map(|x| {
+                        assert!(
+                            *x < array_type.length,
+                            "Index for array out-of-range. Index was {x}, length is {}",
+                            array_type.length
+                        )
+                    });
+
+                    break &array_type.element_type;
+                } else if let ast_types::DataType::Reference(inner_type) = forced_sequence_type {
+                    forced_sequence_type = *inner_type.to_owned();
+                } else if let ast_types::DataType::Boxed(inner_type) = forced_sequence_type {
+                    forced_sequence_type = *inner_type.to_owned();
                 } else {
                     panic!("Cannot index into {list_identifier} of type {maybe_list_type}");
                 }
             };
 
             // If list_identifier is a MemPointer, and the element type is not copyable,
-            // then the element type statys a MemPointer.
+            // then the element type stays a MemPointer.
             let element_type = if let ast_types::DataType::Boxed(_) = maybe_list_type {
                 if element_type.is_copy() {
                     *element_type.to_owned()
@@ -723,7 +747,7 @@ pub fn annotate_identifier_type(
                 *element_type.to_owned()
             };
 
-            list_identifier.force_type(&forced_list_type);
+            list_identifier.force_type(&forced_sequence_type);
             *known_type = Typing::KnownType(element_type.clone());
 
             (element_type, mutable)
@@ -1003,6 +1027,34 @@ fn derive_annotate_expr_type(
                 .map(|expr| derive_annotate_expr_type(expr, no_hint, state, env_fn_signature))
                 .collect();
             ast_types::DataType::Tuple(tuple_types.into())
+        }
+
+        ast::Expr::Array(array_expr, array_type) => {
+            let mut hint = None;
+            let length = match array_expr {
+                ast::ArrayExpression::ElementsSpecified(elem_expressions) => {
+                    for element_expression in elem_expressions.iter_mut() {
+                        let expr_type = derive_annotate_expr_type(
+                            element_expression,
+                            hint.as_ref(),
+                            state,
+                            env_fn_signature,
+                        );
+                        assert!(Some(expr_type.to_owned()) == hint || hint.is_none(), "All expressions in array declaration must evaluate to the same type. Got {} and {}.", hint.unwrap(), expr_type);
+                        hint = Some(expr_type);
+                    }
+
+                    elem_expressions.len()
+                }
+            };
+            let derived_type = ast_types::DataType::Array(ast_types::ArrayType {
+                element_type: Box::new(
+                    hint.expect("Cannot derive type for empty array").to_owned(),
+                ),
+                length,
+            });
+            *array_type = Typing::KnownType(derived_type.clone());
+            derived_type
         }
 
         ast::Expr::Struct(struct_expr) => {

@@ -16,6 +16,7 @@ pub enum DataType {
     Digest,
     List(Box<DataType>, ListType),
     Tuple(Tuple),
+    Array(ArrayType),
     Struct(StructType),
     Enum(Box<EnumType>),
     VoidPointer,
@@ -82,6 +83,14 @@ impl DataType {
             DataType::XFE => true,
             DataType::Digest => true,
             DataType::Tuple(_) => true,
+            DataType::Array(array_type) => {
+                let ArrayType {
+                    element_type,
+                    length: _,
+                } = &array_type;
+
+                element_type.is_copy()
+            }
             DataType::List(_, _) => false,
             DataType::VoidPointer => false,
             DataType::Function(_) => false,
@@ -105,6 +114,11 @@ impl DataType {
             XFE => "XField".to_string(),
             Digest => "Digest".to_string(),
             List(ty, _list_type) => format!("Vec_R{}_L", ty.label_friendly_name()),
+            Array(_array_type) => format!(
+                "array{}_of_R{}_L",
+                _array_type.length,
+                _array_type.element_type.label_friendly_name()
+            ),
             Tuple(tys) => format!(
                 "tuple_L_{}_R",
                 tys.into_iter().map(|x| x.label_friendly_name()).join("_")
@@ -229,6 +243,9 @@ impl DataType {
             DataType::BFE => Some(1),
             DataType::XFE => Some(3),
             DataType::Digest => Some(5),
+            DataType::Array(array_type) => {
+                Some(array_type.element_type.bfield_codec_length()? * array_type.length)
+            }
             DataType::Tuple(inner_types) => inner_types
                 .into_iter()
                 .map(|x| x.bfield_codec_length())
@@ -293,6 +310,7 @@ impl DataType {
             Self::XFE => 3,
             Self::Digest => 5,
             Self::List(_list_type, _) => 1,
+            Self::Array(array_type) => array_type.stack_size(),
             Self::Tuple(tuple_type) => tuple_type.stack_size(),
             Self::VoidPointer => 1,
             Self::Function(_) => todo!(),
@@ -323,6 +341,14 @@ impl DataType {
             //         1
             //     }
             // }
+        }
+    }
+
+    pub fn is_boxed(&self) -> bool {
+        match self {
+            DataType::Boxed(_) => true,
+            DataType::Reference(inner) => inner.is_boxed(),
+            _ => false,
         }
     }
 
@@ -363,6 +389,9 @@ impl TryFrom<DataType> for tasm_lib::snippet::DataType {
                 };
                 Ok(tasm_lib::snippet::DataType::List(Box::new(element_type)))
             }
+            DataType::Array(_array_type) => {
+                return Err("Array types not yet supported by tasm-lib".to_owned())
+            }
             DataType::Tuple(tuple_elements) => {
                 let tuple_elements = tuple_elements
                     .into_iter()
@@ -374,7 +403,11 @@ impl TryFrom<DataType> for tasm_lib::snippet::DataType {
             DataType::Function(_) => todo!(),
             DataType::Struct(_) => todo!(),
             DataType::Enum(_) => todo!(),
-            DataType::Unresolved(name) => panic!("cannot convert unresolved type {name}"),
+            DataType::Unresolved(name) => {
+                return Err(format!(
+                    "Cannot convert unresolved type {name} to tasm-lib type"
+                ))
+            }
             DataType::Boxed(value) => match *value {
                 // A Boxed list is just a list
                 // TODO: Default to `Unsafe` list here??
@@ -419,6 +452,7 @@ impl Display for DataType {
             XFE => "XField".to_string(),
             Digest => "Digest".to_string(),
             List(ty, _list_type) => format!("Vec<{ty}>"),
+            Array(array_type) => format!("[{}; {}]", array_type.element_type, array_type.length),
             Tuple(tys) => format!("({})", tys.into_iter().join(", ")),
             VoidPointer => "void pointer".to_string(),
             Function(fn_type) => {
@@ -713,6 +747,18 @@ impl StructType {
 impl Display for StructType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.name)
+    }
+}
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub struct ArrayType {
+    pub element_type: Box<DataType>,
+    pub length: usize,
+}
+
+impl ArrayType {
+    fn stack_size(&self) -> usize {
+        self.element_type.stack_size() * self.length
     }
 }
 

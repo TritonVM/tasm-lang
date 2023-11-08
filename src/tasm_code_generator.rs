@@ -21,6 +21,7 @@ use self::function_state::{FunctionState, VarAddr};
 use self::inner_function_tasm_code::InnerFunctionTasmCode;
 use self::outer_function_tasm_code::OuterFunctionTasmCode;
 use self::stack::VStack;
+use crate::ast::Identifier;
 use crate::ast_types::{self, CustomTypeOil, StructVariant};
 use crate::libraries::{self};
 use crate::subroutine::SubRoutine;
@@ -101,6 +102,7 @@ pub struct CompilerState<'a> {
     associated_functions: &'a HashMap<String, HashMap<String, ast::Fn<type_checker::Typing>>>,
 }
 
+// TODO: move CompilerState and all methods to a new file!
 impl<'a> CompilerState<'a> {
     /// Import a dependency in an idempotent manner, ensuring it's only ever imported once
     pub(crate) fn add_library_function(&mut self, subroutine: SubRoutine) {
@@ -198,7 +200,8 @@ impl<'a> CompilerState<'a> {
         &mut self,
         identifier: &ast::Identifier<type_checker::Typing>,
     ) -> ValueLocation {
-        fn get_lhs_address_code(
+        /// Return the code to put the pointer on top of the stack
+        fn get_value_pointer(
             state: &mut CompilerState,
             lhs_location: &ValueLocation,
             field_or_element_type: &ast_types::DataType,
@@ -250,105 +253,161 @@ impl<'a> CompilerState<'a> {
                     None => ValueLocation::OpStack(position),
                 }
             }
-            ast::Identifier::ListIndex(ident, index_expr, element_type) => {
-                let element_type = element_type.get_type();
-                let lhs_location = self.locate_identifier(ident);
-                let ident_addr_code =
-                    get_lhs_address_code(self, &lhs_location, &element_type, ident);
-                // stack: _ *list
-
-                let lhs_type = ident.get_type();
-                let list_type = if let ast_types::DataType::List(_, lity) = lhs_type {
-                    lity
-                } else {
-                    panic!("Expected type was list. Got {lhs_type}.")
+            ast::Identifier::Index(ident, index_expr, element_type) => {
+                match ident.get_type() {
+                    ast_types::DataType::List(_, _) => {
+                        return get_value_location_list_element(
+                            self,
+                            &ident,
+                            &index_expr,
+                            element_type,
+                        );
+                    }
+                    ast_types::DataType::Array(_) => {
+                        return get_value_location_array_element(
+                            self,
+                            &ident,
+                            &index_expr,
+                            element_type,
+                        );
+                    }
+                    _ => unreachable!(),
                 };
 
-                self.new_value_identifier("list_expression", &ident.get_type());
-                let (_index_expr, index_code) = compile_expr(index_expr, "index_on_assign", self);
-                // stack: _ *list index
+                fn get_value_location_array_element(
+                    state: &mut CompilerState,
+                    ident: &Identifier<type_checker::Typing>,
+                    index_expr: &ast::IndexExpr<type_checker::Typing>,
+                    element_type: &type_checker::Typing,
+                ) -> ValueLocation {
+                    let element_type = element_type.get_type();
+                    let lhs_location = state.locate_identifier(ident);
+                    let lhs_type = ident.get_type();
 
-                let list_metadata_size = list_type.metadata_size();
-                let element_address = match element_type.bfield_codec_length() {
-                    Some(static_element_size) => {
-                        let relative_address = triton_asm!(
-                            {&index_code}
-                            push {static_element_size}
-                            mul
-                            push {list_metadata_size}
-                            add
-                        );
-                        triton_asm!(
-                            {&ident_addr_code}
-                            {&relative_address}
-                            add
-                        )
+                    match lhs_location {
+                        ValueLocation::OpStack(n) => match index_expr {
+                            ast::IndexExpr::Dynamic(_) => {
+                                unreachable!("The type-checker should have disallowed this!")
+                            }
+                            ast::IndexExpr::Static(index) => {
+                                let depth =
+                                    lhs_type.stack_size() - index * element_type.stack_size() - 1;
+                                ValueLocation::OpStack(n + depth)
+                            }
+                        },
+                        _ => todo!("lhs_location for array was: {lhs_location:?}"),
                     }
-                    // We need a while loop here, and we need a unique identifier for that
-                    None => {
-                        // Notice that the following subroutine is always the same, so
-                        // we only need to import it once, no matter if we index into
-                        // different lists with dynamically sized elements in the same
-                        // program.
-                        let loop_label = "tasm_langs_dynamic_list_element_finder".to_owned();
+                }
 
-                        let loop_subroutine = triton_asm!(
-                            {&loop_label}:
-                                // _ *vec<T>[n]_size index
-                                dup 0
-                                push 0
-                                eq
-                                skiz
-                                    return
-                                // _ *vec<T>[n]_size index
+                fn get_value_location_list_element(
+                    state: &mut CompilerState,
+                    ident: &Identifier<type_checker::Typing>,
+                    index_expr: &ast::IndexExpr<type_checker::Typing>,
+                    element_type: &type_checker::Typing,
+                ) -> ValueLocation {
+                    let element_type = element_type.get_type();
+                    let lhs_location = state.locate_identifier(ident);
+                    let ident_addr_code =
+                        get_value_pointer(state, &lhs_location, &element_type, ident);
+                    // stack: _ *list
 
-                                swap 1
-                                read_mem
-                                // _ index *vec<T>[n]_size vec<T>[n]_size
+                    let lhs_type = ident.get_type();
+                    let list_type = if let ast_types::DataType::List(_, lity) = lhs_type {
+                        lity
+                    } else {
+                        panic!("Expected type was list. Got {lhs_type}.")
+                    };
 
-                                push 1 add add
-                                // _ index *vec<T>[n+1]_size
+                    state.new_value_identifier("list_expression", &ident.get_type());
+                    let index_code = match index_expr {
+                        ast::IndexExpr::Dynamic(index_expr) => {
+                            compile_expr(index_expr, "index_on_assign", state).1
+                        }
+                        ast::IndexExpr::Static(index) => {
+                            state.new_value_identifier(
+                                "index_expression",
+                                &ast_types::DataType::U32,
+                            );
+                            triton_asm!(push { index })
+                        }
+                    };
+                    // stack: _ *list index
 
-                                swap 1
-                                // _ *vec<T>[n+1]_size index
-
-                                push -1
+                    let list_metadata_size = list_type.metadata_size();
+                    let element_address = match element_type.bfield_codec_length() {
+                        Some(static_element_size) => {
+                            let relative_address = triton_asm!(
+                                {&index_code}
+                                push {static_element_size}
+                                mul
+                                push {list_metadata_size}
                                 add
-                                recurse
+                            );
+                            triton_asm!(
+                                {&ident_addr_code}
+                                {&relative_address}
+                                add
+                            )
+                        }
+                        // We need a while loop here, and we need a unique identifier for that
+                        None => {
+                            // Notice that the following subroutine is always the same, so
+                            // we only need to import it once, no matter if we index into
+                            // different lists with dynamically sized elements in the same
+                            // program.
+                            let loop_label = "tasm_langs_dynamic_list_element_finder".to_owned();
 
-                        );
-                        let loop_subroutine: SubRoutine = loop_subroutine.try_into().unwrap();
+                            let loop_subroutine = triton_asm!(
+                                {&loop_label}:
+                                    // _ *vec<T>[n]_size index
+                                    dup 0
+                                    push 0
+                                    eq
+                                    skiz
+                                        return
+                                    // _ *vec<T>[n]_size index
 
-                        self.add_library_function(loop_subroutine);
+                                    swap 1
+                                    read_mem
+                                    // _ index *vec<T>[n]_size vec<T>[n]_size
 
-                        triton_asm!(
-                            {&ident_addr_code}
-                            push {list_metadata_size}
-                            add
-                            {&index_code}
-                            call {loop_label}
-                            // _ *vec<T>[index]_size 0
+                                    push 1 add add
+                                    // _ index *vec<T>[n+1]_size
 
-                            pop
-                            push 1 add
-                            // _ *vec<T>[index]
-                        )
-                    }
-                };
+                                    swap 1
+                                    // _ *vec<T>[n+1]_size index
 
-                self.function_state.vstack.pop();
-                self.function_state.vstack.pop();
+                                    push -1
+                                    add
+                                    recurse
 
-                ValueLocation::DynamicMemoryAddress(element_address)
+                            );
+                            let loop_subroutine: SubRoutine = loop_subroutine.try_into().unwrap();
+
+                            state.add_library_function(loop_subroutine);
+
+                            triton_asm!(
+                                {&ident_addr_code}
+                                push {list_metadata_size}
+                                add
+                                {&index_code}
+                                call {loop_label}
+                                // _ *vec<T>[index]_size 0
+
+                                pop
+                                push 1 add
+                                // _ *vec<T>[index]
+                            )
+                        }
+                    };
+
+                    state.function_state.vstack.pop();
+                    state.function_state.vstack.pop();
+
+                    ValueLocation::DynamicMemoryAddress(element_address)
+                }
             }
             ast::Identifier::Field(lhs, field_id, known_type) => {
-                let lhs_location = self.locate_identifier(lhs);
-                let lhs_type = lhs.get_type();
-
-                let get_ident_code =
-                    get_lhs_address_code(self, &lhs_location, &known_type.get_type(), lhs);
-                // stack: _ struct/tuple
-
                 fn handle_tuple(
                     tuple: ast_types::Tuple,
                     field_id: &ast_types::FieldId,
@@ -401,34 +460,39 @@ impl<'a> CompilerState<'a> {
                     }
                 }
 
-                // limited field support for now
+                let lhs_location = self.locate_identifier(lhs);
+                let lhs_type = lhs.get_type();
                 match lhs.get_type() {
-                    ast_types::DataType::Boxed(inner_type) => match *inner_type {
-                        ast_types::DataType::Struct(inner_struct) => {
-                            let get_field_pointer_from_struct_pointer =
-                                inner_struct.get_field_accessor_code_for_reference(field_id);
-                            ValueLocation::DynamicMemoryAddress(triton_asm!(
-                                {&get_ident_code}
-                                {&get_field_pointer_from_struct_pointer}
-                            ))
-                        }
-                        ast_types::DataType::Tuple(tuple) => {
-                            let tuple_index: usize = field_id.try_into().unwrap();
-                            let tuple_depth: usize = tuple
-                                .into_iter()
-                                .enumerate()
-                                .filter(|(i, _x)| *i > tuple_index)
-                                .map(|(_i, x)| x.stack_size())
-                                .sum::<usize>();
+                    ast_types::DataType::Boxed(inner_type) => {
+                        let get_pointer =
+                            get_value_pointer(self, &lhs_location, &known_type.get_type(), lhs);
+                        match *inner_type {
+                            ast_types::DataType::Struct(inner_struct) => {
+                                let get_field_pointer_from_struct_pointer =
+                                    inner_struct.get_field_accessor_code_for_reference(field_id);
+                                ValueLocation::DynamicMemoryAddress(triton_asm!(
+                                    {&get_pointer}
+                                    {&get_field_pointer_from_struct_pointer}
+                                ))
+                            }
+                            ast_types::DataType::Tuple(tuple) => {
+                                let tuple_index: usize = field_id.try_into().unwrap();
+                                let tuple_depth: usize = tuple
+                                    .into_iter()
+                                    .enumerate()
+                                    .filter(|(i, _x)| *i > tuple_index)
+                                    .map(|(_i, x)| x.stack_size())
+                                    .sum::<usize>();
 
-                            ValueLocation::DynamicMemoryAddress(triton_asm!(
-                                {&get_ident_code}
-                                push {tuple_depth}
-                                add
-                            ))
+                                ValueLocation::DynamicMemoryAddress(triton_asm!(
+                                    {&get_pointer}
+                                    push {tuple_depth}
+                                    add
+                                ))
+                            }
+                            _ => todo!("lhs_type: {lhs_type}"),
                         }
-                        _ => todo!("lhs_type: {lhs_type}"),
-                    },
+                    }
                     ast_types::DataType::Tuple(tuple) => {
                         handle_tuple(tuple, field_id, lhs_location)
                     }
@@ -1777,6 +1841,30 @@ fn compile_expr(
             }
         }
 
+        ast::Expr::Array(array_expr, _) => {
+            // Compile elements left-to-right
+            match array_expr {
+                ast::ArrayExpression::ElementsSpecified(element_expressions) => {
+                    let (idents, code): (Vec<ValueIdentifier>, Vec<Vec<LabelledInstruction>>) =
+                        element_expressions
+                            .iter()
+                            .enumerate()
+                            .map(|(arg_pos, arg_expr)| {
+                                let context = format!("_array_{arg_pos}");
+                                compile_expr(arg_expr, &context, state)
+                            })
+                            .unzip();
+
+                    // Combine vstack entries into one array entry
+                    for _ in idents {
+                        state.function_state.vstack.pop();
+                    }
+
+                    code.concat()
+                }
+            }
+        }
+
         ast::Expr::Tuple(exprs) => {
             // Compile arguments left-to-right
             let (idents, code): (Vec<ValueIdentifier>, Vec<Vec<LabelledInstruction>>) = exprs
@@ -2900,6 +2988,7 @@ fn compile_eq_code(
         }
         List(_, _) => todo!(),
         Tuple(_) => todo!(),
+        Array(_) => todo!("Equality for arrays not yet implemented"),
         Function(_) => todo!(),
         Struct(_) => todo!(),
         Boxed(_) => todo!("Comparison of MemPointer not supported yet"),

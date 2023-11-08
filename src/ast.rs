@@ -302,6 +302,7 @@ pub enum Expr<T> {
     EnumDeclaration(EnumDeclaration),
     Var(Identifier<T>),
     Tuple(Vec<Expr<T>>),
+    Array(ArrayExpression<T>, T),
     FnCall(FnCall<T>),
     MethodCall(MethodCall<T>),
     Binop(Box<Expr<T>>, BinOp, Box<Expr<T>>, T),
@@ -314,6 +315,48 @@ pub enum Expr<T> {
     // TODO: VM-specific intrinsics (hash, absorb, squeeze, etc.)
 }
 
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub enum ArrayExpression<T> {
+    ElementsSpecified(Vec<Expr<T>>),
+}
+
+impl<T> Display for ArrayExpression<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let str = match self {
+            ArrayExpression::ElementsSpecified(elements) => {
+                format!("[{}]", elements.iter().join(","))
+            }
+        };
+        write!(f, "{str}")
+    }
+}
+
+impl<T> ArrayExpression<T> {
+    pub fn is_empty(&self) -> bool {
+        match &self {
+            ArrayExpression::ElementsSpecified(elements) => elements.is_empty(),
+        }
+    }
+
+    pub fn len(&self) -> usize {
+        match &self {
+            ArrayExpression::ElementsSpecified(elements) => elements.len(),
+        }
+    }
+
+    fn label_friendly_name(&self) -> String {
+        match &self {
+            ArrayExpression::ElementsSpecified(elements) => {
+                format!(
+                    "array_decl_{}_of{}",
+                    elements.len(),
+                    self.label_friendly_name()
+                )
+            }
+        }
+    }
+}
+
 impl<T> Expr<T> {
     pub fn label_friendly_name(&self) -> String {
         match self {
@@ -323,6 +366,7 @@ impl<T> Expr<T> {
                 "tuple__L{}R__",
                 vals.iter().map(|x| x.label_friendly_name()).join("_")
             ),
+            Expr::Array(array_expr, _) => format!("array{}", array_expr.len(),),
             Expr::FnCall(_) => "fn_call".to_owned(),
             Expr::MethodCall(_) => "method_call_method_name".to_owned(),
             Expr::Binop(_, binop, _, _) => format!("binop_{binop:?}"),
@@ -348,6 +392,7 @@ impl<T> Display for Expr<T> {
             Expr::Lit(lit) => lit.to_string(),
             Expr::Var(id) => id.to_string(),
             Expr::Tuple(inner) => format!("({})", inner.iter().join(",")),
+            Expr::Array(array_type, _) => array_type.to_string(),
             Expr::FnCall(_) => "fn_call".to_owned(),
             Expr::MethodCall(MethodCall {
                 method_name,
@@ -431,16 +476,32 @@ pub struct SymTable(HashMap<String, (u8, DataType)>);
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum Identifier<T> {
-    String(String, T),                              // x
-    ListIndex(Box<Identifier<T>>, Box<Expr<T>>, T), // x[0]
+    String(String, T),                               // x
+    Index(Box<Identifier<T>>, Box<IndexExpr<T>>, T), // x[0]
     Field(Box<Identifier<T>>, FieldId, T),
+}
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub enum IndexExpr<T> {
+    Dynamic(Expr<T>),
+    Static(usize),
+}
+
+impl<T> Display for IndexExpr<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let output = match self {
+            IndexExpr::Dynamic(expr) => format!("{expr}"),
+            IndexExpr::Static(index) => index.to_string(),
+        };
+        write!(f, "{output}")
+    }
 }
 
 impl<T> Display for Identifier<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let output = match self {
             Identifier::String(name, _) => name.to_string(),
-            Identifier::ListIndex(inner, index, _) => format!("{inner}[{index}]"),
+            Identifier::Index(inner, index, _) => format!("{inner}[{index}]"),
             Identifier::Field(inner, field_name, _) => format!("{inner}.{field_name}"),
         };
         write!(f, "{output}")
@@ -453,9 +514,7 @@ impl Identifier<Typing> {
         println!("Forcing {self} to {forced_type}");
         match self {
             Identifier::String(_, t) => *t = crate::type_checker::Typing::KnownType(forced_type),
-            Identifier::ListIndex(_, _, t) => {
-                *t = crate::type_checker::Typing::KnownType(forced_type)
-            }
+            Identifier::Index(_, _, t) => *t = crate::type_checker::Typing::KnownType(forced_type),
             Identifier::Field(_, _, t) => *t = crate::type_checker::Typing::KnownType(forced_type),
         }
     }
@@ -463,7 +522,7 @@ impl Identifier<Typing> {
     pub fn resolved(&self) -> Option<DataType> {
         let t = match self {
             Identifier::String(_, t) => t,
-            Identifier::ListIndex(_, _, t) => t,
+            Identifier::Index(_, _, t) => t,
             Identifier::Field(_, _, t) => t,
         };
         // matches!(t, Typing::KnownType(_))
@@ -478,7 +537,7 @@ impl<T> Identifier<T> {
     pub fn binding_name(&self) -> String {
         match self {
             Identifier::String(name, _) => name.to_owned(),
-            Identifier::ListIndex(inner_id, _, _) => inner_id.binding_name(),
+            Identifier::Index(inner_id, _, _) => inner_id.binding_name(),
             Identifier::Field(inner_id, _, _) => inner_id.binding_name(),
         }
     }
@@ -486,7 +545,7 @@ impl<T> Identifier<T> {
     pub fn label_friendly_name(&self) -> String {
         match self {
             Identifier::String(name, _) => name.to_string(),
-            Identifier::ListIndex(inner_id, l_index_expr, _) => {
+            Identifier::Index(inner_id, l_index_expr, _) => {
                 format!("{}_{l_index_expr}", inner_id.label_friendly_name(),)
             }
             Identifier::Field(inner_id, field_name, _) => {
