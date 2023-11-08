@@ -5,16 +5,16 @@ use triton_vm::BFieldElement;
 fn main() {
     let a: BFieldElement = BFieldElement::new(100);
     let mut bfe_array: [BFieldElement; 10] = [
-        BFieldElement::zero(),
-        BFieldElement::zero(),
-        BFieldElement::zero(),
-        BFieldElement::zero(),
-        BFieldElement::zero(),
-        BFieldElement::zero(),
-        BFieldElement::zero(),
-        BFieldElement::zero(),
-        BFieldElement::zero(),
-        BFieldElement::zero(),
+        BFieldElement::new(1000),
+        BFieldElement::new(1001),
+        BFieldElement::new(1002),
+        BFieldElement::new(1003),
+        BFieldElement::new(1004),
+        BFieldElement::new(1005),
+        BFieldElement::new(1006),
+        BFieldElement::new(1007),
+        BFieldElement::new(1008),
+        BFieldElement::new(1009),
     ];
     // We put a few other values on the stack, as we otherwise risk that
     // errors when indexing into an array *cancel out*.
@@ -24,7 +24,10 @@ fn main() {
     let b: BFieldElement = BFieldElement::new(200);
     bfe_array[0] = tasm::tasm_io_read_stdin___bfe();
     bfe_array[1] = tasm::tasm_io_read_stdin___bfe();
-    bfe_array[2] = tasm::tasm_io_read_stdin___bfe();
+
+    // Don't set element 2 to verify that indexing into
+    // agrees with ordering of a array declaration as made above
+    let _l: BFieldElement = tasm::tasm_io_read_stdin___bfe();
     bfe_array[3] = tasm::tasm_io_read_stdin___bfe();
     bfe_array[4] = tasm::tasm_io_read_stdin___bfe();
     let c: BFieldElement = BFieldElement::new(400);
@@ -71,8 +74,8 @@ mod tests {
         let expected_output = vec![
             stdin[7],
             stdin[0],
-            stdin[2],
-            stdin[2],
+            BFieldElement::new(1002),
+            BFieldElement::new(1002),
             stdin[9],
             stdin[9],
             stdin[0],
