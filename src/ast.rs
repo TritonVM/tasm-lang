@@ -343,18 +343,6 @@ impl<T> ArrayExpression<T> {
             ArrayExpression::ElementsSpecified(elements) => elements.len(),
         }
     }
-
-    fn label_friendly_name(&self) -> String {
-        match &self {
-            ArrayExpression::ElementsSpecified(elements) => {
-                format!(
-                    "array_decl_{}_of{}",
-                    elements.len(),
-                    self.label_friendly_name()
-                )
-            }
-        }
-    }
 }
 
 impl<T> Expr<T> {

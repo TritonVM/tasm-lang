@@ -1299,6 +1299,7 @@ name = "tasm-lang"
 version = "0.0.0"
 dependencies = [
  "anyhow",
+ "arbitrary",
  "cargo-husky",
  "chrono",
  "field_count",
