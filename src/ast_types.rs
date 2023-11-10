@@ -310,37 +310,26 @@ impl DataType {
             Self::XFE => 3,
             Self::Digest => 5,
             Self::List(_list_type, _) => 1,
-            Self::Array(array_type) => array_type.stack_size(),
+            Self::Array(_) => 1,
             Self::Tuple(tuple_type) => tuple_type.stack_size(),
             Self::VoidPointer => 1,
             Self::Function(_) => todo!(),
             Self::Unresolved(name) => panic!("cannot get size of unresolved type {name}"),
-            Self::Struct(inner_type) => {
-                match &inner_type.variant {
-                    StructVariant::TupleStruct(tuple) => tuple.stack_size(),
-                    StructVariant::NamedFields(struct_named_fields) => {
-                        struct_named_fields.stack_size()
-                    }
-                }
-                // if inner_type.is_copy {
-                //     match &inner_type.variant {
-                //         StructVariant::TupleStruct(tuple) => tuple.stack_size(),
-                //         StructVariant::NamedFields(_) => todo!(),
-                //     }
-                // } else {
-                //     1
-                // }
-            }
+            Self::Struct(inner_type) => match &inner_type.variant {
+                StructVariant::TupleStruct(tuple) => tuple.stack_size(),
+                StructVariant::NamedFields(struct_named_fields) => struct_named_fields.stack_size(),
+            },
             Self::Enum(enum_type) => enum_type.stack_size(),
             Self::Boxed(_inner) => 1,
             Self::Reference(inner) => inner.stack_size(),
-            // Self::MemPointer(inner_type) => {
-            //     if inner_type.is_copy() {
-            //         inner_type.stack_size()
-            //     } else {
-            //         1
-            //     }
-            // }
+        }
+    }
+
+    pub fn unbox(&self) -> DataType {
+        match self {
+            DataType::Boxed(inner) => inner.unbox(),
+            DataType::Reference(inner) => inner.unbox(),
+            dtype => dtype.to_owned(),
         }
     }
 
@@ -757,7 +746,7 @@ pub struct ArrayType {
 }
 
 impl ArrayType {
-    fn stack_size(&self) -> usize {
+    pub(crate) fn size_in_memory(&self) -> usize {
         self.element_type.stack_size() * self.length
     }
 }

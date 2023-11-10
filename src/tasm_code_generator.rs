@@ -70,7 +70,7 @@ pub struct GlobalCodeGeneratorState {
 }
 
 impl GlobalCodeGeneratorState {
-    fn statically_allocate(
+    fn allocate_for_value_id(
         &mut self,
         value_identifier: &ValueIdentifier,
         data_type: &ast_types::DataType,
@@ -255,51 +255,19 @@ impl<'a> CompilerState<'a> {
             }
             ast::Identifier::Index(ident, index_expr, element_type) => {
                 match ident.get_type() {
-                    ast_types::DataType::List(_, _) => {
-                        return get_value_location_list_element(
+                    ast_types::DataType::List(_, _) | ast_types::DataType::Array(_) => {
+                        return get_value_location_of_sequence_element(
                             self,
                             &ident,
                             &index_expr,
                             element_type,
                         );
                     }
-                    ast_types::DataType::Array(_) => {
-                        return get_value_location_array_element(
-                            self,
-                            &ident,
-                            &index_expr,
-                            element_type,
-                        );
-                    }
-                    _ => unreachable!(),
+                    other_type => unreachable!("{other_type:#?}"),
                 };
 
-                fn get_value_location_array_element(
-                    state: &mut CompilerState,
-                    ident: &Identifier<type_checker::Typing>,
-                    index_expr: &ast::IndexExpr<type_checker::Typing>,
-                    element_type: &type_checker::Typing,
-                ) -> ValueLocation {
-                    let element_type = element_type.get_type();
-                    let lhs_location = state.locate_identifier(ident);
-                    let lhs_type = ident.get_type();
-
-                    match lhs_location {
-                        ValueLocation::OpStack(n) => match index_expr {
-                            ast::IndexExpr::Dynamic(_) => {
-                                unreachable!("The type-checker should have disallowed this!")
-                            }
-                            ast::IndexExpr::Static(index) => {
-                                let depth =
-                                    lhs_type.stack_size() - index * element_type.stack_size() - 1;
-                                ValueLocation::OpStack(n + depth)
-                            }
-                        },
-                        _ => todo!("lhs_location for array was: {lhs_location:?}"),
-                    }
-                }
-
-                fn get_value_location_list_element(
+                /// Return the location of an array element or a list element
+                fn get_value_location_of_sequence_element(
                     state: &mut CompilerState,
                     ident: &Identifier<type_checker::Typing>,
                     index_expr: &ast::IndexExpr<type_checker::Typing>,
@@ -309,14 +277,7 @@ impl<'a> CompilerState<'a> {
                     let lhs_location = state.locate_identifier(ident);
                     let ident_addr_code =
                         get_value_pointer(state, &lhs_location, &element_type, ident);
-                    // stack: _ *list
-
-                    let lhs_type = ident.get_type();
-                    let list_type = if let ast_types::DataType::List(_, lity) = lhs_type {
-                        lity
-                    } else {
-                        panic!("Expected type was list. Got {lhs_type}.")
-                    };
+                    // stack: _ *sequence
 
                     state.new_value_identifier("list_expression", &ident.get_type());
                     let index_code = match index_expr {
@@ -331,9 +292,14 @@ impl<'a> CompilerState<'a> {
                             triton_asm!(push { index })
                         }
                     };
-                    // stack: _ *list index
+                    // stack: _ *sequence index
 
-                    let list_metadata_size = list_type.metadata_size();
+                    let list_metadata_size = match ident.get_type() {
+                        ast_types::DataType::Array(_) => 0,
+                        ast_types::DataType::List(_, ast_types::ListType::Unsafe) => 1,
+                        ast_types::DataType::List(_, ast_types::ListType::Safe) => 2,
+                        lhs_type => panic!("Expected type was list. Got {lhs_type}."),
+                    };
                     let element_address = match element_type.bfield_codec_length() {
                         Some(static_element_size) => {
                             let relative_address = triton_asm!(
@@ -682,7 +648,7 @@ impl<'a> CompilerState<'a> {
         let spilled = if self.function_state.spill_required.contains(&address) {
             let spill_address = self
                 .global_compiler_state
-                .statically_allocate(&address, data_type)
+                .allocate_for_value_id(&address, data_type)
                 .try_into()
                 .unwrap();
             eprintln!("Warning: spill required of {address}. Spilling to address: {spill_address}");
@@ -898,7 +864,7 @@ impl<'a> CompilerState<'a> {
             assert!(_spill.is_none(), "Cannot spill while spilling");
             let memory_location: u32 = self
                 .global_compiler_state
-                .statically_allocate(&value_identifier_for_spill_value, &top_element_type)
+                .allocate_for_value_id(&value_identifier_for_spill_value, &top_element_type)
                 .try_into()
                 .unwrap();
             let mut code = copy_top_stack_value_to_memory(memory_location, top_value_size);
@@ -1841,28 +1807,57 @@ fn compile_expr(
             }
         }
 
-        ast::Expr::Array(array_expr, _) => {
-            // Compile elements left-to-right
-            match array_expr {
-                ast::ArrayExpression::ElementsSpecified(element_expressions) => {
-                    let (idents, code): (Vec<ValueIdentifier>, Vec<Vec<LabelledInstruction>>) =
-                        element_expressions
-                            .iter()
-                            .enumerate()
-                            .map(|(arg_pos, arg_expr)| {
-                                let context = format!("_array_{arg_pos}");
-                                compile_expr(arg_expr, &context, state)
-                            })
-                            .unzip();
+        ast::Expr::Array(array_expr, array_type) => {
+            // Compile elements left-to-right and store each element in memory
 
-                    // Combine vstack entries into one array entry
-                    for _ in idents {
-                        state.function_state.vstack.pop();
-                    }
+            // TODO: This does not handle arrays of elements whose sizes
+            // are not known at compile time.
 
-                    code.concat()
-                }
-            }
+            let array_type = array_type.get_type();
+            let (element_size, total_size_in_memory): (u32, usize) =
+                if let ast_types::DataType::Array(array_type) = array_type {
+                    (
+                        array_type.element_type.stack_size().try_into().unwrap(),
+                        array_type.size_in_memory(),
+                    )
+                } else {
+                    panic!("Type must be array");
+                };
+
+            let array_pointer = state
+                .global_compiler_state
+                .snippet_state
+                .kmalloc(total_size_in_memory);
+
+            let mut element_pointer: u32 = array_pointer.try_into().unwrap();
+            let store_array_in_memory = match array_expr {
+                ast::ArrayExpression::ElementsSpecified(element_expressions) => element_expressions
+                    .iter()
+                    .enumerate()
+                    .map(|(arg_pos, arg_expr)| {
+                        let context = format!("_array_{arg_pos}");
+                        let (_, evaluate_element) = compile_expr(arg_expr, &context, state);
+                        let move_element_to_memory = move_top_stack_value_to_memory(
+                            Some(element_pointer),
+                            element_size as usize,
+                        );
+                        element_pointer += element_size;
+
+                        state.function_state.vstack.pop().unwrap();
+
+                        triton_asm!(
+                            {&evaluate_element}
+                            {&move_element_to_memory}
+                        )
+                    })
+                    .concat(),
+            };
+
+            let push_array_pointer_to_stack = triton_asm!(push { array_pointer as u64 });
+            triton_asm!(
+                {&store_array_in_memory}
+                {&push_array_pointer_to_stack}
+            )
         }
 
         ast::Expr::Tuple(exprs) => {

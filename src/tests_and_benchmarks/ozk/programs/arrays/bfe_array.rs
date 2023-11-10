@@ -3,7 +3,8 @@ use num::Zero;
 use triton_vm::BFieldElement;
 
 fn main() {
-    let a: BFieldElement = BFieldElement::new(100);
+    let _k: BFieldElement = BFieldElement::zero();
+    let a: Box<BFieldElement> = Box::<BFieldElement>::new(BFieldElement::new(100));
     let mut bfe_array: [BFieldElement; 10] = [
         BFieldElement::new(1000),
         BFieldElement::new(1001),
@@ -16,12 +17,8 @@ fn main() {
         BFieldElement::new(1008),
         BFieldElement::new(1009),
     ];
-    // We put a few other values on the stack, as we otherwise risk that
-    // errors when indexing into an array *cancel out*.
-    // We need something else on the stack to reveal if we are indexing
-    // into the stack incorrectly.
 
-    let b: BFieldElement = BFieldElement::new(200);
+    let b: Box<BFieldElement> = Box::<BFieldElement>::new(BFieldElement::new(200));
     bfe_array[0] = tasm::tasm_io_read_stdin___bfe();
     bfe_array[1] = tasm::tasm_io_read_stdin___bfe();
 
@@ -45,8 +42,8 @@ fn main() {
     let d: BFieldElement = BFieldElement::new(1u64 << 50);
     tasm::tasm_io_write_to_stdout___bfe(bfe_array[9]);
     tasm::tasm_io_write_to_stdout___bfe(bfe_array[0]);
-    tasm::tasm_io_write_to_stdout___bfe(a);
-    tasm::tasm_io_write_to_stdout___bfe(b);
+    tasm::tasm_io_write_to_stdout___bfe(*a);
+    tasm::tasm_io_write_to_stdout___bfe(*b);
     tasm::tasm_io_write_to_stdout___bfe(c);
     tasm::tasm_io_write_to_stdout___bfe(d);
 
@@ -63,7 +60,7 @@ mod tests {
     use triton_vm::{BFieldElement, NonDeterminism};
 
     #[test]
-    fn bfe_array_on_stack_test() {
+    fn bfe_array_test() {
         let non_determinism = NonDeterminism::default();
 
         let stdin: [BFieldElement; 10] = random();
@@ -94,7 +91,7 @@ mod tests {
         // Run test on Triton-VM
         let test_program = ozk_parsing::compile_for_test(
             "arrays",
-            "bfe_array_on_stack",
+            "bfe_array",
             "main",
             crate::ast_types::ListType::Unsafe,
         );
