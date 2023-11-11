@@ -59,11 +59,11 @@ impl<'a> Graft<'a> {
             let mut grafted_variants = vec![];
             for variant in variants {
                 let variant_name = variant.ident.to_string();
-                let field_type = graft_tuple_struct(&graft_config, variant.fields);
+                let field_type = graft_tuple_struct(graft_config, variant.fields);
                 grafted_variants.push((variant_name, ast_types::DataType::Tuple(field_type)));
             }
 
-            return grafted_variants;
+            grafted_variants
         }
 
         fn graft_struct_with_named_fields(
@@ -1285,8 +1285,8 @@ impl<'a> Graft<'a> {
                             fat_arrow_token: _,
                             body,
                             comma: _,
-                        }: &syn::Arm = &arm;
-                        let arm_body = graft_expr_stmt(graft_config, &body);
+                        }: &syn::Arm = arm;
+                        let arm_body = graft_expr_stmt(graft_config, body);
 
                         // TODO: Add support for `_` matching
                         let arm_body = if let ast::Stmt::Block(block_stmt) = arm_body {

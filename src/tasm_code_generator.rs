@@ -258,8 +258,8 @@ impl<'a> CompilerState<'a> {
                     ast_types::DataType::List(_, _) | ast_types::DataType::Array(_) => {
                         return get_value_location_of_sequence_element(
                             self,
-                            &ident,
-                            &index_expr,
+                            ident,
+                            index_expr,
                             element_type,
                         );
                     }

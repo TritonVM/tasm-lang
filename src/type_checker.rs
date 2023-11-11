@@ -424,7 +424,7 @@ fn annotate_stmt(
         ast::Stmt::Return(opt_expr) => match (opt_expr, &env_fn_signature.output) {
             (None, ast_types::DataType::Tuple(tys)) => assert_eq!(
                 0,
-                tys.len(),
+                tys.element_count(),
                 "Return without value; expect {} to return nothing.",
                 env_fn_signature.name
             ),
@@ -565,7 +565,7 @@ fn annotate_stmt(
                             enum_name,
                             "Match conditions on type {} must all be of same type. Got bad type: {enum_name}", enum_type.name);
                         let variant_data_tuple = enum_type.variant_data_type(variant_name);
-                        assert_eq!(variant_data_tuple.len(), data_bindings.len(), "Number of bindings must match number of elements in variant data tuple");
+                        assert_eq!(variant_data_tuple.element_count(), data_bindings.len(), "Number of bindings must match number of elements in variant data tuple");
                         assert!(
                             has_unique_elements(data_bindings.iter().map(|x| &x.name)),
                             "Name repetition in pattern matching not allowed"
@@ -713,13 +713,13 @@ pub fn annotate_identifier_type(
                         }
                         ast::IndexExpr::Static(index) => Some(index),
                     };
-                    statically_known_index.map(|x| {
+                    if let Some(x) = statically_known_index {
                         assert!(
                             *x < array_type.length,
                             "Index for array out-of-range. Index was {x}, length is {}",
                             array_type.length
                         )
-                    });
+                    }
 
                     break &array_type.element_type;
                 } else if let ast_types::DataType::Reference(inner_type) = forced_sequence_type {

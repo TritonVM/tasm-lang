@@ -55,6 +55,7 @@ impl ProofItem {
         };
     }
 
+    #[allow(clippy::assertions_on_constants)]
     fn _as_merkle_root(&self) -> Digest {
         let mut ret: Digest = Digest::default();
         match self {

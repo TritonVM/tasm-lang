@@ -3,6 +3,8 @@ pub enum SimpleEnum {
     B,
 }
 
+#[allow(clippy::assertions_on_constants)]
+#[allow(clippy::match_single_binding)]
 fn main() {
     let a: SimpleEnum = SimpleEnum::A;
     let b: SimpleEnum = SimpleEnum::B;

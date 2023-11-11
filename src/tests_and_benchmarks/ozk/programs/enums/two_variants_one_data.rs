@@ -7,6 +7,7 @@ pub enum SimpleEnum {
     B,
 }
 
+#[allow(clippy::assertions_on_constants)]
 fn main() {
     let a: SimpleEnum = SimpleEnum::A(tasm::tasm_io_read_stdin___xfe());
     let b: SimpleEnum = SimpleEnum::B;

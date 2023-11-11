@@ -379,7 +379,7 @@ impl TryFrom<DataType> for tasm_lib::snippet::DataType {
                 Ok(tasm_lib::snippet::DataType::List(Box::new(element_type)))
             }
             DataType::Array(_array_type) => {
-                return Err("Array types not yet supported by tasm-lib".to_owned())
+                Err("Array types not yet supported by tasm-lib".to_owned())
             }
             DataType::Tuple(tuple_elements) => {
                 let tuple_elements = tuple_elements
@@ -392,11 +392,9 @@ impl TryFrom<DataType> for tasm_lib::snippet::DataType {
             DataType::Function(_) => todo!(),
             DataType::Struct(_) => todo!(),
             DataType::Enum(_) => todo!(),
-            DataType::Unresolved(name) => {
-                return Err(format!(
-                    "Cannot convert unresolved type {name} to tasm-lib type"
-                ))
-            }
+            DataType::Unresolved(name) => Err(format!(
+                "Cannot convert unresolved type {name} to tasm-lib type"
+            )),
             DataType::Boxed(value) => match *value {
                 // A Boxed list is just a list
                 // TODO: Default to `Unsafe` list here??
@@ -608,7 +606,7 @@ impl EnumType {
         // Append padding code to ensure that all enum variants have the same size
         // on the stack.
         let padding = vec![triton_instr!(push 0); self.padding_size(variant_name)];
-        let discriminant = self.variant_discriminant(&variant_name);
+        let discriminant = self.variant_discriminant(variant_name);
         let discriminant = triton_asm!(push { discriminant });
 
         constructor.body = [constructor.body, padding, discriminant].concat();
@@ -805,7 +803,7 @@ impl std::ops::Index<usize> for Tuple {
 }
 
 impl Tuple {
-    pub fn len(&self) -> usize {
+    pub fn element_count(&self) -> usize {
         self.fields.len()
     }
 
