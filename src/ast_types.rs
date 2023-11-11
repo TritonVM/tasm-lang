@@ -1,6 +1,6 @@
 use anyhow::bail;
 use itertools::Itertools;
-use std::{collections::HashMap, fmt::Display, str::FromStr};
+use std::{fmt::Display, str::FromStr};
 use triton_vm::{triton_asm, triton_instr};
 
 use crate::{ast::FnSignature, libraries::LibraryFunction};
@@ -593,11 +593,7 @@ impl EnumType {
 
     /// Return the constructor that is called by an expression evaluating to an
     /// enum type. E.g.: `Foo::A(100u32);`
-    pub(crate) fn variant_constructor(
-        &self,
-        variant_name: &str,
-        custom_types: &HashMap<String, CustomTypeOil>,
-    ) -> LibraryFunction {
+    pub(crate) fn variant_constructor(&self, variant_name: &str) -> LibraryFunction {
         let data_tuple = self.variant_data_type(variant_name);
         assert!(
             !data_tuple.is_unit(),
@@ -607,8 +603,7 @@ impl EnumType {
 
         let constructor_name = format!("{}::{variant_name}", self.name);
         let constructor_return_type = DataType::Enum(Box::new(self.to_owned()));
-        let mut constructor =
-            data_tuple.constructor(&constructor_name, constructor_return_type, custom_types);
+        let mut constructor = data_tuple.constructor(&constructor_name, constructor_return_type);
 
         // Append padding code to ensure that all enum variants have the same size
         // on the stack.
@@ -649,13 +644,13 @@ impl From<&StructType> for DataType {
 
 impl StructType {
     /// Only named tuples, i.e. tuple structs should use this constructor.
-    pub fn constructor(&self, custom_types: &HashMap<String, CustomTypeOil>) -> LibraryFunction {
+    pub fn constructor(&self) -> LibraryFunction {
         let tuple = if let StructVariant::TupleStruct(tuple) = &self.variant {
             tuple
         } else {
             panic!("Only tuple structs have constructor functions. Attempted to get constructor for struct {}", self.name);
         };
-        tuple.constructor(&self.name, DataType::Struct(self.to_owned()), custom_types)
+        tuple.constructor(&self.name, DataType::Struct(self.to_owned()))
     }
 
     pub fn get_field_type(&self, field_id: &FieldId) -> DataType {

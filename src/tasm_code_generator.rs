@@ -1565,9 +1565,7 @@ fn compile_fn_call(
                     "Can only call enum-variant constructor on enum type. Problem was with {name}"
                 );
             };
-            let constructor = enum_type
-                .variant_constructor(split_name[1], state.custom_types)
-                .body;
+            let constructor = enum_type.variant_constructor(split_name[1]).body;
             call_fn_code.append(&mut constructor.clone());
         } else {
             // Is the function a tuple constuctor? `struct Foo(u32); let a = Foo(200);`
@@ -1577,8 +1575,7 @@ fn compile_fn_call(
                         matches!(struct_type.variant, StructVariant::TupleStruct(_)),
                         "Can only call tuple constructor of tuple struct. Got: {struct_type}"
                     );
-                    call_fn_code
-                        .append(&mut struct_type.constructor(state.custom_types).body.clone());
+                    call_fn_code.append(&mut struct_type.constructor().body.clone());
                 } else {
                     panic!("Can only call tuple constructor of tuple struct. Got: {custom_type:?}");
                 }

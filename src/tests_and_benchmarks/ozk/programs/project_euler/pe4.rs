@@ -6,6 +6,7 @@ fn main() {
     // https://projecteuler.net/problem=4
     // Warning! Takes four minutes to run on my fast machine with the original
     // problem size, which is `min_value = 100`, `max_value = 1000`
+    // So we use a smaller problem size here.
 
     /// Convert a u32 number into a list of its decimal digits. Overwrites the
     /// list provided as input. Least significant digit occupies the lowest
@@ -39,7 +40,7 @@ fn main() {
 
     let mut decimal_digits: Vec<u32> = Vec::<u32>::with_capacity(10);
     let min_value: u32 = 10;
-    let max_value: u32 = 100;
+    let max_value: u32 = 50;
     let mut lhs: u32 = min_value;
     let mut max_palindrome: u32 = 0;
     while lhs != max_value {
@@ -108,7 +109,7 @@ mod benches {
 
         let common_case = BenchmarkInput::default();
         let worst_case = BenchmarkInput::default();
-        let name = "project_euler_4_w_unsafe_lists_i10_to_100".to_owned();
+        let name = "project_euler_4_w_unsafe_lists_i10_to_50".to_owned();
         execute_and_write_benchmark(
             name.clone(),
             code.clone(),

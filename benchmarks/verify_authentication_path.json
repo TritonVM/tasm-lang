@@ -8,9 +8,9 @@
   },
   {
     "name": "verify_authentication_path",
-    "clock_cycle_count": 474148,
-    "hash_table_height": 378,
-    "u32_table_height": 99474,
+    "clock_cycle_count": 250938,
+    "hash_table_height": 300,
+    "u32_table_height": 37964,
     "case": "WorstCase"
   }
 ]

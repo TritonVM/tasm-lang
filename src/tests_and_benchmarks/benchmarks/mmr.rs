@@ -68,7 +68,7 @@ mod benchmark {
         let (code, fn_name) = compile_for_run_test(&rast, crate::ast_types::ListType::Safe);
 
         let common_case = prepare_benchmark_case(31);
-        let worst_case = prepare_benchmark_case(63);
+        let worst_case = prepare_benchmark_case(50);
 
         execute_and_write_benchmark(fn_name, code, common_case, worst_case, -10)
     }

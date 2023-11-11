@@ -4,9 +4,9 @@ fn main() {
     // https://projecteuler.net/problem=7
     // Find the 10_001st prime number.
 
-    // We reduce the problem size to 150 as this algorithm otherwise takes too
+    // We reduce the problem size to 101 as this algorithm otherwise takes too
     // long to run.
-    let index_of_prime_to_find: u32 = 150;
+    let index_of_prime_to_find: u32 = 101;
     let log_of_desired_index: u32 = u32::BITS - index_of_prime_to_find.leading_zeros() - 1;
     let sieve_size: u32 = index_of_prime_to_find * log_of_desired_index;
     let mut primes: Vec<bool> = Vec::<bool>::with_capacity(sieve_size as usize);
@@ -92,7 +92,7 @@ mod benches {
 
         let common_case = BenchmarkInput::default();
         let worst_case = BenchmarkInput::default();
-        let name = "project_euler_7_i150".to_owned();
+        let name = "project_euler_7_i101".to_owned();
         execute_and_write_benchmark(
             name.clone(),
             code.clone(),

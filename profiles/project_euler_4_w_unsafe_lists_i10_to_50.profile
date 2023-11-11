@@ -1,4 +1,4 @@
-project_euler_4_w_unsafe_lists_i10_to_100:
+project_euler_4_w_unsafe_lists_i10_to_50:
 
 # call graph
  main: 290868

@@ -322,10 +322,7 @@ pub fn annotate_fn_outer(
         match custom_type {
             ast_types::CustomTypeOil::Struct(struct_type) => {
                 if let ast_types::StructVariant::TupleStruct(_) = &struct_type.variant {
-                    ftable.insert(
-                        type_name.to_owned(),
-                        struct_type.constructor(custom_types).signature,
-                    );
+                    ftable.insert(type_name.to_owned(), struct_type.constructor().signature);
                 }
             }
             ast_types::CustomTypeOil::Enum(enum_type) => {
@@ -335,9 +332,7 @@ pub fn annotate_fn_outer(
                         let constructor_name = format!("{}::{variant_name}", enum_type.name);
                         ftable.insert(
                             constructor_name,
-                            enum_type
-                                .variant_constructor(variant_name, &custom_types)
-                                .signature,
+                            enum_type.variant_constructor(variant_name).signature,
                         );
                     }
                 }

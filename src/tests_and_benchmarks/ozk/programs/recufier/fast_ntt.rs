@@ -236,7 +236,7 @@ mod benches {
         );
 
         let common_case_input = get_input(32);
-        let worst_case_input = get_input(128);
+        let worst_case_input = get_input(64);
 
         let name = "fast_ntt".to_owned();
         execute_and_write_benchmark(

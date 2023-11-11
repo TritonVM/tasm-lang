@@ -215,10 +215,10 @@ pub(super) fn wrap_main_with_io(
 
 use crate::tests_and_benchmarks::ozk::programs::recufier::vm_proof_stream::VmProofStreamCompiled;
 
-pub(super) fn tasm_recufier_proof_stream_dequeue(
+pub(super) fn _tasm_recufier_proof_stream_dequeue(
     proof_stream: &mut VmProofStreamCompiled,
 ) -> Box<ProofItem> {
-    proof_stream.dequeue_internal().unwrap()
+    proof_stream._dequeue_internal().unwrap()
 }
 
 type _VmHasherState = twenty_first::shared_math::tip5::Tip5State;
@@ -233,7 +233,7 @@ impl VmProofStreamCompiled {
             ),
         }
     }
-    fn dequeue_internal(&mut self) -> anyhow::Result<Box<triton_vm::proof_item::ProofItem>> {
+    fn _dequeue_internal(&mut self) -> anyhow::Result<Box<triton_vm::proof_item::ProofItem>> {
         if self.word_index as usize >= self.data.len() {
             bail!("No more words left in stream.")
         }
@@ -245,20 +245,20 @@ impl VmProofStreamCompiled {
         let item = *triton_vm::proof_item::ProofItem::decode(sequence)?;
 
         if item.include_in_fiat_shamir_heuristic() {
-            self.fiat_shamir_internal(&item);
+            self._fiat_shamir_internal(&item);
         }
 
         Ok(Box::new(item))
     }
 
-    fn fiat_shamir_internal<T: BFieldCodec>(&mut self, item: &T) {
+    fn _fiat_shamir_internal<T: BFieldCodec>(&mut self, item: &T) {
         VmHasher::absorb_repeatedly(
             &mut self.sponge_state,
-            Self::encode_and_pad_item_internal(item).iter(),
+            Self::_encode_and_pad_item_internal(item).iter(),
         );
     }
 
-    fn encode_and_pad_item_internal<T: BFieldCodec>(item: &T) -> Vec<BFieldElement> {
+    fn _encode_and_pad_item_internal<T: BFieldCodec>(item: &T) -> Vec<BFieldElement> {
         let encoding = item.encode();
         let last_chunk_len = (encoding.len() + 1) % VmHasher::RATE;
         let num_padding_zeros = match last_chunk_len {
