@@ -330,6 +330,7 @@ pub fn annotate_fn_outer(
             }
             ast_types::CustomTypeOil::Enum(enum_type) => {
                 for (variant_name, variant_type) in enum_type.variants.iter() {
+                    assert!(!variant_type.is_unresolved(), "Variant type must be known");
                     if !variant_type.is_unit() {
                         let constructor_name = format!("{}::{variant_name}", enum_type.name);
                         ftable.insert(

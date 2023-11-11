@@ -427,8 +427,8 @@ impl<'a> Graft<'a> {
             syn::PathArguments::AngleBracketed(ab) => {
                 assert_eq!(1, ab.args.len(), "Must be Vec<T> for *one* generic T.");
                 match &ab.args[0] {
-                    syn::GenericArgument::Type(syn::Type::Path(path)) => ast_types::DataType::List(
-                        Box::new(self.rust_type_path_to_data_type(path)),
+                    syn::GenericArgument::Type(element_type) => ast_types::DataType::List(
+                        Box::new(self.syn_type_to_ast_type(element_type)),
                         self.list_type,
                     ),
                     other => panic!("Unsupported type {other:#?}"),

@@ -18,6 +18,7 @@ pub mod xfe;
 
 type Annotation = type_checker::Typing;
 
+#[derive(Debug)]
 pub struct LibraryFunction {
     pub signature: FnSignature,
     pub body: Vec<triton_vm::instruction::LabelledInstruction>,

@@ -128,12 +128,12 @@ pub(crate) fn compile_for_test(
     let (rust_main_ast, rust_struct_asts, _) =
         parse_function_and_structs(directory, module_name, function_name);
     let mut oil_ast = graft_config.graft_fn_decl(&rust_main_ast);
-    let (custom_types, mut methods, mut associated_functions) =
+    let (mut custom_types, mut methods, mut associated_functions) =
         graft_config.graft_custom_types_methods_and_associated_functions(rust_struct_asts);
 
     resolve_custom_types(
         &mut oil_ast,
-        &custom_types,
+        &mut custom_types,
         &mut methods,
         &mut associated_functions,
     );
@@ -167,12 +167,12 @@ pub(crate) fn compile_to_basic_snippet(
 ) -> String {
     get_standard_setup!(list_type, graft_config, libraries);
     let mut oil_ast = graft_config.graft_fn_decl(&rust_ast);
-    let (structs, mut methods, mut associated_functions) =
+    let (mut custom_types, mut methods, mut associated_functions) =
         graft_config.graft_custom_types_methods_and_associated_functions(structs_and_methods);
 
     resolve_custom_types(
         &mut oil_ast,
-        &structs,
+        &mut custom_types,
         &mut methods,
         &mut associated_functions,
     );
@@ -180,7 +180,7 @@ pub(crate) fn compile_to_basic_snippet(
     // type-check and annotate
     annotate_fn_outer(
         &mut oil_ast,
-        &structs,
+        &custom_types,
         &mut methods,
         &mut associated_functions,
         &libraries,
@@ -191,7 +191,7 @@ pub(crate) fn compile_to_basic_snippet(
         &libraries,
         methods,
         &associated_functions,
-        &structs,
+        &custom_types,
     );
 
     tasm.generate_basic_snippet_implementation()

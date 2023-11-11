@@ -2,11 +2,18 @@ use std::collections::HashMap;
 
 use crate::{
     ast::*,
-    ast_types::{self, AbstractArgument, AbstractValueArg, DataType},
+    ast_types::{self, AbstractArgument, AbstractValueArg, CustomTypeOil, DataType},
     type_checker::Typing,
 };
 
-impl ReturningBlock<Typing> {
+pub trait CustomTypeResolution {
+    fn resolve_custom_types(
+        &mut self,
+        declared_structs: &HashMap<String, ast_types::CustomTypeOil>,
+    );
+}
+
+impl CustomTypeResolution for ReturningBlock<Typing> {
     fn resolve_custom_types(
         &mut self,
         declared_structs: &HashMap<String, ast_types::CustomTypeOil>,
@@ -19,7 +26,7 @@ impl ReturningBlock<Typing> {
     }
 }
 
-impl Expr<Typing> {
+impl CustomTypeResolution for Expr<Typing> {
     fn resolve_custom_types(
         &mut self,
         declared_structs: &HashMap<String, ast_types::CustomTypeOil>,
@@ -98,7 +105,7 @@ impl Expr<Typing> {
     }
 }
 
-impl IndexExpr<Typing> {
+impl CustomTypeResolution for IndexExpr<Typing> {
     fn resolve_custom_types(
         &mut self,
         declared_structs: &HashMap<String, ast_types::CustomTypeOil>,
@@ -110,7 +117,7 @@ impl IndexExpr<Typing> {
     }
 }
 
-impl Identifier<Typing> {
+impl CustomTypeResolution for Identifier<Typing> {
     fn resolve_custom_types(
         &mut self,
         declared_structs: &HashMap<String, ast_types::CustomTypeOil>,
@@ -126,7 +133,7 @@ impl Identifier<Typing> {
     }
 }
 
-impl Stmt<Typing> {
+impl CustomTypeResolution for Stmt<Typing> {
     fn resolve_custom_types(
         &mut self,
         declared_structs: &HashMap<String, ast_types::CustomTypeOil>,
@@ -200,7 +207,7 @@ impl Stmt<Typing> {
                 expression.resolve_custom_types(declared_structs)
             }
             Stmt::FnDeclaration(Fn { signature, body }) => {
-                signature.resolve_types(declared_structs);
+                signature.resolve_custom_types(declared_structs);
                 body.iter_mut()
                     .for_each(|x| x.resolve_custom_types(declared_structs));
             }
@@ -218,24 +225,34 @@ impl Stmt<Typing> {
 
 pub fn resolve_custom_types(
     function: &mut Fn<Typing>,
-    declared_types: &HashMap<String, ast_types::CustomTypeOil>,
+    custom_types: &mut HashMap<String, ast_types::CustomTypeOil>,
     declared_methods: &mut [Method<Typing>],
     associated_functions: &mut HashMap<String, HashMap<String, Fn<Typing>>>,
 ) {
-    function.resolve_custom_types(declared_types);
+    // Resolve any nested types
+    let mut custom_types_copy = custom_types.clone();
+    while custom_types_copy.iter().any(|x| x.1.is_unresolved()) {
+        custom_types.values_mut().for_each(|x| {
+            x.field_or_variant_types_mut()
+                .for_each(|x| x.resolve_custom_types(&custom_types_copy));
+        });
+        custom_types_copy = custom_types.to_owned();
+    }
+
+    function.resolve_custom_types(custom_types);
 
     declared_methods
         .iter_mut()
-        .for_each(|x| x.resolve_custom_types(declared_types));
+        .for_each(|x| x.resolve_custom_types(custom_types));
 
     associated_functions.values_mut().for_each(|x| {
         x.values_mut()
-            .for_each(|x| x.resolve_custom_types(declared_types))
+            .for_each(|x| x.resolve_custom_types(custom_types))
     });
 }
 
-impl MatchArm<Typing> {
-    pub fn resolve_custom_types(
+impl CustomTypeResolution for MatchArm<Typing> {
+    fn resolve_custom_types(
         &mut self,
         declared_structs: &HashMap<String, ast_types::CustomTypeOil>,
     ) {
@@ -243,8 +260,8 @@ impl MatchArm<Typing> {
     }
 }
 
-impl BlockStmt<Typing> {
-    pub fn resolve_custom_types(
+impl CustomTypeResolution for BlockStmt<Typing> {
+    fn resolve_custom_types(
         &mut self,
         declared_structs: &HashMap<String, ast_types::CustomTypeOil>,
     ) {
@@ -254,24 +271,24 @@ impl BlockStmt<Typing> {
     }
 }
 
-impl Fn<Typing> {
-    pub fn resolve_custom_types(
+impl CustomTypeResolution for Fn<Typing> {
+    fn resolve_custom_types(
         &mut self,
         declared_structs: &HashMap<String, ast_types::CustomTypeOil>,
     ) {
-        self.signature.resolve_types(declared_structs);
+        self.signature.resolve_custom_types(declared_structs);
         self.body
             .iter_mut()
             .for_each(|x| x.resolve_custom_types(declared_structs));
     }
 }
 
-impl Method<Typing> {
-    pub fn resolve_custom_types(
+impl CustomTypeResolution for Method<Typing> {
+    fn resolve_custom_types(
         &mut self,
         declared_structs: &HashMap<String, ast_types::CustomTypeOil>,
     ) {
-        self.signature.resolve_types(declared_structs);
+        self.signature.resolve_custom_types(declared_structs);
         self.body
             .iter_mut()
             .for_each(|x| x.resolve_custom_types(declared_structs));
@@ -292,18 +309,40 @@ impl DataType {
             DataType::Function(function_type) => {
                 function_type.input_argument.is_unresolved() || function_type.output.is_unresolved()
             }
-            _ => false,
+            DataType::Enum(enum_type) => enum_type
+                .variants
+                .iter()
+                .any(|(_name, dtype)| dtype.is_unresolved()),
+            DataType::Array(array_type) => array_type.element_type.is_unresolved(),
+            DataType::Reference(inner_type) => inner_type.is_unresolved(),
+            DataType::Bool => false,
+            DataType::U32 => false,
+            DataType::U64 => false,
+            DataType::U128 => false,
+            DataType::BFE => false,
+            DataType::XFE => false,
+            DataType::Digest => false,
+            DataType::VoidPointer => false,
         }
     }
+}
 
-    pub fn resolve_custom_types(
+impl CustomTypeOil {
+    pub fn is_unresolved(&self) -> bool {
+        self.field_or_variant_types().any(|x| x.is_unresolved())
+    }
+}
+
+impl CustomTypeResolution for DataType {
+    fn resolve_custom_types(
         &mut self,
         declared_structs: &HashMap<String, ast_types::CustomTypeOil>,
     ) {
         // TODO: Should this also mutate the structs in `declared_structs`? Currently
         // it only mutates `self` to the resolved type.
+        use DataType::*;
         match self {
-            DataType::Unresolved(unresolved_type) => {
+            Unresolved(unresolved_type) => {
                 let mut outer_resolved = declared_structs
                     .get(unresolved_type)
                     .unwrap_or_else(|| {
@@ -322,38 +361,60 @@ impl DataType {
                     }
                 }
             }
-            DataType::List(inner, _list_type) => {
+            List(inner, _list_type) => {
                 inner.resolve_custom_types(declared_structs);
             }
-            DataType::Tuple(inners) => inners
-                .into_iter()
-                .for_each(|x| x.resolve_custom_types(declared_structs)),
-            DataType::Function(function_type) => {
+            Tuple(inners) => {
+                inners
+                    .fields
+                    .iter_mut()
+                    .for_each(|x| x.resolve_custom_types(declared_structs));
+            }
+            Function(function_type) => {
                 function_type
                     .input_argument
                     .resolve_custom_types(declared_structs);
                 function_type.output.resolve_custom_types(declared_structs);
             }
-            DataType::Boxed(inner) => {
+            Boxed(inner) => {
                 inner.resolve_custom_types(declared_structs);
             }
-            DataType::Struct(struct_type) => {
+            Struct(struct_type) => {
                 struct_type
                     .field_types_mut()
                     .for_each(|x| x.resolve_custom_types(declared_structs));
             }
-            DataType::Enum(enum_type) => {
+            Enum(enum_type) => {
                 enum_type
                     .variant_types_mut()
                     .for_each(|x| x.resolve_custom_types(declared_structs));
             }
-            _ => (),
+            Array(array_type) => {
+                array_type
+                    .element_type
+                    .as_mut()
+                    .resolve_custom_types(declared_structs);
+            }
+            Reference(inner_type) => {
+                inner_type.resolve_custom_types(declared_structs);
+            }
+            Bool => (),
+            U32 => (),
+            U64 => (),
+            U128 => (),
+            BFE => (),
+            XFE => (),
+            Digest => (),
+            VoidPointer => (),
         }
     }
 }
 
-impl FnSignature {
-    pub fn resolve_types(&mut self, declared_structs: &HashMap<String, ast_types::CustomTypeOil>) {
+impl CustomTypeResolution for FnSignature {
+    fn resolve_custom_types(
+        &mut self,
+        declared_structs: &HashMap<String, ast_types::CustomTypeOil>,
+    ) {
         self.output.resolve_custom_types(declared_structs);
         for input in self.args.iter_mut() {
             match input {

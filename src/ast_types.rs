@@ -501,6 +501,13 @@ impl CustomTypeOil {
             CustomTypeOil::Enum(enum_type) => enum_type.variant_types_mut(),
         }
     }
+
+    pub fn field_or_variant_types<'a>(&'a self) -> Box<dyn Iterator<Item = &'a DataType> + 'a> {
+        match self {
+            CustomTypeOil::Struct(struct_type) => struct_type.field_types(),
+            CustomTypeOil::Enum(enum_type) => enum_type.variant_types(),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
@@ -516,6 +523,10 @@ impl EnumType {
         &'a mut self,
     ) -> Box<dyn Iterator<Item = &'a mut DataType> + 'a> {
         Box::new(self.variants.iter_mut().map(|x| &mut x.1))
+    }
+
+    pub(crate) fn variant_types<'a>(&'a self) -> Box<dyn Iterator<Item = &'a DataType> + 'a> {
+        Box::new(self.variants.iter().map(|x| &x.1))
     }
 
     pub(crate) fn has_variant_of_name(&self, variant_name: &str) -> bool {
@@ -815,7 +826,6 @@ impl Tuple {
         &self,
         tuple_struct_name: &str,
         tuple_struct_type: DataType,
-        custom_types: &HashMap<String, CustomTypeOil>,
     ) -> LibraryFunction {
         let args = self
             .fields
@@ -829,15 +839,12 @@ impl Tuple {
                 })
             })
             .collect_vec();
-        let mut signature = FnSignature {
+        let signature = FnSignature {
             name: tuple_struct_name.to_owned(),
             args,
             output: tuple_struct_type.to_owned(),
             arg_evaluation_order: Default::default(),
         };
-
-        // Resolve type in case of nested tuple structs
-        signature.resolve_types(custom_types);
 
         // Function body of the tuple-struct constructor is empty, since
         // the construction simply corresponds to the evaluation of arguments
