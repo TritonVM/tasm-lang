@@ -530,10 +530,13 @@ fn annotate_stmt(
             // Verify that match-expression returns an enum-type
             let match_expression_type =
                 derive_annotate_expr_type(match_expression, None, state, env_fn_signature);
-            let enum_type = if let ast_types::DataType::Enum(enum_type) = match_expression_type {
-                enum_type
-            } else {
-                panic!("`match` statements are only supported on enum types. For now.");
+            let (enum_type, is_boxed) = match match_expression_type {
+                ast_types::DataType::Enum(enum_type) => (enum_type, false),
+                ast_types::DataType::Boxed(inner) => match *inner.to_owned() {
+                    ast_types::DataType::Enum(enum_type) => (enum_type, true),
+                    other => panic!("`match` statements are only supported on enum types. For now. Got {other}", )
+                },
+                _ => panic!("`match` statements are only supported on enum types. For now. Got {match_expression_type}", )
             };
 
             let mut variants_encountered: HashSet<String> = HashSet::default();
@@ -547,6 +550,8 @@ fn annotate_stmt(
                             "When using wildcard in match statement, wildcard must be used in last match arm. Match expression was for type {}", enum_type.name
                         );
                         contains_wildcard_arm = true;
+
+                        annotate_block_stmt(&mut arm.body, env_fn_signature, state);
                     }
                     ast::MatchCondition::EnumVariant(ast::EnumVariantSelector {
                         enum_name,
@@ -565,14 +570,20 @@ fn annotate_stmt(
                             enum_name,
                             "Match conditions on type {} must all be of same type. Got bad type: {enum_name}", enum_type.name);
                         let variant_data_tuple = enum_type.variant_data_type(variant_name);
-                        assert_eq!(variant_data_tuple.element_count(), data_bindings.len(), "Number of bindings must match number of elements in variant data tuple");
+                        assert!(data_bindings.is_empty() || variant_data_tuple.element_count() == data_bindings.len(), "Number of bindings must match number of elements in variant data tuple");
                         assert!(
                             has_unique_elements(data_bindings.iter().map(|x| &x.name)),
                             "Name repetition in pattern matching not allowed"
                         );
 
                         data_bindings.iter().enumerate().for_each(|(i, x)| {
-                            let new_binding_type = variant_data_tuple.fields[i].to_owned();
+                            let new_binding_type = if is_boxed {
+                                ast_types::DataType::Boxed(Box::new(
+                                    variant_data_tuple.fields[i].to_owned(),
+                                ))
+                            } else {
+                                variant_data_tuple.fields[i].to_owned()
+                            };
 
                             state.vtable.insert(
                                 x.name.to_owned(),
@@ -880,8 +891,19 @@ fn get_method_signature(
         }
     }
 
+    let declared_method_names = state
+        .declared_methods
+        .iter()
+        .map(|x| {
+            format!(
+                "{}: ({})",
+                &x.signature.name,
+                x.signature.args.iter().join(",")
+            )
+        })
+        .join("\n");
     panic!(
-        "Method call in {} Don't know what type of value '{name}' returns! Receiver type was: {original_receiver_type:?}", env_fn_signature.name
+        "Method call in {} Don't know what type of value '{name}' returns! Receiver type was: {original_receiver_type:?}\n\nDeclared methods are:\n{}", env_fn_signature.name, declared_method_names
     )
 }
 

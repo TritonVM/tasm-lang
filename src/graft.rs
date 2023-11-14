@@ -1346,6 +1346,12 @@ impl<'a> Graft<'a> {
                                                 name: ident.ident.to_string(),
                                             });
                                         }
+                                        syn::Pat::Wild(_) => {
+                                            assert!(
+                                                pat.elems.len().is_one(),
+                                                "For now, wildcard binding must be only binding"
+                                            );
+                                        }
                                         other => {
                                             panic!("unsupported binding for match-arm: {other:?}")
                                         }

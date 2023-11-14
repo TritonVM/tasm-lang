@@ -1,7 +1,7 @@
 use anyhow::bail;
 use itertools::Itertools;
 use std::{fmt::Display, str::FromStr};
-use triton_vm::{triton_asm, triton_instr};
+use triton_vm::{instruction::LabelledInstruction, triton_asm, triton_instr};
 
 use crate::{ast::FnSignature, libraries::LibraryFunction};
 
@@ -463,6 +463,23 @@ pub enum AbstractArgument {
     ValueArgument(AbstractValueArg),
 }
 
+impl Display for AbstractArgument {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                AbstractArgument::ValueArgument(val_arg) => {
+                    format!("{}: {}", val_arg.name, val_arg.data_type)
+                }
+                AbstractArgument::FunctionArgument(fun_arg) => {
+                    format!("fn ({}): {}", fun_arg.abstract_name, fun_arg.function_type)
+                }
+            }
+        )
+    }
+}
+
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct AbstractFunctionArg {
     pub abstract_name: String,
@@ -587,6 +604,78 @@ impl EnumType {
             vec![DataType::BFE],
         ]
         .concat()
+    }
+
+    /// Return the code to put enum-variant data fields on top of stack.
+    /// Does not consume the enum_expr pointer.
+    /// BEFORE: _ *enum_expr
+    /// AFTER: _ *enum_expr [*variant-data-fields]
+    pub(crate) fn get_variant_data_fields_in_memory(
+        &self,
+        variant_name: &str,
+    ) -> Vec<(Vec<LabelledInstruction>, DataType)> {
+        // TODO: Can we get this code to consume *enum_expr instead?
+
+        // Example: Foo::Bar(Vec<u32>)
+        // Memory layout will be:
+        // [discriminant, field_size, [u32_list]]
+        // In that case we want to return code to get *u32_list.
+
+        // You can assume that the stack has a pointer to `discriminant` on
+        // top. So we want to return the code
+        // `push 1 add push 1 add`
+        let data_types = self.variant_data_type(variant_name);
+
+        // Skip discriminant
+        let mut acc_code = vec![triton_instr!(push 1), triton_instr!(add)];
+        let mut ret: Vec<Vec<LabelledInstruction>> = vec![];
+
+        // Invariant: _ *enum_expr [*preceding_fields]
+        for (field_count, dtype) in data_types.clone().into_iter().enumerate() {
+            match dtype.bfield_codec_length() {
+                Some(size) => {
+                    // field size is known statically, does not need to be read
+                    // from memory
+                    // stack: _ *enum_expr [*preceding_fields]
+                    ret.push(triton_asm!(
+                        // _ *enum_expr [*preceding_fields]
+
+                        dup {field_count}
+                        // _ *enum_expr [*previous_fields] *enum_expr
+
+                        {&acc_code}
+                        // _ *enum_expr [*previous_fields] *current_field
+                    ));
+                    acc_code.append(&mut triton_asm!(push {size} add));
+                }
+                None => {
+                    // Current field size must be read from memory
+                    // stack: _ *enum_expr [*preceding_fields]
+                    ret.push(triton_asm!(
+                        // _ *enum_expr [*preceding_fields]
+
+                        dup {field_count}
+                        // _ *enum_expr [*previous_fields] *enum_expr
+
+                        {&acc_code}
+                        // _ *enum_expr [*previous_fields] *current_field_size
+
+                        push 1
+                        add
+                        // _ *enum_expr [*previous_fields] *current_field
+                    ));
+
+                    acc_code.append(&mut triton_asm!(
+                        read_mem
+                        add
+                        push 1
+                        add
+                    ));
+                }
+            }
+        }
+
+        ret.into_iter().zip_eq(data_types).collect_vec()
     }
 
     /// Return the constructor that is called by an expression evaluating to an
@@ -944,6 +1033,12 @@ impl NamedFieldsStruct {
 pub struct FunctionType {
     pub input_argument: DataType,
     pub output: DataType,
+}
+
+impl Display for FunctionType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{} -> {}", self.input_argument, self.output)
+    }
 }
 
 impl From<&FnSignature> for DataType {
