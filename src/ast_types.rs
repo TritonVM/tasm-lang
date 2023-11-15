@@ -3,7 +3,7 @@ use itertools::Itertools;
 use std::{fmt::Display, str::FromStr};
 use triton_vm::{instruction::LabelledInstruction, triton_asm, triton_instr};
 
-use crate::{ast::FnSignature, libraries::LibraryFunction};
+use crate::{ast::FnSignature, libraries::LibraryFunction, subroutine::SubRoutine};
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum DataType {
@@ -278,7 +278,7 @@ impl DataType {
                         .iter()
                         .all(|x| x.is_some() && x.unwrap() == variant_lengths[0].unwrap())
                     {
-                        variant_lengths[0]
+                        Some(variant_lengths[0].unwrap() + 1)
                     } else {
                         None
                     }
@@ -532,6 +532,12 @@ pub struct EnumType {
     pub variants: Vec<(String, DataType)>,
 }
 
+impl From<&EnumType> for DataType {
+    fn from(value: &EnumType) -> Self {
+        Self::Enum(Box::new(value.to_owned()))
+    }
+}
+
 impl EnumType {
     /// Return an iterator over mutable references to the type's nested datatypes
     pub(crate) fn variant_types_mut<'a>(
@@ -604,6 +610,99 @@ impl EnumType {
             vec![DataType::BFE],
         ]
         .concat()
+    }
+
+    /// Return the function to set the data size at runtime.
+    /// Returns (function_name, functions_main_code, function_subroutines)
+    /// BEFORE: // _ *discriminant
+    /// AFTER:  // _ *last_data_word data_size
+    pub(crate) fn get_variant_data_size_from_memory_at_runtime(
+        &self,
+    ) -> (SubRoutine, Vec<SubRoutine>) {
+        let function_label = format!("get_variant_data_size_from_memory_at_runtime_{}", self.name);
+        let mut subroutines: Vec<SubRoutine> = vec![];
+        let mut acc_code = triton_asm!(
+            {function_label}:
+        );
+
+        for (haystack_discriminant, dtype) in self.variant_types().enumerate() {
+            let subroutine_label = format!(
+                "{}_variant_size_subroutine_{}",
+                self.name, haystack_discriminant
+            );
+            acc_code.append(&mut triton_asm!(
+                // <*last_data_word data_size> *discriminant
+                read_mem
+                // <*last_data_word data_size> *discriminant discriminant
+
+                push {haystack_discriminant}
+                eq
+                // <*last_data_word data_size> *discriminant (discriminant == haystack)
+                skiz
+                call {subroutine_label}
+
+                // <*last_data_word data_size> *discriminant
+            ));
+
+            let subroutine = match dtype.bfield_codec_length() {
+                None => triton_asm!(
+                    {subroutine_label}:
+                    // *discriminant
+
+                        dup 0
+                        push 1
+                        add
+                        read_mem
+                        // *discriminant *data_size data_size
+
+                        swap 1
+                        // *discriminant data_size *data_size
+
+                        dup 1
+                        // *discriminant data_size *data_size data_size
+
+                        add
+                        // *discriminant data_size *last_data_word
+
+                        swap 2
+                        // *last_data_word data_size *discriminant
+
+                        return
+                ),
+                Some(size) => triton_asm!(
+                    {subroutine_label}:
+                    // *discriminant
+
+                    dup 0
+                    // *discriminant *discriminant
+
+                    push { size }
+                    // *discriminant *discriminant data_size
+
+                    add
+                    // *discriminant *last_data_word
+
+                    swap 1
+                    // *last_data_word *discriminant
+
+                    push { size }
+                    swap 1
+                    // *last_data_word data_size *discriminant
+
+                    return
+                ),
+            };
+            subroutines.push(subroutine.try_into().unwrap());
+        }
+
+        // *last_data_word data_size *discriminant
+        acc_code.append(&mut triton_asm!(
+            pop
+            return
+        ));
+
+        // *last_data_word data_size
+        (acc_code.try_into().unwrap(), subroutines)
     }
 
     /// Return the code to put enum-variant data fields on top of stack.

@@ -176,7 +176,6 @@ mod tests {
             vec![BFieldElement::new(10009 << 32)],
             vec![BFieldElement::new(555 << 32)],
             vec![BFieldElement::new(200)],
-            // vec![BFieldElement::new(100)],
         ]
         .concat();
         let stdin = vec![];
