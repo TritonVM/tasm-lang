@@ -1,9 +1,9 @@
 use anyhow::bail;
 use itertools::Itertools;
 use std::{fmt::Display, str::FromStr};
-use triton_vm::{instruction::LabelledInstruction, triton_asm, triton_instr};
+use triton_vm::triton_asm;
 
-use crate::{ast::FnSignature, libraries::LibraryFunction, subroutine::SubRoutine};
+use crate::{ast::FnSignature, libraries::LibraryFunction};
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum DataType {
@@ -27,6 +27,30 @@ pub enum DataType {
 }
 
 impl DataType {
+    /// Returns true if all data lives on stack, returns
+    /// false if stack only sees a pointer to memory
+    pub fn data_always_lives_in_memory(&self) -> bool {
+        match self {
+            DataType::Bool => false,
+            DataType::U32 => false,
+            DataType::U64 => false,
+            DataType::U128 => false,
+            DataType::BFE => false,
+            DataType::XFE => false,
+            DataType::Digest => false,
+            DataType::List(_, _) => true,
+            DataType::Tuple(_) => false,
+            DataType::Array(_) => true,
+            DataType::Struct(_) => false,
+            DataType::Enum(_) => false,
+            DataType::VoidPointer => true,
+            DataType::Function(_) => todo!(),
+            DataType::Boxed(_) => true,
+            DataType::Reference(_inner) => false, // I think ...
+            DataType::Unresolved(_) => panic!(),
+        }
+    }
+
     pub fn get_tuple_elements(&self) -> Tuple {
         match self {
             DataType::Tuple(tuple) => tuple.to_owned(),
@@ -610,196 +634,6 @@ impl EnumType {
             vec![DataType::BFE],
         ]
         .concat()
-    }
-
-    /// Return the function to set the data size at runtime.
-    /// Returns (function_name, functions_main_code, function_subroutines)
-    /// BEFORE: // _ *discriminant
-    /// AFTER:  // _ *last_data_word data_size
-    pub(crate) fn get_variant_data_size_from_memory_at_runtime(
-        &self,
-    ) -> (SubRoutine, Vec<SubRoutine>) {
-        let function_label = format!("get_variant_data_size_from_memory_at_runtime_{}", self.name);
-        let mut subroutines: Vec<SubRoutine> = vec![];
-        let mut acc_code = triton_asm!(
-            {function_label}:
-        );
-
-        for (haystack_discriminant, dtype) in self.variant_types().enumerate() {
-            let subroutine_label = format!(
-                "{}_variant_size_subroutine_{}",
-                self.name, haystack_discriminant
-            );
-            acc_code.append(&mut triton_asm!(
-                // <*last_data_word data_size> *discriminant
-                read_mem
-                // <*last_data_word data_size> *discriminant discriminant
-
-                push {haystack_discriminant}
-                eq
-                // <*last_data_word data_size> *discriminant (discriminant == haystack)
-                skiz
-                call {subroutine_label}
-
-                // <*last_data_word data_size> *discriminant
-            ));
-
-            let subroutine = match dtype.bfield_codec_length() {
-                None => triton_asm!(
-                    {subroutine_label}:
-                    // *discriminant
-
-                        dup 0
-                        push 1
-                        add
-                        read_mem
-                        // *discriminant *data_size data_size
-
-                        swap 1
-                        // *discriminant data_size *data_size
-
-                        dup 1
-                        // *discriminant data_size *data_size data_size
-
-                        add
-                        // *discriminant data_size *last_data_word
-
-                        swap 2
-                        // *last_data_word data_size *discriminant
-
-                        return
-                ),
-                Some(size) => triton_asm!(
-                    {subroutine_label}:
-                    // *discriminant
-
-                    dup 0
-                    // *discriminant *discriminant
-
-                    push { size }
-                    // *discriminant *discriminant data_size
-
-                    add
-                    // *discriminant *last_data_word
-
-                    swap 1
-                    // *last_data_word *discriminant
-
-                    push { size }
-                    swap 1
-                    // *last_data_word data_size *discriminant
-
-                    return
-                ),
-            };
-            subroutines.push(subroutine.try_into().unwrap());
-        }
-
-        // *last_data_word data_size *discriminant
-        acc_code.append(&mut triton_asm!(
-            pop
-            return
-        ));
-
-        // *last_data_word data_size
-        (acc_code.try_into().unwrap(), subroutines)
-    }
-
-    /// Return the code to put enum-variant data fields on top of stack.
-    /// Does not consume the enum_expr pointer.
-    /// BEFORE: _ *enum_expr
-    /// AFTER: _ *enum_expr [*variant-data-fields]
-    pub(crate) fn get_variant_data_fields_in_memory(
-        &self,
-        variant_name: &str,
-    ) -> Vec<(Vec<LabelledInstruction>, DataType)> {
-        // TODO: Can we get this code to consume *enum_expr instead?
-
-        // Example: Foo::Bar(Vec<u32>)
-        // Memory layout will be:
-        // [discriminant, field_size, [u32_list]]
-        // In that case we want to return code to get *u32_list.
-
-        // You can assume that the stack has a pointer to `discriminant` on
-        // top. So we want to return the code
-        // `push 1 add push 1 add`
-        let data_types = self.variant_data_type(variant_name);
-
-        // Skip discriminant
-        let mut acc_code = vec![triton_instr!(push 1), triton_instr!(add)];
-        let mut ret: Vec<Vec<LabelledInstruction>> = vec![];
-
-        // Invariant: _ *enum_expr [*preceding_fields]
-        for (field_count, dtype) in data_types.clone().into_iter().enumerate() {
-            match dtype.bfield_codec_length() {
-                Some(size) => {
-                    // field size is known statically, does not need to be read
-                    // from memory
-                    // stack: _ *enum_expr [*preceding_fields]
-                    ret.push(triton_asm!(
-                        // _ *enum_expr [*preceding_fields]
-
-                        dup {field_count}
-                        // _ *enum_expr [*previous_fields] *enum_expr
-
-                        {&acc_code}
-                        // _ *enum_expr [*previous_fields] *current_field
-                    ));
-                    acc_code.append(&mut triton_asm!(push {size} add));
-                }
-                None => {
-                    // Current field size must be read from memory
-                    // stack: _ *enum_expr [*preceding_fields]
-                    ret.push(triton_asm!(
-                        // _ *enum_expr [*preceding_fields]
-
-                        dup {field_count}
-                        // _ *enum_expr [*previous_fields] *enum_expr
-
-                        {&acc_code}
-                        // _ *enum_expr [*previous_fields] *current_field_size
-
-                        push 1
-                        add
-                        // _ *enum_expr [*previous_fields] *current_field
-                    ));
-
-                    acc_code.append(&mut triton_asm!(
-                        read_mem
-                        add
-                        push 1
-                        add
-                    ));
-                }
-            }
-        }
-
-        ret.into_iter().zip_eq(data_types).collect_vec()
-    }
-
-    /// Return the constructor that is called by an expression evaluating to an
-    /// enum type. E.g.: `Foo::A(100u32);`
-    pub(crate) fn variant_constructor(&self, variant_name: &str) -> LibraryFunction {
-        let data_tuple = self.variant_data_type(variant_name);
-        assert!(
-            !data_tuple.is_unit(),
-            "Variant {variant_name} in enum type {} does not carry data",
-            self.name
-        );
-
-        let constructor_name = format!("{}::{variant_name}", self.name);
-        let constructor_return_type = DataType::Enum(Box::new(self.to_owned()));
-        let mut constructor = data_tuple.constructor(&constructor_name, constructor_return_type);
-
-        // Append padding code to ensure that all enum variants have the same size
-        // on the stack.
-        let padding = vec![triton_instr!(push 0); self.padding_size(variant_name)];
-        let discriminant = self.variant_discriminant(variant_name);
-        let discriminant = triton_asm!(push { discriminant });
-
-        constructor.body = [constructor.body, padding, discriminant].concat();
-
-        constructor
     }
 }
 

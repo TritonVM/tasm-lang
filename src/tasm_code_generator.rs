@@ -1,7 +1,10 @@
+mod enum_type;
 mod function_state;
 mod inner_function_tasm_code;
 mod outer_function_tasm_code;
 mod stack;
+mod struct_type;
+mod tuple;
 
 use itertools::{Either, Itertools};
 use num::{One, Zero};
@@ -1442,7 +1445,9 @@ fn compile_match_stmt_boxed_expr(
                         .var_addr
                         .insert(binding.name.to_owned(), new_binding_id);
                         bindings_code.append(&mut triton_asm!(
+                            // _ *enum_expr
                             {&get_field_pointer}
+                            // _ *enum_expr [*variant-data-fields]
                         ));
                     });
 
@@ -1453,10 +1458,15 @@ fn compile_match_stmt_boxed_expr(
                     {arm_subroutine_label}:
                         {&remove_old_any_arm_taken_indicator}
                         {&bindings_code}
+                        // _ *enum_expr [*variant-data-fields]
+
                         {&body_code}
+                        // _ *enum_expr [*variant-data-fields]
 
                         // We can just pop local binding from top of stack, since a statement cannot return anything
                         {&pop_local_bindings}
+                        // _ *enum_expr
+
                         {&set_new_no_arm_taken_indicator}
                         return
                 );
@@ -3069,7 +3079,7 @@ fn dereference(
         // From the TASM perspective, a mempointer to a list is the same as a list
         ast_types::DataType::List(_, _) => triton_asm!(),
         ast_types::DataType::Boxed(_) => triton_asm!(),
-        ast_types::DataType::Enum(enum_type) => load_enum_from_memory(enum_type, state),
+        ast_types::DataType::Enum(enum_type) => enum_type::load_enum_from_memory(enum_type, state),
 
         // No idea how to handle these yet
         ast_types::DataType::VoidPointer => todo!(),
@@ -3080,159 +3090,6 @@ fn dereference(
         ast_types::DataType::Struct(_) => load_from_memory(None, resulting_type.stack_size()),
         _ => load_from_memory(None, resulting_type.stack_size()),
     }
-}
-
-/// Return the code to load an enum value from memory. Leaves the stack with the read value on top.
-/// If no static memory address is provided, the memory address is read from top of the stack,
-/// and this memory address is then consumed.
-fn load_enum_from_memory(
-    enum_type: &ast_types::EnumType,
-    state: &mut CompilerState,
-) -> Vec<LabelledInstruction> {
-    // stack: _ *discriminant
-    // memory: _ *discriminant <data_size> [data]
-
-    // Goal:
-    // stack: _ [data] [padding] discriminant
-
-    let (subroutine, subroutines) = enum_type.get_variant_data_size_from_memory_at_runtime();
-    let get_variant_data_size_label = subroutine.get_label();
-    for sr in [vec![subroutine], subroutines].concat() {
-        state.add_library_function(sr);
-    }
-
-    let mut code = triton_asm!(
-        dup 0
-        // _ *discriminant *discriminant
-
-        call {get_variant_data_size_label}
-        // _ *discriminant *last_data_word data_size
-
-        dup 0
-        // _ *discriminant *last_data_word data_size remaining_words
-    );
-
-    // Read `data_size` elements onto stack
-    let load_data_from_memory_label = format!("load_enum_variant_data_to_stack");
-    let read_data_size_elements_to_stack_loop: SubRoutine = triton_asm!(
-        {load_data_from_memory_label}:
-            // Invariant: [data] *discriminant *next_data_word data_size remaining_words
-            // loop condition: remaining_words == 0
-            dup 0
-            push 0
-            eq
-            skiz
-                return
-
-            // [data] *discriminant *next_data_word data_size remaining_words
-
-            swap 2
-            // [data] *discriminant remaining_words data_size *next_data_word
-
-            read_mem
-            // [data] *discriminant remaining_words data_size *next_data_word data_element
-
-            swap 4
-            // [data] data_element remaining_words data_size *next_data_word *discriminant
-            // [data'] remaining_words data_size *next_data_word *discriminant
-
-            swap 3
-            // [data'] *discriminant data_size *next_data_word remaining_words
-
-            push -1
-            add
-            // [data'] *discriminant data_size *next_data_word remaining_words'
-
-            swap 1
-            push -1
-            add
-            // [data'] *discriminant data_size remaining_words' *next_data_word'
-
-            swap 2
-            // [data'] *discriminant *next_data_word' remaining_words' data_size
-
-            swap 1
-            // [data'] *discriminant *next_data_word' data_size remaining_words'
-
-            recurse
-    )
-    .try_into()
-    .unwrap();
-    state.add_library_function(read_data_size_elements_to_stack_loop);
-
-    code.append(&mut triton_asm!(
-        call { load_data_from_memory_label }
-        // _ [data] *discriminant *next_data_word data_size 0
-
-        pop
-        // _ [data] *discriminant *next_data_word data_size
-
-        swap 1
-        // _ [data] *discriminant data_size *next_data_word
-
-        pop
-        // _ [data] *discriminant data_size
-    ));
-
-    let as_data_type: ast_types::DataType = enum_type.into();
-    let total_stack_size = as_data_type.stack_size();
-    let size_of_data_and_padding = total_stack_size - 1;
-    code.append(&mut triton_asm!(
-        // _ [data] *discriminant data_size
-        push -1
-        mul
-        // _ [data] *discriminant -data_size
-
-        push {size_of_data_and_padding}
-        add
-
-        // _ [data] *discriminant size_of_padding
-    ));
-
-    let pad_subroutine_loop_label = "pad_loop_for_enum_to_stack";
-    let pad_subroutine = triton_asm!(
-        // Invariant: [data] [padding] *discriminant remaining_pad
-        {pad_subroutine_loop_label}:
-            // loop condition (remaining_pad == 0)
-            dup 0
-            push 0
-            eq
-            skiz
-                return
-
-            // _ [data] [padding] *discriminant remaining_pad
-            push 0
-            // _ [data] [padding] *discriminant remaining_pad 0
-
-            swap 2
-            // _ [data] [padding'] remaining_pad *discriminant
-
-            swap 1
-            // _ [data] [padding'] *discriminant remaining_pad
-
-            push -1
-            add
-            // _ [data] [padding'] *discriminant remaining_pad'
-
-            recurse
-    );
-    state.add_library_function(pad_subroutine.try_into().unwrap());
-
-    code.append(&mut triton_asm!(
-        call { pad_subroutine_loop_label }
-        // _ [data] [padding'] *discriminant 0
-        pop
-        // _ [data] [padding'] *discriminant
-
-        read_mem
-        // _ [data] [padding'] *discriminant discriminant
-
-        swap 1
-        pop
-        // _ [data] [padding'] discriminant
-    ));
-
-    code
 }
 
 /// Return the code to load a value from memory. Leaves the stack with the read value on top.

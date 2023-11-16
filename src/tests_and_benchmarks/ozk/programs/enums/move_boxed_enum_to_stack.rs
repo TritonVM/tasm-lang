@@ -3,16 +3,18 @@ use itertools::Itertools;
 use triton_vm::Digest;
 use twenty_first::shared_math::b_field_element::BFieldElement;
 use twenty_first::shared_math::bfield_codec::BFieldCodec;
+use twenty_first::shared_math::x_field_element::XFieldElement;
 
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
-#[derive(Arbitrary, BFieldCodec, Clone)]
+#[derive(Arbitrary, BFieldCodec, Clone, Debug)]
 enum EnumType {
     A(u32),
     B(u64),
     C(Digest),
-    // TODO: Make work for vector as well!
-    // D(Vec<XFieldElement>),
+    D(Vec<XFieldElement>),
+    E,
+    // F([Digest; 2]),
 }
 
 fn main() {
@@ -22,19 +24,27 @@ fn main() {
 
     match on_stack {
         EnumType::A(num) => {
-            tasm::tasm_io_write_to_stdout___bfe(BFieldElement::new(0));
+            tasm::tasm_io_write_to_stdout___bfe(BFieldElement::new(1));
             tasm::tasm_io_write_to_stdout___u32(num);
         }
         EnumType::B(num) => {
-            tasm::tasm_io_write_to_stdout___bfe(BFieldElement::new(1));
+            tasm::tasm_io_write_to_stdout___bfe(BFieldElement::new(2));
             tasm::tasm_io_write_to_stdout___u64(num);
         }
         EnumType::C(digest) => {
-            tasm::tasm_io_write_to_stdout___bfe(BFieldElement::new(2));
+            tasm::tasm_io_write_to_stdout___bfe(BFieldElement::new(3));
             tasm::tasm_io_write_to_stdout___digest(digest);
-        } // EnumType::D(list) => {
-          //     tasm::tasm_io_write_to_stdout___bfe(BFieldElement::new(3));
-          //     tasm::tasm_io_write_to_stdout___u32(list.len() as u32);
+        }
+        EnumType::D(list) => {
+            tasm::tasm_io_write_to_stdout___bfe(BFieldElement::new(4));
+            tasm::tasm_io_write_to_stdout___u32(list.len() as u32);
+        }
+        EnumType::E => {
+            tasm::tasm_io_write_to_stdout___bfe(BFieldElement::new(5));
+        } // EnumType::F(digests) => {
+          //     tasm::tasm_io_write_to_stdout___bfe(BFieldElement::new(6));
+          //     // tasm::tasm_io_write_to_stdout___digest(digests[0]);
+          //     // tasm::tasm_io_write_to_stdout___digest(digests[1]);
           // }
     };
 
@@ -55,10 +65,23 @@ mod tests {
 
     #[test]
     fn move_boxed_enum_to_stack_test() {
-        for _ in 0..10 {
+        for _ in 0..20 {
             let rand: [u8; 100] = random();
             let enum_value = EnumType::arbitrary(&mut Unstructured::new(&rand)).unwrap();
+            println!("enum_value:\n{enum_value:#?}");
             let non_determinism = init_memory_from(&enum_value, BFieldElement::new(84));
+            {
+                let mut ram_sorted: Vec<(BFieldElement, BFieldElement)> =
+                    non_determinism.ram.clone().into_iter().collect_vec();
+                ram_sorted.sort_unstable_by_key(|x| x.0.value());
+                println!(
+                    "RAM:\n{}",
+                    ram_sorted
+                        .iter()
+                        .map(|(p, v)| format!("{p} => {v}"))
+                        .join(",")
+                );
+            }
 
             let stdin = vec![];
 
