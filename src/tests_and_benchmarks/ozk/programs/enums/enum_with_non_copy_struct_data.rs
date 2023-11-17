@@ -3,18 +3,17 @@ use itertools::Itertools;
 use triton_vm::Digest;
 use twenty_first::shared_math::b_field_element::BFieldElement;
 use twenty_first::shared_math::bfield_codec::BFieldCodec;
-use twenty_first::shared_math::x_field_element::XFieldElement;
 
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
 #[derive(Arbitrary, BFieldCodec, Clone, Debug)]
+struct NotCopyStruct {
+    a_list_of_digests: Vec<Digest>,
+}
+
+#[derive(Arbitrary, BFieldCodec, Clone, Debug)]
 enum EnumType {
-    A(u32),
-    B(u64),
-    C(Digest),
-    D(Vec<XFieldElement>),
-    E,
-    F([Digest; 4]),
+    A(NotCopyStruct),
 }
 
 fn main() {
@@ -23,31 +22,9 @@ fn main() {
     let on_stack: EnumType = *boxed_enum_type;
 
     match on_stack {
-        EnumType::A(num) => {
-            tasm::tasm_io_write_to_stdout___bfe(BFieldElement::new(1));
-            tasm::tasm_io_write_to_stdout___u32(num);
-        }
-        EnumType::B(num) => {
-            tasm::tasm_io_write_to_stdout___bfe(BFieldElement::new(2));
-            tasm::tasm_io_write_to_stdout___u64(num);
-        }
-        EnumType::C(digest) => {
-            tasm::tasm_io_write_to_stdout___bfe(BFieldElement::new(3));
-            tasm::tasm_io_write_to_stdout___digest(digest);
-        }
-        EnumType::D(list) => {
-            tasm::tasm_io_write_to_stdout___bfe(BFieldElement::new(4));
-            tasm::tasm_io_write_to_stdout___u32(list.len() as u32);
-        }
-        EnumType::E => {
-            tasm::tasm_io_write_to_stdout___bfe(BFieldElement::new(5));
-        }
-        EnumType::F(digests) => {
-            tasm::tasm_io_write_to_stdout___bfe(BFieldElement::new(6));
-            tasm::tasm_io_write_to_stdout___digest(digests[0]);
-            tasm::tasm_io_write_to_stdout___digest(digests[1]);
-            tasm::tasm_io_write_to_stdout___digest(digests[3]);
-            tasm::tasm_io_write_to_stdout___digest(digests[2]);
+        EnumType::A(non_copy_struct) => {
+            tasm::tasm_io_write_to_stdout___bfe(BFieldElement::new(8));
+            tasm::tasm_io_write_to_stdout___u32(non_copy_struct.a_list_of_digests.len() as u32);
         }
     };
 
@@ -67,9 +44,9 @@ mod tests {
     };
 
     #[test]
-    fn move_boxed_enum_to_stack_test() {
+    fn enum_with_non_copy_struct_data_test() {
         for _ in 0..30 {
-            let rand: [u8; 200] = random();
+            let rand: [u8; 300] = random();
             let enum_value = EnumType::arbitrary(&mut Unstructured::new(&rand)).unwrap();
             let non_determinism = init_memory_from(&enum_value, BFieldElement::new(84));
             let stdin = vec![];
@@ -81,7 +58,7 @@ mod tests {
             // Run test on Triton-VM
             let test_program = ozk_parsing::compile_for_test(
                 "enums",
-                "move_boxed_enum_to_stack",
+                "enum_with_non_copy_struct_data",
                 "main",
                 crate::ast_types::ListType::Unsafe,
             );
@@ -96,7 +73,7 @@ mod tests {
             .unwrap();
             if native_output != vm_output.output {
                 panic!(
-                    "native_output:\n{}\nVM output:\n{}. Code was:\n{}\nrand was {}\n",
+                    "native_output:\n{}\nVM output:\n{}. Code was:\n{}\nrand was {}\ninput was: {enum_value:#?}",
                     native_output.iter().join(", "),
                     vm_output.output.iter().join(", "),
                     test_program.iter().join("\n"),

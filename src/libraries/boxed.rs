@@ -5,11 +5,12 @@ use num::One;
 use triton_vm::{instruction::LabelledInstruction, triton_asm, triton_instr};
 
 #[derive(Debug)]
-pub struct AllocBoxed;
+pub struct Boxed;
 
 const FUNCTION_NAME_NEW_BOX: &str = "Box::new";
+const AS_REF_METHOD_NAME: &str = "as_ref";
 
-impl Library for AllocBoxed {
+impl Library for Boxed {
     fn get_function_name(&self, full_name: &str) -> Option<String> {
         if full_name == FUNCTION_NAME_NEW_BOX {
             return Some(full_name.to_owned());
@@ -20,20 +21,40 @@ impl Library for AllocBoxed {
 
     fn get_method_name(
         &self,
-        _method_name: &str,
-        _receiver_type: &crate::ast_types::DataType,
+        method_name: &str,
+        receiver_type: &crate::ast_types::DataType,
     ) -> Option<String> {
+        if method_name == AS_REF_METHOD_NAME {
+            if let ast_types::DataType::Boxed(_inner) = receiver_type {
+                return Some(method_name.to_owned());
+            }
+        }
+
         None
     }
 
     fn method_name_to_signature(
         &self,
-        _fn_name: &str,
-        _receiver_type: &crate::ast_types::DataType,
+        method_name: &str,
+        receiver_type: &crate::ast_types::DataType,
         _args: &[crate::ast::Expr<super::Annotation>],
         _type_checker_state: &crate::type_checker::CheckState,
     ) -> crate::ast::FnSignature {
-        panic!("AllocBoxed does not contain any methods")
+        assert!(matches!(receiver_type, ast_types::DataType::Boxed(_inner)));
+        assert_eq!(AS_REF_METHOD_NAME, method_name);
+
+        ast::FnSignature {
+            name: String::from(AS_REF_METHOD_NAME),
+            args: vec![ast_types::AbstractArgument::ValueArgument(
+                ast_types::AbstractValueArg {
+                    name: "value".to_owned(),
+                    data_type: receiver_type.to_owned(),
+                    mutable: false,
+                },
+            )],
+            output: receiver_type.to_owned(),
+            arg_evaluation_order: Default::default(),
+        }
     }
 
     fn function_name_to_signature(
@@ -59,12 +80,17 @@ impl Library for AllocBoxed {
 
     fn call_method(
         &self,
-        _method_name: &str,
-        _receiver_type: &crate::ast_types::DataType,
+        method_name: &str,
+        receiver_type: &crate::ast_types::DataType,
         _args: &[crate::ast::Expr<super::Annotation>],
         _state: &mut crate::tasm_code_generator::CompilerState,
     ) -> Vec<triton_vm::instruction::LabelledInstruction> {
-        panic!("AllocBoxed does not contain any methods")
+        assert!(matches!(receiver_type, ast_types::DataType::Boxed(_inner)));
+        assert_eq!(AS_REF_METHOD_NAME, method_name);
+
+        // This can simply be implemented as the identity function, I think.
+        // The only reason we need this funciton is that Rustc demands it.
+        triton_asm!()
     }
 
     fn call_function(

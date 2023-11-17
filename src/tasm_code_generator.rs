@@ -1825,8 +1825,10 @@ fn compile_method_call(
             })
             .unzip();
 
-    // First check if this is a declared method
+    let mut found_match = false;
     let mut call_code = vec![];
+
+    // First check if this is a declared method
     for declared_method in state.declared_methods.iter() {
         if method_call.method_name == declared_method.signature.name
             && (receiver_type == declared_method.receiver_type() ||
@@ -1863,23 +1865,25 @@ fn compile_method_call(
             }
 
             call_code.append(&mut triton_asm!(call { method_label }));
+            found_match = true;
         }
     }
 
     // Then check if it is a method from a library
-    if call_code.is_empty() {
+    if !found_match {
         for lib in state.libraries.iter() {
             if let Some(fn_name) = lib.get_method_name(&method_name, &receiver_type) {
                 let mut call_method_code =
                     lib.call_method(&fn_name, &receiver_type, &method_call.args, state);
                 call_code.append(&mut call_method_code);
+                found_match = true;
                 break;
             }
         }
     }
 
     assert!(
-        !call_code.is_empty(),
+        found_match,
         "Unknown method: \"{method_name}\" for receiver type \"{receiver_type}\""
     );
 

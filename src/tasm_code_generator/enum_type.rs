@@ -343,13 +343,19 @@ impl ast_types::EnumType {
                         if data_field.data_always_lives_in_memory() {
                             (1, true, static_encoding_length.is_none())
                         } else {
-                            let stack_size = if data_field.is_copy() {
-                                static_encoding_length.unwrap()
-                            } else {
-                                1
-                            };
-                            (stack_size, false, false)
+                            (
+                                data_field.stack_size(),
+                                false,
+                                static_encoding_length.is_none(),
+                            )
                         };
+
+                    println!("enum_type");
+                    dbg!(data_field);
+                    dbg!(static_encoding_length);
+                    dbg!(field_stack_size);
+                    dbg!(is_reference_type);
+                    dbg!(has_size_indicator);
 
                     triton_asm!(
                         {subroutine_label}:
