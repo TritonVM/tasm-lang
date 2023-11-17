@@ -1,3 +1,4 @@
+mod data_type;
 mod enum_type;
 mod function_state;
 mod inner_function_tasm_code;
@@ -7,14 +8,13 @@ mod struct_type;
 mod tuple;
 
 use itertools::{Either, Itertools};
-use num::{One, Zero};
+use num::One;
 use std::collections::{HashMap, HashSet};
 use std::fmt::Display;
+use tasm_lib;
 use tasm_lib::library::Library as SnippetState;
 use tasm_lib::snippet::BasicSnippet;
-use tasm_lib::{arithmetic, hashing};
 use triton_vm::instruction::LabelledInstruction;
-use triton_vm::op_stack::OpStackElement;
 use triton_vm::{triton_asm, triton_instr};
 use twenty_first::amount::u32s::U32s;
 use twenty_first::shared_math::b_field_element::BFieldElement;
@@ -1992,7 +1992,7 @@ fn compile_expr(
                 } else {
                     match location {
                         ValueLocation::OpStack(position) => {
-                            dup_value_from_stack_code(position.try_into().unwrap(), &var_type)
+                            var_type.dup_value_from_stack_code(position.try_into().unwrap())
                         }
                         ValueLocation::StaticMemoryAddress(pointer) => {
                             load_from_memory(Some(pointer), var_type.stack_size())
@@ -2187,21 +2187,24 @@ fn compile_expr(
                     let add_code = match result_type {
                         ast_types::DataType::U32 => {
                             // We use the safe, overflow-checking, add code as default
-                            let safe_add_u32 =
-                                state.import_snippet(Box::new(arithmetic::u32::safeadd::Safeadd));
+                            let safe_add_u32 = state.import_snippet(Box::new(
+                                tasm_lib::arithmetic::u32::safeadd::Safeadd,
+                            ));
                             triton_asm!(call { safe_add_u32 })
                         }
                         ast_types::DataType::U64 => {
                             // We use the safe, overflow-checking, add code as default
-                            let add_u64 =
-                                state.import_snippet(Box::new(arithmetic::u64::add_u64::AddU64));
+                            let add_u64 = state.import_snippet(Box::new(
+                                tasm_lib::arithmetic::u64::add_u64::AddU64,
+                            ));
 
                             triton_asm!(call { add_u64 })
                         }
                         ast_types::DataType::U128 => {
                             // We use the safe, overflow-checking, add code as default
-                            let add_u128 =
-                                state.import_snippet(Box::new(arithmetic::u128::add_u128::AddU128));
+                            let add_u128 = state.import_snippet(Box::new(
+                                tasm_lib::arithmetic::u128::add_u128::AddU128,
+                            ));
 
                             triton_asm!(call { add_u128 })
                         }
@@ -2245,8 +2248,9 @@ fn compile_expr(
                     let bitwise_and_code = match result_type {
                         ast_types::DataType::U32 => triton_asm!(and),
                         ast_types::DataType::U64 => {
-                            let and_u64 =
-                                state.import_snippet(Box::new(arithmetic::u64::and_u64::AndU64));
+                            let and_u64 = state.import_snippet(Box::new(
+                                tasm_lib::arithmetic::u64::and_u64::AndU64,
+                            ));
                             triton_asm!(call { and_u64 })
                         }
                         _ => panic!("Logical AND operator is not supported for {result_type}"),
@@ -2293,12 +2297,13 @@ fn compile_expr(
 
                     let bitwise_or_code = match result_type {
                         U32 => {
-                            let or_u32 = state.import_snippet(Box::new(arithmetic::u32::or::Or));
+                            let or_u32 =
+                                state.import_snippet(Box::new(tasm_lib::arithmetic::u32::or::Or));
                             triton_asm!(call { or_u32 })
                         }
                         U64 => {
-                            let or_u64 =
-                                state.import_snippet(Box::new(arithmetic::u64::or_u64::OrU64));
+                            let or_u64 = state
+                                .import_snippet(Box::new(tasm_lib::arithmetic::u64::or_u64::OrU64));
                             triton_asm!(call { or_u64 })
                         }
                         _ => panic!("bitwise `or` on {result_type} is not supported"),
@@ -2340,8 +2345,9 @@ fn compile_expr(
                             if matches!(rhs_expr_owned, ast::Expr::Lit(ast::ExprLit::U64(2))) {
                                 let (_lhs_expr_addr, lhs_expr_code) =
                                     compile_expr(lhs_expr, "_binop_lhs", state);
-                                let div2 = state
-                                    .import_snippet(Box::new(arithmetic::u64::div2_u64::Div2U64));
+                                let div2 = state.import_snippet(Box::new(
+                                    tasm_lib::arithmetic::u64::div2_u64::Div2U64,
+                                ));
 
                                 // Pop the numerator that was divided by two
                                 state.function_state.vstack.pop();
@@ -2357,7 +2363,7 @@ fn compile_expr(
                                     compile_expr(rhs_expr, "_binop_rhs", state);
 
                                 let div_mod_u64 = state.import_snippet(Box::new(
-                                    arithmetic::u64::div_mod_u64::DivModU64,
+                                    tasm_lib::arithmetic::u64::div_mod_u64::DivModU64,
                                 ));
 
                                 state.function_state.vstack.pop();
@@ -2450,8 +2456,9 @@ fn compile_expr(
                             let (_rhs_expr_addr, rhs_expr_code) =
                                 compile_expr(rhs_expr, "_binop_rhs", state);
 
-                            let div_mod_u64 = state
-                                .import_snippet(Box::new(arithmetic::u64::div_mod_u64::DivModU64));
+                            let div_mod_u64 = state.import_snippet(Box::new(
+                                tasm_lib::arithmetic::u64::div_mod_u64::DivModU64,
+                            ));
 
                             state.function_state.vstack.pop();
                             state.function_state.vstack.pop();
@@ -2478,7 +2485,7 @@ fn compile_expr(
                     let (_rhs_expr_addr, rhs_expr_code) =
                         compile_expr(rhs_expr, "_binop_rhs", state);
 
-                    let eq_code = compile_eq_code(&lhs_type, state);
+                    let eq_code = lhs_type.compile_eq_code(state);
 
                     state.function_state.vstack.pop();
                     state.function_state.vstack.pop();
@@ -2507,8 +2514,9 @@ fn compile_expr(
                         ),
 
                         U64 => {
-                            let lt_u64 = state
-                                .import_snippet(Box::new(arithmetic::u64::lt_u64::LtStandardU64));
+                            let lt_u64 = state.import_snippet(Box::new(
+                                tasm_lib::arithmetic::u64::lt_u64::LtStandardU64,
+                            ));
                             triton_asm!(
                                 {&lhs_expr_code}
                                 {&rhs_expr_code}
@@ -2542,8 +2550,9 @@ fn compile_expr(
                             lt
                         ),
                         U64 => {
-                            let lt_u64 = state
-                                .import_snippet(Box::new(arithmetic::u64::lt_u64::LtStandardU64));
+                            let lt_u64 = state.import_snippet(Box::new(
+                                tasm_lib::arithmetic::u64::lt_u64::LtStandardU64,
+                            ));
 
                             triton_asm!(
                                 {&lhs_expr_code}
@@ -2570,8 +2579,9 @@ fn compile_expr(
 
                     match (&lhs_type, &rhs_type) {
                         (U32, U32) => {
-                            let fn_name =
-                                state.import_snippet(Box::new(arithmetic::u32::safemul::Safemul));
+                            let fn_name = state.import_snippet(Box::new(
+                                tasm_lib::arithmetic::u32::safemul::Safemul,
+                            ));
 
                             triton_asm!(
                                 {&lhs_expr_code}
@@ -2581,7 +2591,7 @@ fn compile_expr(
                         }
                         (U64, U64) => {
                             let fn_name = state.import_snippet(Box::new(
-                                arithmetic::u64::safe_mul_u64::SafeMulU64,
+                                tasm_lib::arithmetic::u64::safe_mul_u64::SafeMulU64,
                             ));
 
                             triton_asm!(
@@ -2592,7 +2602,7 @@ fn compile_expr(
                         }
                         (U128, U128) => {
                             let fn_name = state.import_snippet(Box::new(
-                                arithmetic::u128::safe_mul_u128::SafeMulU128,
+                                tasm_lib::arithmetic::u128::safe_mul_u128::SafeMulU128,
                             ));
 
                             triton_asm!(
@@ -2632,7 +2642,7 @@ fn compile_expr(
                     let (_rhs_expr_addr, rhs_expr_code) =
                         compile_expr(rhs_expr, "_binop_rhs", state);
 
-                    let eq_code = compile_eq_code(&lhs_type, state);
+                    let eq_code = lhs_type.compile_eq_code(state);
 
                     state.function_state.vstack.pop();
                     state.function_state.vstack.pop();
@@ -2676,12 +2686,12 @@ fn compile_expr(
 
                     let lhs_type = lhs_expr.get_type();
                     let shl = match lhs_type {
-                        ast_types::DataType::U32 => state.import_snippet(Box::new(arithmetic::u32::shiftleft::Shiftleft)),
+                        ast_types::DataType::U32 => state.import_snippet(Box::new(tasm_lib::arithmetic::u32::shiftleft::Shiftleft)),
                         ast_types::DataType::U64 => state.import_snippet(Box::new(
-                                    arithmetic::u64::shift_left_u64::ShiftLeftU64,
+                                    tasm_lib::arithmetic::u64::shift_left_u64::ShiftLeftU64,
                                 )),
                         ast_types::DataType::U128 => state.import_snippet(Box::new(
-                            arithmetic::u128::shift_left_u128::ShiftLeftU128,
+                            tasm_lib::arithmetic::u128::shift_left_u128::ShiftLeftU128,
                         )),
                         _ => panic!("Unsupported SHL of type {lhs_type}. Expression was `{lhs_expr}: >> {rhs_expr}`; types: `{lhs_type}`, {}.", rhs_expr.get_type()),
                     };
@@ -2707,12 +2717,12 @@ fn compile_expr(
                     // TODO: add optimization where RHS is a literal. Also applies for `Binop::Shl`. We have code snippets
                     // for left/right shifting u128s with statically known bits.
                     let shr = match lhs_type {
-                        ast_types::DataType::U32 => state.import_snippet(Box::new(arithmetic::u32::shiftright::Shiftright)),
+                        ast_types::DataType::U32 => state.import_snippet(Box::new(tasm_lib::arithmetic::u32::shiftright::Shiftright)),
                         ast_types::DataType::U64 => state.import_snippet(Box::new(
-                                    arithmetic::u64::shift_right_u64::ShiftRightU64,
+                                    tasm_lib::arithmetic::u64::shift_right_u64::ShiftRightU64,
                                 )),
                         ast_types::DataType::U128 => state.import_snippet(Box::new(
-                            arithmetic::u128::shift_right_u128::ShiftRightU128,
+                            tasm_lib::arithmetic::u128::shift_right_u128::ShiftRightU128,
                         )),
                         _ => panic!("Unsupported SHR of type {lhs_type}. Expression was `{lhs_expr}: >> {rhs_expr}`; types: `{lhs_type}`, {}.", rhs_expr.get_type()),
                     };
@@ -2737,8 +2747,9 @@ fn compile_expr(
                     let sub_code: Vec<LabelledInstruction> = match result_type {
                         ast_types::DataType::U32 => {
                             // As standard, we use safe arithmetic that crashes on overflow
-                            let safe_sub_u32 =
-                                state.import_snippet(Box::new(arithmetic::u32::safesub::Safesub));
+                            let safe_sub_u32 = state.import_snippet(Box::new(
+                                tasm_lib::arithmetic::u32::safesub::Safesub,
+                            ));
                             triton_asm!(
                                 swap 1
                                 call {safe_sub_u32}
@@ -2746,8 +2757,9 @@ fn compile_expr(
                         }
                         ast_types::DataType::U64 => {
                             // As standard, we use safe arithmetic that crashes on overflow
-                            let sub_u64 =
-                                state.import_snippet(Box::new(arithmetic::u64::sub_u64::SubU64));
+                            let sub_u64 = state.import_snippet(Box::new(
+                                tasm_lib::arithmetic::u64::sub_u64::SubU64,
+                            ));
                             triton_asm!(
                                 //     // _ lhs_hi lhs_lo rhs_hi rhs_lo
                                 swap 3
@@ -2759,8 +2771,9 @@ fn compile_expr(
                         }
                         ast_types::DataType::U128 => {
                             // As standard, we use safe arithmetic that crashes on overflow
-                            let sub_u128 =
-                                state.import_snippet(Box::new(arithmetic::u128::sub_u128::SubU128));
+                            let sub_u128 = state.import_snippet(Box::new(
+                                tasm_lib::arithmetic::u128::sub_u128::SubU128,
+                            ));
                             triton_asm!(
                                 // _ lhs_3 lhs_2 lhs_1 lhs_0 rhs_3 rhs_2 rhs_1 rhs_0
                                 swap 7
@@ -3142,137 +3155,4 @@ fn load_from_memory(
     // Stack: _ element_N element_{N - 1} ... element_0
 
     ret
-}
-
-fn compile_eq_code(
-    lhs_type: &ast_types::DataType,
-    state: &mut CompilerState,
-) -> Vec<LabelledInstruction> {
-    use ast_types::DataType::*;
-    match lhs_type {
-        Bool | U32 | BFE | VoidPointer => triton_asm!(eq),
-        U64 => triton_asm!(
-            // _ a_hi a_lo b_hi b_lo
-            swap 3
-            eq
-            swap 2
-            eq
-            mul
-        ),
-        U128 => triton_asm!(
-            // _ a_3 a_2 a_1 a_0 b_3 b_2 b_1 b_0
-            swap 5
-            eq
-            // _ a_3 a_2 b_0 a_0 b_3 b_2 (b_1 == a_1)
-            swap 5
-            eq
-            // _ a_3 (b_1 == a_1) b_0 a_0 b_3 (b_2 == a_2)
-            swap 5
-            eq
-            // _ (b_2 == a_2) (b_1 == a_1) b_0 a_0 (b_3 == a_3)
-            swap 2
-            eq
-            // _ (b_2 == a_2) (b_1 == a_1) (b_3 == a_3) (b_0 == a_0)
-            mul
-            mul
-            mul
-            // _ (b_2 == a_2) * (b_1 == a_1) * (b_3 == a_3) * (b_0 == a_0)
-        ),
-
-        XFE => triton_asm!(
-             // _ a_2 a_1 a_0 b_2 b_1 b_0
-            swap 4 // _ a_2 b_0 a_0 b_2 b_1 a_1
-            eq     // _ a_2 b_0 a_0 b_2 (b_1 == a_1)
-            swap 4 // _ (b_1 == a_1) b_0 a_0 b_2 a_2
-            eq     // _ (b_1 == a_1) b_0 a_0 (b_2 == a_2)
-            swap 2 // _ (b_1 == a_1) (b_2 == a_2) a_0 b_0
-            eq     // _ (b_1 == a_1) (b_2 == a_2) (a_0 == b_0)
-            mul    // _ (b_1 == a_1) ((b_2 == a_2)·(a_0 == b_0))
-            mul    // _ ((b_1 == a_1)·(b_2 == a_2)·(a_0 == b_0))
-        ),
-        Digest => {
-            let eq_digest = state.import_snippet(Box::new(hashing::eq_digest::EqDigest));
-            triton_asm!(call { eq_digest })
-        }
-        List(_, _) => todo!(),
-        Tuple(_) => todo!(),
-        Array(_) => todo!("Equality for arrays not yet implemented"),
-        Function(_) => todo!(),
-        Struct(_) => todo!(),
-        Boxed(_) => todo!("Comparison of MemPointer not supported yet"),
-        Unresolved(name) => panic!("Cannot compare unresolved type {name}"),
-        Reference(_) => panic!("Cannot compare references. Got {lhs_type}"),
-        Enum(_) => todo!("Equality for enums not yet implemented"),
-    }
-}
-
-/// Copy a value at a position on the stack to the top
-fn dup_value_from_stack_code(
-    position: OpStackElement,
-    data_type: &ast_types::DataType,
-) -> Vec<LabelledInstruction> {
-    let elem_size = data_type.stack_size();
-
-    // the position of the deepest element of the value.
-    let n: usize = Into::<usize>::into(position) + elem_size - 1;
-
-    let instrs_as_str = format!("dup {}\n", n);
-    let instrs_as_str = instrs_as_str.repeat(elem_size);
-
-    triton_asm!({ instrs_as_str })
-}
-
-impl ast_types::StructType {
-    /// Assuming the stack top points to the start of the struct, returns the code
-    /// that modifies the top stack value to point to the indicated field. So the top
-    /// stack element is consumed and the returned value is a pointer to the requested
-    /// field in the struct. Note that the top of the stack is where the field begins,
-    /// not the size indication of that field.
-    pub fn get_field_accessor_code_for_reference(
-        &self,
-        field_id: &ast_types::FieldId,
-    ) -> Vec<LabelledInstruction> {
-        // This implementation must match `BFieldCodec` for the equivalent Rust types
-        let mut instructions = vec![];
-        let mut static_pointer_addition = 0;
-        let needle_id = field_id;
-        let mut needle_type: Option<ast_types::DataType> = None;
-        for (haystack_field_id, haystack_type) in self.field_ids_and_types_reversed_for_tuples() {
-            if haystack_field_id == *needle_id {
-                // If we've found the field the accumulators are in the right state.
-                // return them.
-                needle_type = Some(haystack_type.to_owned());
-                break;
-            } else {
-                // We have not reached the field yet. If the field has a statically
-                // known size, we can just add that number to the accumulator. Otherwise,
-                // we have to read the size of the field from RAM, and add that value
-                // to the pointer
-                match haystack_type.bfield_codec_length() {
-                    Some(static_length) => static_pointer_addition += static_length,
-                    None => {
-                        if !static_pointer_addition.is_zero() {
-                            instructions
-                                .append(&mut triton_asm!(push {static_pointer_addition} add));
-                        }
-                        instructions.append(&mut triton_asm!(read_mem add push 1 add));
-                        static_pointer_addition = 0;
-                    }
-                }
-            }
-        }
-
-        // If the requested field is dynamically sized, add one to address, to point to start
-        // of the field instead of the size of the field.
-        match needle_type.unwrap().bfield_codec_length() {
-            Some(_) => (),
-            None => static_pointer_addition += 1,
-        }
-
-        if !static_pointer_addition.is_zero() {
-            instructions.append(&mut triton_asm!(push {static_pointer_addition} add));
-        }
-
-        instructions
-    }
 }
