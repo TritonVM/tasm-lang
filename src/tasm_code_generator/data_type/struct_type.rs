@@ -10,7 +10,7 @@ impl ast_types::StructType {
     /// stack element is consumed and the returned value is a pointer to the requested
     /// field in the struct. Note that the top of the stack is where the field begins,
     /// not the size indication of that field.
-    pub fn get_field_accessor_code_for_reference(
+    pub(crate) fn get_field_accessor_code_for_reference(
         &self,
         field_id: &ast_types::FieldId,
     ) -> Vec<LabelledInstruction> {

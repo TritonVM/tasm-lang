@@ -10,7 +10,7 @@ use crate::tasm_code_generator::SubRoutine;
 
 /// BEFORE: _ *discriminant
 /// AFTER:  _ [data] [padding] discriminant
-pub(super) fn load_enum_from_memory(
+pub(crate) fn load_enum_from_memory(
     enum_type: &ast_types::EnumType,
     state: &mut CompilerState,
 ) -> Vec<LabelledInstruction> {
@@ -401,7 +401,7 @@ impl ast_types::EnumType {
     /// Does not consume the enum_expr pointer.
     /// BEFORE: _ *enum_expr
     /// AFTER: _ *enum_expr [*variant-data-fields]
-    pub(super) fn get_variant_data_fields_in_memory(
+    pub(crate) fn get_variant_data_fields_in_memory(
         &self,
         variant_name: &str,
     ) -> Vec<(Vec<LabelledInstruction>, ast_types::DataType)> {

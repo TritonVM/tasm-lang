@@ -1,11 +1,8 @@
 mod data_type;
-mod enum_type;
 mod function_state;
 mod inner_function_tasm_code;
 mod outer_function_tasm_code;
 mod stack;
-mod struct_type;
-mod tuple;
 
 use itertools::{Either, Itertools};
 use num::One;
@@ -20,6 +17,7 @@ use twenty_first::amount::u32s::U32s;
 use twenty_first::shared_math::b_field_element::BFieldElement;
 use twenty_first::shared_math::bfield_codec::BFieldCodec;
 
+use self::data_type::enum_type;
 use self::function_state::{FunctionState, VarAddr};
 use self::inner_function_tasm_code::InnerFunctionTasmCode;
 use self::outer_function_tasm_code::OuterFunctionTasmCode;
@@ -3109,6 +3107,8 @@ fn dereference(
     }
 }
 
+#[deprecated]
+/// TODO: REPLACE THIS WITH THE `copy_from_memory` method for `DataType`
 /// Return the code to load a value from memory. Leaves the stack with the read value on top.
 /// If no static memory address is provided, the memory address is read from top of the stack,
 /// and this memory address is then consumed.
