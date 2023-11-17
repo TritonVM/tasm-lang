@@ -165,7 +165,7 @@ mod tests {
     };
 
     #[test]
-    fn proof_item_enum_test() {
+    fn boxed_proof_item_enum_test() {
         let a_0: Digest = random();
         let proof_item = ProofItem::MerkleRoot(a_0);
         let non_determinism = init_memory_from(&proof_item, BFieldElement::new(84));

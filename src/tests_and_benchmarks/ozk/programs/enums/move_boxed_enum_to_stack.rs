@@ -14,7 +14,7 @@ enum EnumType {
     C(Digest),
     D(Vec<XFieldElement>),
     E,
-    // F([Digest; 2]),
+    F([Digest; 4]),
 }
 
 fn main() {
@@ -41,11 +41,14 @@ fn main() {
         }
         EnumType::E => {
             tasm::tasm_io_write_to_stdout___bfe(BFieldElement::new(5));
-        } // EnumType::F(digests) => {
-          //     tasm::tasm_io_write_to_stdout___bfe(BFieldElement::new(6));
-          //     // tasm::tasm_io_write_to_stdout___digest(digests[0]);
-          //     // tasm::tasm_io_write_to_stdout___digest(digests[1]);
-          // }
+        }
+        EnumType::F(digests) => {
+            tasm::tasm_io_write_to_stdout___bfe(BFieldElement::new(6));
+            tasm::tasm_io_write_to_stdout___digest(digests[0]);
+            tasm::tasm_io_write_to_stdout___digest(digests[1]);
+            tasm::tasm_io_write_to_stdout___digest(digests[3]);
+            tasm::tasm_io_write_to_stdout___digest(digests[2]);
+        }
     };
 
     return;
@@ -68,19 +71,11 @@ mod tests {
         for _ in 0..20 {
             let rand: [u8; 100] = random();
             let enum_value = EnumType::arbitrary(&mut Unstructured::new(&rand)).unwrap();
-            println!("enum_value:\n{enum_value:#?}");
             let non_determinism = init_memory_from(&enum_value, BFieldElement::new(84));
             {
                 let mut ram_sorted: Vec<(BFieldElement, BFieldElement)> =
                     non_determinism.ram.clone().into_iter().collect_vec();
                 ram_sorted.sort_unstable_by_key(|x| x.0.value());
-                println!(
-                    "RAM:\n{}",
-                    ram_sorted
-                        .iter()
-                        .map(|(p, v)| format!("{p} => {v}"))
-                        .join(",")
-                );
             }
 
             let stdin = vec![];
@@ -96,7 +91,6 @@ mod tests {
                 "main",
                 crate::ast_types::ListType::Unsafe,
             );
-            println!("executing:\n{}", test_program.iter().join("\n"));
             let vm_output = execute_compiled_with_stack_memory_and_ins_for_test(
                 &test_program,
                 vec![],

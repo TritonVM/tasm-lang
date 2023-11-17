@@ -1,5 +1,4 @@
 use itertools::Itertools;
-use num::One;
 use triton_vm::instruction::LabelledInstruction;
 use triton_vm::triton_asm;
 use triton_vm::triton_instr;
@@ -39,8 +38,6 @@ pub(super) fn load_enum_from_memory(
     // We *should* be able to statically allocate the correct amount of data for that,
     // I think.
 
-    let read_n_words_from_memory_label = format!("read_n_words_from_memory_to_stack");
-
     let [load_field_data_from_memory, load_field_reference_type_branch, load_field_value_branch] =
         read_data_size_elements_to_stack_loop();
     let load_field_data_from_memory_label = load_field_data_from_memory.get_label();
@@ -48,7 +45,7 @@ pub(super) fn load_enum_from_memory(
     state.add_library_function(load_field_reference_type_branch);
     state.add_library_function(load_field_value_branch);
 
-    let load_variant_data_from_memory_label = format!("load_enum_variant_data_to_stack_loop");
+    let load_variant_data_from_memory_label = "load_enum_variant_data_to_stack_loop";
     let read_data_size_elements_to_stack_loop: SubRoutine = triton_asm!(
         // Invariant: _ *discriminant [(*data_field, stack_size is_reference_type)] remaining_fields
     {load_variant_data_from_memory_label}:
@@ -89,16 +86,6 @@ pub(super) fn load_enum_from_memory(
         dup 1
         swap 1
         // _ *discriminant *last_word_of_field next_size next_size is_reference_type
-
-        // if is_reference_type {
-            // _ *discriminant *last_word_of_field next_size
-            // pop
-            // swap 1
-            // push 0
-            // push 0
-        // } else {
-            //
-        // }
 
         call {load_field_data_from_memory_label}
         // _ [field_data] *discriminant garbage data_size 0
@@ -285,95 +272,6 @@ fn pad_subroutine() -> SubRoutine {
     .try_into()
     .unwrap()
 }
-// state.add_library_function(pad_subroutine.try_into().unwrap());
-
-/// Return the code to load an enum value from memory. Leaves the stack with the read value on top.
-/// If no static memory address is provided, the memory address is read from top of the stack,
-/// and this memory address is then consumed.
-pub(super) fn load_enum_from_memory_old(
-    enum_type: &ast_types::EnumType,
-    state: &mut CompilerState,
-) -> Vec<LabelledInstruction> {
-    // stack: _ *discriminant
-    // memory: _ *discriminant <data_size> [data]
-
-    // Goal:
-    // stack: _ [data] [padding] discriminant
-
-    let (subroutine, subroutines) = enum_type.get_variant_data_size_from_memory_at_runtime();
-    let get_variant_data_size_label = subroutine.get_label();
-    for sr in [vec![subroutine], subroutines].concat() {
-        state.add_library_function(sr);
-    }
-
-    let mut code = triton_asm!(
-        dup 0
-        // _ *discriminant *discriminant
-
-        call {get_variant_data_size_label}
-        // _ *discriminant *last_data_word data_size
-
-        dup 0
-        // _ *discriminant *last_data_word data_size remaining_words
-    );
-
-    // Read `data_size` elements onto stack
-
-    let [load_field_data_from_memory, load_field_reference_type_branch, load_field_value_branch] =
-        read_data_size_elements_to_stack_loop();
-    let load_field_data_from_memory_label = load_field_data_from_memory.get_label();
-    state.add_library_function(load_field_data_from_memory);
-    state.add_library_function(load_field_reference_type_branch);
-    state.add_library_function(load_field_value_branch);
-
-    code.append(&mut triton_asm!(
-        call { load_field_data_from_memory_label }
-        // _ [data] *discriminant *next_data_word data_size 0
-
-        pop
-        // _ [data] *discriminant *next_data_word data_size
-
-        swap 1
-        // _ [data] *discriminant data_size *next_data_word
-
-        pop
-        // _ [data] *discriminant data_size
-    ));
-
-    let as_data_type: ast_types::DataType = enum_type.into();
-    let total_stack_size = as_data_type.stack_size();
-    let size_of_data_and_padding = total_stack_size - 1;
-    code.append(&mut triton_asm!(
-        // _ [data] *discriminant data_size
-        push -1
-        mul
-        // _ [data] *discriminant -data_size
-
-        push {size_of_data_and_padding}
-        add
-
-        // _ [data] *discriminant size_of_padding
-    ));
-
-    let pad_subroutine_loop = pad_subroutine();
-    let pad_subroutine_loop_label = pad_subroutine_loop.get_label();
-    state.add_library_function(pad_subroutine_loop);
-    code.append(&mut triton_asm!(
-        call { pad_subroutine_loop_label }
-        // _ [data] [padding'] *discriminant 0
-        pop
-        // _ [data] [padding'] *discriminant
-
-        read_mem
-        // _ [data] [padding'] *discriminant discriminant
-
-        swap 1
-        pop
-        // _ [data] [padding'] discriminant
-    ));
-
-    code
-}
 
 impl ast_types::EnumType {
     /// Return the function to get data field pointers for variant data, at
@@ -439,66 +337,41 @@ impl ast_types::EnumType {
                         return
                 ),
                 1 => {
-                    // TODO: This logic does *not* work for arrays
-                    // We should have a method on `data_type` which
-                    match data_fields[0].bfield_codec_length() {
-                        Some(field_size) => {
-                            // Field does not have size indicator, as it's statically known
-                            triton_asm!(
-                            {subroutine_label}:
-                                // _ *discriminant
+                    let data_field = &data_fields[0];
+                    let static_encoding_length = data_field.bfield_codec_length();
+                    let (field_stack_size, is_reference_type, has_size_indicator) =
+                        if data_field.data_always_lives_in_memory() {
+                            (1, true, static_encoding_length.is_none())
+                        } else {
+                            let stack_size = if data_field.is_copy() {
+                                static_encoding_length.unwrap()
+                            } else {
+                                1
+                            };
+                            (stack_size, false, false)
+                        };
 
-                                push {field_size}
-                                // _ *discriminant field_size
+                    triton_asm!(
+                        {subroutine_label}:
+                            // *discriminant
 
-                                push 0
-                                // _ *discriminant field_size is_reference_type
+                            push {field_stack_size}
+                            push {is_reference_type as u64}
+                            push 1
+                            // _ *discriminant field_stack_size is_reference_type field_count
 
-                                push 1
-                                // _ *discriminant field_size is_reference_type field_count
+                            dup 3
+                            push {1 + has_size_indicator as u64}
+                            add
+                            // _ *discriminant field_stack_size is_reference_type field_count *data_field
 
-                                dup 3
-                                push 1
-                                add
-                                // _ *discriminant field_size is_reference_type field_count *data_field
+                            swap 4
+                            // _ *data_field field_size is_reference_type field_count *discriminant
 
-                                swap 4
-                                // _ *data_field field_size is_reference_type field_count *discriminant
-
-                                return
-                                )
-                        }
-                        None => {
-                            // Field does have size indicator
-                            triton_asm!(
-                            {subroutine_label}:
-                                // _ *discriminant
-
-                                push 1
-                                // _ *discriminant field_stack_size
-
-                                push 1
-                                // _ *discriminant field_stack_size is_reference_type
-
-                                push 1
-                                // _ *discriminant field_stack_size is_reference_type field_count
-
-                                dup 3
-                                push 2
-                                add
-                                // _ *discriminant field_stack_size is_reference_type field_count *data_field
-
-                                swap 4
-                                // _ *data_field field_stack_size is_reference_type field_count *discriminant
-
-                                return
-                                )
-                        }
-                    }
+                            return
+                    )
                 }
-                n => {
-                    // TODO: When implementing this, remember to *reverse* the fields
-                    // such that first field is on top of the stack
+                _n => {
                     todo!()
                 }
             };
@@ -515,99 +388,6 @@ impl ast_types::EnumType {
                 return
         ));
 
-        (acc_code.try_into().unwrap(), subroutines)
-    }
-
-    /// Return the function to set the data size at runtime.
-    /// Returns (function_name, functions_main_code, function_subroutines)
-    /// BEFORE: // _ *discriminant
-    /// AFTER:  // _ *last_data_word data_size
-    pub(super) fn get_variant_data_size_from_memory_at_runtime(
-        &self,
-    ) -> (SubRoutine, Vec<SubRoutine>) {
-        let function_label = format!("get_variant_data_size_from_memory_at_runtime_{}", self.name);
-        let mut subroutines: Vec<SubRoutine> = vec![];
-        let mut acc_code = triton_asm!(
-            {function_label}:
-        );
-
-        for (haystack_discriminant, dtype) in self.variant_types().enumerate() {
-            let subroutine_label = format!(
-                "{}_variant_size_subroutine_{}",
-                self.name, haystack_discriminant
-            );
-            acc_code.append(&mut triton_asm!(
-                // <*last_data_word data_size> *discriminant
-                read_mem
-                // <*last_data_word data_size> *discriminant discriminant
-
-                push {haystack_discriminant}
-                eq
-                // <*last_data_word data_size> *discriminant (discriminant == haystack)
-                skiz
-                call {subroutine_label}
-
-                // <*last_data_word data_size> *discriminant
-            ));
-
-            let subroutine = match dtype.bfield_codec_length() {
-                None => triton_asm!(
-                    {subroutine_label}:
-                    // *discriminant
-
-                        dup 0
-                        push 1
-                        add
-                        read_mem
-                        // *discriminant *data_size data_size
-
-                        swap 1
-                        // *discriminant data_size *data_size
-
-                        dup 1
-                        // *discriminant data_size *data_size data_size
-
-                        add
-                        // *discriminant data_size *last_data_word
-
-                        swap 2
-                        // *last_data_word data_size *discriminant
-
-                        return
-                ),
-                Some(size) => triton_asm!(
-                    {subroutine_label}:
-                    // *discriminant
-
-                    dup 0
-                    // *discriminant *discriminant
-
-                    push { size }
-                    // *discriminant *discriminant data_size
-
-                    add
-                    // *discriminant *last_data_word
-
-                    swap 1
-                    // *last_data_word *discriminant
-
-                    push { size }
-                    swap 1
-                    // *last_data_word data_size *discriminant
-
-                    return
-                ),
-            };
-            subroutines.push(subroutine.try_into().unwrap());
-        }
-
-        // *last_data_word data_size *discriminant
-        acc_code.append(&mut triton_asm!(
-            pop
-            return
-        ));
-
-        // *last_data_word data_size
         (acc_code.try_into().unwrap(), subroutines)
     }
 
