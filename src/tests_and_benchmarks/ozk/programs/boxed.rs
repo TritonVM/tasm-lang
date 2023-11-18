@@ -11,3 +11,4 @@ mod ref_struct_typecheck_succeed_bc_copy;
 mod tuple_struct_one_element;
 mod tuple_struct_two_elements_copy;
 mod tuple_struct_two_elements_not_copy;
+mod tuple_struct_with_vec;

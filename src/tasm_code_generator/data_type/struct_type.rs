@@ -74,15 +74,17 @@ impl ast_types::StructType {
             .try_into()
             .unwrap();
 
-        let mut field_count = 0;
-        for (_, field_type) in self.field_ids_and_types_reversed_for_tuples() {
+        for (field_count, (_, field_type)) in
+            self.field_ids_and_types_reversed_for_tuples().enumerate()
+        {
+            let pointer_pointer_for_this_field = pointer_for_result + field_count as u64;
             match field_type.bfield_codec_length() {
                 Some(static_size) => {
                     code.append(&mut triton_asm!(
                         // _ *current_field
 
-                        // Store result in result vector
-                        push {pointer_for_result + field_count}
+                        // Store result in result array
+                        push {pointer_pointer_for_this_field}
                         dup 1
                         write_mem
                         pop
@@ -96,13 +98,37 @@ impl ast_types::StructType {
                     ));
                 }
                 None => {
-                    //
-                    todo!();
-                    code.append(&mut triton_asm!())
+                    code.append(&mut triton_asm!(
+                        // _ *current_field_size
+
+                        read_mem
+                        // _ *current_field_size current_field_size
+
+                        swap 1
+                        // _ current_field_size *current_field_size
+
+                        push 1
+                        add
+                        // _ current_field_size *current_field
+
+                        push {pointer_pointer_for_this_field}
+                        dup 1
+                        // _ current_field_size *current_field **field *current_field
+
+                        write_mem
+                        // _ current_field_size *current_field **field
+
+                        pop
+
+                        // _ current_field_size *current_field
+
+                        add
+                        push 1
+                        add
+                        // _ *next_field_or_field_size *current_field
+                    ))
                 }
             }
-
-            field_count += 1;
         }
 
         code.push(triton_instr!(pop));
