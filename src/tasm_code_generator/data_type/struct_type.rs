@@ -23,7 +23,7 @@ impl ast_types::StructType {
             // stack: _
 
             let number_of_fields = struct_type.field_count();
-            for (field_count, dtype) in struct_type.field_types().enumerate() {
+            for (field_count, (field_id, dtype)) in struct_type.field_ids_and_types().enumerate() {
                 let static_address_for_field_pointer =
                     pointer_pointer.value() + number_of_fields as u64 - 1 - field_count as u64;
 
@@ -40,7 +40,9 @@ impl ast_types::StructType {
                     pop
                 ));
 
-                let mut load_field = dtype.copy_from_memory(None, state, false);
+                let mut load_field = dtype.copy_from_memory(None, state);
+
+                println!("load_field {field_id}: {}\n.static_address_for_field_pointer:{static_address_for_field_pointer}", load_field.iter().join("\n"));
 
                 code.append(&mut load_field);
             }
@@ -74,12 +76,18 @@ impl ast_types::StructType {
             .try_into()
             .unwrap();
 
-        for (field_count, (_, field_type)) in
+        for (field_count, (field_id, field_type)) in
             self.field_ids_and_types_reversed_for_tuples().enumerate()
         {
             let pointer_pointer_for_this_field = pointer_for_result + field_count as u64;
+            println!(
+                "\n\nfield_type: {field_type}, field_type.bfield_codec_length() = {:?}",
+                field_type.bfield_codec_length()
+            );
+            println!("pointer_pointer_for_this_field: {pointer_pointer_for_this_field}");
             match field_type.bfield_codec_length() {
                 Some(static_size) => {
+                    println!("SOME field_id: {field_id}");
                     code.append(&mut triton_asm!(
                         // _ *current_field
 
@@ -98,6 +106,7 @@ impl ast_types::StructType {
                     ));
                 }
                 None => {
+                    println!("NONE field_id: {field_id}");
                     code.append(&mut triton_asm!(
                         // _ *current_field_size
 
@@ -129,6 +138,8 @@ impl ast_types::StructType {
                     ))
                 }
             }
+
+            println!("*field_id {field_id}:\n{}", code.iter().join("\n"));
         }
 
         code.push(triton_instr!(pop));

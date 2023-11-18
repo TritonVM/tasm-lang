@@ -69,7 +69,6 @@ impl ast_types::DataType {
         &self,
         static_address: Option<BFieldElement>,
         state: &mut CompilerState,
-        preserve_memory_address_on_top_of_stack: bool,
     ) -> Vec<LabelledInstruction> {
         match self {
             ast_types::DataType::Bool
@@ -83,11 +82,7 @@ impl ast_types::DataType {
                 Self::copy_words_from_memory(static_address, self.stack_size())
             }
             ast_types::DataType::List(_, _) => {
-                if preserve_memory_address_on_top_of_stack {
-                    triton_asm!(dup 0)
-                } else {
-                    triton_asm!()
-                }
+                triton_asm!()
             }
             ast_types::DataType::Enum(enum_type) => enum_type.load_from_memory(state),
             ast_types::DataType::Array(_) => todo!(),

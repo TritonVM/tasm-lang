@@ -33,9 +33,23 @@ mod tests {
     #[test]
     fn move_boxed_tuple_struct_with_vec_test() {
         for _ in 0..2 {
-            let rand: [u8; 200] = random();
+            let rand: [u8; 100] = random();
             let struct_value = TupleStruct2::arbitrary(&mut Unstructured::new(&rand)).unwrap();
+            println!("struct_value: {struct_value:#?}");
+            println!(
+                "struct_value.encoded: {}",
+                struct_value.encode().iter().join(", ")
+            );
             let non_determinism = init_memory_from(&struct_value, BFieldElement::new(84));
+            {
+                let mut ram: Vec<(BFieldElement, BFieldElement)> =
+                    non_determinism.ram.clone().into_iter().collect();
+                ram.sort_unstable_by_key(|(p, v)| p.value());
+                println!(
+                    "{}",
+                    ram.iter().map(|(p, v)| format!("{p} => {v}")).join(", ")
+                );
+            }
             let stdin = vec![];
 
             // Run program on host machine
