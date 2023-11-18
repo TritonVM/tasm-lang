@@ -47,14 +47,11 @@ impl ast_types::StructType {
 
             code
         }
-        // TODO: Fix this once we have a function to get all field pointers!
-        // ast_types::DataType::copy_words_from_memory(None, self.stack_size(), false)
-
         // _ *struct
-        // if struct is copy, we just copy all bytes, otherwise we need the
-        // list of pointers.
+        // if struct is copy, we just copy all bytes, otherwise we need something
+        // more complicated.
         if self.is_copy {
-            ast_types::DataType::copy_words_from_memory(None, self.stack_size(), false)
+            ast_types::DataType::copy_words_from_memory(None, self.stack_size())
         } else {
             load_from_memory_struct_is_not_copy(self, state)
         }
@@ -111,99 +108,7 @@ impl ast_types::StructType {
         code.push(triton_instr!(pop));
 
         (pointer_for_result.into(), code)
-
-        // // TODO: We might have to reverse the order, if this is a struct with named fields!
-        // for (field_id, field_type) in self.field_ids_and_types_reversed_for_tuples() {
-        //     code.push(triton_instr!(dup 0));
-        //     // _ [fields] *field_or_fieldsize *field_or_fieldsize
-
-        //     let static_size = field_type.bfield_codec_length();
-        //     if static_size.is_none() {
-        //         code.append(&mut triton_asm!(push 1 add));
-        //     }
-
-        //     code.append(&mut triton_asm!(
-        //         // _ [*fields] *field_or_fieldsize *field
-
-        //         swap 1
-        //         // _ [*fields] *field *field_or_fieldsize
-        //         // _ [*fields'] *field_or_fieldsize
-        //     ));
-
-        //     match static_size {
-        //         Some(size) => code.append(&mut triton_asm!(
-        //             // _ [*fields'] *field
-        //             push { size }
-        //             add
-        //             // _ [*fields'] *next_field
-        //         )),
-        //         None => code.append(&mut triton_asm!(
-        //             // _ [*fields'] *field_size
-        //             read_mem
-        //             // _ [*fields'] *field_size field_size
-
-        //             push 1
-        //             add
-        //             add
-        //             // _ [*fields'] *next_field
-        //         )),
-        //     }
-        // }
-
-        // code.push(triton_instr!(pop));
-        // // _ [*fields]
-
-        // code
     }
-
-    // let mut code = triton_asm!();
-    // for (field_id, field_type) in self.field_ids_and_types_reversed_for_tuples() {}
-    // let mut code = triton_asm!();
-    // for (field_id, field_type) in self.field_ids_and_types_reversed_for_tuples() {
-    //     let static_size = field_type.bfield_codec_length();
-    //     if static_size.is_none() {
-    //         code.append(&mut triton_asm!(push 1 add));
-    //     }
-    //     code.append(&mut field_type.copy_from_memory(None, state, true));
-    //     // _ [field] first_word_of_field
-    //     match static_size {
-    //         None => {
-    //             code.append(&mut triton_asm!(
-    //                 // _ [field] first_word_of_field
-
-    //                 push -1
-    //                 add
-    //                 // [field] *size
-
-    //                 read_mem
-    //                 // [field] *size size
-
-    //                 push 1
-    //                 add
-    //                 add
-    //                 // [field] *next_field
-    //             ));
-    //         }
-    //         Some(static_size) => {
-    //             code.append(&mut triton_asm!(
-    //                 // _ [field] first_word_of_field
-
-    //                 push {static_size}
-    //                 add
-    //                 // _ [field] *next_field
-    //             ));
-    //         }
-    //     }
-    // }
-
-    // code.push(triton_instr!(pop));
-
-    // println!(
-    //     "code for loading struct from memory: {}",
-    //     code.iter().join("\n")
-    // );
-    // code
-    // }
 
     /// Assuming the stack top points to the start of the struct, returns the code
     /// that modifies the top stack value to point to the indicated field. So the top

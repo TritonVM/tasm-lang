@@ -12,11 +12,10 @@ pub mod enum_type;
 pub mod struct_type;
 
 impl ast_types::DataType {
-    // TODO: MAKE PRIVATE!
-    pub fn copy_words_from_memory(
+    // TODO: MAKE PRIVATE if possible
+    pub(super) fn copy_words_from_memory(
         static_memory_address: Option<BFieldElement>,
         value_size: usize,
-        preserve_memory_address_on_top_of_stack: bool,
     ) -> Vec<LabelledInstruction> {
         // A stack value of the form `_ val2 val1 val0`, with `val0` being on the top of the stack
         // is stored in memory as: `val0 val1 val2`, where `val0` is stored on the `memory_location`
@@ -47,7 +46,7 @@ impl ast_types::DataType {
             ret.push(triton_instr!(swap 1));
 
             // Decrement memory address to prepare for next loop iteration
-            if i != value_size - 1 || preserve_memory_address_on_top_of_stack {
+            if i != value_size - 1 {
                 ret.append(&mut triton_asm!(
                     push -1
                     add))
@@ -56,11 +55,7 @@ impl ast_types::DataType {
         }
 
         // Remove memory address from top of stack
-        if !preserve_memory_address_on_top_of_stack {
-            ret.push(triton_instr!(pop));
-        }
-
-        // Stack: _ element_N element_{N - 1} ... element_0 <first_word_in_field>
+        ret.push(triton_instr!(pop));
 
         ret
     }
@@ -84,11 +79,9 @@ impl ast_types::DataType {
             | ast_types::DataType::BFE
             | ast_types::DataType::XFE
             | ast_types::DataType::Digest
-            | ast_types::DataType::Tuple(_) => Self::copy_words_from_memory(
-                static_address,
-                self.stack_size(),
-                preserve_memory_address_on_top_of_stack,
-            ),
+            | ast_types::DataType::Tuple(_) => {
+                Self::copy_words_from_memory(static_address, self.stack_size())
+            }
             ast_types::DataType::List(_, _) => {
                 if preserve_memory_address_on_top_of_stack {
                     triton_asm!(dup 0)

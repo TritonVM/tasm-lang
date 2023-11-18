@@ -17,7 +17,6 @@ use twenty_first::amount::u32s::U32s;
 use twenty_first::shared_math::b_field_element::BFieldElement;
 use twenty_first::shared_math::bfield_codec::BFieldCodec;
 
-use self::data_type::enum_type;
 use self::function_state::{FunctionState, VarAddr};
 use self::inner_function_tasm_code::InnerFunctionTasmCode;
 use self::outer_function_tasm_code::OuterFunctionTasmCode;
@@ -2000,14 +1999,6 @@ fn compile_expr(
                                 {&code}
                                 {&dereference(&var_type, state)}
                             )
-                            // if let ast_types::DataType::MemPointer(_) = var_type {
-                            //     triton_asm!(
-                            //         {&code}
-                            //         {&dereference(&var_type)}
-                            //     )
-                            // } else {
-                            //     code
-                            // }
                         }
                     }
                 }
