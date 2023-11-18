@@ -63,7 +63,7 @@ mod tests {
         // Test function in Triton VM
         let test_program = ozk_parsing::compile_for_test(
             "boxed",
-            "tuple_struct",
+            "tuple_struct_one_element",
             "main",
             crate::ast_types::ListType::Unsafe,
         );

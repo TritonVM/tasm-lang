@@ -8,4 +8,6 @@ mod nested_tuples;
 mod ref_struct_typecheck_fail;
 mod ref_struct_typecheck_succeed_bc_boxed;
 mod ref_struct_typecheck_succeed_bc_copy;
-mod tuple_struct;
+mod tuple_struct_one_element;
+mod tuple_struct_two_elements_copy;
+mod tuple_struct_two_elements_not_copy;

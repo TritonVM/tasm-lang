@@ -12,9 +12,11 @@ pub mod enum_type;
 pub mod struct_type;
 
 impl ast_types::DataType {
-    fn copy_words_from_memory(
+    // TODO: MAKE PRIVATE!
+    pub fn copy_words_from_memory(
         static_memory_address: Option<BFieldElement>,
         value_size: usize,
+        preserve_memory_address_on_top_of_stack: bool,
     ) -> Vec<LabelledInstruction> {
         // A stack value of the form `_ val2 val1 val0`, with `val0` being on the top of the stack
         // is stored in memory as: `val0 val1 val2`, where `val0` is stored on the `memory_location`
@@ -45,16 +47,20 @@ impl ast_types::DataType {
             ret.push(triton_instr!(swap 1));
 
             // Decrement memory address to prepare for next loop iteration
-            if i != value_size - 1 {
-                ret.append(&mut triton_asm!(push {BFieldElement::MAX} add))
+            if i != value_size - 1 || preserve_memory_address_on_top_of_stack {
+                ret.append(&mut triton_asm!(
+                    push -1
+                    add))
                 // Stack: _ (memory_address - 1)
             }
         }
 
         // Remove memory address from top of stack
-        ret.push(triton_instr!(pop));
+        if !preserve_memory_address_on_top_of_stack {
+            ret.push(triton_instr!(pop));
+        }
 
-        // Stack: _ element_N element_{N - 1} ... element_0
+        // Stack: _ element_N element_{N - 1} ... element_0 <first_word_in_field>
 
         ret
     }
@@ -67,6 +73,8 @@ impl ast_types::DataType {
     pub(super) fn copy_from_memory(
         &self,
         static_address: Option<BFieldElement>,
+        state: &mut CompilerState,
+        preserve_memory_address_on_top_of_stack: bool,
     ) -> Vec<LabelledInstruction> {
         match self {
             ast_types::DataType::Bool
@@ -75,14 +83,22 @@ impl ast_types::DataType {
             | ast_types::DataType::U128
             | ast_types::DataType::BFE
             | ast_types::DataType::XFE
-            | ast_types::DataType::Digest => {
-                Self::copy_words_from_memory(static_address, self.stack_size())
+            | ast_types::DataType::Digest
+            | ast_types::DataType::Tuple(_) => Self::copy_words_from_memory(
+                static_address,
+                self.stack_size(),
+                preserve_memory_address_on_top_of_stack,
+            ),
+            ast_types::DataType::List(_, _) => {
+                if preserve_memory_address_on_top_of_stack {
+                    triton_asm!(dup 0)
+                } else {
+                    triton_asm!()
+                }
             }
-            ast_types::DataType::List(_, _) => Self::copy_words_from_memory(static_address, 1),
-            ast_types::DataType::Tuple(_) => todo!(),
+            ast_types::DataType::Enum(enum_type) => enum_type.load_from_memory(state),
             ast_types::DataType::Array(_) => todo!(),
-            ast_types::DataType::Struct(_) => todo!(),
-            ast_types::DataType::Enum(_) => todo!(),
+            ast_types::DataType::Struct(struct_type) => struct_type.load_from_memory(state),
             ast_types::DataType::VoidPointer => todo!(),
             ast_types::DataType::Function(_) => todo!(),
             ast_types::DataType::Boxed(_) => todo!(),

@@ -3090,21 +3090,7 @@ fn dereference(
     resulting_type: &ast_types::DataType,
     state: &mut CompilerState,
 ) -> Vec<LabelledInstruction> {
-    match resulting_type {
-        // From the TASM perspective, a mempointer to a list is the same as a list
-        ast_types::DataType::List(_, _) => triton_asm!(),
-        ast_types::DataType::Boxed(_) => triton_asm!(),
-        ast_types::DataType::Enum(enum_type) => enum_type::load_enum_from_memory(enum_type, state),
-
-        // No idea how to handle these yet
-        ast_types::DataType::VoidPointer => todo!(),
-        ast_types::DataType::Function(_) => todo!(),
-        ast_types::DataType::Unresolved(_) => todo!(),
-
-        // Simple data types are simple read from memory and placed on the stack
-        ast_types::DataType::Struct(_) => load_from_memory(None, resulting_type.stack_size()),
-        _ => load_from_memory(None, resulting_type.stack_size()),
-    }
+    resulting_type.copy_from_memory(None, state, false)
 }
 
 #[deprecated]

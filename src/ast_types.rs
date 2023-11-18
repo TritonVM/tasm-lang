@@ -339,10 +339,7 @@ impl DataType {
             Self::VoidPointer => 1,
             Self::Function(_) => todo!(),
             Self::Unresolved(name) => panic!("cannot get size of unresolved type {name}"),
-            Self::Struct(inner_type) => match &inner_type.variant {
-                StructVariant::TupleStruct(tuple) => tuple.stack_size(),
-                StructVariant::NamedFields(struct_named_fields) => struct_named_fields.stack_size(),
-            },
+            Self::Struct(inner_type) => inner_type.stack_size(),
             Self::Enum(enum_type) => enum_type.stack_size(),
             Self::Boxed(_inner) => 1,
             Self::Reference(inner) => inner.stack_size(),
@@ -700,6 +697,13 @@ impl StructType {
         }
     }
 
+    pub fn field_count(&self) -> usize {
+        match &self.variant {
+            StructVariant::TupleStruct(tuple) => tuple.element_count(),
+            StructVariant::NamedFields(nfs) => nfs.fields.len(),
+        }
+    }
+
     pub fn field_types<'a>(&'a self) -> Box<dyn Iterator<Item = &'a DataType> + 'a> {
         match &self.variant {
             StructVariant::TupleStruct(ts) => Box::new(ts.fields.iter()),
@@ -834,7 +838,8 @@ impl Tuple {
     }
 
     pub fn stack_size(&self) -> usize {
-        self.into_iter().map(|x| x.stack_size()).sum()
+        let ret = self.into_iter().map(|x| x.stack_size()).sum();
+        ret
     }
 
     pub fn constructor(

@@ -110,6 +110,16 @@ pub(super) fn tasm_arithmetic_u64_log_2_floor(val: u64) -> u32 {
 }
 
 #[allow(non_snake_case)]
+pub(super) fn tasm_io_read_stdin___u32() -> u32 {
+    #[allow(clippy::unwrap_used)]
+    let val: u32 = PUB_INPUT
+        .with(|v| v.borrow_mut().pop().unwrap())
+        .try_into()
+        .unwrap();
+    val
+}
+
+#[allow(non_snake_case)]
 pub(super) fn tasm_io_read_stdin___u64() -> u64 {
     #[allow(clippy::unwrap_used)]
     let hi: u32 = PUB_INPUT
