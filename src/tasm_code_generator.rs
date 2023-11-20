@@ -3081,7 +3081,7 @@ fn dereference(
     resulting_type: &ast_types::DataType,
     state: &mut CompilerState,
 ) -> Vec<LabelledInstruction> {
-    resulting_type.copy_from_memory(None, state)
+    resulting_type.load_from_memory(None, state)
 }
 
 #[deprecated]

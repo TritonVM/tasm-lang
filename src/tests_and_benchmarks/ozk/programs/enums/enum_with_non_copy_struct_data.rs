@@ -46,7 +46,7 @@ mod tests {
     #[test]
     fn enum_with_non_copy_struct_data_test() {
         for _ in 0..30 {
-            let rand: [u8; 300] = random();
+            let rand: [u8; 100] = random();
             let enum_value = EnumType::arbitrary(&mut Unstructured::new(&rand)).unwrap();
             let non_determinism = init_memory_from(&enum_value, BFieldElement::new(84));
             let stdin = vec![];
@@ -67,11 +67,20 @@ mod tests {
                 vec![],
                 &mut HashMap::default(),
                 stdin,
-                non_determinism,
+                non_determinism.clone(),
                 0,
             )
             .unwrap();
             if native_output != vm_output.output {
+                {
+                    let mut ram: Vec<(BFieldElement, BFieldElement)> =
+                        non_determinism.ram.clone().into_iter().collect();
+                    ram.sort_unstable_by_key(|(p, _v)| p.value());
+                    println!(
+                        "{}",
+                        ram.iter().map(|(p, v)| format!("{p} => {v}")).join(", ")
+                    );
+                }
                 panic!(
                     "native_output:\n{}\nVM output:\n{}. Code was:\n{}\nrand was {}\ninput was: {enum_value:#?}",
                     native_output.iter().join(", "),

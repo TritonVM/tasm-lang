@@ -65,7 +65,7 @@ impl ast_types::DataType {
     /// memory address is assumed to be on top of the stack.
     /// BEFORE: _ <*value>
     /// AFTER: _ [value]
-    pub(super) fn copy_from_memory(
+    pub(super) fn load_from_memory(
         &self,
         static_address: Option<BFieldElement>,
         state: &mut CompilerState,

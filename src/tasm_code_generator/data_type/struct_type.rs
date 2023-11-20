@@ -40,7 +40,7 @@ impl ast_types::StructType {
                     pop
                 ));
 
-                let mut load_field = dtype.copy_from_memory(None, state);
+                let mut load_field = dtype.load_from_memory(None, state);
 
                 println!("load_field {field_id}: {}\n.static_address_for_field_pointer:{static_address_for_field_pointer}", load_field.iter().join("\n"));
 
