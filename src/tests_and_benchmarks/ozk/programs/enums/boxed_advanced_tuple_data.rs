@@ -1,0 +1,179 @@
+use arbitrary::Arbitrary;
+use itertools::Itertools;
+use tasm_lib::Digest;
+use twenty_first::shared_math::b_field_element::BFieldElement;
+use twenty_first::shared_math::bfield_codec::BFieldCodec;
+use twenty_first::shared_math::x_field_element::XFieldElement;
+
+use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
+
+#[derive(Arbitrary, BFieldCodec, Clone, Debug)]
+enum EnumType {
+    A,
+    B(Digest),
+    C(Vec<XFieldElement>),
+    D(BFieldElement, BFieldElement),
+    E(Vec<BFieldElement>, XFieldElement),
+    F(XFieldElement, Vec<XFieldElement>),
+    G(
+        XFieldElement,
+        Vec<XFieldElement>,
+        Vec<Digest>,
+        u32,
+        Vec<Digest>,
+    ),
+}
+
+fn main() {
+    let boxed_enum_type: Box<EnumType> =
+        EnumType::decode(&tasm::load_from_memory(BFieldElement::new(84))).unwrap();
+
+    match boxed_enum_type.as_ref() {
+        EnumType::A => {
+            tasm::tasm_io_write_to_stdout___bfe(BFieldElement::new(1));
+        }
+        EnumType::B(digest) => {
+            tasm::tasm_io_write_to_stdout___bfe(BFieldElement::new(2));
+            tasm::tasm_io_write_to_stdout___digest(*digest);
+        }
+        EnumType::C(xfes) => {
+            tasm::tasm_io_write_to_stdout___bfe(BFieldElement::new(3));
+            tasm::tasm_io_write_to_stdout___u32(xfes.len() as u32);
+            if xfes.len() > 0 {
+                tasm::tasm_io_write_to_stdout___xfe(xfes[0]);
+            }
+            if xfes.len() > 1 {
+                tasm::tasm_io_write_to_stdout___xfe(xfes[1]);
+            }
+        }
+        EnumType::D(bfe0, bfe1) => {
+            tasm::tasm_io_write_to_stdout___bfe(BFieldElement::new(4));
+            tasm::tasm_io_write_to_stdout___bfe(*bfe0);
+            tasm::tasm_io_write_to_stdout___bfe(*bfe1);
+        }
+        EnumType::E(bfes, xfe) => {
+            //
+            tasm::tasm_io_write_to_stdout___bfe(BFieldElement::new(5));
+            tasm::tasm_io_write_to_stdout___u32(bfes.len() as u32);
+            if bfes.len() > 0 {
+                tasm::tasm_io_write_to_stdout___bfe(bfes[0]);
+            }
+            if bfes.len() > 1 {
+                tasm::tasm_io_write_to_stdout___bfe(bfes[1]);
+            }
+            tasm::tasm_io_write_to_stdout___xfe(*xfe);
+        }
+        EnumType::F(xfe, xfes) => {
+            //
+            tasm::tasm_io_write_to_stdout___bfe(BFieldElement::new(6));
+            tasm::tasm_io_write_to_stdout___u32(xfes.len() as u32);
+            if xfes.len() > 0 {
+                tasm::tasm_io_write_to_stdout___xfe(xfes[0]);
+            }
+            tasm::tasm_io_write_to_stdout___xfe(*xfe);
+            if xfes.len() > 1 {
+                tasm::tasm_io_write_to_stdout___xfe(xfes[1]);
+            }
+        }
+        EnumType::G(xfe, xfes, digests0, unsi32, digests1) => {
+            //
+            tasm::tasm_io_write_to_stdout___bfe(BFieldElement::new(7));
+            tasm::tasm_io_write_to_stdout___u32(digests1.len() as u32);
+            tasm::tasm_io_write_to_stdout___u32(digests0.len() as u32);
+            tasm::tasm_io_write_to_stdout___u32(xfes.len() as u32);
+            tasm::tasm_io_write_to_stdout___u32(*unsi32);
+            if digests1.len() > 0 {
+                tasm::tasm_io_write_to_stdout___digest(digests1[0]);
+            }
+            tasm::tasm_io_write_to_stdout___xfe(*xfe);
+            if digests1.len() > 1 {
+                tasm::tasm_io_write_to_stdout___digest(digests1[1]);
+            }
+            if digests0.len() > 0 {
+                tasm::tasm_io_write_to_stdout___digest(digests0[0]);
+            }
+            tasm::tasm_io_write_to_stdout___xfe(*xfe);
+            if digests0.len() > 1 {
+                tasm::tasm_io_write_to_stdout___digest(digests0[1]);
+            }
+            if xfes.len() > 0 {
+                tasm::tasm_io_write_to_stdout___xfe(xfes[0]);
+            }
+            tasm::tasm_io_write_to_stdout___xfe(*xfe);
+            if xfes.len() > 1 {
+                tasm::tasm_io_write_to_stdout___xfe(xfes[1]);
+            }
+        }
+    };
+
+    return;
+}
+
+mod tests {
+    use super::*;
+    use arbitrary::Unstructured;
+    use itertools::Itertools;
+    use rand::random;
+    use std::collections::HashMap;
+    use twenty_first::shared_math::other::random_elements;
+
+    use crate::tests_and_benchmarks::ozk::{ozk_parsing, rust_shadows};
+    use crate::tests_and_benchmarks::test_helpers::shared_test::{
+        execute_compiled_with_stack_memory_and_ins_for_test, init_memory_from,
+    };
+
+    #[test]
+    fn boxed_enum_with_advanced_tuple_test() {
+        let mut test_cases = vec![];
+        for _ in 0..10 {
+            let rand: [u8; 2000] = random();
+            let enum_value = EnumType::arbitrary(&mut Unstructured::new(&rand)).unwrap();
+            test_cases.push(enum_value);
+        }
+
+        test_cases.push(
+            // Check with elements in all vecs
+            EnumType::G(
+                random(),
+                random_elements(4),
+                random_elements(5),
+                random(),
+                random_elements(6),
+            ),
+        );
+
+        for test_case in test_cases {
+            let non_determinism = init_memory_from(&test_case, BFieldElement::new(84));
+            let stdin = vec![];
+
+            // Run program on host machine
+            let native_output =
+                rust_shadows::wrap_main_with_io(&main)(stdin.clone(), non_determinism.clone());
+
+            // Run test on Triton-VM
+            let test_program = ozk_parsing::compile_for_test(
+                "enums",
+                "boxed_advanced_tuple_data",
+                "main",
+                crate::ast_types::ListType::Unsafe,
+            );
+            let vm_output = execute_compiled_with_stack_memory_and_ins_for_test(
+                &test_program,
+                vec![],
+                &mut HashMap::default(),
+                stdin,
+                non_determinism,
+                0,
+            )
+            .unwrap();
+            if native_output != vm_output.output {
+                panic!(
+                    "native_output:\n{}\nVM output:\n{}. Code was:\n{}\n",
+                    native_output.iter().join(", "),
+                    vm_output.output.iter().join(", "),
+                    test_program.iter().join("\n"),
+                );
+            }
+        }
+    }
+}
