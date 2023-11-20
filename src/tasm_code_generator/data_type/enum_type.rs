@@ -146,7 +146,7 @@ impl EnumType {
             state.add_library_function(code_for_subroutine.try_into().unwrap());
         }
 
-        let value_stack_size = self.stack_size();
+        let size_of_data_plus_padding = self.stack_size() - 1;
         let pad_subroutine = pad_subroutine();
         state.add_library_function(pad_subroutine.clone());
 
@@ -160,7 +160,7 @@ impl EnumType {
             // _ [data] words_loaded
             push -1
             mul
-            push {value_stack_size}
+            push {size_of_data_plus_padding}
             add
             // _ [data] (stack_size - words_loaded)
             // _ [data] pad_needed
@@ -347,129 +347,6 @@ impl EnumType {
             fn_code.try_into().unwrap(),
             subroutines,
         )
-    }
-
-    /// Return the function to get data field pointers for variant data, at
-    /// runtime.
-    /// BEFORE: _ *discriminant
-    /// AFTER: _ [(*data_field, stack_size, is_reference_type)] field_count
-    fn get_variant_data_pointers_and_field_sizes_at_runtime_old(
-        &self,
-    ) -> (SubRoutine, Vec<SubRoutine>) {
-        // TODO: Return value could be delivered as pointer to
-        // static memory allocation, in case we want to allow
-        // more data in the fields. This function puts a limit
-        // on the number of fields in a variant type to 7.
-        assert!(
-            self.variants
-                .iter()
-                .all(|x| x.1.as_tuple_type().element_count() < 2),
-            "Cannot handle so much data in enums. enum type: \"{}\"",
-            self.name
-        );
-        let function_label = format!(
-            "get_variant_data_pointers_and_data_sizes_at_runtime_{}",
-            self.name
-        );
-        let mut subroutines: Vec<SubRoutine> = vec![];
-        let mut acc_code = triton_asm!(
-            {function_label}:
-        );
-
-        for (haystack_discriminant, dtype) in self.variant_types().enumerate() {
-            let subroutine_label = format!(
-                "{}_variant_size_subroutine_{}",
-                self.name, haystack_discriminant
-            );
-            acc_code.append(&mut triton_asm!(
-                // <[(*data_field data_field_stack_size is_reference_type)] field_count> *discriminant
-
-                read_mem
-                // <variant_info> *discriminant discriminant
-
-                push {haystack_discriminant}
-                eq
-                // <variant_info> *discriminant (discriminant == haystack)
-
-                skiz
-                call {subroutine_label}
-
-                // <variant_info> *discriminant
-            ));
-
-            let data_fields = dtype.as_tuple_type();
-            let subroutine = match data_fields.element_count() {
-                0 => triton_asm!(
-                    {subroutine_label}:
-                        // _ *discriminant
-
-                        push 0
-                        // _ *discriminant field_count
-
-                        swap 1
-                        // _ field_count *discriminant
-
-                        return
-                ),
-                1 => {
-                    let data_field = &data_fields[0];
-                    let static_encoding_length = data_field.bfield_codec_length();
-                    let (field_stack_size, is_reference_type, has_size_indicator) =
-                        if data_field.data_always_lives_in_memory() {
-                            (1, true, static_encoding_length.is_none())
-                        } else {
-                            (
-                                data_field.stack_size(),
-                                false,
-                                static_encoding_length.is_none(),
-                            )
-                        };
-
-                    println!("enum_type");
-                    dbg!(data_field);
-                    dbg!(static_encoding_length);
-                    dbg!(field_stack_size);
-                    dbg!(is_reference_type);
-                    dbg!(has_size_indicator);
-
-                    triton_asm!(
-                        {subroutine_label}:
-                            // *discriminant
-
-                            push {field_stack_size}
-                            push {is_reference_type as u64}
-                            push 1
-                            // _ *discriminant field_stack_size is_reference_type field_count
-
-                            dup 3
-                            push {1 + has_size_indicator as u64}
-                            add
-                            // _ *discriminant field_stack_size is_reference_type field_count *data_field
-
-                            swap 4
-                            // _ *data_field field_size is_reference_type field_count *discriminant
-
-                            return
-                    )
-                }
-                _n => {
-                    todo!()
-                }
-            };
-
-            subroutines.push(subroutine.try_into().unwrap());
-        }
-
-        // _ [(*data_field data_field_stack_size is_reference_type)] field_count *discriminant
-
-        acc_code.append(&mut triton_asm!(
-                pop
-                // _ [(*data_field data_field_stack_size is_reference_type)] field_count
-
-                return
-        ));
-
-        (acc_code.try_into().unwrap(), subroutines)
     }
 
     /// Return the code to put enum-variant data fields on top of stack.
