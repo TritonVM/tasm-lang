@@ -1123,7 +1123,9 @@ fn derive_annotate_expr_type(
             );
 
             // Sort expression such that it matches type declaration, and ends up with the
-            // first-declared field on top of the stack.
+            // last declared field on top of stack. This generates more efficient code, so
+            // we just demand that the programmer does that.
+            let original_order = struct_expr.field_names_and_values.clone();
             struct_expr
                 .field_names_and_values
                 .sort_by_key(|(field_name, _)| {
@@ -1133,7 +1135,11 @@ fn derive_annotate_expr_type(
                         .position(|(name, _)| name == field_name)
                         .unwrap_or(usize::MAX)
                 });
-            struct_expr.field_names_and_values.reverse();
+            assert_eq!(
+                original_order, struct_expr.field_names_and_values,
+                "{}: Fields in declaration must match that in type definition in order to allow left-to-right evaluation",
+                struct_type.name
+            );
 
             struct_expr.struct_type.clone()
         }

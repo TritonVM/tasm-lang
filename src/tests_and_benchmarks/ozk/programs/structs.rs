@@ -7,4 +7,6 @@ mod simple_struct;
 mod struct_with_array;
 mod struct_with_methods;
 mod struct_with_simple_methods;
+mod struct_with_two_vecs_to_stack;
 mod struct_with_vecs;
+mod struct_with_xfe_and_xfes_to_stack;

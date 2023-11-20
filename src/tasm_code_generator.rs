@@ -405,7 +405,7 @@ impl<'a> CompilerState<'a> {
                 ) -> ValueLocation {
                     let needle_name: String = field_id.to_string();
                     let mut field_depth: usize = 0;
-                    for (haystack_name, haystack_type) in struct_type.fields.iter() {
+                    for (haystack_name, haystack_type) in struct_type.fields.iter().rev() {
                         if &needle_name == haystack_name {
                             break;
                         } else {
@@ -2079,7 +2079,9 @@ fn compile_expr(
 
         ast::Expr::Struct(struct_expr) => {
             // It is assumed that the struct fields in the expression are sorted as that in the
-            // type declaration, after the type checker has run.
+            // type declaration, after the type checker has run. Then the expressions can just be
+            // evaluated left-to-right and the stack will end up with the last field value on
+            // top of the stack.
             let (idents, code): (Vec<ValueIdentifier>, Vec<Vec<LabelledInstruction>>) = struct_expr
                 .field_names_and_values
                 .iter()

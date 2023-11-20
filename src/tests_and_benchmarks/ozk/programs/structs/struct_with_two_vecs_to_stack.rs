@@ -1,4 +1,5 @@
 use arbitrary::Arbitrary;
+use triton_vm::Digest;
 use twenty_first::shared_math::b_field_element::BFieldElement;
 use twenty_first::shared_math::bfield_codec::BFieldCodec;
 use twenty_first::shared_math::x_field_element::XFieldElement;
@@ -6,15 +7,20 @@ use twenty_first::shared_math::x_field_element::XFieldElement;
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
 #[derive(Arbitrary, BFieldCodec, Clone, Debug)]
-struct TupleStruct2(Vec<XFieldElement>, u32); // TODO: Use (u128, XFieldElement) here instead
+struct NotCopyStruct {
+    digests: Vec<Digest>,
+    xfes: Vec<XFieldElement>,
+}
 
 fn main() {
-    let boxed_struct: Box<TupleStruct2> =
-        TupleStruct2::decode(&tasm::load_from_memory(BFieldElement::new(84))).unwrap();
-    let on_stack: TupleStruct2 = *boxed_struct;
+    let boxed_enum_type: Box<NotCopyStruct> =
+        NotCopyStruct::decode(&tasm::load_from_memory(BFieldElement::new(84))).unwrap();
 
-    tasm::tasm_io_write_to_stdout___u32(on_stack.1);
-    tasm::tasm_io_write_to_stdout___u32(on_stack.0.len() as u32);
+    let on_stack: NotCopyStruct = *boxed_enum_type;
+
+    tasm::tasm_io_write_to_stdout___u32(on_stack.digests.len() as u32);
+    tasm::tasm_io_write_to_stdout___u32(on_stack.xfes.len() as u32);
+
     return;
 }
 
@@ -31,25 +37,11 @@ mod tests {
     };
 
     #[test]
-    fn move_boxed_tuple_struct_with_vec_test() {
+    fn struct_with_two_vecs_to_stack_test() {
         for _ in 0..2 {
             let rand: [u8; 100] = random();
-            let struct_value = TupleStruct2::arbitrary(&mut Unstructured::new(&rand)).unwrap();
-            println!("struct_value: {struct_value:#?}");
-            println!(
-                "struct_value.encoded: {}",
-                struct_value.encode().iter().join(", ")
-            );
-            let non_determinism = init_memory_from(&struct_value, BFieldElement::new(84));
-            {
-                let mut ram: Vec<(BFieldElement, BFieldElement)> =
-                    non_determinism.ram.clone().into_iter().collect();
-                ram.sort_unstable_by_key(|(p, _v)| p.value());
-                println!(
-                    "{}",
-                    ram.iter().map(|(p, v)| format!("{p} => {v}")).join(", ")
-                );
-            }
+            let sv = NotCopyStruct::arbitrary(&mut Unstructured::new(&rand)).unwrap();
+            let non_determinism = init_memory_from(&sv, BFieldElement::new(84));
             let stdin = vec![];
 
             // Run program on host machine
@@ -58,8 +50,8 @@ mod tests {
 
             // Run test on Triton-VM
             let test_program = ozk_parsing::compile_for_test(
-                "boxed",
-                "tuple_struct_with_vec",
+                "structs",
+                "struct_with_two_vecs_to_stack",
                 "main",
                 crate::ast_types::ListType::Unsafe,
             );
@@ -68,13 +60,22 @@ mod tests {
                 vec![],
                 &mut HashMap::default(),
                 stdin,
-                non_determinism,
+                non_determinism.clone(),
                 0,
             )
             .unwrap();
             if native_output != vm_output.output {
+                {
+                    let mut ram: Vec<(BFieldElement, BFieldElement)> =
+                        non_determinism.ram.clone().into_iter().collect();
+                    ram.sort_unstable_by_key(|(p, _v)| p.value());
+                    println!(
+                        "{}",
+                        ram.iter().map(|(p, v)| format!("{p} => {v}")).join(", ")
+                    );
+                }
                 panic!(
-                    "native_output:\n{}\nVM output:\n{}. Code was:\n{}\nrand was {}\n",
+                    "native_output:\n{}\nVM output:\n{}. Code was:\n{}\nrand was {}\ninput was: {sv:#?}",
                     native_output.iter().join(", "),
                     vm_output.output.iter().join(", "),
                     test_program.iter().join("\n"),

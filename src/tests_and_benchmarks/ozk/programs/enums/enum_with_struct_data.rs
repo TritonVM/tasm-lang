@@ -52,13 +52,13 @@ fn main() {
 
     match on_stack {
         EnumType::A(copy_struct) => {
-            tasm::tasm_io_write_to_stdout___bfe(BFieldElement::new(7));
+            tasm::tasm_io_write_to_stdout___bfe(BFieldElement::new(9));
             tasm::tasm_io_write_to_stdout___digest(copy_struct.a_digest);
             tasm::tasm_io_write_to_stdout___u32(copy_struct.a_u32);
             tasm::tasm_io_write_to_stdout___u64(copy_struct.a_u64);
         }
         EnumType::B(non_copy_struct) => {
-            tasm::tasm_io_write_to_stdout___bfe(BFieldElement::new(8));
+            tasm::tasm_io_write_to_stdout___bfe(BFieldElement::new(10));
             tasm::tasm_io_write_to_stdout___u32(non_copy_struct.a_u32);
             tasm::tasm_io_write_to_stdout___u64(non_copy_struct.a_u64);
             tasm::tasm_io_write_to_stdout___u32(non_copy_struct.a_list_of_digests.len() as u32);

@@ -17,6 +17,7 @@ struct TestStruct {
 fn main() {
     let val_0: u128 = 14;
     let mut test_struct: TestStruct = TestStruct {
+        a: BFieldElement::new(14u64 << 40),
         b: Vec::<XFieldElement>::with_capacity(14),
         d: Digest::new([
             BFieldElement::new(2u64),
@@ -25,7 +26,6 @@ fn main() {
             BFieldElement::new(16u64),
             BFieldElement::new(32u64),
         ]),
-        a: BFieldElement::new(14u64 << 40),
         h: u128::MAX,
         i: u128::MAX - 4,
     };

@@ -1,4 +1,3 @@
-use itertools::Itertools;
 use num::Zero;
 use triton_vm::instruction::LabelledInstruction;
 use triton_vm::triton_asm;
@@ -22,10 +21,8 @@ impl ast_types::StructType {
             let (pointer_pointer, mut code) = struct_type.get_all_field_pointers(state);
             // stack: _
 
-            let number_of_fields = struct_type.field_count();
-            for (field_count, (field_id, dtype)) in struct_type.field_ids_and_types().enumerate() {
-                let static_address_for_field_pointer =
-                    pointer_pointer.value() + number_of_fields as u64 - 1 - field_count as u64;
+            for (field_count, (_field_id, dtype)) in struct_type.field_ids_and_types().enumerate() {
+                let static_address_for_field_pointer = pointer_pointer.value() + field_count as u64;
 
                 code.append(&mut triton_asm!(
                     push {static_address_for_field_pointer}
@@ -48,6 +45,7 @@ impl ast_types::StructType {
 
             code
         }
+
         // _ *struct
         // if struct is copy, we just copy all bytes, otherwise we need something
         // more complicated.
@@ -75,10 +73,12 @@ impl ast_types::StructType {
             .try_into()
             .unwrap();
 
-        for (field_count, (field_id, field_type)) in
-            self.field_ids_and_types_reversed_for_tuples().enumerate()
+        let number_of_fields = self.field_count();
+        for (field_count, (_field_id, field_type)) in
+            self.field_ids_and_types_reversed().enumerate()
         {
-            let pointer_pointer_for_this_field = pointer_for_result + field_count as u64;
+            let pointer_pointer_for_this_field =
+                pointer_for_result + number_of_fields as u64 - 1 - field_count as u64;
             match field_type.bfield_codec_length() {
                 Some(static_size) => {
                     code.append(&mut triton_asm!(
@@ -120,13 +120,10 @@ impl ast_types::StructType {
                         // _ current_field_size *current_field **field
 
                         pop
-
                         // _ current_field_size *current_field
 
                         add
-                        push 1
-                        add
-                        // _ *next_field_or_field_size *current_field
+                        // _ *next_field_or_field_size
                     ))
                 }
             }
@@ -151,7 +148,7 @@ impl ast_types::StructType {
         let mut static_pointer_addition = 0;
         let needle_id = field_id;
         let mut needle_type: Option<ast_types::DataType> = None;
-        for (haystack_field_id, haystack_type) in self.field_ids_and_types_reversed_for_tuples() {
+        for (haystack_field_id, haystack_type) in self.field_ids_and_types_reversed() {
             if haystack_field_id == *needle_id {
                 // If we've found the field the accumulators are in the right state.
                 // return them.

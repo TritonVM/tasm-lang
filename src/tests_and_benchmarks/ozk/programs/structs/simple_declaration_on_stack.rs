@@ -18,7 +18,9 @@ struct TestStruct {
 
 fn main() {
     let mut test_struct: TestStruct = TestStruct {
+        a: BFieldElement::new(14u64 << 40),
         b: BFieldElement::new(48u64 << 41),
+        c: XFieldElement::one(),
         d: Digest::new([
             BFieldElement::new(2u64),
             BFieldElement::new(4u64),
@@ -26,8 +28,6 @@ fn main() {
             BFieldElement::new(16u64),
             BFieldElement::new(32u64),
         ]),
-        a: BFieldElement::new(14u64 << 40),
-        c: XFieldElement::one(),
         e: false,
         f: 1 << 22,
         g: 1 << 44,
