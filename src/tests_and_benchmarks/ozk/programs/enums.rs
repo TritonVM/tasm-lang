@@ -1,5 +1,6 @@
 mod boxed_advanced_tuple_data;
 mod boxed_multiple_tuple_data;
+mod boxed_multiple_tuple_data_to_stack;
 mod boxed_proof_item_simple;
 mod custom_struct_in_data;
 mod enum_with_non_copy_struct_data;

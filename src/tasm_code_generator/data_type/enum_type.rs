@@ -39,6 +39,7 @@ impl EnumType {
 
             call {get_variant_data_pointers_label}
             // _ *discriminant
+            // memory: [(*field0, _), (*field1, _), ...]
 
             // Initialize word-counter to zero
             push {pointer_for_words_loaded_acc}
@@ -96,8 +97,8 @@ impl EnumType {
             for (field_count, data_field_type) in data_fields.fields.iter().enumerate() {
                 let load_field = data_field_type.load_from_memory(None, state);
                 let field_stack_size = data_field_type.stack_size();
-                load_variant_fields = triton_asm!(
-                    // [data] _
+                load_variant_fields.append(&mut triton_asm!(
+                    // _ [data]
 
                     push {field_pointer_pointer.value() + 2 * field_count as u64}
                     // _ [data] *field[field_count].pointer
@@ -131,7 +132,7 @@ impl EnumType {
                     write_mem
                     pop
                     // _ [data']
-                );
+                ));
             }
 
             // acc_code_for_subroutine.append(&mut triton_asm!(return));
@@ -213,14 +214,6 @@ impl EnumType {
             .kmalloc(2 * max_field_count)
             .try_into()
             .unwrap();
-
-        assert!(
-            self.variants
-                .iter()
-                .all(|x| x.1.as_tuple_type().element_count() < 2),
-            "Cannot handle so much data in enums. enum type: \"{}\"",
-            self.name
-        );
 
         let mut subroutines: Vec<SubRoutine> = vec![];
         let mut set_all_field_pointers = vec![];
@@ -327,8 +320,99 @@ impl EnumType {
                         return
                     )
                 }
-                _n => {
-                    todo!()
+                n => {
+                    let mut handle_fields = triton_asm!();
+
+                    for field_count in 0..n {
+                        let field_index = data_fields.element_count() - 1 - field_count;
+                        let data_field = &data_fields[field_index];
+                        let static_encoding_length = data_field.bfield_codec_length();
+                        let pointer_pointer = field_pointer_pointer + 2 * field_index as u64;
+                        let mut write_field_pointer_and_size = match static_encoding_length {
+                            Some(static_size) => {
+                                // We don't need to store size, since it's statically known
+                                triton_asm!(
+                                    // _ *field
+
+                                    dup 0
+                                    // _ *field *field
+
+                                    push {pointer_pointer}
+                                    swap 1
+                                    // _ *field *field[field_index].pointer *field
+
+                                    write_mem
+                                    // _ *field *field[field_index].pointer
+
+                                    pop
+                                    // _ *field
+
+                                    push {static_size}
+                                    add
+                                    // _ *next_field
+                                )
+                            }
+                            None => triton_asm!(
+                                // _ *field_size
+
+                                read_mem
+                                // _ *field_size field_size
+
+                                push {pointer_pointer + 1}
+                                swap 1
+                                // _ *field_size *field[field_index].size field_size
+
+                                write_mem
+                                // _ *field_size *field[field_index].size
+
+                                pop
+                                // _ *field_size
+
+                                read_mem
+                                // _ *field_size field_size
+
+                                swap 1
+                                // _ field_size *field_size
+
+                                push 1
+                                add
+                                // _ field_size *field
+
+                                push {pointer_pointer}
+                                dup 1
+                                // _ field_size *field *field[field_index].pointer *field
+
+                                write_mem
+                                // _ field_size *field[field_index].pointer
+
+                                pop
+                                // _ field_size *field
+
+                                add
+                                // _ next_field
+                            ),
+                        };
+
+                        handle_fields.append(&mut write_field_pointer_and_size);
+                    }
+
+                    triton_asm!(
+                        {subroutine_label}:
+                            // _ *discriminant
+
+                            dup 0
+
+                            push 1
+                            add
+                            // _ *discriminant *first_field_or_field_size
+
+                            {&handle_fields}
+                            // _ *discriminant *garbage
+
+                            pop
+                            // _ *discriminant
+                            return
+                    )
                 }
             };
 
@@ -351,12 +435,12 @@ impl EnumType {
 
     /// Return the code to put enum-variant data fields on top of stack.
     /// Does not consume the enum_expr pointer.
-    /// BEFORE: _ *enum_expr
-    /// AFTER: _ *enum_expr [*variant-data-fields]
+    /// BEFORE: _ *discriminant
+    /// AFTER: _ *discriminant [*variant-data-fields]
     pub(crate) fn get_variant_data_fields_in_memory(
         &self,
         variant_name: &str,
-    ) -> Vec<(Vec<LabelledInstruction>, ast_types::DataType)> {
+    ) -> (Vec<LabelledInstruction>, ast_types::Tuple) {
         // TODO: Can we get this code to consume *enum_expr instead?
 
         // Example: Foo::Bar(Vec<u32>)
@@ -370,55 +454,103 @@ impl EnumType {
         let data_types = self.variant_data_type(variant_name);
 
         // Skip discriminant
-        let mut acc_code = vec![triton_instr!(push 1), triton_instr!(add)];
-        let mut ret: Vec<Vec<LabelledInstruction>> = vec![];
+        let mut acc_code = triton_asm!(
+            // _ *discriminant
+            dup 0
+            push 1
+            add
+            // _ *discriminant *first_field_or_field_size
+        );
+        // let mut ret: Vec<Vec<LabelledInstruction>> = vec![];
 
-        // Invariant: _ *enum_expr [*preceding_fields]
-        for (field_count, dtype) in data_types.clone().into_iter().enumerate() {
-            match dtype.bfield_codec_length() {
+        // Before this loop: _ *discriminant *first_field_or_field_size
+        // Goal: _ *discriminant field_0 field_1 field_2 ...
+        for (field_count, dtype) in data_types.clone().into_iter().rev().enumerate() {
+            let mut get_field_pointer = match dtype.bfield_codec_length() {
                 Some(size) => {
-                    // field size is known statically, does not need to be read
-                    // from memory
-                    // stack: _ *enum_expr [*preceding_fields]
-                    ret.push(triton_asm!(
-                        // _ *enum_expr [*preceding_fields]
+                    triton_asm!(
+                        // _ *discriminant *field
 
-                        dup {field_count}
-                        // _ *enum_expr [*previous_fields] *enum_expr
+                        dup 0
+                        // _ *discriminant *field *field
 
-                        {&acc_code}
-                        // _ *enum_expr [*previous_fields] *current_field
-                    ));
-                    acc_code.append(&mut triton_asm!(push {size} add));
+                        push {size}
+                        add
+                        // _ *discriminant *field *next_field_or_size
+                    )
                 }
                 None => {
-                    // Current field size must be read from memory
-                    // stack: _ *enum_expr [*preceding_fields]
-                    ret.push(triton_asm!(
-                        // _ *enum_expr [*preceding_fields]
+                    triton_asm!(
+                        // _ *discriminant *field_size
 
-                        dup {field_count}
-                        // _ *enum_expr [*previous_fields] *enum_expr
-
-                        {&acc_code}
-                        // _ *enum_expr [*previous_fields] *current_field_size
-
-                        push 1
-                        add
-                        // _ *enum_expr [*previous_fields] *current_field
-                    ));
-
-                    acc_code.append(&mut triton_asm!(
                         read_mem
-                        add
+                        // _ *discriminant *field_size field_size
+
+                        swap 1
                         push 1
                         add
-                    ));
+                        swap 1
+                        // _ *discriminant *field field_size
+
+                        dup 1
+                        add
+                        // _ *discriminant *field *next_field_or_size
+                    )
                 }
-            }
+            };
+
+            acc_code.append(&mut get_field_pointer);
         }
 
-        ret.into_iter().zip_eq(data_types).collect_vec()
+        // We have:
+        // _ *discriminant [*field_2, *field_1, *field_0]
+        // We want:
+        // _ *discriminant [*field_0, *field_1, *field_2]
+
+        // So we need to flip top `n` words on the stack
+        let flip_code = match data_types.element_count() {
+            0 => triton_asm!(),
+            1 => triton_asm!(),
+            2 => triton_asm!(swap 1),
+            3 => triton_asm!(swap 2),
+            4 => triton_asm!(
+                // _ e3 e2 e1 e0
+                swap 3
+                // _ e0 e2 e1 e3
+                swap 1
+                // _ e2 e0 e1 e3
+                swap 2
+                // _ e1 e0 e2 e3
+                swap 1
+                // _ e0 e1 e2 e3
+            ),
+            5 => triton_asm!(
+                swap 4
+                // _ e0 e3 e2 e1 e4
+                swap 1
+                // _ e0 e3 e2 e4 e1
+                swap 3
+                // _ e0 e1 e2 e4 e3
+
+                swap 1
+                // _ e0 e1 e2 e3 e4
+            ),
+            _ => todo!("What?!"),
+        };
+
+        // acc_code.append(&mut flip_code);
+        let acc_code = triton_asm!(
+            {&acc_code}
+            // _ *discriminant [*field (hi-to-low)] *garbage
+
+            pop
+            // _ *discriminant [*field (hi-to-low)]
+
+            {&flip_code}
+            // _ *discriminant [*field (low-to-hi)]
+        );
+
+        (acc_code, data_types)
     }
 
     /// Return the constructor that is called by an expression evaluating to an

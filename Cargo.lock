@@ -120,7 +120,7 @@ checksum = "d468802bab17cbc0cc575e9b053f41e72aa36bfa6b7f55e3529ffa43161b97fa"
 [[package]]
 name = "bfieldcodec_derive"
 version = "0.4.2"
-source = "git+https://github.com/Neptune-Crypto/twenty-first.git?branch=reverse-tuple-element-order-in-bfieldcodec#57595a75ea8af9643fd9b8f97199b1181ba2e4c1"
+source = "git+https://github.com/Neptune-Crypto/twenty-first.git?branch=reverse-tuple-element-order-in-bfieldcodec#25999e32371a89e7ba8645d1cd760d5c6c72e145"
 dependencies = [
  "quote",
  "syn 2.0.39",
@@ -1384,7 +1384,7 @@ dependencies = [
 [[package]]
 name = "twenty-first"
 version = "0.34.0"
-source = "git+https://github.com/Neptune-Crypto/twenty-first.git?branch=reverse-tuple-element-order-in-bfieldcodec#57595a75ea8af9643fd9b8f97199b1181ba2e4c1"
+source = "git+https://github.com/Neptune-Crypto/twenty-first.git?branch=reverse-tuple-element-order-in-bfieldcodec#25999e32371a89e7ba8645d1cd760d5c6c72e145"
 dependencies = [
  "anyhow",
  "arbitrary",

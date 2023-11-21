@@ -1420,16 +1420,15 @@ fn compile_match_stmt_boxed_expr(
                 // We need to insert pointers to each data-element contained in the
                 // variant. So we need a function that returns those addresses
                 // relative to the value.
-                let rel_data_position_and_types = match_expression_enum_type
+                let (bindings_code, tuple_type) = match_expression_enum_type
                     .get_variant_data_fields_in_memory(&enum_variant.variant_name);
 
-                let mut bindings_code = vec![];
                 enum_variant
                     .data_bindings
                     .iter()
-                    .zip(rel_data_position_and_types.iter())
-                    .for_each(|(binding, (get_field_pointer, dtype))| {
-                        let dtype = ast_types::DataType::Boxed(Box::new(dtype.to_owned()));
+                    .zip_eq(tuple_type.fields.iter())
+                    .for_each(|(binding, element_type)| {
+                        let dtype = ast_types::DataType::Boxed(Box::new(element_type.to_owned()));
                         let (new_binding_id, spill_addr) =
                             state.new_value_identifier("in_memory_split_value", &dtype);
                         assert!(spill_addr.is_none(), "Cannot handle memory-spilling in match-arm bindings yet. Required spilling of binding '{}'", binding.name);
@@ -1441,11 +1440,6 @@ fn compile_match_stmt_boxed_expr(
                         .function_state
                         .var_addr
                         .insert(binding.name.to_owned(), new_binding_id);
-                        bindings_code.append(&mut triton_asm!(
-                            // _ *enum_expr
-                            {&get_field_pointer}
-                            // _ *enum_expr [*variant-data-fields]
-                        ));
                     });
 
                 let body_code = compile_block_stmt(&arm.body, state);
