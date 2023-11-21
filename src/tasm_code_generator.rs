@@ -140,6 +140,13 @@ pub struct CompilerState<'a> {
 
 // TODO: move CompilerState and all methods to a new file!
 impl<'a> CompilerState<'a> {
+    /// Returns true iff the subroutine was already included
+    pub(crate) fn contains_subroutine(&self, subroutine_label: &str) -> bool {
+        self.global_compiler_state
+            .library_snippets
+            .contains_key(subroutine_label)
+    }
+
     /// Import a dependency in an idempotent manner, ensuring it's only ever imported once
     pub(crate) fn add_library_function(&mut self, subroutine: SubRoutine) {
         // TODO: Can't we include this in a nicer way by e.g. unwrapping inner
@@ -1363,6 +1370,8 @@ fn compile_stmt(
                 // _ match_expr
 
                 {&restore_stack_code}
+
+                // _
             )
         }
     }
@@ -1448,16 +1457,12 @@ fn compile_match_stmt_boxed_expr(
                     triton_asm!()
                 };
 
-                // Insert bindings from pattern-match into stack view for arm-body
-                // We need to insert pointers to each data-element contained in the
-                // variant. So we need a function that returns those addresses
-                // relative to the value.
-                let (bindings_code, tuple_type) = if enum_variant.data_bindings.is_empty() {
-                    (triton_asm!(), ast_types::Tuple::unit())
-                } else {
-                    match_expression_enum_type
-                        .get_variant_data_fields_in_memory(&enum_variant.variant_name)
-                };
+                let tuple_type = enum_variant.get_bindings_type(
+                    &match_expression_enum_type.variant_data_type(&enum_variant.variant_name),
+                );
+
+                let label_for_bindings_subroutine = match_expression_enum_type
+                    .get_variant_data_fields_in_memory(&enum_variant, state);
 
                 enum_variant
                     .data_bindings
@@ -1484,7 +1489,9 @@ fn compile_match_stmt_boxed_expr(
                 let subroutine_code = triton_asm!(
                     {arm_subroutine_label}:
                         {&remove_old_any_arm_taken_indicator}
-                        {&bindings_code}
+                        // _ *discriminant
+
+                        call {label_for_bindings_subroutine}
                         // _ *enum_expr [*variant-data-fields]
 
                         {&body_code}

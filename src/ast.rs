@@ -138,6 +138,29 @@ pub struct EnumVariantSelector {
     pub data_bindings: Vec<PatternMatchedBinding>,
 }
 
+impl EnumVariantSelector {
+    /// Return the label for the subroutine that creates the bindings defined in this
+    /// match-arm.
+    pub(crate) fn label_for_binding_subroutine(&self, boxed: bool) -> String {
+        let boxed_qualifier = if boxed { "boxed" } else { "stack" };
+        format!(
+            "{}_{}_bind_{}_{boxed_qualifier}",
+            self.enum_name,
+            self.variant_name,
+            self.data_bindings.len()
+        )
+    }
+
+    /// Return the composite type of this match-arm binding
+    pub(crate) fn get_bindings_type(&self, data_type: &ast_types::Tuple) -> ast_types::Tuple {
+        if self.data_bindings.is_empty() {
+            ast_types::Tuple::unit()
+        } else {
+            data_type.to_owned()
+        }
+    }
+}
+
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct PatternMatchedBinding {
     pub name: String,

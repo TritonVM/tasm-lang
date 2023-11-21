@@ -1,9 +1,9 @@
-use itertools::Itertools;
 use triton_vm::instruction::LabelledInstruction;
 use triton_vm::triton_asm;
 use triton_vm::triton_instr;
 use triton_vm::BFieldElement;
 
+use crate::ast;
 use crate::ast_types;
 use crate::ast_types::EnumType;
 use crate::libraries::LibraryFunction;
@@ -188,6 +188,8 @@ impl EnumType {
         code
     }
 
+    // TODO: I don't think we're using the stored field sizes for anything.
+    // Get rid of those!
     /// Return the code to get all field pointers for the discriminant whose
     /// pointer lives on top of the stack.
     /// The field pointers are stored in memory at a statically known address.
@@ -433,33 +435,34 @@ impl EnumType {
         )
     }
 
-    /// Return the code to put enum-variant data fields on top of stack.
-    /// Does not consume the enum_expr pointer.
+    /// Return the subroutine label for putting pointers to field
+    /// elements on top of the stack
     /// BEFORE: _ *discriminant
     /// AFTER: _ *discriminant [*variant-data-fields]
     pub(crate) fn get_variant_data_fields_in_memory(
         &self,
-        variant_name: &str,
-    ) -> (Vec<LabelledInstruction>, ast_types::Tuple) {
-        // TODO: Can we get this code to consume *enum_expr instead?
+        enum_variant_selector: &ast::EnumVariantSelector,
+        state: &mut CompilerState,
+    ) -> String {
+        let data_types = enum_variant_selector
+            .get_bindings_type(&self.variant_data_type(&enum_variant_selector.variant_name));
 
-        // Example: Foo::Bar(Vec<u32>)
-        // Memory layout will be:
-        // [discriminant, field_size, [u32_list]]
-        // In that case we want to return code to get *u32_list.
+        let label_for_subroutine = enum_variant_selector.label_for_binding_subroutine(true);
 
-        // You can assume that the stack has a pointer to `discriminant` on
-        // top. So we want to return the code
-        // `push 1 add push 1 add`
-        let data_types = self.variant_data_type(variant_name);
+        // If subroutine was already constructed and included, just return the label, otherwise
+        // build the subroutine and include it in state.
+        if state.contains_subroutine(&label_for_subroutine) {
+            return label_for_subroutine;
+        }
 
-        // Skip discriminant
         let mut acc_code = triton_asm!(
-            // _ *discriminant
-            dup 0
-            push 1
-            add
-            // _ *discriminant *first_field_or_field_size
+            {label_for_subroutine}:
+
+                // _ *discriminant
+                dup 0
+                push 1
+                add
+                // _ *discriminant *first_field_or_field_size
         );
         // let mut ret: Vec<Vec<LabelledInstruction>> = vec![];
 
@@ -548,9 +551,13 @@ impl EnumType {
 
             {&flip_code}
             // _ *discriminant [*field (low-to-hi)]
+
+            return
         );
 
-        (acc_code, data_types)
+        state.add_library_function(acc_code.try_into().unwrap());
+
+        label_for_subroutine
     }
 
     /// Return the constructor that is called by an expression evaluating to an
