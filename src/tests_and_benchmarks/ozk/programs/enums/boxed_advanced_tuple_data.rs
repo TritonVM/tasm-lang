@@ -1,3 +1,4 @@
+#![allow(clippy::len_zero)]
 use arbitrary::Arbitrary;
 use itertools::Itertools;
 use tasm_lib::Digest;

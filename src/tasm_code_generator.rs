@@ -5,7 +5,6 @@ mod outer_function_tasm_code;
 mod stack;
 
 use itertools::{Either, Itertools};
-use num::One;
 use std::collections::{HashMap, HashSet};
 use std::fmt::Display;
 use tasm_lib;
@@ -888,7 +887,7 @@ impl<'a> CompilerState<'a> {
                 .unwrap();
             let mut code = copy_top_stack_value_to_memory(memory_location, top_value_size);
             code.append(&mut triton_asm![pop; height_of_affected_stack]);
-            code.append(&mut load_from_memory(Some(memory_location), top_value_size));
+            code.append(&mut load_from_memory(memory_location, top_value_size));
 
             code
         } else if words_to_remove != 0 {
@@ -1179,10 +1178,7 @@ fn compile_stmt(
                             Some(spill_addr) => {
                                 // Value is spilled, so we load it from memory and clear that stack.
                                 code.append(&mut triton_asm![pop; state.function_state.vstack.get_stack_height()]);
-                                code.append(&mut load_from_memory(
-                                    Some(*spill_addr),
-                                    dt.stack_size(),
-                                ))
+                                code.append(&mut load_from_memory(*spill_addr, dt.stack_size()))
                             }
 
                             None => {
@@ -2010,7 +2006,7 @@ fn compile_expr(
                             var_type.dup_value_from_stack_code(position.try_into().unwrap())
                         }
                         ValueLocation::StaticMemoryAddress(pointer) => {
-                            load_from_memory(Some(pointer), var_type.stack_size())
+                            load_from_memory(pointer, var_type.stack_size())
                         }
                         ValueLocation::DynamicMemoryAddress(code) => {
                             triton_asm!(
@@ -3104,30 +3100,14 @@ fn dereference(
     resulting_type.load_from_memory(None, state)
 }
 
-#[deprecated]
-/// TODO: REPLACE THIS WITH THE `copy_from_memory` method for `DataType`
 /// Return the code to load a value from memory. Leaves the stack with the read value on top.
-/// If no static memory address is provided, the memory address is read from top of the stack,
-/// and this memory address is then consumed.
-fn load_from_memory(
-    static_memory_address: Option<u32>,
-    value_size: usize,
-) -> Vec<LabelledInstruction> {
+fn load_from_memory(static_memory_address: u32, value_size: usize) -> Vec<LabelledInstruction> {
     // A stack value of the form `_ val2 val1 val0`, with `val0` being on the top of the stack
     // is stored in memory as: `val0 val1 val2`, where `val0` is stored on the `memory_location`
     // address. So we read the value at the highest memory location first.
-    // TODO: Consider making subroutines out of this in
-    // order to get shorter programs.
-    let mut ret = match static_memory_address {
-        Some(mem_location) => triton_asm!(push {mem_location as u64 + value_size as u64 - 1}),
-        None => {
-            if value_size.is_one() {
-                triton_asm!()
-            } else {
-                triton_asm!(push {value_size as u64 - 1} add)
-            }
-        }
-    };
+    let mut ret = triton_asm!(
+        push {static_memory_address as u64 + value_size as u64 - 1}
+    );
 
     // stack: _ memory_address_of_last_word
 

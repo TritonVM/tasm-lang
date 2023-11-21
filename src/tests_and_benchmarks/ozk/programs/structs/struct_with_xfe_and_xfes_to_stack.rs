@@ -1,3 +1,4 @@
+#![allow(clippy::len_zero)]
 use arbitrary::Arbitrary;
 use triton_vm::Digest;
 use twenty_first::shared_math::b_field_element::BFieldElement;
