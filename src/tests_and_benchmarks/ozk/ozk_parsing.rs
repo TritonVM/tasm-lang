@@ -12,18 +12,21 @@ pub type StructsAndMethods = HashMap<String, (CustomTypeRust, Vec<syn::ImplItemM
 
 fn extract_types_and_function(
     parsed_file: syn::File,
-    function_name: &str,
-) -> (StructsAndMethods, Option<syn::ItemFn>) {
+    function_name: Option<&str>,
+) -> (StructsAndMethods, Option<syn::ItemFn>, Vec<String>) {
     get_standard_setup!(ast_types::ListType::Unsafe, graft_config, _lib);
     let mut outer_function: Option<syn::ItemFn> = None;
     let mut custom_types: HashMap<String, (Option<CustomTypeRust>, Vec<syn::ImplItemMethod>)> =
         HashMap::default();
+    let mut dependencies = vec![];
     for item in parsed_file.items {
         match item {
             // Top-level function declaration
             syn::Item::Fn(func) => {
-                if func.sig.ident == function_name {
-                    outer_function = Some(func.to_owned());
+                if let Some(function_name) = function_name {
+                    if func.sig.ident == function_name {
+                        outer_function = Some(func.to_owned());
+                    }
                 }
             }
 
@@ -83,7 +86,43 @@ fn extract_types_and_function(
                     }
                 };
             }
-            _ => {}
+            syn::Item::Use(syn::ItemUse {
+                attrs: _,
+                vis: _,
+                use_token: _,
+                leading_colon: _,
+                tree,
+                semi_token: _,
+            }) => {
+                fn get_module_name(tree: &syn::UseTree) -> Option<String> {
+                    match tree {
+                        syn::UseTree::Path(use_path) => {
+                            if use_path.ident == "super" {
+                                match use_path.tree.as_ref() {
+                                    syn::UseTree::Path(use_path) => {
+                                        if let syn::UseTree::Glob(_) = *use_path.tree {
+                                            Some(use_path.ident.to_string())
+                                        } else {
+                                            None
+                                        }
+                                    }
+                                    _ => None,
+                                }
+                            } else {
+                                None
+                            }
+                        }
+                        _ => None,
+                    }
+                }
+
+                // Import files specified with `use super::<module_name>::*;`
+                // This is currently the only way to import
+                if let Some(module_name) = get_module_name(&tree) {
+                    dependencies.push(module_name);
+                }
+            }
+            _ => (),
         }
     }
 
@@ -93,7 +132,7 @@ fn extract_types_and_function(
         .map(|(struct_name, (option_struct, methods))| (struct_name.clone(), (option_struct.unwrap_or_else(|| panic!("Couldn't find struct definition for {struct_name} for which methods was defined")), methods)))
         .collect();
 
-    (structs, outer_function)
+    (structs, outer_function, dependencies)
 }
 
 /// Return the Rust-AST for the `main` function and all custom types defined in the
@@ -103,17 +142,34 @@ pub(super) fn parse_function_and_structs(
     module_name: &str,
     function_name: &str,
 ) -> (syn::ItemFn, StructsAndMethods, String) {
-    let path = format!(
-        "{}/src/tests_and_benchmarks/ozk/programs/{directory}/{module_name}.rs",
-        env!("CARGO_MANIFEST_DIR"),
-    );
-    let content = fs::read_to_string(&path).expect("Unable to read file {path}");
-    let parsed_file: syn::File = syn::parse_str(&content).expect("Unable to parse rust code");
-    let (custom_types, main_parsed) = extract_types_and_function(parsed_file, function_name);
+    fn parse_function_and_structs_inner(
+        directory: &str,
+        module_name: &str,
+        function_name: Option<&str>,
+    ) -> (Option<syn::ItemFn>, StructsAndMethods, String) {
+        let path = format!(
+            "{}/src/tests_and_benchmarks/ozk/programs/{directory}/{module_name}.rs",
+            env!("CARGO_MANIFEST_DIR"),
+        );
+        let content = fs::read_to_string(&path).expect("Unable to read file {path}");
+        let parsed_file: syn::File = syn::parse_str(&content).expect("Unable to parse rust code");
+        let (mut custom_types, main_parsed, dependencies) =
+            extract_types_and_function(parsed_file, function_name);
 
+        for dependency in dependencies {
+            let (_, imported_custom_types, _) =
+                parse_function_and_structs_inner(directory, &dependency, None);
+            custom_types.extend(imported_custom_types.into_iter())
+        }
+
+        (main_parsed, custom_types, module_name.to_owned())
+    }
+
+    let (main_parsed, custom_types, module_name) =
+        parse_function_and_structs_inner(directory, module_name, Some(function_name));
     match main_parsed {
         Some(main) => (main, custom_types, module_name.to_owned()),
-        None => panic!("Failed to parse file {path}"),
+        None => panic!("Failed to parse module {module_name}"),
     }
 }
 
