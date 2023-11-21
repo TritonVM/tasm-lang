@@ -27,30 +27,6 @@ pub enum DataType {
 }
 
 impl DataType {
-    /// Returns true if all data lives on stack, returns
-    /// false if stack only sees a pointer to memory
-    pub fn data_always_lives_in_memory(&self) -> bool {
-        match self {
-            DataType::Bool => false,
-            DataType::U32 => false,
-            DataType::U64 => false,
-            DataType::U128 => false,
-            DataType::BFE => false,
-            DataType::XFE => false,
-            DataType::Digest => false,
-            DataType::List(_, _) => true,
-            DataType::Tuple(_) => false,
-            DataType::Array(_) => true,
-            DataType::Struct(_) => false,
-            DataType::Enum(_) => false,
-            DataType::VoidPointer => true,
-            DataType::Function(_) => todo!(),
-            DataType::Boxed(_) => true,
-            DataType::Reference(_inner) => false, // I think ...
-            DataType::Unresolved(_) => panic!(),
-        }
-    }
-
     pub fn get_tuple_elements(&self) -> Tuple {
         match self {
             DataType::Tuple(tuple) => tuple.to_owned(),

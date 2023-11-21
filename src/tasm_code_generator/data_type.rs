@@ -81,14 +81,15 @@ impl ast_types::DataType {
             | ast_types::DataType::Tuple(_) => {
                 Self::copy_words_from_memory(static_address, self.stack_size())
             }
-            ast_types::DataType::List(_, _) | ast_types::DataType::Array(_) => {
+            ast_types::DataType::List(_, _)
+            | ast_types::DataType::Array(_)
+            | ast_types::DataType::Boxed(_) => {
                 triton_asm!()
             }
             ast_types::DataType::Enum(enum_type) => enum_type.load_from_memory(state),
             ast_types::DataType::Struct(struct_type) => struct_type.load_from_memory(state),
             ast_types::DataType::VoidPointer => todo!(),
             ast_types::DataType::Function(_) => todo!(),
-            ast_types::DataType::Boxed(_) => todo!(),
             ast_types::DataType::Reference(_) => todo!(),
             ast_types::DataType::Unresolved(_) => todo!(),
         }
