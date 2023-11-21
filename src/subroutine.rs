@@ -10,7 +10,7 @@ use crate::libraries::LibraryFunction;
 /// its name, and contains a `return` such that this code can be called
 /// but is not itself executable, as the `return` would lead to a jump stack
 /// underflow.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) struct SubRoutine(Vec<LabelledInstruction>);
 
 impl Display for SubRoutine {

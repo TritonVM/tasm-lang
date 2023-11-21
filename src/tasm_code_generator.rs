@@ -144,9 +144,21 @@ impl<'a> CompilerState<'a> {
     pub(crate) fn add_library_function(&mut self, subroutine: SubRoutine) {
         // TODO: Can't we include this in a nicer way by e.g. unwrapping inner
         // subroutines?
-        self.global_compiler_state
+        let already_there = self
+            .global_compiler_state
             .library_snippets
-            .insert(subroutine.get_label(), subroutine);
+            .insert(subroutine.get_label(), subroutine.clone());
+        match already_there {
+            Some(previous_version) => assert_eq!(
+                previous_version,
+                subroutine,
+                "Inconsistent library functions added. Got two different versions of {}\n\n. 1st was:\n{}\n\n 2nd was:\n{}",
+                subroutine.get_label(),
+                previous_version,
+                subroutine
+            ),
+            None => (),
+        }
     }
 
     /// Construct a new compiler state with no known values that must be spilled.
