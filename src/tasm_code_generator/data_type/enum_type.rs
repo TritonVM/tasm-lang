@@ -11,9 +11,22 @@ use crate::tasm_code_generator::CompilerState;
 use crate::tasm_code_generator::SubRoutine;
 
 impl EnumType {
+    /// Return a label for the subroutine which loads this enum type from
+    /// memory onto the stack
+    fn label_for_memory_loading_subroutine(&self) -> String {
+        format!("load_{}_to_stack", self.name)
+    }
+
     /// BEFORE: _ *discriminant
     /// AFTER:  _ [data] [padding] discriminant
     pub(crate) fn load_from_memory(&self, state: &mut CompilerState) -> Vec<LabelledInstruction> {
+        let load_subroutine_label = self.label_for_memory_loading_subroutine();
+        if state.contains_subroutine(&load_subroutine_label) {
+            return triton_asm!(call {
+                load_subroutine_label
+            });
+        }
+
         let (field_pointer_pointer, get_variant_data_pointers, subroutines) =
             self.get_variant_data_pointers_with_sizes(state);
         let pointer_for_words_loaded_acc: u64 = state
@@ -33,29 +46,30 @@ impl EnumType {
             state.add_library_function(sr);
         }
 
-        let mut code = triton_asm!(
-            // _ *discriminant
+        let mut load_subroutine = triton_asm!(
+            {load_subroutine_label}:
+                // _ *discriminant
 
 
-            call {get_variant_data_pointers_label}
-            // _ *discriminant
-            // memory: [(*field0, _), (*field1, _), ...]
+                call {get_variant_data_pointers_label}
+                // _ *discriminant
+                // memory: [(*field0, _), (*field1, _), ...]
 
-            // Initialize word-counter to zero
-            push {pointer_for_words_loaded_acc}
-            push 0
-            write_mem
-            pop
-            // _ *discriminant
+                // Initialize word-counter to zero
+                push {pointer_for_words_loaded_acc}
+                push 0
+                write_mem
+                pop
+                // _ *discriminant
 
-            // Store discriminant pointer
-            push {pointer_for_discriminant_pointer}
-            swap 1
-            // _ **discriminant *discriminant
+                // Store discriminant pointer
+                push {pointer_for_discriminant_pointer}
+                swap 1
+                // _ **discriminant *discriminant
 
-            write_mem
-            pop
-            // _
+                write_mem
+                pop
+                // _
         );
 
         // Now match on variant to load the data
@@ -65,7 +79,7 @@ impl EnumType {
             let subroutine_for_loading_variant_fields_label =
                 format!("{}_load_field_subroutine_{}", self.name, variant_name);
 
-            code.append(&mut triton_asm!(
+            load_subroutine.append(&mut triton_asm!(
                 // _ [data]
 
                 push {pointer_for_discriminant_pointer}
@@ -151,7 +165,7 @@ impl EnumType {
         let pad_subroutine = pad_subroutine();
         state.add_library_function(pad_subroutine.clone());
 
-        code.append(&mut triton_asm!(
+        load_subroutine.append(&mut triton_asm!(
             // _ [data]
             push {pointer_for_words_loaded_acc}
             read_mem
@@ -183,9 +197,16 @@ impl EnumType {
             pop
             pop
             // _ [data] [padding] discriminant
+
+            return
         ));
 
-        code
+        // load_subroutine
+        state.add_library_function(load_subroutine.try_into().unwrap());
+
+        triton_asm!(call {
+            load_subroutine_label
+        })
     }
 
     // TODO: I don't think we're using the stored field sizes for anything.

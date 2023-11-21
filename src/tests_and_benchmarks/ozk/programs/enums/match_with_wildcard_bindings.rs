@@ -3,7 +3,7 @@
 // Allows the use of input/output on the native architecture
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 use itertools::Itertools;
-use triton_vm::{BFieldElement, Digest};
+use triton_vm::BFieldElement;
 use twenty_first::shared_math::bfield_codec::BFieldCodec;
 
 #[derive(BFieldCodec)]
@@ -12,27 +12,9 @@ pub enum EnumType {
     B(Vec<Vec<BFieldElement>>),
 }
 
-impl EnumType {
-    // fn discriminant(&self) -> BFieldElement {
-    //     #[allow(unused_assignments)]
-    //     let mut discriminant: BFieldElement = BFieldElement::new(u32::MAX as u64);
-    //     match self {
-    //         EnumType::A(_) => {
-    //             discriminant = BFieldElement::new(0);
-    //         }
-    //         EnumType::B(_) => {
-    //             discriminant = BFieldElement::new(1);
-    //         }
-    //     };
-
-    //     return discriminant;
-    // }
-}
-
 fn main() {
     let b: Box<EnumType> =
         EnumType::decode(&tasm::load_from_memory(BFieldElement::new(84))).unwrap();
-    // tasm::tasm_io_write_to_stdout___bfe(boxed_proof_item.discriminant());
 
     match *b {
         EnumType::A(_) => {

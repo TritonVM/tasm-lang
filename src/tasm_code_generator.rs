@@ -155,16 +155,15 @@ impl<'a> CompilerState<'a> {
             .global_compiler_state
             .library_snippets
             .insert(subroutine.get_label(), subroutine.clone());
-        match already_there {
-            Some(previous_version) => assert_eq!(
-                previous_version,
-                subroutine,
-                "Inconsistent library functions added. Got two different versions of {}\n\n. 1st was:\n{}\n\n 2nd was:\n{}",
-                subroutine.get_label(),
-                previous_version,
-                subroutine
-            ),
-            None => (),
+        if let Some(previous_version) = already_there {
+            assert_eq!(
+                        previous_version,
+                        subroutine,
+                        "Inconsistent library functions added. Got two different versions of {}\n\n. 1st was:\n{}\n\n 2nd was:\n{}",
+                        subroutine.get_label(),
+                        previous_version,
+                        subroutine
+                    );
         }
     }
 
@@ -1426,9 +1425,9 @@ fn compile_match_stmt_boxed_expr(
         let arm_subroutine_label = format!("{match_expr_id}_body_{arm_counter}");
 
         match &arm.match_condition {
-            ast::MatchCondition::EnumVariant(enum_variant) => {
-                let arm_variant_discriminant =
-                    match_expression_enum_type.variant_discriminant(&enum_variant.variant_name);
+            ast::MatchCondition::EnumVariant(enum_variant_selector) => {
+                let arm_variant_discriminant = match_expression_enum_type
+                    .variant_discriminant(&enum_variant_selector.variant_name);
 
                 match_code.append(&mut triton_asm!(
                     // _ match_expr <no_arm_taken>
@@ -1457,14 +1456,15 @@ fn compile_match_stmt_boxed_expr(
                     triton_asm!()
                 };
 
-                let tuple_type = enum_variant.get_bindings_type(
-                    &match_expression_enum_type.variant_data_type(&enum_variant.variant_name),
+                let tuple_type = enum_variant_selector.get_bindings_type(
+                    &match_expression_enum_type
+                        .variant_data_type(&enum_variant_selector.variant_name),
                 );
 
                 let label_for_bindings_subroutine = match_expression_enum_type
-                    .get_variant_data_fields_in_memory(&enum_variant, state);
+                    .get_variant_data_fields_in_memory(enum_variant_selector, state);
 
-                enum_variant
+                enum_variant_selector
                     .data_bindings
                     .iter()
                     .zip_eq(tuple_type.fields.iter())
@@ -1485,7 +1485,8 @@ fn compile_match_stmt_boxed_expr(
 
                 let body_code = compile_block_stmt(&arm.body, state);
 
-                let pop_local_bindings = vec![triton_instr!(pop); enum_variant.data_bindings.len()];
+                let pop_local_bindings =
+                    vec![triton_instr!(pop); enum_variant_selector.data_bindings.len()];
                 let subroutine_code = triton_asm!(
                     {arm_subroutine_label}:
                         {&remove_old_any_arm_taken_indicator}
@@ -1578,10 +1579,10 @@ fn compile_match_stmt_stack_expr(
         let arm_subroutine_label = format!("{match_expr_id}_body_{arm_counter}");
 
         match &arm.match_condition {
-            ast::MatchCondition::EnumVariant(enum_variant) => {
+            ast::MatchCondition::EnumVariant(enum_variant_selector) => {
                 // We know that variant discriminant is on top
-                let arm_variant_discriminant =
-                    match_expression_enum_type.variant_discriminant(&enum_variant.variant_name);
+                let arm_variant_discriminant = match_expression_enum_type
+                    .variant_discriminant(&enum_variant_selector.variant_name);
                 match_code.append(&mut triton_asm!(
                     // dup {contains_wildcard as u32}
                     {&match_expr_discriminant}
@@ -1610,11 +1611,13 @@ fn compile_match_stmt_stack_expr(
                 // into
                 // _ [enum_data] [padding] discriminant
                 let new_ids = state.split_value(
-                    &match_expr_id,
-                    match_expression_enum_type.decompose_variant(&enum_variant.variant_name),
+                    match_expr_id,
+                    match_expression_enum_type
+                        .decompose_variant(&enum_variant_selector.variant_name),
                 );
+
                 // Insert bindings from pattern-match into stack view for arm-body
-                enum_variant
+                enum_variant_selector
                     .data_bindings
                     .iter()
                     .zip(new_ids.iter())

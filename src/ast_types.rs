@@ -819,8 +819,7 @@ impl Tuple {
     }
 
     pub fn stack_size(&self) -> usize {
-        let ret = self.into_iter().map(|x| x.stack_size()).sum();
-        ret
+        self.into_iter().map(|x| x.stack_size()).sum()
     }
 
     pub fn constructor(
