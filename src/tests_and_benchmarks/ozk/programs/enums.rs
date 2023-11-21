@@ -1,4 +1,5 @@
 mod boxed_advanced_tuple_data;
+mod boxed_match_with_wildcard_binding;
 mod boxed_multiple_tuple_data;
 mod boxed_multiple_tuple_data_to_stack;
 mod boxed_proof_item_simple;
@@ -6,6 +7,7 @@ mod custom_struct_in_data;
 mod enum_with_non_copy_struct_data;
 mod enum_with_struct_data;
 mod enum_with_struct_with_two_vecs;
+mod match_with_wildcard_bindings;
 mod move_boxed_enum_to_stack;
 mod rust_by_example_enums;
 mod two_variants_no_data;

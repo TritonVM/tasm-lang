@@ -465,7 +465,7 @@ impl EnumType {
 
         // Before this loop: _ *discriminant *first_field_or_field_size
         // Goal: _ *discriminant field_0 field_1 field_2 ...
-        for (field_count, dtype) in data_types.clone().into_iter().rev().enumerate() {
+        for dtype in data_types.clone().into_iter().rev() {
             let mut get_field_pointer = match dtype.bfield_codec_length() {
                 Some(size) => {
                     triton_asm!(

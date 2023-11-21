@@ -810,6 +810,10 @@ impl Tuple {
         self.fields.len()
     }
 
+    pub(crate) fn unit() -> Self {
+        Self { fields: vec![] }
+    }
+
     pub(crate) fn is_unit(&self) -> bool {
         self.fields.is_empty()
     }

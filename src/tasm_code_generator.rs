@@ -1327,14 +1327,44 @@ fn compile_stmt(
 
             vec![]
         }
-        ast::Stmt::Match(match_stmt) => match match_stmt.match_expression.get_type() {
-            ast_types::DataType::Enum(_) => compile_match_stmt_stack_expr(match_stmt, state),
-            ast_types::DataType::Boxed(inner) => match *inner.to_owned() {
-                ast_types::DataType::Enum(_) => compile_match_stmt_boxed_expr(match_stmt, state),
+        ast::Stmt::Match(match_stmt) => {
+            let vstack_init = state.function_state.vstack.clone();
+            let var_addr_init = state.function_state.var_addr.clone();
+            let (match_expr_id, match_expr_evaluation) =
+                compile_expr(&match_stmt.match_expression, "match-expr", state);
+            assert!(
+                !state.function_state.spill_required.contains(&match_expr_id),
+                "Cannot handle memory-spill of evaluated match expressions. But {match_expr_id} required memory spilling"
+            );
+
+            // stack: // _ [enum]
+            let match_stmt = match match_stmt.match_expression.get_type() {
+                ast_types::DataType::Enum(_) => {
+                    compile_match_stmt_stack_expr(match_stmt, state, &match_expr_id)
+                }
+                ast_types::DataType::Boxed(inner) => match *inner.to_owned() {
+                    ast_types::DataType::Enum(_) => {
+                        compile_match_stmt_boxed_expr(match_stmt, state, &match_expr_id)
+                    }
+                    _ => unreachable!(),
+                },
                 _ => unreachable!(),
-            },
-            _ => unreachable!(),
-        },
+            };
+
+            // Remove match-expression from stack
+            let restore_stack_code = state.restore_stack_code(&vstack_init, &var_addr_init);
+
+            triton_asm!(
+                // _
+                {&match_expr_evaluation}
+                // _ match_expr
+
+                {&match_stmt}
+                // _ match_expr
+
+                {&restore_stack_code}
+            )
+        }
     }
 }
 
@@ -1345,23 +1375,13 @@ fn compile_match_stmt_boxed_expr(
         match_expression,
     }: &ast::MatchStmt<type_checker::Typing>,
     state: &mut CompilerState,
+    match_expr_id: &ValueIdentifier,
 ) -> Vec<LabelledInstruction> {
-    let vstack_init = state.function_state.vstack.clone();
-    let var_addr_init = state.function_state.var_addr.clone();
-
-    // Evaluate match expression
-    let (match_expr_id, match_expr_evaluation) =
-        compile_expr(match_expression, "match-expr", state);
-    assert!(
-                !state.function_state.spill_required.contains(&match_expr_id),
-                "Cannot handle memory-spill of evaluated match expressions. But {match_expr_id} required memory spilling"
-            );
-
-    let mut match_code = triton_asm!({ &match_expr_evaluation });
     let contains_wildcard = arms
         .iter()
         .any(|x| matches!(x.match_condition, ast::MatchCondition::CatchAll));
 
+    let mut match_code = vec![];
     let match_expr_discriminant = if contains_wildcard {
         // Indicate that no arm body has been executed yet. For wildcard arm-conditions.
         match_code.push(triton_instr!(push 1));
@@ -1432,8 +1452,12 @@ fn compile_match_stmt_boxed_expr(
                 // We need to insert pointers to each data-element contained in the
                 // variant. So we need a function that returns those addresses
                 // relative to the value.
-                let (bindings_code, tuple_type) = match_expression_enum_type
-                    .get_variant_data_fields_in_memory(&enum_variant.variant_name);
+                let (bindings_code, tuple_type) = if enum_variant.data_bindings.is_empty() {
+                    (triton_asm!(), ast_types::Tuple::unit())
+                } else {
+                    match_expression_enum_type
+                        .get_variant_data_fields_in_memory(&enum_variant.variant_name)
+                };
 
                 enum_variant
                     .data_bindings
@@ -1512,13 +1536,7 @@ fn compile_match_stmt_boxed_expr(
         match_code.push(triton_instr!(pop));
     }
 
-    // Remove match-expression from stack
-    let restore_stack_code = state.restore_stack_code(&vstack_init, &var_addr_init);
-
-    triton_asm!(
-        {&match_code}
-        {&restore_stack_code}
-    )
+    triton_asm!({ &match_code })
 }
 
 /// Compile a match-statement where the matched-against value lives on the stack
@@ -1528,30 +1546,20 @@ fn compile_match_stmt_stack_expr(
         match_expression,
     }: &ast::MatchStmt<type_checker::Typing>,
     state: &mut CompilerState,
+    match_expr_id: &ValueIdentifier,
 ) -> Vec<LabelledInstruction> {
-    let vstack_init = state.function_state.vstack.clone();
-    let var_addr_init = state.function_state.var_addr.clone();
-
-    // Evaluate match expression
-    let (match_expr_id, match_expr_evaluation) =
-        compile_expr(match_expression, "match-expr", state);
-    assert!(
-                !state.function_state.spill_required.contains(&match_expr_id),
-                "Cannot handle memory-spill of evaluated match expressions. But {match_expr_id} required memory spilling"
-            );
-
-    let mut match_code = triton_asm!({ &match_expr_evaluation });
     let contains_wildcard = arms
         .iter()
         .any(|x| matches!(x.match_condition, ast::MatchCondition::CatchAll));
 
-    if contains_wildcard {
+    let mut match_code = if contains_wildcard {
         // Indicate that no arm body has been executed yet. For wildcard arm-conditions.
-        match_code.push(triton_instr!(push 1));
-    }
+        triton_asm!(push 1)
+    } else {
+        triton_asm!()
+    };
 
-    // Match-expression is either an enum type, or a boxed enum type.
-    let match_expression_enum_type = match_expression.get_type().unbox().as_enum_type();
+    let match_expression_enum_type = match_expression.get_type().as_enum_type();
 
     let outer_vstack = state.function_state.vstack.clone();
     let outer_bindings = state.function_state.var_addr.clone();
@@ -1663,13 +1671,7 @@ fn compile_match_stmt_stack_expr(
         match_code.push(triton_instr!(pop));
     }
 
-    // Remove match-expression from stack
-    let restore_stack_code = state.restore_stack_code(&vstack_init, &var_addr_init);
-
-    triton_asm!(
-        {&match_code}
-        {&restore_stack_code}
-    )
+    triton_asm!({ &match_code })
 }
 
 fn compile_fn_call(
