@@ -2,11 +2,12 @@ use itertools::Itertools;
 use num::{One, Zero};
 use std::collections::HashMap;
 use std::str::FromStr;
-use syn::parse_quote;
+use syn::{parse_quote, PathArguments};
 
 use crate::ast;
 use crate::ast::ReturningBlock;
 use crate::ast_types;
+use crate::ast_types::DataType;
 use crate::libraries::Library;
 use crate::type_checker;
 
@@ -407,6 +408,10 @@ impl<'a> Graft<'a> {
             return ast_types::DataType::Boxed(Box::new(inner_type));
         }
 
+        if rust_type_as_string == "Result" {
+            return self.rust_result_to_data_type(&rust_type_path.path.segments[0].arguments);
+        }
+
         // We only allow the user to use types that are capitalized
         if rust_type_as_string
             .chars()
@@ -436,6 +441,20 @@ impl<'a> Graft<'a> {
             }
             other => panic!("Unsupported type {other:#?}"),
         }
+    }
+
+    fn rust_result_to_data_type(&self, path_args: &PathArguments) -> DataType {
+        let PathArguments::AngleBracketed(generics) = path_args else {
+            panic!("Unsupported path argument {path_args:#?}");
+        };
+        assert_eq!(2, generics.args.len(), "`Result` must have two generics");
+
+        let ok_type_arg = &generics.args[0];
+        let syn::GenericArgument::Type(ok_type) = ok_type_arg else {
+            panic!("Unsupported type {ok_type_arg:#?}");
+        };
+        let ok_type = self.syn_type_to_ast_type(ok_type);
+        DataType::Result(Box::new(ok_type))
     }
 
     pub fn syn_type_to_ast_type(&self, syn_type: &syn::Type) -> ast_types::DataType {

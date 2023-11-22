@@ -23,6 +23,7 @@ pub enum DataType {
     Function(Box<FunctionType>),
     Boxed(Box<DataType>),
     Reference(Box<DataType>),
+    Result(Box<DataType>),
     Unresolved(String),
 }
 
@@ -83,14 +84,7 @@ impl DataType {
             DataType::XFE => true,
             DataType::Digest => true,
             DataType::Tuple(_) => true,
-            DataType::Array(array_type) => {
-                let ArrayType {
-                    element_type,
-                    length: _,
-                } = &array_type;
-
-                element_type.is_copy()
-            }
+            DataType::Array(array_type) => array_type.element_type.is_copy(),
             DataType::List(_, _) => false,
             DataType::VoidPointer => false,
             DataType::Function(_) => false,
@@ -99,6 +93,7 @@ impl DataType {
             DataType::Unresolved(_) => false,
             DataType::Boxed(_) => false,
             DataType::Reference(_) => false,
+            DataType::Result(ok_type) => ok_type.is_copy(),
         }
     }
 
@@ -113,14 +108,14 @@ impl DataType {
             BFE => "BField".to_string(),
             XFE => "XField".to_string(),
             Digest => "Digest".to_string(),
-            List(ty, _list_type) => format!("Vec_R{}_L", ty.label_friendly_name()),
+            List(ty, _list_type) => format!("Vec_L{}R", ty.label_friendly_name()),
             Array(_array_type) => format!(
-                "array{}_of_R{}_L",
+                "array{}_of_L{}R",
                 _array_type.length,
                 _array_type.element_type.label_friendly_name()
             ),
             Tuple(tys) => format!(
-                "tuple_L_{}_R",
+                "tuple_L{}R",
                 tys.into_iter().map(|x| x.label_friendly_name()).join("_")
             ),
             VoidPointer => "void_pointer".to_string(),
@@ -134,6 +129,7 @@ impl DataType {
             Unresolved(name) => name.to_string(),
             Boxed(ty) => format!("boxed_L{}R", ty.label_friendly_name()),
             Reference(ty) => format!("reference_to_L{}R", ty.label_friendly_name()),
+            Result(ok_type) => format!("result_L{}R", ok_type.label_friendly_name()),
         }
     }
 
@@ -285,10 +281,11 @@ impl DataType {
                 }
             }
             DataType::Boxed(inner_type) => inner_type.bfield_codec_length(),
-            DataType::VoidPointer => todo!(),
-            DataType::Function(_) => todo!(),
-            DataType::Unresolved(_) => todo!(),
+            DataType::VoidPointer => panic!(),
+            DataType::Function(_) => panic!(),
+            DataType::Unresolved(_) => panic!(),
             DataType::Reference(inner) => inner.bfield_codec_length(),
+            DataType::Result(_) => panic!(),
         }
     }
 
@@ -313,12 +310,13 @@ impl DataType {
             Self::Array(_) => 1,
             Self::Tuple(tuple_type) => tuple_type.stack_size(),
             Self::VoidPointer => 1,
-            Self::Function(_) => todo!(),
+            Self::Function(_) => panic!(),
             Self::Unresolved(name) => panic!("cannot get size of unresolved type {name}"),
             Self::Struct(inner_type) => inner_type.stack_size(),
             Self::Enum(enum_type) => enum_type.stack_size(),
             Self::Boxed(_inner) => 1,
             Self::Reference(inner) => inner.stack_size(),
+            Self::Result(ok_type) => 1 + ok_type.stack_size(),
         }
     }
 
@@ -400,6 +398,7 @@ impl TryFrom<DataType> for tasm_lib::snippet::DataType {
                 _ => Ok(tasm_lib::snippet::DataType::VoidPointer),
             },
             DataType::Reference(inner) => (*inner).try_into(),
+            DataType::Result(_) => todo!("tasm-lib does not support result types (yet?)"),
         }
     }
 }
@@ -449,6 +448,7 @@ impl Display for DataType {
             Unresolved(name) => name.to_string(),
             Boxed(ty) => format!("Boxed<{ty}>"),
             Reference(ty) => format!("*{ty}"),
+            Result(payload) => format!("Result<{payload}, _>"),
         };
         write!(f, "{str}",)
     }

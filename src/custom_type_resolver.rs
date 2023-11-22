@@ -323,6 +323,7 @@ impl DataType {
             DataType::XFE => false,
             DataType::Digest => false,
             DataType::VoidPointer => false,
+            DataType::Result(ok) => ok.is_unresolved(),
         }
     }
 }
@@ -398,6 +399,8 @@ impl CustomTypeResolution for DataType {
             Reference(inner_type) => {
                 inner_type.resolve_custom_types(declared_structs);
             }
+            Result(ok_type) => ok_type.resolve_custom_types(declared_structs),
+
             Bool => (),
             U32 => (),
             U64 => (),

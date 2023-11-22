@@ -151,7 +151,7 @@ pub(super) fn parse_function_and_structs(
             "{}/src/tests_and_benchmarks/ozk/programs/{directory}/{module_name}.rs",
             env!("CARGO_MANIFEST_DIR"),
         );
-        let content = fs::read_to_string(&path).expect("Unable to read file {path}");
+        let content = fs::read_to_string(path).expect("Unable to read file {path}");
         let parsed_file: syn::File = syn::parse_str(&content).expect("Unable to parse rust code");
         let (mut custom_types, main_parsed, dependencies) =
             extract_types_and_function(parsed_file, function_name);

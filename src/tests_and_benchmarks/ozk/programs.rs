@@ -5,4 +5,5 @@ mod enums;
 mod other;
 mod project_euler;
 pub mod recufier;
+mod result_types;
 mod structs;

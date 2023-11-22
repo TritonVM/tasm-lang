@@ -92,6 +92,7 @@ impl ast_types::DataType {
             ast_types::DataType::Function(_) => todo!(),
             ast_types::DataType::Reference(_) => todo!(),
             ast_types::DataType::Unresolved(_) => todo!(),
+            ast_types::DataType::Result(_) => panic!(),
         }
     }
 
@@ -169,6 +170,7 @@ impl ast_types::DataType {
             Unresolved(name) => panic!("Cannot compare unresolved type {name}"),
             Reference(_) => panic!("Cannot compare references. Got {self}"),
             Enum(_) => todo!("Equality for enums not yet implemented"),
+            Result(_) => panic!("Cannot compare results. Got {self}"),
         }
     }
 }
