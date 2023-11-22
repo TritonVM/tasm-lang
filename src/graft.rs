@@ -599,28 +599,25 @@ impl<'a> Graft<'a> {
     pub fn path_to_type_parameter(&self, path: &syn::Path) -> Option<ast_types::DataType> {
         let mut type_parameter: Option<ast_types::DataType> = None;
         for segment in path.segments.iter() {
-            match &segment.arguments {
-                syn::PathArguments::None => continue,
-                syn::PathArguments::AngleBracketed(abga) => {
-                    assert_eq!(
-                        1,
-                        abga.args.len(),
-                        "Only one type parameter argument is supported"
-                    );
-                    if let syn::GenericArgument::Type(rdt) = &abga.args[0] {
-                        assert!(
-                            type_parameter.is_none(),
-                            "only one type parameter supported"
-                        );
-                        type_parameter = Some(self.syn_type_to_ast_type(rdt));
-                    } else {
-                        panic!("unsupported GenericArgument: {:#?}", abga.args[0]);
-                    }
+            if segment.arguments == PathArguments::None {
+                continue;
+            }
+            let PathArguments::AngleBracketed(abgas) = &segment.arguments else {
+                panic!("unsupported PathArguments: {path:#?}");
+            };
+            for generic_arg in abgas.args.iter() {
+                let syn::GenericArgument::Type(generic_type) = generic_arg else {
+                    panic!("unsupported GenericArgument: {generic_arg:#?}");
+                };
+                if let syn::Type::Infer(_) = generic_type {
+                    continue;
                 }
-                syn::PathArguments::Parenthesized(_) => panic!("unsupported: {path:#?}"),
+                if type_parameter.is_some() {
+                    panic!("only one type parameter supported, got {generic_type:?}");
+                }
+                type_parameter = Some(self.syn_type_to_ast_type(generic_type));
             }
         }
-
         type_parameter
     }
 
