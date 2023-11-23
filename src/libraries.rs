@@ -10,8 +10,8 @@ use std::fmt::Debug;
 pub mod bfe;
 pub mod bfield_codec;
 pub mod boxed;
+mod core;
 pub mod hasher;
-mod result;
 pub mod tasm;
 pub mod unsigned_integers;
 pub mod vector;
@@ -51,7 +51,7 @@ pub fn all_libraries<'a>(config: LibraryConfig) -> Vec<Box<dyn Library + 'a>> {
             list_type: config.list_type,
         }),
         Box::new(xfe::XfeLibrary),
-        Box::new(result::Result),
+        Box::new(core::Core),
     ]
 }
 

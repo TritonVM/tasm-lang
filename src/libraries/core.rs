@@ -12,12 +12,26 @@ use crate::libraries::{Annotation, Library};
 use crate::tasm_code_generator::CompilerState;
 use crate::type_checker::CheckState;
 
+/// Everything that
 #[derive(Debug)]
-pub struct Result;
+pub struct Core;
 
 const FUNCTION_NAME_OK: &str = "Ok";
 
-impl Library for Result {
+pub(crate) fn result_type(ok_type: ast_types::DataType) -> ast_types::EnumType {
+    let a: Result<u32, ()> = Ok(100);
+    let a = 100u32.checked_sub(200);
+    ast_types::EnumType {
+        is_copy: ok_type.is_copy(),
+        name: format!("Result<{ok_type}, _>"),
+        variants: vec![
+            ("Ok".to_owned(), ok_type),
+            ("Err".to_owned(), ast_types::DataType::unit()),
+        ],
+    }
+}
+
+impl Library for Core {
     fn get_function_name(&self, full_name: &str) -> Option<String> {
         if full_name == FUNCTION_NAME_OK {
             return Some(full_name.to_owned());

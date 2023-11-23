@@ -454,7 +454,13 @@ impl<'a> Graft<'a> {
             panic!("Unsupported type {ok_type_arg:#?}");
         };
         let ok_type = self.syn_type_to_ast_type(ok_type);
-        DataType::Result(Box::new(ok_type))
+        // DataType::Result(Box::new(ok_type))
+        let result_as_enumtype = ast_types::EnumType {
+            is_copy: ok_type.is_copy(),
+            name: format!(),
+            variants: vec![],
+        };
+        // DataType::Enum(())
     }
 
     pub fn syn_type_to_ast_type(&self, syn_type: &syn::Type) -> ast_types::DataType {
