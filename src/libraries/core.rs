@@ -2,7 +2,6 @@ use syn::punctuated::Punctuated;
 use syn::token::Comma;
 use syn::ExprMethodCall;
 use triton_vm::instruction::LabelledInstruction;
-use triton_vm::triton_asm;
 
 use crate::ast::{Expr, FnSignature};
 use crate::ast_types;
@@ -12,30 +11,38 @@ use crate::libraries::{Annotation, Library};
 use crate::tasm_code_generator::CompilerState;
 use crate::type_checker::CheckState;
 
-/// Everything that
+/// Everything that lives in the Rust `core` module
+/// belongs in here.
 #[derive(Debug)]
-pub struct Core;
+pub struct Core {
+    // enum_types: Vec<fn(&str) -> Option<ast_types::EnumType>>,
+}
 
-const FUNCTION_NAME_OK: &str = "Ok";
+// Problem: We cannot list the types that we cover here, as they
+// are defined by type parameters.
+
+// impl Default for Core {
+//     fn default() -> Self {
+//         Self {
+//             enum_types: Default::default(),
+//         }
+//     }
+// }
 
 pub(crate) fn result_type(ok_type: ast_types::DataType) -> ast_types::EnumType {
-    let a: Result<u32, ()> = Ok(100);
-    let a = 100u32.checked_sub(200);
     ast_types::EnumType {
         is_copy: ok_type.is_copy(),
         name: format!("Result<{ok_type}, _>"),
         variants: vec![
-            ("Ok".to_owned(), ok_type),
             ("Err".to_owned(), ast_types::DataType::unit()),
+            ("Ok".to_owned(), ok_type),
         ],
+        is_prelude: true,
     }
 }
 
 impl Library for Core {
     fn get_function_name(&self, full_name: &str) -> Option<String> {
-        if full_name == FUNCTION_NAME_OK {
-            return Some(full_name.to_owned());
-        }
         None
     }
 
@@ -59,23 +66,7 @@ impl Library for Core {
         type_parameter: Option<DataType>,
         args: &[Expr<Annotation>],
     ) -> FnSignature {
-        assert_eq!(fn_name, FUNCTION_NAME_OK);
-        assert_eq!(1, args.len());
-
-        let type_parameter = type_parameter.unwrap();
-        let argument = ast_types::AbstractValueArg {
-            name: "x".to_string(),
-            data_type: type_parameter.clone(),
-            mutable: false,
-        };
-        let argument = ast_types::AbstractArgument::ValueArgument(argument);
-
-        FnSignature {
-            name: fn_name.to_owned(),
-            args: vec![argument],
-            output: DataType::Result(Box::new(type_parameter)),
-            arg_evaluation_order: Default::default(),
-        }
+        todo!()
     }
 
     fn call_method(
@@ -95,8 +86,7 @@ impl Library for Core {
         _args: &[Expr<Annotation>],
         _state: &mut CompilerState,
     ) -> Vec<LabelledInstruction> {
-        assert_eq!(fn_name, FUNCTION_NAME_OK);
-        triton_asm! { push 1 }
+        panic!()
     }
 
     fn get_graft_function_name(&self, _full_name: &str) -> Option<String> {
@@ -105,7 +95,7 @@ impl Library for Core {
 
     fn graft_function(
         &self,
-        _graft_config: &Graft,
+        _graft_config: &mut Graft,
         _fn_name: &str,
         _args: &Punctuated<syn::Expr, Comma>,
         _type_parameter: Option<DataType>,
@@ -115,7 +105,7 @@ impl Library for Core {
 
     fn graft_method(
         &self,
-        _graft_config: &Graft,
+        _graft_config: &mut Graft,
         _rust_method_call: &ExprMethodCall,
     ) -> Option<Expr<Annotation>> {
         None

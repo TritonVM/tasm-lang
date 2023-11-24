@@ -317,6 +317,8 @@ pub fn annotate_fn_outer(
     // Populate `ftable` with tuple constructors, allowing initialization of tuple structs
     // using `struct Foo(u32); let a = Foo(200);` as well as data-carrying enum-type
     // variants such as `Bar::A(200u32);`.
+    // TODO: `ftable` probably needs a type parameter as well, so we can call
+    // both `Ok(1u32)` and `Ok(1u64)`.
     let mut ftable: HashMap<String, ast::FnSignature> = HashMap::default();
     for (type_name, custom_type) in custom_types.iter() {
         match custom_type {
@@ -327,12 +329,15 @@ pub fn annotate_fn_outer(
             }
             ast_types::CustomTypeOil::Enum(enum_type) => {
                 for (variant_name, variant_type) in enum_type.variants.iter() {
-                    assert!(!variant_type.is_unresolved(), "Variant type must be known");
                     if !variant_type.is_unit() {
-                        let constructor_name = format!("{}::{variant_name}", enum_type.name);
+                        let constructor_name = if enum_type.is_prelude {
+                            format!("{variant_name}")
+                        } else {
+                            format!("{}::{variant_name}", enum_type.name)
+                        };
                         ftable.insert(
                             constructor_name,
-                            enum_type.variant_constructor(variant_name).signature,
+                            enum_type.variant_tuple_constructor(variant_name).signature,
                         );
                     }
                 }
@@ -569,7 +574,8 @@ fn annotate_stmt(
                             &enum_type.name,
                             enum_name,
                             "Match conditions on type {} must all be of same type. Got bad type: {enum_name}", enum_type.name);
-                        let variant_data_tuple = enum_type.variant_data_type(variant_name);
+                        let variant_data_tuple =
+                            enum_type.variant_data_type(variant_name).as_tuple_type();
                         assert!(data_bindings.is_empty() || variant_data_tuple.element_count() == data_bindings.len(), "Number of bindings must match number of elements in variant data tuple");
                         assert!(
                             has_unique_elements(data_bindings.iter().map(|x| &x.name)),

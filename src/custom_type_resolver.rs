@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::{
     ast::*,
-    ast_types::{self, AbstractArgument, AbstractValueArg, CustomTypeOil, DataType},
+    ast_types::{self, AbstractArgument, AbstractValueArg, CustomTypeOil, DataType, Tuple},
     type_checker::Typing,
 };
 
@@ -323,8 +323,13 @@ impl DataType {
             DataType::XFE => false,
             DataType::Digest => false,
             DataType::VoidPointer => false,
-            DataType::Result(ok) => ok.is_unresolved(),
         }
+    }
+}
+
+impl Tuple {
+    pub fn is_unresolved(&self) -> bool {
+        self.fields.iter().any(|x| x.is_unresolved())
     }
 }
 
@@ -399,7 +404,6 @@ impl CustomTypeResolution for DataType {
             Reference(inner_type) => {
                 inner_type.resolve_custom_types(declared_structs);
             }
-            Result(ok_type) => ok_type.resolve_custom_types(declared_structs),
 
             Bool => (),
             U32 => (),

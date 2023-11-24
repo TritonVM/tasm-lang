@@ -107,14 +107,14 @@ impl Library for HasherLib {
 
     fn graft_function(
         &self,
-        graft_config: &Graft,
+        graft_config: &mut Graft,
         full_name: &str,
         args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
         _function_type_parameter: Option<ast_types::DataType>,
     ) -> Option<ast::Expr<super::Annotation>> {
         fn graft_digest_new(
             arg_0: &syn::Expr,
-            graft_config: &Graft,
+            graft_config: &mut Graft,
         ) -> ast::Expr<super::Annotation> {
             match arg_0 {
                 syn::Expr::Array(syn::ExprArray {
@@ -204,7 +204,7 @@ impl Library for HasherLib {
 
     fn graft_method(
         &self,
-        _graft_config: &Graft,
+        _graft_config: &mut Graft,
         _rust_method_call: &syn::ExprMethodCall,
     ) -> Option<ast::Expr<super::Annotation>> {
         None

@@ -180,7 +180,7 @@ impl Library for BFieldCodecLib {
 
     fn graft_function(
         &self,
-        graft_config: &Graft,
+        graft_config: &mut Graft,
         fn_name: &str,
         args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
         function_type_parameter: Option<ast_types::DataType>,
@@ -189,7 +189,7 @@ impl Library for BFieldCodecLib {
         /// Expects the `decode` expression to be `T::decode(&tasm::load_from_memory(BFieldElement::new(x)))`
         /// Extracts the `x` from the above expression and returns it as a literal.
         fn handle_decode(
-            graft_config: &Graft,
+            graft_config: &mut Graft,
             fn_name: &str,
             args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
             function_type_parameter: Option<ast_types::DataType>,
@@ -272,11 +272,11 @@ impl Library for BFieldCodecLib {
 
     fn graft_method(
         &self,
-        graft_config: &Graft,
+        graft_config: &mut Graft,
         rust_method_call: &syn::ExprMethodCall,
     ) -> Option<ast::Expr<super::Annotation>> {
         fn handle_unwrap(
-            graft_config: &Graft,
+            graft_config: &mut Graft,
             rust_method_call: &syn::ExprMethodCall,
         ) -> Option<ast::Expr<super::Annotation>> {
             match rust_method_call.receiver.as_ref() {

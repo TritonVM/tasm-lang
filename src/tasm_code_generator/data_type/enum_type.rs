@@ -465,8 +465,11 @@ impl EnumType {
         enum_variant_selector: &ast::EnumVariantSelector,
         state: &mut CompilerState,
     ) -> String {
-        let data_types = enum_variant_selector
-            .get_bindings_type(&self.variant_data_type(&enum_variant_selector.variant_name));
+        let data_types = enum_variant_selector.get_bindings_type(
+            &self
+                .variant_data_type(&enum_variant_selector.variant_name)
+                .as_tuple_type(),
+        );
 
         let label_for_subroutine = enum_variant_selector.label_for_binding_subroutine(true);
 
@@ -583,8 +586,8 @@ impl EnumType {
 
     /// Return the constructor that is called by an expression evaluating to an
     /// enum type. E.g.: `Foo::A(100u32);`
-    pub(crate) fn variant_constructor(&self, variant_name: &str) -> LibraryFunction {
-        let data_tuple = self.variant_data_type(variant_name);
+    pub(crate) fn variant_tuple_constructor(&self, variant_name: &str) -> LibraryFunction {
+        let data_tuple = self.variant_data_type(variant_name).as_tuple_type();
         assert!(
             !data_tuple.is_unit(),
             "Variant {variant_name} in enum type {} does not carry data",

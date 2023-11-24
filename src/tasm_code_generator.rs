@@ -22,6 +22,7 @@ use self::outer_function_tasm_code::OuterFunctionTasmCode;
 use self::stack::VStack;
 use crate::ast::Identifier;
 use crate::ast_types::{self, CustomTypeOil, StructVariant};
+use crate::composite_types::CompositeTypes;
 use crate::libraries::{self};
 use crate::subroutine::SubRoutine;
 use crate::type_checker::GetType;
@@ -119,7 +120,6 @@ impl GlobalCodeGeneratorState {
     }
 }
 
-// TODO: Maybe this needs a new lifetime specifier, `'b`?
 #[derive(Debug)]
 pub struct CompilerState<'a> {
     /// The part of the compiler state that applies across function calls to locally defined
@@ -130,7 +130,7 @@ pub struct CompilerState<'a> {
 
     libraries: &'a [Box<dyn libraries::Library>],
 
-    custom_types: &'a HashMap<String, ast_types::CustomTypeOil>,
+    custom_types: &'a CompositeTypes,
 
     declared_methods: &'a [ast::Method<type_checker::Typing>],
 
@@ -172,7 +172,7 @@ impl<'a> CompilerState<'a> {
         libraries: &'a [Box<dyn libraries::Library>],
         declared_methods: &'a [ast::Method<type_checker::Typing>],
         associated_functions: &'a HashMap<String, HashMap<String, ast::Fn<type_checker::Typing>>>,
-        custom_types: &'a HashMap<String, ast_types::CustomTypeOil>,
+        custom_types: &'a CompositeTypes,
     ) -> Self {
         Self {
             global_compiler_state,
@@ -192,7 +192,7 @@ impl<'a> CompilerState<'a> {
         libraries: &'a [Box<dyn libraries::Library>],
         declared_methods: &'a [ast::Method<type_checker::Typing>],
         associated_functions: &'a HashMap<String, HashMap<String, ast::Fn<type_checker::Typing>>>,
-        custom_types: &'a HashMap<String, ast_types::CustomTypeOil>,
+        custom_types: &'a CompositeTypes,
     ) -> Self {
         Self {
             global_compiler_state,
@@ -955,7 +955,7 @@ fn compile_function_inner(
     libraries: &[Box<dyn libraries::Library>],
     declared_methods: &[ast::Method<type_checker::Typing>],
     associated_functions: &HashMap<String, HashMap<String, ast::Fn<type_checker::Typing>>>,
-    custom_types: &HashMap<String, ast_types::CustomTypeOil>,
+    custom_types: &CompositeTypes,
 ) -> InnerFunctionTasmCode {
     let fn_name = &function.signature.name;
     let _fn_stack_output_sig = format!("{}", function.signature.output);
@@ -1028,7 +1028,7 @@ pub(crate) fn compile_function(
     libraries: &[Box<dyn libraries::Library>],
     declared_methods: Vec<ast::Method<type_checker::Typing>>,
     associated_functions: &HashMap<String, HashMap<String, ast::Fn<type_checker::Typing>>>,
-    custom_types: &HashMap<String, ast_types::CustomTypeOil>,
+    custom_types: &CompositeTypes,
 ) -> OuterFunctionTasmCode {
     let mut state = CompilerState::new(
         GlobalCodeGeneratorState::default(),
@@ -1454,7 +1454,8 @@ fn compile_match_stmt_boxed_expr(
 
                 let tuple_type = enum_variant_selector.get_bindings_type(
                     &match_expression_enum_type
-                        .variant_data_type(&enum_variant_selector.variant_name),
+                        .variant_data_type(&enum_variant_selector.variant_name)
+                        .as_tuple_type(),
                 );
 
                 let label_for_bindings_subroutine = match_expression_enum_type
@@ -1690,11 +1691,11 @@ fn compile_fn_call(
         annot: _return_type, // unit for statement-level fn calls
         type_parameter,
         arg_evaluation_order,
-    } = fn_call.clone();
+    } = fn_call;
 
     // Compile function arguments either left-to-right or right-to-left depending
     // on definition in function.
-    let args_iter = if arg_evaluation_order == ast::ArgEvaluationOrder::LeftToRight {
+    let args_iter = if *arg_evaluation_order == ast::ArgEvaluationOrder::LeftToRight {
         Either::Left(args.iter().enumerate())
     } else {
         Either::Right(args.iter().enumerate().rev())
@@ -1711,7 +1712,12 @@ fn compile_fn_call(
     let mut call_fn_code = vec![];
     for lib in state.libraries.iter() {
         if let Some(fn_name) = lib.get_function_name(&name) {
-            call_fn_code.append(&mut lib.call_function(&fn_name, type_parameter, &args, state));
+            call_fn_code.append(&mut lib.call_function(
+                &fn_name,
+                type_parameter.to_owned(),
+                &args,
+                state,
+            ));
             break;
         }
     }
@@ -1784,7 +1790,7 @@ fn compile_fn_call(
                     "Can only call enum-variant constructor on enum type. Problem was with {name}"
                 );
             };
-            let constructor = enum_type.variant_constructor(split_name[1]).body;
+            let constructor = enum_type.variant_tuple_constructor(split_name[1]).body;
             call_fn_code.append(&mut constructor.clone());
         } else {
             // Is the function a tuple constuctor? `struct Foo(u32); let a = Foo(200);`

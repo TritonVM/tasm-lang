@@ -10,7 +10,7 @@ use std::fmt::Debug;
 pub mod bfe;
 pub mod bfield_codec;
 pub mod boxed;
-mod core;
+pub mod core;
 pub mod hasher;
 pub mod tasm;
 pub mod unsigned_integers;
@@ -51,7 +51,7 @@ pub fn all_libraries<'a>(config: LibraryConfig) -> Vec<Box<dyn Library + 'a>> {
             list_type: config.list_type,
         }),
         Box::new(xfe::XfeLibrary),
-        Box::new(core::Core),
+        Box::new(core::Core {}),
     ]
 }
 
@@ -142,7 +142,7 @@ pub trait Library: Debug {
 
     fn graft_function(
         &self,
-        graft_config: &Graft,
+        graft_config: &mut Graft,
         fn_name: &str,
         args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
         type_parameter: Option<ast_types::DataType>,
@@ -150,7 +150,7 @@ pub trait Library: Debug {
 
     fn graft_method(
         &self,
-        graft_config: &Graft,
+        graft_config: &mut Graft,
         rust_method_call: &syn::ExprMethodCall,
     ) -> Option<ast::Expr<Annotation>>;
 }

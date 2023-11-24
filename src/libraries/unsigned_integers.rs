@@ -142,7 +142,7 @@ impl Library for UnsignedIntegersLib {
 
     fn graft_function(
         &self,
-        _graft_config: &Graft,
+        _graft_config: &mut Graft,
         _fn_name: &str,
         _args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
         _function_type_parameter: Option<ast_types::DataType>,
@@ -152,7 +152,7 @@ impl Library for UnsignedIntegersLib {
 
     fn graft_method(
         &self,
-        _graft_config: &Graft,
+        _graft_config: &mut Graft,
         _rust_method_call: &syn::ExprMethodCall,
     ) -> Option<ast::Expr<super::Annotation>> {
         None

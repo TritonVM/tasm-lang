@@ -4,6 +4,7 @@ pub mod cfg;
 mod compiled_tasm;
 #[macro_use]
 pub mod graft;
+mod composite_types;
 pub mod custom_type_resolver;
 pub mod libraries;
 pub mod ssa;

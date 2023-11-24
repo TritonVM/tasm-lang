@@ -23,7 +23,6 @@ pub enum DataType {
     Function(Box<FunctionType>),
     Boxed(Box<DataType>),
     Reference(Box<DataType>),
-    Result(Box<DataType>),
     Unresolved(String),
 }
 
@@ -35,6 +34,7 @@ impl DataType {
                 name: _,
                 is_copy: _,
                 variant,
+                is_prelude: _,
             }) => match variant {
                 StructVariant::TupleStruct(ts) => ts.to_owned(),
                 StructVariant::NamedFields(_) => todo!(),
@@ -47,6 +47,7 @@ impl DataType {
                         name: _,
                         is_copy: _,
                         variant,
+                        is_prelude: _,
                     }) => match variant {
                         StructVariant::TupleStruct(ts) => ts.to_owned(),
                         StructVariant::NamedFields(_) => todo!(),
@@ -61,6 +62,7 @@ impl DataType {
                         name: _,
                         is_copy: _,
                         variant,
+                        is_prelude: _,
                     }) => match variant {
                         StructVariant::TupleStruct(ts) => ts.to_owned(),
                         StructVariant::NamedFields(_) => todo!(),
@@ -93,7 +95,6 @@ impl DataType {
             DataType::Unresolved(_) => false,
             DataType::Boxed(_) => false,
             DataType::Reference(_) => false,
-            DataType::Result(ok_type) => ok_type.is_copy(),
         }
     }
 
@@ -129,7 +130,6 @@ impl DataType {
             Unresolved(name) => name.to_string(),
             Boxed(ty) => format!("boxed_L{}R", ty.label_friendly_name()),
             Reference(ty) => format!("reference_to_L{}R", ty.label_friendly_name()),
-            Result(ok_type) => format!("result_L{}R", ok_type.label_friendly_name()),
         }
     }
 
@@ -256,7 +256,7 @@ impl DataType {
                 if enum_type.variants.is_empty() {
                     // No variants: length is 0
                     Some(0)
-                } else if enum_type.variants.iter().all(|x| x.1 == DataType::unit()) {
+                } else if enum_type.variants.iter().all(|x| x.1.is_unit()) {
                     // No variants have associated data: 1,
                     Some(1)
                 } else {
@@ -285,7 +285,6 @@ impl DataType {
             DataType::Function(_) => panic!(),
             DataType::Unresolved(_) => panic!(),
             DataType::Reference(inner) => inner.bfield_codec_length(),
-            DataType::Result(_) => panic!(),
         }
     }
 
@@ -316,7 +315,6 @@ impl DataType {
             Self::Enum(enum_type) => enum_type.stack_size(),
             Self::Boxed(_inner) => 1,
             Self::Reference(inner) => inner.stack_size(),
-            Self::Result(ok_type) => 1 + ok_type.stack_size(),
         }
     }
 
@@ -346,7 +344,10 @@ impl DataType {
     pub fn as_tuple_type(&self) -> Tuple {
         match self {
             DataType::Tuple(tuple_type) => tuple_type.to_owned(),
-            _ => panic!("Expected tuple type. Got: {self}"),
+            other => Tuple {
+                fields: vec![other.to_owned()],
+            },
+            // _ => panic!("Expected tuple type. Got: {self}"),
         }
     }
 }
@@ -398,7 +399,6 @@ impl TryFrom<DataType> for tasm_lib::snippet::DataType {
                 _ => Ok(tasm_lib::snippet::DataType::VoidPointer),
             },
             DataType::Reference(inner) => (*inner).try_into(),
-            DataType::Result(_) => todo!("tasm-lib does not support result types (yet?)"),
         }
     }
 }
@@ -448,7 +448,6 @@ impl Display for DataType {
             Unresolved(name) => name.to_string(),
             Boxed(ty) => format!("Boxed<{ty}>"),
             Reference(ty) => format!("*{ty}"),
-            Result(payload) => format!("Result<{payload}, _>"),
         };
         write!(f, "{str}",)
     }
@@ -504,7 +503,26 @@ pub enum CustomTypeOil {
     Enum(EnumType),
 }
 
+impl From<EnumType> for CustomTypeOil {
+    fn from(value: EnumType) -> Self {
+        CustomTypeOil::Enum(value)
+    }
+}
+
+impl From<StructType> for CustomTypeOil {
+    fn from(value: StructType) -> Self {
+        CustomTypeOil::Struct(value)
+    }
+}
+
 impl CustomTypeOil {
+    pub(crate) fn name(&self) -> &str {
+        match self {
+            CustomTypeOil::Struct(s) => &s.name,
+            CustomTypeOil::Enum(e) => &e.name,
+        }
+    }
+
     pub fn field_or_variant_types_mut<'a>(
         &'a mut self,
     ) -> Box<dyn Iterator<Item = &'a mut DataType> + 'a> {
@@ -527,6 +545,7 @@ pub struct EnumType {
     pub name: String,
     pub is_copy: bool,
     pub variants: Vec<(String, DataType)>,
+    pub is_prelude: bool,
 }
 
 impl From<&EnumType> for DataType {
@@ -551,10 +570,10 @@ impl EnumType {
         self.variants.iter().any(|x| x.0 == variant_name)
     }
 
-    pub(crate) fn variant_data_type(&self, variant_name: &str) -> Tuple {
+    pub(crate) fn variant_data_type(&self, variant_name: &str) -> DataType {
         for type_variant in self.variants.iter() {
             if type_variant.0 == variant_name {
-                return type_variant.1.clone().as_tuple_type();
+                return type_variant.1.clone();
             }
         }
 
@@ -600,7 +619,7 @@ impl EnumType {
     /// stack: _ [data] [padding] discriminator
     pub fn decompose_variant(&self, variant_name: &str) -> Vec<DataType> {
         [
-            self.variant_data_type(variant_name).fields,
+            self.variant_data_type(variant_name).as_tuple_type().fields,
             vec![DataType::Tuple(
                 vec![DataType::BFE; self.padding_size(variant_name)].into(),
             )],
@@ -615,6 +634,7 @@ pub struct StructType {
     pub name: String,
     pub is_copy: bool,
     pub variant: StructVariant,
+    pub is_prelude: bool,
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
@@ -761,6 +781,12 @@ impl ArrayType {
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct Tuple {
     pub fields: Vec<DataType>,
+}
+
+impl From<Tuple> for DataType {
+    fn from(value: Tuple) -> Self {
+        DataType::Tuple(value)
+    }
 }
 
 impl From<Vec<DataType>> for Tuple {

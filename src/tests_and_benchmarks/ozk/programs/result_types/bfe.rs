@@ -4,7 +4,7 @@ use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
 fn main() {
     let a: BFieldElement = tasm::tasm_io_read_stdin___bfe();
-    let _res: Result<BFieldElement, ()> = Ok::<BFieldElement, _>(a);
+    let _res: Result<BFieldElement, ()> = Ok(a);
     return;
 }
 

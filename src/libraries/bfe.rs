@@ -162,7 +162,7 @@ impl Library for BfeLibrary {
 
     fn graft_function(
         &self,
-        graft_config: &Graft,
+        graft_config: &mut Graft,
         full_name: &str,
         args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
         _function_type_parameter: Option<ast_types::DataType>,
@@ -188,7 +188,7 @@ impl Library for BfeLibrary {
 
     fn graft_method(
         &self,
-        graft_config: &Graft,
+        graft_config: &mut Graft,
         rust_method_call: &syn::ExprMethodCall,
     ) -> Option<ast::Expr<super::Annotation>> {
         // Handle the `unwrap()` when using `BFieldElement::primitive_root_of_unity(order).unwrap()`
@@ -223,7 +223,7 @@ impl Library for BfeLibrary {
 /// Graft `BFieldElement::primitive_root_of_unity` to allow for compile-time resolution,
 /// if possible. Also gets rid of `unwrap` method call if needed.
 fn graft_bfe_primitive_root(
-    graft_config: &Graft,
+    graft_config: &mut Graft,
     args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
 ) -> ast::Expr<super::Annotation> {
     let args = args
@@ -264,7 +264,7 @@ fn graft_bfe_primitive_root(
 }
 
 fn graft_bfe_new(
-    graft_config: &Graft,
+    graft_config: &mut Graft,
     args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
 ) -> ast::Expr<super::Annotation> {
     let args = args

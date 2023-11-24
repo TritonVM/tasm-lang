@@ -99,7 +99,7 @@ impl Library for XfeLibrary {
 
     fn graft_function(
         &self,
-        graft_config: &Graft,
+        graft_config: &mut Graft,
         fn_name: &str,
         args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
         _function_type_parameter: Option<ast_types::DataType>,
@@ -186,7 +186,7 @@ impl Library for XfeLibrary {
 
     fn graft_method(
         &self,
-        graft_config: &Graft,
+        graft_config: &mut Graft,
         rust_method_call: &syn::ExprMethodCall,
     ) -> Option<ast::Expr<super::Annotation>> {
         // Handle `unlift().unwrap()`. Ignore everything else.

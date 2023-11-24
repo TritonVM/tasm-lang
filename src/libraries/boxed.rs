@@ -1,4 +1,5 @@
 use super::Library;
+use crate::graft::Graft;
 use crate::subroutine::SubRoutine;
 use crate::{ast, ast_types};
 use num::One;
@@ -119,7 +120,7 @@ impl Library for Boxed {
 
     fn graft_function(
         &self,
-        _graft_config: &crate::graft::Graft,
+        _graft_config: &mut Graft,
         _fn_name: &str,
         _args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
         _type_parameter: Option<crate::ast_types::DataType>,
@@ -129,7 +130,7 @@ impl Library for Boxed {
 
     fn graft_method(
         &self,
-        _graft_config: &crate::graft::Graft,
+        _graft_config: &mut Graft,
         _rust_method_call: &syn::ExprMethodCall,
     ) -> Option<crate::ast::Expr<super::Annotation>> {
         None
