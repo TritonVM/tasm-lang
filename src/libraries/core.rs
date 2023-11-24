@@ -14,20 +14,7 @@ use crate::type_checker::CheckState;
 /// Everything that lives in the Rust `core` module
 /// belongs in here.
 #[derive(Debug)]
-pub struct Core {
-    // enum_types: Vec<fn(&str) -> Option<ast_types::EnumType>>,
-}
-
-// Problem: We cannot list the types that we cover here, as they
-// are defined by type parameters.
-
-// impl Default for Core {
-//     fn default() -> Self {
-//         Self {
-//             enum_types: Default::default(),
-//         }
-//     }
-// }
+pub struct Core {}
 
 pub(crate) fn result_type(ok_type: ast_types::DataType) -> ast_types::EnumType {
     ast_types::EnumType {
@@ -42,7 +29,7 @@ pub(crate) fn result_type(ok_type: ast_types::DataType) -> ast_types::EnumType {
 }
 
 impl Library for Core {
-    fn get_function_name(&self, full_name: &str) -> Option<String> {
+    fn get_function_name(&self, _full_name: &str) -> Option<String> {
         None
     }
 
@@ -62,9 +49,9 @@ impl Library for Core {
 
     fn function_name_to_signature(
         &self,
-        fn_name: &str,
-        type_parameter: Option<DataType>,
-        args: &[Expr<Annotation>],
+        _fn_name: &str,
+        _type_parameter: Option<DataType>,
+        _args: &[Expr<Annotation>],
     ) -> FnSignature {
         todo!()
     }
@@ -81,7 +68,7 @@ impl Library for Core {
 
     fn call_function(
         &self,
-        fn_name: &str,
+        _fn_name: &str,
         _type_parameter: Option<DataType>,
         _args: &[Expr<Annotation>],
         _state: &mut CompilerState,

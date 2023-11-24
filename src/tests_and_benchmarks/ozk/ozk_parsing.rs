@@ -186,7 +186,7 @@ pub(crate) fn compile_for_test(
     let mut oil_ast = graft_config.graft_fn_decl(&rust_main_ast);
     let (mut custom_types, mut methods, mut associated_functions) =
         graft_config.graft_custom_types_methods_and_associated_functions(rust_struct_asts);
-    custom_types.extend(graft_config.imported_custom_types);
+    custom_types.checked_merge(graft_config.imported_custom_types);
 
     resolve_custom_types(
         &mut oil_ast,

@@ -8,6 +8,7 @@ use crate::ast;
 use crate::ast::ReturningBlock;
 use crate::ast_types;
 use crate::ast_types::DataType;
+use crate::composite_types::CompositeTypes;
 use crate::libraries::Library;
 use crate::type_checker;
 
@@ -17,7 +18,7 @@ pub type Annotation = type_checker::Typing;
 pub struct Graft<'a> {
     pub list_type: ast_types::ListType,
     pub libraries: &'a [Box<dyn Library + 'a>],
-    pub imported_custom_types: HashMap<String, ast_types::CustomTypeOil>,
+    pub imported_custom_types: CompositeTypes,
 }
 
 #[derive(Debug, Clone)]
@@ -51,7 +52,7 @@ impl<'a> Graft<'a> {
         &mut self,
         structs_and_methods: HashMap<String, (CustomTypeRust, Vec<syn::ImplItemMethod>)>,
     ) -> (
-        HashMap<String, ast_types::CustomTypeOil>,
+        CompositeTypes,
         Vec<ast::Method<Annotation>>,
         HashMap<String, HashMap<String, ast::Fn<Annotation>>>,
     ) {
@@ -115,7 +116,7 @@ impl<'a> Graft<'a> {
             }
         }
 
-        let mut custom_types = HashMap::default();
+        let mut composite_types = CompositeTypes::default();
 
         // Handle custom data structures
         let structs = structs_and_methods
@@ -147,7 +148,7 @@ impl<'a> Graft<'a> {
                         is_prelude: false,
                     };
 
-                    custom_types.insert(name, ast_types::CustomTypeOil::Enum(enum_type));
+                    composite_types.add(name, ast_types::CustomTypeOil::Enum(enum_type));
                 }
                 CustomTypeRust::Struct(struct_item) => {
                     let syn::ItemStruct {
@@ -178,11 +179,10 @@ impl<'a> Graft<'a> {
                         is_copy,
                         variant: struct_type,
                         name: name.clone(),
-                        is_prelude: false,
                     };
 
-                    custom_types
-                        .insert(name.clone(), ast_types::CustomTypeOil::Struct(struct_type));
+                    composite_types
+                        .add(name.clone(), ast_types::CustomTypeOil::Struct(struct_type));
                 }
             }
         }
@@ -199,7 +199,12 @@ impl<'a> Graft<'a> {
             for syn_method in assoc_function {
                 if syn_method.sig.receiver().is_some() {
                     // Associated function is a method
-                    methods.push(self.graft_method(&syn_method, &custom_types[&struct_name]));
+                    methods.push(
+                        self.graft_method(
+                            &syn_method,
+                            &composite_types.get_exactly_one(&struct_name),
+                        ),
+                    );
                 } else {
                     // Associated function is *not* a method, i.e., does not take `self` argument
                     let grafted_assoc_function = self.graft_associated_function(&syn_method);
@@ -217,7 +222,7 @@ impl<'a> Graft<'a> {
             }
         }
 
-        (custom_types, methods, associated_functions)
+        (composite_types, methods, associated_functions)
     }
 
     fn graft_method(
@@ -464,7 +469,7 @@ impl<'a> Graft<'a> {
 
         let resolved_type = libraries::core::result_type(ok_type);
         self.imported_custom_types
-            .insert(resolved_type.name.clone(), resolved_type.clone().into());
+            .add(resolved_type.name.clone(), resolved_type.clone().into());
         ast_types::DataType::Enum(Box::new(resolved_type))
     }
 

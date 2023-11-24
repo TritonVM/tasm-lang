@@ -5,6 +5,7 @@ use twenty_first::shared_math::b_field_element::BFieldElement;
 use twenty_first::shared_math::x_field_element::XFieldElement;
 use twenty_first::utils::has_unique_elements;
 
+use crate::composite_types::CompositeTypes;
 use crate::tasm_code_generator::SIZE_OF_ACCESSIBLE_STACK;
 use crate::{ast, ast_types, libraries};
 
@@ -137,7 +138,7 @@ pub struct CheckState<'a> {
     /// The `ftable` maps function names to their signature (argument and output) types.
     ///
     /// This is used for determining the type of function calls in expressions.
-    pub ftable: HashMap<String, ast::FnSignature>,
+    pub ftable: HashMap<String, Vec<ast::FnSignature>>,
 
     pub declared_methods: Vec<ast::Method<Typing>>,
 
@@ -175,7 +176,7 @@ pub fn annotate_method(
     declared_methods: Vec<ast::Method<Typing>>,
     associated_functions: &HashMap<String, HashMap<String, ast::Fn<Typing>>>,
     libraries: &[Box<dyn libraries::Library>],
-    ftable: HashMap<String, ast::FnSignature>,
+    ftable: HashMap<String, Vec<ast::FnSignature>>,
 ) {
     // Initialize `CheckState`
     let vtable: HashMap<String, DataTypeAndMutability> =
@@ -242,14 +243,17 @@ pub fn annotate_fn_inner(
     declared_methods: Vec<ast::Method<Typing>>,
     associated_functions: &HashMap<String, HashMap<String, ast::Fn<Typing>>>,
     libraries: &[Box<dyn libraries::Library>],
-    mut ftable: HashMap<String, ast::FnSignature>,
+    mut ftable: HashMap<String, Vec<ast::FnSignature>>,
 ) {
     // Initialize `CheckState`
     let vtable: HashMap<String, DataTypeAndMutability> =
         HashMap::with_capacity(function.signature.args.len());
 
     // Insert self into ftable
-    ftable.insert(function.signature.name.clone(), function.signature.clone());
+    ftable.insert(
+        function.signature.name.clone(),
+        vec![function.signature.clone()],
+    );
     let mut state = CheckState {
         libraries,
         vtable,
@@ -307,7 +311,7 @@ pub fn annotate_fn_inner(
 
 pub fn annotate_fn_outer(
     function: &mut ast::Fn<Typing>,
-    custom_types: &HashMap<String, ast_types::CustomTypeOil>,
+    composite_types: &CompositeTypes,
     declared_methods: &mut [ast::Method<Typing>],
     associated_functions: &mut HashMap<String, HashMap<String, ast::Fn<Typing>>>,
     libraries: &[Box<dyn libraries::Library>],
@@ -319,31 +323,7 @@ pub fn annotate_fn_outer(
     // variants such as `Bar::A(200u32);`.
     // TODO: `ftable` probably needs a type parameter as well, so we can call
     // both `Ok(1u32)` and `Ok(1u64)`.
-    let mut ftable: HashMap<String, ast::FnSignature> = HashMap::default();
-    for (type_name, custom_type) in custom_types.iter() {
-        match custom_type {
-            ast_types::CustomTypeOil::Struct(struct_type) => {
-                if let ast_types::StructVariant::TupleStruct(_) = &struct_type.variant {
-                    ftable.insert(type_name.to_owned(), struct_type.constructor().signature);
-                }
-            }
-            ast_types::CustomTypeOil::Enum(enum_type) => {
-                for (variant_name, variant_type) in enum_type.variants.iter() {
-                    if !variant_type.is_unit() {
-                        let constructor_name = if enum_type.is_prelude {
-                            format!("{variant_name}")
-                        } else {
-                            format!("{}::{variant_name}", enum_type.name)
-                        };
-                        ftable.insert(
-                            constructor_name,
-                            enum_type.variant_tuple_constructor(variant_name).signature,
-                        );
-                    }
-                }
-            }
-        }
-    }
+    let ftable = composite_types.get_all_constructor_signatures();
 
     // Type annotate the function
     let ftable_outer = ftable.clone();
@@ -642,9 +622,10 @@ fn annotate_stmt(
                 state.libraries,
                 state.ftable.clone(),
             );
-            state
-                .ftable
-                .insert(function.signature.name.clone(), function.signature.clone());
+            state.ftable.insert(
+                function.signature.name.clone(),
+                vec![function.signature.clone()],
+            );
         }
     }
 }
@@ -688,8 +669,13 @@ pub fn annotate_identifier_type(
                 (found_type.data_type.clone(), found_type.mutable)
             }
             None => match state.ftable.get(var_name) {
-                Some(function) => {
-                    *var_type = Typing::KnownType(function.into());
+                Some(functions) => {
+                    assert!(
+                        functions.len().is_one(),
+                        "Duplicate function name: {var_name}"
+                    );
+                    let function = functions[0].clone();
+                    *var_type = Typing::KnownType(function.clone().into());
                     let function_datatype: ast_types::DataType = function.into();
                     (function_datatype, false)
                 }
@@ -810,11 +796,18 @@ fn get_fn_signature(
         return ret_value;
     }
 
-    state
-        .ftable
-        .get(name)
-        .unwrap_or_else(|| panic!("Function call in {} Don't know what type of value '{name}' returns! Type parameter was: {type_parameter:?}. ftable is:\n{}", env_fn_signature.name, state.ftable.keys().join("\n")))
-        .clone()
+    match state.ftable.get(name) {
+        None => (),
+        Some(fn_signatures) => {
+            match fn_signatures.len() {
+                0 => unreachable!(),
+                1 => return fn_signatures[0].clone(),
+                _n => todo!(), // <-- We need to inspect types for this case
+            }
+        }
+    }
+
+    panic!("Function call in {} Don't know what type of value '{name}' returns! Type parameter was: {type_parameter:?}. ftable is:\n{}", env_fn_signature.name, state.ftable.keys().join("\n"))
 }
 
 fn get_method_signature(

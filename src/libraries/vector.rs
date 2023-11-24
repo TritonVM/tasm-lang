@@ -1,4 +1,5 @@
 use itertools::Itertools;
+use num::One;
 use tasm_lib::snippet::BasicSnippet;
 use triton_vm::triton_asm;
 
@@ -333,7 +334,12 @@ impl VectorLib {
             .get(inner_fn_name.as_str())
             .unwrap()
             .to_owned();
-        let inner_output = inner_fn_signature.output;
+        assert!(
+            inner_fn_signature.len().is_one(),
+            "Duplicate definition of function {inner_fn_name} observed"
+        );
+        let inner_fn_signature = &inner_fn_signature[0];
+        let inner_output = &inner_fn_signature.output;
         let inner_input = match &inner_fn_signature.args[0] {
             ast_types::AbstractArgument::FunctionArgument(_) => todo!(),
             ast_types::AbstractArgument::ValueArgument(value_arg) => value_arg.data_type.to_owned(),
@@ -356,7 +362,7 @@ impl VectorLib {
             name: String::from("map"),
             // TODO: Use List<inner_fn_signature-args> here instead for betetr type checking
             args: vec![vector_as_arg, derived_inner_function_as_function_arg],
-            output: ast_types::DataType::List(Box::new(inner_output), self.list_type),
+            output: ast_types::DataType::List(Box::new(inner_output.to_owned()), self.list_type),
             arg_evaluation_order: Default::default(),
         }
     }

@@ -1,3 +1,4 @@
+use crate::composite_types::CompositeTypes;
 use crate::tasm_code_generator::compile_function;
 use crate::type_checker::{self, annotate_fn_outer, GetType, Typing};
 use crate::{ast, ast_types};
@@ -72,7 +73,7 @@ pub fn graft_check_compile_prop(
     // type-check and annotate. Doesn't handle structs and methods yet.
     annotate_fn_outer(
         &mut intermediate_language_ast,
-        &HashMap::default(),
+        &CompositeTypes::default(),
         &mut Vec::default(),
         &mut HashMap::default(),
         &libraries,
@@ -84,7 +85,7 @@ pub fn graft_check_compile_prop(
         &libraries,
         Vec::default(),
         &HashMap::default(),
-        &HashMap::default(),
+        &CompositeTypes::default(),
     );
     tasm.compose()
 }

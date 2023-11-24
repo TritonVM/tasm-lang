@@ -34,7 +34,6 @@ impl DataType {
                 name: _,
                 is_copy: _,
                 variant,
-                is_prelude: _,
             }) => match variant {
                 StructVariant::TupleStruct(ts) => ts.to_owned(),
                 StructVariant::NamedFields(_) => todo!(),
@@ -47,7 +46,6 @@ impl DataType {
                         name: _,
                         is_copy: _,
                         variant,
-                        is_prelude: _,
                     }) => match variant {
                         StructVariant::TupleStruct(ts) => ts.to_owned(),
                         StructVariant::NamedFields(_) => todo!(),
@@ -62,7 +60,6 @@ impl DataType {
                         name: _,
                         is_copy: _,
                         variant,
-                        is_prelude: _,
                     }) => match variant {
                         StructVariant::TupleStruct(ts) => ts.to_owned(),
                         StructVariant::NamedFields(_) => todo!(),
@@ -509,6 +506,23 @@ impl From<EnumType> for CustomTypeOil {
     }
 }
 
+impl From<&EnumType> for CustomTypeOil {
+    fn from(value: &EnumType) -> Self {
+        CustomTypeOil::Enum(value.to_owned())
+    }
+}
+
+impl TryFrom<&CustomTypeOil> for EnumType {
+    type Error = anyhow::Error;
+
+    fn try_from(value: &CustomTypeOil) -> Result<Self, Self::Error> {
+        match value {
+            CustomTypeOil::Struct(s) => bail!("Expected enum but found struct {s}"),
+            CustomTypeOil::Enum(e) => Ok(e.to_owned()),
+        }
+    }
+}
+
 impl From<StructType> for CustomTypeOil {
     fn from(value: StructType) -> Self {
         CustomTypeOil::Struct(value)
@@ -516,10 +530,10 @@ impl From<StructType> for CustomTypeOil {
 }
 
 impl CustomTypeOil {
-    pub(crate) fn name(&self) -> &str {
+    pub(crate) fn is_prelude(&self) -> bool {
         match self {
-            CustomTypeOil::Struct(s) => &s.name,
-            CustomTypeOil::Enum(e) => &e.name,
+            CustomTypeOil::Struct(_) => false,
+            CustomTypeOil::Enum(e) => e.is_prelude,
         }
     }
 
@@ -634,7 +648,6 @@ pub struct StructType {
     pub name: String,
     pub is_copy: bool,
     pub variant: StructVariant,
-    pub is_prelude: bool,
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
@@ -985,8 +998,30 @@ impl Display for FunctionType {
     }
 }
 
-impl From<&FnSignature> for DataType {
-    fn from(value: &FnSignature) -> Self {
+// impl From<&FnSignature> for DataType {
+//     fn from(value: &FnSignature) -> Self {
+//         let mut input_args = vec![];
+
+//         for inp in value.args.iter() {
+//             let input = match inp {
+//                 AbstractArgument::FunctionArgument(_) => todo!(),
+//                 AbstractArgument::ValueArgument(abs_val) => abs_val.data_type.to_owned(),
+//             };
+//             input_args.push(input);
+//         }
+
+//         DataType::Function(Box::new(FunctionType {
+//             input_argument: match input_args.len() {
+//                 1 => input_args[0].to_owned(),
+//                 _ => DataType::Tuple(input_args.into()),
+//             },
+//             output: value.output.to_owned(),
+//         }))
+//     }
+// }
+
+impl From<FnSignature> for DataType {
+    fn from(value: FnSignature) -> Self {
         let mut input_args = vec![];
 
         for inp in value.args.iter() {

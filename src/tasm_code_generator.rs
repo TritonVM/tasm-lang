@@ -21,7 +21,7 @@ use self::inner_function_tasm_code::InnerFunctionTasmCode;
 use self::outer_function_tasm_code::OuterFunctionTasmCode;
 use self::stack::VStack;
 use crate::ast::Identifier;
-use crate::ast_types::{self, CustomTypeOil, StructVariant};
+use crate::ast_types::{self, StructVariant};
 use crate::composite_types::CompositeTypes;
 use crate::libraries::{self};
 use crate::subroutine::SubRoutine;
@@ -1773,42 +1773,13 @@ fn compile_fn_call(
     }
 
     if call_fn_code.is_empty() {
-        // Is the function a enum-variant constructor? `enum Foo { Bar(u32) }; let a = Foo::Bar(42);`
-        let split_name = name.split("::").collect_vec();
-        if split_name.len() > 1
-            && split_name[1].chars().next().unwrap().is_uppercase()
-            && state.custom_types.contains_key(split_name[0])
-        {
-            let custom_type = state
-                .custom_types
-                .get(split_name[0])
-                .unwrap_or_else(|| panic!("Unknown enum-variant constructor: {name}"));
-            let enum_type = if let CustomTypeOil::Enum(enum_type) = custom_type {
-                enum_type
-            } else {
-                panic!(
-                    "Can only call enum-variant constructor on enum type. Problem was with {name}"
-                );
-            };
-            let constructor = enum_type.variant_tuple_constructor(split_name[1]).body;
-            call_fn_code.append(&mut constructor.clone());
+        let maybe_constructor_code = state.custom_types.constructor_code(fn_call);
+        if let Some(mut constructor_body) = maybe_constructor_code {
+            call_fn_code.append(&mut constructor_body);
         } else {
-            // Is the function a tuple constuctor? `struct Foo(u32); let a = Foo(200);`
-            if let Some(custom_type) = state.custom_types.get(&name) {
-                if let CustomTypeOil::Struct(struct_type) = custom_type {
-                    assert!(
-                        matches!(struct_type.variant, StructVariant::TupleStruct(_)),
-                        "Can only call tuple constructor of tuple struct. Got: {struct_type}"
-                    );
-                    call_fn_code.append(&mut struct_type.constructor().body.clone());
-                } else {
-                    panic!("Can only call tuple constructor of tuple struct. Got: {custom_type:?}");
-                }
-            } else {
-                // Function is not a library function, but type checker has guaranteed that it is in
-                // scope. So we just call it.
-                call_fn_code.append(&mut triton_asm!(call { name }));
-            }
+            // Function is not a library function, but type checker has guaranteed that it is in
+            // scope. So we just call it.
+            call_fn_code.append(&mut triton_asm!(call { name }));
         }
     }
 
