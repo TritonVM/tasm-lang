@@ -17,6 +17,12 @@ pub struct Method<T> {
     pub body: Vec<Stmt<T>>,
 }
 
+impl<T> Display for Method<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.signature.name)
+    }
+}
+
 impl<T: Clone> Method<T> {
     /// Convert a method to a function data type with a specified name
     pub fn to_ast_function(self, new_name: &str) -> Fn<T> {
@@ -409,6 +415,7 @@ impl<T> Display for Expr<T> {
                 method_name,
                 args,
                 annot: _,
+                associated_type: _,
             }) => format!("{}.{method_name}", args[0]),
             Expr::Binop(_, binop, _, _) => format!("binop_{binop:?}"),
             Expr::If(_) => "if_else".to_owned(),
@@ -522,7 +529,7 @@ impl<T> Display for Identifier<T> {
 impl Identifier<Typing> {
     pub fn force_type(&mut self, forced_type: &DataType) {
         let forced_type = forced_type.to_owned();
-        println!("Forcing {self} to {forced_type}");
+        eprintln!("Forcing {self} to {forced_type}");
         match self {
             Identifier::String(_, t) => *t = crate::type_checker::Typing::KnownType(forced_type),
             Identifier::Index(_, _, t) => *t = crate::type_checker::Typing::KnownType(forced_type),
@@ -594,4 +601,9 @@ pub struct MethodCall<T> {
     pub method_name: String,
     pub args: Vec<Expr<T>>,
     pub annot: T,
+
+    /// To type does this method belong? Not the same
+    /// same as receiver type, since receiver type can be
+    /// `&self` or `Box<Self>`.
+    pub associated_type: Option<DataType>,
 }

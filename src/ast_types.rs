@@ -529,7 +529,23 @@ impl From<StructType> for CustomTypeOil {
     }
 }
 
+impl From<CustomTypeOil> for DataType {
+    fn from(value: CustomTypeOil) -> Self {
+        match value {
+            CustomTypeOil::Struct(s) => DataType::Struct(s),
+            CustomTypeOil::Enum(e) => DataType::Enum(Box::new(e)),
+        }
+    }
+}
+
 impl CustomTypeOil {
+    pub(crate) fn name(&self) -> &str {
+        match self {
+            CustomTypeOil::Struct(s) => &s.name,
+            CustomTypeOil::Enum(e) => &e.name,
+        }
+    }
+
     pub(crate) fn is_prelude(&self) -> bool {
         match self {
             CustomTypeOil::Struct(_) => false,

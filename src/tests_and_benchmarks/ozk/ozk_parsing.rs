@@ -8,12 +8,12 @@ use crate::{
 
 /// Mapping from name of a custom type to its type declaration and associated function
 /// and methods.
-pub type StructsAndMethods = HashMap<String, (CustomTypeRust, Vec<syn::ImplItemMethod>)>;
+pub type StructsAndMethodsRustAst = HashMap<String, (CustomTypeRust, Vec<syn::ImplItemMethod>)>;
 
 fn extract_types_and_function(
     parsed_file: syn::File,
     function_name: Option<&str>,
-) -> (StructsAndMethods, Option<syn::ItemFn>, Vec<String>) {
+) -> (StructsAndMethodsRustAst, Option<syn::ItemFn>, Vec<String>) {
     get_standard_setup!(ast_types::ListType::Unsafe, graft_config, _lib);
     let mut outer_function: Option<syn::ItemFn> = None;
     let mut custom_types: HashMap<String, (Option<CustomTypeRust>, Vec<syn::ImplItemMethod>)> =
@@ -86,6 +86,8 @@ fn extract_types_and_function(
                     }
                 };
             }
+
+            // Imports on the form `use super::<module>::*;`
             syn::Item::Use(syn::ItemUse {
                 attrs: _,
                 vis: _,
@@ -116,8 +118,6 @@ fn extract_types_and_function(
                     }
                 }
 
-                // Import files specified with `use super::<module_name>::*;`
-                // This is currently the only way to import
                 if let Some(module_name) = get_module_name(&tree) {
                     dependencies.push(module_name);
                 }
@@ -127,7 +127,7 @@ fn extract_types_and_function(
     }
 
     // Each method must have a struct after parsing all code. So we can unwrap the Option type.
-    let structs: StructsAndMethods = custom_types
+    let structs: StructsAndMethodsRustAst = custom_types
         .into_iter()
         .map(|(struct_name, (option_struct, methods))| (struct_name.clone(), (option_struct.unwrap_or_else(|| panic!("Couldn't find struct definition for {struct_name} for which methods was defined")), methods)))
         .collect();
@@ -141,12 +141,12 @@ pub(super) fn parse_function_and_structs(
     directory: &str,
     module_name: &str,
     function_name: &str,
-) -> (syn::ItemFn, StructsAndMethods, String) {
+) -> (syn::ItemFn, StructsAndMethodsRustAst, String) {
     fn parse_function_and_structs_inner(
         directory: &str,
         module_name: &str,
         function_name: Option<&str>,
-    ) -> (Option<syn::ItemFn>, StructsAndMethods, String) {
+    ) -> (Option<syn::ItemFn>, StructsAndMethodsRustAst, String) {
         let path = format!(
             "{}/src/tests_and_benchmarks/ozk/programs/{directory}/{module_name}.rs",
             env!("CARGO_MANIFEST_DIR"),
@@ -184,33 +184,18 @@ pub(crate) fn compile_for_test(
     let (rust_main_ast, rust_struct_asts, _) =
         parse_function_and_structs(directory, module_name, function_name);
     let mut oil_ast = graft_config.graft_fn_decl(&rust_main_ast);
-    let (mut custom_types, mut methods, mut associated_functions) =
+    // let (mut custom_types, mut methods, mut associated_functions) =
+    //     graft_config.graft_custom_types_methods_and_associated_functions(rust_struct_asts);
+    let mut composite_types =
         graft_config.graft_custom_types_methods_and_associated_functions(rust_struct_asts);
-    custom_types.checked_merge(graft_config.imported_custom_types);
+    composite_types.checked_merge(graft_config.imported_custom_types);
 
-    resolve_custom_types(
-        &mut oil_ast,
-        &mut custom_types,
-        &mut methods,
-        &mut associated_functions,
-    );
+    resolve_custom_types(&mut oil_ast, &mut composite_types);
 
     // type-check and annotate
-    annotate_fn_outer(
-        &mut oil_ast,
-        &custom_types,
-        &mut methods,
-        &mut associated_functions,
-        &libraries,
-    );
+    annotate_fn_outer(&mut oil_ast, &mut composite_types, &libraries);
 
-    let tasm = compile_function(
-        &oil_ast,
-        &libraries,
-        methods,
-        &associated_functions,
-        &custom_types,
-    );
+    let tasm = compile_function(&oil_ast, &libraries, &composite_types);
 
     // compose
     tasm.compose()
@@ -219,37 +204,20 @@ pub(crate) fn compile_for_test(
 #[allow(dead_code)]
 pub(crate) fn compile_to_basic_snippet(
     rust_ast: syn::ItemFn,
-    structs_and_methods: StructsAndMethods,
+    structs_and_methods: StructsAndMethodsRustAst,
     list_type: ast_types::ListType,
 ) -> String {
     get_standard_setup!(list_type, graft_config, libraries);
     let mut oil_ast = graft_config.graft_fn_decl(&rust_ast);
-    let (mut custom_types, mut methods, mut associated_functions) =
+    let mut composite_types =
         graft_config.graft_custom_types_methods_and_associated_functions(structs_and_methods);
 
-    resolve_custom_types(
-        &mut oil_ast,
-        &mut custom_types,
-        &mut methods,
-        &mut associated_functions,
-    );
+    resolve_custom_types(&mut oil_ast, &mut composite_types);
 
     // type-check and annotate
-    annotate_fn_outer(
-        &mut oil_ast,
-        &custom_types,
-        &mut methods,
-        &mut associated_functions,
-        &libraries,
-    );
+    annotate_fn_outer(&mut oil_ast, &mut composite_types, &libraries);
 
-    let tasm = compile_function(
-        &oil_ast,
-        &libraries,
-        methods,
-        &associated_functions,
-        &custom_types,
-    );
+    let tasm = compile_function(&oil_ast, &libraries, &composite_types);
 
     tasm.generate_basic_snippet_implementation()
 }

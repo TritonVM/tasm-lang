@@ -5,6 +5,7 @@ use twenty_first::shared_math::b_field_element::BFieldElement;
 use twenty_first::shared_math::x_field_element::XFieldElement;
 use twenty_first::utils::has_unique_elements;
 
+use crate::ast::MethodCall;
 use crate::composite_types::CompositeTypes;
 use crate::tasm_code_generator::SIZE_OF_ACCESSIBLE_STACK;
 use crate::{ast, ast_types, libraries};
@@ -128,22 +129,20 @@ impl<T: GetType> GetType for ast::MethodCall<T> {
 
 #[derive(Debug)]
 pub struct CheckState<'a> {
-    pub libraries: &'a [Box<dyn libraries::Library>],
+    pub(crate) libraries: &'a [Box<dyn libraries::Library>],
 
     /// The `vtable` maps variable names to their type.
     ///
     /// This is used for determining the type of variables in expressions.
-    pub vtable: HashMap<String, DataTypeAndMutability>,
+    pub(crate) vtable: HashMap<String, DataTypeAndMutability>,
 
     /// The `ftable` maps function names to their signature (argument and output) types.
     ///
     /// This is used for determining the type of function calls in expressions.
-    pub ftable: HashMap<String, Vec<ast::FnSignature>>,
+    pub(crate) ftable: HashMap<String, Vec<ast::FnSignature>>,
 
-    pub declared_methods: Vec<ast::Method<Typing>>,
-
-    /// Functions declared in `impl` blocks, without a `&self` argument
-    pub associated_functions: HashMap<String, HashMap<String, ast::Fn<Typing>>>,
+    /// All non-atomic types that are in scope
+    pub(crate) composite_types: &'a CompositeTypes,
 }
 
 #[derive(Clone, Debug)]
@@ -173,8 +172,7 @@ impl DataTypeAndMutability {
 // TODO: Delete `annotate_method`, use `annotate_function` instead
 pub fn annotate_method(
     method: &mut ast::Method<Typing>,
-    declared_methods: Vec<ast::Method<Typing>>,
-    associated_functions: &HashMap<String, HashMap<String, ast::Fn<Typing>>>,
+    composite_types: &CompositeTypes,
     libraries: &[Box<dyn libraries::Library>],
     ftable: HashMap<String, Vec<ast::FnSignature>>,
 ) {
@@ -187,8 +185,7 @@ pub fn annotate_method(
         libraries,
         vtable,
         ftable,
-        declared_methods,
-        associated_functions: associated_functions.to_owned(),
+        composite_types,
     };
 
     // Populate vtable with function arguments
@@ -240,8 +237,7 @@ pub fn annotate_method(
 
 pub fn annotate_fn_inner(
     function: &mut ast::Fn<Typing>,
-    declared_methods: Vec<ast::Method<Typing>>,
-    associated_functions: &HashMap<String, HashMap<String, ast::Fn<Typing>>>,
+    composite_types: &CompositeTypes,
     libraries: &[Box<dyn libraries::Library>],
     mut ftable: HashMap<String, Vec<ast::FnSignature>>,
 ) {
@@ -258,8 +254,7 @@ pub fn annotate_fn_inner(
         libraries,
         vtable,
         ftable,
-        declared_methods: declared_methods.to_owned(),
-        associated_functions: associated_functions.to_owned(),
+        composite_types,
     };
 
     // Populate vtable with function arguments
@@ -309,15 +304,11 @@ pub fn annotate_fn_inner(
         .for_each(|stmt| annotate_stmt(stmt, &mut state, &function.signature));
 }
 
-pub fn annotate_fn_outer(
+pub(crate) fn annotate_fn_outer(
     function: &mut ast::Fn<Typing>,
-    composite_types: &CompositeTypes,
-    declared_methods: &mut [ast::Method<Typing>],
-    associated_functions: &mut HashMap<String, HashMap<String, ast::Fn<Typing>>>,
+    composite_types: &mut CompositeTypes,
     libraries: &[Box<dyn libraries::Library>],
 ) {
-    let untyped_declared_methods = declared_methods.to_owned();
-
     // Populate `ftable` with tuple constructors, allowing initialization of tuple structs
     // using `struct Foo(u32); let a = Foo(200);` as well as data-carrying enum-type
     // variants such as `Bar::A(200u32);`.
@@ -327,38 +318,21 @@ pub fn annotate_fn_outer(
 
     // Type annotate the function
     let ftable_outer = ftable.clone();
-    annotate_fn_inner(
-        function,
-        untyped_declared_methods.clone(),
-        associated_functions,
-        libraries,
-        ftable,
-    );
+    annotate_fn_inner(function, composite_types, libraries, ftable);
 
-    // Type annotate all declared methods
-    let untyped_assoc_functions = associated_functions.clone();
-    for declared_method in declared_methods.iter_mut() {
+    // Type annotate all declared methods and associated functions
+    let composite_type_copy = composite_types.clone();
+    composite_types.methods_mut().for_each(|method| {
         annotate_method(
-            declared_method,
-            untyped_declared_methods.clone(),
-            &untyped_assoc_functions,
+            method,
+            &composite_type_copy,
             libraries,
             ftable_outer.clone(),
-        )
-    }
-
-    // Type annotate all associated functions
-    for (_, functions) in associated_functions.iter_mut() {
-        for (_, afunc) in functions.iter_mut() {
-            annotate_fn_inner(
-                afunc,
-                untyped_declared_methods.clone(),
-                &untyped_assoc_functions,
-                libraries,
-                ftable_outer.clone(),
-            )
-        }
-    }
+        );
+    });
+    composite_types.associated_functions_mut().for_each(|func| {
+        annotate_fn_inner(func, &composite_type_copy, libraries, ftable_outer.clone());
+    });
 }
 
 fn annotate_stmt(
@@ -447,31 +421,23 @@ fn annotate_stmt(
             *annot = Typing::KnownType(callees_fn_signature.output);
         }
 
-        ast::Stmt::MethodCall(ast::MethodCall {
-            method_name,
-            args,
-            annot,
-        }) => {
-            derive_annotate_expr_type(&mut args[0], None, state, env_fn_signature);
-            let receiver_type = args[0].get_type();
+        ast::Stmt::MethodCall(method_call) => {
+            derive_annotate_expr_type(&mut method_call.args[0], None, state, env_fn_signature);
+            let receiver_type = method_call.args[0].get_type();
 
-            let callees_method_signature: ast::FnSignature = get_method_signature(
-                method_name,
-                state,
-                receiver_type.clone(),
-                args,
-                env_fn_signature,
-            );
+            let callees_method_signature: ast::FnSignature =
+                get_method_signature(state, method_call, env_fn_signature);
             assert!(
                 callees_method_signature.output.is_unit(),
-                "Method call {receiver_type}.'{method_name}' at statement-level must return the unit type."
+                "Method call {receiver_type}.'{}' at statement-level must return the unit type.",
+                method_call.method_name
             );
 
             // TODO: Check that receiver_type corresponds to method's FnSignature
 
-            derive_annotate_fn_call_args(&callees_method_signature, args, state);
+            derive_annotate_fn_call_args(&callees_method_signature, &mut method_call.args, state);
 
-            *annot = Typing::KnownType(callees_method_signature.output)
+            method_call.annot = Typing::KnownType(callees_method_signature.output)
         }
 
         ast::Stmt::While(ast::WhileStmt { condition, block }) => {
@@ -617,8 +583,7 @@ fn annotate_stmt(
             // A local function can see all functions available in the outer scope.
             annotate_fn_inner(
                 function,
-                state.declared_methods.clone(),
-                &state.associated_functions,
+                state.composite_types,
                 state.libraries,
                 state.ftable.clone(),
             );
@@ -771,31 +736,6 @@ fn get_fn_signature(
     args: &[ast::Expr<Typing>],
     env_fn_signature: &ast::FnSignature,
 ) -> ast::FnSignature {
-    // Function from libraries are in scope
-    for lib in state.libraries.iter() {
-        if let Some(fn_name) = lib.get_function_name(name) {
-            return lib.function_name_to_signature(&fn_name, type_parameter.to_owned(), args);
-        }
-    }
-
-    // Associated functions are in scope, they must be called with `<Type>::<function_name>`, where `function_name`
-    // must be lower-cased.
-    let split_name = name.split("::").collect_vec();
-    if split_name.len() > 1 && split_name[1].chars().next().unwrap().is_lowercase() {
-        let associated_type_name = split_name[0];
-        let fn_name = split_name[1];
-
-        let ret_value = match state.associated_functions.get(associated_type_name) {
-            Some(entry) => {
-                match entry.get(fn_name) {
-                Some(function) => function.signature.to_owned(),
-                None => panic!("Don't know associated function '{fn_name}' for type {associated_type_name}"),
-            }},
-            None => panic!("Don't know type {associated_type_name} for which an associated function call {fn_name} is made"),
-        };
-        return ret_value;
-    }
-
     match state.ftable.get(name) {
         None => (),
         Some(fn_signatures) => {
@@ -807,103 +747,136 @@ fn get_fn_signature(
         }
     }
 
+    match state
+        .composite_types
+        .get_associated_function_signature(name)
+    {
+        None => (),
+        Some(afunc) => return afunc.to_owned(),
+    };
+
+    // Function from libraries are in scope
+    for lib in state.libraries.iter() {
+        if let Some(fn_name) = lib.get_function_name(name) {
+            return lib.function_name_to_signature(&fn_name, type_parameter.to_owned(), args);
+        }
+    }
+
     panic!("Function call in {} Don't know what type of value '{name}' returns! Type parameter was: {type_parameter:?}. ftable is:\n{}", env_fn_signature.name, state.ftable.keys().join("\n"))
 }
 
 fn get_method_signature(
-    name: &str,
     state: &CheckState,
-    original_receiver_type: ast_types::DataType,
-    args: &mut [ast::Expr<Typing>],
+    method_call: &mut MethodCall<Typing>,
     env_fn_signature: &ast::FnSignature,
 ) -> ast::FnSignature {
-    // Note that `state.libraries` contain the methods that are always available, whereas
-    // `state.declared_methods` contain the methods that are declared in the program.
-
     // Implemented following the description from: https://stackoverflow.com/a/28552082/2574407
     // TODO: Handle automatic dereferencing and referencing of MemPointer types
+    let original_receiver_type = method_call.args[0].get_type();
     let mut forced_type = original_receiver_type.clone();
     let mut try_again = true;
     while try_again {
         // 1. if there's a method `bar` where the receiver type (the type of self
         // in the method) matches `forced_type` exactly , use it (a "by value method")
-        for declared_method in state.declared_methods.iter() {
-            if declared_method.signature.name == name {
-                let method_receiver_type = declared_method.receiver_type();
-                if method_receiver_type == forced_type {
-                    if let ast::Expr::Var(ref mut var) = &mut args[0] {
-                        var.force_type(&forced_type);
+        match state.composite_types.get_by_type(&forced_type) {
+            None => (),
+            Some(comp_type) => match comp_type.get_method(&method_call.method_name) {
+                Some(method) => {
+                    method_call.associated_type = Some(forced_type.clone());
+                    if method.receiver_type() == forced_type {
+                        // TODO: I'm not sure what this commented-out code does
+                        if let ast::Expr::Var(ref mut var) = &mut method_call.args[0] {
+                            var.force_type(&forced_type);
+                        }
+
+                        return method.signature.to_owned();
                     }
 
-                    return declared_method.signature.clone();
+                    let auto_refd_forced_type =
+                        ast_types::DataType::Reference(Box::new(forced_type.clone()));
+                    if method.receiver_type() == auto_refd_forced_type {
+                        // TODO: I'm not sure what this commented-out code does
+                        if let ast::Expr::Var(var) = &mut method_call.args[0] {
+                            var.force_type(&auto_refd_forced_type);
+                        }
+
+                        return method.signature.to_owned();
+                    }
+
+                    let auto_boxed_forced_type =
+                        ast_types::DataType::Boxed(Box::new(forced_type.clone()));
+                    if method.receiver_type() == auto_boxed_forced_type {
+                        // TODO: I'm not sure what this commented-out code does
+                        if let ast::Expr::Var(var) = &mut method_call.args[0] {
+                            var.force_type(&auto_boxed_forced_type);
+                        }
+
+                        return method.signature.to_owned();
+                    }
                 }
-            }
-        }
+                None => (),
+            },
+        };
 
         for lib in state.libraries.iter() {
-            if let Some(method_name) = lib.get_method_name(name, &forced_type) {
-                if let ast::Expr::Var(var) = &mut args[0] {
+            if let Some(method_name) = lib.get_method_name(&method_call.method_name, &forced_type) {
+                method_call.associated_type = Some(forced_type.clone());
+
+                // TODO: I'm not sure what this commented-out code does
+                if let ast::Expr::Var(var) = &mut method_call.args[0] {
                     var.force_type(&forced_type);
                 }
 
-                return lib.method_name_to_signature(&method_name, &forced_type, args, state);
+                return lib.method_name_to_signature(
+                    &method_name,
+                    &forced_type,
+                    &method_call.args,
+                    state,
+                );
             }
         }
 
-        // 2. therwise, add one auto-ref (take & or &mut of the receiver), and,
+        // 2. otherwise, add one auto-ref (take & or &mut of the receiver), and,
         // if some method's receiver matches &U, use it (an "autorefd method")
         let auto_refd_forced_type = ast_types::DataType::Reference(Box::new(forced_type.clone()));
-        for declared_method in state.declared_methods.iter() {
-            if declared_method.signature.name == name {
-                let method_receiver_type = declared_method.receiver_type();
-                if method_receiver_type == auto_refd_forced_type {
-                    if let ast::Expr::Var(var) = &mut args[0] {
-                        var.force_type(&auto_refd_forced_type);
-                    }
-
-                    return declared_method.signature.clone();
-                }
-            }
-        }
-
         for lib in state.libraries.iter() {
-            if let Some(method_name) = lib.get_method_name(name, &auto_refd_forced_type) {
-                if let ast::Expr::Var(var) = &mut args[0] {
+            if let Some(method_name) =
+                lib.get_method_name(&method_call.method_name, &auto_refd_forced_type)
+            {
+                method_call.associated_type = Some(forced_type);
+
+                // TODO: I'm not sure what this commented-out code does
+                if let ast::Expr::Var(var) = &mut method_call.args[0] {
                     var.force_type(&auto_refd_forced_type);
                 }
+
                 return lib.method_name_to_signature(
                     &method_name,
                     &auto_refd_forced_type,
-                    args,
+                    &method_call.args,
                     state,
                 );
             }
         }
 
         // Keep stripping `References` until we find a match
-        if let ast_types::DataType::Reference(inner_type) = forced_type {
+        if let ast_types::DataType::Reference(inner_type) = &forced_type {
             forced_type = *inner_type.to_owned();
-        } else if let ast_types::DataType::Boxed(inner_type) = forced_type {
+        } else if let ast_types::DataType::Boxed(inner_type) = &forced_type {
             forced_type = *inner_type.to_owned();
         } else {
             try_again = false;
         }
     }
 
-    let declared_method_names = state
-        .declared_methods
-        .iter()
-        .map(|x| {
-            format!(
-                "{}: ({})",
-                &x.signature.name,
-                x.signature.args.iter().join(",")
-            )
-        })
-        .join("\n");
+    let declared_types = state.composite_types.all_composite_type_names();
+    let declared_method_names = state.composite_types.all_method_names();
     panic!(
-        "Method call in {} Don't know what type of value '{name}' returns! Receiver type was: {original_receiver_type:?}\n\nDeclared methods are:\n{}", env_fn_signature.name, declared_method_names
-    )
+        "Method call in {} Don't know what type of value '{}' returns!
+         Receiver type was: {original_receiver_type:?}
+         \n\nDeclared methods are:\n{declared_method_names}. Declared types are:\n{declared_types}",
+        env_fn_signature.name, method_call.method_name,
+    );
 }
 
 fn derive_annotate_fn_call_args(
@@ -1183,26 +1156,22 @@ fn derive_annotate_expr_type(
             callees_fn_signature.output
         }
 
-        ast::Expr::MethodCall(ast::MethodCall {
-            method_name,
-            args,
-            annot,
-        }) => {
-            derive_annotate_expr_type(&mut args[0], None, state, env_fn_signature);
-            let receiver_type = args[0].get_type();
+        ast::Expr::MethodCall(method_call) => {
+            derive_annotate_expr_type(&mut method_call.args[0], None, state, env_fn_signature);
             let callees_method_signature: ast::FnSignature =
-                get_method_signature(method_name, state, receiver_type, args, env_fn_signature);
+                get_method_signature(state, method_call, env_fn_signature);
             assert!(
                 !callees_method_signature.output.is_unit(),
-                "Method calls in expressions cannot return the unit type"
+                "Method call {} in expressions cannot return the unit type",
+                method_call.method_name
             );
 
             // We don't need to check receiver type here since that is done by
             // `derive_annotate_fn_call_args` below.
 
-            derive_annotate_fn_call_args(&callees_method_signature, args, state);
+            derive_annotate_fn_call_args(&callees_method_signature, &mut method_call.args, state);
 
-            *annot = Typing::KnownType(callees_method_signature.output.clone());
+            method_call.annot = Typing::KnownType(callees_method_signature.output.clone());
 
             callees_method_signature.output
         }

@@ -71,22 +71,15 @@ pub fn graft_check_compile_prop(
     let mut intermediate_language_ast = graft_config.graft_fn_decl(item_fn);
 
     // type-check and annotate. Doesn't handle structs and methods yet.
+    let mut composite_types = CompositeTypes::default();
     annotate_fn_outer(
         &mut intermediate_language_ast,
-        &CompositeTypes::default(),
-        &mut Vec::default(),
-        &mut HashMap::default(),
+        &mut composite_types,
         &libraries,
     );
 
     // compile
-    let tasm = compile_function(
-        &intermediate_language_ast,
-        &libraries,
-        Vec::default(),
-        &HashMap::default(),
-        &CompositeTypes::default(),
-    );
+    let tasm = compile_function(&intermediate_language_ast, &libraries, &composite_types);
     tasm.compose()
 }
 

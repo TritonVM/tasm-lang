@@ -130,11 +130,7 @@ pub struct CompilerState<'a> {
 
     libraries: &'a [Box<dyn libraries::Library>],
 
-    custom_types: &'a CompositeTypes,
-
-    declared_methods: &'a [ast::Method<type_checker::Typing>],
-
-    associated_functions: &'a HashMap<String, HashMap<String, ast::Fn<type_checker::Typing>>>,
+    composite_types: &'a CompositeTypes,
 }
 
 // TODO: move CompilerState and all methods to a new file!
@@ -170,17 +166,13 @@ impl<'a> CompilerState<'a> {
     fn new(
         global_compiler_state: GlobalCodeGeneratorState,
         libraries: &'a [Box<dyn libraries::Library>],
-        declared_methods: &'a [ast::Method<type_checker::Typing>],
-        associated_functions: &'a HashMap<String, HashMap<String, ast::Fn<type_checker::Typing>>>,
         custom_types: &'a CompositeTypes,
     ) -> Self {
         Self {
             global_compiler_state,
             function_state: FunctionState::default(),
             libraries,
-            declared_methods,
-            associated_functions,
-            custom_types,
+            composite_types: custom_types,
         }
     }
 
@@ -190,8 +182,6 @@ impl<'a> CompilerState<'a> {
         global_compiler_state: GlobalCodeGeneratorState,
         required_spills: HashSet<ValueIdentifier>,
         libraries: &'a [Box<dyn libraries::Library>],
-        declared_methods: &'a [ast::Method<type_checker::Typing>],
-        associated_functions: &'a HashMap<String, HashMap<String, ast::Fn<type_checker::Typing>>>,
         custom_types: &'a CompositeTypes,
     ) -> Self {
         Self {
@@ -203,9 +193,7 @@ impl<'a> CompilerState<'a> {
                 subroutines: Vec::default(),
             },
             libraries,
-            declared_methods,
-            associated_functions,
-            custom_types,
+            composite_types: custom_types,
         }
     }
 
@@ -953,22 +941,15 @@ fn compile_function_inner(
     function: &ast::Fn<type_checker::Typing>,
     global_compiler_state: &mut GlobalCodeGeneratorState,
     libraries: &[Box<dyn libraries::Library>],
-    declared_methods: &[ast::Method<type_checker::Typing>],
-    associated_functions: &HashMap<String, HashMap<String, ast::Fn<type_checker::Typing>>>,
-    custom_types: &CompositeTypes,
+    composite_types: &CompositeTypes,
 ) -> InnerFunctionTasmCode {
     let fn_name = &function.signature.name;
     let _fn_stack_output_sig = format!("{}", function.signature.output);
 
     // Run the compilation 1st time to learn which values need to be spilled to memory
     let spills = {
-        let mut temporary_fn_state = CompilerState::new(
-            global_compiler_state.to_owned(),
-            libraries,
-            declared_methods,
-            associated_functions,
-            custom_types,
-        );
+        let mut temporary_fn_state =
+            CompilerState::new(global_compiler_state.to_owned(), libraries, composite_types);
         let fn_arg_spilling = temporary_fn_state
             .add_input_arguments_to_vstack_and_return_spilled_fn_args(&function.signature.args);
         assert!(
@@ -991,9 +972,7 @@ fn compile_function_inner(
         global_compiler_state.to_owned(),
         spills,
         libraries,
-        declared_methods,
-        associated_functions,
-        custom_types,
+        composite_types,
     );
 
     // Add function arguments to the compiler's view of the stack.
@@ -1026,23 +1005,14 @@ fn compile_function_inner(
 pub(crate) fn compile_function(
     function: &ast::Fn<type_checker::Typing>,
     libraries: &[Box<dyn libraries::Library>],
-    declared_methods: Vec<ast::Method<type_checker::Typing>>,
-    associated_functions: &HashMap<String, HashMap<String, ast::Fn<type_checker::Typing>>>,
     custom_types: &CompositeTypes,
 ) -> OuterFunctionTasmCode {
-    let mut state = CompilerState::new(
-        GlobalCodeGeneratorState::default(),
-        libraries,
-        &declared_methods,
-        associated_functions,
-        custom_types,
-    );
+    let mut state =
+        CompilerState::new(GlobalCodeGeneratorState::default(), libraries, custom_types);
     let compiled_function = compile_function_inner(
         function,
         &mut state.global_compiler_state,
         libraries,
-        &declared_methods,
-        associated_functions,
         custom_types,
     );
 
@@ -1319,9 +1289,7 @@ fn compile_stmt(
                 function,
                 &mut state.global_compiler_state,
                 state.libraries,
-                state.declared_methods,
-                state.associated_functions,
-                state.custom_types,
+                state.composite_types,
             );
             state
                 .function_state
@@ -1711,11 +1679,11 @@ fn compile_fn_call(
 
     let mut call_fn_code = vec![];
     for lib in state.libraries.iter() {
-        if let Some(fn_name) = lib.get_function_name(&name) {
+        if let Some(fn_name) = lib.get_function_name(name) {
             call_fn_code.append(&mut lib.call_function(
                 &fn_name,
                 type_parameter.to_owned(),
-                &args,
+                args,
                 state,
             ));
             break;
@@ -1725,55 +1693,43 @@ fn compile_fn_call(
     // Associated functions are in scope in `ftable`, they must be called with `<Type>::<function_name>`,
     // where function_name must be lower-cased.
     if call_fn_code.is_empty() {
-        let split_name = name.split("::").collect_vec();
-        if split_name.len() > 1 && split_name[1].chars().next().unwrap().is_lowercase() {
-            let associated_type_name = split_name[0];
-            let fn_name = split_name[1];
+        match state.composite_types.get_associated_function(name) {
+            None => (),
+            Some(afunc) => {
+                let function_label: String = afunc.get_tasm_label();
+                call_fn_code.append(&mut triton_asm!(call { function_label }));
 
-            let assoc_fun = match state.associated_functions.get(associated_type_name) {
-                Some(entry) => {
-                    match entry.get(fn_name) {
-                        Some(function) => function.to_owned(),
-                        None => panic!("Don't know associated function '{fn_name}' for type {associated_type_name}"),
-                    }},
-                    None => panic!("Don't know type {associated_type_name} for which an associated function {fn_name} is made"),
-                };
-
-            let function_label: String = assoc_fun.get_tasm_label();
-            call_fn_code.append(&mut triton_asm!(call { function_label }));
-
-            if !state
-                .global_compiler_state
-                .compiled_methods_and_afs
-                .contains_key(&function_label)
-            {
-                // Insert something with the right label *before* compiling,
-                // otherwise the methods cannot handle recursion.
-                state.global_compiler_state.compiled_methods_and_afs.insert(
-                    function_label.clone(),
-                    InnerFunctionTasmCode::dummy_value(&function_label),
-                );
-
-                // Compile the method as a function and add it to compiled methods
-                let compiled_function = compile_function_inner(
-                    &assoc_fun,
-                    &mut state.global_compiler_state,
-                    state.libraries,
-                    state.declared_methods,
-                    state.associated_functions,
-                    state.custom_types,
-                );
-
-                state
+                if !state
                     .global_compiler_state
                     .compiled_methods_and_afs
-                    .insert(function_label.clone(), compiled_function);
+                    .contains_key(&function_label)
+                {
+                    // Insert something with the right label *before* compiling,
+                    // otherwise the associated functions cannot handle recursion.
+                    state.global_compiler_state.compiled_methods_and_afs.insert(
+                        function_label.clone(),
+                        InnerFunctionTasmCode::dummy_value(&function_label),
+                    );
+
+                    // Compile the associated function as a function and add it to compiled methods
+                    let compiled_function = compile_function_inner(
+                        &afunc,
+                        &mut state.global_compiler_state,
+                        state.libraries,
+                        state.composite_types,
+                    );
+
+                    state
+                        .global_compiler_state
+                        .compiled_methods_and_afs
+                        .insert(function_label.clone(), compiled_function);
+                }
             }
         }
     }
 
     if call_fn_code.is_empty() {
-        let maybe_constructor_code = state.custom_types.constructor_code(fn_call);
+        let maybe_constructor_code = state.composite_types.constructor_code(fn_call);
         if let Some(mut constructor_body) = maybe_constructor_code {
             call_fn_code.append(&mut constructor_body);
         } else {
@@ -1797,10 +1753,6 @@ fn compile_method_call(
 ) -> Vec<LabelledInstruction> {
     let method_name = method_call.method_name.clone();
 
-    // The type checker might have forced the `receiver_type` here, so
-    // we're not allowed to change it again.
-    let receiver_type = method_call.args[0].get_type();
-
     // Compile arguments, including receiver, left-to-right
     let (_args_idents, args_code): (Vec<ValueIdentifier>, Vec<Vec<LabelledInstruction>>) =
         method_call
@@ -1817,44 +1769,38 @@ fn compile_method_call(
     let mut call_code = vec![];
 
     // First check if this is a declared method
-    for declared_method in state.declared_methods.iter() {
-        if method_call.method_name == declared_method.signature.name
-            && (receiver_type == declared_method.receiver_type() ||
-            // TODO: Type checker should handle this. Remove this extra condition!
-            ast_types::DataType::Boxed(Box::new(receiver_type.clone())) == declared_method.receiver_type())
+    let receiver_type = method_call.args[0].get_type();
+    if let Some(method) = state.composite_types.get_method(method_call) {
+        let method_label = method.get_tasm_label();
+        if !state
+            .global_compiler_state
+            .compiled_methods_and_afs
+            .contains_key(&method_label)
         {
-            let method_label = declared_method.get_tasm_label();
-            if !state
+            // Insert something with the right label *before* compiling,
+            // otherwise the methods and associated functions cannot
+            // handle recursion.
+            state.global_compiler_state.compiled_methods_and_afs.insert(
+                method_label.clone(),
+                InnerFunctionTasmCode::dummy_value(&method_label),
+            );
+
+            // Compile the method as a function and add it to compiled methods
+            let compiled_method = compile_function_inner(
+                &method.clone().to_ast_function(&method_label),
+                &mut state.global_compiler_state,
+                state.libraries,
+                state.composite_types,
+            );
+
+            state
                 .global_compiler_state
                 .compiled_methods_and_afs
-                .contains_key(&method_label)
-            {
-                // Insert something with the right label *before* compiling,
-                // otherwise the methods cannot handle recursion.
-                state.global_compiler_state.compiled_methods_and_afs.insert(
-                    method_label.clone(),
-                    InnerFunctionTasmCode::dummy_value(&method_label),
-                );
-
-                // Compile the method as a function and add it to compiled methods
-                let compiled_method = compile_function_inner(
-                    &declared_method.clone().to_ast_function(&method_label),
-                    &mut state.global_compiler_state,
-                    state.libraries,
-                    state.declared_methods,
-                    state.associated_functions,
-                    state.custom_types,
-                );
-
-                state
-                    .global_compiler_state
-                    .compiled_methods_and_afs
-                    .insert(method_label.clone(), compiled_method);
-            }
-
-            call_code.append(&mut triton_asm!(call { method_label }));
-            found_match = true;
+                .insert(method_label.clone(), compiled_method);
         }
+
+        call_code.append(&mut triton_asm!(call { method_label }));
+        found_match = true;
     }
 
     // Then check if it is a method from a library

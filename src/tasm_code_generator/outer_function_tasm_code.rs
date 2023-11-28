@@ -428,7 +428,6 @@ impl BasicSnippet for {snippet_struct_name} {{
             let split_at_type = import.split("___").collect_vec();
             let type_parameter = split_at_type.get(1);
             let import = split_at_type[0];
-            println!("type_parameter: {type_parameter:?}");
             let type_parameter =
                 type_parameter.map(|x| tasm_lib::snippet::DataType::from_str(x).unwrap());
             let snippet_struct_name = import.split('_').last().unwrap();

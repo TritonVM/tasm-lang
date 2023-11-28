@@ -6,7 +6,7 @@ use triton_vm::triton_asm;
 use crate::{
     ast,
     ast_types::{self, ListType},
-    graft::{Annotation, Graft},
+    graft::Graft,
     tasm_code_generator::CompilerState,
     type_checker::GetType,
 };
@@ -188,6 +188,7 @@ impl Library for VectorLib {
 
         match last_method_name.as_str() {
             UNWRAP_NAME => {
+                // Handle `a.pop().unwrap();`
                 match rust_method_call.receiver.as_ref() {
                     syn::Expr::MethodCall(rust_inner_method_call) => {
                         let inner_method_call =
@@ -214,12 +215,11 @@ impl Library for VectorLib {
                                 .map(|x| graft_config.graft_expr(x))
                                 .collect_vec(),
                         );
-                        let annot = Default::default();
-
                         Some(ast::Expr::MethodCall(ast::MethodCall {
                             method_name: POP_NAME.to_owned(),
                             args,
-                            annot,
+                            annot: Default::default(),
+                            associated_type: None,
                         }))
                     }
                     _ => None,
@@ -270,12 +270,12 @@ impl Library for VectorLib {
                                 .map(|x| graft_config.graft_expr(x))
                                 .collect_vec(),
                         );
-                        let annot: Annotation = Default::default();
 
                         Some(ast::Expr::MethodCall(ast::MethodCall {
                             method_name: MAP_NAME.to_owned(),
                             args,
-                            annot,
+                            annot: Default::default(),
+                            associated_type: None,
                         }))
                     }
                     _ => todo!(),

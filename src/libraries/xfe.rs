@@ -224,12 +224,12 @@ impl Library for XfeLibrary {
                         .map(|x| graft_config.graft_expr(x))
                         .collect_vec(),
                 );
-                let annot = Default::default();
 
                 Some(ast::Expr::MethodCall(ast::MethodCall {
                     method_name: UNLIFT_NAME.to_owned(),
                     args,
-                    annot,
+                    annot: Default::default(),
+                    associated_type: None,
                 }))
             }
             _ => None,

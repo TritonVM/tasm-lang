@@ -18,7 +18,7 @@ pub type Annotation = type_checker::Typing;
 pub struct Graft<'a> {
     pub list_type: ast_types::ListType,
     pub libraries: &'a [Box<dyn Library + 'a>],
-    pub imported_custom_types: CompositeTypes,
+    pub(crate) imported_custom_types: CompositeTypes,
 }
 
 #[derive(Debug, Clone)]
@@ -51,11 +51,7 @@ impl<'a> Graft<'a> {
     pub(crate) fn graft_custom_types_methods_and_associated_functions(
         &mut self,
         structs_and_methods: HashMap<String, (CustomTypeRust, Vec<syn::ImplItemMethod>)>,
-    ) -> (
-        CompositeTypes,
-        Vec<ast::Method<Annotation>>,
-        HashMap<String, HashMap<String, ast::Fn<Annotation>>>,
-    ) {
+    ) -> CompositeTypes {
         fn graft_enum_variants(
             graft_config: &mut Graft,
             variants: Vec<syn::Variant>,
@@ -118,7 +114,7 @@ impl<'a> Graft<'a> {
 
         let mut composite_types = CompositeTypes::default();
 
-        // Handle custom data structures
+        // Handle composite data structures
         let structs = structs_and_methods
             .clone()
             .into_iter()
@@ -148,7 +144,7 @@ impl<'a> Graft<'a> {
                         is_prelude: false,
                     };
 
-                    composite_types.add(name, ast_types::CustomTypeOil::Enum(enum_type));
+                    composite_types.add_type(name, ast_types::CustomTypeOil::Enum(enum_type));
                 }
                 CustomTypeRust::Struct(struct_item) => {
                     let syn::ItemStruct {
@@ -182,53 +178,39 @@ impl<'a> Graft<'a> {
                     };
 
                     composite_types
-                        .add(name.clone(), ast_types::CustomTypeOil::Struct(struct_type));
+                        .add_type(name.clone(), ast_types::CustomTypeOil::Struct(struct_type));
                 }
             }
         }
 
-        // Handle methods
+        // Handle methods and associated functions
         let struct_names_and_associated_functions = structs_and_methods
             .clone()
             .into_iter()
             .map(|(struct_name, (_syn_struct, methods))| (struct_name, methods))
             .collect_vec();
-        let mut methods = vec![];
-        let mut associated_functions = HashMap::default();
-        for (struct_name, assoc_function) in struct_names_and_associated_functions {
+        for (type_name, assoc_function) in struct_names_and_associated_functions {
+            let type_ctx = composite_types.get_mut_unique_by_name(&type_name);
+            let as_dt: ast_types::DataType = type_ctx.composite_type.clone().into();
             for syn_method in assoc_function {
                 if syn_method.sig.receiver().is_some() {
-                    // Associated function is a method
-                    methods.push(
-                        self.graft_method(
-                            &syn_method,
-                            &composite_types.get_exactly_one(&struct_name),
-                        ),
-                    );
+                    let oil_method = self.graft_method(&syn_method, &as_dt);
+                    type_ctx.add_method(oil_method);
                 } else {
-                    // Associated function is *not* a method, i.e., does not take `self` argument
-                    let grafted_assoc_function = self.graft_associated_function(&syn_method);
-                    let new_entry = (
-                        grafted_assoc_function.signature.name.clone(),
-                        grafted_assoc_function.clone(),
-                    );
-                    associated_functions
-                        .entry(struct_name.clone())
-                        .and_modify(|x: &mut HashMap<String, ast::Fn<Annotation>>| {
-                            x.insert(new_entry.0.clone(), new_entry.1.clone());
-                        })
-                        .or_insert(HashMap::from([new_entry]));
+                    // Associated function is *not* a method, i.e., does not take a `self` argument
+                    let new_fun = self.graft_associated_function(&syn_method);
+                    type_ctx.add_associated_function(new_fun);
                 }
             }
         }
 
-        (composite_types, methods, associated_functions)
+        composite_types
     }
 
     fn graft_method(
         &mut self,
         method: &syn::ImplItemMethod,
-        custom_type: &ast_types::CustomTypeOil,
+        custom_type: &ast_types::DataType,
     ) -> ast::Method<Annotation> {
         let method_name = method.sig.ident.to_string();
         let receiver = method.sig.receiver().unwrap().to_owned();
@@ -238,35 +220,15 @@ impl<'a> Graft<'a> {
                 mutability,
                 ..
             } = receiver;
-            let receiver_data_type = match custom_type {
-                ast_types::CustomTypeOil::Struct(struct_type) => match reference {
-                    Some(_) => {
-                        if struct_type.is_copy {
-                            ast_types::DataType::Reference(Box::new(ast_types::DataType::Struct(
-                                struct_type.to_owned(),
-                            )))
-                        } else {
-                            ast_types::DataType::Boxed(Box::new(ast_types::DataType::Struct(
-                                struct_type.to_owned(),
-                            )))
-                        }
+            let receiver_data_type = match reference {
+                Some(_) => {
+                    if custom_type.is_copy() {
+                        ast_types::DataType::Reference(Box::new(custom_type.to_owned()))
+                    } else {
+                        ast_types::DataType::Boxed(Box::new(custom_type.to_owned()))
                     }
-                    None => ast_types::DataType::Struct(struct_type.to_owned()),
-                },
-                ast_types::CustomTypeOil::Enum(enum_type) => match reference {
-                    Some(_) => {
-                        if enum_type.is_copy {
-                            ast_types::DataType::Reference(Box::new(ast_types::DataType::Enum(
-                                Box::new(enum_type.to_owned()),
-                            )))
-                        } else {
-                            ast_types::DataType::Boxed(Box::new(ast_types::DataType::Enum(
-                                Box::new(enum_type.to_owned()),
-                            )))
-                        }
-                    }
-                    None => ast_types::DataType::Enum(Box::new(enum_type.to_owned())),
-                },
+                }
+                None => custom_type.to_owned(),
             };
 
             ast_types::AbstractValueArg {
@@ -325,7 +287,6 @@ impl<'a> Graft<'a> {
             .map(ast_types::AbstractArgument::ValueArgument)
             .collect_vec();
         let output = self.graft_return_type(&input.sig.output);
-        println!("output return type: {output:?}");
         let body = input
             .block
             .stmts
@@ -451,7 +412,8 @@ impl<'a> Graft<'a> {
         } else {
             panic!("Box must be followed by its type parameter `<T>`");
         };
-        return ast_types::DataType::Boxed(Box::new(inner_type));
+
+        ast_types::DataType::Boxed(Box::new(inner_type))
     }
 
     fn rust_result_to_data_type(&mut self, path_args: &PathArguments) -> DataType {
@@ -469,7 +431,7 @@ impl<'a> Graft<'a> {
 
         let resolved_type = libraries::core::result_type(ok_type);
         self.imported_custom_types
-            .add(resolved_type.name.clone(), resolved_type.clone().into());
+            .add_type(resolved_type.name.clone(), resolved_type.clone().into());
         ast_types::DataType::Enum(Box::new(resolved_type))
     }
 
@@ -726,11 +688,11 @@ impl<'a> Graft<'a> {
                 .map(|x| self.graft_expr(x))
                 .collect_vec(),
         );
-        let annot = Default::default();
         ast::Expr::MethodCall(ast::MethodCall {
             method_name: last_method_name,
             args,
-            annot,
+            annot: Default::default(),
+            associated_type: Default::default(),
         })
     }
 
