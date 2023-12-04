@@ -1,10 +1,13 @@
+use num::One;
 use triton_vm::BFieldElement;
+use twenty_first::shared_math::x_field_element::XFieldElement;
 
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
 fn main() {
-    let a: BFieldElement = tasm::tasm_io_read_stdin___bfe();
-    let _res: Result<BFieldElement, ()> = Ok(a);
+    let bfe: BFieldElement = tasm::tasm_io_read_stdin___bfe();
+    let result_bfe: Result<BFieldElement, ()> = Ok(bfe);
+    assert!(result_bfe.is_ok());
     return;
 }
 

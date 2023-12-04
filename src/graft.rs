@@ -144,7 +144,7 @@ impl<'a> Graft<'a> {
                         is_prelude: false,
                     };
 
-                    composite_types.add_type(name, ast_types::CustomTypeOil::Enum(enum_type));
+                    composite_types.add_custom_type(ast_types::CustomTypeOil::Enum(enum_type));
                 }
                 CustomTypeRust::Struct(struct_item) => {
                     let syn::ItemStruct {
@@ -177,8 +177,7 @@ impl<'a> Graft<'a> {
                         name: name.clone(),
                     };
 
-                    composite_types
-                        .add_type(name.clone(), ast_types::CustomTypeOil::Struct(struct_type));
+                    composite_types.add_custom_type(ast_types::CustomTypeOil::Struct(struct_type));
                 }
             }
         }
@@ -434,8 +433,8 @@ impl<'a> Graft<'a> {
 
         let resolved_type = libraries::core::result_type(ok_type);
         self.imported_custom_types
-            .add_type(resolved_type.name.clone(), resolved_type.clone().into());
-        ast_types::DataType::Enum(Box::new(resolved_type))
+            .add_type_context(resolved_type.clone());
+        ast_types::DataType::Enum(Box::new(resolved_type.composite_type.try_into().unwrap()))
     }
 
     pub(crate) fn syn_type_to_ast_type(&mut self, syn_type: &syn::Type) -> ast_types::DataType {

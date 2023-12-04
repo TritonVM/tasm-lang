@@ -15,7 +15,7 @@ use crate::{
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub(crate) enum RoutineBody<T> {
     Ast(Vec<Stmt<T>>),
-    Instructions(SubRoutine),
+    Instructions(Vec<LabelledInstruction>),
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]

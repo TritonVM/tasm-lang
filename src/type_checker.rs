@@ -5,7 +5,7 @@ use twenty_first::shared_math::b_field_element::BFieldElement;
 use twenty_first::shared_math::x_field_element::XFieldElement;
 use twenty_first::utils::has_unique_elements;
 
-use crate::ast::{MethodCall, RoutineBody};
+use crate::ast::MethodCall;
 use crate::composite_types::CompositeTypes;
 use crate::tasm_code_generator::SIZE_OF_ACCESSIBLE_STACK;
 use crate::{ast, ast_types, libraries};
@@ -872,9 +872,9 @@ fn get_method_signature(
     let declared_types = state.composite_types.all_composite_type_names();
     let declared_method_names = state.composite_types.all_method_names();
     panic!(
-        "Method call in {} Don't know what type of value '{}' returns!
+        "Method call in '{}' Don't know what type of value '{}' returns!
          Receiver type was: {original_receiver_type:?}
-         \n\nDeclared methods are:\n{declared_method_names}. Declared types are:\n{declared_types}",
+         \n\nDeclared methods are:\n{declared_method_names}\n\n Declared types are:\n{declared_types}\n\n",
         env_fn_signature.name, method_call.method_name,
     );
 }

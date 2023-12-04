@@ -944,11 +944,17 @@ fn compile_function_inner(
     composite_types: &CompositeTypes,
 ) -> InnerFunctionTasmCode {
     let fn_name = &function.signature.name;
+
     let function_body = match &function.body {
         RoutineBody::Ast(ast) => ast,
         RoutineBody::Instructions(instrs) => {
+            let body_with_label_and_return = triton_asm!(
+                {fn_name}:
+                    {&instrs}
+                    return
+            );
             return InnerFunctionTasmCode {
-                call_depth_zero_code: instrs.to_owned(),
+                call_depth_zero_code: body_with_label_and_return.try_into().unwrap(),
                 name: fn_name.to_owned(),
                 sub_routines: vec![],
             };
@@ -1781,6 +1787,7 @@ fn compile_method_call(
     let receiver_type = method_call.args[0].get_type();
     if let Some(method) = state.composite_types.get_method(method_call) {
         let method_label = method.get_tasm_label();
+        println!("method_label: {method_label}");
         if !state
             .global_compiler_state
             .compiled_methods_and_afs

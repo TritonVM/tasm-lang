@@ -144,17 +144,23 @@ impl CompositeTypes {
         }
     }
 
+    pub(crate) fn add_type_context(&mut self, tyctx: TypeContext) {
+        let name = tyctx.composite_type.name();
+        self.add(name.to_owned(), tyctx);
+    }
+
     /// Add a composite type to the collection. Panics if it's already included.
-    pub(crate) fn add_type(&mut self, type_name: String, dtype: CustomTypeOil) {
+    pub(crate) fn add_custom_type(&mut self, dtype: CustomTypeOil) {
+        let name = dtype.name().to_owned();
         let tyctx: TypeContext = dtype.into();
-        self.add(type_name, tyctx);
+        self.add(name, tyctx);
     }
 
     /// Add a composite type to the collection. Panics if it's already included.
     fn add(&mut self, type_name: String, tyctx: TypeContext) {
         let type_count = self.composite_types.len();
         self.by_name
-            .entry(type_name.clone())
+            .entry(type_name.to_owned())
             .and_modify(|types_w_same_name| {
                 assert!(
                     types_w_same_name
@@ -304,7 +310,10 @@ impl CompositeTypes {
             .iter()
             .map(|tyctx| {
                 let method_names_of_type = tyctx.methods.iter().join(", ");
-                format!("{}:\n{method_names_of_type}", tyctx.composite_type.name())
+                format!(
+                    "{}:\n    {method_names_of_type}",
+                    tyctx.composite_type.name()
+                )
             })
             .join("\n\n")
     }

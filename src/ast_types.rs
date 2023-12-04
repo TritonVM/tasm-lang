@@ -523,6 +523,17 @@ impl TryFrom<&CustomTypeOil> for EnumType {
     }
 }
 
+impl TryFrom<CustomTypeOil> for EnumType {
+    type Error = anyhow::Error;
+
+    fn try_from(value: CustomTypeOil) -> Result<Self, Self::Error> {
+        match value {
+            CustomTypeOil::Struct(s) => bail!("Expected enum but found struct {s}"),
+            CustomTypeOil::Enum(e) => Ok(e),
+        }
+    }
+}
+
 impl From<StructType> for CustomTypeOil {
     fn from(value: StructType) -> Self {
         CustomTypeOil::Struct(value)
@@ -581,6 +592,12 @@ pub struct EnumType {
 impl From<&EnumType> for DataType {
     fn from(value: &EnumType) -> Self {
         Self::Enum(Box::new(value.to_owned()))
+    }
+}
+
+impl From<EnumType> for DataType {
+    fn from(value: EnumType) -> Self {
+        Self::Enum(Box::new(value))
     }
 }
 
