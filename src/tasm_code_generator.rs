@@ -20,7 +20,7 @@ use self::function_state::{FunctionState, VarAddr};
 use self::inner_function_tasm_code::InnerFunctionTasmCode;
 use self::outer_function_tasm_code::OuterFunctionTasmCode;
 use self::stack::VStack;
-use crate::ast::Identifier;
+use crate::ast::{Identifier, RoutineBody};
 use crate::ast_types::{self, StructVariant};
 use crate::composite_types::CompositeTypes;
 use crate::libraries::{self};
@@ -944,6 +944,17 @@ fn compile_function_inner(
     composite_types: &CompositeTypes,
 ) -> InnerFunctionTasmCode {
     let fn_name = &function.signature.name;
+    let function_body = match &function.body {
+        RoutineBody::Ast(ast) => ast,
+        RoutineBody::Instructions(instrs) => {
+            return InnerFunctionTasmCode {
+                call_depth_zero_code: instrs.to_owned(),
+                name: fn_name.to_owned(),
+                sub_routines: vec![],
+            };
+        }
+    };
+
     let _fn_stack_output_sig = format!("{}", function.signature.output);
 
     // Run the compilation 1st time to learn which values need to be spilled to memory
@@ -958,8 +969,7 @@ fn compile_function_inner(
         );
 
         // Compiling the function body allows us to learn which values need to be spilled to memory
-        let _fn_body_code = function
-            .body
+        let _fn_body_code = function_body
             .iter()
             .map(|stmt| compile_stmt(stmt, &mut temporary_fn_state))
             .concat();
@@ -987,8 +997,7 @@ fn compile_function_inner(
 
     // Append the code for the function body
     fn_body_code.append(
-        &mut function
-            .body
+        &mut function_body
             .iter()
             .map(|stmt| compile_stmt(stmt, &mut state))
             .concat(),

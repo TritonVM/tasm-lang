@@ -1,20 +1,27 @@
 use itertools::Itertools;
 use std::collections::HashMap;
 use std::fmt::Display;
-use triton_vm::Digest;
+use triton_vm::{instruction::LabelledInstruction, Digest};
 use twenty_first::shared_math::b_field_element::BFieldElement;
 use twenty_first::shared_math::bfield_codec::BFieldCodec;
 use twenty_first::shared_math::x_field_element::XFieldElement;
 
 use crate::{
     ast_types::{self, AbstractArgument, DataType, FieldId},
+    subroutine::SubRoutine,
     type_checker::Typing,
 };
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub(crate) enum RoutineBody<T> {
+    Ast(Vec<Stmt<T>>),
+    Instructions(SubRoutine),
+}
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct Method<T> {
     pub signature: FnSignature,
-    pub body: Vec<Stmt<T>>,
+    pub body: RoutineBody<T>,
 }
 
 impl<T> Display for Method<T> {
@@ -61,7 +68,7 @@ impl<T> Method<T> {
 pub struct Fn<T> {
     pub signature: FnSignature,
     // TODO: Should probably be a BlockStmt<T> instead of Vec<Stmt>
-    pub body: Vec<Stmt<T>>,
+    pub body: RoutineBody<T>,
 }
 
 impl<T> Fn<T> {

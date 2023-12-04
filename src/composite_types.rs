@@ -14,8 +14,8 @@ use std::collections::HashMap;
 #[derive(Debug, Clone)]
 pub(crate) struct TypeContext {
     pub(crate) composite_type: ast_types::CustomTypeOil,
-    methods: Vec<ast::Method<Typing>>,
-    associated_functions: Vec<ast::Fn<Typing>>,
+    pub(crate) methods: Vec<ast::Method<Typing>>,
+    pub(crate) associated_functions: Vec<ast::Fn<Typing>>,
 }
 
 impl From<CustomTypeOil> for TypeContext {

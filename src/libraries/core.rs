@@ -2,22 +2,24 @@ use syn::punctuated::Punctuated;
 use syn::token::Comma;
 use syn::ExprMethodCall;
 use triton_vm::instruction::LabelledInstruction;
+use triton_vm::triton_asm;
 
-use crate::ast::{Expr, FnSignature};
+use crate::ast::{self, Expr, FnSignature};
 use crate::ast_types;
 use crate::ast_types::DataType;
 use crate::graft::Graft;
 use crate::libraries::{Annotation, Library};
 use crate::tasm_code_generator::CompilerState;
 use crate::type_checker::CheckState;
+use crate::type_checker::Typing;
 
 /// Everything that lives in the Rust `core` module
 /// belongs in here.
 #[derive(Debug)]
 pub struct Core {}
 
-pub(crate) fn result_type(ok_type: ast_types::DataType) -> ast_types::EnumType {
-    ast_types::EnumType {
+pub(crate) fn result_type(ok_type: ast_types::DataType) -> crate::composite_types::TypeContext {
+    let dtype = ast_types::EnumType {
         is_copy: ok_type.is_copy(),
         name: format!("Result<{ok_type}, _>"),
         variants: vec![
@@ -25,7 +27,30 @@ pub(crate) fn result_type(ok_type: ast_types::DataType) -> ast_types::EnumType {
             ("Ok".to_owned(), ok_type),
         ],
         is_prelude: true,
-    }
+    };
+    let is_ok_method = ast::Method {
+        body: crate::ast::RoutineBody::<Typing>::Instructions(
+            triton_asm!(
+                is_ok_method:
+                    dup 0
+                    assert
+                    return
+            )
+            .try_into()
+            .unwrap(),
+        ),
+        signature: ast::FnSignature {
+            name: todo!(),
+            args: todo!(),
+            output: todo!(),
+            arg_evaluation_order: todo!(),
+        },
+    };
+    let _ = crate::composite_types::TypeContext {
+        composite_type: dtype.into(),
+        methods: vec![],
+        associated_functions: todo!(),
+    };
 }
 
 impl Library for Core {

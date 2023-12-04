@@ -5,7 +5,7 @@ use twenty_first::shared_math::b_field_element::BFieldElement;
 use twenty_first::shared_math::x_field_element::XFieldElement;
 use twenty_first::utils::has_unique_elements;
 
-use crate::ast::MethodCall;
+use crate::ast::{MethodCall, RoutineBody};
 use crate::composite_types::CompositeTypes;
 use crate::tasm_code_generator::SIZE_OF_ACCESSIBLE_STACK;
 use crate::{ast, ast_types, libraries};
@@ -217,22 +217,22 @@ pub fn annotate_method(
         SIZE_OF_ACCESSIBLE_STACK - 1
     );
 
-    // Verify that last statement of function exists, and that it is a `return` statement
-    let last_stmt = method
-        .body
-        .iter()
-        .last()
-        .unwrap_or_else(|| panic!("{}: Function cannot be emtpy.", method.signature.name));
-    assert!(
-        matches!(last_stmt, ast::Stmt::Return(_)),
-        "Last line of function must be a `return`"
-    );
+    if let ast::RoutineBody::Ast(stmts) = &mut method.body {
+        // Verify that last statement of function exists, and that it is a `return` statement
+        let last_stmt = stmts
+            .iter()
+            .last()
+            .unwrap_or_else(|| panic!("{}: Function cannot be emtpy.", method.signature.name));
+        assert!(
+            matches!(last_stmt, ast::Stmt::Return(_)),
+            "Last line of function must be a `return`"
+        );
 
-    // Type-annotate each statement in-place
-    method
-        .body
-        .iter_mut()
-        .for_each(|stmt| annotate_stmt(stmt, &mut state, &method.signature));
+        // Type-annotate each statement in-place
+        stmts
+            .iter_mut()
+            .for_each(|stmt| annotate_stmt(stmt, &mut state, &method.signature));
+    }
 }
 
 pub fn annotate_fn_inner(
@@ -286,22 +286,22 @@ pub fn annotate_fn_inner(
         SIZE_OF_ACCESSIBLE_STACK - 1
     );
 
-    // Verify that last statement of function exists, and that it is a `return` statement
-    let last_stmt = function
-        .body
-        .iter()
-        .last()
-        .unwrap_or_else(|| panic!("{}: Function cannot be emtpy.", function.signature.name));
-    assert!(
-        matches!(last_stmt, ast::Stmt::Return(_)),
-        "Last line of function must be a `return`"
-    );
+    if let ast::RoutineBody::Ast(stmts) = &mut function.body {
+        // Verify that last statement of function exists, and that it is a `return` statement
+        let last_stmt = stmts
+            .iter()
+            .last()
+            .unwrap_or_else(|| panic!("{}: Function cannot be emtpy.", function.signature.name));
+        assert!(
+            matches!(last_stmt, ast::Stmt::Return(_)),
+            "Last line of function must be a `return`"
+        );
 
-    // Type-annotate each statement in-place
-    function
-        .body
-        .iter_mut()
-        .for_each(|stmt| annotate_stmt(stmt, &mut state, &function.signature));
+        // Type-annotate each statement in-place
+        stmts
+            .iter_mut()
+            .for_each(|stmt| annotate_stmt(stmt, &mut state, &function.signature));
+    }
 }
 
 pub(crate) fn annotate_fn_outer(

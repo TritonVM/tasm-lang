@@ -266,7 +266,10 @@ impl<'a> Graft<'a> {
             .map(|x| self.graft_stmt(x))
             .collect_vec();
 
-        ast::Method { signature, body }
+        ast::Method {
+            signature,
+            body: ast::RoutineBody::Ast(body),
+        }
     }
 
     /// Graft a function declaration inside an `impl` block of a custom-defined
@@ -301,7 +304,7 @@ impl<'a> Graft<'a> {
                 output,
                 arg_evaluation_order: Default::default(),
             },
-            body,
+            body: ast::RoutineBody::Ast(body),
         }
     }
 
@@ -326,7 +329,7 @@ impl<'a> Graft<'a> {
             .collect_vec();
 
         ast::Fn {
-            body,
+            body: ast::RoutineBody::Ast(body),
             signature: ast::FnSignature {
                 name: function_name,
                 args,

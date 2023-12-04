@@ -191,8 +191,14 @@ impl CustomTypeResolution for Stmt<Typing> {
             }
             Stmt::FnDeclaration(Fn { signature, body }) => {
                 signature.resolve_custom_types(composite_types);
-                body.iter_mut()
-                    .for_each(|x| x.resolve_custom_types(composite_types));
+                match body {
+                    RoutineBody::Ast(stmts) => {
+                        stmts
+                            .iter_mut()
+                            .for_each(|x| x.resolve_custom_types(composite_types));
+                    }
+                    RoutineBody::Instructions(_instrs) => (),
+                }
             }
             Stmt::Match(MatchStmt {
                 match_expression,
@@ -229,18 +235,24 @@ impl CustomTypeResolution for BlockStmt<Typing> {
 impl CustomTypeResolution for Fn<Typing> {
     fn resolve_custom_types(&mut self, composite_types: &CompositeTypes) {
         self.signature.resolve_custom_types(composite_types);
-        self.body
-            .iter_mut()
-            .for_each(|x| x.resolve_custom_types(composite_types));
+        match &mut self.body {
+            RoutineBody::Ast(stmts) => stmts
+                .iter_mut()
+                .for_each(|x| x.resolve_custom_types(composite_types)),
+            RoutineBody::Instructions(_instrs) => (),
+        }
     }
 }
 
 impl CustomTypeResolution for Method<Typing> {
     fn resolve_custom_types(&mut self, composite_types: &CompositeTypes) {
         self.signature.resolve_custom_types(composite_types);
-        self.body
-            .iter_mut()
-            .for_each(|x| x.resolve_custom_types(composite_types));
+        match &mut self.body {
+            RoutineBody::Ast(stmts) => stmts
+                .iter_mut()
+                .for_each(|x| x.resolve_custom_types(composite_types)),
+            RoutineBody::Instructions(_instrs) => (),
+        }
     }
 }
 
