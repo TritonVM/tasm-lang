@@ -1,4 +1,3 @@
-use num::One;
 use triton_vm::BFieldElement;
 use twenty_first::shared_math::x_field_element::XFieldElement;
 
@@ -8,6 +7,13 @@ fn main() {
     let bfe: BFieldElement = tasm::tasm_io_read_stdin___bfe();
     let result_bfe: Result<BFieldElement, ()> = Ok(bfe);
     assert!(result_bfe.is_ok());
+    let xfe: XFieldElement = XFieldElement::new([
+        BFieldElement::new(14),
+        BFieldElement::new(15),
+        BFieldElement::new(16),
+    ]);
+    let result_xfe: Result<XFieldElement, ()> = Ok(xfe);
+    assert!(result_xfe.is_ok());
     return;
 }
 

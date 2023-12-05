@@ -21,14 +21,13 @@ pub struct Core {}
 pub(crate) fn result_type(ok_type: ast_types::DataType) -> crate::composite_types::TypeContext {
     let dtype = ast_types::EnumType {
         is_copy: ok_type.is_copy(),
-        name: format!("Result"),
+        name: format!("Result___{ok_type}"),
         variants: vec![
             ("Ok".to_owned(), ok_type.clone()),
             ("Err".to_owned(), ast_types::DataType::unit()),
         ],
         is_prelude: true,
     };
-    // let is_ok_method_label = format!("is_ok___{}", ok_type);
     let is_ok_method_label = "is_ok";
     let stack_size = dtype.stack_size();
     let swap_to_bottom = match stack_size {

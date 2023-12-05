@@ -97,6 +97,32 @@ impl FnSignature {
 
         input_args_stack_size
     }
+
+    pub fn matches(&self, types: &[ast_types::DataType]) -> bool {
+        if self.args.len() != types.len() {
+            return false;
+        }
+
+        for (arg, dtype) in self.args.iter().zip_eq(types.iter()) {
+            match arg {
+                AbstractArgument::FunctionArgument(fun_arg) => {
+                    let ast_types::DataType::Function(fun) = dtype else {
+                        return false;
+                    };
+                    if fun_arg.function_type != **fun {
+                        return false;
+                    }
+                }
+                AbstractArgument::ValueArgument(val_arg) => {
+                    if val_arg.data_type != *dtype {
+                        return false;
+                    }
+                }
+            }
+        }
+
+        true
+    }
 }
 
 #[derive(Debug, Default, Clone, Hash, PartialEq, Eq)]
