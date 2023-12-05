@@ -161,7 +161,7 @@ impl Library for HasherLib {
                     let mut bfe_literals = vec![];
                     for expr in initializer_exprs {
                         match expr {
-                            ast::Expr::Lit(ast::ExprLit::BFE(bfe)) => {
+                            ast::Expr::Lit(ast::ExprLit::Bfe(bfe)) => {
                                 bfe_literals.push(bfe);
                             }
                             _ => {

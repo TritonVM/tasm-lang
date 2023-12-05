@@ -43,8 +43,8 @@ impl<T: GetType> GetType for ast::ExprLit<T> {
             ast::ExprLit::U32(_) => ast_types::DataType::U32,
             ast::ExprLit::U64(_) => ast_types::DataType::U64,
             ast::ExprLit::U128(_) => ast_types::DataType::U128,
-            ast::ExprLit::BFE(_) => ast_types::DataType::BFE,
-            ast::ExprLit::XFE(_) => ast_types::DataType::XFE,
+            ast::ExprLit::Bfe(_) => ast_types::DataType::BFE,
+            ast::ExprLit::Xfe(_) => ast_types::DataType::XFE,
             ast::ExprLit::Digest(_) => ast_types::DataType::Digest,
             ast::ExprLit::GenericNum(_, t) => t.get_type(),
             ast::ExprLit::MemPointer(ast::MemPointerLiteral {
@@ -807,11 +807,11 @@ fn get_method_signature(
         // in the method) matches `forced_type` exactly , use it (a "by value method")
         match state.composite_types.get_by_type(&forced_type) {
             None => (),
-            Some(comp_type) => match comp_type.get_method(&method_call.method_name) {
-                Some(method) => {
+            Some(comp_type) => {
+                if let Some(method) = comp_type.get_method(&method_call.method_name) {
                     method_call.associated_type = Some(forced_type.clone());
                     if method.receiver_type() == forced_type {
-                        // TODO: I'm not sure what this commented-out code does
+                        // TODO: Is this neccessary?
                         if let ast::Expr::Var(ref mut var) = &mut method_call.args[0] {
                             var.force_type(&forced_type);
                         }
@@ -822,7 +822,7 @@ fn get_method_signature(
                     let auto_refd_forced_type =
                         ast_types::DataType::Reference(Box::new(forced_type.clone()));
                     if method.receiver_type() == auto_refd_forced_type {
-                        // TODO: I'm not sure what this commented-out code does
+                        // TODO: Is this neccessary?
                         if let ast::Expr::Var(var) = &mut method_call.args[0] {
                             var.force_type(&auto_refd_forced_type);
                         }
@@ -833,7 +833,7 @@ fn get_method_signature(
                     let auto_boxed_forced_type =
                         ast_types::DataType::Boxed(Box::new(forced_type.clone()));
                     if method.receiver_type() == auto_boxed_forced_type {
-                        // TODO: I'm not sure what this commented-out code does
+                        // TODO: Is this neccessary?
                         if let ast::Expr::Var(var) = &mut method_call.args[0] {
                             var.force_type(&auto_boxed_forced_type);
                         }
@@ -841,15 +841,14 @@ fn get_method_signature(
                         return method.signature.to_owned();
                     }
                 }
-                None => (),
-            },
+            }
         };
 
         for lib in state.libraries.iter() {
             if let Some(method_name) = lib.get_method_name(&method_call.method_name, &forced_type) {
                 method_call.associated_type = Some(forced_type.clone());
 
-                // TODO: I'm not sure what this commented-out code does
+                // TODO: Is this neccessary?
                 if let ast::Expr::Var(var) = &mut method_call.args[0] {
                     var.force_type(&forced_type);
                 }
@@ -984,8 +983,8 @@ fn derive_annotate_expr_type(
         ast::Expr::Lit(ast::ExprLit::U32(_)) => Ok(ast_types::DataType::U32),
         ast::Expr::Lit(ast::ExprLit::U64(_)) => Ok(ast_types::DataType::U64),
         ast::Expr::Lit(ast::ExprLit::U128(_)) => Ok(ast_types::DataType::U128),
-        ast::Expr::Lit(ast::ExprLit::BFE(_)) => Ok(ast_types::DataType::BFE),
-        ast::Expr::Lit(ast::ExprLit::XFE(_)) => Ok(ast_types::DataType::XFE),
+        ast::Expr::Lit(ast::ExprLit::Bfe(_)) => Ok(ast_types::DataType::BFE),
+        ast::Expr::Lit(ast::ExprLit::Xfe(_)) => Ok(ast_types::DataType::XFE),
         ast::Expr::Lit(ast::ExprLit::Digest(_)) => Ok(ast_types::DataType::Digest),
         ast::Expr::Lit(ast::ExprLit::MemPointer(ast::MemPointerLiteral {
             mem_pointer_address: _,
@@ -1019,14 +1018,14 @@ fn derive_annotate_expr_type(
                 Some(&BFE) => {
                     assert!(*n <= BFieldElement::MAX as u128);
                     let n = BFieldElement::new(TryInto::<u64>::try_into(*n).unwrap());
-                    *expr = ast::Expr::Lit(ast::ExprLit::BFE(n));
+                    *expr = ast::Expr::Lit(ast::ExprLit::Bfe(n));
                     Ok(BFE)
                 }
                 Some(&XFE) => {
                     assert!(*n <= BFieldElement::MAX as u128);
                     let n = BFieldElement::new(TryInto::<u64>::try_into(*n).unwrap());
                     let n = XFieldElement::new_const(n);
-                    *expr = ast::Expr::Lit(ast::ExprLit::XFE(n));
+                    *expr = ast::Expr::Lit(ast::ExprLit::Xfe(n));
                     Ok(XFE)
                 }
                 Some(hint) => panic!("GenericNum does not infer as type hint {hint}"),

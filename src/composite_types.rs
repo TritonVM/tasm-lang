@@ -217,7 +217,7 @@ impl CompositeTypes {
         &self,
         method_call: &ast::MethodCall<type_checker::Typing>,
     ) -> Option<ast::Method<Typing>> {
-        self.get_by_type(&method_call.associated_type.as_ref().unwrap())
+        self.get_by_type(method_call.associated_type.as_ref().unwrap())
             .map(|tyctx| tyctx.get_method(&method_call.method_name).unwrap())
             .cloned()
     }
@@ -351,7 +351,7 @@ impl CompositeTypes {
             return None;
         };
 
-        ty_ctx.get_associated_function(&fname).map(|x| x.to_owned())
+        ty_ctx.get_associated_function(fname).map(|x| x.to_owned())
     }
 
     /// Return all enums that are included in `prelude`, meaning that

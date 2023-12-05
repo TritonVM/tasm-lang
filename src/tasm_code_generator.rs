@@ -1803,7 +1803,7 @@ fn compile_method_call(
 
             // Compile the method as a function and add it to compiled methods
             let compiled_method = compile_function_inner(
-                &method.clone().to_ast_function(&method_label),
+                &method.clone().as_ast_function(&method_label),
                 &mut state.global_compiler_state,
                 state.libraries,
                 state.composite_types,
@@ -1862,7 +1862,7 @@ fn compile_expr(
                 triton_asm!(push {*value as u64})
             }
 
-            ast::ExprLit::BFE(value) => triton_asm!(push {*value }),
+            ast::ExprLit::Bfe(value) => triton_asm!(push {*value }),
 
             ast::ExprLit::U64(value) => {
                 let as_u32s = U32s::<2>::try_from(*value).unwrap().encode();
@@ -1887,7 +1887,7 @@ fn compile_expr(
                 code
             }
 
-            ast::ExprLit::XFE(value) => {
+            ast::ExprLit::Xfe(value) => {
                 // In the VM, the 1st element of the array is expected to be on top of the stack.
                 // So the elements must be pushed onto the stack in reversed order.
                 triton_asm!(

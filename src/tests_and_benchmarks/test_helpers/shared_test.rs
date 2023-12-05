@@ -550,11 +550,11 @@ pub fn u128_lit(value: u128) -> ast::ExprLit<type_checker::Typing> {
 }
 
 pub fn bfe_lit(value: BFieldElement) -> ast::ExprLit<type_checker::Typing> {
-    ast::ExprLit::BFE(value)
+    ast::ExprLit::Bfe(value)
 }
 
 pub fn xfe_lit(value: XFieldElement) -> ast::ExprLit<type_checker::Typing> {
-    ast::ExprLit::XFE(value)
+    ast::ExprLit::Xfe(value)
 }
 
 pub fn digest_lit(value: Digest) -> ast::ExprLit<type_checker::Typing> {

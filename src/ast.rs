@@ -29,8 +29,10 @@ impl<T> Display for Method<T> {
 }
 
 impl<T: Clone> Method<T> {
-    /// Convert a method to a function data type with a specified name
-    pub fn to_ast_function(self, new_name: &str) -> Fn<T> {
+    /// Convert a method to a function data type with a specified name. Consumes the
+    /// method.
+    #[allow(clippy::wrong_self_convention)]
+    pub fn as_ast_function(self, new_name: &str) -> Fn<T> {
         let mut fn_signature = self.signature;
         fn_signature.name = new_name.to_owned();
         Fn {
@@ -235,8 +237,8 @@ pub(crate) enum ExprLit<T> {
     U32(u32),
     U64(u64),
     U128(u128),
-    BFE(BFieldElement),
-    XFE(XFieldElement),
+    Bfe(BFieldElement),
+    Xfe(XFieldElement),
     Digest(Digest),
     MemPointer(MemPointerLiteral<T>),
     GenericNum(u128, T),
@@ -249,8 +251,8 @@ impl<T> ExprLit<T> {
             ExprLit::U32(u32) => u32.to_string(),
             ExprLit::U64(val) => val.to_string(),
             ExprLit::U128(val) => val.to_string(),
-            ExprLit::BFE(val) => val.to_string(),
-            ExprLit::XFE(val) => val.to_string(),
+            ExprLit::Bfe(val) => val.to_string(),
+            ExprLit::Xfe(val) => val.to_string(),
             ExprLit::Digest(val) => val.to_string(),
             ExprLit::MemPointer(val) => format!("MP_L{}R", val.mem_pointer_address),
             ExprLit::GenericNum(val, _) => val.to_string(),
@@ -265,8 +267,8 @@ impl<T> Display for ExprLit<T> {
             ExprLit::U32(u32) => u32.to_string(),
             ExprLit::U64(val) => val.to_string(),
             ExprLit::U128(val) => val.to_string(),
-            ExprLit::BFE(val) => val.to_string(),
-            ExprLit::XFE(val) => val.to_string(),
+            ExprLit::Bfe(val) => val.to_string(),
+            ExprLit::Xfe(val) => val.to_string(),
             ExprLit::Digest(val) => val.to_string(),
             ExprLit::MemPointer(val) => format!("*{}", val),
             ExprLit::GenericNum(val, _) => val.to_string(),
@@ -304,8 +306,8 @@ impl<T> BFieldCodec for ExprLit<T> {
             ExprLit::U32(value) => value.encode(),
             ExprLit::U64(value) => value.encode(),
             ExprLit::U128(val) => val.encode(),
-            ExprLit::BFE(value) => value.encode(),
-            ExprLit::XFE(value) => value.encode(),
+            ExprLit::Bfe(value) => value.encode(),
+            ExprLit::Xfe(value) => value.encode(),
             ExprLit::Digest(value) => value.encode(),
             ExprLit::GenericNum(_, _) => todo!(),
             ExprLit::MemPointer(_) => todo!(),

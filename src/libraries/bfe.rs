@@ -168,11 +168,11 @@ impl Library for BfeLibrary {
         _function_type_parameter: Option<ast_types::DataType>,
     ) -> Option<ast::Expr<super::Annotation>> {
         if full_name == FUNCTION_NAME_ZERO {
-            return Some(ast::Expr::Lit(ast::ExprLit::BFE(BFieldElement::zero())));
+            return Some(ast::Expr::Lit(ast::ExprLit::Bfe(BFieldElement::zero())));
         }
 
         if full_name == FUNCTION_NAME_ONE {
-            return Some(ast::Expr::Lit(ast::ExprLit::BFE(BFieldElement::one())));
+            return Some(ast::Expr::Lit(ast::ExprLit::Bfe(BFieldElement::one())));
         }
 
         if full_name == FUNCTION_NAME_NEW_BFE {
@@ -238,11 +238,11 @@ fn graft_bfe_primitive_root(
     let init_arg = &args[0];
     match init_arg {
         ast::Expr::Lit(lit) => match lit {
-            ast::ExprLit::U64(value) => ast::Expr::Lit(ast::ExprLit::BFE(
+            ast::ExprLit::U64(value) => ast::Expr::Lit(ast::ExprLit::Bfe(
                 BFieldElement::primitive_root_of_unity(*value)
                     .expect("Primitive root must be known. Got order: {value}"),
             )),
-            ast::ExprLit::GenericNum(value, _) => ast::Expr::Lit(ast::ExprLit::BFE(
+            ast::ExprLit::GenericNum(value, _) => ast::Expr::Lit(ast::ExprLit::Bfe(
                 BFieldElement::primitive_root_of_unity(TryInto::<u64>::try_into(*value).unwrap())
                     .expect("Primitive root must be known. Got order: {value}"),
             )),
@@ -280,9 +280,9 @@ fn graft_bfe_new(
     match init_arg {
         ast::Expr::Lit(lit) => match lit {
             ast::ExprLit::U64(value) => {
-                ast::Expr::Lit(ast::ExprLit::BFE(BFieldElement::new(*value)))
+                ast::Expr::Lit(ast::ExprLit::Bfe(BFieldElement::new(*value)))
             }
-            ast::ExprLit::GenericNum(value, _) => ast::Expr::Lit(ast::ExprLit::BFE(
+            ast::ExprLit::GenericNum(value, _) => ast::Expr::Lit(ast::ExprLit::Bfe(
                 BFieldElement::new(TryInto::<u64>::try_into(*value).unwrap()),
             )),
             _ => {
@@ -295,7 +295,7 @@ fn graft_bfe_new(
         ast::Expr::Var(ast::Identifier::String(constant, _)) => {
             if constant == "BFieldElement::MAX" {
                 // `const` declaration of `BFieldElement::new(BFieldElement::MAX)`
-                ast::Expr::Lit(ast::ExprLit::BFE(BFieldElement::new(BFieldElement::MAX)))
+                ast::Expr::Lit(ast::ExprLit::Bfe(BFieldElement::new(BFieldElement::MAX)))
             } else {
                 // non-const declaration of `BFieldElement::new(<expr>)`
                 let bfe_new_function = bfe_new_function();

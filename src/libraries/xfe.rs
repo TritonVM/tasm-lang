@@ -106,12 +106,12 @@ impl Library for XfeLibrary {
     ) -> Option<ast::Expr<super::Annotation>> {
         if fn_name == ZERO_CONST_NAME {
             assert!(args.len().is_zero(), "{ZERO_CONST_NAME} takes no arguments");
-            return Some(ast::Expr::Lit(ast::ExprLit::XFE(XFieldElement::zero())));
+            return Some(ast::Expr::Lit(ast::ExprLit::Xfe(XFieldElement::zero())));
         }
 
         if fn_name == ONE_CONST_NAME {
             assert!(args.len().is_zero(), "{ONE_CONST_NAME} takes no arguments");
-            return Some(ast::Expr::Lit(ast::ExprLit::XFE(XFieldElement::one())));
+            return Some(ast::Expr::Lit(ast::ExprLit::Xfe(XFieldElement::one())));
         }
 
         if fn_name != FUNCTION_NAME_NEW {
@@ -165,7 +165,7 @@ impl Library for XfeLibrary {
                 let mut bfe_literals = vec![];
                 for expr in initializer_exprs {
                     match expr {
-                        ast::Expr::Lit(ast::ExprLit::BFE(bfe)) => {
+                        ast::Expr::Lit(ast::ExprLit::Bfe(bfe)) => {
                             bfe_literals.push(bfe);
                         }
                         _ => {
@@ -176,7 +176,7 @@ impl Library for XfeLibrary {
 
                 let bfe_literals: [BFieldElement; EXTENSION_DEGREE] =
                     bfe_literals.try_into().unwrap();
-                Some(ast::Expr::Lit(ast::ExprLit::XFE(XFieldElement::new(
+                Some(ast::Expr::Lit(ast::ExprLit::Xfe(XFieldElement::new(
                     bfe_literals,
                 ))))
             }

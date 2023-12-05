@@ -237,7 +237,7 @@ impl Library for BFieldCodecLib {
                             match &load_function_args[0] {
                                 // TODO: Maybe `address` can be an expression and doesn't have to be a literal?
                                 // Do we need or want that?
-                                ast::Expr::Lit(ast::ExprLit::BFE(address_value)) => address_value.to_owned(),
+                                ast::Expr::Lit(ast::ExprLit::Bfe(address_value)) => address_value.to_owned(),
                                 _ => panic!("Argument to {LOAD_FROM_MEMORY_FN_NAME} must be known at compile time and must be a BFieldElement"),
                             }
                         }
