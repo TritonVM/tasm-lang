@@ -27,7 +27,6 @@ pub enum CustomTypeRust {
     Enum(syn::ItemEnum),
 }
 
-#[allow(unused_macros)]
 macro_rules! get_standard_setup {
     ($list_type:expr, $graft_config:ident, $libraries:ident) => {
         let library_config = crate::libraries::LibraryConfig {

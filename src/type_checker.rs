@@ -171,7 +171,7 @@ impl DataTypeAndMutability {
 }
 
 // TODO: Delete `annotate_method`, use `annotate_function` instead
-pub fn annotate_method(
+fn annotate_method(
     method: &mut ast::Method<Typing>,
     composite_types: &CompositeTypes,
     libraries: &[Box<dyn libraries::Library>],
@@ -236,7 +236,7 @@ pub fn annotate_method(
     }
 }
 
-pub fn annotate_fn_inner(
+fn annotate_fn_inner(
     function: &mut ast::Fn<Typing>,
     composite_types: &CompositeTypes,
     libraries: &[Box<dyn libraries::Library>],
