@@ -168,7 +168,7 @@ pub(crate) enum MatchCondition {
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub(crate) struct EnumVariantSelector {
     // `Bar` in `Bar::Foo(baz)`
-    pub enum_name: String,
+    pub type_name: Option<String>,
 
     // `Foo`
     pub variant_name: String,
@@ -184,7 +184,7 @@ impl EnumVariantSelector {
         let boxed_qualifier = if boxed { "boxed" } else { "stack" };
         format!(
             "{}_{}_bind_{}_{boxed_qualifier}",
-            self.enum_name,
+            self.type_name.clone().unwrap_or_default(),
             self.variant_name,
             self.data_bindings.len()
         )

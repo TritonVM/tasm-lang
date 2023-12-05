@@ -1318,17 +1318,20 @@ impl<'a> Graft<'a> {
                                 qself: _,
                                 path,
                             }) => {
-                                //
+                                // Enums that are in prelude can be matched with only the variant name, like `None`
+                                // instead of `Result::None`
                                 let enum_case = Graft::path_to_ident(path);
                                 let enum_case_split = enum_case.split("::").collect_vec();
-                                assert!(
-                                    2 == enum_case_split.len(),
-                                    "Expected <Type>::<VariantName> for enum match case"
-                                );
+                                let (type_name, variant_name) = match enum_case_split.len() {
+                                    1 => (None, enum_case_split[0].to_owned()),
+                                    2 => (Some(enum_case_split[0].to_owned()), enum_case_split[1].to_owned()),
+                                    _ => panic!("Expected `<Type>::<VariantName>` or `VariantName` for enum match case. Got: `{enum_case}`"),
+                                };
+
                                 ast::MatchCondition::EnumVariant(ast::EnumVariantSelector {
-                                    enum_name: enum_case_split[0].to_owned(),
-                                    variant_name: enum_case_split[1].to_owned(),
                                     data_bindings: Vec::default(),
+                                    type_name,
+                                    variant_name,
                                 })
                             }
                             syn::Pat::Range(_) => todo!(),
@@ -1342,12 +1345,15 @@ impl<'a> Graft<'a> {
                                 pat,
                                 path,
                             }) => {
+                                // Enums that are in prelude can be matched with only the variant name, like `None`
+                                // instead of `Result::None`
                                 let enum_case = Graft::path_to_ident(path);
                                 let enum_case_split = enum_case.split("::").collect_vec();
-                                assert!(
-                                    2 == enum_case_split.len(),
-                                    "Expected <Type>::<VariantName> for enum match case"
-                                );
+                                let (type_name, variant_name) = match enum_case_split.len() {
+                                    1 => (None, enum_case_split[0].to_owned()),
+                                    2 => (Some(enum_case_split[0].to_owned()), enum_case_split[1].to_owned()),
+                                    _ => panic!("Expected `<Type>::<VariantName>` or `<VariantName>` for enum match case. Got: `{enum_case}`"),
+                                };
 
                                 let mut data_bindings = vec![];
                                 for pat_elem in pat.elems.iter() {
@@ -1371,8 +1377,8 @@ impl<'a> Graft<'a> {
                                 }
 
                                 ast::MatchCondition::EnumVariant(ast::EnumVariantSelector {
-                                    enum_name: enum_case_split[0].to_owned(),
-                                    variant_name: enum_case_split[1].to_owned(),
+                                    type_name,
+                                    variant_name,
                                     data_bindings,
                                 })
                             }

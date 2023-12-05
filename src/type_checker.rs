@@ -518,7 +518,7 @@ fn annotate_stmt(
                         annotate_block_stmt(&mut arm.body, env_fn_signature, state);
                     }
                     ast::MatchCondition::EnumVariant(ast::EnumVariantSelector {
-                        enum_name,
+                        type_name,
                         variant_name,
                         data_bindings,
                     }) => {
@@ -528,11 +528,19 @@ fn annotate_stmt(
                             variant_name,
                             enum_type.name
                         );
-                        // Verify that arms match variant of enum type
-                        assert_eq!(
-                            &enum_type.name,
-                            enum_name,
-                            "Match conditions on type {} must all be of same type. Got bad type: {enum_name}", enum_type.name);
+
+                        match type_name {
+                            Some(enum_type_name) => {
+                                assert_eq!(
+                                    &enum_type.name,
+                                    enum_type_name,
+                                    "Match conditions on type {} must all be of same type. Got bad type: {enum_type_name}", enum_type.name);
+                            }
+                            None => {
+                                assert!(enum_type.is_prelude, "Only enums specified in prelude may use only the variant name in a match arm");
+                            }
+                        };
+
                         let variant_data_tuple =
                             enum_type.variant_data_type(variant_name).as_tuple_type();
                         assert!(data_bindings.is_empty() || variant_data_tuple.element_count() == data_bindings.len(), "Number of bindings must match number of elements in variant data tuple");
