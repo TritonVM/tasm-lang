@@ -1,4 +1,3 @@
-use itertools::Itertools;
 use triton_vm::instruction::LabelledInstruction;
 use triton_vm::triton_asm;
 use triton_vm::triton_instr;
@@ -589,7 +588,6 @@ impl EnumType {
     /// enum type. E.g.: `Foo::A(100u32);`
     pub(crate) fn variant_tuple_constructor(&self, variant_name: &str) -> LibraryFunction {
         let data_tuple = self.variant_data_type(variant_name).as_tuple_type();
-        println!("data_tuple: {data_tuple:#?}");
         assert!(
             !data_tuple.is_unit(),
             "Variant {variant_name} in enum type {} does not carry data",
@@ -597,7 +595,6 @@ impl EnumType {
         );
 
         let constructor_name = format!("{}::{variant_name}", self.name);
-        println!("constructor_name: {constructor_name}");
         let constructor_return_type = ast_types::DataType::Enum(Box::new(self.to_owned()));
         let mut constructor = data_tuple.constructor(&constructor_name, constructor_return_type);
 
@@ -608,7 +605,6 @@ impl EnumType {
         let discriminant = triton_asm!(push { discriminant });
 
         constructor.body = [constructor.body, padding, discriminant].concat();
-        println!("constructor.body: {}", constructor.body.iter().join("\n"));
 
         constructor
     }

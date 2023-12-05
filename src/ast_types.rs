@@ -123,7 +123,14 @@ impl DataType {
                 format!("function_from_L{}R__to_L{}R", input, output)
             }
             Struct(struct_type) => struct_type.name.to_owned(),
-            Enum(enum_type) => enum_type.name.to_owned(),
+            Enum(enum_type) => match enum_type.type_parameter.as_ref() {
+                // Use type parameter here to differentiate between
+                // methods for `Result<BFE>` and `Result<XFE>`.
+                Some(type_param) => {
+                    format!("{}___{}", enum_type.name, type_param.label_friendly_name())
+                }
+                None => enum_type.name.to_owned(),
+            },
             Unresolved(name) => name.to_string(),
             Boxed(ty) => format!("boxed_L{}R", ty.label_friendly_name()),
             Reference(ty) => format!("reference_to_L{}R", ty.label_friendly_name()),
@@ -523,13 +530,52 @@ impl TryFrom<&CustomTypeOil> for EnumType {
     }
 }
 
+impl TryFrom<DataType> for CustomTypeOil {
+    type Error = anyhow::Error;
+
+    fn try_from(value: DataType) -> Result<Self, Self::Error> {
+        match value {
+            DataType::Enum(enumt) => Ok(CustomTypeOil::Enum(*enumt.to_owned())),
+            DataType::Struct(structt) => Ok(CustomTypeOil::Struct(structt.to_owned())),
+            _ => bail!("Cannot convert {value} to specified type"),
+        }
+    }
+}
+
+impl TryFrom<CustomTypeOil> for EnumType {
+    type Error = anyhow::Error;
+
+    fn try_from(value: CustomTypeOil) -> Result<Self, Self::Error> {
+        match value {
+            CustomTypeOil::Struct(s) => bail!("Expected enum but found struct {s}"),
+            CustomTypeOil::Enum(e) => Ok(e),
+        }
+    }
+}
+
 impl From<StructType> for CustomTypeOil {
     fn from(value: StructType) -> Self {
         CustomTypeOil::Struct(value)
     }
 }
 
+impl From<CustomTypeOil> for DataType {
+    fn from(value: CustomTypeOil) -> Self {
+        match value {
+            CustomTypeOil::Struct(s) => DataType::Struct(s),
+            CustomTypeOil::Enum(e) => DataType::Enum(Box::new(e)),
+        }
+    }
+}
+
 impl CustomTypeOil {
+    pub(crate) fn name(&self) -> &str {
+        match self {
+            CustomTypeOil::Struct(s) => &s.name,
+            CustomTypeOil::Enum(e) => &e.name,
+        }
+    }
+
     pub(crate) fn is_prelude(&self) -> bool {
         match self {
             CustomTypeOil::Struct(_) => false,
@@ -560,11 +606,21 @@ pub struct EnumType {
     pub is_copy: bool,
     pub variants: Vec<(String, DataType)>,
     pub is_prelude: bool,
+
+    // Use `type_parameter` to create differentiate between function labels
+    // for e.g. `Result<T>` and `Result<S>` types.
+    pub type_parameter: Option<DataType>,
 }
 
 impl From<&EnumType> for DataType {
     fn from(value: &EnumType) -> Self {
         Self::Enum(Box::new(value.to_owned()))
+    }
+}
+
+impl From<EnumType> for DataType {
+    fn from(value: EnumType) -> Self {
+        Self::Enum(Box::new(value))
     }
 }
 
@@ -670,7 +726,7 @@ impl From<&StructType> for DataType {
 
 impl StructType {
     /// Only named tuples, i.e. tuple structs should use this constructor.
-    pub fn constructor(&self) -> LibraryFunction {
+    pub(crate) fn constructor(&self) -> LibraryFunction {
         let tuple = if let StructVariant::TupleStruct(tuple) = &self.variant {
             tuple
         } else {
@@ -679,7 +735,7 @@ impl StructType {
         tuple.constructor(&self.name, DataType::Struct(self.to_owned()))
     }
 
-    pub fn get_field_type(&self, field_id: &FieldId) -> DataType {
+    pub(crate) fn get_field_type(&self, field_id: &FieldId) -> DataType {
         let res = match &self.variant {
             StructVariant::TupleStruct(ts) => match field_id {
                 FieldId::NamedField(_) => {
@@ -706,14 +762,14 @@ impl StructType {
         }
     }
 
-    pub fn field_count(&self) -> usize {
+    pub(crate) fn field_count(&self) -> usize {
         match &self.variant {
             StructVariant::TupleStruct(tuple) => tuple.element_count(),
             StructVariant::NamedFields(nfs) => nfs.fields.len(),
         }
     }
 
-    pub fn field_types<'a>(&'a self) -> Box<dyn Iterator<Item = &'a DataType> + 'a> {
+    pub(crate) fn field_types<'a>(&'a self) -> Box<dyn Iterator<Item = &'a DataType> + 'a> {
         match &self.variant {
             StructVariant::TupleStruct(ts) => Box::new(ts.fields.iter()),
             StructVariant::NamedFields(nfs) => {
@@ -722,7 +778,9 @@ impl StructType {
         }
     }
 
-    pub fn field_types_mut<'a>(&'a mut self) -> Box<dyn Iterator<Item = &'a mut DataType> + 'a> {
+    pub(crate) fn field_types_mut<'a>(
+        &'a mut self,
+    ) -> Box<dyn Iterator<Item = &'a mut DataType> + 'a> {
         match &mut self.variant {
             StructVariant::TupleStruct(ts) => Box::new(ts.fields.iter_mut()),
             StructVariant::NamedFields(nfs) => {
@@ -731,7 +789,7 @@ impl StructType {
         }
     }
 
-    pub fn field_ids_and_types<'a>(
+    pub(crate) fn field_ids_and_types<'a>(
         &'a self,
     ) -> Box<dyn Iterator<Item = (FieldId, &'a DataType)> + 'a> {
         match &self.variant {
@@ -752,7 +810,7 @@ impl StructType {
     /// Iterate over all fields in a type in reverse order. Needed since the
     /// "natural" order of fields is flipped whether the struct lives on
     /// stack or in memory.
-    pub fn field_ids_and_types_reversed<'a>(
+    pub(crate) fn field_ids_and_types_reversed<'a>(
         &'a self,
     ) -> Box<dyn Iterator<Item = (FieldId, &'a DataType)> + 'a> {
         match &self.variant {
@@ -845,7 +903,7 @@ impl std::ops::Index<usize> for Tuple {
 }
 
 impl Tuple {
-    pub fn element_count(&self) -> usize {
+    pub(crate) fn element_count(&self) -> usize {
         self.fields.len()
     }
 
@@ -857,11 +915,11 @@ impl Tuple {
         self.fields.is_empty()
     }
 
-    pub fn stack_size(&self) -> usize {
+    pub(crate) fn stack_size(&self) -> usize {
         self.into_iter().map(|x| x.stack_size()).sum()
     }
 
-    pub fn constructor(
+    pub(crate) fn constructor(
         &self,
         tuple_struct_name: &str,
         tuple_struct_type: DataType,

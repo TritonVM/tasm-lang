@@ -3,6 +3,8 @@ use std::fs::File;
 use std::io::Read;
 use std::process;
 
+use tasm_lang::ast_types::ListType;
+
 fn main() {
     let mut args = env::args();
     let _ = args.next(); // executable name
@@ -15,13 +17,15 @@ fn main() {
         }
     };
 
-    let mut file = File::open(filename).expect("Unable to open file");
+    let mut file = File::open(&filename).expect("Unable to open file");
 
     let mut src = String::new();
     file.read_to_string(&mut src).expect("Unable to read file");
 
-    let syntax = syn::parse_file(&src).expect("Unable to parse file");
+    // TODO: Allow this to be set by CLI args
+    let list_type = ListType::Unsafe;
 
-    // Debug impl is available if Syn is built with "extra-traits" feature.
-    println!("{syntax:#?}");
+    let output = tasm_lang::compile_to_string(&filename, list_type);
+
+    println!("{output}");
 }

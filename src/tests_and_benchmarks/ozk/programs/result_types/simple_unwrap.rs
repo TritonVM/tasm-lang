@@ -1,20 +1,35 @@
+use tasm_lib::Digest;
 use triton_vm::BFieldElement;
+use twenty_first::shared_math::x_field_element::XFieldElement;
 
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
+#[allow(clippy::unnecessary_literal_unwrap)]
 fn main() {
-    let a: BFieldElement = tasm::tasm_io_read_stdin___bfe();
-    let _res: Result<BFieldElement, ()> = Ok(a);
+    let bfe: BFieldElement = BFieldElement::new(500u64);
+    let result_bfe: Result<BFieldElement, ()> = Ok(bfe);
+    let bfe_again: BFieldElement = result_bfe.unwrap();
+    assert!(bfe == bfe_again);
+
+    let xfe: XFieldElement = tasm::tasm_io_read_stdin___xfe();
+    let result_xfe: Result<XFieldElement, ()> = Ok(xfe);
+    let xfe_again: XFieldElement = result_xfe.unwrap();
+    assert!(xfe == xfe_again);
+
+    let digest: Digest = tasm::tasm_io_read_stdin___digest();
+    let result_digest: Result<Digest, ()> = Ok(digest);
+    let digest_again: Digest = result_digest.unwrap();
+    assert!(digest == digest_again);
+
     return;
 }
 
 mod test {
+    use itertools::Itertools;
     use std::collections::HashMap;
     use std::default::Default;
-
-    use itertools::Itertools;
-    use rand::random;
     use triton_vm::NonDeterminism;
+    use twenty_first::shared_math::other::random_elements;
 
     use crate::tests_and_benchmarks::ozk::{ozk_parsing, rust_shadows};
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
@@ -22,15 +37,14 @@ mod test {
     use super::*;
 
     #[test]
-    fn result_bfe_test() {
-        let rand: BFieldElement = random();
-        let stdin = vec![rand];
+    fn simple_unwrap_test() {
+        let stdin = random_elements(8);
         let non_determinism = NonDeterminism::default();
         let native_output =
             rust_shadows::wrap_main_with_io(&main)(stdin.clone(), non_determinism.clone());
         let test_program = ozk_parsing::compile_for_test(
             "result_types",
-            "bfe",
+            "simple_unwrap",
             "main",
             crate::ast_types::ListType::Unsafe,
         );

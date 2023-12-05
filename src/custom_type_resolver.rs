@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use crate::{
     ast::*,
     ast_types::{self, AbstractArgument, AbstractValueArg, CustomTypeOil, DataType, Tuple},
@@ -7,7 +5,7 @@ use crate::{
     type_checker::Typing,
 };
 
-pub trait CustomTypeResolution {
+pub(crate) trait CustomTypeResolution {
     fn resolve_custom_types(&mut self, composite_types: &CompositeTypes);
 }
 
@@ -28,6 +26,7 @@ impl CustomTypeResolution for Expr<Typing> {
                 method_name: _,
                 args,
                 annot: _,
+                associated_type: _,
             }) => args
                 .iter_mut()
                 .for_each(|arg_expr| arg_expr.resolve_custom_types(composite_types)),
@@ -157,6 +156,7 @@ impl CustomTypeResolution for Stmt<Typing> {
                 method_name: _,
                 args,
                 annot: _,
+                associated_type: _,
             }) => {
                 args.iter_mut()
                     .for_each(|x| x.resolve_custom_types(composite_types));
@@ -191,8 +191,14 @@ impl CustomTypeResolution for Stmt<Typing> {
             }
             Stmt::FnDeclaration(Fn { signature, body }) => {
                 signature.resolve_custom_types(composite_types);
-                body.iter_mut()
-                    .for_each(|x| x.resolve_custom_types(composite_types));
+                match body {
+                    RoutineBody::Ast(stmts) => {
+                        stmts
+                            .iter_mut()
+                            .for_each(|x| x.resolve_custom_types(composite_types));
+                    }
+                    RoutineBody::Instructions(_instrs) => (),
+                }
             }
             Stmt::Match(MatchStmt {
                 match_expression,
@@ -206,42 +212,10 @@ impl CustomTypeResolution for Stmt<Typing> {
     }
 }
 
-/// Resolve any nested custom types
-fn resolve_nested_custom_types(ct: &mut CompositeTypes) {
-    let mut custom_types_copy = ct.clone();
-    while custom_types_copy
-        .clone()
-        .into_iter()
-        .any(|x| x.1.iter().any(|x| x.is_unresolved()))
-    {
-        ct.values_mut().for_each(|x| {
-            x.iter_mut().for_each(|y| {
-                y.field_or_variant_types_mut()
-                    .for_each(|z| z.resolve_custom_types(&custom_types_copy))
-            });
-        });
-        custom_types_copy = ct.to_owned();
-    }
-}
-
-pub fn resolve_custom_types(
-    function: &mut Fn<Typing>,
-    custom_types: &mut CompositeTypes,
-    declared_methods: &mut [Method<Typing>],
-    associated_functions: &mut HashMap<String, HashMap<String, Fn<Typing>>>,
-) {
-    resolve_nested_custom_types(custom_types);
+pub(crate) fn resolve_custom_types(function: &mut Fn<Typing>, custom_types: &mut CompositeTypes) {
+    custom_types.resolve_nested();
 
     function.resolve_custom_types(custom_types);
-
-    declared_methods
-        .iter_mut()
-        .for_each(|x| x.resolve_custom_types(custom_types));
-
-    associated_functions.values_mut().for_each(|x| {
-        x.values_mut()
-            .for_each(|x| x.resolve_custom_types(custom_types))
-    });
 }
 
 impl CustomTypeResolution for MatchArm<Typing> {
@@ -261,18 +235,24 @@ impl CustomTypeResolution for BlockStmt<Typing> {
 impl CustomTypeResolution for Fn<Typing> {
     fn resolve_custom_types(&mut self, composite_types: &CompositeTypes) {
         self.signature.resolve_custom_types(composite_types);
-        self.body
-            .iter_mut()
-            .for_each(|x| x.resolve_custom_types(composite_types));
+        match &mut self.body {
+            RoutineBody::Ast(stmts) => stmts
+                .iter_mut()
+                .for_each(|x| x.resolve_custom_types(composite_types)),
+            RoutineBody::Instructions(_instrs) => (),
+        }
     }
 }
 
 impl CustomTypeResolution for Method<Typing> {
     fn resolve_custom_types(&mut self, composite_types: &CompositeTypes) {
         self.signature.resolve_custom_types(composite_types);
-        self.body
-            .iter_mut()
-            .for_each(|x| x.resolve_custom_types(composite_types));
+        match &mut self.body {
+            RoutineBody::Ast(stmts) => stmts
+                .iter_mut()
+                .for_each(|x| x.resolve_custom_types(composite_types)),
+            RoutineBody::Instructions(_instrs) => (),
+        }
     }
 }
 
@@ -325,7 +305,9 @@ impl CustomTypeResolution for DataType {
         use DataType::*;
         match self {
             Unresolved(unresolved_type) => {
-                let resolved = composite_types.get_exactly_one(unresolved_type);
+                let resolved = composite_types
+                    .get_unique_by_name(unresolved_type)
+                    .composite_type;
                 match resolved {
                     ast_types::CustomTypeOil::Struct(resolved_struct_type) => {
                         *self = DataType::Struct(resolved_struct_type);
