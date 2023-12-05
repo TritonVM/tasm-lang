@@ -55,6 +55,37 @@ fn main() {
         }
     };
 
+    let bfe_err: Result<BFieldElement, ()> = Err(());
+    let xfe_err: Result<XFieldElement, ()> = Err(());
+    let digest_err: Result<Digest, ()> = Err(());
+    match bfe_err {
+        Result::Ok(_) => {
+            assert!(false);
+        }
+        Result::Err(_) => {
+            tasm::tasm_io_write_to_stdout___bfe(bfe);
+        }
+    };
+    match xfe_err {
+        Result::Ok(_) => {
+            assert!(false);
+        }
+        Result::Err(_) => {
+            tasm::tasm_io_write_to_stdout___bfe(bfe);
+        }
+    };
+    match digest_err {
+        Result::Ok(_) => {
+            assert!(false);
+        }
+        Result::Err(_) => {
+            tasm::tasm_io_write_to_stdout___bfe(bfe);
+        }
+    };
+
+    tasm::tasm_io_write_to_stdout___xfe(xfe);
+    tasm::tasm_io_write_to_stdout___bfe(bfe);
+
     return;
 }
 

@@ -399,7 +399,9 @@ impl CompositeTypes {
         ret
     }
 
-    /// Return the composite type for which the input function call is a constructor
+    /// Return the composite type for which the input function call is a constructor.
+    /// May only be run after full type annotation, as the output type might be needed
+    /// to find the correct constructor.
     /// `Foo::A(100)` will match
     /// enum Foo {
     ///     A(u32),
@@ -411,9 +413,10 @@ impl CompositeTypes {
             args,
             type_parameter: _,
             arg_evaluation_order: _,
-            annot: _,
+            annot,
         }: &ast::FnCall<type_checker::Typing>,
     ) -> Option<(ast_types::CustomTypeOil, Option<String>)> {
+        let return_type = annot.get_type();
         let split_name = name.split("::").collect_vec();
 
         // Is this an enum constructor for a type in `prelude`? E.g. `Ok(...)`.
@@ -428,6 +431,7 @@ impl CompositeTypes {
                     .all(|(constructor_abstr_arg, actual_arg)| {
                         constructor_abstr_arg == actual_arg.get_type()
                     })
+                    && return_type == prelude.clone().into()
                 {
                     return Some((prelude.into(), Some(split_name[0].to_owned())));
                 }

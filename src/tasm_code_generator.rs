@@ -1668,37 +1668,29 @@ fn compile_fn_call(
     fn_call: &ast::FnCall<type_checker::Typing>,
     state: &mut CompilerState,
 ) -> Vec<LabelledInstruction> {
-    let ast::FnCall {
-        name,
-        args,
-        annot: _return_type, // unit for statement-level fn calls
-        type_parameter,
-        arg_evaluation_order,
-    } = fn_call;
-
     // Compile function arguments either left-to-right or right-to-left depending
     // on definition in function.
-    let args_iter = if *arg_evaluation_order == ast::ArgEvaluationOrder::LeftToRight {
-        Either::Left(args.iter().enumerate())
+    let args_iter = if fn_call.arg_evaluation_order == ast::ArgEvaluationOrder::LeftToRight {
+        Either::Left(fn_call.args.iter().enumerate())
     } else {
-        Either::Right(args.iter().enumerate().rev())
+        Either::Right(fn_call.args.iter().enumerate().rev())
     };
 
     let (_args_idents, args_code): (Vec<ValueIdentifier>, Vec<Vec<LabelledInstruction>>) =
         args_iter
             .map(|(arg_pos, arg_expr)| {
-                let context = format!("_{name}_arg_{arg_pos}");
+                let context = format!("_{}_arg_{arg_pos}", fn_call.name);
                 compile_expr(arg_expr, &context, state)
             })
             .unzip();
 
     let mut call_fn_code = vec![];
     for lib in state.libraries.iter() {
-        if let Some(fn_name) = lib.get_function_name(name) {
+        if let Some(fn_name) = lib.get_function_name(&fn_call.name) {
             call_fn_code.append(&mut lib.call_function(
                 &fn_name,
-                type_parameter.to_owned(),
-                args,
+                fn_call.type_parameter.to_owned(),
+                &fn_call.args,
                 state,
             ));
             break;
@@ -1708,7 +1700,7 @@ fn compile_fn_call(
     // Associated functions are in scope in `ftable`, they must be called with `<Type>::<function_name>`,
     // where function_name must be lower-cased.
     if call_fn_code.is_empty() {
-        match state.composite_types.get_associated_function(name) {
+        match state.composite_types.get_associated_function(&fn_call.name) {
             None => (),
             Some(afunc) => {
                 let function_label: String = afunc.get_tasm_label();
@@ -1750,12 +1742,12 @@ fn compile_fn_call(
         } else {
             // Function is not a library function, but type checker has guaranteed that it is in
             // scope. So we just call it.
-            call_fn_code.append(&mut triton_asm!(call { name }));
+            call_fn_code.append(&mut triton_asm!(call { fn_call.name }));
         }
     }
 
     // Remove function arguments from vstack since they're not visible after the function call
-    for _ in 0..args.len() {
+    for _ in 0..fn_call.args.len() {
         state.function_state.vstack.pop();
     }
 

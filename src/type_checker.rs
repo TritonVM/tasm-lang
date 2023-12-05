@@ -414,7 +414,7 @@ fn annotate_stmt(
             }
 
             let callees_fn_signature =
-                get_fn_signature(name, state, type_parameter, args, env_fn_signature);
+                get_fn_signature(name, state, type_parameter, args, env_fn_signature, None);
             assert!(
                 callees_fn_signature.output.is_unit(),
                 "Function call '{name}' at statement-level must return the unit type."
@@ -750,6 +750,7 @@ fn get_fn_signature(
     type_parameter: &Option<ast_types::DataType>,
     args: &[ast::Expr<Typing>],
     env_fn_signature: &ast::FnSignature,
+    output_type_hint: Option<&ast_types::DataType>,
 ) -> ast::FnSignature {
     match state.ftable.get(name) {
         None => (),
@@ -758,11 +759,19 @@ fn get_fn_signature(
                 0 => unreachable!(),
                 1 => return fn_signatures[0].clone(),
                 _ => {
-                    // find the 1st function that matches the types
+                    // find the 1st function that matches the types and matches the output
+                    // type *if* a type hint is provided.
                     let types = args.iter().map(|x| x.get_type()).collect_vec();
                     for sig in fn_signatures.iter() {
                         if sig.matches(&types) {
-                            return sig.to_owned();
+                            match output_type_hint {
+                                Some(some_hint) => {
+                                    if sig.output == *some_hint {
+                                        return sig.to_owned();
+                                    }
+                                }
+                                None => return sig.to_owned(),
+                            }
                         }
                     }
 
@@ -1177,30 +1186,30 @@ fn derive_annotate_expr_type(
             Ok(enum_decl.enum_type.clone())
         }
 
-        ast::Expr::FnCall(ast::FnCall {
-            name,
-            args,
-            annot,
-            type_parameter,
-            arg_evaluation_order,
-        }) => {
+        ast::Expr::FnCall(fn_call) => {
             // Attempt to annotate all arguments before getting the function signature
-            for arg in args.iter_mut() {
+            for arg in fn_call.args.iter_mut() {
                 // It's OK if this fails, as a later invocation of the argument expressions
                 // might pass.
                 let _ = derive_annotate_expr_type(arg, None, state, env_fn_signature);
             }
 
-            let callees_fn_signature =
-                get_fn_signature(name, state, type_parameter, args, env_fn_signature);
+            let callees_fn_signature = get_fn_signature(
+                &fn_call.name,
+                state,
+                &fn_call.type_parameter,
+                &fn_call.args,
+                env_fn_signature,
+                hint,
+            );
             assert!(
                 !callees_fn_signature.output.is_unit(),
                 "Function calls in expressions cannot return the unit type"
             );
 
-            derive_annotate_fn_call_args(&callees_fn_signature, args, state);
-            *annot = Typing::KnownType(callees_fn_signature.output.clone());
-            *arg_evaluation_order = callees_fn_signature.arg_evaluation_order;
+            derive_annotate_fn_call_args(&callees_fn_signature, &mut fn_call.args, state);
+            fn_call.annot = Typing::KnownType(callees_fn_signature.output.clone());
+            fn_call.arg_evaluation_order = callees_fn_signature.arg_evaluation_order;
 
             Ok(callees_fn_signature.output)
         }

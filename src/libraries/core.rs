@@ -24,7 +24,10 @@ pub(crate) fn result_type(ok_type: ast_types::DataType) -> crate::composite_type
         name: "Result".to_owned(),
         variants: vec![
             ("Ok".to_owned(), ok_type.clone()),
-            ("Err".to_owned(), ast_types::DataType::unit()),
+            (
+                "Err".to_owned(),
+                ast_types::DataType::Tuple(vec![ast_types::DataType::unit()].into()),
+            ),
         ],
         is_prelude: true,
         type_parameter: Some(ok_type),
