@@ -987,6 +987,19 @@ impl<'a> Graft<'a> {
                     Default::default(),
                 )
             }
+            syn::Expr::Try(syn::ExprTry {
+                attrs: _,
+                expr,
+                question_token: _,
+            }) => {
+                // `?` is the same as `unwrap` for this compiler
+                ast::Expr::MethodCall(ast::MethodCall {
+                    method_name: "unwrap".to_owned(),
+                    args: vec![self.graft_expr(expr)],
+                    annot: Default::default(),
+                    associated_type: Default::default(),
+                })
+            }
             other => panic!("unsupported: {other:?}"),
         }
     }
