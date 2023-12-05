@@ -161,7 +161,7 @@ fn parse_function_and_types(file_path: &str) -> (syn::ItemFn, StructsAndMethodsR
 
     let content = fs::read_to_string(file_path).expect("Unable to read file {path}");
     let parsed_file: syn::File = syn::parse_str(&content).expect("Unable to parse rust code");
-    let (mut custom_types, main_parsed, dependencies) =
+    let (custom_types, main_parsed, dependencies) =
         extract_types_and_function(parsed_file, Some("main"));
 
     assert!(

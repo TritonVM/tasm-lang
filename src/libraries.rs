@@ -20,7 +20,7 @@ pub mod xfe;
 type Annotation = type_checker::Typing;
 
 #[derive(Debug)]
-pub struct LibraryFunction {
+pub(crate) struct LibraryFunction {
     pub signature: FnSignature,
     pub body: Vec<triton_vm::instruction::LabelledInstruction>,
 }
@@ -29,7 +29,7 @@ pub struct LibraryConfig {
     pub list_type: ast_types::ListType,
 }
 
-pub fn all_libraries<'a>(config: LibraryConfig) -> Vec<Box<dyn Library + 'a>> {
+pub(crate) fn all_libraries<'a>(config: LibraryConfig) -> Vec<Box<dyn Library + 'a>> {
     vec![
         Box::new(boxed::Boxed),
         Box::new(bfe::BfeLibrary {
@@ -55,7 +55,7 @@ pub fn all_libraries<'a>(config: LibraryConfig) -> Vec<Box<dyn Library + 'a>> {
     ]
 }
 
-pub fn tasm_lib_snippet_to_fn_signature(
+pub(crate) fn tasm_lib_snippet_to_fn_signature(
     list_type: ListType,
     snippet: Box<dyn tasm_lib::snippet::BasicSnippet>,
 ) -> ast::FnSignature {
@@ -90,7 +90,7 @@ pub fn tasm_lib_snippet_to_fn_signature(
     }
 }
 
-pub trait Library: Debug {
+pub(crate) trait Library: Debug {
     /// Return full function name iff library knows this function
     fn get_function_name(&self, full_name: &str) -> Option<String>;
 

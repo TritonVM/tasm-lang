@@ -703,7 +703,7 @@ impl From<&StructType> for DataType {
 
 impl StructType {
     /// Only named tuples, i.e. tuple structs should use this constructor.
-    pub fn constructor(&self) -> LibraryFunction {
+    pub(crate) fn constructor(&self) -> LibraryFunction {
         let tuple = if let StructVariant::TupleStruct(tuple) = &self.variant {
             tuple
         } else {
@@ -712,7 +712,7 @@ impl StructType {
         tuple.constructor(&self.name, DataType::Struct(self.to_owned()))
     }
 
-    pub fn get_field_type(&self, field_id: &FieldId) -> DataType {
+    pub(crate) fn get_field_type(&self, field_id: &FieldId) -> DataType {
         let res = match &self.variant {
             StructVariant::TupleStruct(ts) => match field_id {
                 FieldId::NamedField(_) => {
@@ -739,14 +739,14 @@ impl StructType {
         }
     }
 
-    pub fn field_count(&self) -> usize {
+    pub(crate) fn field_count(&self) -> usize {
         match &self.variant {
             StructVariant::TupleStruct(tuple) => tuple.element_count(),
             StructVariant::NamedFields(nfs) => nfs.fields.len(),
         }
     }
 
-    pub fn field_types<'a>(&'a self) -> Box<dyn Iterator<Item = &'a DataType> + 'a> {
+    pub(crate) fn field_types<'a>(&'a self) -> Box<dyn Iterator<Item = &'a DataType> + 'a> {
         match &self.variant {
             StructVariant::TupleStruct(ts) => Box::new(ts.fields.iter()),
             StructVariant::NamedFields(nfs) => {
@@ -755,7 +755,9 @@ impl StructType {
         }
     }
 
-    pub fn field_types_mut<'a>(&'a mut self) -> Box<dyn Iterator<Item = &'a mut DataType> + 'a> {
+    pub(crate) fn field_types_mut<'a>(
+        &'a mut self,
+    ) -> Box<dyn Iterator<Item = &'a mut DataType> + 'a> {
         match &mut self.variant {
             StructVariant::TupleStruct(ts) => Box::new(ts.fields.iter_mut()),
             StructVariant::NamedFields(nfs) => {
@@ -764,7 +766,7 @@ impl StructType {
         }
     }
 
-    pub fn field_ids_and_types<'a>(
+    pub(crate) fn field_ids_and_types<'a>(
         &'a self,
     ) -> Box<dyn Iterator<Item = (FieldId, &'a DataType)> + 'a> {
         match &self.variant {
@@ -785,7 +787,7 @@ impl StructType {
     /// Iterate over all fields in a type in reverse order. Needed since the
     /// "natural" order of fields is flipped whether the struct lives on
     /// stack or in memory.
-    pub fn field_ids_and_types_reversed<'a>(
+    pub(crate) fn field_ids_and_types_reversed<'a>(
         &'a self,
     ) -> Box<dyn Iterator<Item = (FieldId, &'a DataType)> + 'a> {
         match &self.variant {
@@ -878,7 +880,7 @@ impl std::ops::Index<usize> for Tuple {
 }
 
 impl Tuple {
-    pub fn element_count(&self) -> usize {
+    pub(crate) fn element_count(&self) -> usize {
         self.fields.len()
     }
 
@@ -890,11 +892,11 @@ impl Tuple {
         self.fields.is_empty()
     }
 
-    pub fn stack_size(&self) -> usize {
+    pub(crate) fn stack_size(&self) -> usize {
         self.into_iter().map(|x| x.stack_size()).sum()
     }
 
-    pub fn constructor(
+    pub(crate) fn constructor(
         &self,
         tuple_struct_name: &str,
         tuple_struct_type: DataType,

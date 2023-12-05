@@ -207,12 +207,7 @@ fn annotate_method(
 
     // Verify that input arguments do not exceed 15 words
     assert!(
-        state
-            .vtable
-            .values()
-            .map(|x| x.data_type.stack_size())
-            .sum::<usize>()
-            < SIZE_OF_ACCESSIBLE_STACK,
+        method.signature.input_arguments_stack_size() < SIZE_OF_ACCESSIBLE_STACK,
         "{}: Cannot handle method signatures with input size exceeding {} words",
         method.signature.name,
         SIZE_OF_ACCESSIBLE_STACK - 1
@@ -413,7 +408,9 @@ fn annotate_stmt(
         }) => {
             // Attempt to annotate all arguments before getting the function signature
             for arg in args.iter_mut() {
-                derive_annotate_expr_type(arg, None, state, env_fn_signature);
+                // It's OK if this fails, as a later invocation of the argument expressions
+                // might pass.
+                let _ = derive_annotate_expr_type(arg, None, state, env_fn_signature);
             }
 
             let callees_fn_signature =
@@ -430,7 +427,13 @@ fn annotate_stmt(
         }
 
         ast::Stmt::MethodCall(method_call) => {
-            derive_annotate_expr_type(&mut method_call.args[0], None, state, env_fn_signature);
+            // Attempt to annotate all arguments before getting the function signature
+            for arg in method_call.args.iter_mut() {
+                // It's OK if this fails, as a later invocation of the argument expressions
+                // might pass.
+                let _ = derive_annotate_expr_type(arg, None, state, env_fn_signature);
+            }
+
             let receiver_type = method_call.args[0].get_type();
 
             let callees_method_signature: ast::FnSignature =
@@ -632,7 +635,7 @@ pub fn assert_type_equals(
 }
 
 /// Set type and return type and whether the identifier was declared as mutable
-pub fn annotate_identifier_type(
+pub(crate) fn annotate_identifier_type(
     identifier: &mut ast::Identifier<Typing>,
     state: &mut CheckState,
     fn_signature: &ast::FnSignature,
@@ -967,6 +970,9 @@ fn derive_annotate_fn_call_args(
     }
 }
 
+/// Annotate an expression. This function can return error, if the type information
+/// is not yet complete. If it returns an error, later invocations of this function,
+/// with specified type hints might pass.
 fn derive_annotate_expr_type(
     expr: &mut ast::Expr<Typing>,
     hint: Option<&ast_types::DataType>,
@@ -1181,8 +1187,11 @@ fn derive_annotate_expr_type(
         }) => {
             // Attempt to annotate all arguments before getting the function signature
             for arg in args.iter_mut() {
-                derive_annotate_expr_type(arg, None, state, env_fn_signature);
+                // It's OK if this fails, as a later invocation of the argument expressions
+                // might pass.
+                let _ = derive_annotate_expr_type(arg, None, state, env_fn_signature);
             }
+
             let callees_fn_signature =
                 get_fn_signature(name, state, type_parameter, args, env_fn_signature);
             assert!(
@@ -1198,7 +1207,13 @@ fn derive_annotate_expr_type(
         }
 
         ast::Expr::MethodCall(method_call) => {
-            derive_annotate_expr_type(&mut method_call.args[0], None, state, env_fn_signature);
+            // Attempt to annotate all arguments before getting the function signature
+            for arg in method_call.args.iter_mut() {
+                // It's OK if this fails, as a later invocation of the argument expressions
+                // might pass.
+                let _ = derive_annotate_expr_type(arg, None, state, env_fn_signature);
+            }
+
             let callees_method_signature: ast::FnSignature =
                 get_method_signature(state, method_call, env_fn_signature);
             assert!(
@@ -1652,20 +1667,11 @@ fn derive_annotate_returning_block_expr(
     ret_type
 }
 
-pub fn is_string_identifier<T>(identifier: &ast::Identifier<T>) -> bool {
-    matches!(identifier, ast::Identifier::String(_, _))
-}
-
-pub fn is_list_type(data_type: &ast_types::DataType) -> bool {
-    use ast_types::DataType::*;
-    matches!(data_type, List(_, _))
-}
-
 /// A type that can be used as address in `read_mem` and `write_mem` calls.
 ///
 /// Since memory addresses are essentially `BFieldElement`s, only types
 /// that are subsets of `BFE`s can be used. The only such type is `U32`.
-pub fn is_index_type(data_type: &ast_types::DataType) -> bool {
+pub(crate) fn is_index_type(data_type: &ast_types::DataType) -> bool {
     use ast_types::DataType::*;
     matches!(data_type, U32 | BFE)
 }
@@ -1675,19 +1681,19 @@ pub fn is_index_type(data_type: &ast_types::DataType) -> bool {
 /// Note that not all operators work for all arithmetic types.
 ///
 /// E.g. the bitwise operators only work for `is_u32_based_type()`.
-pub fn is_arithmetic_type(data_type: &ast_types::DataType) -> bool {
+pub(crate) fn is_arithmetic_type(data_type: &ast_types::DataType) -> bool {
     use ast_types::DataType::*;
     matches!(data_type, U32 | U64 | U128 | BFE | XFE)
 }
 
 /// A type from which expressions such as `-value` can be formed
-pub fn is_negatable_type(data_type: &ast_types::DataType) -> bool {
+pub(crate) fn is_negatable_type(data_type: &ast_types::DataType) -> bool {
     use ast_types::DataType::*;
     matches!(data_type, BFE | XFE)
 }
 
 /// A type from which expressions such as `!value` can be formed
-pub fn type_compatible_with_not(data_type: &ast_types::DataType) -> bool {
+pub(crate) fn type_compatible_with_not(data_type: &ast_types::DataType) -> bool {
     use ast_types::DataType::*;
     matches!(data_type, Bool | U32 | U64)
 }
@@ -1695,13 +1701,13 @@ pub fn type_compatible_with_not(data_type: &ast_types::DataType) -> bool {
 /// A type that is implemented in terms of `U32` values.
 ///
 /// E.g. `U32` and `U64`.
-pub fn is_u32_based_type(data_type: &ast_types::DataType) -> bool {
+pub(crate) fn is_u32_based_type(data_type: &ast_types::DataType) -> bool {
     use ast_types::DataType::*;
     matches!(data_type, U32 | U64 | U128)
 }
 
 /// A non-composite fixed-length type.
-pub fn is_primitive_type(data_type: &ast_types::DataType) -> bool {
+pub(crate) fn is_primitive_type(data_type: &ast_types::DataType) -> bool {
     use ast_types::DataType::*;
     matches!(data_type, Bool | U32 | U64 | U128 | BFE | XFE | Digest)
 }

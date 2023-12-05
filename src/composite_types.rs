@@ -318,14 +318,6 @@ impl CompositeTypes {
             .join("\n\n")
     }
 
-    // TODO: Delete this method
-    pub(crate) fn by_types(&self) -> String {
-        self.by_type
-            .iter()
-            .map(|(k, v)| format!("{k:?} => {v}"))
-            .join("\n\n")
-    }
-
     pub(crate) fn all_composite_type_names(&self) -> String {
         self.composite_types
             .iter()

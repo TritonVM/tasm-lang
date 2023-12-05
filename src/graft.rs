@@ -15,7 +15,7 @@ use crate::type_checker;
 pub type Annotation = type_checker::Typing;
 
 #[derive(Debug)]
-pub struct Graft<'a> {
+pub(crate) struct Graft<'a> {
     pub list_type: ast_types::ListType,
     pub libraries: &'a [Box<dyn Library + 'a>],
     pub(crate) imported_custom_types: CompositeTypes,
@@ -272,7 +272,7 @@ impl<'a> Graft<'a> {
 
     /// Graft a function declaration inside an `impl` block of a custom-defined
     /// structure. The function does not take a `self` as input argument.
-    pub fn graft_associated_function(
+    pub(crate) fn graft_associated_function(
         &mut self,
         input: &syn::ImplItemMethod,
     ) -> ast::Fn<Annotation> {
@@ -306,7 +306,7 @@ impl<'a> Graft<'a> {
         }
     }
 
-    pub fn graft_fn_decl(&mut self, input: &syn::ItemFn) -> ast::Fn<Annotation> {
+    pub(crate) fn graft_fn_decl(&mut self, input: &syn::ItemFn) -> ast::Fn<Annotation> {
         let function_name = input.sig.ident.to_string();
         let args = input
             .sig

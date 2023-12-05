@@ -1,5 +1,4 @@
 use triton_vm::BFieldElement;
-use twenty_first::shared_math::x_field_element::XFieldElement;
 
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
@@ -14,8 +13,8 @@ fn main() {
         return Ok(create_result_type(succeed)?);
     }
 
-    let bfe_res_0 = create_result_type(true);
-    let bfe_res_1 = call_create(true);
+    let _bfe_res_0 = create_result_type(true);
+    let _bfe_res_1 = call_create(true);
 
     return;
 }

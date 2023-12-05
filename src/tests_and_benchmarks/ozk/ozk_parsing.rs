@@ -1,9 +1,9 @@
-use std::{collections::HashMap, fs};
+use std::fs;
 use triton_vm::instruction::LabelledInstruction;
 
 use crate::{
     ast_types, custom_type_resolver::resolve_custom_types, extract_types_and_function,
-    graft::CustomTypeRust, tasm_code_generator::compile_function, type_checker::annotate_fn_outer,
+    tasm_code_generator::compile_function, type_checker::annotate_fn_outer,
     StructsAndMethodsRustAst,
 };
 
