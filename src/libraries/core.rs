@@ -21,13 +21,15 @@ pub struct Core {}
 pub(crate) fn result_type(ok_type: ast_types::DataType) -> crate::composite_types::TypeContext {
     let dtype = ast_types::EnumType {
         is_copy: ok_type.is_copy(),
-        name: format!("Result___{ok_type}"),
+        name: "Result".to_owned(),
         variants: vec![
             ("Ok".to_owned(), ok_type.clone()),
             ("Err".to_owned(), ast_types::DataType::unit()),
         ],
         is_prelude: true,
+        type_parameter: Some(ok_type),
     };
+    let dtype = ast_types::DataType::Enum(Box::new(dtype));
     let is_ok_method_label = "is_ok";
     let stack_size = dtype.stack_size();
     let swap_to_bottom = match stack_size {
@@ -39,17 +41,18 @@ pub(crate) fn result_type(ok_type: ast_types::DataType) -> crate::composite_type
     let remove_data = match stack_size {
         0 => unreachable!(),
         1 => triton_asm!(pop),
-        n @ 2..=16 => {
-            let as_str = "pop\n".repeat(n - 1);
+        2..=16 => {
+            let as_str = "pop\n".repeat(stack_size - 1);
             triton_asm!({ as_str })
         }
         _ => panic!("Can't handle this yet"),
     };
+    let is_ok_input_data_type = ast_types::DataType::Reference(Box::new(dtype.clone()));
     let method_signature = ast::FnSignature {
         name: is_ok_method_label.to_owned(),
         args: vec![AbstractArgument::ValueArgument(AbstractValueArg {
             name: "x".to_owned(),
-            data_type: dtype.clone().into(),
+            data_type: is_ok_input_data_type,
             mutable: false,
         })],
         output: ast_types::DataType::Bool,
@@ -71,7 +74,7 @@ pub(crate) fn result_type(ok_type: ast_types::DataType) -> crate::composite_type
         signature: method_signature,
     };
     crate::composite_types::TypeContext {
-        composite_type: dtype.into(),
+        composite_type: dtype.try_into().unwrap(),
         methods: vec![is_ok_method],
         associated_functions: vec![],
     }

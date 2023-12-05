@@ -1,12 +1,14 @@
-use triton_vm::BFieldElement;
+use triton_vm::{BFieldElement, Digest};
 use twenty_first::shared_math::x_field_element::XFieldElement;
 
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
+#[allow(clippy::assertions_on_constants)]
 fn main() {
     let bfe: BFieldElement = tasm::tasm_io_read_stdin___bfe();
     let result_bfe: Result<BFieldElement, ()> = Ok(bfe);
     assert!(result_bfe.is_ok());
+
     let xfe: XFieldElement = XFieldElement::new([
         BFieldElement::new(14),
         BFieldElement::new(15),
@@ -14,6 +16,45 @@ fn main() {
     ]);
     let result_xfe: Result<XFieldElement, ()> = Ok(xfe);
     assert!(result_xfe.is_ok());
+
+    let digest: Digest = tasm::tasm_io_read_stdin___digest();
+    let result_digest: Result<Digest, ()> = Ok(digest);
+    assert!(result_digest.is_ok());
+
+    tasm::tasm_io_write_to_stdout___bfe(bfe);
+
+    match result_bfe {
+        Result::Ok(bfe_again) => {
+            tasm::tasm_io_write_to_stdout___bfe(bfe_again);
+            assert!(bfe == bfe_again);
+        }
+        Result::Err(_) => {
+            assert!(false);
+        }
+    };
+
+    match result_xfe {
+        Result::Ok(xfe_again) => {
+            tasm::tasm_io_write_to_stdout___bfe(bfe);
+            tasm::tasm_io_write_to_stdout___xfe(xfe_again);
+            tasm::tasm_io_write_to_stdout___bfe(bfe);
+            assert!(xfe == xfe_again);
+        }
+        Result::Err(_) => {
+            assert!(false);
+        }
+    };
+
+    match result_digest {
+        Result::Ok(digest_again) => {
+            tasm::tasm_io_write_to_stdout___digest(digest_again);
+            assert!(digest == digest_again);
+        }
+        Result::Err(_) => {
+            assert!(false);
+        }
+    };
+
     return;
 }
 
@@ -31,15 +72,15 @@ mod test {
     use super::*;
 
     #[test]
-    fn result_bfe_test() {
-        let rand: BFieldElement = random();
-        let stdin = vec![rand];
+    fn copy_types_test() {
+        let stdin = vec![random(), random(), random(), random(), random(), random()];
+        println!("stdin: {stdin:#?}");
         let non_determinism = NonDeterminism::default();
         let native_output =
             rust_shadows::wrap_main_with_io(&main)(stdin.clone(), non_determinism.clone());
         let test_program = ozk_parsing::compile_for_test(
             "result_types",
-            "bfe",
+            "copy_types",
             "main",
             crate::ast_types::ListType::Unsafe,
         );

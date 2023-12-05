@@ -123,7 +123,14 @@ impl DataType {
                 format!("function_from_L{}R__to_L{}R", input, output)
             }
             Struct(struct_type) => struct_type.name.to_owned(),
-            Enum(enum_type) => enum_type.name.to_owned(),
+            Enum(enum_type) => match enum_type.type_parameter.as_ref() {
+                // Use type parameter here to differentiate between
+                // methods for `Result<BFE>` and `Result<XFE>`.
+                Some(type_param) => {
+                    format!("{}___{}", enum_type.name, type_param.label_friendly_name())
+                }
+                None => enum_type.name.to_owned(),
+            },
             Unresolved(name) => name.to_string(),
             Boxed(ty) => format!("boxed_L{}R", ty.label_friendly_name()),
             Reference(ty) => format!("reference_to_L{}R", ty.label_friendly_name()),
@@ -523,6 +530,18 @@ impl TryFrom<&CustomTypeOil> for EnumType {
     }
 }
 
+impl TryFrom<DataType> for CustomTypeOil {
+    type Error = anyhow::Error;
+
+    fn try_from(value: DataType) -> Result<Self, Self::Error> {
+        match value {
+            DataType::Enum(enumt) => Ok(CustomTypeOil::Enum(*enumt.to_owned())),
+            DataType::Struct(structt) => Ok(CustomTypeOil::Struct(structt.to_owned())),
+            _ => bail!("Cannot convert {value} to specified type"),
+        }
+    }
+}
+
 impl TryFrom<CustomTypeOil> for EnumType {
     type Error = anyhow::Error;
 
@@ -587,6 +606,10 @@ pub struct EnumType {
     pub is_copy: bool,
     pub variants: Vec<(String, DataType)>,
     pub is_prelude: bool,
+
+    // Use `type_parameter` to create differentiate between function labels
+    // for e.g. `Result<T>` and `Result<S>` types.
+    pub type_parameter: Option<DataType>,
 }
 
 impl From<&EnumType> for DataType {

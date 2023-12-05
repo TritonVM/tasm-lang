@@ -99,7 +99,7 @@ impl CompositeTypes {
     pub(crate) fn checked_merge(&mut self, other: Self) {
         for (type_name, dtype_indices) in other.by_name.into_iter() {
             for dtype_index in dtype_indices {
-                self.add(
+                self.unique_add(
                     type_name.clone(),
                     other.composite_types[dtype_index].clone(),
                 )
@@ -144,24 +144,55 @@ impl CompositeTypes {
         }
     }
 
-    pub(crate) fn add_type_context(&mut self, tyctx: TypeContext) {
-        let name = tyctx.composite_type.name();
-        self.add(name.to_owned(), tyctx);
+    /// Add a composite type to the collection. Does nothing if it's already included.
+    pub(crate) fn add_type_context_if_new(&mut self, tyctx: TypeContext) {
+        self.idempotent_add(tyctx.composite_type.name().to_owned(), tyctx);
     }
 
     /// Add a composite type to the collection. Panics if it's already included.
     pub(crate) fn add_custom_type(&mut self, dtype: CustomTypeOil) {
         let name = dtype.name().to_owned();
         let tyctx: TypeContext = dtype.into();
-        self.add(name, tyctx);
+        self.unique_add(name, tyctx);
     }
 
-    /// Add a composite type to the collection. Panics if it's already included.
-    fn add(&mut self, type_name: String, tyctx: TypeContext) {
+    /// Add a composite type to the collection. Does nothing if the type is already
+    /// included.
+    fn idempotent_add(&mut self, type_name: String, tyctx: TypeContext) {
+        let mut do_nothing = false;
         let type_count = self.composite_types.len();
         self.by_name
             .entry(type_name.to_owned())
             .and_modify(|types_w_same_name| {
+                // If all existing types with this name are different, insert
+                // the new type.
+                if types_w_same_name
+                    .iter()
+                    .all(|x| self.composite_types[*x] != tyctx)
+                {
+                    types_w_same_name.push(type_count);
+                } else {
+                    do_nothing = true;
+                }
+            })
+            .or_insert(vec![type_count]);
+
+        if do_nothing {
+            return;
+        }
+
+        self.by_type
+            .insert(tyctx.composite_type.clone().into(), type_count);
+        self.composite_types.push(tyctx);
+    }
+
+    /// Add a composite type to the collection. Panics if it's already included.
+    fn unique_add(&mut self, type_name: String, tyctx: TypeContext) {
+        let type_count = self.composite_types.len();
+        self.by_name
+            .entry(type_name.to_owned())
+            .and_modify(|types_w_same_name| {
+                // Assert that this type has not been seen before
                 assert!(
                     types_w_same_name
                         .iter()

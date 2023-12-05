@@ -141,6 +141,7 @@ impl<'a> Graft<'a> {
                         is_copy,
                         variants,
                         is_prelude: false,
+                        type_parameter: None,
                     };
 
                     composite_types.add_custom_type(ast_types::CustomTypeOil::Enum(enum_type));
@@ -432,7 +433,7 @@ impl<'a> Graft<'a> {
 
         let resolved_type = libraries::core::result_type(ok_type);
         self.imported_custom_types
-            .add_type_context(resolved_type.clone());
+            .add_type_context_if_new(resolved_type.clone());
         ast_types::DataType::Enum(Box::new(resolved_type.composite_type.try_into().unwrap()))
     }
 
