@@ -25,7 +25,7 @@ struct NotCopyStruct {
 #[derive(Arbitrary, BFieldCodec, Clone, Debug)]
 enum EnumType {
     A(CopyStruct),
-    B(NotCopyStruct),
+    B(NotCopyStruct, BFieldElement, Digest, Vec<BFieldElement>),
 }
 
 fn main() {
@@ -39,12 +39,15 @@ fn main() {
             tasm::tasm_io_write_to_stdout___u32(copy_struct.a_u32);
             tasm::tasm_io_write_to_stdout___u64(copy_struct.a_u64);
         }
-        EnumType::B(non_copy_struct) => {
+        EnumType::B(non_copy_struct, bfe, digest, bfes) => {
             tasm::tasm_io_write_to_stdout___bfe(BFieldElement::new(8));
             tasm::tasm_io_write_to_stdout___u32(non_copy_struct.a_list_of_xfes.len() as u32);
             tasm::tasm_io_write_to_stdout___u32(non_copy_struct.a_u32);
             tasm::tasm_io_write_to_stdout___u64(non_copy_struct.a_u64);
             tasm::tasm_io_write_to_stdout___u32(non_copy_struct.a_list_of_digests.len() as u32);
+            tasm::tasm_io_write_to_stdout___bfe(*bfe);
+            tasm::tasm_io_write_to_stdout___digest(*digest);
+            tasm::tasm_io_write_to_stdout___u32(bfes.len() as u32);
         }
     };
 
@@ -57,12 +60,15 @@ fn main() {
             tasm::tasm_io_write_to_stdout___u32(copy_struct.a_u32);
             tasm::tasm_io_write_to_stdout___u64(copy_struct.a_u64);
         }
-        EnumType::B(non_copy_struct) => {
+        EnumType::B(non_copy_struct, bfe, digest, bfes) => {
             tasm::tasm_io_write_to_stdout___bfe(BFieldElement::new(10));
             tasm::tasm_io_write_to_stdout___u32(non_copy_struct.a_u32);
             tasm::tasm_io_write_to_stdout___u64(non_copy_struct.a_u64);
             tasm::tasm_io_write_to_stdout___u32(non_copy_struct.a_list_of_digests.len() as u32);
             tasm::tasm_io_write_to_stdout___u32(non_copy_struct.a_list_of_xfes.len() as u32);
+            tasm::tasm_io_write_to_stdout___bfe(bfe);
+            tasm::tasm_io_write_to_stdout___digest(digest);
+            tasm::tasm_io_write_to_stdout___u32(bfes.len() as u32);
         }
     };
 
