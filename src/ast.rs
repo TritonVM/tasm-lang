@@ -296,6 +296,8 @@ impl<T> Display for MemPointerLiteral<T> {
 }
 
 impl<T> BFieldCodec for ExprLit<T> {
+    type Error = anyhow::Error;
+
     fn decode(_sequence: &[BFieldElement]) -> anyhow::Result<Box<Self>> {
         todo!()
     }

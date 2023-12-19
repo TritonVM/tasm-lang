@@ -30,7 +30,7 @@ impl BFieldCodecLib {
                     mutable: false,
                 },
             )],
-            output: ast_types::DataType::List(Box::new(ast_types::DataType::BFE), self.list_type),
+            output: ast_types::DataType::List(Box::new(ast_types::DataType::Bfe), self.list_type),
             arg_evaluation_order: Default::default(),
         }
     }

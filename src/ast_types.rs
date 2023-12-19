@@ -1,6 +1,8 @@
+use std::{fmt::Display, str::FromStr};
+
 use anyhow::bail;
 use itertools::Itertools;
-use std::{fmt::Display, str::FromStr};
+use tasm_lib::snippet::BasicSnippet;
 use triton_vm::triton_asm;
 
 use crate::{ast::FnSignature, libraries::LibraryFunction};
@@ -11,8 +13,8 @@ pub enum DataType {
     U32,
     U64,
     U128,
-    BFE,
-    XFE,
+    Bfe,
+    Xfe,
     Digest,
     List(Box<DataType>, ListType),
     Tuple(Tuple),
@@ -79,8 +81,8 @@ impl DataType {
             DataType::U32 => true,
             DataType::U64 => true,
             DataType::U128 => true,
-            DataType::BFE => true,
-            DataType::XFE => true,
+            DataType::Bfe => true,
+            DataType::Xfe => true,
             DataType::Digest => true,
             DataType::Tuple(_) => true,
             DataType::Array(array_type) => array_type.element_type.is_copy(),
@@ -103,8 +105,8 @@ impl DataType {
             U32 => "u32".to_string(),
             U64 => "u64".to_string(),
             U128 => "u128".to_string(),
-            BFE => "BField".to_string(),
-            XFE => "XField".to_string(),
+            Bfe => "BField".to_string(),
+            Xfe => "XField".to_string(),
             Digest => "Digest".to_string(),
             List(ty, _list_type) => format!("Vec_L{}R", ty.label_friendly_name()),
             Array(_array_type) => format!(
@@ -138,30 +140,30 @@ impl DataType {
     }
 
     pub fn from_tasm_lib_datatype(
-        tasm_lib_type: tasm_lib::snippet::DataType,
+        tasm_lib_type: tasm_lib::data_type::DataType,
         list_type: ListType,
     ) -> Self {
         use DataType::*;
         match tasm_lib_type {
-            tasm_lib::snippet::DataType::Bool => Bool,
-            tasm_lib::snippet::DataType::U32 => U32,
-            tasm_lib::snippet::DataType::U64 => U64,
-            tasm_lib::snippet::DataType::U128 => U128,
-            tasm_lib::snippet::DataType::BFE => BFE,
-            tasm_lib::snippet::DataType::XFE => XFE,
-            tasm_lib::snippet::DataType::Digest => Digest,
-            tasm_lib::snippet::DataType::List(elem_type) => {
+            tasm_lib::data_type::DataType::Bool => Bool,
+            tasm_lib::data_type::DataType::U32 => U32,
+            tasm_lib::data_type::DataType::U64 => U64,
+            tasm_lib::data_type::DataType::U128 => U128,
+            tasm_lib::data_type::DataType::Bfe => Bfe,
+            tasm_lib::data_type::DataType::Xfe => Xfe,
+            tasm_lib::data_type::DataType::Digest => Digest,
+            tasm_lib::data_type::DataType::List(elem_type) => {
                 let element_type = Self::from_tasm_lib_datatype(*elem_type, list_type);
                 List(Box::new(element_type), list_type)
             }
-            tasm_lib::snippet::DataType::Tuple(tasm_types) => {
+            tasm_lib::data_type::DataType::Tuple(tasm_types) => {
                 let element_types: Vec<DataType> = tasm_types
                     .into_iter()
                     .map(|t| Self::from_tasm_lib_datatype(t, list_type))
                     .collect();
                 Tuple(element_types.into())
             }
-            tasm_lib::snippet::DataType::VoidPointer => VoidPointer,
+            tasm_lib::data_type::DataType::VoidPointer => VoidPointer,
         }
     }
 
@@ -240,8 +242,8 @@ impl DataType {
             DataType::U32 => Some(1),
             DataType::U64 => Some(2),
             DataType::U128 => Some(4),
-            DataType::BFE => Some(1),
-            DataType::XFE => Some(3),
+            DataType::Bfe => Some(1),
+            DataType::Xfe => Some(3),
             DataType::Digest => Some(5),
             DataType::Array(array_type) => {
                 Some(array_type.element_type.bfield_codec_length()? * array_type.length)
@@ -306,8 +308,8 @@ impl DataType {
             Self::U32 => 1,
             Self::U64 => 2,
             Self::U128 => 4,
-            Self::BFE => 1,
-            Self::XFE => 3,
+            Self::Bfe => 1,
+            Self::Xfe => 3,
             Self::Digest => 5,
             Self::List(_list_type, _) => 1,
             Self::Array(_) => 1,
@@ -356,18 +358,18 @@ impl DataType {
     }
 }
 
-impl TryFrom<DataType> for tasm_lib::snippet::DataType {
+impl TryFrom<DataType> for tasm_lib::data_type::DataType {
     type Error = String;
 
     fn try_from(value: DataType) -> Result<Self, Self::Error> {
         match value {
-            DataType::Bool => Ok(tasm_lib::snippet::DataType::Bool),
-            DataType::U32 => Ok(tasm_lib::snippet::DataType::U32),
-            DataType::U64 => Ok(tasm_lib::snippet::DataType::U64),
-            DataType::U128 => Ok(tasm_lib::snippet::DataType::U128),
-            DataType::BFE => Ok(tasm_lib::snippet::DataType::BFE),
-            DataType::XFE => Ok(tasm_lib::snippet::DataType::XFE),
-            DataType::Digest => Ok(tasm_lib::snippet::DataType::Digest),
+            DataType::Bool => Ok(tasm_lib::data_type::DataType::Bool),
+            DataType::U32 => Ok(tasm_lib::data_type::DataType::U32),
+            DataType::U64 => Ok(tasm_lib::data_type::DataType::U64),
+            DataType::U128 => Ok(tasm_lib::data_type::DataType::U128),
+            DataType::Bfe => Ok(tasm_lib::data_type::DataType::Bfe),
+            DataType::Xfe => Ok(tasm_lib::data_type::DataType::Xfe),
+            DataType::Digest => Ok(tasm_lib::data_type::DataType::Digest),
             DataType::List(elem_type, _) => {
                 let element_type = (*elem_type).try_into();
                 let element_type = match element_type {
@@ -376,7 +378,7 @@ impl TryFrom<DataType> for tasm_lib::snippet::DataType {
                         return Err(format!("Failed to convert element type of list: {err}"))
                     }
                 };
-                Ok(tasm_lib::snippet::DataType::List(Box::new(element_type)))
+                Ok(tasm_lib::data_type::DataType::List(Box::new(element_type)))
             }
             DataType::Array(_array_type) => {
                 Err("Array types not yet supported by tasm-lib".to_owned())
@@ -386,9 +388,9 @@ impl TryFrom<DataType> for tasm_lib::snippet::DataType {
                     .into_iter()
                     .map(|x| x.try_into().unwrap())
                     .collect_vec();
-                Ok(tasm_lib::snippet::DataType::Tuple(tuple_elements))
+                Ok(tasm_lib::data_type::DataType::Tuple(tuple_elements))
             }
-            DataType::VoidPointer => Ok(tasm_lib::snippet::DataType::VoidPointer),
+            DataType::VoidPointer => Ok(tasm_lib::data_type::DataType::VoidPointer),
             DataType::Function(_) => todo!(),
             DataType::Struct(_) => todo!(),
             DataType::Enum(_) => todo!(),
@@ -400,7 +402,7 @@ impl TryFrom<DataType> for tasm_lib::snippet::DataType {
                 // TODO: Default to `Unsafe` list here??
                 DataType::List(_, ListType::Unsafe) => (*value).try_into(),
                 DataType::Unresolved(_) => todo!(),
-                _ => Ok(tasm_lib::snippet::DataType::VoidPointer),
+                _ => Ok(tasm_lib::data_type::DataType::VoidPointer),
             },
             DataType::Reference(inner) => (*inner).try_into(),
         }
@@ -419,8 +421,8 @@ impl FromStr for DataType {
             "usize" => Ok(DataType::U32),
             "u64" => Ok(DataType::U64),
             "u128" => Ok(DataType::U128),
-            "BFieldElement" => Ok(DataType::BFE),
-            "XFieldElement" => Ok(DataType::XFE),
+            "BFieldElement" => Ok(DataType::Bfe),
+            "XFieldElement" => Ok(DataType::Xfe),
             "Digest" => Ok(DataType::Digest),
             ty => bail!("Unsupported type {}", ty),
         }
@@ -435,8 +437,8 @@ impl Display for DataType {
             U32 => "u32".to_string(),
             U64 => "u64".to_string(),
             U128 => "u128".to_string(),
-            BFE => "BField".to_string(),
-            XFE => "XField".to_string(),
+            Bfe => "BField".to_string(),
+            Xfe => "XField".to_string(),
             Digest => "Digest".to_string(),
             List(ty, _list_type) => format!("Vec<{ty}>"),
             Array(array_type) => format!("[{}; {}]", array_type.element_type, array_type.length),
@@ -691,9 +693,9 @@ impl EnumType {
         [
             self.variant_data_type(variant_name).as_tuple_type().fields,
             vec![DataType::Tuple(
-                vec![DataType::BFE; self.padding_size(variant_name)].into(),
+                vec![DataType::Bfe; self.padding_size(variant_name)].into(),
             )],
-            vec![DataType::BFE],
+            vec![DataType::Bfe],
         ]
         .concat()
     }
@@ -1104,6 +1106,56 @@ impl From<FnSignature> for DataType {
 pub enum ListType {
     Safe,
     Unsafe,
+}
+
+impl ListType {
+    pub fn with_capacity_snippet(&self, type_parameter: DataType) -> Box<dyn BasicSnippet> {
+        let tasm_type: tasm_lib::data_type::DataType = type_parameter.try_into().unwrap();
+        match self {
+            Self::Safe => Box::new(tasm_lib::list::safeimplu32::new::SafeNew {
+                data_type: tasm_type,
+            }),
+            Self::Unsafe => Box::new(tasm_lib::list::unsafeimplu32::new::UnsafeNew {
+                data_type: tasm_type,
+            }),
+        }
+    }
+
+    pub fn len_snippet(&self, type_parameter: DataType) -> Box<dyn BasicSnippet> {
+        let tasm_type: tasm_lib::data_type::DataType = type_parameter.try_into().unwrap();
+        match self {
+            Self::Safe => Box::new(tasm_lib::list::safeimplu32::length::Length {
+                data_type: tasm_type,
+            }),
+            Self::Unsafe => Box::new(tasm_lib::list::unsafeimplu32::length::Length {
+                data_type: tasm_type,
+            }),
+        }
+    }
+
+    pub fn push_snippet(&self, type_parameter: DataType) -> Box<dyn BasicSnippet> {
+        let tasm_type: tasm_lib::data_type::DataType = type_parameter.try_into().unwrap();
+        match self {
+            Self::Safe => Box::new(tasm_lib::list::safeimplu32::push::SafePush {
+                data_type: tasm_type,
+            }),
+            Self::Unsafe => Box::new(tasm_lib::list::unsafeimplu32::push::UnsafePush {
+                data_type: tasm_type,
+            }),
+        }
+    }
+
+    pub fn pop_snippet(&self, type_parameter: DataType) -> Box<dyn BasicSnippet> {
+        let tasm_type: tasm_lib::data_type::DataType = type_parameter.try_into().unwrap();
+        match self {
+            Self::Safe => Box::new(tasm_lib::list::safeimplu32::pop::SafePop {
+                data_type: tasm_type,
+            }),
+            Self::Unsafe => Box::new(tasm_lib::list::unsafeimplu32::pop::UnsafePop {
+                data_type: tasm_type,
+            }),
+        }
+    }
 }
 
 impl From<ListType> for tasm_lib::list::ListType {

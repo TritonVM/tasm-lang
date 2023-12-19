@@ -75,8 +75,8 @@ impl ast_types::DataType {
             | ast_types::DataType::U32
             | ast_types::DataType::U64
             | ast_types::DataType::U128
-            | ast_types::DataType::BFE
-            | ast_types::DataType::XFE
+            | ast_types::DataType::Bfe
+            | ast_types::DataType::Xfe
             | ast_types::DataType::Digest
             | ast_types::DataType::Tuple(_) => {
                 Self::copy_words_from_memory(static_address, self.stack_size())
@@ -115,7 +115,7 @@ impl ast_types::DataType {
     pub(super) fn compile_eq_code(&self, state: &mut CompilerState) -> Vec<LabelledInstruction> {
         use ast_types::DataType::*;
         match self {
-            Bool | U32 | BFE | VoidPointer => triton_asm!(eq),
+            Bool | U32 | Bfe | VoidPointer => triton_asm!(eq),
             U64 => triton_asm!(
                 // _ a_hi a_lo b_hi b_lo
                 swap 3
@@ -144,7 +144,7 @@ impl ast_types::DataType {
                 // _ (b_2 == a_2) * (b_1 == a_1) * (b_3 == a_3) * (b_0 == a_0)
             ),
 
-            XFE => triton_asm!(
+            Xfe => triton_asm!(
                  // _ a_2 a_1 a_0 b_2 b_1 b_0
                 swap 4 // _ a_2 b_0 a_0 b_2 b_1 a_1
                 eq     // _ a_2 b_0 a_0 b_2 (b_1 == a_1)

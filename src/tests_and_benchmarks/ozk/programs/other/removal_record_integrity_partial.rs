@@ -255,19 +255,7 @@ mod tests {
     }
 
     impl BFieldCodec for ChunkDictionary {
-        fn encode(&self) -> Vec<BFieldElement> {
-            let mut string = vec![BFieldElement::new(self.dictionary.keys().len() as u64)];
-            for key in self.dictionary.keys().sorted() {
-                string.append(&mut key.encode());
-                let mut membership_proof_encoded = self.dictionary[key].0.encode();
-                string.push(BFieldElement::new(membership_proof_encoded.len() as u64));
-                string.append(&mut membership_proof_encoded);
-                let mut chunk_encoded = self.dictionary[key].1.encode();
-                string.push(BFieldElement::new(chunk_encoded.len() as u64));
-                string.append(&mut chunk_encoded);
-            }
-            string
-        }
+        type Error = anyhow::Error;
 
         fn decode(sequence: &[BFieldElement]) -> anyhow::Result<Box<Self>> {
             if sequence.is_empty() {
@@ -311,6 +299,20 @@ mod tests {
             }
 
             Ok(Box::new(ChunkDictionary { dictionary }))
+        }
+
+        fn encode(&self) -> Vec<BFieldElement> {
+            let mut string = vec![BFieldElement::new(self.dictionary.keys().len() as u64)];
+            for key in self.dictionary.keys().sorted() {
+                string.append(&mut key.encode());
+                let mut membership_proof_encoded = self.dictionary[key].0.encode();
+                string.push(BFieldElement::new(membership_proof_encoded.len() as u64));
+                string.append(&mut membership_proof_encoded);
+                let mut chunk_encoded = self.dictionary[key].1.encode();
+                string.push(BFieldElement::new(chunk_encoded.len() as u64));
+                string.append(&mut chunk_encoded);
+            }
+            string
         }
 
         fn static_length() -> Option<usize> {

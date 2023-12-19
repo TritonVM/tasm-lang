@@ -69,7 +69,7 @@ impl ast_types::StructType {
         let pointer_for_result: u64 = state
             .global_compiler_state
             .snippet_state
-            .kmalloc(self.field_count())
+            .kmalloc(self.field_count() as u32)
             .try_into()
             .unwrap();
 

@@ -2,7 +2,6 @@
 // Allows the use of input/output on the native architecture
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 use arbitrary::Arbitrary;
-use itertools::Itertools;
 use tasm_lib::structure::tasm_object::TasmObject;
 use triton_vm::{BFieldElement, Digest};
 use twenty_first::shared_math::bfield_codec::BFieldCodec;

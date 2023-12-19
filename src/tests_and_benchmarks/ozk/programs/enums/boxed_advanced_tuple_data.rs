@@ -1,6 +1,5 @@
 #![allow(clippy::len_zero)]
 use arbitrary::Arbitrary;
-use itertools::Itertools;
 use tasm_lib::Digest;
 use twenty_first::shared_math::b_field_element::BFieldElement;
 use twenty_first::shared_math::bfield_codec::BFieldCodec;

@@ -280,8 +280,8 @@ impl DataType {
             DataType::U32 => false,
             DataType::U64 => false,
             DataType::U128 => false,
-            DataType::BFE => false,
-            DataType::XFE => false,
+            DataType::Bfe => false,
+            DataType::Xfe => false,
             DataType::Digest => false,
             DataType::VoidPointer => false,
         }
@@ -359,8 +359,8 @@ impl CustomTypeResolution for DataType {
             U32 => (),
             U64 => (),
             U128 => (),
-            BFE => (),
-            XFE => (),
+            Bfe => (),
+            Xfe => (),
             Digest => (),
             VoidPointer => (),
         }

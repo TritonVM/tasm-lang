@@ -1,19 +1,20 @@
+use std::collections::HashMap;
+
+use anyhow::Ok;
+use itertools::Itertools;
+use tasm_lib::memory::dyn_malloc::DYN_MALLOC_ADDRESS;
+use tasm_lib::{empty_stack, rust_shadowing_helper_functions, DIGEST_LENGTH};
+use triton_vm::instruction::LabelledInstruction;
+use triton_vm::vm::VMState;
+use triton_vm::{Digest, NonDeterminism, Program, PublicInput};
+use twenty_first::shared_math::b_field_element::{BFieldElement, BFIELD_ONE, BFIELD_ZERO};
+use twenty_first::shared_math::bfield_codec::BFieldCodec;
+use twenty_first::shared_math::x_field_element::XFieldElement;
+
 use crate::composite_types::CompositeTypes;
 use crate::tasm_code_generator::compile_function;
 use crate::type_checker::{self, annotate_fn_outer, GetType, Typing};
 use crate::{ast, ast_types};
-use anyhow::Ok;
-use itertools::Itertools;
-use std::collections::HashMap;
-use tasm_lib::memory::dyn_malloc::{self, DYN_MALLOC_ADDRESS};
-use tasm_lib::{
-    empty_stack, program_with_state_preparation, rust_shadowing_helper_functions, DIGEST_LENGTH,
-};
-use triton_vm::instruction::LabelledInstruction;
-use triton_vm::{Digest, NonDeterminism, PublicInput};
-use twenty_first::shared_math::b_field_element::{BFieldElement, BFIELD_ONE, BFIELD_ZERO};
-use twenty_first::shared_math::bfield_codec::BFieldCodec;
-use twenty_first::shared_math::x_field_element::XFieldElement;
 
 #[derive(Debug, Clone)]
 pub struct InputOutputTestCase {
@@ -45,10 +46,7 @@ pub fn init_memory_from<T: BFieldCodec>(
         .zip(memory_address.value()..)
         .map(|(v, k)| (k.into(), v))
         .collect();
-    init_ram.insert(
-        dyn_malloc::DYN_MALLOC_ADDRESS.into(),
-        first_free_address.into(),
-    );
+    init_ram.insert(DYN_MALLOC_ADDRESS, first_free_address.into());
     NonDeterminism::new(vec![]).with_ram(init_ram)
 }
 
@@ -86,7 +84,6 @@ pub fn graft_check_compile_prop(
 pub fn execute_compiled_with_stack_memory_and_ins_for_bench(
     code: &[LabelledInstruction],
     input_args: Vec<ast::ExprLit<Typing>>,
-    memory: &mut HashMap<BFieldElement, BFieldElement>,
     std_in: Vec<BFieldElement>,
     non_determinism: NonDeterminism<BFieldElement>,
     expected_stack_diff: isize,
@@ -105,8 +102,6 @@ pub fn execute_compiled_with_stack_memory_and_ins_for_bench(
         expected_stack_diff,
         std_in,
         non_determinism,
-        memory,
-        None,
     )
 }
 
@@ -118,44 +113,39 @@ pub fn execute_compiled_with_stack_memory_and_ins_for_test(
     mut non_determinism: NonDeterminism<BFieldElement>,
     _expected_stack_diff: isize,
 ) -> anyhow::Result<tasm_lib::VmOutputState> {
-    let mut init_stack = empty_stack();
+    let mut initial_stack = empty_stack();
     for input_arg in input_args {
         let input_arg_seq = input_arg.encode();
-        init_stack.append(&mut input_arg_seq.into_iter().rev().collect());
+        initial_stack.append(&mut input_arg_seq.into_iter().rev().collect());
     }
 
-    assert!(non_determinism.ram.is_empty() || memory.is_empty(), "Cannot specify initial memory with both `memory` and `non_determinism`. Please pick only one.");
-
+    assert!(
+        non_determinism.ram.is_empty() || memory.is_empty(),
+        "Cannot specify initial memory with both `memory` and `non_determinism`. \
+        Please pick only one."
+    );
     non_determinism.ram.extend(memory.clone());
 
-    // Run the tasm-lib's execute function without requesting initialization of the dynamic
-    // memory allocator, as this is the compiler's responsibility.
-    let program = program_with_state_preparation(code, &init_stack, &mut non_determinism, None);
-    let vm_res = program.debug_terminal_state(
+    let program = Program::new(code);
+    let mut vm_state = VMState::new(
+        &program,
         PublicInput::new(std_in.to_vec()),
         non_determinism.clone(),
-        None,
-        None,
     );
+    vm_state.op_stack.stack = initial_stack;
+    vm_state.run()?;
 
-    match vm_res {
-        std::result::Result::Ok(vm_res) => {
-            *memory = vm_res.ram.clone();
-            Ok(tasm_lib::VmOutputState {
-                output: vm_res.public_output,
-                final_stack: vm_res.op_stack.stack,
-                final_ram: vm_res.ram,
-                final_sponge_state: tasm_lib::VmHasherState {
-                    state: vm_res.sponge_state,
-                },
-            })
-        }
-        Err((err, last_vm_state)) => anyhow::bail!(
-            "VM execution failed with error: {}\n Last VM state\n: {}",
-            err,
-            last_vm_state
-        ),
-    }
+    let sponge_state = vm_state
+        .sponge_state
+        .map(|state| tasm_lib::VmHasherState { state });
+    let output_state = tasm_lib::VmOutputState {
+        output: vm_state.public_output,
+        final_stack: vm_state.op_stack.stack,
+        final_ram: vm_state.ram,
+        final_sponge_state: sponge_state,
+    };
+
+    Ok(output_state)
 }
 
 pub fn execute_with_stack_unsafe_lists(
@@ -284,7 +274,8 @@ pub fn compare_compiled_prop_with_stack_and_memory_and_ins(
             .skip(DIGEST_LENGTH)
             .cloned()
             .collect_vec(),
-        "Code execution must produce expected stack `{}`. \n\nTVM:\n{}\n\nExpected:\n{}\n\nCode was:\n{}",
+        "Code execution must produce expected stack `{}`. \n\nTVM:\n{}\n\nExpected:\n{}\n\n\
+        Code was:\n{}",
         function_name,
         exec_result
             .final_stack
@@ -300,16 +291,16 @@ pub fn compare_compiled_prop_with_stack_and_memory_and_ins(
         code.iter().join("\n")
     );
 
-    // Verify that memory behaves as expected, if expected value is set. Don't bother verifying the value
-    // of the dyn malloc address though, as this is considered an implementation detail and is really hard
-    // to keep track of.
+    // Verify that memory behaves as expected, if expected value is set. Don't bother verifying the
+    // value of the dyn malloc address though, as this is considered an implementation detail and is
+    // really hard to keep track of.
     if expected_final_memory.as_ref().is_some()
         && !expected_final_memory
             .as_ref()
             .unwrap()
-            .contains_key(&BFieldElement::new(DYN_MALLOC_ADDRESS as u64))
+            .contains_key(&DYN_MALLOC_ADDRESS)
     {
-        actual_memory.remove(&BFieldElement::new(DYN_MALLOC_ADDRESS as u64));
+        actual_memory.remove(&DYN_MALLOC_ADDRESS);
     }
 
     if let Some(efm) = expected_final_memory {
@@ -330,7 +321,10 @@ pub fn compare_compiled_prop_with_stack_and_memory_and_ins(
                 .map(|x| format!("({} => {})", x.0, x.1))
                 .collect_vec()
                 .join(",");
-            panic!("Memory must match expected value after execution.\n\nTVM: {actual_memory_str}\n\nExpected: {expected_final_memory_str}",)
+            panic!(
+                "Memory must match expected value after execution.\n\nTVM: {actual_memory_str}\n\n\
+                Expected: {expected_final_memory_str}",
+            )
         }
     }
 }

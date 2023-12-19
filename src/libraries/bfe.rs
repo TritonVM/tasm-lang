@@ -39,7 +39,7 @@ impl Library for BfeLibrary {
         receiver_type: &ast_types::DataType,
     ) -> Option<String> {
         match receiver_type {
-            ast_types::DataType::BFE => {
+            ast_types::DataType::Bfe => {
                 if method_name == METHOD_NAME_LIFT
                     || method_name == METHOD_NAME_VALUE
                     || method_name == METHOD_NAME_MOD_POW_U32
@@ -60,7 +60,7 @@ impl Library for BfeLibrary {
         _args: &[ast::Expr<super::Annotation>],
         _type_checker_state: &crate::type_checker::CheckState,
     ) -> ast::FnSignature {
-        if matches!(receiver_type, ast_types::DataType::BFE) {
+        if matches!(receiver_type, ast_types::DataType::Bfe) {
             if method_name == METHOD_NAME_LIFT {
                 return bfe_lift_method().signature;
             }
@@ -101,7 +101,7 @@ impl Library for BfeLibrary {
         _args: &[ast::Expr<super::Annotation>],
         _state: &mut crate::tasm_code_generator::CompilerState,
     ) -> Vec<triton_vm::instruction::LabelledInstruction> {
-        if matches!(receiver_type, ast_types::DataType::BFE) {
+        if matches!(receiver_type, ast_types::DataType::Bfe) {
             // TODO: Instead of inlining this, we could add the subroutine to the
             // compiler state and the call that subroutine. And then let the inline
             // handle whatever needs to be inlined.
@@ -328,7 +328,7 @@ fn bfe_mod_pow_method() -> LibraryFunction {
         args: vec![
             ast_types::AbstractArgument::ValueArgument(ast_types::AbstractValueArg {
                 name: "base".to_owned(),
-                data_type: ast_types::DataType::BFE,
+                data_type: ast_types::DataType::Bfe,
                 mutable: false,
             }),
             ast_types::AbstractArgument::ValueArgument(ast_types::AbstractValueArg {
@@ -337,7 +337,7 @@ fn bfe_mod_pow_method() -> LibraryFunction {
                 mutable: false,
             }),
         ],
-        output: ast_types::DataType::BFE,
+        output: ast_types::DataType::Bfe,
         arg_evaluation_order: Default::default(),
     };
 
@@ -353,11 +353,11 @@ fn bfe_lift_method() -> LibraryFunction {
         args: vec![ast_types::AbstractArgument::ValueArgument(
             ast_types::AbstractValueArg {
                 name: "value".to_owned(),
-                data_type: ast_types::DataType::BFE,
+                data_type: ast_types::DataType::Bfe,
                 mutable: false,
             },
         )],
-        output: ast_types::DataType::XFE,
+        output: ast_types::DataType::Xfe,
         arg_evaluation_order: Default::default(),
     };
 
@@ -373,7 +373,7 @@ fn bfe_value_method() -> LibraryFunction {
         args: vec![ast_types::AbstractArgument::ValueArgument(
             ast_types::AbstractValueArg {
                 name: "bfe_value".to_owned(),
-                data_type: ast_types::DataType::BFE,
+                data_type: ast_types::DataType::Bfe,
                 mutable: false,
             },
         )],
@@ -402,7 +402,7 @@ fn bfe_new_function() -> LibraryFunction {
                 mutable: false,
             },
         )],
-        output: ast_types::DataType::BFE,
+        output: ast_types::DataType::Bfe,
         arg_evaluation_order: Default::default(),
     };
 

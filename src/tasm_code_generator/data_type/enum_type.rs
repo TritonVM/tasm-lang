@@ -234,7 +234,7 @@ impl EnumType {
         let field_pointer_pointer: u64 = state
             .global_compiler_state
             .snippet_state
-            .kmalloc(2 * max_field_count)
+            .kmalloc(2 * max_field_count as u32)
             .try_into()
             .unwrap();
 

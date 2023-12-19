@@ -219,7 +219,7 @@ impl HasherLib {
                 ast_types::AbstractValueArg {
                     name: "list".to_owned(),
                     data_type: ast_types::DataType::Reference(Box::new(ast_types::DataType::List(
-                        Box::new(ast_types::DataType::BFE),
+                        Box::new(ast_types::DataType::Bfe),
                         self.list_type,
                     ))),
                     mutable: false,

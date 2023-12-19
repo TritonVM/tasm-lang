@@ -100,7 +100,7 @@ impl ValueLocation {
 pub struct GlobalCodeGeneratorState {
     counter: usize,
     snippet_state: SnippetState,
-    static_allocations: HashMap<ValueIdentifier, (usize, ast_types::DataType)>,
+    static_allocations: HashMap<ValueIdentifier, (BFieldElement, ast_types::DataType)>,
     compiled_methods_and_afs: HashMap<String, InnerFunctionTasmCode>,
     library_snippets: HashMap<String, SubRoutine>,
 }
@@ -110,8 +110,8 @@ impl GlobalCodeGeneratorState {
         &mut self,
         value_identifier: &ValueIdentifier,
         data_type: &ast_types::DataType,
-    ) -> usize {
-        let new_address = self.snippet_state.kmalloc(data_type.stack_size());
+    ) -> BFieldElement {
+        let new_address = self.snippet_state.kmalloc(data_type.stack_size() as u32);
         self.static_allocations.insert(
             value_identifier.to_owned(),
             (new_address, data_type.to_owned()),
@@ -1956,21 +1956,16 @@ fn compile_expr(
             // TODO: This does not handle arrays of elements whose sizes
             // are not known at compile time.
 
-            let array_type = array_type.get_type();
-            let (element_size, total_size_in_memory): (u32, usize) =
-                if let ast_types::DataType::Array(array_type) = array_type {
-                    (
-                        array_type.element_type.stack_size().try_into().unwrap(),
-                        array_type.size_in_memory(),
-                    )
-                } else {
-                    panic!("Type must be array");
-                };
+            let ast_types::DataType::Array(array_type) = array_type.get_type() else {
+                panic!("Type must be array");
+            };
+            let element_size: u32 = array_type.element_type.stack_size().try_into().unwrap();
+            let total_size_in_memory: usize = array_type.size_in_memory();
 
             let array_pointer = state
                 .global_compiler_state
                 .snippet_state
-                .kmalloc(total_size_in_memory);
+                .kmalloc(total_size_in_memory as u32);
 
             let mut element_pointer: u32 = array_pointer.try_into().unwrap();
             let store_array_in_memory = match array_expr {
@@ -1996,7 +1991,7 @@ fn compile_expr(
                     .concat(),
             };
 
-            let push_array_pointer_to_stack = triton_asm!(push { array_pointer as u64 });
+            let push_array_pointer_to_stack = triton_asm!(push { array_pointer.to_string() });
             triton_asm!(
                 {&store_array_in_memory}
                 {&push_array_pointer_to_stack}
@@ -2071,8 +2066,8 @@ fn compile_expr(
             let (_inner_expr_addr, inner_expr_code) = compile_expr(rhs_expr, "unop_operand", state);
             let code = match unaryop {
                 ast::UnaryOp::Neg => match rhs_type {
-                    ast_types::DataType::BFE => triton_asm!(push -1 mul),
-                    ast_types::DataType::XFE => triton_asm!(push -1 xbmul),
+                    ast_types::DataType::Bfe => triton_asm!(push -1 mul),
+                    ast_types::DataType::Xfe => triton_asm!(push -1 xbmul),
                     _ => panic!("Unsupported negation of type {rhs_type}"),
                 },
                 ast::UnaryOp::Not => match rhs_type {
@@ -2144,8 +2139,8 @@ fn compile_expr(
 
                             triton_asm!(call { add_u128 })
                         }
-                        ast_types::DataType::BFE => triton_asm!(add),
-                        ast_types::DataType::XFE => {
+                        ast_types::DataType::Bfe => triton_asm!(add),
+                        ast_types::DataType::Xfe => {
                             triton_asm!(xxadd swap 3 pop swap 3 pop swap 3 pop)
                         }
                         _ => panic!("Operator add is not supported for type {result_type}"),
@@ -2315,7 +2310,7 @@ fn compile_expr(
                                 )
                             }
                         }
-                        BFE => {
+                        Bfe => {
                             let (_lhs_expr_addr, lhs_expr_code) =
                                 compile_expr(lhs_expr, "_binop_lhs", state);
                             let (_rhs_expr_addr, rhs_expr_code) =
@@ -2333,7 +2328,7 @@ fn compile_expr(
                                 mul
                             )
                         }
-                        XFE => {
+                        Xfe => {
                             let (_lhs_expr_addr, lhs_expr_code) =
                                 compile_expr(lhs_expr, "_binop_lhs", state);
                             let (_rhs_expr_addr, rhs_expr_code) =
@@ -2547,12 +2542,12 @@ fn compile_expr(
                                 call {fn_name}
                             )
                         }
-                        (BFE, BFE) => triton_asm!(
+                        (Bfe, Bfe) => triton_asm!(
                             {&lhs_expr_code}
                             {&rhs_expr_code}
                             mul
                         ),
-                        (XFE, XFE) => triton_asm!(
+                        (Xfe, Xfe) => triton_asm!(
                             {&lhs_expr_code}
                             {&rhs_expr_code}
                             xxmul
@@ -2563,7 +2558,7 @@ fn compile_expr(
                             swap 3
                             pop
                         ),
-                        (XFE, BFE) => triton_asm!(
+                        (Xfe, Bfe) => triton_asm!(
                             {&lhs_expr_code}
                             {&rhs_expr_code}
                             xbmul
@@ -2735,14 +2730,14 @@ fn compile_expr(
                                 call {sub_u128}
                             )
                         }
-                        ast_types::DataType::BFE => {
+                        ast_types::DataType::Bfe => {
                             triton_asm!(
                                 push -1
                                 mul
                                 add
                             )
                         }
-                        ast_types::DataType::XFE => {
+                        ast_types::DataType::Xfe => {
                             triton_asm!(
                                   // multiply top element with -1
                                 push -1
@@ -2888,7 +2883,7 @@ fn compile_expr(
                     )
                 }
                 (ast_types::DataType::Bool, ast_types::DataType::U32) => expr_code,
-                (ast_types::DataType::Bool, ast_types::DataType::BFE) => expr_code,
+                (ast_types::DataType::Bool, ast_types::DataType::Bfe) => expr_code,
                 (ast_types::DataType::U128, ast_types::DataType::U64) => {
                     triton_asm!(
                     {&expr_code}

@@ -1,5 +1,4 @@
 use arbitrary::Arbitrary;
-use itertools::Itertools;
 use twenty_first::shared_math::b_field_element::BFieldElement;
 use twenty_first::shared_math::bfield_codec::BFieldCodec;
 

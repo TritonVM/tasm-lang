@@ -43,8 +43,8 @@ impl<T: GetType> GetType for ast::ExprLit<T> {
             ast::ExprLit::U32(_) => ast_types::DataType::U32,
             ast::ExprLit::U64(_) => ast_types::DataType::U64,
             ast::ExprLit::U128(_) => ast_types::DataType::U128,
-            ast::ExprLit::Bfe(_) => ast_types::DataType::BFE,
-            ast::ExprLit::Xfe(_) => ast_types::DataType::XFE,
+            ast::ExprLit::Bfe(_) => ast_types::DataType::Bfe,
+            ast::ExprLit::Xfe(_) => ast_types::DataType::Xfe,
             ast::ExprLit::Digest(_) => ast_types::DataType::Digest,
             ast::ExprLit::GenericNum(_, t) => t.get_type(),
             ast::ExprLit::MemPointer(ast::MemPointerLiteral {
@@ -1000,8 +1000,8 @@ fn derive_annotate_expr_type(
         ast::Expr::Lit(ast::ExprLit::U32(_)) => Ok(ast_types::DataType::U32),
         ast::Expr::Lit(ast::ExprLit::U64(_)) => Ok(ast_types::DataType::U64),
         ast::Expr::Lit(ast::ExprLit::U128(_)) => Ok(ast_types::DataType::U128),
-        ast::Expr::Lit(ast::ExprLit::Bfe(_)) => Ok(ast_types::DataType::BFE),
-        ast::Expr::Lit(ast::ExprLit::Xfe(_)) => Ok(ast_types::DataType::XFE),
+        ast::Expr::Lit(ast::ExprLit::Bfe(_)) => Ok(ast_types::DataType::Bfe),
+        ast::Expr::Lit(ast::ExprLit::Xfe(_)) => Ok(ast_types::DataType::Xfe),
         ast::Expr::Lit(ast::ExprLit::Digest(_)) => Ok(ast_types::DataType::Digest),
         ast::Expr::Lit(ast::ExprLit::MemPointer(ast::MemPointerLiteral {
             mem_pointer_address: _,
@@ -1032,18 +1032,18 @@ fn derive_annotate_expr_type(
                         ast::Expr::Lit(ast::ExprLit::U128(TryInto::<u128>::try_into(*n).unwrap()));
                     Ok(U128)
                 }
-                Some(&BFE) => {
+                Some(&Bfe) => {
                     assert!(*n <= BFieldElement::MAX as u128);
                     let n = BFieldElement::new(TryInto::<u64>::try_into(*n).unwrap());
                     *expr = ast::Expr::Lit(ast::ExprLit::Bfe(n));
-                    Ok(BFE)
+                    Ok(Bfe)
                 }
-                Some(&XFE) => {
+                Some(&Xfe) => {
                     assert!(*n <= BFieldElement::MAX as u128);
                     let n = BFieldElement::new(TryInto::<u64>::try_into(*n).unwrap());
                     let n = XFieldElement::new_const(n);
                     *expr = ast::Expr::Lit(ast::ExprLit::Xfe(n));
-                    Ok(XFE)
+                    Ok(Xfe)
                 }
                 Some(hint) => panic!("GenericNum does not infer as type hint {hint}"),
                 None => bail!("GenericNum does not infer in context with no type hint. Missing type hint for: {}", expr),
@@ -1487,10 +1487,10 @@ fn derive_annotate_expr_type(
 
                     // We are allowed to multiply an XFieldElement with a BFieldElement, but we
                     // don't currently support the mirrored expression.
-                    if lhs_type == ast_types::DataType::XFE && rhs_type == ast_types::DataType::BFE
+                    if lhs_type == ast_types::DataType::Xfe && rhs_type == ast_types::DataType::Bfe
                     {
-                        *binop_type = Typing::KnownType(ast_types::DataType::XFE);
-                        Ok(ast_types::DataType::XFE)
+                        *binop_type = Typing::KnownType(ast_types::DataType::Xfe);
+                        Ok(ast_types::DataType::Xfe)
                     } else {
                         assert_type_equals(&lhs_type, &rhs_type, "mul-expr");
                         assert!(
@@ -1689,7 +1689,7 @@ fn derive_annotate_returning_block_expr(
 /// that are subsets of `BFE`s can be used. The only such type is `U32`.
 pub(crate) fn is_index_type(data_type: &ast_types::DataType) -> bool {
     use ast_types::DataType::*;
-    matches!(data_type, U32 | BFE)
+    matches!(data_type, U32 | Bfe)
 }
 
 /// A type for which basic arithmetic operators can be overloaded.
@@ -1699,13 +1699,13 @@ pub(crate) fn is_index_type(data_type: &ast_types::DataType) -> bool {
 /// E.g. the bitwise operators only work for `is_u32_based_type()`.
 pub(crate) fn is_arithmetic_type(data_type: &ast_types::DataType) -> bool {
     use ast_types::DataType::*;
-    matches!(data_type, U32 | U64 | U128 | BFE | XFE)
+    matches!(data_type, U32 | U64 | U128 | Bfe | Xfe)
 }
 
 /// A type from which expressions such as `-value` can be formed
 pub(crate) fn is_negatable_type(data_type: &ast_types::DataType) -> bool {
     use ast_types::DataType::*;
-    matches!(data_type, BFE | XFE)
+    matches!(data_type, Bfe | Xfe)
 }
 
 /// A type from which expressions such as `!value` can be formed
@@ -1725,5 +1725,5 @@ pub(crate) fn is_u32_based_type(data_type: &ast_types::DataType) -> bool {
 /// A non-composite fixed-length type.
 pub(crate) fn is_primitive_type(data_type: &ast_types::DataType) -> bool {
     use ast_types::DataType::*;
-    matches!(data_type, Bool | U32 | U64 | U128 | BFE | XFE | Digest)
+    matches!(data_type, Bool | U32 | U64 | U128 | Bfe | Xfe | Digest)
 }
