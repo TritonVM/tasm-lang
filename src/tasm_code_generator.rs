@@ -802,20 +802,20 @@ impl<'a> CompilerState<'a> {
             words_to_remove: usize,
         ) -> Vec<LabelledInstruction> {
             match (top_value_size, words_to_remove) {
-                (3, 2) => triton_asm!(swap 2 swap 4 pop swap 2 pop),
-                (4, 2) => triton_asm!(swap 1 swap 3 swap 5 pop swap 1 swap 3 pop),
-                (6, 2) => triton_asm!(swap 2 swap 4 swap 6 pop swap 2 swap 4 swap 6 pop),
-                (4, 3) => triton_asm!(swap 3 swap 6 pop swap 3 pop swap 3 pop),
-                (5, 3) => triton_asm!(swap 4 swap 7 pop swap 2 swap 5 pop swap 3 pop swap 1),
-                (6, 4) => triton_asm!(swap 4 swap 8 pop swap 4 swap 8 pop swap 4 pop swap 4 pop),
-                (8, 4) => triton_asm!(swap 4 swap 8 pop swap 4 swap 8 pop swap 4 swap 8 pop swap 4 swap 8 pop),
+                (3, 2) => triton_asm!(swap 2 swap 4 pop 1 swap 2 pop 1),
+                (4, 2) => triton_asm!(swap 1 swap 3 swap 5 pop 1 swap 1 swap 3 pop 1),
+                (6, 2) => triton_asm!(swap 2 swap 4 swap 6 pop 1 swap 2 swap 4 swap 6 pop 1),
+                (4, 3) => triton_asm!(swap 3 swap 6 pop 1 swap 3 pop 1 swap 3 pop 1),
+                (5, 3) => triton_asm!(swap 4 swap 7 pop 1 swap 2 swap 5 pop 1 swap 3 pop 1 swap 1),
+                (6, 4) => triton_asm!(swap 4 swap 8 pop 1 swap 4 swap 8 pop 1 swap 4 pop 1 swap 4 pop 1),
+                (8, 4) => triton_asm!(swap 4 swap 8 pop 1 swap 4 swap 8 pop 1 swap 4 swap 8 pop 1 swap 4 swap 8 pop 1),
                 (n, 1) => {
                     let mut swaps = vec![];
                     for i in 1..=n {
                         swaps.append(&mut triton_asm!(swap {i}));
                     }
 
-                    triton_asm!({&swaps} pop)
+                    triton_asm!({&swaps} pop 1)
                 }
                 _ => panic!("Unsupported. Please cover more special cases. Got: {top_value_size}, {words_to_remove}"),
             }
@@ -849,7 +849,7 @@ impl<'a> CompilerState<'a> {
         {
             // If we can handle the stack clearing by just swapping the top value
             // lower onto the stack and removing everything above, we do that.
-            let mut code = vec![triton_asm!(swap {words_to_remove} pop); top_value_size].concat();
+            let mut code = vec![triton_asm!(swap {words_to_remove} pop 1); top_value_size].concat();
 
             // Generate code to remove any remaining values from the requested stack range
             let remaining_pops = if words_to_remove > top_value_size {
@@ -858,7 +858,7 @@ impl<'a> CompilerState<'a> {
                 0
             };
 
-            code.append(&mut triton_asm![pop; remaining_pops]);
+            code.extend(pop_n(remaining_pops));
 
             code
         } else if words_to_remove >= SIZE_OF_ACCESSIBLE_STACK {
@@ -874,8 +874,8 @@ impl<'a> CompilerState<'a> {
                 .try_into()
                 .unwrap();
             let mut code = copy_top_stack_value_to_memory(memory_location, top_value_size);
-            code.append(&mut triton_asm![pop; height_of_affected_stack]);
-            code.append(&mut load_from_memory(memory_location, top_value_size));
+            code.extend(pop_n(height_of_affected_stack));
+            code.extend(load_from_memory(memory_location, top_value_size));
 
             code
         } else if words_to_remove != 0 {
@@ -1126,12 +1126,9 @@ fn compile_stmt(
 
         // 'return;': Clean stack
         ast::Stmt::Return(None) => {
-            let mut code = vec![];
-            while let Some((_addr, (data_type, _spilled))) = state.function_state.vstack.pop() {
-                code.push(triton_asm![pop; data_type.stack_size()])
-            }
-
-            code.concat()
+            let total_stack_height = state.function_state.vstack.get_stack_height();
+            state.function_state.vstack.inner.clear();
+            pop_n(total_stack_height)
         }
 
         ast::Stmt::Return(Some(ret_expr)) => {
@@ -1162,8 +1159,8 @@ fn compile_stmt(
                         match spilled {
                             Some(spill_addr) => {
                                 // Value is spilled, so we load it from memory and clear that stack.
-                                code.append(&mut triton_asm![pop; state.function_state.vstack.get_stack_height()]);
-                                code.append(&mut load_from_memory(*spill_addr, dt.stack_size()))
+                                code.extend(pop_n(state.function_state.vstack.get_stack_height()));
+                                code.extend(load_from_memory(*spill_addr, dt.stack_size()))
                             }
 
                             None => {
@@ -1177,7 +1174,7 @@ fn compile_stmt(
                         break;
                     }
 
-                    code.append(&mut triton_asm![pop; dt.stack_size()]);
+                    code.extend(pop_n(dt.stack_size()));
                     state.function_state.vstack.pop();
                 }
 
@@ -1263,7 +1260,7 @@ fn compile_stmt(
 
             let then_code = triton_asm!(
                 {then_subroutine_name}:
-                    pop
+                    pop 1
                     {&then_body_code}
                     push 0
                     return
@@ -2140,9 +2137,7 @@ fn compile_expr(
                             triton_asm!(call { add_u128 })
                         }
                         ast_types::DataType::Bfe => triton_asm!(add),
-                        ast_types::DataType::Xfe => {
-                            triton_asm!(xxadd swap 3 pop swap 3 pop swap 3 pop)
-                        }
+                        ast_types::DataType::Xfe => triton_asm!(xxadd),
                         _ => panic!("Operator add is not supported for type {result_type}"),
                     };
 
@@ -2266,7 +2261,7 @@ fn compile_expr(
                                 {&rhs_expr_code}
                                 swap 1
                                 div_mod
-                                pop
+                                pop 1
                             )
                         }
                         U64 => {
@@ -2305,8 +2300,7 @@ fn compile_expr(
                                     {&lhs_expr_code}
                                     {&rhs_expr_code}
                                     call {div_mod_u64}
-                                    pop
-                                    pop
+                                    pop 2
                                 )
                             }
                         }
@@ -2343,12 +2337,6 @@ fn compile_expr(
                                 {&rhs_expr_code}
                                 xinvert
                                 xxmul
-                                swap 3
-                                pop
-                                swap 3
-                                pop
-                                swap 3
-                                pop
                             )
                         }
                         _ => panic!("Unsupported div for type {result_type}"),
@@ -2376,7 +2364,7 @@ fn compile_expr(
                                 swap 1
                                 div_mod
                                 swap 1
-                                pop
+                                pop 1
                             )
                         }
                         U64 => {
@@ -2400,9 +2388,9 @@ fn compile_expr(
                                 {&rhs_expr_code}
                                 call {div_mod_u64}
                                 swap 2
-                                pop
+                                pop 1
                                 swap 2
-                                pop
+                                pop 1
                             )
                         }
                         _ => panic!("Unsupported remainder of type {lhs_type}"),
@@ -2551,12 +2539,6 @@ fn compile_expr(
                             {&lhs_expr_code}
                             {&rhs_expr_code}
                             xxmul
-                            swap 3
-                            pop
-                            swap 3
-                            pop
-                            swap 3
-                            pop
                         ),
                         (Xfe, Bfe) => triton_asm!(
                             {&lhs_expr_code}
@@ -2744,13 +2726,6 @@ fn compile_expr(
                                 xbmul
                                 // Perform (lhs - rhs)
                                 xxadd
-                                // Get rid of the lhs, only leaving the result
-                                swap 3
-                                pop
-                                swap 3
-                                pop
-                                swap 3
-                                pop
                             )
                         }
                         _ => panic!("subtraction operator is not supported for {result_type}"),
@@ -2799,7 +2774,7 @@ fn compile_expr(
 
             let then_code = triton_asm!(
                 {then_subroutine_name}:
-                    pop
+                    pop 1
                     {&then_code}
                     push 0
                     return
@@ -2846,7 +2821,7 @@ fn compile_expr(
                     triton_asm!(
                         {&expr_code}
                         swap 1
-                        pop
+                        pop 1
                     )
                 }
                 (ast_types::DataType::U32, ast_types::DataType::U64) => {
@@ -2888,9 +2863,9 @@ fn compile_expr(
                     triton_asm!(
                     {&expr_code}
                     swap 2
-                    pop
+                    pop 1
                     swap 2
-                    pop
+                    pop 1
                     )
                 }
                 _ => todo!("previous_type: {previous_type}; result_type: {result_type}"),
@@ -2977,7 +2952,7 @@ pub fn move_top_stack_value_to_memory(
     }
 
     // remove memory address from top of stack
-    ret.push(triton_instr!(pop));
+    ret.push(triton_instr!(pop 1));
 
     ret
 }
@@ -3058,4 +3033,14 @@ fn load_from_memory(static_memory_address: u32, value_size: usize) -> Vec<Labell
     // Stack: _ element_N element_{N - 1} ... element_0
 
     ret
+}
+
+fn pop_n(number_of_words_to_pop: usize) -> Vec<LabelledInstruction> {
+    let full_pops = triton_asm![pop 5; number_of_words_to_pop / 5];
+    let num_remaining_pops = number_of_words_to_pop % 5;
+    let remaining_pops = match num_remaining_pops {
+        0 => triton_asm!(),
+        _ => triton_asm!(pop {number_of_words_to_pop % 5}),
+    };
+    [full_pops, remaining_pops].concat()
 }
