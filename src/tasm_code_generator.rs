@@ -3004,12 +3004,21 @@ fn read_n_words_from_memory(number_of_words_to_read: usize) -> Vec<LabelledInstr
 /// BEFORE: _ [value; number_of_words_to_write] *first_word
 /// AFTER:  _
 pub(super) fn write_n_words_to_memory(number_of_words_to_write: usize) -> Vec<LabelledInstruction> {
+    let writes = write_n_words_to_memory_leaving_address(number_of_words_to_write);
+    [writes, triton_asm!(pop 1)].concat()
+}
+
+/// BEFORE: _ [value; number_of_words_to_write] *first_word
+/// AFTER:  _ (*last_word + 1)
+pub(super) fn write_n_words_to_memory_leaving_address(
+    number_of_words_to_write: usize,
+) -> Vec<LabelledInstruction> {
     let full_writes = triton_asm![write_mem 5; number_of_words_to_write / 5];
     let remaining_writes = match number_of_words_to_write % 5 {
         0 => triton_asm!(),
         _ => triton_asm!(write_mem {number_of_words_to_write % 5}),
     };
-    [full_writes, remaining_writes, triton_asm!(pop 1)].concat()
+    [full_writes, remaining_writes].concat()
 }
 
 fn pop_n(number_of_words_to_pop: usize) -> Vec<LabelledInstruction> {

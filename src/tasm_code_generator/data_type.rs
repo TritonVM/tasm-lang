@@ -1,63 +1,37 @@
-use num::One;
 use tasm_lib;
 use triton_vm::instruction::LabelledInstruction;
 use triton_vm::op_stack::OpStackElement;
-use triton_vm::triton_instr;
 use triton_vm::{triton_asm, BFieldElement};
 
 use crate::ast_types;
-use crate::tasm_code_generator::CompilerState;
+use crate::tasm_code_generator::{read_n_words_from_memory, CompilerState};
 
 pub mod enum_type;
 pub mod struct_type;
 
 impl ast_types::DataType {
+    /// BEFORE: _ (*first_word | ∅)
+    /// AFTER:  _ [value; value_size]
     // TODO: MAKE PRIVATE if possible
     pub(super) fn copy_words_from_memory(
         static_memory_address: Option<BFieldElement>,
         value_size: usize,
     ) -> Vec<LabelledInstruction> {
-        // A stack value of the form `_ val2 val1 val0`, with `val0` being on the top of the stack
-        // is stored in memory as: `val0 val1 val2`, where `val0` is stored on the `memory_location`
-        // address. So we read the value at the highest memory location first.
-        // TODO: Consider making subroutines out of this in
-        // order to get shorter programs.
-        let mut ret = match static_memory_address {
-            Some(mem_location) => {
-                triton_asm!(push {mem_location.value() + value_size as u64 - 1})
-            }
-            None => {
-                if value_size.is_one() {
-                    triton_asm!()
-                } else {
-                    triton_asm!(push {value_size as u64 - 1} add)
-                }
-            }
+        // TODO: Consider making subroutines out of this in order to get shorter programs.
+        let mut code = match static_memory_address {
+            Some(mem_location) => triton_asm!(push {mem_location.value() + value_size as u64 - 1}),
+            None => match value_size {
+                0 => panic!("values must never have size 0"),
+                1 => triton_asm!(),
+                _ => triton_asm!(push {value_size as u64 - 1} add),
+            },
         };
 
-        // stack: _ memory_address_of_last_word
+        // _ *last_word
+        code.extend(read_n_words_from_memory(value_size));
 
-        for i in 0..value_size {
-            // Stack: _ memory_address
-
-            ret.push(triton_instr!(read_mem));
-            // Stack: _ memory_address value
-
-            ret.push(triton_instr!(swap 1));
-
-            // Decrement memory address to prepare for next loop iteration
-            if i != value_size - 1 {
-                ret.append(&mut triton_asm!(
-                    push -1
-                    add))
-                // Stack: _ (memory_address - 1)
-            }
-        }
-
-        // Remove memory address from top of stack
-        ret.push(triton_instr!(pop));
-
-        ret
+        // _ [value; value_size]
+        code
     }
 
     /// Return the code to copy a value in memory to the stack.
