@@ -1,10 +1,10 @@
 use itertools::Itertools;
 use triton_vm::instruction::LabelledInstruction;
-use triton_vm::triton_asm;
-use triton_vm::triton_instr;
+use twenty_first::shared_math::b_field_element::BFieldElement;
 
-use super::ValueIdentifier;
 use crate::ast_types;
+
+use super::{copy_value_to_memory, ValueIdentifier};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct Stack<T: Eq> {
@@ -36,8 +36,12 @@ impl<T: Eq> Stack<T> {
     }
 }
 
-// the compiler's view of the stack, including information about whether value has been spilled to memory
-pub(crate) type VStack = Stack<(ValueIdentifier, (ast_types::DataType, Option<u32>))>;
+/// the compiler's view of the stack, including information about whether a value has been spilled
+/// to memory
+pub(crate) type VStack = Stack<(
+    ValueIdentifier,
+    (ast_types::DataType, Option<BFieldElement>),
+)>;
 
 impl VStack {
     /// Returns (stack_position, data_type, maybe_memory_location) where `stack_position` is the top of
@@ -47,7 +51,7 @@ impl VStack {
     pub(crate) fn find_stack_value(
         &self,
         seek_addr: &ValueIdentifier,
-    ) -> (usize, ast_types::DataType, Option<u32>) {
+    ) -> (usize, ast_types::DataType, Option<BFieldElement>) {
         let mut position: usize = 0;
         for (_i, (found_addr, (data_type, spilled))) in self.inner.iter().rev().enumerate() {
             if seek_addr == found_addr {
@@ -93,47 +97,11 @@ impl VStack {
                 self.find_stack_value(value_to_spill);
             let memory_spill_address = memory_spill_address.unwrap();
             let top_of_value = stack_position;
-            let mut spill_code = Self::copy_value_to_memory(
-                memory_spill_address,
-                data_type.stack_size(),
-                top_of_value,
-            );
-            code.append(&mut spill_code);
+            let spill_code =
+                copy_value_to_memory(memory_spill_address, data_type.stack_size(), top_of_value);
+            code.extend(spill_code);
         }
 
         code
-    }
-
-    /// Return the code to store a stack-value in memory
-    pub(crate) fn copy_value_to_memory(
-        memory_location: u32,
-        value_size: usize,
-        stack_location_for_top_of_value: usize,
-    ) -> Vec<LabelledInstruction> {
-        // A stack value of the form `_ val2 val1 val0`, with `val0` being on the top of the stack
-        // is stored in memory as: `val0 val1 val2`, where `val0` is stored on the `memory_location`
-        // address.
-        let mut ret = triton_asm!(push {memory_location as u64});
-
-        for i in 0..value_size {
-            // ret.push(dup(1 + i as u64 + stack_location_for_top_of_value as u64));
-            ret.append(
-                &mut triton_asm!(dup {1 + i as u64 + stack_location_for_top_of_value as u64}),
-            );
-            // _ [elements] mem_address element
-
-            ret.push(triton_instr!(write_mem));
-            // _ [elements] mem_address
-
-            if i != value_size - 1 {
-                ret.append(&mut triton_asm!(push 1 add));
-                // _ (mem_address + 1)
-            }
-        }
-
-        // remove memory address from top of stack
-        ret.push(triton_instr!(pop));
-
-        ret
     }
 }

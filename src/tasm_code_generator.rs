@@ -31,7 +31,7 @@ use crate::{ast, type_checker};
 #[derive(Clone, Debug)]
 pub enum ValueLocation {
     OpStack(usize),
-    StaticMemoryAddress(u32),
+    StaticMemoryAddress(BFieldElement),
     DynamicMemoryAddress(Vec<LabelledInstruction>),
 }
 
@@ -392,7 +392,8 @@ impl<'a> CompilerState<'a> {
                     match lhs_location {
                         ValueLocation::OpStack(n) => ValueLocation::OpStack(n + tuple_depth),
                         ValueLocation::StaticMemoryAddress(p) => {
-                            ValueLocation::StaticMemoryAddress(p + tuple_depth as u32)
+                            let new_address = p + BFieldElement::from(tuple_depth as u32);
+                            ValueLocation::StaticMemoryAddress(new_address)
                         }
                         ValueLocation::DynamicMemoryAddress(code) => {
                             let new_code = [code, triton_asm!(push {tuple_depth} add)].concat();
@@ -421,7 +422,8 @@ impl<'a> CompilerState<'a> {
                     match lhs_location {
                         ValueLocation::OpStack(n) => ValueLocation::OpStack(n + field_depth),
                         ValueLocation::StaticMemoryAddress(p) => {
-                            ValueLocation::StaticMemoryAddress(p + field_depth as u32)
+                            let new_address = p + BFieldElement::from(field_depth as u32);
+                            ValueLocation::StaticMemoryAddress(new_address)
                         }
                         ValueLocation::DynamicMemoryAddress(_code) => unreachable!(
                             "named struct was expected to live on stack, or be spilled"
@@ -590,13 +592,13 @@ impl<'a> CompilerState<'a> {
             let new_label: ValueIdentifier =
                 self.unique_label("split_value", Some(&new_type)).into();
             new_labels.push(new_label.clone());
-            self.function_state.vstack.insert_at(
-                index_removed + i,
-                (
-                    new_label,
-                    (new_type.clone(), spilled.map(|x| x + size_acc as u32)),
-                ),
-            );
+            let next_insertion_index = index_removed + i;
+            let maybe_spill_address = spilled.map(|x| x + BFieldElement::from(size_acc as u32));
+            let v_stack_element_description = (new_type.clone(), maybe_spill_address);
+            let v_stack_entry = (new_label, v_stack_element_description);
+            self.function_state
+                .vstack
+                .insert_at(next_insertion_index, v_stack_entry);
             size_acc += new_type.stack_size();
         }
 
@@ -645,7 +647,7 @@ impl<'a> CompilerState<'a> {
         &mut self,
         prefix: &str,
         data_type: &ast_types::DataType,
-    ) -> (ValueIdentifier, Option<u32>) {
+    ) -> (ValueIdentifier, Option<BFieldElement>) {
         let name = self.unique_label(prefix, Some(data_type));
         let address = ValueIdentifier { name };
 
@@ -654,9 +656,7 @@ impl<'a> CompilerState<'a> {
         let spilled = if self.function_state.spill_required.contains(&address) {
             let spill_address = self
                 .global_compiler_state
-                .allocate_for_value_id(&address, data_type)
-                .try_into()
-                .unwrap();
+                .allocate_for_value_id(&address, data_type);
             eprintln!("Warning: spill required of {address}. Spilling to address: {spill_address}");
             Some(spill_address)
         } else {
@@ -690,7 +690,7 @@ impl<'a> CompilerState<'a> {
         previous_var_addr: &VarAddr,
     ) {
         // make a list of tuples (binding name, stack position, spilled_value) as the stack looked at the beginning of the loop
-        let bindings_start: HashMap<String, (usize, Option<u32>)> = previous_var_addr
+        let bindings_start: HashMap<String, (usize, Option<BFieldElement>)> = previous_var_addr
             .iter()
             .map(|(k, v)| {
                 let binding_name = k.to_string();
@@ -701,7 +701,7 @@ impl<'a> CompilerState<'a> {
             .collect();
 
         // make a list of tuples (binding name, stack position, spilled_value) as the stack looks now
-        let bindings_end: HashMap<String, (usize, Option<u32>)> = self
+        let bindings_end: HashMap<String, (usize, Option<BFieldElement>)> = self
             .function_state
             .var_addr
             .iter()
@@ -868,11 +868,9 @@ impl<'a> CompilerState<'a> {
             let (value_identifier_for_spill_value, _spill) =
                 self.new_value_identifier("memory_return_spilling", &top_element_type);
             assert!(_spill.is_none(), "Cannot spill while spilling");
-            let memory_location: u32 = self
+            let memory_location: BFieldElement = self
                 .global_compiler_state
-                .allocate_for_value_id(&value_identifier_for_spill_value, &top_element_type)
-                .try_into()
-                .unwrap();
+                .allocate_for_value_id(&value_identifier_for_spill_value, &top_element_type);
             let mut code = copy_top_stack_value_to_memory(memory_location, top_value_size);
             code.extend(pop_n(height_of_affected_stack));
             code.extend(load_from_memory(memory_location, top_value_size));
@@ -1956,7 +1954,7 @@ fn compile_expr(
             let ast_types::DataType::Array(array_type) = array_type.get_type() else {
                 panic!("Type must be array");
             };
-            let element_size: u32 = array_type.element_type.stack_size().try_into().unwrap();
+            let element_size: usize = array_type.element_type.stack_size();
             let total_size_in_memory: usize = array_type.size_in_memory();
 
             let array_pointer = state
@@ -1964,7 +1962,7 @@ fn compile_expr(
                 .snippet_state
                 .kmalloc(total_size_in_memory as u32);
 
-            let mut element_pointer: u32 = array_pointer.try_into().unwrap();
+            let mut element_pointer = array_pointer;
             let store_array_in_memory = match array_expr {
                 ast::ArrayExpression::ElementsSpecified(element_expressions) => element_expressions
                     .iter()
@@ -1972,11 +1970,9 @@ fn compile_expr(
                     .map(|(arg_pos, arg_expr)| {
                         let context = format!("_array_{arg_pos}");
                         let (_, evaluate_element) = compile_expr(arg_expr, &context, state);
-                        let move_element_to_memory = move_top_stack_value_to_memory(
-                            Some(element_pointer),
-                            element_size as usize,
-                        );
-                        element_pointer += element_size;
+                        let move_element_to_memory =
+                            move_top_stack_value_to_memory(Some(element_pointer), element_size);
+                        element_pointer += BFieldElement::from(element_size as u32);
 
                         state.function_state.vstack.pop().unwrap();
 
@@ -2920,76 +2916,23 @@ fn compile_returning_block_expr(
     (expr_add, [statement_code, expr_code, cleanup_code].concat())
 }
 
-/// Return the code to move the top stack element to a
-/// specific memory address. Pops top stack value.
-/// If no static memory pointer is provided, pointer is assumed to be on
-/// top of the stack, above the value that is moved to memory, in
-/// which case this address is also popped from the stack.
+/// Return the code to move the top stack element to a specific memory address. Pops top stack
+/// value. If no static memory pointer is provided, pointer is assumed to be on top of the stack,
+/// above the value that is moved to memory, in which case this address is also popped from the
+/// stack.
 pub fn move_top_stack_value_to_memory(
-    static_memory_location: Option<u32>,
+    static_memory_location: Option<BFieldElement>,
     top_value_size: usize,
 ) -> Vec<LabelledInstruction> {
     // A stack value of the form `_ val2 val1 val0`, with `val0` being on the top of the stack
     // is stored in memory as: `val0 val1 val2`, where `val0` is stored on the `memory_location`
     // address.
-    let mut ret = match static_memory_location {
-        Some(static_mem_addr) => triton_asm!(push {static_mem_addr as u64}),
+    let initial_instruction = match static_memory_location {
+        Some(static_mem_addr) => triton_asm!(push { static_mem_addr }),
         None => triton_asm!(),
     };
 
-    // _ [value] mem_address_start
-    for i in 0..top_value_size {
-        ret.push(triton_instr!(swap 1));
-        // _ mem_address element
-
-        ret.push(triton_instr!(write_mem));
-        // _ mem_address
-
-        if i != top_value_size - 1 {
-            ret.append(&mut triton_asm!(push 1 add));
-            // _ (mem_address + 1)
-        }
-    }
-
-    // remove memory address from top of stack
-    ret.push(triton_instr!(pop 1));
-
-    ret
-}
-
-/// Return the code to store the top stack element at a
-/// specific memory address. Leaves the stack unchanged.
-/// Limitation: Can only copy values smaller than 16 for now
-fn copy_top_stack_value_to_memory(
-    memory_location: u32,
-    top_value_size: usize,
-) -> Vec<LabelledInstruction> {
-    // A stack value of the form `_ val2 val1 val0`, with `val0` being on the top of the stack
-    // is stored in memory as: `val0 val1 val2`, where `val0` is stored on the `memory_location`
-    // address.
-    let mut ret = triton_asm!(push {memory_location as u64});
-
-    assert!(
-        top_value_size < SIZE_OF_ACCESSIBLE_STACK,
-        "Can only copy values of size less than 16 for now"
-    );
-    for i in 0..top_value_size {
-        ret.append(&mut triton_asm!(dup {1 + i as u64}));
-        // _ [elements] mem_address element
-
-        ret.push(triton_instr!(write_mem));
-        // _ [elements] mem_address
-
-        if i != top_value_size - 1 {
-            ret.append(&mut triton_asm!(push 1 add));
-            // _ (mem_address + 1)
-        }
-    }
-
-    // remove memory address from top of stack
-    ret.push(triton_instr!(pop));
-
-    ret
+    [initial_instruction, write_n_words_to_memory(top_value_size)].concat()
 }
 
 /// Returns the code to convert a `MemPointer<data_type>` into a `data_type` on the stack. Consumes the
@@ -3002,43 +2945,76 @@ fn dereference(
 }
 
 /// Return the code to load a value from memory. Leaves the stack with the read value on top.
-fn load_from_memory(static_memory_address: u32, value_size: usize) -> Vec<LabelledInstruction> {
+fn load_from_memory(
+    static_memory_address: BFieldElement,
+    value_size: usize,
+) -> Vec<LabelledInstruction> {
     // A stack value of the form `_ val2 val1 val0`, with `val0` being on the top of the stack
     // is stored in memory as: `val0 val1 val2`, where `val0` is stored on the `memory_location`
     // address. So we read the value at the highest memory location first.
-    let mut ret = triton_asm!(
-        push {static_memory_address as u64 + value_size as u64 - 1}
-    );
+    let last_word_pointer = static_memory_address.value() + value_size as u64 - 1;
 
-    // stack: _ memory_address_of_last_word
+    [
+        triton_asm!(push { last_word_pointer }),
+        read_n_words_from_memory(value_size),
+    ]
+    .concat()
+}
 
-    for i in 0..value_size {
-        // Stack: _ memory_address
+/// Return the code to store a stack-value in memory
+pub(crate) fn copy_value_to_memory(
+    memory_location: BFieldElement,
+    value_size: usize,
+    stack_location_for_top_of_value: usize,
+) -> Vec<LabelledInstruction> {
+    // A stack value of the form `_ val2 val1 val0`, with `val0` being on the top of the stack
+    // is stored in memory as: `val0 val1 val2`, where `val0` is stored on the `memory_location`
+    // address.
 
-        ret.push(triton_instr!(read_mem));
-        // Stack: _ memory_address value
+    let stack_location_for_bottom_of_value = stack_location_for_top_of_value + value_size - 1;
+    let dup_instructions = format!("dup {stack_location_for_bottom_of_value} ").repeat(value_size);
 
-        ret.push(triton_instr!(swap 1));
+    triton_asm!(
+        { dup_instructions }
+        push { memory_location }
+        {&write_n_words_to_memory(value_size)}
+    )
+}
 
-        // Decrement memory address to prepare for next loop iteration
-        if i != value_size - 1 {
-            ret.append(&mut triton_asm!(push {BFieldElement::MAX} add))
-            // Stack: _ (memory_address - 1)
-        }
-    }
+/// Return the code to store the top stack element at a specific memory address. Leaves the stack
+/// unchanged. Limitation: Can only copy values smaller than 16 for now
+fn copy_top_stack_value_to_memory(
+    memory_location: BFieldElement,
+    top_value_size: usize,
+) -> Vec<LabelledInstruction> {
+    copy_value_to_memory(memory_location, top_value_size, 0)
+}
 
-    // Remove memory address from top of stack
-    ret.push(triton_instr!(pop));
+/// BEFORE: _ *last_word
+/// AFTER:  _ [read_value; number_of_words_to_read]
+fn read_n_words_from_memory(number_of_words_to_read: usize) -> Vec<LabelledInstruction> {
+    let full_reads = triton_asm![read_mem 5; number_of_words_to_read / 5];
+    let remaining_reads = match number_of_words_to_read % 5 {
+        0 => triton_asm!(),
+        _ => triton_asm!(read_mem {number_of_words_to_read % 5}),
+    };
+    [full_reads, remaining_reads, triton_asm!(pop 1)].concat()
+}
 
-    // Stack: _ element_N element_{N - 1} ... element_0
-
-    ret
+/// BEFORE: _ [value; number_of_words_to_write] *first_word
+/// AFTER:  _
+pub(super) fn write_n_words_to_memory(number_of_words_to_write: usize) -> Vec<LabelledInstruction> {
+    let full_writes = triton_asm![write_mem 5; number_of_words_to_write / 5];
+    let remaining_writes = match number_of_words_to_write % 5 {
+        0 => triton_asm!(),
+        _ => triton_asm!(write_mem {number_of_words_to_write % 5}),
+    };
+    [full_writes, remaining_writes, triton_asm!(pop 1)].concat()
 }
 
 fn pop_n(number_of_words_to_pop: usize) -> Vec<LabelledInstruction> {
     let full_pops = triton_asm![pop 5; number_of_words_to_pop / 5];
-    let num_remaining_pops = number_of_words_to_pop % 5;
-    let remaining_pops = match num_remaining_pops {
+    let remaining_pops = match number_of_words_to_pop % 5 {
         0 => triton_asm!(),
         _ => triton_asm!(pop {number_of_words_to_pop % 5}),
     };
