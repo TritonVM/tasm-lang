@@ -772,7 +772,7 @@ impl<'a> CompilerState<'a> {
             {
                 break;
             } else {
-                code.append(&mut triton_asm![pop; dt.stack_size()]);
+                code.extend(pop_n(dt.stack_size()));
                 self.function_state.vstack.pop();
                 if let Some(binding) = binding_name {
                     let removed = self.function_state.var_addr.remove(&binding);
@@ -1096,7 +1096,7 @@ fn compile_stmt(
             } else {
                 match location {
                     ValueLocation::OpStack(top_value_position) => {
-                        let swap_pop_instructions = format!("swap {top_value_position} pop\n")
+                        let swap_pop_instructions = format!("swap {top_value_position} pop 1\n")
                             .repeat(ident_type.stack_size());
                         triton_asm!({ swap_pop_instructions })
                     }
