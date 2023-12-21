@@ -88,7 +88,11 @@ impl ValueLocation {
                 // Type of `l` in `l[<expr>]` is known to be list. So we know stack size = 1
                 // Read the list pointer from memory, then clear the stack, leaving only
                 // the list pointer on the stack.
-                triton_asm!(push {pointer} read_mem swap 1 pop)
+                triton_asm!(
+                    push {pointer}
+                    read_mem 1
+                    pop 1
+                )
             }
             ValueLocation::DynamicMemoryAddress(code) => code.to_owned(),
         }
