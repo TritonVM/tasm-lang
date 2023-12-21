@@ -297,11 +297,10 @@ mod compile_and_typecheck_tests {
 
         #[test]
         fn build_and_read_vector_in_while_loop_test() {
-            let mut vm_memory = HashMap::default();
             let exec_result = execute_with_stack_memory_and_ins_safe_lists(
                 &build_and_read_u32_vector_in_while_loop_rast(),
                 vec![],
-                &mut vm_memory,
+                &HashMap::default(),
                 vec![],
                 NonDeterminism::new(vec![]),
                 1,
@@ -315,11 +314,11 @@ mod compile_and_typecheck_tests {
 
             let list_pointer_b = final_stack.pop().unwrap();
             let expected_list_b = (400..416).map(u32_lit).rev().collect_vec();
-            assert_list_equal(expected_list_b, list_pointer_b, &vm_memory);
+            assert_list_equal(expected_list_b, list_pointer_b, &exec_result.final_ram);
 
             let list_pointer_a = final_stack.pop().unwrap();
             let expected_list_a = (0..16).map(u32_lit).collect_vec();
-            assert_list_equal(expected_list_a, list_pointer_a, &vm_memory);
+            assert_list_equal(expected_list_a, list_pointer_a, &exec_result.final_ram);
 
             fn build_and_read_u32_vector_in_while_loop_rast() -> syn::ItemFn {
                 item_fn(parse_quote! {
@@ -355,11 +354,10 @@ mod compile_and_typecheck_tests {
 
         #[test]
         fn build_vector_in_while_loop_test() {
-            let mut vm_memory = HashMap::default();
             let mut exec_result = execute_with_stack_memory_and_ins_safe_lists(
                 &build_u32_vector_in_while_loop_rast(),
                 vec![],
-                &mut vm_memory,
+                &HashMap::default(),
                 vec![],
                 NonDeterminism::new(vec![]),
                 DataType::List(Box::new(DataType::U32), ListType::Safe).stack_size() as isize,
@@ -367,13 +365,12 @@ mod compile_and_typecheck_tests {
             .unwrap();
             let mut list_pointer = exec_result.final_stack.last().unwrap();
             let mut expected_list = (0..16).map(u32_lit).collect_vec();
-            assert_list_equal(expected_list, *list_pointer, &vm_memory);
+            assert_list_equal(expected_list, *list_pointer, &exec_result.final_ram);
 
-            vm_memory = HashMap::default();
             exec_result = execute_with_stack_memory_and_ins_safe_lists(
                 &build_u64_vector_in_while_loop_rast(),
                 vec![],
-                &mut vm_memory,
+                &HashMap::default(),
                 vec![],
                 NonDeterminism::new(vec![]),
                 DataType::List(Box::new(DataType::U64), ListType::Safe).stack_size() as isize,
@@ -381,7 +378,7 @@ mod compile_and_typecheck_tests {
             .unwrap();
             list_pointer = exec_result.final_stack.last().unwrap();
             expected_list = (0..16).map(u64_lit).collect_vec();
-            assert_list_equal(expected_list, *list_pointer, &vm_memory)
+            assert_list_equal(expected_list, *list_pointer, &exec_result.final_ram)
         }
 
         #[test]

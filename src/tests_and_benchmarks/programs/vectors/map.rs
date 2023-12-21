@@ -29,7 +29,7 @@ mod tests {
 
         #[test]
         fn simple_map_mul_by_2_test() {
-            let mut vm_memory = HashMap::default();
+            let mut init_memory = HashMap::default();
             let init_list_u32s: Vec<u32> = random_elements(1);
             let init_list_u64s: Vec<u64> =
                 init_list_u32s.into_iter().map(|x| x as u64).collect_vec();
@@ -38,11 +38,11 @@ mod tests {
                 input_list_pointer,
                 1,
                 init_list_u64s.clone(),
-                &mut vm_memory,
+                &mut init_memory,
             );
             println!(
                 "vm_memory: {}",
-                vm_memory
+                init_memory
                     .iter()
                     .sorted_by_key(|x| x.0.value())
                     .map(|(k, v)| format!("({k} => {v})"))
@@ -51,7 +51,7 @@ mod tests {
             let exec_result = execute_with_stack_and_memory_safe_lists(
                 &simple_map_mul_by_2(),
                 vec![bfe_lit(input_list_pointer)],
-                &mut vm_memory,
+                &init_memory,
                 0,
             )
             .unwrap();
@@ -60,7 +60,7 @@ mod tests {
                 .into_iter()
                 .map(|x| u64_lit(x * 2))
                 .collect_vec();
-            assert_list_equal(expected_list, *list_pointer, &vm_memory);
+            assert_list_equal(expected_list, *list_pointer, &exec_result.final_ram);
         }
     }
 }

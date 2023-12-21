@@ -108,7 +108,7 @@ pub fn execute_compiled_with_stack_memory_and_ins_for_bench(
 pub fn execute_compiled_with_stack_memory_and_ins_for_test(
     code: &[LabelledInstruction],
     input_args: Vec<ast::ExprLit<Typing>>,
-    memory: &mut HashMap<BFieldElement, BFieldElement>,
+    memory: &HashMap<BFieldElement, BFieldElement>,
     std_in: Vec<BFieldElement>,
     mut non_determinism: NonDeterminism<BFieldElement>,
     _expected_stack_diff: isize,
@@ -159,7 +159,7 @@ pub fn execute_with_stack_unsafe_lists(
     execute_compiled_with_stack_memory_and_ins_for_test(
         &code,
         stack_start,
-        &mut HashMap::default(),
+        &HashMap::default(),
         vec![],
         NonDeterminism::new(vec![]),
         expected_stack_diff,
@@ -177,9 +177,9 @@ pub fn execute_with_stack_safe_lists(
     execute_compiled_with_stack_memory_and_ins_for_test(
         &code,
         stack_start,
-        &mut HashMap::default(),
+        &HashMap::default(),
         vec![],
-        NonDeterminism::new(vec![]),
+        NonDeterminism::default(),
         expected_stack_diff,
     )
 }
@@ -188,7 +188,7 @@ pub fn execute_with_stack_safe_lists(
 pub fn execute_with_stack_and_memory_safe_lists(
     rust_ast: &syn::ItemFn,
     input_args: Vec<ast::ExprLit<Typing>>,
-    memory: &mut HashMap<BFieldElement, BFieldElement>,
+    memory: &HashMap<BFieldElement, BFieldElement>,
     expected_stack_diff: isize,
 ) -> anyhow::Result<tasm_lib::VmOutputState> {
     // Compile
@@ -200,7 +200,7 @@ pub fn execute_with_stack_and_memory_safe_lists(
         input_args,
         memory,
         vec![],
-        NonDeterminism::new(vec![]),
+        NonDeterminism::default(),
         expected_stack_diff,
     )
 }
@@ -209,7 +209,7 @@ pub fn execute_with_stack_and_memory_safe_lists(
 pub fn execute_with_stack_memory_and_ins_safe_lists(
     rust_ast: &syn::ItemFn,
     input_args: Vec<ast::ExprLit<Typing>>,
-    memory: &mut HashMap<BFieldElement, BFieldElement>,
+    memory: &HashMap<BFieldElement, BFieldElement>,
     std_in: Vec<BFieldElement>,
     non_determinism: NonDeterminism<BFieldElement>,
     expected_stack_diff: isize,
@@ -250,11 +250,10 @@ pub fn compare_compiled_prop_with_stack_and_memory_and_ins(
             .iter()
             .map(|arg| arg.get_type().stack_size())
             .sum::<usize>();
-    let mut actual_memory = init_memory;
     let exec_result = execute_compiled_with_stack_memory_and_ins_for_test(
         code,
         input_args,
-        &mut actual_memory,
+        &init_memory,
         std_in,
         non_determinism,
         expected_final_stack.len() as isize - init_stack_length as isize,
@@ -294,17 +293,18 @@ pub fn compare_compiled_prop_with_stack_and_memory_and_ins(
     // Verify that memory behaves as expected, if expected value is set. Don't bother verifying the
     // value of the dyn malloc address though, as this is considered an implementation detail and is
     // really hard to keep track of.
+    let mut final_ram = exec_result.final_ram.clone();
     if expected_final_memory.as_ref().is_some()
         && !expected_final_memory
             .as_ref()
             .unwrap()
             .contains_key(&DYN_MALLOC_ADDRESS)
     {
-        actual_memory.remove(&DYN_MALLOC_ADDRESS);
+        final_ram.remove(&DYN_MALLOC_ADDRESS);
     }
 
     if let Some(efm) = expected_final_memory {
-        if actual_memory != efm {
+        if final_ram != efm {
             let mut expected_final_memory = efm.iter().collect_vec();
             expected_final_memory
                 .sort_unstable_by(|&a, &b| a.0.value().partial_cmp(&b.0.value()).unwrap());
@@ -314,7 +314,7 @@ pub fn compare_compiled_prop_with_stack_and_memory_and_ins(
                 .collect_vec()
                 .join(",");
 
-            let mut actual_memory = actual_memory.iter().collect_vec();
+            let mut actual_memory = final_ram.iter().collect_vec();
             actual_memory.sort_unstable_by(|&a, &b| a.0.value().partial_cmp(&b.0.value()).unwrap());
             let actual_memory_str = actual_memory
                 .iter()

@@ -59,7 +59,7 @@ mod tests {
         let vm_output = execute_with_stack_memory_and_ins_safe_lists(
             &parsed,
             vec![],
-            &mut HashMap::default(),
+            &HashMap::default(),
             stdin,
             non_determinism,
             expected_stack_diff,

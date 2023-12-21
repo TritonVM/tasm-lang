@@ -605,13 +605,13 @@ mod run_tests {
                 let digests: Vec<Digest> = random_elements(size);
                 let msa: mmr::mmr_accumulator::MmrAccumulator<Tip5> =
                     mmr::mmr_accumulator::MmrAccumulator::new(digests.clone());
-                let mut memory = HashMap::default();
+                let mut init_memory = HashMap::default();
                 let list_pointer: BFieldElement = 10000u64.into();
                 rust_shadowing_helper_functions::safe_list::safe_list_insert(
                     list_pointer,
                     2000,
                     msa.get_peaks(),
-                    &mut memory,
+                    &mut init_memory,
                 );
                 let new_leaf: Digest = random();
                 let inputs = vec![
@@ -619,8 +619,11 @@ mod run_tests {
                     bfe_lit(list_pointer),
                     digest_lit(new_leaf),
                 ];
-                let res = execute_with_stack_and_memory_safe_lists(&src, inputs, &mut memory, -6);
-                assert!(res.is_ok(), "VM execution must succeed");
+                let res = execute_with_stack_and_memory_safe_lists(&src, inputs, &init_memory, -6);
+                let res = match res {
+                    Ok(res) => res,
+                    Err(err) => panic!("VM execution must succeed. Got: {err}"),
+                };
 
                 let (new_peaks, mp) = mmr::shared_basic::calculate_new_peaks_from_append::<Tip5>(
                     msa.count_leaves(),
@@ -632,7 +635,7 @@ mod run_tests {
                 assert_list_equal(
                     new_peaks.iter().map(|x| digest_lit(*x)).collect_vec(),
                     list_pointer,
-                    &memory,
+                    &res.final_ram,
                 );
 
                 // Verify that the authentication path calculated in the VM match that calculated in Rust
@@ -642,7 +645,7 @@ mod run_tests {
                         .map(|x| digest_lit(*x))
                         .collect_vec(),
                     BFieldElement::one(),
-                    &memory,
+                    &res.final_ram,
                 );
             }
         }
@@ -762,7 +765,7 @@ mod run_tests {
                 let digests: Vec<Digest> = random_elements(size);
                 let ammr = get_rustyleveldb_ammr_from_digests(digests.clone());
 
-                let mut memory = HashMap::default();
+                let mut init_memory = HashMap::default();
                 let old_peaks_pointer: BFieldElement = 10000u64.into();
                 let old_peaks = ammr.get_peaks();
                 let capacity = 2000;
@@ -771,7 +774,7 @@ mod run_tests {
                     old_peaks_pointer,
                     capacity,
                     old_peaks.clone(),
-                    &mut memory,
+                    &mut init_memory,
                 );
                 let ap_pointer: BFieldElement = 20000u64.into();
                 let old_mp = ammr.prove_membership(leaf_index).0;
@@ -779,7 +782,7 @@ mod run_tests {
                     ap_pointer,
                     capacity,
                     old_mp.authentication_path.clone(),
-                    &mut memory,
+                    &mut init_memory,
                 );
                 let new_leaf: Digest = random();
                 let inputs = vec![
@@ -792,12 +795,12 @@ mod run_tests {
                 let res = execute_compiled_with_stack_memory_and_ins_for_test(
                     &code,
                     inputs,
-                    &mut memory,
+                    &init_memory,
                     vec![],
                     NonDeterminism::new(vec![]),
                     -10,
-                );
-                assert!(res.is_ok(), "VM execution must succeed");
+                )
+                .unwrap();
 
                 let expected_new_peaks = mmr::shared_basic::calculate_new_peaks_from_leaf_mutation::<
                     Tip5,
@@ -812,7 +815,7 @@ mod run_tests {
                         .map(|x| digest_lit(*x))
                         .collect_vec(),
                     old_peaks_pointer,
-                    &memory,
+                    &res.final_ram,
                 );
 
                 // Sanity check
@@ -840,7 +843,7 @@ mod run_tests {
                 let ammr = get_rustyleveldb_ammr_from_digests(digests.clone());
                 let leaf_index = random::<u64>() % size as u64;
 
-                let mut memory = HashMap::default();
+                let mut init_memory = HashMap::default();
                 let peaks_pointer: BFieldElement = 10000u64.into();
                 let peaks = ammr.get_peaks();
                 let capacity = 2000;
@@ -848,7 +851,7 @@ mod run_tests {
                     peaks_pointer,
                     capacity,
                     peaks.clone(),
-                    &mut memory,
+                    &mut init_memory,
                 );
                 let ap_pointer: BFieldElement = 20000u64.into();
                 let mp: MmrMembershipProof<H> = ammr.prove_membership(leaf_index).0;
@@ -856,7 +859,7 @@ mod run_tests {
                     ap_pointer,
                     capacity,
                     mp.authentication_path.clone(),
-                    &mut memory,
+                    &mut init_memory,
                 );
 
                 let own_leaf = digests[leaf_index as usize];
@@ -872,7 +875,7 @@ mod run_tests {
                 let vm_res = match execute_compiled_with_stack_memory_and_ins_for_test(
                     &code,
                     good_inputs,
-                    &mut memory,
+                    &init_memory,
                     vec![],
                     NonDeterminism::new(vec![]),
                     -10,
@@ -901,7 +904,7 @@ mod run_tests {
                 let vm_res_negative = match execute_compiled_with_stack_memory_and_ins_for_test(
                     &code,
                     bad_inputs,
-                    &mut memory,
+                    &init_memory,
                     vec![],
                     NonDeterminism::new(vec![]),
                     -10,
