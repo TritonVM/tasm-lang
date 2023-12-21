@@ -316,7 +316,7 @@ impl VectorLib {
             // _ *list
             // Stack at function end:
             // _
-            body: triton_asm!(push 0 write_mem pop),
+            body: triton_asm!(push 0 swap 1 write_mem 1 pop 1),
         }
     }
 
