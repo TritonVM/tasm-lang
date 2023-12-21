@@ -231,7 +231,9 @@ impl HasherLib {
     }
 
     fn hash_varlen_code(&self, state: &mut CompilerState) -> Vec<LabelledInstruction> {
-        // This is just a thin wrapper around `tasm-lib`'s `hash_varlen`
+        // This is just a thin wrapper around `tasm-lib`'s `hash_varlen`, such that
+        // you can call `H::hash_varlen(&bfes)`, where `bfes` has to be a list of
+        // `BFieldElement`s, no other element type works.
         let tasm_libs_hash_varlen_label =
             state.import_snippet(Box::new(tasm_lib::hashing::hash_varlen::HashVarlen));
         let tasm_langs_hash_varlen_label = "tasm_langs_hash_varlen".to_owned();
@@ -240,11 +242,10 @@ impl HasherLib {
             {tasm_langs_hash_varlen_label}:
             // _ *list
 
-            read_mem
-            // _ *list len
+            read_mem 1
+            // _ len (*list - 1)
 
-            swap 1
-            push {self.list_type.metadata_size()}
+            push {self.list_type.metadata_size() + 1}
             add
             swap 1
             // _ *elem_0 len
@@ -252,6 +253,7 @@ impl HasherLib {
 
             call { tasm_libs_hash_varlen_label }
             // _ digest
+
             return
         );
         state.add_library_function(tasm_langs_hash_varlen.try_into().unwrap());
