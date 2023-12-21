@@ -639,12 +639,13 @@ mod run_tests {
                 );
 
                 // Verify that the authentication path calculated in the VM match that calculated in Rust
+                let auth_path_pointer = *res.final_stack.last().unwrap();
                 assert_list_equal(
                     mp.authentication_path
                         .iter()
                         .map(|x| digest_lit(*x))
                         .collect_vec(),
-                    BFieldElement::one(),
+                    auth_path_pointer,
                     &res.final_ram,
                 );
             }
