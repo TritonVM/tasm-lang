@@ -170,8 +170,6 @@ mod run_tests {
 
     #[test]
     fn secretin_10_test() {
-        color_eyre::install().unwrap();
-
         let rust_ast_to_compile = item_fn(parse_quote! {
             fn secretin() -> (BFieldElement, BFieldElement, BFieldElement, BFieldElement, BFieldElement, BFieldElement, BFieldElement, BFieldElement) {
                 let r0: BFieldElement = tasm::tasm_io_read_secin___bfe();
