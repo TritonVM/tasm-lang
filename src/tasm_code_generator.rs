@@ -9,7 +9,7 @@ use std::collections::{HashMap, HashSet};
 use std::fmt::Display;
 use tasm_lib;
 use tasm_lib::library::Library as SnippetState;
-use tasm_lib::snippet::BasicSnippet;
+use tasm_lib::traits::basic_snippet::BasicSnippet;
 use triton_vm::instruction::LabelledInstruction;
 use triton_vm::{triton_asm, triton_instr};
 use twenty_first::amount::u32s::U32s;

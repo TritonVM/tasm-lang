@@ -2,7 +2,7 @@ use std::{fmt::Display, str::FromStr};
 
 use anyhow::bail;
 use itertools::Itertools;
-use tasm_lib::snippet::BasicSnippet;
+use tasm_lib::traits::basic_snippet::BasicSnippet;
 use triton_vm::triton_asm;
 
 use crate::{ast::FnSignature, libraries::LibraryFunction};
