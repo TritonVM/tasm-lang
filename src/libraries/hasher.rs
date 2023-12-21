@@ -285,6 +285,6 @@ fn get_hash_pair_function() -> LibraryFunction {
 
     LibraryFunction {
         signature: fn_signature,
-        body: triton_asm!(hash pop pop pop pop pop),
+        body: triton_asm!(hash),
     }
 }
