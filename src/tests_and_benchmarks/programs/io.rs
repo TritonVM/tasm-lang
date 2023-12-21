@@ -31,24 +31,8 @@ mod run_tests {
     fn secretin_rast() -> syn::ItemFn {
         item_fn(parse_quote! {
             fn secretin() -> BFieldElement {
-                let res: BFieldElement = tasm::tasm_io_read_secret___bfe();
+                let res: BFieldElement = tasm::tasm_io_read_secin___bfe();
                 return res;
-            }
-        })
-    }
-
-    fn secretin_rast_10() -> syn::ItemFn {
-        item_fn(parse_quote! {
-            fn secretin() -> (BFieldElement, BFieldElement, BFieldElement, BFieldElement, BFieldElement, BFieldElement, BFieldElement, BFieldElement) {
-                let r0: BFieldElement = tasm::tasm_io_read_secret___bfe();
-                let r1: BFieldElement = tasm::tasm_io_read_secret___bfe();
-                let r2: BFieldElement = tasm::tasm_io_read_secret___bfe();
-                let r3: BFieldElement = tasm::tasm_io_read_secret___bfe();
-                let r4: BFieldElement = tasm::tasm_io_read_secret___bfe();
-                let r5: BFieldElement = tasm::tasm_io_read_secret___bfe();
-                let r6: BFieldElement = tasm::tasm_io_read_secret___bfe();
-                let r7: BFieldElement = tasm::tasm_io_read_secret___bfe();
-                return (r0,r1,r2,r3,r4,r5,r6,r7);
             }
         })
     }
@@ -99,12 +83,12 @@ mod run_tests {
         item_fn(parse_quote! {
             fn all_types_one_liner() -> (bool, u32, u64, BFieldElement, XFieldElement, Digest) {
                 return (
-                    tasm::tasm_io_read_secret___bool(),
-                    tasm::tasm_io_read_secret___u32(),
-                    tasm::tasm_io_read_secret___u64(),
-                    tasm::tasm_io_read_secret___bfe(),
-                    tasm::tasm_io_read_secret___xfe(),
-                    tasm::tasm_io_read_secret___digest()
+                    tasm::tasm_io_read_secin___bool(),
+                    tasm::tasm_io_read_secin___u32(),
+                    tasm::tasm_io_read_secin___u64(),
+                    tasm::tasm_io_read_secin___bfe(),
+                    tasm::tasm_io_read_secin___xfe(),
+                    tasm::tasm_io_read_secin___digest()
                 );
             }
         })
@@ -122,11 +106,11 @@ mod run_tests {
     fn secretin_rast_most_types() -> syn::ItemFn {
         item_fn(parse_quote! {
             fn most_types() -> (bool, u32, u64, BFieldElement, XFieldElement) {
-                let r0: bool = tasm::tasm_io_read_secret___bool();
-                let r1: u32 = tasm::tasm_io_read_secret___u32();
-                let r2: u64 = tasm::tasm_io_read_secret___u64();
-                let r3: BFieldElement = tasm::tasm_io_read_secret___bfe();
-                let r4: XFieldElement = tasm::tasm_io_read_secret___xfe();
+                let r0: bool = tasm::tasm_io_read_secin___bool();
+                let r1: u32 = tasm::tasm_io_read_secin___u32();
+                let r2: u64 = tasm::tasm_io_read_secin___u64();
+                let r3: BFieldElement = tasm::tasm_io_read_secin___bfe();
+                let r4: XFieldElement = tasm::tasm_io_read_secin___xfe();
                 return (r0,r1,r2,r3,r4);
             }
         })
@@ -135,7 +119,7 @@ mod run_tests {
     fn secretin_rast_digest() -> syn::ItemFn {
         item_fn(parse_quote! {
             fn get_digest() -> Digest {
-                let s: Digest = tasm::tasm_io_read_secret___digest();
+                let s: Digest = tasm::tasm_io_read_secin___digest();
                 return s;
             }
         })
@@ -186,10 +170,26 @@ mod run_tests {
 
     #[test]
     fn secretin_10_test() {
+        color_eyre::install().unwrap();
+
+        let rust_ast_to_compile = item_fn(parse_quote! {
+            fn secretin() -> (BFieldElement, BFieldElement, BFieldElement, BFieldElement, BFieldElement, BFieldElement, BFieldElement, BFieldElement) {
+                let r0: BFieldElement = tasm::tasm_io_read_secin___bfe();
+                let r1: BFieldElement = tasm::tasm_io_read_secin___bfe();
+                let r2: BFieldElement = tasm::tasm_io_read_secin___bfe();
+                let r3: BFieldElement = tasm::tasm_io_read_secin___bfe();
+                let r4: BFieldElement = tasm::tasm_io_read_secin___bfe();
+                let r5: BFieldElement = tasm::tasm_io_read_secin___bfe();
+                let r6: BFieldElement = tasm::tasm_io_read_secin___bfe();
+                let r7: BFieldElement = tasm::tasm_io_read_secin___bfe();
+                return (r0,r1,r2,r3,r4,r5,r6,r7);
+            }
+        });
+
         let my_bfe = BFieldElement::new(42);
         let my_bfe999 = BFieldElement::new(999);
         compare_prop_with_stack_and_memory_and_ins_safe_lists(
-            &secretin_rast_10(),
+            &rust_ast_to_compile,
             vec![],
             vec![
                 bfe_lit(my_bfe),
