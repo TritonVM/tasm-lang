@@ -18,25 +18,6 @@ mod compile_and_typecheck_tests {
         })
     }
 
-    fn simple_list_support() -> syn::ItemFn {
-        item_fn(parse_quote! {
-            fn make_short_list() -> (Vec<u64>, u32, u64, u64) {
-                let mut a: Vec<u64> = Vec::<u64>::with_capacity(17);
-                a.push(2000u64);
-                a.push(3000u64);
-                a.push(4000u64);
-                let b: u64 = a.pop().unwrap();
-                let len: u32 = a.len() as u32;
-
-                a[1] = 5000u64;
-
-                let d: u64 = a[0];
-
-                return (a, len, b, d);
-            }
-        })
-    }
-
     fn simple_digest_list() -> syn::ItemFn {
         item_fn(parse_quote! {
             fn make_short_digest_list(digest: Digest) -> Digest {
@@ -133,6 +114,7 @@ mod compile_and_typecheck_tests {
     pub mod run_tests {
         use itertools::Itertools;
         use rand::random;
+        use tasm_lib::memory::dyn_malloc;
         use triton_vm::{Digest, NonDeterminism};
 
         use crate::ast_types::{self, DataType, ListType};
@@ -218,48 +200,73 @@ mod compile_and_typecheck_tests {
             use tasm_lib::rust_shadowing_helper_functions::safe_list::safe_list_pop;
             use tasm_lib::rust_shadowing_helper_functions::safe_list::safe_list_push;
 
+            let rust_ast = item_fn(parse_quote! {
+                fn make_short_list() -> (Vec<u64>, u32, u64, u64) {
+                    let mut a: Vec<u64> = Vec::<u64>::with_capacity(17);
+                    a.push(2000u64);
+                    a.push(3000u64);
+                    a.push(4000u64);
+                    let b: u64 = a.pop().unwrap();
+                    let len: u32 = a.len() as u32;
+
+                    a[1] = 5000u64;
+
+                    let d: u64 = a[0];
+
+                    return (a, len, b, d);
+                }
+            });
+
+            let expected_list_pointer = dyn_malloc::FIRST_DYNAMICALLY_ALLOCATED_ADDRESS;
             let inputs = vec![];
-            let outputs = vec![
-                bfe_lit(BFieldElement::one()),
+            let expected_outputs = vec![
+                bfe_lit(expected_list_pointer),
                 u32_lit(2),
                 u64_lit(4000),
                 u64_lit(2000),
             ];
 
-            let mut memory: HashMap<BFieldElement, BFieldElement> = HashMap::default();
+            let mut expected_final_memory: HashMap<BFieldElement, BFieldElement> =
+                HashMap::default();
 
-            // Free-pointer
-            // `2 * 17 + 2` is used by list. `1` is used by the dynamic allocator.
-            let total_memory_used = 2 * 17 + 2 + 1;
-            assert!(memory
-                .insert(BFieldElement::zero(), BFieldElement::new(total_memory_used))
-                .is_none());
-
-            let list_pointer = BFieldElement::one();
-            safe_list_new(list_pointer, 17, &mut memory);
+            safe_list_new(expected_list_pointer, 17, &mut expected_final_memory);
 
             let elem_0 = vec![BFieldElement::new(2000), BFieldElement::new(0)];
-            safe_list_push(list_pointer, elem_0.clone(), &mut memory, elem_0.len());
+            safe_list_push(
+                expected_list_pointer,
+                elem_0.clone(),
+                &mut expected_final_memory,
+                elem_0.len(),
+            );
 
             let elem_1 = vec![BFieldElement::new(5000), BFieldElement::new(0)];
-            safe_list_push(list_pointer, elem_1.clone(), &mut memory, elem_1.len());
+            safe_list_push(
+                expected_list_pointer,
+                elem_1.clone(),
+                &mut expected_final_memory,
+                elem_1.len(),
+            );
 
             let elem_2 = vec![BFieldElement::new(4000), BFieldElement::new(0)];
-            safe_list_push(list_pointer, elem_2.clone(), &mut memory, elem_2.len());
+            safe_list_push(
+                expected_list_pointer,
+                elem_2.clone(),
+                &mut expected_final_memory,
+                elem_2.len(),
+            );
 
             safe_list_pop(
-                list_pointer,
-                &mut memory,
+                expected_list_pointer,
+                &mut expected_final_memory,
                 ast_types::DataType::U64.stack_size(),
             );
 
-            let input_memory = HashMap::default();
             compare_prop_with_stack_and_memory_safe_lists(
-                &simple_list_support(),
+                &rust_ast,
                 inputs,
-                outputs,
-                input_memory,
-                Some(memory),
+                expected_outputs,
+                HashMap::default(),
+                Some(expected_final_memory),
             );
         }
 
