@@ -4,7 +4,6 @@ use num::One;
 use std::collections::{HashMap, HashSet};
 use twenty_first::shared_math::b_field_element::BFieldElement;
 use twenty_first::shared_math::x_field_element::XFieldElement;
-use twenty_first::utils::has_unique_elements;
 
 use crate::ast::MethodCall;
 use crate::composite_types::CompositeTypes;
@@ -545,7 +544,7 @@ fn annotate_stmt(
                             enum_type.variant_data_type(variant_name).as_tuple_type();
                         assert!(data_bindings.is_empty() || variant_data_tuple.element_count() == data_bindings.len(), "Number of bindings must match number of elements in variant data tuple");
                         assert!(
-                            has_unique_elements(data_bindings.iter().map(|x| &x.name)),
+                            data_bindings.iter().map(|x| &x.name).all_unique(),
                             "Name repetition in pattern matching not allowed"
                         );
 
