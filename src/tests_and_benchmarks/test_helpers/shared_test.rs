@@ -34,20 +34,17 @@ impl InputOutputTestCase {
     }
 }
 
-pub fn init_memory_from<T: BFieldCodec>(
+pub(crate) fn init_memory_from<T: BFieldCodec>(
     data_struct: &T,
     memory_address: BFieldElement,
 ) -> NonDeterminism<BFieldElement> {
-    // Encode data structure and insert it into RAM, then set the dynamic memory allocator
     let data_struct_encoded = data_struct.encode();
-    let first_free_address = memory_address.value() + data_struct_encoded.len() as u64 + 1;
-    let mut init_ram: HashMap<BFieldElement, BFieldElement> = data_struct_encoded
+    let init_ram: HashMap<BFieldElement, BFieldElement> = data_struct_encoded
         .into_iter()
         .zip(memory_address.value()..)
         .map(|(v, k)| (k.into(), v))
         .collect();
-    init_ram.insert(DYN_MALLOC_ADDRESS, first_free_address.into());
-    NonDeterminism::new(vec![]).with_ram(init_ram)
+    NonDeterminism::default().with_ram(init_ram)
 }
 
 /// Get the execution code and the name of the compiled function
