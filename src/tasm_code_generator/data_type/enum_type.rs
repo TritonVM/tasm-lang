@@ -56,19 +56,18 @@ impl EnumType {
                 // memory: [(*field0, _), (*field1, _), ...]
 
                 // Initialize word-counter to zero
-                push {pointer_for_words_loaded_acc}
                 push 0
-                write_mem
-                pop
+                push {pointer_for_words_loaded_acc}
+                write_mem 1
+                pop 1
                 // _ *discriminant
 
                 // Store discriminant pointer
                 push {pointer_for_discriminant_pointer}
-                swap 1
-                // _ **discriminant *discriminant
+                // _ *discriminant **discriminant
 
-                write_mem
-                pop
+                write_mem 1
+                pop 1
                 // _
         );
 
@@ -85,15 +84,10 @@ impl EnumType {
                 push {pointer_for_discriminant_pointer}
                 // _ [data] **discriminant
 
-                read_mem
-                // _ [data] **discriminant *discriminant
+                read_mem 1 pop 1
+                // _ [data] *discriminant
 
-                read_mem
-                // _ [data] **discriminant *discriminant discriminant
-
-                swap 2
-                pop
-                pop
+                read_mem 1 pop 1
                 // _ [data] discriminant
 
                 push {haystack_discriminant}
@@ -117,11 +111,10 @@ impl EnumType {
                     push {field_pointer_pointer.value() + 2 * field_count as u64}
                     // _ [data] *field[field_count].pointer
 
-                    read_mem
-                    swap 1
-                    pop
-
+                    read_mem 1
+                    pop 1
                     // _ [data] *field
+
                     {&load_field}
 
                     // _ [data] [field_data]
@@ -133,18 +126,16 @@ impl EnumType {
                     push {pointer_for_words_loaded_acc}
                     // _ [data'] field_stack_size *word_acc
 
-                    read_mem
-                    swap 1
-                    pop
+                    read_mem 1
+                    pop 1
                     // _ [data'] field_stack_size word_acc
 
                     add
                     // _ [data'] word_acc'
 
                     push {pointer_for_words_loaded_acc}
-                    swap 1
-                    write_mem
-                    pop
+                    write_mem 1
+                    pop 1
                     // _ [data']
                 ));
             }
@@ -168,9 +159,8 @@ impl EnumType {
         load_subroutine.append(&mut triton_asm!(
             // _ [data]
             push {pointer_for_words_loaded_acc}
-            read_mem
-            swap 1
-            pop
+            read_mem 1
+            pop 1
 
             // _ [data] words_loaded
             push -1
@@ -183,19 +173,14 @@ impl EnumType {
             call {pad_subroutine.get_label()}
             // _ [data] [padding] 0
 
-            pop
+            pop 1
             // _ [data] [padding]
 
             push {pointer_for_discriminant_pointer}
             // _ [data] [padding] **discriminant
 
-            read_mem
-            read_mem
-            // _ [data] [padding] **discriminant *discriminant discriminant
-
-            swap 2
-            pop
-            pop
+            read_mem 1 pop 1
+            read_mem 1 pop 1
             // _ [data] [padding] discriminant
 
             return
@@ -249,7 +234,9 @@ impl EnumType {
             set_all_field_pointers.append(&mut triton_asm!(
                 // _ *discriminant
 
-                read_mem
+                read_mem 1
+                push 1 add
+                swap 1
                 // _ *discriminant discriminant
 
                 push {haystack_discriminant}
@@ -285,13 +272,10 @@ impl EnumType {
                                 // _ *first_field
 
                                 push {field_pointer_pointer}
-                                swap 1
-                                // _ *field[0].pointer *first_field
+                                // _ *first_field *field[0].pointer
 
-                                write_mem
-                                // _ *field[0].pointer
-
-                                pop
+                                write_mem 1
+                                pop 1
                                 // _
                             )
                         }
@@ -301,31 +285,24 @@ impl EnumType {
                             add
                             // _ *first_field_size
 
-                            read_mem
-                            // _ *first_field_size field_size
+                            read_mem 1
+                            swap 1
+                            // _ (*first_field_size - 1) field_size
 
                             push {field_pointer_pointer + 1}
-                            swap 1
-                            // _ *first_field_size *field[0].size field_size
+                            // _ (*first_field_size - 1) field_size *field[0].size
 
-                            write_mem
-                            // _ *first_field_size *field[0].size
+                            write_mem 1
+                            pop 1
+                            // _ (*first_field_size - 1)
 
-                            pop
-                            // _ *first_field_size
-
-                            push 1
+                            push 2
                             add
                             // _ *first_field
 
                             push {field_pointer_pointer}
-                            swap 1
-                            // _ *field[0].pointer *first_field
-
-                            write_mem
-                            // _ *field[0].pointer
-
-                            pop
+                            write_mem 1
+                            pop 1
                             // _
                         ),
                     };
@@ -361,13 +338,8 @@ impl EnumType {
                                     // _ *field *field
 
                                     push {pointer_pointer}
-                                    swap 1
-                                    // _ *field *field[field_index].pointer *field
-
-                                    write_mem
-                                    // _ *field *field[field_index].pointer
-
-                                    pop
+                                    write_mem 1
+                                    pop 1
                                     // _ *field
 
                                     push {static_size}
@@ -378,37 +350,28 @@ impl EnumType {
                             None => triton_asm!(
                                 // _ *field_size
 
-                                read_mem
+                                read_mem 1
+                                push 1 add swap 1
                                 // _ *field_size field_size
 
                                 push {pointer_pointer + 1}
-                                swap 1
-                                // _ *field_size *field[field_index].size field_size
-
-                                write_mem
-                                // _ *field_size *field[field_index].size
-
-                                pop
+                                write_mem 1
+                                pop 1
                                 // _ *field_size
 
-                                read_mem
-                                // _ *field_size field_size
+                                read_mem 1
+                                // _ field_size (*field_size - 1)
 
-                                swap 1
-                                // _ field_size *field_size
-
-                                push 1
+                                push 2
                                 add
                                 // _ field_size *field
 
+                                dup 0
+                                // _ field_size *field *field
+
                                 push {pointer_pointer}
-                                dup 1
-                                // _ field_size *field *field[field_index].pointer *field
-
-                                write_mem
-                                // _ field_size *field[field_index].pointer
-
-                                pop
+                                write_mem 1
+                                pop 1
                                 // _ field_size *field
 
                                 add
@@ -432,7 +395,7 @@ impl EnumType {
                             {&handle_fields}
                             // _ *discriminant *garbage
 
-                            pop
+                            pop 1
                             // _ *discriminant
                             return
                     )
@@ -510,11 +473,10 @@ impl EnumType {
                     triton_asm!(
                         // _ *discriminant *field_size
 
-                        read_mem
-                        // _ *discriminant *field_size field_size
+                        read_mem 1
+                        // _ *discriminant field_size (*field_size - 1)
 
-                        swap 1
-                        push 1
+                        push 2
                         add
                         swap 1
                         // _ *discriminant *field field_size
@@ -558,7 +520,6 @@ impl EnumType {
                 // _ e0 e3 e2 e4 e1
                 swap 3
                 // _ e0 e1 e2 e4 e3
-
                 swap 1
                 // _ e0 e1 e2 e3 e4
             ),
@@ -570,7 +531,7 @@ impl EnumType {
             {&acc_code}
             // _ *discriminant [*field (hi-to-low)] *garbage
 
-            pop
+            pop 1
             // _ *discriminant [*field (hi-to-low)]
 
             {&flip_code}
