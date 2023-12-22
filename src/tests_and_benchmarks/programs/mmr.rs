@@ -59,7 +59,6 @@ mod run_tests {
     use std::collections::HashMap;
 
     use itertools::Itertools;
-    use num::One;
     use rand::{random, thread_rng, RngCore};
     use tasm_lib::rust_shadowing_helper_functions;
     use triton_vm::NonDeterminism;
