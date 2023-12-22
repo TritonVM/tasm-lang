@@ -341,10 +341,10 @@ impl<'a> CompilerState<'a> {
                                     // _ *vec<T>[n]_size index
 
                                     swap 1
-                                    read_mem
-                                    // _ index *vec<T>[n]_size vec<T>[n]_size
+                                    read_mem 1
+                                    // _ index vec<T>[n]_size (*vec<T>[n]_size - 1)
 
-                                    push 1 add add
+                                    push 2 add add
                                     // _ index *vec<T>[n+1]_size
 
                                     swap 1
@@ -367,7 +367,7 @@ impl<'a> CompilerState<'a> {
                                 call {loop_label}
                                 // _ *vec<T>[index]_size 0
 
-                                pop
+                                pop 1
                                 push 1 add
                                 // _ *vec<T>[index]
                             )
@@ -1372,23 +1372,20 @@ fn compile_match_stmt_boxed_expr(
         // Indicate that no arm body has been executed yet. For wildcard arm-conditions.
         match_code.push(triton_instr!(push 1));
         triton_asm!(
-            // *match_expr no_arm_taken_indicator
-            swap 1
-            // no_arm_taken_indicator *match_expr
-            read_mem
-            // no_arm_taken_indicator *match_expr discriminant
-            swap 2
-            // discriminant *match_expr no_arm_taken_indicator
-            swap 1
-            // discriminant no_arm_taken_indicator *match_expr
-
-            swap 2
-            // *match_expr no_arm_taken_indicator discriminant
+                    // *match_expr no_arm_taken_indicator
+            swap 1  // no_arm_taken_indicator *match_expr
+            read_mem 1 push 1 add
+                    // no_arm_taken_indicator discriminant *match_expr
+            swap 2  // *match_expr discriminant no_arm_taken_indicator
+            swap 1  // *match_expr no_arm_taken_indicator discriminant
         )
     } else {
-        // *match_expr
-        triton_asm!(read_mem)
-        // *match_expr discriminant
+        triton_asm!(
+                    // *match_expr
+            read_mem 1 push 1 add
+                    // discriminant *match_expr
+            swap 1  // *match_expr discriminant
+        )
     };
 
     // Get enum_type
@@ -1424,7 +1421,7 @@ fn compile_match_stmt_boxed_expr(
                 ));
 
                 let remove_old_any_arm_taken_indicator = if contains_wildcard {
-                    triton_asm!(pop)
+                    triton_asm!(pop 1)
                 } else {
                     triton_asm!()
                 };
@@ -1464,8 +1461,7 @@ fn compile_match_stmt_boxed_expr(
 
                 let body_code = compile_block_stmt(&arm.body, state);
 
-                let pop_local_bindings =
-                    vec![triton_instr!(pop); enum_variant_selector.data_bindings.len()];
+                let pop_local_bindings = pop_n(enum_variant_selector.data_bindings.len());
                 let subroutine_code = triton_asm!(
                     {arm_subroutine_label}:
                         {&remove_old_any_arm_taken_indicator}
@@ -1520,7 +1516,7 @@ fn compile_match_stmt_boxed_expr(
 
     // Cleanup stack by removing evaluated expresison and `any_arm_taken_bool` indicator
     if contains_wildcard {
-        match_code.push(triton_instr!(pop));
+        match_code.push(triton_instr!(pop 1));
     }
 
     triton_asm!({ &match_code })
@@ -1552,7 +1548,7 @@ fn compile_match_stmt_stack_expr(
     let outer_bindings = state.function_state.var_addr.clone();
     let match_expr_discriminant = triton_asm!(dup {contains_wildcard as u32});
     for (arm_counter, arm) in arms.iter().enumerate() {
-        // At start of each loop-iternation, stack is:
+        // At start of each loop-iteration, stack is:
         // stack: _ [expression_variant_data] expression_variant_discriminant <no_arm_taken>
 
         let arm_subroutine_label = format!("{match_expr_id}_body_{arm_counter}");
@@ -1575,7 +1571,7 @@ fn compile_match_stmt_stack_expr(
                 ));
 
                 let remove_old_any_arm_taken_indicator = if contains_wildcard {
-                    triton_asm!(pop)
+                    triton_asm!(pop 1)
                 } else {
                     triton_asm!()
                 };
@@ -1655,9 +1651,9 @@ fn compile_match_stmt_stack_expr(
             .restore_stack_and_bindings(&outer_vstack, &outer_bindings);
     }
 
-    // Cleanup stack by removing evaluated expresison and `any_arm_taken_bool` indicator
+    // Cleanup stack by removing evaluated expression and `any_arm_taken_bool` indicator
     if contains_wildcard {
-        match_code.push(triton_instr!(pop));
+        match_code.push(triton_instr!(pop 1));
     }
 
     triton_asm!({ &match_code })
