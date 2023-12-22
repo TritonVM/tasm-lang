@@ -3025,7 +3025,7 @@ pub(super) fn write_n_words_to_memory_leaving_address(
     [full_writes, remaining_writes].concat()
 }
 
-fn pop_n(number_of_words_to_pop: usize) -> Vec<LabelledInstruction> {
+pub(crate) fn pop_n(number_of_words_to_pop: usize) -> Vec<LabelledInstruction> {
     let full_pops = triton_asm![pop 5; number_of_words_to_pop / 5];
     let remaining_pops = match number_of_words_to_pop % 5 {
         0 => triton_asm!(),
