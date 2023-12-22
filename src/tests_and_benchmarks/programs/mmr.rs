@@ -240,8 +240,11 @@ mod run_tests {
     fn right_lineage_length_and_own_height_test() {
         fn right_lineage_length_and_own_height_rast() -> syn::ItemFn {
             item_fn(parse_quote! {
+                // Obscure graph-traversel algorithm for transforming indices into other kinds of indices
                 fn right_lineage_length_and_own_height(node_index: u64) -> (u32, u32) {
-                    let mut candidate_and_candidate_height: (u64, u32) = tasm::tasm_mmr_leftmost_ancestor(node_index);
+                    let leftmost_ancestor_height: u32 = tasm::tasm_arithmetic_u64_log_2_floor(node_index);
+                    let leftmost_ancestor_node_index: u64 = (1 << (leftmost_ancestor_height + 1)) - 1;
+                    let mut candidate_and_candidate_height: (u64, u32) = (leftmost_ancestor_node_index, leftmost_ancestor_height);
 
                     let mut right_ancestor_count: u32 = 0;
 
