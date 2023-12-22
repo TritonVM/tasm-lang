@@ -9,22 +9,20 @@ mod run_tests {
     use triton_vm::{BFieldElement, Digest};
     use twenty_first::shared_math::other::random_elements;
 
-    fn bfe_encode_rast() -> syn::ItemFn {
-        item_fn(parse_quote! {
+    #[test]
+    fn bfe_encode_test() {
+        let rust_ast_to_compile = item_fn(parse_quote! {
             fn bfe_encode_test_fn(input: BFieldElement) -> BFieldElement {
                 let a: Vec<BFieldElement> = input.encode();
                 let b: Vec<BFieldElement> = input.encode();
 
                 return a[0];
             }
-        })
-    }
+        });
 
-    #[test]
-    fn bfe_encode_test() {
         let input_bfe: BFieldElement = BFieldElement::new(87);
         compare_prop_with_stack_safe_lists(
-            &bfe_encode_rast(),
+            &rust_ast_to_compile,
             vec![bfe_lit(input_bfe)],
             vec![bfe_lit(input_bfe)],
         );

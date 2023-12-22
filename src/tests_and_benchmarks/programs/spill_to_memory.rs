@@ -383,30 +383,6 @@ fn big_branches_spill_rast() -> syn::ItemFn {
     })
 }
 
-fn ensure_dyn_malloc_and_static_malloc_do_not_interfere_1_rast() -> syn::ItemFn {
-    item_fn(parse_quote! {
-        fn ensure_dyn_malloc_and_static_malloc_do_not_interfere() -> Vec<u32> {
-            // Write code that spills into memory which constitutes static memory allocation.
-            // Then create a vector that also lives in memory and verify that updates to its
-            // elements does not interfere with statically allocated memory.
-            let val0: (u64, u64, u64, u64, u64) = (10420u64, 10421u64, 10422u64, 10423u64, 10424u64);
-            let val1: (u64, u64, u64, u64, u64) = (20420u64, 20421u64, 20422u64, 20423u64, 20424u64);
-            let mut b: Vec<u32> = Vec::<u32>::with_capacity(16);
-            let mut a: Vec<Digest> = Vec::<Digest>::with_capacity(16);
-
-            let mut i: usize = 0;
-            while i < 16usize {
-                b.push(i as u32 + 200u32);
-                i = i + 1;
-            }
-
-            // This ensures that val0 is spilled to memory
-            let val2 : (u64, u64, u64, u64, u64) = val0;
-            return b;
-        }
-    })
-}
-
 fn ensure_dyn_malloc_and_static_malloc_do_not_interfere_2_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn ensure_dyn_malloc_and_static_malloc_do_not_interfere() -> Vec<u32> {
@@ -780,62 +756,86 @@ mod run_tests {
 
     #[test]
     fn ensure_dyn_malloc_and_static_malloc_do_not_interfere_test_1() {
-        let mut vm_memory = HashMap::default();
+        let function = item_fn(parse_quote! {
+            fn ensure_dyn_malloc_and_static_malloc_do_not_interfere() -> Vec<u32> {
+                // Write code that spills into memory which constitutes static memory allocation.
+                // Then create a vector that also lives in memory and verify that updates to its
+                // elements does not interfere with statically allocated memory.
+                let val0: (u64, u64, u64, u64, u64) = (10420u64, 10421u64, 10422u64, 10423u64, 10424u64);
+                let val1: (u64, u64, u64, u64, u64) = (20420u64, 20421u64, 20422u64, 20423u64, 20424u64);
+                let mut b: Vec<u32> = Vec::<u32>::with_capacity(16);
+                let mut a: Vec<Digest> = Vec::<Digest>::with_capacity(16);
+
+                let mut i: usize = 0;
+                while i < 16usize {
+                    b.push(i as u32 + 200u32);
+                    i = i + 1;
+                }
+
+                // This ensures that val0 is spilled to memory
+                let val2 : (u64, u64, u64, u64, u64) = val0;
+                return b;
+            }
+        });
+
+        let init_vm_memory = HashMap::default();
         let exec_result = execute_with_stack_and_memory_safe_lists(
-            &ensure_dyn_malloc_and_static_malloc_do_not_interfere_1_rast(),
+            &function,
             vec![],
-            &mut vm_memory,
+            &init_vm_memory,
             DataType::List(Box::new(DataType::U64), ListType::Safe).stack_size() as isize,
         )
         .unwrap();
 
+        let final_vm_memory = exec_result.final_ram;
         let list_pointer = exec_result.final_stack.last().unwrap();
         println!("list_pointer: {list_pointer}");
+        println!(
+            "memory value at list_pointer: {}",
+            final_vm_memory[list_pointer]
+        );
         let expected_list = (0..16).map(|i| u32_lit(200 + i)).collect_vec();
-        assert_list_equal(expected_list, *list_pointer, &vm_memory)
+        assert_list_equal(expected_list, *list_pointer, &final_vm_memory)
     }
 
     #[test]
     fn ensure_dyn_malloc_and_static_malloc_do_not_interfere_test_2() {
-        let mut vm_memory = HashMap::default();
         let exec_result = execute_with_stack_and_memory_safe_lists(
             &ensure_dyn_malloc_and_static_malloc_do_not_interfere_2_rast(),
             vec![],
-            &mut vm_memory,
+            &HashMap::default(),
             DataType::List(Box::new(DataType::U64), ListType::Safe).stack_size() as isize,
         )
         .unwrap();
 
         let list_pointer = exec_result.final_stack.last().unwrap();
         let expected_list = (0..16).map(|i| u32_lit(200 + i)).collect_vec();
-        assert_list_equal(expected_list, *list_pointer, &vm_memory)
+        assert_list_equal(expected_list, *list_pointer, &exec_result.final_ram)
     }
 
     #[test]
     fn ensure_dyn_malloc_and_static_malloc_do_not_interfere_test_3() {
-        let mut vm_memory = HashMap::default();
         let exec_result = execute_with_stack_and_memory_safe_lists(
             &ensure_dyn_malloc_and_static_malloc_do_not_interfere_3_rast(),
             vec![],
-            &mut vm_memory,
+            &HashMap::default(),
             DataType::List(Box::new(DataType::U64), ListType::Safe).stack_size() as isize,
         )
         .unwrap();
 
         let list_pointer = exec_result.final_stack.last().unwrap();
         let expected_list = (0..16).map(|i| u32_lit(200 + i)).collect_vec();
-        assert_list_equal(expected_list, *list_pointer, &vm_memory)
+        assert_list_equal(expected_list, *list_pointer, &exec_result.final_ram)
     }
 
     #[test]
     fn ensure_dyn_malloc_and_static_malloc_do_not_interfere_test_4() {
         // First run the program to get the list's pointer that is stored as the third-to-last
         // output.
-        let mut vm_memory = HashMap::default();
         let exec_result = execute_with_stack_and_memory_safe_lists(
             &ensure_dyn_malloc_and_static_malloc_do_not_interfere_4_rast(),
             vec![],
-            &mut vm_memory,
+            &HashMap::default(),
             DataType::List(Box::new(DataType::U64), ListType::Safe).stack_size() as isize + 2,
         )
         .unwrap();
@@ -844,7 +844,7 @@ mod run_tests {
 
         // Check against expected list
         let expected_list = (0..16).map(|i| u32_lit(200 + i)).collect_vec();
-        assert_list_equal(expected_list, list_pointer, &vm_memory);
+        assert_list_equal(expected_list, list_pointer, &exec_result.final_ram);
 
         // Check the other return value
         compare_prop_with_stack_safe_lists(
@@ -858,11 +858,10 @@ mod run_tests {
     fn ensure_dyn_malloc_and_static_malloc_do_not_interfere_test_5() {
         // First run the program to get the list's pointer that is stored as the 11th-to-last
         // output.
-        let mut vm_memory = HashMap::default();
         let exec_result = execute_with_stack_and_memory_safe_lists(
             &ensure_dyn_malloc_and_static_malloc_do_not_interfere_5_rast(),
             vec![],
-            &mut vm_memory,
+            &HashMap::default(),
             12,
         )
         .unwrap();
@@ -872,10 +871,10 @@ mod run_tests {
 
         // Check against expected list
         let expected_list_b = (0..16).map(|i| u32_lit(200 + i)).collect_vec();
-        assert_list_equal(expected_list_b, list_pointer_b, &vm_memory);
+        assert_list_equal(expected_list_b, list_pointer_b, &exec_result.final_ram);
 
         let expected_list_a = vec![];
-        assert_list_equal(expected_list_a, list_pointer_a, &vm_memory);
+        assert_list_equal(expected_list_a, list_pointer_a, &exec_result.final_ram);
 
         // Check the other return value
         compare_prop_with_stack_safe_lists(

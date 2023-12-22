@@ -1,6 +1,5 @@
 #![allow(clippy::len_zero)]
 use arbitrary::Arbitrary;
-use itertools::Itertools;
 use tasm_lib::Digest;
 use twenty_first::shared_math::b_field_element::BFieldElement;
 use twenty_first::shared_math::bfield_codec::BFieldCodec;
@@ -161,7 +160,7 @@ mod tests {
             let vm_output = execute_compiled_with_stack_memory_and_ins_for_test(
                 &test_program,
                 vec![],
-                &mut HashMap::default(),
+                &HashMap::default(),
                 stdin,
                 non_determinism,
                 0,

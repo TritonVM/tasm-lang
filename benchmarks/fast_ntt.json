@@ -1,15 +1,15 @@
 [
   {
     "name": "fast_ntt",
-    "clock_cycle_count": 73520,
-    "hash_table_height": 0,
+    "clock_cycle_count": 61387,
+    "hash_table_height": 594,
     "u32_table_height": 1711,
     "case": "CommonCase"
   },
   {
     "name": "fast_ntt",
-    "clock_cycle_count": 170306,
-    "hash_table_height": 0,
+    "clock_cycle_count": 141975,
+    "hash_table_height": 594,
     "u32_table_height": 3694,
     "case": "WorstCase"
   }

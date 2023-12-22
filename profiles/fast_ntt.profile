@@ -1,16 +1,16 @@
 fast_ntt:
 
 # call graph
- main: 73515
+ main: 61385
    tasm_io_read_stdin___bfe: 2
-   tasm_list_unsafeimplu32_length___xfe: 4
+   tasm_list_unsafeimplu32_length___xfe: 3
    tasm_arithmetic_u32_leadingzeros: 12
      tasm_arithmetic_u32_leadingzeros_non_zero: 4
    tasm_arithmetic_u32_safesub: 11
    tasm_arithmetic_u32_safesub: 11
-   xfe_ntt: 33850
-     tasm_list_unsafeimplu32_length___xfe: 4
-     _binop_Neq__LboolR_bool_29_while_loop: 13545
+   xfe_ntt: 28543
+     tasm_list_unsafeimplu32_length___xfe: 3
+     _binop_Neq__LboolR_bool_29_while_loop: 13041
        bitreverse: 351
          _binop_Lt__LboolR_bool_9_while_loop: 343
            tasm_arithmetic_u32_shiftleft: 11
@@ -57,7 +57,7 @@ fast_ntt:
            tasm_arithmetic_u32_or: 7
            tasm_arithmetic_u32_shiftright: 14
            tasm_arithmetic_u32_safeadd: 8
-       _binop_Lt__LboolR_bool_35_then: 97
+       _binop_Lt__LboolR_bool_35_then: 55
        tasm_arithmetic_u32_safeadd: 8
        bitreverse: 351
          _binop_Lt__LboolR_bool_9_while_loop: 343
@@ -81,7 +81,7 @@ fast_ntt:
            tasm_arithmetic_u32_or: 7
            tasm_arithmetic_u32_shiftright: 14
            tasm_arithmetic_u32_safeadd: 8
-       _binop_Lt__LboolR_bool_35_then: 97
+       _binop_Lt__LboolR_bool_35_then: 55
        tasm_arithmetic_u32_safeadd: 8
        bitreverse: 351
          _binop_Lt__LboolR_bool_9_while_loop: 343
@@ -105,103 +105,7 @@ fast_ntt:
            tasm_arithmetic_u32_or: 7
            tasm_arithmetic_u32_shiftright: 14
            tasm_arithmetic_u32_safeadd: 8
-       _binop_Lt__LboolR_bool_35_then: 97
-       tasm_arithmetic_u32_safeadd: 8
-       bitreverse: 351
-         _binop_Lt__LboolR_bool_9_while_loop: 343
-           tasm_arithmetic_u32_shiftleft: 11
-           tasm_arithmetic_u32_or: 7
-           tasm_arithmetic_u32_shiftright: 14
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_shiftleft: 11
-           tasm_arithmetic_u32_or: 7
-           tasm_arithmetic_u32_shiftright: 14
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_shiftleft: 11
-           tasm_arithmetic_u32_or: 7
-           tasm_arithmetic_u32_shiftright: 14
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_shiftleft: 11
-           tasm_arithmetic_u32_or: 7
-           tasm_arithmetic_u32_shiftright: 14
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_shiftleft: 11
-           tasm_arithmetic_u32_or: 7
-           tasm_arithmetic_u32_shiftright: 14
-           tasm_arithmetic_u32_safeadd: 8
-       _binop_Lt__LboolR_bool_35_else: 1
-       tasm_arithmetic_u32_safeadd: 8
-       bitreverse: 351
-         _binop_Lt__LboolR_bool_9_while_loop: 343
-           tasm_arithmetic_u32_shiftleft: 11
-           tasm_arithmetic_u32_or: 7
-           tasm_arithmetic_u32_shiftright: 14
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_shiftleft: 11
-           tasm_arithmetic_u32_or: 7
-           tasm_arithmetic_u32_shiftright: 14
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_shiftleft: 11
-           tasm_arithmetic_u32_or: 7
-           tasm_arithmetic_u32_shiftright: 14
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_shiftleft: 11
-           tasm_arithmetic_u32_or: 7
-           tasm_arithmetic_u32_shiftright: 14
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_shiftleft: 11
-           tasm_arithmetic_u32_or: 7
-           tasm_arithmetic_u32_shiftright: 14
-           tasm_arithmetic_u32_safeadd: 8
-       _binop_Lt__LboolR_bool_35_then: 97
-       tasm_arithmetic_u32_safeadd: 8
-       bitreverse: 351
-         _binop_Lt__LboolR_bool_9_while_loop: 343
-           tasm_arithmetic_u32_shiftleft: 11
-           tasm_arithmetic_u32_or: 7
-           tasm_arithmetic_u32_shiftright: 14
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_shiftleft: 11
-           tasm_arithmetic_u32_or: 7
-           tasm_arithmetic_u32_shiftright: 14
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_shiftleft: 11
-           tasm_arithmetic_u32_or: 7
-           tasm_arithmetic_u32_shiftright: 14
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_shiftleft: 11
-           tasm_arithmetic_u32_or: 7
-           tasm_arithmetic_u32_shiftright: 14
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_shiftleft: 11
-           tasm_arithmetic_u32_or: 7
-           tasm_arithmetic_u32_shiftright: 14
-           tasm_arithmetic_u32_safeadd: 8
-       _binop_Lt__LboolR_bool_35_then: 97
-       tasm_arithmetic_u32_safeadd: 8
-       bitreverse: 351
-         _binop_Lt__LboolR_bool_9_while_loop: 343
-           tasm_arithmetic_u32_shiftleft: 11
-           tasm_arithmetic_u32_or: 7
-           tasm_arithmetic_u32_shiftright: 14
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_shiftleft: 11
-           tasm_arithmetic_u32_or: 7
-           tasm_arithmetic_u32_shiftright: 14
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_shiftleft: 11
-           tasm_arithmetic_u32_or: 7
-           tasm_arithmetic_u32_shiftright: 14
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_shiftleft: 11
-           tasm_arithmetic_u32_or: 7
-           tasm_arithmetic_u32_shiftright: 14
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_shiftleft: 11
-           tasm_arithmetic_u32_or: 7
-           tasm_arithmetic_u32_shiftright: 14
-           tasm_arithmetic_u32_safeadd: 8
-       _binop_Lt__LboolR_bool_35_then: 97
+       _binop_Lt__LboolR_bool_35_then: 55
        tasm_arithmetic_u32_safeadd: 8
        bitreverse: 351
          _binop_Lt__LboolR_bool_9_while_loop: 343
@@ -249,7 +153,55 @@ fast_ntt:
            tasm_arithmetic_u32_or: 7
            tasm_arithmetic_u32_shiftright: 14
            tasm_arithmetic_u32_safeadd: 8
-       _binop_Lt__LboolR_bool_35_then: 97
+       _binop_Lt__LboolR_bool_35_then: 55
+       tasm_arithmetic_u32_safeadd: 8
+       bitreverse: 351
+         _binop_Lt__LboolR_bool_9_while_loop: 343
+           tasm_arithmetic_u32_shiftleft: 11
+           tasm_arithmetic_u32_or: 7
+           tasm_arithmetic_u32_shiftright: 14
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_shiftleft: 11
+           tasm_arithmetic_u32_or: 7
+           tasm_arithmetic_u32_shiftright: 14
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_shiftleft: 11
+           tasm_arithmetic_u32_or: 7
+           tasm_arithmetic_u32_shiftright: 14
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_shiftleft: 11
+           tasm_arithmetic_u32_or: 7
+           tasm_arithmetic_u32_shiftright: 14
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_shiftleft: 11
+           tasm_arithmetic_u32_or: 7
+           tasm_arithmetic_u32_shiftright: 14
+           tasm_arithmetic_u32_safeadd: 8
+       _binop_Lt__LboolR_bool_35_then: 55
+       tasm_arithmetic_u32_safeadd: 8
+       bitreverse: 351
+         _binop_Lt__LboolR_bool_9_while_loop: 343
+           tasm_arithmetic_u32_shiftleft: 11
+           tasm_arithmetic_u32_or: 7
+           tasm_arithmetic_u32_shiftright: 14
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_shiftleft: 11
+           tasm_arithmetic_u32_or: 7
+           tasm_arithmetic_u32_shiftright: 14
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_shiftleft: 11
+           tasm_arithmetic_u32_or: 7
+           tasm_arithmetic_u32_shiftright: 14
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_shiftleft: 11
+           tasm_arithmetic_u32_or: 7
+           tasm_arithmetic_u32_shiftright: 14
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_shiftleft: 11
+           tasm_arithmetic_u32_or: 7
+           tasm_arithmetic_u32_shiftright: 14
+           tasm_arithmetic_u32_safeadd: 8
+       _binop_Lt__LboolR_bool_35_then: 55
        tasm_arithmetic_u32_safeadd: 8
        bitreverse: 351
          _binop_Lt__LboolR_bool_9_while_loop: 343
@@ -297,7 +249,7 @@ fast_ntt:
            tasm_arithmetic_u32_or: 7
            tasm_arithmetic_u32_shiftright: 14
            tasm_arithmetic_u32_safeadd: 8
-       _binop_Lt__LboolR_bool_35_then: 97
+       _binop_Lt__LboolR_bool_35_then: 55
        tasm_arithmetic_u32_safeadd: 8
        bitreverse: 351
          _binop_Lt__LboolR_bool_9_while_loop: 343
@@ -345,7 +297,7 @@ fast_ntt:
            tasm_arithmetic_u32_or: 7
            tasm_arithmetic_u32_shiftright: 14
            tasm_arithmetic_u32_safeadd: 8
-       _binop_Lt__LboolR_bool_35_then: 97
+       _binop_Lt__LboolR_bool_35_then: 55
        tasm_arithmetic_u32_safeadd: 8
        bitreverse: 351
          _binop_Lt__LboolR_bool_9_while_loop: 343
@@ -393,7 +345,7 @@ fast_ntt:
            tasm_arithmetic_u32_or: 7
            tasm_arithmetic_u32_shiftright: 14
            tasm_arithmetic_u32_safeadd: 8
-       _binop_Lt__LboolR_bool_35_then: 97
+       _binop_Lt__LboolR_bool_35_then: 55
        tasm_arithmetic_u32_safeadd: 8
        bitreverse: 351
          _binop_Lt__LboolR_bool_9_while_loop: 343
@@ -441,55 +393,7 @@ fast_ntt:
            tasm_arithmetic_u32_or: 7
            tasm_arithmetic_u32_shiftright: 14
            tasm_arithmetic_u32_safeadd: 8
-       _binop_Lt__LboolR_bool_35_else: 1
-       tasm_arithmetic_u32_safeadd: 8
-       bitreverse: 351
-         _binop_Lt__LboolR_bool_9_while_loop: 343
-           tasm_arithmetic_u32_shiftleft: 11
-           tasm_arithmetic_u32_or: 7
-           tasm_arithmetic_u32_shiftright: 14
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_shiftleft: 11
-           tasm_arithmetic_u32_or: 7
-           tasm_arithmetic_u32_shiftright: 14
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_shiftleft: 11
-           tasm_arithmetic_u32_or: 7
-           tasm_arithmetic_u32_shiftright: 14
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_shiftleft: 11
-           tasm_arithmetic_u32_or: 7
-           tasm_arithmetic_u32_shiftright: 14
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_shiftleft: 11
-           tasm_arithmetic_u32_or: 7
-           tasm_arithmetic_u32_shiftright: 14
-           tasm_arithmetic_u32_safeadd: 8
-       _binop_Lt__LboolR_bool_35_else: 1
-       tasm_arithmetic_u32_safeadd: 8
-       bitreverse: 351
-         _binop_Lt__LboolR_bool_9_while_loop: 343
-           tasm_arithmetic_u32_shiftleft: 11
-           tasm_arithmetic_u32_or: 7
-           tasm_arithmetic_u32_shiftright: 14
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_shiftleft: 11
-           tasm_arithmetic_u32_or: 7
-           tasm_arithmetic_u32_shiftright: 14
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_shiftleft: 11
-           tasm_arithmetic_u32_or: 7
-           tasm_arithmetic_u32_shiftright: 14
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_shiftleft: 11
-           tasm_arithmetic_u32_or: 7
-           tasm_arithmetic_u32_shiftright: 14
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_shiftleft: 11
-           tasm_arithmetic_u32_or: 7
-           tasm_arithmetic_u32_shiftright: 14
-           tasm_arithmetic_u32_safeadd: 8
-       _binop_Lt__LboolR_bool_35_then: 97
+       _binop_Lt__LboolR_bool_35_then: 55
        tasm_arithmetic_u32_safeadd: 8
        bitreverse: 351
          _binop_Lt__LboolR_bool_9_while_loop: 343
@@ -585,7 +489,7 @@ fast_ntt:
            tasm_arithmetic_u32_or: 7
            tasm_arithmetic_u32_shiftright: 14
            tasm_arithmetic_u32_safeadd: 8
-       _binop_Lt__LboolR_bool_35_then: 97
+       _binop_Lt__LboolR_bool_35_then: 55
        tasm_arithmetic_u32_safeadd: 8
        bitreverse: 351
          _binop_Lt__LboolR_bool_9_while_loop: 343
@@ -634,6 +538,54 @@ fast_ntt:
            tasm_arithmetic_u32_shiftright: 14
            tasm_arithmetic_u32_safeadd: 8
        _binop_Lt__LboolR_bool_35_else: 1
+       tasm_arithmetic_u32_safeadd: 8
+       bitreverse: 351
+         _binop_Lt__LboolR_bool_9_while_loop: 343
+           tasm_arithmetic_u32_shiftleft: 11
+           tasm_arithmetic_u32_or: 7
+           tasm_arithmetic_u32_shiftright: 14
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_shiftleft: 11
+           tasm_arithmetic_u32_or: 7
+           tasm_arithmetic_u32_shiftright: 14
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_shiftleft: 11
+           tasm_arithmetic_u32_or: 7
+           tasm_arithmetic_u32_shiftright: 14
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_shiftleft: 11
+           tasm_arithmetic_u32_or: 7
+           tasm_arithmetic_u32_shiftright: 14
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_shiftleft: 11
+           tasm_arithmetic_u32_or: 7
+           tasm_arithmetic_u32_shiftright: 14
+           tasm_arithmetic_u32_safeadd: 8
+       _binop_Lt__LboolR_bool_35_else: 1
+       tasm_arithmetic_u32_safeadd: 8
+       bitreverse: 351
+         _binop_Lt__LboolR_bool_9_while_loop: 343
+           tasm_arithmetic_u32_shiftleft: 11
+           tasm_arithmetic_u32_or: 7
+           tasm_arithmetic_u32_shiftright: 14
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_shiftleft: 11
+           tasm_arithmetic_u32_or: 7
+           tasm_arithmetic_u32_shiftright: 14
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_shiftleft: 11
+           tasm_arithmetic_u32_or: 7
+           tasm_arithmetic_u32_shiftright: 14
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_shiftleft: 11
+           tasm_arithmetic_u32_or: 7
+           tasm_arithmetic_u32_shiftright: 14
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_shiftleft: 11
+           tasm_arithmetic_u32_or: 7
+           tasm_arithmetic_u32_shiftright: 14
+           tasm_arithmetic_u32_safeadd: 8
+       _binop_Lt__LboolR_bool_35_then: 55
        tasm_arithmetic_u32_safeadd: 8
        bitreverse: 351
          _binop_Lt__LboolR_bool_9_while_loop: 343
@@ -779,10 +731,58 @@ fast_ntt:
            tasm_arithmetic_u32_safeadd: 8
        _binop_Lt__LboolR_bool_35_else: 1
        tasm_arithmetic_u32_safeadd: 8
-     _binop_Neq__LboolR_bool_58_while_loop: 20275
+       bitreverse: 351
+         _binop_Lt__LboolR_bool_9_while_loop: 343
+           tasm_arithmetic_u32_shiftleft: 11
+           tasm_arithmetic_u32_or: 7
+           tasm_arithmetic_u32_shiftright: 14
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_shiftleft: 11
+           tasm_arithmetic_u32_or: 7
+           tasm_arithmetic_u32_shiftright: 14
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_shiftleft: 11
+           tasm_arithmetic_u32_or: 7
+           tasm_arithmetic_u32_shiftright: 14
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_shiftleft: 11
+           tasm_arithmetic_u32_or: 7
+           tasm_arithmetic_u32_shiftright: 14
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_shiftleft: 11
+           tasm_arithmetic_u32_or: 7
+           tasm_arithmetic_u32_shiftright: 14
+           tasm_arithmetic_u32_safeadd: 8
+       _binop_Lt__LboolR_bool_35_else: 1
+       tasm_arithmetic_u32_safeadd: 8
+       bitreverse: 351
+         _binop_Lt__LboolR_bool_9_while_loop: 343
+           tasm_arithmetic_u32_shiftleft: 11
+           tasm_arithmetic_u32_or: 7
+           tasm_arithmetic_u32_shiftright: 14
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_shiftleft: 11
+           tasm_arithmetic_u32_or: 7
+           tasm_arithmetic_u32_shiftright: 14
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_shiftleft: 11
+           tasm_arithmetic_u32_or: 7
+           tasm_arithmetic_u32_shiftright: 14
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_shiftleft: 11
+           tasm_arithmetic_u32_or: 7
+           tasm_arithmetic_u32_shiftright: 14
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_shiftleft: 11
+           tasm_arithmetic_u32_or: 7
+           tasm_arithmetic_u32_shiftright: 14
+           tasm_arithmetic_u32_safeadd: 8
+       _binop_Lt__LboolR_bool_35_else: 1
+       tasm_arithmetic_u32_safeadd: 8
+     _binop_Neq__LboolR_bool_58_while_loop: 15478
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_69_while_loop: 4488
-         _binop_Neq__LboolR_bool_74_while_loop: 241
+       _binop_Lt__LboolR_bool_69_while_loop: 3512
+         _binop_Neq__LboolR_bool_74_while_loop: 181
            tasm_arithmetic_u32_safeadd: 8
            tasm_arithmetic_u32_safeadd: 8
            tasm_arithmetic_u32_safeadd: 8
@@ -792,7 +792,7 @@ fast_ntt:
            tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safemul: 8
          tasm_arithmetic_u32_safeadd: 8
-         _binop_Neq__LboolR_bool_74_while_loop: 241
+         _binop_Neq__LboolR_bool_74_while_loop: 181
            tasm_arithmetic_u32_safeadd: 8
            tasm_arithmetic_u32_safeadd: 8
            tasm_arithmetic_u32_safeadd: 8
@@ -802,7 +802,7 @@ fast_ntt:
            tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safemul: 8
          tasm_arithmetic_u32_safeadd: 8
-         _binop_Neq__LboolR_bool_74_while_loop: 241
+         _binop_Neq__LboolR_bool_74_while_loop: 181
            tasm_arithmetic_u32_safeadd: 8
            tasm_arithmetic_u32_safeadd: 8
            tasm_arithmetic_u32_safeadd: 8
@@ -812,7 +812,7 @@ fast_ntt:
            tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safemul: 8
          tasm_arithmetic_u32_safeadd: 8
-         _binop_Neq__LboolR_bool_74_while_loop: 241
+         _binop_Neq__LboolR_bool_74_while_loop: 181
            tasm_arithmetic_u32_safeadd: 8
            tasm_arithmetic_u32_safeadd: 8
            tasm_arithmetic_u32_safeadd: 8
@@ -822,7 +822,7 @@ fast_ntt:
            tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safemul: 8
          tasm_arithmetic_u32_safeadd: 8
-         _binop_Neq__LboolR_bool_74_while_loop: 241
+         _binop_Neq__LboolR_bool_74_while_loop: 181
            tasm_arithmetic_u32_safeadd: 8
            tasm_arithmetic_u32_safeadd: 8
            tasm_arithmetic_u32_safeadd: 8
@@ -832,7 +832,7 @@ fast_ntt:
            tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safemul: 8
          tasm_arithmetic_u32_safeadd: 8
-         _binop_Neq__LboolR_bool_74_while_loop: 241
+         _binop_Neq__LboolR_bool_74_while_loop: 181
            tasm_arithmetic_u32_safeadd: 8
            tasm_arithmetic_u32_safeadd: 8
            tasm_arithmetic_u32_safeadd: 8
@@ -842,7 +842,7 @@ fast_ntt:
            tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safemul: 8
          tasm_arithmetic_u32_safeadd: 8
-         _binop_Neq__LboolR_bool_74_while_loop: 241
+         _binop_Neq__LboolR_bool_74_while_loop: 181
            tasm_arithmetic_u32_safeadd: 8
            tasm_arithmetic_u32_safeadd: 8
            tasm_arithmetic_u32_safeadd: 8
@@ -852,7 +852,7 @@ fast_ntt:
            tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safemul: 8
          tasm_arithmetic_u32_safeadd: 8
-         _binop_Neq__LboolR_bool_74_while_loop: 241
+         _binop_Neq__LboolR_bool_74_while_loop: 181
            tasm_arithmetic_u32_safeadd: 8
            tasm_arithmetic_u32_safeadd: 8
            tasm_arithmetic_u32_safeadd: 8
@@ -862,7 +862,7 @@ fast_ntt:
            tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safemul: 8
          tasm_arithmetic_u32_safeadd: 8
-         _binop_Neq__LboolR_bool_74_while_loop: 241
+         _binop_Neq__LboolR_bool_74_while_loop: 181
            tasm_arithmetic_u32_safeadd: 8
            tasm_arithmetic_u32_safeadd: 8
            tasm_arithmetic_u32_safeadd: 8
@@ -872,7 +872,7 @@ fast_ntt:
            tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safemul: 8
          tasm_arithmetic_u32_safeadd: 8
-         _binop_Neq__LboolR_bool_74_while_loop: 241
+         _binop_Neq__LboolR_bool_74_while_loop: 181
            tasm_arithmetic_u32_safeadd: 8
            tasm_arithmetic_u32_safeadd: 8
            tasm_arithmetic_u32_safeadd: 8
@@ -882,7 +882,7 @@ fast_ntt:
            tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safemul: 8
          tasm_arithmetic_u32_safeadd: 8
-         _binop_Neq__LboolR_bool_74_while_loop: 241
+         _binop_Neq__LboolR_bool_74_while_loop: 181
            tasm_arithmetic_u32_safeadd: 8
            tasm_arithmetic_u32_safeadd: 8
            tasm_arithmetic_u32_safeadd: 8
@@ -892,7 +892,7 @@ fast_ntt:
            tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safemul: 8
          tasm_arithmetic_u32_safeadd: 8
-         _binop_Neq__LboolR_bool_74_while_loop: 241
+         _binop_Neq__LboolR_bool_74_while_loop: 181
            tasm_arithmetic_u32_safeadd: 8
            tasm_arithmetic_u32_safeadd: 8
            tasm_arithmetic_u32_safeadd: 8
@@ -902,7 +902,7 @@ fast_ntt:
            tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safemul: 8
          tasm_arithmetic_u32_safeadd: 8
-         _binop_Neq__LboolR_bool_74_while_loop: 241
+         _binop_Neq__LboolR_bool_74_while_loop: 181
            tasm_arithmetic_u32_safeadd: 8
            tasm_arithmetic_u32_safeadd: 8
            tasm_arithmetic_u32_safeadd: 8
@@ -912,7 +912,7 @@ fast_ntt:
            tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safemul: 8
          tasm_arithmetic_u32_safeadd: 8
-         _binop_Neq__LboolR_bool_74_while_loop: 241
+         _binop_Neq__LboolR_bool_74_while_loop: 181
            tasm_arithmetic_u32_safeadd: 8
            tasm_arithmetic_u32_safeadd: 8
            tasm_arithmetic_u32_safeadd: 8
@@ -922,7 +922,7 @@ fast_ntt:
            tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safemul: 8
          tasm_arithmetic_u32_safeadd: 8
-         _binop_Neq__LboolR_bool_74_while_loop: 241
+         _binop_Neq__LboolR_bool_74_while_loop: 181
            tasm_arithmetic_u32_safeadd: 8
            tasm_arithmetic_u32_safeadd: 8
            tasm_arithmetic_u32_safeadd: 8
@@ -932,147 +932,7 @@ fast_ntt:
            tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safemul: 8
          tasm_arithmetic_u32_safeadd: 8
-         _binop_Neq__LboolR_bool_74_while_loop: 241
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-         tasm_arithmetic_u32_safemul: 8
-         tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safemul: 8
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_69_while_loop: 4080
-         _binop_Neq__LboolR_bool_74_while_loop: 470
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-         tasm_arithmetic_u32_safemul: 8
-         tasm_arithmetic_u32_safeadd: 8
-         _binop_Neq__LboolR_bool_74_while_loop: 470
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-         tasm_arithmetic_u32_safemul: 8
-         tasm_arithmetic_u32_safeadd: 8
-         _binop_Neq__LboolR_bool_74_while_loop: 470
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-         tasm_arithmetic_u32_safemul: 8
-         tasm_arithmetic_u32_safeadd: 8
-         _binop_Neq__LboolR_bool_74_while_loop: 470
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-         tasm_arithmetic_u32_safemul: 8
-         tasm_arithmetic_u32_safeadd: 8
-         _binop_Neq__LboolR_bool_74_while_loop: 470
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-         tasm_arithmetic_u32_safemul: 8
-         tasm_arithmetic_u32_safeadd: 8
-         _binop_Neq__LboolR_bool_74_while_loop: 470
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-         tasm_arithmetic_u32_safemul: 8
-         tasm_arithmetic_u32_safeadd: 8
-         _binop_Neq__LboolR_bool_74_while_loop: 470
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-         tasm_arithmetic_u32_safemul: 8
-         tasm_arithmetic_u32_safeadd: 8
-         _binop_Neq__LboolR_bool_74_while_loop: 470
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
+         _binop_Neq__LboolR_bool_74_while_loop: 181
            tasm_arithmetic_u32_safeadd: 8
            tasm_arithmetic_u32_safeadd: 8
            tasm_arithmetic_u32_safeadd: 8
@@ -1085,53 +945,8 @@ fast_ntt:
        tasm_arithmetic_u32_safemul: 8
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_69_while_loop: 3876
-         _binop_Neq__LboolR_bool_74_while_loop: 928
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-         tasm_arithmetic_u32_safemul: 8
-         tasm_arithmetic_u32_safeadd: 8
-         _binop_Neq__LboolR_bool_74_while_loop: 928
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
+       _binop_Lt__LboolR_bool_69_while_loop: 3120
+         _binop_Neq__LboolR_bool_74_while_loop: 351
            tasm_arithmetic_u32_safeadd: 8
            tasm_arithmetic_u32_safeadd: 8
            tasm_arithmetic_u32_safeadd: 8
@@ -1148,21 +963,7 @@ fast_ntt:
            tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safemul: 8
          tasm_arithmetic_u32_safeadd: 8
-         _binop_Neq__LboolR_bool_74_while_loop: 928
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
+         _binop_Neq__LboolR_bool_74_while_loop: 351
            tasm_arithmetic_u32_safeadd: 8
            tasm_arithmetic_u32_safeadd: 8
            tasm_arithmetic_u32_safeadd: 8
@@ -1179,7 +980,7 @@ fast_ntt:
            tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safemul: 8
          tasm_arithmetic_u32_safeadd: 8
-         _binop_Neq__LboolR_bool_74_while_loop: 928
+         _binop_Neq__LboolR_bool_74_while_loop: 351
            tasm_arithmetic_u32_safeadd: 8
            tasm_arithmetic_u32_safeadd: 8
            tasm_arithmetic_u32_safeadd: 8
@@ -1194,6 +995,77 @@ fast_ntt:
            tasm_arithmetic_u32_safeadd: 8
            tasm_arithmetic_u32_safeadd: 8
            tasm_arithmetic_u32_safeadd: 8
+         tasm_arithmetic_u32_safemul: 8
+         tasm_arithmetic_u32_safeadd: 8
+         _binop_Neq__LboolR_bool_74_while_loop: 351
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+         tasm_arithmetic_u32_safemul: 8
+         tasm_arithmetic_u32_safeadd: 8
+         _binop_Neq__LboolR_bool_74_while_loop: 351
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+         tasm_arithmetic_u32_safemul: 8
+         tasm_arithmetic_u32_safeadd: 8
+         _binop_Neq__LboolR_bool_74_while_loop: 351
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+         tasm_arithmetic_u32_safemul: 8
+         tasm_arithmetic_u32_safeadd: 8
+         _binop_Neq__LboolR_bool_74_while_loop: 351
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+         tasm_arithmetic_u32_safemul: 8
+         tasm_arithmetic_u32_safeadd: 8
+         _binop_Neq__LboolR_bool_74_while_loop: 351
            tasm_arithmetic_u32_safeadd: 8
            tasm_arithmetic_u32_safeadd: 8
            tasm_arithmetic_u32_safeadd: 8
@@ -1213,36 +1085,8 @@ fast_ntt:
        tasm_arithmetic_u32_safemul: 8
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_69_while_loop: 3774
-         _binop_Neq__LboolR_bool_74_while_loop: 1844
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safeadd: 8
+       _binop_Lt__LboolR_bool_69_while_loop: 2924
+         _binop_Neq__LboolR_bool_74_while_loop: 691
            tasm_arithmetic_u32_safeadd: 8
            tasm_arithmetic_u32_safeadd: 8
            tasm_arithmetic_u32_safeadd: 8
@@ -1273,7 +1117,7 @@ fast_ntt:
            tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safemul: 8
          tasm_arithmetic_u32_safeadd: 8
-         _binop_Neq__LboolR_bool_74_while_loop: 1844
+         _binop_Neq__LboolR_bool_74_while_loop: 691
            tasm_arithmetic_u32_safeadd: 8
            tasm_arithmetic_u32_safeadd: 8
            tasm_arithmetic_u32_safeadd: 8
@@ -1302,6 +1146,40 @@ fast_ntt:
            tasm_arithmetic_u32_safeadd: 8
            tasm_arithmetic_u32_safeadd: 8
            tasm_arithmetic_u32_safeadd: 8
+         tasm_arithmetic_u32_safemul: 8
+         tasm_arithmetic_u32_safeadd: 8
+         _binop_Neq__LboolR_bool_74_while_loop: 691
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+         tasm_arithmetic_u32_safemul: 8
+         tasm_arithmetic_u32_safeadd: 8
+         _binop_Neq__LboolR_bool_74_while_loop: 691
            tasm_arithmetic_u32_safeadd: 8
            tasm_arithmetic_u32_safeadd: 8
            tasm_arithmetic_u32_safeadd: 8
@@ -1335,8 +1213,8 @@ fast_ntt:
        tasm_arithmetic_u32_safemul: 8
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_69_while_loop: 3723
-         _binop_Neq__LboolR_bool_74_while_loop: 3676
+       _binop_Lt__LboolR_bool_69_while_loop: 2826
+         _binop_Neq__LboolR_bool_74_while_loop: 1371
            tasm_arithmetic_u32_safeadd: 8
            tasm_arithmetic_u32_safeadd: 8
            tasm_arithmetic_u32_safeadd: 8
@@ -1393,6 +1271,9 @@ fast_ntt:
            tasm_arithmetic_u32_safeadd: 8
            tasm_arithmetic_u32_safeadd: 8
            tasm_arithmetic_u32_safeadd: 8
+         tasm_arithmetic_u32_safemul: 8
+         tasm_arithmetic_u32_safeadd: 8
+         _binop_Neq__LboolR_bool_74_while_loop: 1371
            tasm_arithmetic_u32_safeadd: 8
            tasm_arithmetic_u32_safeadd: 8
            tasm_arithmetic_u32_safeadd: 8
@@ -1453,1035 +1334,966 @@ fast_ntt:
          tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
        tasm_arithmetic_u32_safeadd: 8
-   _binop_Lt__LboolR_bool_186_while_loop: 1480
-     tasm_io_write_to_stdout___xfe: 4
-     tasm_arithmetic_u32_safeadd: 8
-     tasm_io_write_to_stdout___xfe: 4
-     tasm_arithmetic_u32_safeadd: 8
-     tasm_io_write_to_stdout___xfe: 4
-     tasm_arithmetic_u32_safeadd: 8
-     tasm_io_write_to_stdout___xfe: 4
-     tasm_arithmetic_u32_safeadd: 8
-     tasm_io_write_to_stdout___xfe: 4
-     tasm_arithmetic_u32_safeadd: 8
-     tasm_io_write_to_stdout___xfe: 4
-     tasm_arithmetic_u32_safeadd: 8
-     tasm_io_write_to_stdout___xfe: 4
-     tasm_arithmetic_u32_safeadd: 8
-     tasm_io_write_to_stdout___xfe: 4
-     tasm_arithmetic_u32_safeadd: 8
-     tasm_io_write_to_stdout___xfe: 4
-     tasm_arithmetic_u32_safeadd: 8
-     tasm_io_write_to_stdout___xfe: 4
-     tasm_arithmetic_u32_safeadd: 8
-     tasm_io_write_to_stdout___xfe: 4
-     tasm_arithmetic_u32_safeadd: 8
-     tasm_io_write_to_stdout___xfe: 4
-     tasm_arithmetic_u32_safeadd: 8
-     tasm_io_write_to_stdout___xfe: 4
-     tasm_arithmetic_u32_safeadd: 8
-     tasm_io_write_to_stdout___xfe: 4
-     tasm_arithmetic_u32_safeadd: 8
-     tasm_io_write_to_stdout___xfe: 4
-     tasm_arithmetic_u32_safeadd: 8
-     tasm_io_write_to_stdout___xfe: 4
-     tasm_arithmetic_u32_safeadd: 8
-     tasm_io_write_to_stdout___xfe: 4
-     tasm_arithmetic_u32_safeadd: 8
-     tasm_io_write_to_stdout___xfe: 4
-     tasm_arithmetic_u32_safeadd: 8
-     tasm_io_write_to_stdout___xfe: 4
-     tasm_arithmetic_u32_safeadd: 8
-     tasm_io_write_to_stdout___xfe: 4
-     tasm_arithmetic_u32_safeadd: 8
-     tasm_io_write_to_stdout___xfe: 4
-     tasm_arithmetic_u32_safeadd: 8
-     tasm_io_write_to_stdout___xfe: 4
-     tasm_arithmetic_u32_safeadd: 8
-     tasm_io_write_to_stdout___xfe: 4
-     tasm_arithmetic_u32_safeadd: 8
-     tasm_io_write_to_stdout___xfe: 4
-     tasm_arithmetic_u32_safeadd: 8
-     tasm_io_write_to_stdout___xfe: 4
-     tasm_arithmetic_u32_safeadd: 8
-     tasm_io_write_to_stdout___xfe: 4
-     tasm_arithmetic_u32_safeadd: 8
-     tasm_io_write_to_stdout___xfe: 4
-     tasm_arithmetic_u32_safeadd: 8
-     tasm_io_write_to_stdout___xfe: 4
-     tasm_arithmetic_u32_safeadd: 8
-     tasm_io_write_to_stdout___xfe: 4
-     tasm_arithmetic_u32_safeadd: 8
-     tasm_io_write_to_stdout___xfe: 4
-     tasm_arithmetic_u32_safeadd: 8
-     tasm_io_write_to_stdout___xfe: 4
-     tasm_arithmetic_u32_safeadd: 8
-     tasm_io_write_to_stdout___xfe: 4
-     tasm_arithmetic_u32_safeadd: 8
-   xfe_intt: 35854
-     xfe_ntt: 33850
-       tasm_list_unsafeimplu32_length___xfe: 4
-       _binop_Neq__LboolR_bool_29_while_loop: 13545
-         bitreverse: 351
-           _binop_Lt__LboolR_bool_9_while_loop: 343
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-         _binop_Lt__LboolR_bool_35_else: 1
-         tasm_arithmetic_u32_safeadd: 8
-         bitreverse: 351
-           _binop_Lt__LboolR_bool_9_while_loop: 343
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-         _binop_Lt__LboolR_bool_35_then: 97
-         tasm_arithmetic_u32_safeadd: 8
-         bitreverse: 351
-           _binop_Lt__LboolR_bool_9_while_loop: 343
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-         _binop_Lt__LboolR_bool_35_then: 97
-         tasm_arithmetic_u32_safeadd: 8
-         bitreverse: 351
-           _binop_Lt__LboolR_bool_9_while_loop: 343
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-         _binop_Lt__LboolR_bool_35_then: 97
-         tasm_arithmetic_u32_safeadd: 8
-         bitreverse: 351
-           _binop_Lt__LboolR_bool_9_while_loop: 343
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-         _binop_Lt__LboolR_bool_35_else: 1
-         tasm_arithmetic_u32_safeadd: 8
-         bitreverse: 351
-           _binop_Lt__LboolR_bool_9_while_loop: 343
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-         _binop_Lt__LboolR_bool_35_then: 97
-         tasm_arithmetic_u32_safeadd: 8
-         bitreverse: 351
-           _binop_Lt__LboolR_bool_9_while_loop: 343
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-         _binop_Lt__LboolR_bool_35_then: 97
-         tasm_arithmetic_u32_safeadd: 8
-         bitreverse: 351
-           _binop_Lt__LboolR_bool_9_while_loop: 343
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-         _binop_Lt__LboolR_bool_35_then: 97
-         tasm_arithmetic_u32_safeadd: 8
-         bitreverse: 351
-           _binop_Lt__LboolR_bool_9_while_loop: 343
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-         _binop_Lt__LboolR_bool_35_else: 1
-         tasm_arithmetic_u32_safeadd: 8
-         bitreverse: 351
-           _binop_Lt__LboolR_bool_9_while_loop: 343
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-         _binop_Lt__LboolR_bool_35_then: 97
-         tasm_arithmetic_u32_safeadd: 8
-         bitreverse: 351
-           _binop_Lt__LboolR_bool_9_while_loop: 343
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-         _binop_Lt__LboolR_bool_35_else: 1
-         tasm_arithmetic_u32_safeadd: 8
-         bitreverse: 351
-           _binop_Lt__LboolR_bool_9_while_loop: 343
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-         _binop_Lt__LboolR_bool_35_then: 97
-         tasm_arithmetic_u32_safeadd: 8
-         bitreverse: 351
-           _binop_Lt__LboolR_bool_9_while_loop: 343
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-         _binop_Lt__LboolR_bool_35_else: 1
-         tasm_arithmetic_u32_safeadd: 8
-         bitreverse: 351
-           _binop_Lt__LboolR_bool_9_while_loop: 343
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-         _binop_Lt__LboolR_bool_35_then: 97
-         tasm_arithmetic_u32_safeadd: 8
-         bitreverse: 351
-           _binop_Lt__LboolR_bool_9_while_loop: 343
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-         _binop_Lt__LboolR_bool_35_else: 1
-         tasm_arithmetic_u32_safeadd: 8
-         bitreverse: 351
-           _binop_Lt__LboolR_bool_9_while_loop: 343
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-         _binop_Lt__LboolR_bool_35_then: 97
-         tasm_arithmetic_u32_safeadd: 8
-         bitreverse: 351
-           _binop_Lt__LboolR_bool_9_while_loop: 343
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-         _binop_Lt__LboolR_bool_35_else: 1
-         tasm_arithmetic_u32_safeadd: 8
-         bitreverse: 351
-           _binop_Lt__LboolR_bool_9_while_loop: 343
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-         _binop_Lt__LboolR_bool_35_else: 1
-         tasm_arithmetic_u32_safeadd: 8
-         bitreverse: 351
-           _binop_Lt__LboolR_bool_9_while_loop: 343
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-         _binop_Lt__LboolR_bool_35_else: 1
-         tasm_arithmetic_u32_safeadd: 8
-         bitreverse: 351
-           _binop_Lt__LboolR_bool_9_while_loop: 343
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-         _binop_Lt__LboolR_bool_35_then: 97
-         tasm_arithmetic_u32_safeadd: 8
-         bitreverse: 351
-           _binop_Lt__LboolR_bool_9_while_loop: 343
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-         _binop_Lt__LboolR_bool_35_else: 1
-         tasm_arithmetic_u32_safeadd: 8
-         bitreverse: 351
-           _binop_Lt__LboolR_bool_9_while_loop: 343
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-         _binop_Lt__LboolR_bool_35_else: 1
-         tasm_arithmetic_u32_safeadd: 8
-         bitreverse: 351
-           _binop_Lt__LboolR_bool_9_while_loop: 343
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-         _binop_Lt__LboolR_bool_35_else: 1
-         tasm_arithmetic_u32_safeadd: 8
-         bitreverse: 351
-           _binop_Lt__LboolR_bool_9_while_loop: 343
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-         _binop_Lt__LboolR_bool_35_then: 97
-         tasm_arithmetic_u32_safeadd: 8
-         bitreverse: 351
-           _binop_Lt__LboolR_bool_9_while_loop: 343
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-         _binop_Lt__LboolR_bool_35_else: 1
-         tasm_arithmetic_u32_safeadd: 8
-         bitreverse: 351
-           _binop_Lt__LboolR_bool_9_while_loop: 343
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-         _binop_Lt__LboolR_bool_35_else: 1
-         tasm_arithmetic_u32_safeadd: 8
-         bitreverse: 351
-           _binop_Lt__LboolR_bool_9_while_loop: 343
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-         _binop_Lt__LboolR_bool_35_else: 1
-         tasm_arithmetic_u32_safeadd: 8
-         bitreverse: 351
-           _binop_Lt__LboolR_bool_9_while_loop: 343
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-         _binop_Lt__LboolR_bool_35_else: 1
-         tasm_arithmetic_u32_safeadd: 8
-         bitreverse: 351
-           _binop_Lt__LboolR_bool_9_while_loop: 343
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-         _binop_Lt__LboolR_bool_35_else: 1
-         tasm_arithmetic_u32_safeadd: 8
-         bitreverse: 351
-           _binop_Lt__LboolR_bool_9_while_loop: 343
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-         _binop_Lt__LboolR_bool_35_else: 1
-         tasm_arithmetic_u32_safeadd: 8
-         bitreverse: 351
-           _binop_Lt__LboolR_bool_9_while_loop: 343
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-         _binop_Lt__LboolR_bool_35_else: 1
-         tasm_arithmetic_u32_safeadd: 8
-         bitreverse: 351
-           _binop_Lt__LboolR_bool_9_while_loop: 343
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_shiftleft: 11
-             tasm_arithmetic_u32_or: 7
-             tasm_arithmetic_u32_shiftright: 14
-             tasm_arithmetic_u32_safeadd: 8
-         _binop_Lt__LboolR_bool_35_else: 1
-         tasm_arithmetic_u32_safeadd: 8
-       _binop_Neq__LboolR_bool_58_while_loop: 20275
-         tasm_arithmetic_u32_safemul: 8
-         _binop_Lt__LboolR_bool_69_while_loop: 4488
-           _binop_Neq__LboolR_bool_74_while_loop: 241
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safemul: 8
+       tasm_arithmetic_u32_safemul: 8
+       _binop_Lt__LboolR_bool_69_while_loop: 2777
+         _binop_Neq__LboolR_bool_74_while_loop: 2731
            tasm_arithmetic_u32_safeadd: 8
-           _binop_Neq__LboolR_bool_74_while_loop: 241
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safemul: 8
            tasm_arithmetic_u32_safeadd: 8
-           _binop_Neq__LboolR_bool_74_while_loop: 241
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safemul: 8
            tasm_arithmetic_u32_safeadd: 8
-           _binop_Neq__LboolR_bool_74_while_loop: 241
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safemul: 8
            tasm_arithmetic_u32_safeadd: 8
-           _binop_Neq__LboolR_bool_74_while_loop: 241
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safemul: 8
            tasm_arithmetic_u32_safeadd: 8
-           _binop_Neq__LboolR_bool_74_while_loop: 241
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safemul: 8
            tasm_arithmetic_u32_safeadd: 8
-           _binop_Neq__LboolR_bool_74_while_loop: 241
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safemul: 8
            tasm_arithmetic_u32_safeadd: 8
-           _binop_Neq__LboolR_bool_74_while_loop: 241
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safemul: 8
            tasm_arithmetic_u32_safeadd: 8
-           _binop_Neq__LboolR_bool_74_while_loop: 241
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safemul: 8
            tasm_arithmetic_u32_safeadd: 8
-           _binop_Neq__LboolR_bool_74_while_loop: 241
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safemul: 8
            tasm_arithmetic_u32_safeadd: 8
-           _binop_Neq__LboolR_bool_74_while_loop: 241
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safemul: 8
            tasm_arithmetic_u32_safeadd: 8
-           _binop_Neq__LboolR_bool_74_while_loop: 241
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safemul: 8
            tasm_arithmetic_u32_safeadd: 8
-           _binop_Neq__LboolR_bool_74_while_loop: 241
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safemul: 8
            tasm_arithmetic_u32_safeadd: 8
-           _binop_Neq__LboolR_bool_74_while_loop: 241
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safemul: 8
            tasm_arithmetic_u32_safeadd: 8
-           _binop_Neq__LboolR_bool_74_while_loop: 241
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safemul: 8
            tasm_arithmetic_u32_safeadd: 8
-           _binop_Neq__LboolR_bool_74_while_loop: 241
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safemul: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safeadd: 8
            tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safemul: 8
          tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safemul: 8
+       tasm_arithmetic_u32_safeadd: 8
+   _binop_Lt__LboolR_bool_186_while_loop: 1128
+     tasm_io_write_to_stdout___xfe: 2
+     tasm_arithmetic_u32_safeadd: 8
+     tasm_io_write_to_stdout___xfe: 2
+     tasm_arithmetic_u32_safeadd: 8
+     tasm_io_write_to_stdout___xfe: 2
+     tasm_arithmetic_u32_safeadd: 8
+     tasm_io_write_to_stdout___xfe: 2
+     tasm_arithmetic_u32_safeadd: 8
+     tasm_io_write_to_stdout___xfe: 2
+     tasm_arithmetic_u32_safeadd: 8
+     tasm_io_write_to_stdout___xfe: 2
+     tasm_arithmetic_u32_safeadd: 8
+     tasm_io_write_to_stdout___xfe: 2
+     tasm_arithmetic_u32_safeadd: 8
+     tasm_io_write_to_stdout___xfe: 2
+     tasm_arithmetic_u32_safeadd: 8
+     tasm_io_write_to_stdout___xfe: 2
+     tasm_arithmetic_u32_safeadd: 8
+     tasm_io_write_to_stdout___xfe: 2
+     tasm_arithmetic_u32_safeadd: 8
+     tasm_io_write_to_stdout___xfe: 2
+     tasm_arithmetic_u32_safeadd: 8
+     tasm_io_write_to_stdout___xfe: 2
+     tasm_arithmetic_u32_safeadd: 8
+     tasm_io_write_to_stdout___xfe: 2
+     tasm_arithmetic_u32_safeadd: 8
+     tasm_io_write_to_stdout___xfe: 2
+     tasm_arithmetic_u32_safeadd: 8
+     tasm_io_write_to_stdout___xfe: 2
+     tasm_arithmetic_u32_safeadd: 8
+     tasm_io_write_to_stdout___xfe: 2
+     tasm_arithmetic_u32_safeadd: 8
+     tasm_io_write_to_stdout___xfe: 2
+     tasm_arithmetic_u32_safeadd: 8
+     tasm_io_write_to_stdout___xfe: 2
+     tasm_arithmetic_u32_safeadd: 8
+     tasm_io_write_to_stdout___xfe: 2
+     tasm_arithmetic_u32_safeadd: 8
+     tasm_io_write_to_stdout___xfe: 2
+     tasm_arithmetic_u32_safeadd: 8
+     tasm_io_write_to_stdout___xfe: 2
+     tasm_arithmetic_u32_safeadd: 8
+     tasm_io_write_to_stdout___xfe: 2
+     tasm_arithmetic_u32_safeadd: 8
+     tasm_io_write_to_stdout___xfe: 2
+     tasm_arithmetic_u32_safeadd: 8
+     tasm_io_write_to_stdout___xfe: 2
+     tasm_arithmetic_u32_safeadd: 8
+     tasm_io_write_to_stdout___xfe: 2
+     tasm_arithmetic_u32_safeadd: 8
+     tasm_io_write_to_stdout___xfe: 2
+     tasm_arithmetic_u32_safeadd: 8
+     tasm_io_write_to_stdout___xfe: 2
+     tasm_arithmetic_u32_safeadd: 8
+     tasm_io_write_to_stdout___xfe: 2
+     tasm_arithmetic_u32_safeadd: 8
+     tasm_io_write_to_stdout___xfe: 2
+     tasm_arithmetic_u32_safeadd: 8
+     tasm_io_write_to_stdout___xfe: 2
+     tasm_arithmetic_u32_safeadd: 8
+     tasm_io_write_to_stdout___xfe: 2
+     tasm_arithmetic_u32_safeadd: 8
+     tasm_io_write_to_stdout___xfe: 2
+     tasm_arithmetic_u32_safeadd: 8
+   xfe_intt: 29965
+     xfe_ntt: 28543
+       tasm_list_unsafeimplu32_length___xfe: 3
+       _binop_Neq__LboolR_bool_29_while_loop: 13041
+         bitreverse: 351
+           _binop_Lt__LboolR_bool_9_while_loop: 343
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+         _binop_Lt__LboolR_bool_35_else: 1
+         tasm_arithmetic_u32_safeadd: 8
+         bitreverse: 351
+           _binop_Lt__LboolR_bool_9_while_loop: 343
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+         _binop_Lt__LboolR_bool_35_then: 55
+         tasm_arithmetic_u32_safeadd: 8
+         bitreverse: 351
+           _binop_Lt__LboolR_bool_9_while_loop: 343
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+         _binop_Lt__LboolR_bool_35_then: 55
+         tasm_arithmetic_u32_safeadd: 8
+         bitreverse: 351
+           _binop_Lt__LboolR_bool_9_while_loop: 343
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+         _binop_Lt__LboolR_bool_35_then: 55
+         tasm_arithmetic_u32_safeadd: 8
+         bitreverse: 351
+           _binop_Lt__LboolR_bool_9_while_loop: 343
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+         _binop_Lt__LboolR_bool_35_else: 1
+         tasm_arithmetic_u32_safeadd: 8
+         bitreverse: 351
+           _binop_Lt__LboolR_bool_9_while_loop: 343
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+         _binop_Lt__LboolR_bool_35_then: 55
+         tasm_arithmetic_u32_safeadd: 8
+         bitreverse: 351
+           _binop_Lt__LboolR_bool_9_while_loop: 343
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+         _binop_Lt__LboolR_bool_35_then: 55
+         tasm_arithmetic_u32_safeadd: 8
+         bitreverse: 351
+           _binop_Lt__LboolR_bool_9_while_loop: 343
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+         _binop_Lt__LboolR_bool_35_then: 55
+         tasm_arithmetic_u32_safeadd: 8
+         bitreverse: 351
+           _binop_Lt__LboolR_bool_9_while_loop: 343
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+         _binop_Lt__LboolR_bool_35_else: 1
+         tasm_arithmetic_u32_safeadd: 8
+         bitreverse: 351
+           _binop_Lt__LboolR_bool_9_while_loop: 343
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+         _binop_Lt__LboolR_bool_35_then: 55
+         tasm_arithmetic_u32_safeadd: 8
+         bitreverse: 351
+           _binop_Lt__LboolR_bool_9_while_loop: 343
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+         _binop_Lt__LboolR_bool_35_else: 1
+         tasm_arithmetic_u32_safeadd: 8
+         bitreverse: 351
+           _binop_Lt__LboolR_bool_9_while_loop: 343
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+         _binop_Lt__LboolR_bool_35_then: 55
+         tasm_arithmetic_u32_safeadd: 8
+         bitreverse: 351
+           _binop_Lt__LboolR_bool_9_while_loop: 343
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+         _binop_Lt__LboolR_bool_35_else: 1
+         tasm_arithmetic_u32_safeadd: 8
+         bitreverse: 351
+           _binop_Lt__LboolR_bool_9_while_loop: 343
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+         _binop_Lt__LboolR_bool_35_then: 55
+         tasm_arithmetic_u32_safeadd: 8
+         bitreverse: 351
+           _binop_Lt__LboolR_bool_9_while_loop: 343
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+         _binop_Lt__LboolR_bool_35_else: 1
+         tasm_arithmetic_u32_safeadd: 8
+         bitreverse: 351
+           _binop_Lt__LboolR_bool_9_while_loop: 343
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+         _binop_Lt__LboolR_bool_35_then: 55
+         tasm_arithmetic_u32_safeadd: 8
+         bitreverse: 351
+           _binop_Lt__LboolR_bool_9_while_loop: 343
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+         _binop_Lt__LboolR_bool_35_else: 1
+         tasm_arithmetic_u32_safeadd: 8
+         bitreverse: 351
+           _binop_Lt__LboolR_bool_9_while_loop: 343
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+         _binop_Lt__LboolR_bool_35_else: 1
+         tasm_arithmetic_u32_safeadd: 8
+         bitreverse: 351
+           _binop_Lt__LboolR_bool_9_while_loop: 343
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+         _binop_Lt__LboolR_bool_35_else: 1
+         tasm_arithmetic_u32_safeadd: 8
+         bitreverse: 351
+           _binop_Lt__LboolR_bool_9_while_loop: 343
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+         _binop_Lt__LboolR_bool_35_then: 55
+         tasm_arithmetic_u32_safeadd: 8
+         bitreverse: 351
+           _binop_Lt__LboolR_bool_9_while_loop: 343
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+         _binop_Lt__LboolR_bool_35_else: 1
+         tasm_arithmetic_u32_safeadd: 8
+         bitreverse: 351
+           _binop_Lt__LboolR_bool_9_while_loop: 343
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+         _binop_Lt__LboolR_bool_35_else: 1
+         tasm_arithmetic_u32_safeadd: 8
+         bitreverse: 351
+           _binop_Lt__LboolR_bool_9_while_loop: 343
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+         _binop_Lt__LboolR_bool_35_else: 1
+         tasm_arithmetic_u32_safeadd: 8
+         bitreverse: 351
+           _binop_Lt__LboolR_bool_9_while_loop: 343
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+         _binop_Lt__LboolR_bool_35_then: 55
+         tasm_arithmetic_u32_safeadd: 8
+         bitreverse: 351
+           _binop_Lt__LboolR_bool_9_while_loop: 343
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+         _binop_Lt__LboolR_bool_35_else: 1
+         tasm_arithmetic_u32_safeadd: 8
+         bitreverse: 351
+           _binop_Lt__LboolR_bool_9_while_loop: 343
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+         _binop_Lt__LboolR_bool_35_else: 1
+         tasm_arithmetic_u32_safeadd: 8
+         bitreverse: 351
+           _binop_Lt__LboolR_bool_9_while_loop: 343
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+         _binop_Lt__LboolR_bool_35_else: 1
+         tasm_arithmetic_u32_safeadd: 8
+         bitreverse: 351
+           _binop_Lt__LboolR_bool_9_while_loop: 343
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+         _binop_Lt__LboolR_bool_35_else: 1
+         tasm_arithmetic_u32_safeadd: 8
+         bitreverse: 351
+           _binop_Lt__LboolR_bool_9_while_loop: 343
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+         _binop_Lt__LboolR_bool_35_else: 1
+         tasm_arithmetic_u32_safeadd: 8
+         bitreverse: 351
+           _binop_Lt__LboolR_bool_9_while_loop: 343
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+         _binop_Lt__LboolR_bool_35_else: 1
+         tasm_arithmetic_u32_safeadd: 8
+         bitreverse: 351
+           _binop_Lt__LboolR_bool_9_while_loop: 343
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+         _binop_Lt__LboolR_bool_35_else: 1
+         tasm_arithmetic_u32_safeadd: 8
+         bitreverse: 351
+           _binop_Lt__LboolR_bool_9_while_loop: 343
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_shiftleft: 11
+             tasm_arithmetic_u32_or: 7
+             tasm_arithmetic_u32_shiftright: 14
+             tasm_arithmetic_u32_safeadd: 8
+         _binop_Lt__LboolR_bool_35_else: 1
+         tasm_arithmetic_u32_safeadd: 8
+       _binop_Neq__LboolR_bool_58_while_loop: 15478
          tasm_arithmetic_u32_safemul: 8
-         _binop_Lt__LboolR_bool_69_while_loop: 4080
-           _binop_Neq__LboolR_bool_74_while_loop: 470
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safemul: 8
-           tasm_arithmetic_u32_safeadd: 8
-           _binop_Neq__LboolR_bool_74_while_loop: 470
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
+         _binop_Lt__LboolR_bool_69_while_loop: 3512
+           _binop_Neq__LboolR_bool_74_while_loop: 181
              tasm_arithmetic_u32_safeadd: 8
              tasm_arithmetic_u32_safeadd: 8
              tasm_arithmetic_u32_safeadd: 8
@@ -2491,31 +2303,7 @@ fast_ntt:
              tasm_arithmetic_u32_safeadd: 8
            tasm_arithmetic_u32_safemul: 8
            tasm_arithmetic_u32_safeadd: 8
-           _binop_Neq__LboolR_bool_74_while_loop: 470
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safemul: 8
-           tasm_arithmetic_u32_safeadd: 8
-           _binop_Neq__LboolR_bool_74_while_loop: 470
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
+           _binop_Neq__LboolR_bool_74_while_loop: 181
              tasm_arithmetic_u32_safeadd: 8
              tasm_arithmetic_u32_safeadd: 8
              tasm_arithmetic_u32_safeadd: 8
@@ -2525,31 +2313,7 @@ fast_ntt:
              tasm_arithmetic_u32_safeadd: 8
            tasm_arithmetic_u32_safemul: 8
            tasm_arithmetic_u32_safeadd: 8
-           _binop_Neq__LboolR_bool_74_while_loop: 470
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safemul: 8
-           tasm_arithmetic_u32_safeadd: 8
-           _binop_Neq__LboolR_bool_74_while_loop: 470
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
+           _binop_Neq__LboolR_bool_74_while_loop: 181
              tasm_arithmetic_u32_safeadd: 8
              tasm_arithmetic_u32_safeadd: 8
              tasm_arithmetic_u32_safeadd: 8
@@ -2559,14 +2323,7 @@ fast_ntt:
              tasm_arithmetic_u32_safeadd: 8
            tasm_arithmetic_u32_safemul: 8
            tasm_arithmetic_u32_safeadd: 8
-           _binop_Neq__LboolR_bool_74_while_loop: 470
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
+           _binop_Neq__LboolR_bool_74_while_loop: 181
              tasm_arithmetic_u32_safeadd: 8
              tasm_arithmetic_u32_safeadd: 8
              tasm_arithmetic_u32_safeadd: 8
@@ -2576,7 +2333,7 @@ fast_ntt:
              tasm_arithmetic_u32_safeadd: 8
            tasm_arithmetic_u32_safemul: 8
            tasm_arithmetic_u32_safeadd: 8
-           _binop_Neq__LboolR_bool_74_while_loop: 470
+           _binop_Neq__LboolR_bool_74_while_loop: 181
              tasm_arithmetic_u32_safeadd: 8
              tasm_arithmetic_u32_safeadd: 8
              tasm_arithmetic_u32_safeadd: 8
@@ -2584,6 +2341,109 @@ fast_ntt:
              tasm_arithmetic_u32_safeadd: 8
              tasm_arithmetic_u32_safeadd: 8
              tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safemul: 8
+           tasm_arithmetic_u32_safeadd: 8
+           _binop_Neq__LboolR_bool_74_while_loop: 181
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safemul: 8
+           tasm_arithmetic_u32_safeadd: 8
+           _binop_Neq__LboolR_bool_74_while_loop: 181
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safemul: 8
+           tasm_arithmetic_u32_safeadd: 8
+           _binop_Neq__LboolR_bool_74_while_loop: 181
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safemul: 8
+           tasm_arithmetic_u32_safeadd: 8
+           _binop_Neq__LboolR_bool_74_while_loop: 181
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safemul: 8
+           tasm_arithmetic_u32_safeadd: 8
+           _binop_Neq__LboolR_bool_74_while_loop: 181
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safemul: 8
+           tasm_arithmetic_u32_safeadd: 8
+           _binop_Neq__LboolR_bool_74_while_loop: 181
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safemul: 8
+           tasm_arithmetic_u32_safeadd: 8
+           _binop_Neq__LboolR_bool_74_while_loop: 181
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safemul: 8
+           tasm_arithmetic_u32_safeadd: 8
+           _binop_Neq__LboolR_bool_74_while_loop: 181
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safemul: 8
+           tasm_arithmetic_u32_safeadd: 8
+           _binop_Neq__LboolR_bool_74_while_loop: 181
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safemul: 8
+           tasm_arithmetic_u32_safeadd: 8
+           _binop_Neq__LboolR_bool_74_while_loop: 181
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safemul: 8
+           tasm_arithmetic_u32_safeadd: 8
+           _binop_Neq__LboolR_bool_74_while_loop: 181
              tasm_arithmetic_u32_safeadd: 8
              tasm_arithmetic_u32_safeadd: 8
              tasm_arithmetic_u32_safeadd: 8
@@ -2596,53 +2456,8 @@ fast_ntt:
          tasm_arithmetic_u32_safemul: 8
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safemul: 8
-         _binop_Lt__LboolR_bool_69_while_loop: 3876
-           _binop_Neq__LboolR_bool_74_while_loop: 928
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-           tasm_arithmetic_u32_safemul: 8
-           tasm_arithmetic_u32_safeadd: 8
-           _binop_Neq__LboolR_bool_74_while_loop: 928
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
+         _binop_Lt__LboolR_bool_69_while_loop: 3120
+           _binop_Neq__LboolR_bool_74_while_loop: 351
              tasm_arithmetic_u32_safeadd: 8
              tasm_arithmetic_u32_safeadd: 8
              tasm_arithmetic_u32_safeadd: 8
@@ -2659,21 +2474,7 @@ fast_ntt:
              tasm_arithmetic_u32_safeadd: 8
            tasm_arithmetic_u32_safemul: 8
            tasm_arithmetic_u32_safeadd: 8
-           _binop_Neq__LboolR_bool_74_while_loop: 928
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
+           _binop_Neq__LboolR_bool_74_while_loop: 351
              tasm_arithmetic_u32_safeadd: 8
              tasm_arithmetic_u32_safeadd: 8
              tasm_arithmetic_u32_safeadd: 8
@@ -2690,7 +2491,7 @@ fast_ntt:
              tasm_arithmetic_u32_safeadd: 8
            tasm_arithmetic_u32_safemul: 8
            tasm_arithmetic_u32_safeadd: 8
-           _binop_Neq__LboolR_bool_74_while_loop: 928
+           _binop_Neq__LboolR_bool_74_while_loop: 351
              tasm_arithmetic_u32_safeadd: 8
              tasm_arithmetic_u32_safeadd: 8
              tasm_arithmetic_u32_safeadd: 8
@@ -2705,6 +2506,77 @@ fast_ntt:
              tasm_arithmetic_u32_safeadd: 8
              tasm_arithmetic_u32_safeadd: 8
              tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safemul: 8
+           tasm_arithmetic_u32_safeadd: 8
+           _binop_Neq__LboolR_bool_74_while_loop: 351
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safemul: 8
+           tasm_arithmetic_u32_safeadd: 8
+           _binop_Neq__LboolR_bool_74_while_loop: 351
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safemul: 8
+           tasm_arithmetic_u32_safeadd: 8
+           _binop_Neq__LboolR_bool_74_while_loop: 351
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safemul: 8
+           tasm_arithmetic_u32_safeadd: 8
+           _binop_Neq__LboolR_bool_74_while_loop: 351
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safemul: 8
+           tasm_arithmetic_u32_safeadd: 8
+           _binop_Neq__LboolR_bool_74_while_loop: 351
              tasm_arithmetic_u32_safeadd: 8
              tasm_arithmetic_u32_safeadd: 8
              tasm_arithmetic_u32_safeadd: 8
@@ -2724,36 +2596,8 @@ fast_ntt:
          tasm_arithmetic_u32_safemul: 8
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safemul: 8
-         _binop_Lt__LboolR_bool_69_while_loop: 3774
-           _binop_Neq__LboolR_bool_74_while_loop: 1844
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
-             tasm_arithmetic_u32_safeadd: 8
+         _binop_Lt__LboolR_bool_69_while_loop: 2924
+           _binop_Neq__LboolR_bool_74_while_loop: 691
              tasm_arithmetic_u32_safeadd: 8
              tasm_arithmetic_u32_safeadd: 8
              tasm_arithmetic_u32_safeadd: 8
@@ -2784,7 +2628,7 @@ fast_ntt:
              tasm_arithmetic_u32_safeadd: 8
            tasm_arithmetic_u32_safemul: 8
            tasm_arithmetic_u32_safeadd: 8
-           _binop_Neq__LboolR_bool_74_while_loop: 1844
+           _binop_Neq__LboolR_bool_74_while_loop: 691
              tasm_arithmetic_u32_safeadd: 8
              tasm_arithmetic_u32_safeadd: 8
              tasm_arithmetic_u32_safeadd: 8
@@ -2813,6 +2657,40 @@ fast_ntt:
              tasm_arithmetic_u32_safeadd: 8
              tasm_arithmetic_u32_safeadd: 8
              tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safemul: 8
+           tasm_arithmetic_u32_safeadd: 8
+           _binop_Neq__LboolR_bool_74_while_loop: 691
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safemul: 8
+           tasm_arithmetic_u32_safeadd: 8
+           _binop_Neq__LboolR_bool_74_while_loop: 691
              tasm_arithmetic_u32_safeadd: 8
              tasm_arithmetic_u32_safeadd: 8
              tasm_arithmetic_u32_safeadd: 8
@@ -2846,8 +2724,130 @@ fast_ntt:
          tasm_arithmetic_u32_safemul: 8
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safemul: 8
-         _binop_Lt__LboolR_bool_69_while_loop: 3723
-           _binop_Neq__LboolR_bool_74_while_loop: 3676
+         _binop_Lt__LboolR_bool_69_while_loop: 2826
+           _binop_Neq__LboolR_bool_74_while_loop: 1371
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safemul: 8
+           tasm_arithmetic_u32_safeadd: 8
+           _binop_Neq__LboolR_bool_74_while_loop: 1371
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+             tasm_arithmetic_u32_safeadd: 8
+           tasm_arithmetic_u32_safemul: 8
+           tasm_arithmetic_u32_safeadd: 8
+         tasm_arithmetic_u32_safemul: 8
+         tasm_arithmetic_u32_safeadd: 8
+         tasm_arithmetic_u32_safemul: 8
+         _binop_Lt__LboolR_bool_69_while_loop: 2777
+           _binop_Neq__LboolR_bool_74_while_loop: 2731
              tasm_arithmetic_u32_safeadd: 8
              tasm_arithmetic_u32_safeadd: 8
              tasm_arithmetic_u32_safeadd: 8
@@ -2964,10 +2964,10 @@ fast_ntt:
            tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safemul: 8
          tasm_arithmetic_u32_safeadd: 8
-     tasm_list_unsafeimplu32_length___xfe: 4
+     tasm_list_unsafeimplu32_length___xfe: 3
      bfe_new_from_u64: 5
-     tasm_list_unsafeimplu32_length___xfe: 4
-     _binop_Lt__LboolR_bool_149_while_loop: 1960
+     tasm_list_unsafeimplu32_length___xfe: 3
+     _binop_Lt__LboolR_bool_149_while_loop: 1384
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safeadd: 8
@@ -3000,7 +3000,7 @@ fast_ntt:
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safeadd: 8
-   _binop_Lt__LboolR_bool_201_while_loop: 2248
+   _binop_Lt__LboolR_bool_201_while_loop: 1672
      tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
@@ -3033,17 +3033,17 @@ fast_ntt:
      tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
- total: 73521
+ total: 61387
 
 # aggregated
- main: 73515
+ main: 61385
    tasm_io_read_stdin___bfe: 2
-   tasm_list_unsafeimplu32_length___xfe: 20
+   tasm_list_unsafeimplu32_length___xfe: 15
    tasm_arithmetic_u32_leadingzeros: 12
      tasm_arithmetic_u32_leadingzeros_non_zero: 4
    tasm_arithmetic_u32_safesub: 22
-   xfe_ntt: 67700
-     _binop_Neq__LboolR_bool_29_while_loop: 27090
+   xfe_ntt: 57086
+     _binop_Neq__LboolR_bool_29_while_loop: 26082
        bitreverse: 22464
          _binop_Lt__LboolR_bool_9_while_loop: 21952
            tasm_arithmetic_u32_shiftleft: 3520
@@ -3051,15 +3051,15 @@ fast_ntt:
            tasm_arithmetic_u32_shiftright: 4480
      tasm_arithmetic_u32_safeadd: 13376
        _binop_Lt__LboolR_bool_35_else: 40
-       _binop_Lt__LboolR_bool_35_then: 2328
-     _binop_Neq__LboolR_bool_58_while_loop: 40550
+       _binop_Lt__LboolR_bool_35_then: 1320
+     _binop_Neq__LboolR_bool_58_while_loop: 30956
        tasm_arithmetic_u32_safemul: 656
-       _binop_Lt__LboolR_bool_69_while_loop: 39882
-         _binop_Neq__LboolR_bool_74_while_loop: 37384
-   _binop_Lt__LboolR_bool_186_while_loop: 1480
-     tasm_io_write_to_stdout___xfe: 128
-   xfe_intt: 35854
+       _binop_Lt__LboolR_bool_69_while_loop: 30318
+         _binop_Neq__LboolR_bool_74_while_loop: 27882
+   _binop_Lt__LboolR_bool_186_while_loop: 1128
+     tasm_io_write_to_stdout___xfe: 64
+   xfe_intt: 29965
      bfe_new_from_u64: 5
-     _binop_Lt__LboolR_bool_149_while_loop: 1960
-   _binop_Lt__LboolR_bool_201_while_loop: 2248
- total: 73521
+     _binop_Lt__LboolR_bool_149_while_loop: 1384
+   _binop_Lt__LboolR_bool_201_while_loop: 1672
+ total: 61387

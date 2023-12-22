@@ -28,7 +28,7 @@ impl Library for XfeLibrary {
         method_name: &str,
         receiver_type: &ast_types::DataType,
     ) -> Option<String> {
-        if *receiver_type == ast_types::DataType::XFE && method_name == UNLIFT_NAME {
+        if *receiver_type == ast_types::DataType::Xfe && method_name == UNLIFT_NAME {
             return Some(method_name.to_owned());
         }
 
@@ -42,7 +42,7 @@ impl Library for XfeLibrary {
         _args: &[ast::Expr<super::Annotation>],
         _type_checker_state: &crate::type_checker::CheckState,
     ) -> ast::FnSignature {
-        if *receiver_type == ast_types::DataType::XFE && method_name == UNLIFT_NAME {
+        if *receiver_type == ast_types::DataType::Xfe && method_name == UNLIFT_NAME {
             get_xfe_unlift_method().signature
         } else {
             panic!("Unknown method in XFE library. Got: {method_name}");
@@ -65,7 +65,7 @@ impl Library for XfeLibrary {
         _args: &[ast::Expr<super::Annotation>],
         _state: &mut crate::tasm_code_generator::CompilerState,
     ) -> Vec<triton_vm::instruction::LabelledInstruction> {
-        if *receiver_type == ast_types::DataType::XFE && method_name == UNLIFT_NAME {
+        if *receiver_type == ast_types::DataType::Xfe && method_name == UNLIFT_NAME {
             get_xfe_unlift_method().body
         } else {
             panic!("Unknown method in XFE library. Got: {method_name}");
@@ -243,11 +243,11 @@ fn get_xfe_unlift_method() -> LibraryFunction {
         args: vec![ast_types::AbstractArgument::ValueArgument(
             ast_types::AbstractValueArg {
                 name: "value".to_owned(),
-                data_type: ast_types::DataType::XFE,
+                data_type: ast_types::DataType::Xfe,
                 mutable: false,
             },
         )],
-        output: ast_types::DataType::BFE,
+        output: ast_types::DataType::Bfe,
         arg_evaluation_order: Default::default(),
     };
 

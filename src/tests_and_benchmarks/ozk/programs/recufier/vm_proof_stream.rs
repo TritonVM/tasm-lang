@@ -2,7 +2,6 @@
 // Allows the use of input/output on the native architecture
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 use arbitrary::Arbitrary;
-use itertools::Itertools;
 use tasm_lib::structure::tasm_object::TasmObject;
 use triton_vm::{BFieldElement, Digest};
 use twenty_first::shared_math::bfield_codec::BFieldCodec;
@@ -186,7 +185,7 @@ mod tests {
         // let vm_output = execute_compiled_with_stack_memory_and_ins_for_test(
         //     &test_program,
         //     vec![],
-        //     &mut HashMap::default(),
+        //     &HashMap::default(),
         //     Default::default(),
         //     Default::default(),
         //     0,

@@ -1,13 +1,15 @@
-use chrono::Local;
-use itertools::Itertools;
 use std::collections::HashMap;
 use std::str::FromStr;
+
+use chrono::Local;
+use itertools::Itertools;
 use tasm_lib::library::Library as SnippetState;
-use tasm_lib::memory::dyn_malloc::DynMalloc;
 use triton_vm::instruction;
 use triton_vm::instruction::LabelledInstruction;
+use triton_vm::op_stack::NumberOfWords;
 use triton_vm::triton_asm;
 use triton_vm::Program;
+use twenty_first::shared_math::b_field_element::BFieldElement;
 
 use crate::ast;
 use crate::ast_types;
@@ -29,56 +31,87 @@ pub(crate) struct OuterFunctionTasmCode {
     #[allow(dead_code)]
     pub library_snippets: HashMap<String, SubRoutine>,
     #[allow(dead_code)]
-    pub static_allocations: HashMap<ValueIdentifier, (usize, ast_types::DataType)>,
+    pub static_allocations: HashMap<ValueIdentifier, (BFieldElement, ast_types::DataType)>,
 }
 
 fn replace_hardcoded_snippet_names_and_spill_addresses(
     code: Vec<LabelledInstruction>,
     imported_snippet_names: &[String],
-    static_allocations: &HashMap<ValueIdentifier, (usize, ast_types::DataType)>,
+    static_allocations: &HashMap<ValueIdentifier, (BFieldElement, ast_types::DataType)>,
 ) -> String {
     use instruction::AnInstruction::*;
     use instruction::LabelledInstruction::Instruction;
-    fn instrunction_triplet_looks_like_spill_writing(
-        instr_0: &LabelledInstruction,
-        _instr_1: &LabelledInstruction,
-        instr_2: &LabelledInstruction,
-        static_allocations: &HashMap<ValueIdentifier, (usize, ast_types::DataType)>,
-    ) -> Option<(ValueIdentifier, usize)> {
-        // TODO: Add check that `instr_1` grows stack by 1, once that method is available
-        // in Triton VM, cf. https://github.com/TritonVM/triton-vm/issues/227
-        if let Instruction(Push(n)) = instr_0 {
-            if *instr_2 == Instruction(WriteMem) {
-                let n = n.value() as usize;
-                return static_allocations
-                    .iter()
-                    .find(|(_val_id, (memory_spill_position, _))| *memory_spill_position == n)
-                    .map(|x| (x.0.to_owned(), x.1 .0.to_owned()));
-            }
-        }
 
-        None
-    }
-
-    fn instrunction_triplet_looks_like_spill_reading(
+    /// _Warning_: only works if the data type of the spilled element is of size 5 or less.
+    fn instruction_triplet_looks_like_spill_writing(
         instr_0: &LabelledInstruction,
         instr_1: &LabelledInstruction,
         instr_2: &LabelledInstruction,
-        static_allocations: &HashMap<ValueIdentifier, (usize, ast_types::DataType)>,
-    ) -> Option<(ValueIdentifier, usize)> {
-        if let Instruction(Push(n)) = instr_0 {
-            if *instr_1 == Instruction(ReadMem)
-                && *instr_2 == Instruction(Swap(1u32.try_into().unwrap()))
-            {
-                let n = n.value() as usize;
-                return static_allocations
-                    .iter()
-                    .find(|(_val_id, (memory_spill_position, _))| *memory_spill_position == n)
-                    .map(|x| (x.0.to_owned(), x.1 .0.to_owned()));
-            }
+        static_allocations: &HashMap<ValueIdentifier, (BFieldElement, ast_types::DataType)>,
+    ) -> Option<(ValueIdentifier, BFieldElement)> {
+        let Instruction(Push(presumed_address)) = instr_0 else {
+            return None;
+        };
+        let Instruction(WriteMem(number_of_written_words)) = instr_1 else {
+            return None;
+        };
+        let Instruction(Pop(NumberOfWords::N1)) = instr_2 else {
+            return None;
+        };
+
+        let Some((value_identifier, (static_address, data_type))) = static_allocations
+            .iter()
+            .find(|(_val_id, (mem_spill_position, _))| mem_spill_position == presumed_address)
+        else {
+            return None;
+        };
+
+        let Ok(data_size) = NumberOfWords::try_from(data_type.stack_size()) else {
+            return None;
+        };
+        if number_of_written_words != &data_size {
+            return None;
         }
 
-        None
+        Some((value_identifier.to_owned(), *static_address))
+    }
+
+    /// _Warning_: only works if the data type of the spilled element is of size 5 or less.
+    fn instruction_triplet_looks_like_spill_reading(
+        instr_0: &LabelledInstruction,
+        instr_1: &LabelledInstruction,
+        instr_2: &LabelledInstruction,
+        static_allocations: &HashMap<ValueIdentifier, (BFieldElement, ast_types::DataType)>,
+    ) -> Option<(ValueIdentifier, BFieldElement)> {
+        let Instruction(Push(presumed_address_of_last_word)) = instr_0 else {
+            return None;
+        };
+        let Instruction(ReadMem(number_of_read_words)) = instr_1 else {
+            return None;
+        };
+        let Instruction(Pop(NumberOfWords::N1)) = instr_2 else {
+            return None;
+        };
+
+        let Some((value_identifier, (static_address, data_type))) =
+            static_allocations
+                .iter()
+                .find(|(_val_id, (mem_spill_position, data_type))| {
+                    let mem_pointer_offset = BFieldElement::from(data_type.stack_size() as u32 - 1);
+                    *mem_spill_position + mem_pointer_offset == *presumed_address_of_last_word
+                })
+        else {
+            return None;
+        };
+
+        let Ok(data_size) = NumberOfWords::try_from(data_type.stack_size()) else {
+            return None;
+        };
+        if number_of_read_words != &data_size {
+            return None;
+        }
+
+        Some((value_identifier.to_owned(), *static_address))
     }
 
     let all_possible_snippet_calls: Vec<LabelledInstruction> = imported_snippet_names
@@ -87,13 +120,13 @@ fn replace_hardcoded_snippet_names_and_spill_addresses(
         .collect_vec();
     let mut ret = vec![];
     for (instr_0, instr_1, instr_2) in code.iter().tuple_windows() {
-        let maybe_spill_write = instrunction_triplet_looks_like_spill_writing(
+        let maybe_spill_write = instruction_triplet_looks_like_spill_writing(
             instr_0,
             instr_1,
             instr_2,
             static_allocations,
         );
-        let maybe_spill_read = instrunction_triplet_looks_like_spill_reading(
+        let maybe_spill_read = instruction_triplet_looks_like_spill_reading(
             instr_0,
             instr_1,
             instr_2,
@@ -141,7 +174,7 @@ impl OuterFunctionTasmCode {
                 mutable: _,
             }) = arg
             {
-                let tasm_lib_type: tasm_lib::snippet::DataType =
+                let tasm_lib_type: tasm_lib::data_type::DataType =
                     data_type.to_owned().try_into().unwrap();
                 types_and_names.push((tasm_lib_type, name.clone()));
             } else {
@@ -169,14 +202,14 @@ impl OuterFunctionTasmCode {
     }
 
     fn basic_snippet_outputs_function(&self) -> String {
-        let output_type: tasm_lib::snippet::DataType = self
+        let output_type: tasm_lib::data_type::DataType = self
             .outer_function_signature
             .output
             .to_owned()
             .try_into()
             .unwrap();
 
-        // TODO: If there is no return type, conside leaving this function body as `vec![]`
+        // TODO: If there is no return type, consider leaving this function body as `vec![]`
         let output_description = format!("({}, \"result\".to_owned())", output_type.variant_name());
 
         format!(
@@ -338,12 +371,7 @@ impl BasicSnippet for {snippet_struct_name} {{
             .collect_vec();
 
         let name = &self.function_data.name;
-        let dyn_malloc_init = DynMalloc::get_initialization_code(
-            self.snippet_state
-                .get_next_free_address()
-                .try_into()
-                .unwrap(),
-        );
+
         let external_dependencies: Vec<SubRoutine> = self
             .snippet_state
             .all_external_dependencies()
@@ -363,7 +391,6 @@ impl BasicSnippet for {snippet_struct_name} {{
 
         // Wrap entire execution in a call such that `recurse` can be used on the outermost layer, i.e. in `inner_body`.
         let ret = triton_asm!(
-            {&dyn_malloc_init}
             call {name}
             halt
             {name}:
@@ -429,7 +456,7 @@ impl BasicSnippet for {snippet_struct_name} {{
             let type_parameter = split_at_type.get(1);
             let import = split_at_type[0];
             let type_parameter =
-                type_parameter.map(|x| tasm_lib::snippet::DataType::from_str(x).unwrap());
+                type_parameter.map(|x| tasm_lib::data_type::DataType::from_str(x).unwrap());
             let snippet_struct_name = import.split('_').last().unwrap();
             let snippet_struct_name = inflections::case::to_pascal_case(snippet_struct_name);
             let module_full_import_path = import.replace('_', "::");

@@ -20,7 +20,7 @@ mod run_tests {
     fn default_digest_test() {
         fn default_digest_rast() -> syn::ItemFn {
             item_fn(parse_quote! {
-                // Calling this `hash_pair` would result in a label collission
+                // Calling this `hash_pair` would result in a label collision
                 fn default_digest_testf() -> Digest {
                     let a: Digest = Digest::default();
                     return a;
@@ -39,7 +39,7 @@ mod run_tests {
     fn hash_pair_test() {
         fn hash_pair_rast() -> syn::ItemFn {
             item_fn(parse_quote! {
-                // Calling this `hash_pair` would result in a label collission
+                // Calling this `hash_pair` would result in a label collision
                 fn hash_pair_test(left: Digest, right: Digest) -> Digest {
                     let ret: Digest = H::hash_pair(left, right);
                     return ret;

@@ -26,15 +26,8 @@ impl ast_types::StructType {
 
                 code.append(&mut triton_asm!(
                     push {static_address_for_field_pointer}
-                    // _ **field
-
-                    read_mem
-                    // _ **field *field
-
-                    swap 1
-                    // _ *field **field
-
-                    pop
+                    read_mem 1
+                    pop 1
                     // *field
                 ));
 
@@ -69,7 +62,7 @@ impl ast_types::StructType {
         let pointer_for_result: u64 = state
             .global_compiler_state
             .snippet_state
-            .kmalloc(self.field_count())
+            .kmalloc(self.field_count() as u32)
             .try_into()
             .unwrap();
 
@@ -85,10 +78,10 @@ impl ast_types::StructType {
                         // _ *current_field
 
                         // Store result in result array
+                        dup 0
                         push {pointer_pointer_for_this_field}
-                        dup 1
-                        write_mem
-                        pop
+                        write_mem 1
+                        pop 1
                         // _ *current_field
 
                         // TODO: Not needed for last loop-iteration
@@ -102,24 +95,17 @@ impl ast_types::StructType {
                     code.append(&mut triton_asm!(
                         // _ *current_field_size
 
-                        read_mem
-                        // _ *current_field_size current_field_size
+                        read_mem 1
+                        // _ current_field_size (*current_field_size - 1)
 
-                        swap 1
-                        // _ current_field_size *current_field_size
-
-                        push 1
+                        push 2
                         add
                         // _ current_field_size *current_field
 
+                        dup 0
                         push {pointer_pointer_for_this_field}
-                        dup 1
-                        // _ current_field_size *current_field **field *current_field
-
-                        write_mem
-                        // _ current_field_size *current_field **field
-
-                        pop
+                        write_mem 1
+                        pop 1
                         // _ current_field_size *current_field
 
                         add
@@ -129,7 +115,7 @@ impl ast_types::StructType {
             }
         }
 
-        code.push(triton_instr!(pop));
+        code.push(triton_instr!(pop 1));
 
         (pointer_for_result.into(), code)
     }
@@ -166,7 +152,7 @@ impl ast_types::StructType {
                             instructions
                                 .append(&mut triton_asm!(push {static_pointer_addition} add));
                         }
-                        instructions.append(&mut triton_asm!(read_mem add push 1 add));
+                        instructions.append(&mut triton_asm!(read_mem 1 add push 2 add));
                         static_pointer_addition = 0;
                     }
                 }

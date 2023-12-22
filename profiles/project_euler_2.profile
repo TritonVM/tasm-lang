@@ -1,7 +1,7 @@
 project_euler_2:
 
 # call graph
- main: 1498
+ main: 1496
    _unaryop_not__LboolR_bool_6_while_loop: 1486
      _binop_Eq__LboolR_bool_11_else: 1
      tasm_arithmetic_u32_safeadd: 8
@@ -79,13 +79,13 @@ project_euler_2:
        tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
    tasm_io_write_to_stdout___u32: 2
- total: 1504
+ total: 1498
 
 # aggregated
- main: 1498
+ main: 1496
    _unaryop_not__LboolR_bool_6_while_loop: 1486
      _binop_Eq__LboolR_bool_11_else: 21
      tasm_arithmetic_u32_safeadd: 344
      _binop_Eq__LboolR_bool_11_then: 176
    tasm_io_write_to_stdout___u32: 2
- total: 1504
+ total: 1498

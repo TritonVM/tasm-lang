@@ -1,8 +1,8 @@
-use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 use arbitrary::Arbitrary;
-use itertools::Itertools;
 use triton_vm::BFieldElement;
 use twenty_first::shared_math::bfield_codec::BFieldCodec;
+
+use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
 #[derive(BFieldCodec, Arbitrary)]
 pub enum EnumType {
@@ -54,16 +54,18 @@ fn main() {
 }
 
 mod tests {
-    use super::*;
+    use std::collections::HashMap;
+
     use arbitrary::Unstructured;
     use itertools::Itertools;
     use rand::random;
-    use std::collections::HashMap;
 
     use crate::tests_and_benchmarks::ozk::{ozk_parsing, rust_shadows};
     use crate::tests_and_benchmarks::test_helpers::shared_test::{
         execute_compiled_with_stack_memory_and_ins_for_test, init_memory_from,
     };
+
+    use super::*;
 
     #[test]
     fn match_with_wildcard_bindings_test() {
@@ -97,7 +99,7 @@ mod tests {
             let vm_output = execute_compiled_with_stack_memory_and_ins_for_test(
                 &test_program,
                 vec![],
-                &mut HashMap::default(),
+                &HashMap::default(),
                 stdin,
                 non_determinism.clone(),
                 0,

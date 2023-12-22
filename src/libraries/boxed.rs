@@ -1,9 +1,10 @@
 use super::Library;
 use crate::graft::Graft;
 use crate::subroutine::SubRoutine;
+use crate::tasm_code_generator::write_n_words_to_memory_leaving_address;
 use crate::{ast, ast_types};
 use num::One;
-use triton_vm::{instruction::LabelledInstruction, triton_asm, triton_instr};
+use triton_vm::{instruction::LabelledInstruction, triton_asm};
 
 #[derive(Debug)]
 pub struct Boxed;
@@ -137,34 +138,16 @@ impl Library for Boxed {
     }
 }
 
-/// BEFORE: [value] mem_address_start
-/// AFTER: mem_address_start
+/// BEFORE: _ [value] mem_address_start
+/// AFTER:  _ mem_address_start
 fn move_top_stack_value_to_memory_keep_address(top_value_size: usize) -> Vec<LabelledInstruction> {
-    // A stack value of the form `_ val2 val1 val0`, with `val0` being on the top of the stack
-    // is stored in memory as: `val0 val1 val2`, where `val0` is stored on the `memory_location`
-    // address.
-    let mut ret = vec![];
-    // stack: _ [value] mem_address_start
-
-    // _ [value] mem_address_start
-    for i in 0..top_value_size {
-        ret.push(triton_instr!(swap 1));
-        // _ mem_address element
-
-        ret.push(triton_instr!(write_mem));
-        // _ mem_address
-
-        if i != top_value_size - 1 {
-            ret.append(&mut triton_asm!(push 1 add));
-            // _ (mem_address + 1)
-        }
-    }
+    let mut code = write_n_words_to_memory_leaving_address(top_value_size);
 
     // reset memory address to its initial value
-    let decrement_value = -(top_value_size as isize - 1);
-    ret.append(&mut triton_asm!(push {decrement_value} add));
+    let decrement_value = -(top_value_size as isize);
+    code.extend(triton_asm!(push {decrement_value} add));
 
-    ret
+    code
 }
 
 fn new_box_function_signature(inner_type: &ast_types::DataType) -> ast::FnSignature {

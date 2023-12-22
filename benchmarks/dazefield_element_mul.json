@@ -1,15 +1,15 @@
 [
   {
     "name": "dazefield_element_mul",
-    "clock_cycle_count": 2593,
-    "hash_table_height": 0,
+    "clock_cycle_count": 2466,
+    "hash_table_height": 588,
     "u32_table_height": 568,
     "case": "CommonCase"
   },
   {
     "name": "dazefield_element_mul",
-    "clock_cycle_count": 2593,
-    "hash_table_height": 0,
+    "clock_cycle_count": 2466,
+    "hash_table_height": 588,
     "u32_table_height": 948,
     "case": "WorstCase"
   }

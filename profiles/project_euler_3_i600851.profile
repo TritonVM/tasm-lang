@@ -1,2616 +1,2616 @@
 project_euler_3_i600851:
 
 # call graph
- main: 55977
-   _unaryop_not__LboolR_bool_7_while_loop: 55961
+ main: 50356
+   _unaryop_not__LboolR_bool_7_while_loop: 50344
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
-     _binop_Eq__LboolR_bool_12_then: 283
-       tasm_arithmetic_u64_div_mod: 269
+     _binop_Eq__LboolR_bool_12_then: 246
+       tasm_arithmetic_u64_div_mod: 233
          tasm_arithmetic_u64_shift_right: 26
          tasm_arithmetic_u64_and: 5
          tasm_arithmetic_u64_shift_right: 26
          tasm_arithmetic_u64_and: 5
-         tasm_arithmetic_u64_lt_standard: 23
+         tasm_arithmetic_u64_lt_standard: 20
            tasm_arithmetic_u64_lt_standard_aux: 16
              tasm_arithmetic_u64_lt_standard_lo: 5
-         _binop_Gt_bool_bool_26_else: 99
-           _binop_Or_bool_bool_44_then: 58
+         _binop_Gt_bool_bool_26_else: 89
+           _binop_Or_bool_bool_44_then: 53
              _binop_Eq_bool_bool_47_else: 35
                _binop_Eq_bool_bool_53_then: 26
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-     tasm_arithmetic_u64_div_mod: 269
+     tasm_arithmetic_u64_div_mod: 233
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
        tasm_arithmetic_u64_shift_right: 26
        tasm_arithmetic_u64_and: 5
-       tasm_arithmetic_u64_lt_standard: 23
+       tasm_arithmetic_u64_lt_standard: 20
          tasm_arithmetic_u64_lt_standard_aux: 16
            tasm_arithmetic_u64_lt_standard_lo: 5
-       _binop_Gt_bool_bool_26_else: 99
-         _binop_Or_bool_bool_44_then: 58
+       _binop_Gt_bool_bool_26_else: 89
+         _binop_Or_bool_bool_44_then: 53
            _binop_Eq_bool_bool_47_else: 35
              _binop_Eq_bool_bool_53_then: 26
      _binop_Eq__LboolR_bool_12_else: 24
        tasm_arithmetic_u64_add: 14
      tasm_arithmetic_u64_safe_mul: 38
-     tasm_arithmetic_u64_lt_standard: 23
+     tasm_arithmetic_u64_lt_standard: 20
        tasm_arithmetic_u64_lt_standard_aux: 16
          tasm_arithmetic_u64_lt_standard_lo: 5
-   tasm_io_write_to_stdout___u64: 3
- total: 55983
+   tasm_io_write_to_stdout___u64: 2
+ total: 50358
 
 # aggregated
- main: 55977
-   _unaryop_not__LboolR_bool_7_while_loop: 55961
+ main: 50356
+   _unaryop_not__LboolR_bool_7_while_loop: 50344
      tasm_arithmetic_u64_safe_mul: 5472
-     tasm_arithmetic_u64_lt_standard: 6624
+     tasm_arithmetic_u64_lt_standard: 5760
        tasm_arithmetic_u64_lt_standard_aux: 4608
          tasm_arithmetic_u64_lt_standard_lo: 1440
-     tasm_arithmetic_u64_div_mod: 38736
+     tasm_arithmetic_u64_div_mod: 33552
        tasm_arithmetic_u64_shift_right: 7488
        tasm_arithmetic_u64_and: 1440
-       _binop_Gt_bool_bool_26_else: 14256
-         _binop_Or_bool_bool_44_then: 8352
+       _binop_Gt_bool_bool_26_else: 12816
+         _binop_Or_bool_bool_44_then: 7632
            _binop_Eq_bool_bool_47_else: 5040
              _binop_Eq_bool_bool_53_then: 3744
      _binop_Eq__LboolR_bool_12_else: 3408
        tasm_arithmetic_u64_add: 1988
-     _binop_Eq__LboolR_bool_12_then: 283
-   tasm_io_write_to_stdout___u64: 3
- total: 55983
+     _binop_Eq__LboolR_bool_12_then: 246
+   tasm_io_write_to_stdout___u64: 2
+ total: 50358

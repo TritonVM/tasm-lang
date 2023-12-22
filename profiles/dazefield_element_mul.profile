@@ -1,11 +1,11 @@
 dazefield_element_mul:
 
 # call graph
- main: 2588
+ main: 2464
    tasm_io_read_stdin___bfe: 2
-   new: 592
-     tasm_arithmetic_u128_safe_mul: 149
-     montyred: 425
+   new: 566
+     tasm_arithmetic_u128_safe_mul: 145
+     montyred: 403
        tasm_arithmetic_u128_shift_right: 116
          tasm_arithmetic_u128_shift_right_handle_hi_shift: 66
            tasm_arithmetic_u128_shift_right: 49
@@ -19,9 +19,9 @@ dazefield_element_mul:
        tasm_arithmetic_u64_safe_mul: 38
        tasm_arithmetic_u64_wrapping_sub: 25
    tasm_io_read_stdin___bfe: 2
-   new: 592
-     tasm_arithmetic_u128_safe_mul: 149
-     montyred: 425
+   new: 566
+     tasm_arithmetic_u128_safe_mul: 145
+     montyred: 403
        tasm_arithmetic_u128_shift_right: 116
          tasm_arithmetic_u128_shift_right_handle_hi_shift: 66
            tasm_arithmetic_u128_shift_right: 49
@@ -34,9 +34,9 @@ dazefield_element_mul:
        tasm_arithmetic_u64_add: 14
        tasm_arithmetic_u64_safe_mul: 38
        tasm_arithmetic_u64_wrapping_sub: 25
-   method_DazeFieldElement_mul: 471
+   method_DazeFieldElement_mul: 448
      tasm_arithmetic_u64_mul_two_u64s_to_u128_u64: 33
-     montyred: 425
+     montyred: 403
        tasm_arithmetic_u128_shift_right: 116
          tasm_arithmetic_u128_shift_right_handle_hi_shift: 66
            tasm_arithmetic_u128_shift_right: 49
@@ -49,9 +49,9 @@ dazefield_element_mul:
        tasm_arithmetic_u64_add: 14
        tasm_arithmetic_u64_safe_mul: 38
        tasm_arithmetic_u64_wrapping_sub: 25
-   method_reference_to_LDazeFieldElementR_valued: 446
-     method_reference_to_LDazeFieldElementR_canonical_representation: 438
-       montyred: 425
+   method_reference_to_LDazeFieldElementR_valued: 424
+     method_reference_to_LDazeFieldElementR_canonical_representation: 416
+       montyred: 403
          tasm_arithmetic_u128_shift_right: 116
            tasm_arithmetic_u128_shift_right_handle_hi_shift: 66
              tasm_arithmetic_u128_shift_right: 49
@@ -66,9 +66,9 @@ dazefield_element_mul:
          tasm_arithmetic_u64_wrapping_sub: 25
    bfe_new_from_u64: 5
    tasm_io_write_to_stdout___bfe: 2
-   method_reference_to_LDazeFieldElementR_valued: 446
-     method_reference_to_LDazeFieldElementR_canonical_representation: 438
-       montyred: 425
+   method_reference_to_LDazeFieldElementR_valued: 424
+     method_reference_to_LDazeFieldElementR_canonical_representation: 416
+       montyred: 403
          tasm_arithmetic_u128_shift_right: 116
            tasm_arithmetic_u128_shift_right_handle_hi_shift: 66
              tasm_arithmetic_u128_shift_right: 49
@@ -81,15 +81,15 @@ dazefield_element_mul:
          tasm_arithmetic_u64_add: 14
          tasm_arithmetic_u64_safe_mul: 38
          tasm_arithmetic_u64_wrapping_sub: 25
-   tasm_io_write_to_stdout___u64: 3
- total: 2594
+   tasm_io_write_to_stdout___u64: 2
+ total: 2466
 
 # aggregated
- main: 2588
+ main: 2464
    tasm_io_read_stdin___bfe: 4
-   new: 1184
-     tasm_arithmetic_u128_safe_mul: 298
-     montyred: 2125
+   new: 1132
+     tasm_arithmetic_u128_safe_mul: 290
+     montyred: 2015
        tasm_arithmetic_u128_shift_right: 825
          tasm_arithmetic_u128_shift_right_handle_hi_shift: 330
        tasm_arithmetic_u64_shift_left: 115
@@ -99,11 +99,11 @@ dazefield_element_mul:
        tasm_arithmetic_u64_overflowing_sub: 140
        tasm_arithmetic_u64_add: 70
        tasm_arithmetic_u64_safe_mul: 190
-   method_DazeFieldElement_mul: 471
+   method_DazeFieldElement_mul: 448
      tasm_arithmetic_u64_mul_two_u64s_to_u128_u64: 33
-   method_reference_to_LDazeFieldElementR_valued: 892
-     method_reference_to_LDazeFieldElementR_canonical_representation: 876
+   method_reference_to_LDazeFieldElementR_valued: 848
+     method_reference_to_LDazeFieldElementR_canonical_representation: 832
    bfe_new_from_u64: 5
    tasm_io_write_to_stdout___bfe: 2
-   tasm_io_write_to_stdout___u64: 3
- total: 2594
+   tasm_io_write_to_stdout___u64: 2
+ total: 2466

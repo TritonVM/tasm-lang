@@ -191,7 +191,7 @@ mod tests {
             let vm_output = execute_compiled_with_stack_memory_and_ins_for_test(
                 &code,
                 vec![],
-                &mut HashMap::default(),
+                &HashMap::default(),
                 stdin,
                 non_determinism,
                 expected_stack_diff,

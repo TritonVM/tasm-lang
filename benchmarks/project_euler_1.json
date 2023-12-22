@@ -1,15 +1,15 @@
 [
   {
     "name": "project_euler_1",
-    "clock_cycle_count": 54965,
-    "hash_table_height": 0,
+    "clock_cycle_count": 54961,
+    "hash_table_height": 72,
     "u32_table_height": 48359,
     "case": "CommonCase"
   },
   {
     "name": "project_euler_1",
-    "clock_cycle_count": 54965,
-    "hash_table_height": 0,
+    "clock_cycle_count": 54961,
+    "hash_table_height": 72,
     "u32_table_height": 48359,
     "case": "WorstCase"
   }

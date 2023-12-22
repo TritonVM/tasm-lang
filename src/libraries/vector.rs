@@ -1,6 +1,6 @@
 use itertools::Itertools;
 use num::One;
-use tasm_lib::snippet::BasicSnippet;
+use tasm_lib::traits::basic_snippet::BasicSnippet;
 use triton_vm::triton_asm;
 
 use crate::{
@@ -316,7 +316,7 @@ impl VectorLib {
             // _ *list
             // Stack at function end:
             // _
-            body: triton_asm!(push 0 write_mem pop),
+            body: triton_asm!(push 0 swap 1 write_mem 1 pop 1),
         }
     }
 
@@ -373,45 +373,15 @@ impl VectorLib {
         type_parameter: &Option<ast_types::DataType>,
         args: &[ast::Expr<super::Annotation>],
     ) -> Option<Box<dyn BasicSnippet>> {
-        let tasm_type: Option<tasm_lib::snippet::DataType> =
-            type_parameter.clone().map(|x| x.try_into().unwrap());
         match public_name {
             "default" => panic!("Change `Vec::default()` to `Vec::with_capacity(n)`."),
             "with_capacity" => {
-                assert!(type_parameter.is_some(), "Type parameter must be set when instantiating a vector: `Vec::<T>::with_capacity(n)`");
-                match self.list_type {
-                    ListType::Safe => Some(Box::new(tasm_lib::list::safeimplu32::new::SafeNew(
-                        tasm_type.unwrap(),
-                    ))),
-                    ListType::Unsafe => Some(Box::new(
-                        tasm_lib::list::unsafeimplu32::new::UnsafeNew(tasm_type.unwrap()),
-                    )),
-                }
+                let data_type = type_parameter.clone().expect("Type parameter must be set when instantiating a vector: `Vec::<T>::with_capacity(n)`");
+                Some(self.list_type.with_capacity_snippet(data_type))
             }
-            "push" => match self.list_type {
-                ListType::Safe => Some(Box::new(tasm_lib::list::safeimplu32::push::SafePush(
-                    tasm_type.unwrap(),
-                ))),
-                ListType::Unsafe => Some(Box::new(
-                    tasm_lib::list::unsafeimplu32::push::UnsafePush(tasm_type.unwrap()),
-                )),
-            },
-            "pop" => match self.list_type {
-                ListType::Safe => Some(Box::new(tasm_lib::list::safeimplu32::pop::SafePop(
-                    tasm_type.unwrap(),
-                ))),
-                ListType::Unsafe => Some(Box::new(tasm_lib::list::unsafeimplu32::pop::UnsafePop(
-                    tasm_type.unwrap(),
-                ))),
-            },
-            "len" => match self.list_type {
-                ListType::Safe => Some(Box::new(tasm_lib::list::safeimplu32::length::Length(
-                    tasm_type.unwrap(),
-                ))),
-                ListType::Unsafe => Some(Box::new(tasm_lib::list::unsafeimplu32::length::Length(
-                    tasm_type.unwrap(),
-                ))),
-            },
+            "push" => Some(self.list_type.push_snippet(type_parameter.clone().unwrap())),
+            "pop" => Some(self.list_type.pop_snippet(type_parameter.clone().unwrap())),
+            "len" => Some(self.list_type.len_snippet(type_parameter.clone().unwrap())),
             "map" => {
                 let inner_function_type =
                     if let ast_types::DataType::Function(fun_type) = args[1].get_type() {

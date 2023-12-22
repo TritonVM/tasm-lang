@@ -57,7 +57,7 @@ pub(crate) fn all_libraries<'a>(config: LibraryConfig) -> Vec<Box<dyn Library + 
 
 pub(crate) fn tasm_lib_snippet_to_fn_signature(
     list_type: ListType,
-    snippet: Box<dyn tasm_lib::snippet::BasicSnippet>,
+    snippet: Box<dyn tasm_lib::traits::basic_snippet::BasicSnippet>,
 ) -> ast::FnSignature {
     let name = snippet.entrypoint();
     let mut args: Vec<ast_types::AbstractArgument> = vec![];

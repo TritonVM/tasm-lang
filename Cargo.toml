@@ -11,9 +11,9 @@ itertools = "0.11"
 num = "0.4"
 rand = "0"
 syn = { version = "1.0", features = ["full", "extra-traits"] }
-tasm-lib = { git = "https://github.com/TritonVM/tasm-lib.git", branch = "reverse-tuple-element-order-in-bfieldcodec" }
-triton-vm = { git = "https://github.com/TritonVM/triton-vm.git", branch = "reverse-tuple-element-order-in-bfieldcodec" }
-twenty-first = { git = "https://github.com/Neptune-Crypto/twenty-first.git", branch = "reverse-tuple-element-order-in-bfieldcodec" }
+tasm-lib = { git = "https://github.com/TritonVM/tasm-lib.git", rev = "7659e588a656db3a298dc18125b1e5919aa20e50" }
+triton-vm = { git = "https://github.com/TritonVM/triton-vm.git", rev = "a46dca23" }
+twenty-first = { git = "https://github.com/Neptune-Crypto/twenty-first.git", rev = "493abaa6" }
 
 [dev-dependencies]
 anyhow = "1"

@@ -1,6 +1,9 @@
 use tasm_lib::memory::dyn_malloc;
+use triton_vm::instruction::LabelledInstruction;
 use triton_vm::triton_asm;
 
+use crate::ast_types::DataType;
+use crate::tasm_code_generator::{write_n_words_to_memory_leaving_address, CompilerState};
 use crate::{
     ast::{self},
     ast_types,
@@ -30,9 +33,62 @@ impl BFieldCodecLib {
                     mutable: false,
                 },
             )],
-            output: ast_types::DataType::List(Box::new(ast_types::DataType::BFE), self.list_type),
+            output: ast_types::DataType::List(Box::new(ast_types::DataType::Bfe), self.list_type),
             arg_evaluation_order: Default::default(),
         }
+    }
+
+    fn encode_method(
+        &self,
+        method_name: &str,
+        receiver_type: &DataType,
+        state: &mut CompilerState,
+    ) -> (String, Vec<LabelledInstruction>) {
+        let encoding_length = receiver_type.bfield_codec_length().unwrap();
+        let list_size_in_memory = (encoding_length + self.list_type.metadata_size()) as i32;
+
+        // 1. Create a new list with the appropriate capacity
+        // 2. Maybe // huh?
+        let dyn_malloc_label = state.import_snippet(Box::new(dyn_malloc::DynMalloc));
+
+        let write_capacity = match self.list_type {
+            ast_types::ListType::Safe => {
+                triton_asm!(
+                                    // _ (*list + 1)
+                    push {encoding_length}
+                                    // _ (*list + 1) value_size
+                    swap 1          // _ value_size (*list + 1)
+                    write_mem 1     // _ (*list + 2)
+                )
+            }
+            ast_types::ListType::Unsafe => triton_asm!(),
+        };
+
+        let encode_subroutine_label =
+            format!("{method_name}_{}", receiver_type.label_friendly_name());
+        let encode_subroutine_code = triton_asm!(
+                {encode_subroutine_label}:
+                                    // _ [value]
+                    push {list_size_in_memory}
+                    call {dyn_malloc_label}
+                                    // _ [value] *list
+
+                    // write length
+                    push {encoding_length}
+                    swap 1
+                    write_mem 1     // _ [value] (*list + 1)
+
+                    {&write_capacity}
+                                    // _ [value] *word_0
+
+                    {&write_n_words_to_memory_leaving_address(encoding_length)}
+                                    // _ (*last_word + 1)
+
+                    push {-list_size_in_memory}
+                    add             // _ *list
+                    return
+        );
+        (encode_subroutine_label, encode_subroutine_code)
     }
 }
 
@@ -93,65 +149,8 @@ impl Library for BFieldCodecLib {
             panic!("Unknown method in BFieldCodecLib. Got: {method_name} on receiver_type: {receiver_type}");
         }
 
-        let value_size = receiver_type.bfield_codec_length().unwrap();
-        let list_size_in_memory = (value_size + self.list_type.metadata_size()) as i32;
-
-        // 1. Create a new list with the appropriate capacity
-        // 2. Maybe
-        let dyn_malloc_label = state.import_snippet(Box::new(dyn_malloc::DynMalloc));
-
-        let write_capacity = match self.list_type {
-            ast_types::ListType::Safe => {
-                triton_asm!(
-                    // _ *list
-                    push 1 add
-                    // _ (*list + 1)
-                    push {value_size}
-                    // _ (*list + 1) value_size
-
-                    write_mem
-                    // _ (*list + 1)
-
-                    push -1 add
-                    // _ *list
-                )
-            }
-            ast_types::ListType::Unsafe => triton_asm!(),
-        };
-        let write_words_to_list = "swap 1 write_mem push 1 add\n".repeat(value_size);
-
-        let encode_subroutine_label =
-            format!("{method_name}_{}", receiver_type.label_friendly_name());
-        let encode_subroutine_code = triton_asm!(
-                {encode_subroutine_label}:
-                    // _ [value]
-
-                    push {list_size_in_memory}
-                    call {dyn_malloc_label}
-                    // _ [value] *list
-
-                    // write length
-                    push {value_size}
-                    write_mem
-                    // _ [value] *list
-
-                    {&write_capacity}
-                    // _ [value] *list
-
-                    push {self.list_type.metadata_size()}
-                    add
-                    // _ [value] *word_0
-
-                    {write_words_to_list}
-
-                    // _ *word_{value_size}
-
-                    push {-list_size_in_memory}
-                    add
-
-                    // _ *list
-                    return
-        );
+        let (encode_subroutine_label, encode_subroutine_code) =
+            self.encode_method(method_name, receiver_type, state);
 
         state.add_library_function(encode_subroutine_code.try_into().unwrap());
 

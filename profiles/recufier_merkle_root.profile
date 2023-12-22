@@ -1,172 +1,172 @@
 recufier_merkle_root:
 
 # call graph
- main: 2685
-   tasm_list_unsafeimplu32_length___digest: 4
-   merkle_root: 2654
+ main: 2268
+   tasm_list_unsafeimplu32_length___digest: 3
+   merkle_root: 2247
      tasm_arithmetic_u32_safeadd: 8
-     _fn_call__LDigestR_Digest_30_else: 2626
+     _fn_call__LDigestR_Digest_30_else: 2219
        tasm_arithmetic_u32_safesub: 11
        tasm_arithmetic_u32_safesub: 11
-       merkle_root: 1270
+       merkle_root: 1071
          tasm_arithmetic_u32_safeadd: 8
-         _fn_call__LDigestR_Digest_30_else: 1242
+         _fn_call__LDigestR_Digest_30_else: 1043
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
-           merkle_root: 578
+           merkle_root: 483
              tasm_arithmetic_u32_safeadd: 8
-             _fn_call__LDigestR_Digest_30_else: 550
+             _fn_call__LDigestR_Digest_30_else: 455
                tasm_arithmetic_u32_safesub: 11
                tasm_arithmetic_u32_safesub: 11
-               merkle_root: 232
+               merkle_root: 189
                  tasm_arithmetic_u32_safeadd: 8
-                 _fn_call__LDigestR_Digest_30_else: 204
+                 _fn_call__LDigestR_Digest_30_else: 161
                    tasm_arithmetic_u32_safesub: 11
                    tasm_arithmetic_u32_safesub: 11
-                   merkle_root: 59
+                   merkle_root: 42
                      tasm_arithmetic_u32_safeadd: 8
-                     _leafs_start__LDigestR_Digest_10_then: 31
+                     _leafs_start__LDigestR_Digest_10_then: 14
                    tasm_arithmetic_u32_safeadd: 8
-                   merkle_root: 59
+                   merkle_root: 42
                      tasm_arithmetic_u32_safeadd: 8
-                     _leafs_start__LDigestR_Digest_10_then: 31
-                   hash_pair: 7
+                     _leafs_start__LDigestR_Digest_10_then: 14
+                   hash_pair: 2
                tasm_arithmetic_u32_safeadd: 8
-               merkle_root: 232
+               merkle_root: 189
                  tasm_arithmetic_u32_safeadd: 8
-                 _fn_call__LDigestR_Digest_30_else: 204
+                 _fn_call__LDigestR_Digest_30_else: 161
                    tasm_arithmetic_u32_safesub: 11
                    tasm_arithmetic_u32_safesub: 11
-                   merkle_root: 59
+                   merkle_root: 42
                      tasm_arithmetic_u32_safeadd: 8
-                     _leafs_start__LDigestR_Digest_10_then: 31
+                     _leafs_start__LDigestR_Digest_10_then: 14
                    tasm_arithmetic_u32_safeadd: 8
-                   merkle_root: 59
+                   merkle_root: 42
                      tasm_arithmetic_u32_safeadd: 8
-                     _leafs_start__LDigestR_Digest_10_then: 31
-                   hash_pair: 7
-               hash_pair: 7
+                     _leafs_start__LDigestR_Digest_10_then: 14
+                   hash_pair: 2
+               hash_pair: 2
            tasm_arithmetic_u32_safeadd: 8
-           merkle_root: 578
+           merkle_root: 483
              tasm_arithmetic_u32_safeadd: 8
-             _fn_call__LDigestR_Digest_30_else: 550
+             _fn_call__LDigestR_Digest_30_else: 455
                tasm_arithmetic_u32_safesub: 11
                tasm_arithmetic_u32_safesub: 11
-               merkle_root: 232
+               merkle_root: 189
                  tasm_arithmetic_u32_safeadd: 8
-                 _fn_call__LDigestR_Digest_30_else: 204
+                 _fn_call__LDigestR_Digest_30_else: 161
                    tasm_arithmetic_u32_safesub: 11
                    tasm_arithmetic_u32_safesub: 11
-                   merkle_root: 59
+                   merkle_root: 42
                      tasm_arithmetic_u32_safeadd: 8
-                     _leafs_start__LDigestR_Digest_10_then: 31
+                     _leafs_start__LDigestR_Digest_10_then: 14
                    tasm_arithmetic_u32_safeadd: 8
-                   merkle_root: 59
+                   merkle_root: 42
                      tasm_arithmetic_u32_safeadd: 8
-                     _leafs_start__LDigestR_Digest_10_then: 31
-                   hash_pair: 7
+                     _leafs_start__LDigestR_Digest_10_then: 14
+                   hash_pair: 2
                tasm_arithmetic_u32_safeadd: 8
-               merkle_root: 232
+               merkle_root: 189
                  tasm_arithmetic_u32_safeadd: 8
-                 _fn_call__LDigestR_Digest_30_else: 204
+                 _fn_call__LDigestR_Digest_30_else: 161
                    tasm_arithmetic_u32_safesub: 11
                    tasm_arithmetic_u32_safesub: 11
-                   merkle_root: 59
+                   merkle_root: 42
                      tasm_arithmetic_u32_safeadd: 8
-                     _leafs_start__LDigestR_Digest_10_then: 31
+                     _leafs_start__LDigestR_Digest_10_then: 14
                    tasm_arithmetic_u32_safeadd: 8
-                   merkle_root: 59
+                   merkle_root: 42
                      tasm_arithmetic_u32_safeadd: 8
-                     _leafs_start__LDigestR_Digest_10_then: 31
-                   hash_pair: 7
-               hash_pair: 7
-           hash_pair: 7
+                     _leafs_start__LDigestR_Digest_10_then: 14
+                   hash_pair: 2
+               hash_pair: 2
+           hash_pair: 2
        tasm_arithmetic_u32_safeadd: 8
-       merkle_root: 1270
+       merkle_root: 1071
          tasm_arithmetic_u32_safeadd: 8
-         _fn_call__LDigestR_Digest_30_else: 1242
+         _fn_call__LDigestR_Digest_30_else: 1043
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
-           merkle_root: 578
+           merkle_root: 483
              tasm_arithmetic_u32_safeadd: 8
-             _fn_call__LDigestR_Digest_30_else: 550
+             _fn_call__LDigestR_Digest_30_else: 455
                tasm_arithmetic_u32_safesub: 11
                tasm_arithmetic_u32_safesub: 11
-               merkle_root: 232
+               merkle_root: 189
                  tasm_arithmetic_u32_safeadd: 8
-                 _fn_call__LDigestR_Digest_30_else: 204
+                 _fn_call__LDigestR_Digest_30_else: 161
                    tasm_arithmetic_u32_safesub: 11
                    tasm_arithmetic_u32_safesub: 11
-                   merkle_root: 59
+                   merkle_root: 42
                      tasm_arithmetic_u32_safeadd: 8
-                     _leafs_start__LDigestR_Digest_10_then: 31
+                     _leafs_start__LDigestR_Digest_10_then: 14
                    tasm_arithmetic_u32_safeadd: 8
-                   merkle_root: 59
+                   merkle_root: 42
                      tasm_arithmetic_u32_safeadd: 8
-                     _leafs_start__LDigestR_Digest_10_then: 31
-                   hash_pair: 7
+                     _leafs_start__LDigestR_Digest_10_then: 14
+                   hash_pair: 2
                tasm_arithmetic_u32_safeadd: 8
-               merkle_root: 232
+               merkle_root: 189
                  tasm_arithmetic_u32_safeadd: 8
-                 _fn_call__LDigestR_Digest_30_else: 204
+                 _fn_call__LDigestR_Digest_30_else: 161
                    tasm_arithmetic_u32_safesub: 11
                    tasm_arithmetic_u32_safesub: 11
-                   merkle_root: 59
+                   merkle_root: 42
                      tasm_arithmetic_u32_safeadd: 8
-                     _leafs_start__LDigestR_Digest_10_then: 31
+                     _leafs_start__LDigestR_Digest_10_then: 14
                    tasm_arithmetic_u32_safeadd: 8
-                   merkle_root: 59
+                   merkle_root: 42
                      tasm_arithmetic_u32_safeadd: 8
-                     _leafs_start__LDigestR_Digest_10_then: 31
-                   hash_pair: 7
-               hash_pair: 7
+                     _leafs_start__LDigestR_Digest_10_then: 14
+                   hash_pair: 2
+               hash_pair: 2
            tasm_arithmetic_u32_safeadd: 8
-           merkle_root: 578
+           merkle_root: 483
              tasm_arithmetic_u32_safeadd: 8
-             _fn_call__LDigestR_Digest_30_else: 550
+             _fn_call__LDigestR_Digest_30_else: 455
                tasm_arithmetic_u32_safesub: 11
                tasm_arithmetic_u32_safesub: 11
-               merkle_root: 232
+               merkle_root: 189
                  tasm_arithmetic_u32_safeadd: 8
-                 _fn_call__LDigestR_Digest_30_else: 204
+                 _fn_call__LDigestR_Digest_30_else: 161
                    tasm_arithmetic_u32_safesub: 11
                    tasm_arithmetic_u32_safesub: 11
-                   merkle_root: 59
+                   merkle_root: 42
                      tasm_arithmetic_u32_safeadd: 8
-                     _leafs_start__LDigestR_Digest_10_then: 31
+                     _leafs_start__LDigestR_Digest_10_then: 14
                    tasm_arithmetic_u32_safeadd: 8
-                   merkle_root: 59
+                   merkle_root: 42
                      tasm_arithmetic_u32_safeadd: 8
-                     _leafs_start__LDigestR_Digest_10_then: 31
-                   hash_pair: 7
+                     _leafs_start__LDigestR_Digest_10_then: 14
+                   hash_pair: 2
                tasm_arithmetic_u32_safeadd: 8
-               merkle_root: 232
+               merkle_root: 189
                  tasm_arithmetic_u32_safeadd: 8
-                 _fn_call__LDigestR_Digest_30_else: 204
+                 _fn_call__LDigestR_Digest_30_else: 161
                    tasm_arithmetic_u32_safesub: 11
                    tasm_arithmetic_u32_safesub: 11
-                   merkle_root: 59
+                   merkle_root: 42
                      tasm_arithmetic_u32_safeadd: 8
-                     _leafs_start__LDigestR_Digest_10_then: 31
+                     _leafs_start__LDigestR_Digest_10_then: 14
                    tasm_arithmetic_u32_safeadd: 8
-                   merkle_root: 59
+                   merkle_root: 42
                      tasm_arithmetic_u32_safeadd: 8
-                     _leafs_start__LDigestR_Digest_10_then: 31
-                   hash_pair: 7
-               hash_pair: 7
-           hash_pair: 7
-       hash_pair: 7
-   tasm_io_write_to_stdout___digest: 6
- total: 2691
+                     _leafs_start__LDigestR_Digest_10_then: 14
+                   hash_pair: 2
+               hash_pair: 2
+           hash_pair: 2
+       hash_pair: 2
+   tasm_io_write_to_stdout___digest: 2
+ total: 2270
 
 # aggregated
- main: 2685
-   tasm_list_unsafeimplu32_length___digest: 4
-   merkle_root: 10306
+ main: 2268
+   tasm_list_unsafeimplu32_length___digest: 3
+   merkle_root: 8505
      tasm_arithmetic_u32_safeadd: 368
-     _fn_call__LDigestR_Digest_30_else: 8942
+     _fn_call__LDigestR_Digest_30_else: 7413
        tasm_arithmetic_u32_safesub: 330
-                     _leafs_start__LDigestR_Digest_10_then: 496
-       hash_pair: 105
-   tasm_io_write_to_stdout___digest: 6
- total: 2691
+                     _leafs_start__LDigestR_Digest_10_then: 224
+       hash_pair: 30
+   tasm_io_write_to_stdout___digest: 2
+ total: 2270

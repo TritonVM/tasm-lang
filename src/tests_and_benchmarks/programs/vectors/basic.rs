@@ -1,54 +1,96 @@
-#[cfg(test)]
-mod compile_and_typecheck_tests {
-    use num::{One, Zero};
+pub mod run_tests {
+    use crate::ast_types::{self, DataType, ListType};
+    use crate::{graft::item_fn, tests_and_benchmarks::test_helpers::shared_test::*};
+    use itertools::Itertools;
+    use num::One;
+    use rand::random;
     use std::collections::HashMap;
     use syn::parse_quote;
+    use tasm_lib::memory::dyn_malloc;
     use triton_vm::BFieldElement;
+    use triton_vm::{Digest, NonDeterminism};
 
-    use crate::{graft::item_fn, tests_and_benchmarks::test_helpers::shared_test::*};
+    #[test]
+    fn very_simple_list_support_test() {
+        fn very_simple_list_support() -> syn::ItemFn {
+            item_fn(parse_quote! {
+                fn make_very_short_list() -> u32 {
+                    let mut a: Vec<u32> = Vec::<u32>::with_capacity(17);
+                    a.push(2000u32);
 
-    fn very_simple_list_support() -> syn::ItemFn {
-        item_fn(parse_quote! {
-            fn make_very_short_list() -> u32 {
-                let mut a: Vec<u32> = Vec::<u32>::with_capacity(17);
-                a.push(2000u32);
+                    return a[0];
+                }
+            })
+        }
 
-                return a[0];
-            }
-        })
+        let inputs = vec![];
+        let expected_outputs = vec![u32_lit(2000)];
+        compare_prop_with_stack_safe_lists(&very_simple_list_support(), inputs, expected_outputs);
     }
 
-    fn simple_list_support() -> syn::ItemFn {
-        item_fn(parse_quote! {
-            fn make_short_list() -> (Vec<u64>, u32, u64, u64) {
-                let mut a: Vec<u64> = Vec::<u64>::with_capacity(17);
-                a.push(2000u64);
-                a.push(3000u64);
-                a.push(4000u64);
-                let b: u64 = a.pop().unwrap();
-                let len: u32 = a.len() as u32;
+    #[test]
+    fn clear_support_test() {
+        fn clear_list_rast() -> syn::ItemFn {
+            item_fn(parse_quote! {
+                fn clear_list() -> usize {
+                    let mut a: Vec<u32> = Vec::<u32>::with_capacity(17);
+                    a.push(2001u32);
+                    a.push(2002u32);
+                    a.push(2003u32);
+                    a.push(2004u32);
+                    a.push(2005u32);
+                    a.push(2006u32);
+                    a.push(2007u32);
+                    a.push(2008u32);
 
-                a[1] = 5000u64;
+                    // Length is 8
+                    a.clear();
 
-                let d: u64 = a[0];
+                    a.push(2009u32);
+                    a.push(2010u32);
+                    a.push(2011u32);
 
-                return (a, len, b, d);
-            }
-        })
+                    // Length is 3
+                    return a.len();
+                }
+            })
+        }
+
+        compare_prop_with_stack_safe_lists(&clear_list_rast(), vec![], vec![u32_lit(3)]);
+        compare_prop_with_stack_unsafe_lists(&clear_list_rast(), vec![], vec![u32_lit(3)]);
     }
 
-    fn simple_digest_list() -> syn::ItemFn {
-        item_fn(parse_quote! {
+    #[test]
+    fn simple_digest_list_support_test() {
+        let random_digest: Digest = random();
+        let inputs = vec![digest_lit(random_digest)];
+        let expected_outputs = vec![digest_lit(random_digest)];
+        let rust_ast = item_fn(parse_quote! {
             fn make_short_digest_list(digest: Digest) -> Digest {
                 let mut a: Vec<Digest> = Vec::<Digest>::with_capacity(17);
                 a.push(digest);
                 return a[0];
             }
-        })
+        });
+        compare_prop_with_stack_safe_lists(&rust_ast, inputs, expected_outputs);
     }
 
-    fn build_digest_list_with_indexing() -> syn::ItemFn {
-        item_fn(parse_quote! {
+    #[test]
+    fn build_digest_list_with_indexing_test() {
+        let random_digest0: Digest = random();
+        let random_digest1: Digest = random();
+        let random_digest2: Digest = random();
+        let inputs = vec![
+            digest_lit(random_digest1),
+            digest_lit(random_digest0),
+            digest_lit(random_digest2),
+        ];
+        let expected_outputs = vec![
+            digest_lit(random_digest0),
+            digest_lit(random_digest1),
+            digest_lit(random_digest2),
+        ];
+        let rust_ast = item_fn(parse_quote! {
             fn make_short_digest_list(digest1: Digest, digest0: Digest, digest2: Digest) -> (Digest, Digest, Digest) {
                 let mut a: Vec<Digest> = Vec::<Digest>::with_capacity(17);
                 a.push(digest1);
@@ -65,11 +107,109 @@ mod compile_and_typecheck_tests {
 
                 return (a[0], a[1], a[2]);
             }
-        })
+        });
+        compare_prop_with_stack_safe_lists(&rust_ast, inputs, expected_outputs);
     }
 
-    fn mut_list_argument() -> syn::ItemFn {
-        item_fn(parse_quote! {
+    #[test]
+    fn simple_list_support_run_test() {
+        use tasm_lib::rust_shadowing_helper_functions::safe_list::safe_list_new;
+        use tasm_lib::rust_shadowing_helper_functions::safe_list::safe_list_pop;
+        use tasm_lib::rust_shadowing_helper_functions::safe_list::safe_list_push;
+
+        let rust_ast = item_fn(parse_quote! {
+            fn make_short_list() -> (Vec<u64>, u32, u64, u64) {
+                let mut a: Vec<u64> = Vec::<u64>::with_capacity(17);
+                a.push(2000u64);
+                a.push(3000u64);
+                a.push(4000u64);
+                let b: u64 = a.pop().unwrap();
+                let len: u32 = a.len() as u32;
+
+                a[1] = 5000u64;
+
+                let d: u64 = a[0];
+
+                return (a, len, b, d);
+            }
+        });
+
+        let expected_list_pointer = dyn_malloc::FIRST_DYNAMICALLY_ALLOCATED_ADDRESS;
+        let inputs = vec![];
+        let expected_outputs = vec![
+            bfe_lit(expected_list_pointer),
+            u32_lit(2),
+            u64_lit(4000),
+            u64_lit(2000),
+        ];
+
+        let mut expected_final_memory: HashMap<BFieldElement, BFieldElement> = HashMap::default();
+
+        safe_list_new(expected_list_pointer, 17, &mut expected_final_memory);
+
+        let elem_0 = vec![BFieldElement::new(2000), BFieldElement::new(0)];
+        safe_list_push(
+            expected_list_pointer,
+            elem_0.clone(),
+            &mut expected_final_memory,
+            elem_0.len(),
+        );
+
+        let elem_1 = vec![BFieldElement::new(5000), BFieldElement::new(0)];
+        safe_list_push(
+            expected_list_pointer,
+            elem_1.clone(),
+            &mut expected_final_memory,
+            elem_1.len(),
+        );
+
+        let elem_2 = vec![BFieldElement::new(4000), BFieldElement::new(0)];
+        safe_list_push(
+            expected_list_pointer,
+            elem_2.clone(),
+            &mut expected_final_memory,
+            elem_2.len(),
+        );
+
+        safe_list_pop(
+            expected_list_pointer,
+            &mut expected_final_memory,
+            ast_types::DataType::U64.stack_size(),
+        );
+
+        compare_prop_with_stack_and_memory_safe_lists(
+            &rust_ast,
+            inputs,
+            expected_outputs,
+            HashMap::default(),
+            Some(expected_final_memory),
+        );
+    }
+
+    #[test]
+    fn simple_list_support_test() {
+        use tasm_lib::rust_shadowing_helper_functions::safe_list::safe_list_new;
+        use tasm_lib::rust_shadowing_helper_functions::safe_list::safe_list_push;
+
+        let mut memory = HashMap::default();
+        let list_pointer = BFieldElement::one();
+        safe_list_new(list_pointer, 43, &mut memory);
+
+        let elem_1 = vec![BFieldElement::new(2000), BFieldElement::new(0)];
+        safe_list_push(list_pointer, elem_1.clone(), &mut memory, elem_1.len());
+
+        let mut expected_final_memory = memory.clone();
+        for i in 0..10 {
+            let elem_i = vec![BFieldElement::new(i), BFieldElement::new(0)];
+            safe_list_push(
+                list_pointer,
+                elem_i.clone(),
+                &mut expected_final_memory,
+                elem_i.len(),
+            );
+        }
+
+        let item_fn = &item_fn(parse_quote! {
             fn foo(values: &mut Vec<u64>) {
                 let mut i: u64 = 0u64;
                 while i < 10u64 {
@@ -79,11 +219,132 @@ mod compile_and_typecheck_tests {
 
                 return;
             }
-        })
+        });
+        compare_prop_with_stack_and_memory_safe_lists(
+            item_fn,
+            vec![bfe_lit(list_pointer)],
+            vec![],
+            memory,
+            Some(expected_final_memory),
+        );
     }
 
-    fn polymorphic_vectors_rast() -> syn::ItemFn {
-        item_fn(parse_quote! {
+    #[test]
+    fn build_and_read_vector_in_while_loop_test() {
+        let exec_result = execute_with_stack_memory_and_ins_safe_lists(
+            &build_and_read_u32_vector_in_while_loop_rast(),
+            vec![],
+            &HashMap::default(),
+            vec![],
+            NonDeterminism::new(vec![]),
+            1,
+        )
+        .unwrap();
+
+        // Verify that expected lists were built
+        let mut final_stack = exec_result.final_stack.clone();
+        let b_10 = final_stack.pop().unwrap();
+        assert_eq!(405, b_10.value());
+
+        let list_pointer_b = final_stack.pop().unwrap();
+        let expected_list_b = (400..416).map(u32_lit).rev().collect_vec();
+        assert_list_equal(expected_list_b, list_pointer_b, &exec_result.final_ram);
+
+        let list_pointer_a = final_stack.pop().unwrap();
+        let expected_list_a = (0..16).map(u32_lit).collect_vec();
+        assert_list_equal(expected_list_a, list_pointer_a, &exec_result.final_ram);
+
+        fn build_and_read_u32_vector_in_while_loop_rast() -> syn::ItemFn {
+            item_fn(parse_quote! {
+                fn manage_vector() -> (Vec<u32>, Vec<u32>, u32) {
+                    let mut a: Vec<u32> = Vec::<u32>::with_capacity(16);
+
+                    let mut i: usize = 0;
+                    while i < 16usize {
+                        a.push(i);
+                        i = i + 1;
+                    }
+
+                    // Declare b vector
+                    i = 0;
+                    let mut b: Vec<u32> = Vec::<u32>::with_capacity(32);
+                    while i < 16 {
+                        b.push(0u32);
+                        i += 1;
+                    }
+
+                    // Construct b vector
+                    i = 0;
+                    while i < 16 {
+                        b[i] = a[15 - i] + 400;
+                        i += 1;
+                    }
+
+                    return (a, b, b[10]);
+                }
+            })
+        }
+    }
+
+    #[test]
+    fn build_vector_in_while_loop_test() {
+        let mut exec_result = execute_with_stack_memory_and_ins_safe_lists(
+            &item_fn(parse_quote! {
+                fn build_vector_in_while_loop() -> Vec<u32> {
+                    let mut a: Vec<u32> = Vec::<u32>::with_capacity(16);
+
+                    let mut i: usize = 0;
+                    while i < 16usize {
+                        a.push(i);
+                        i = i + 1;
+                    }
+
+                    return a;
+                }
+            }),
+            vec![],
+            &HashMap::default(),
+            vec![],
+            NonDeterminism::new(vec![]),
+            DataType::List(Box::new(DataType::U32), ListType::Safe).stack_size() as isize,
+        )
+        .unwrap();
+        let mut list_pointer = exec_result.final_stack.last().unwrap();
+        let mut expected_list = (0..16).map(u32_lit).collect_vec();
+        assert_list_equal(expected_list, *list_pointer, &exec_result.final_ram);
+
+        exec_result = execute_with_stack_memory_and_ins_safe_lists(
+            &item_fn(parse_quote! {
+                fn build_vector_in_while_loop() -> Vec<u64> {
+                    let mut a: Vec<u64> = Vec::<u64>::with_capacity(16);
+
+                    let mut i: usize = 0;
+                    while i < 16usize {
+                        a.push(i as u64);
+                        i = i + 1;
+                    }
+
+                    return a;
+                }
+            }),
+            vec![],
+            &HashMap::default(),
+            vec![],
+            NonDeterminism::new(vec![]),
+            DataType::List(Box::new(DataType::U64), ListType::Safe).stack_size() as isize,
+        )
+        .unwrap();
+        list_pointer = exec_result.final_stack.last().unwrap();
+        expected_list = (0..16).map(u64_lit).collect_vec();
+        assert_list_equal(expected_list, *list_pointer, &exec_result.final_ram)
+    }
+
+    #[test]
+    fn polymorphic_vectors_test() {
+        use tasm_lib::rust_shadowing_helper_functions::safe_list::safe_list_new;
+        use tasm_lib::rust_shadowing_helper_functions::safe_list::safe_list_push;
+
+        let rust_ast = item_fn(parse_quote! {
             fn polymorphic_vectors() -> (Vec<u32>, u32, Vec<u64>, u32) {
                 let mut a: Vec<u32> = Vec::<u32>::with_capacity(16);
                 let mut b: Vec<u64> = Vec::<u64>::with_capacity(16);
@@ -95,339 +356,54 @@ mod compile_and_typecheck_tests {
 
                 return (a, a_len, b, b_len);
             }
-        })
-    }
+        });
 
-    fn build_u32_vector_in_while_loop_rast() -> syn::ItemFn {
-        item_fn(parse_quote! {
-            fn build_vector_in_while_loop() -> Vec<u32> {
-                let mut a: Vec<u32> = Vec::<u32>::with_capacity(16);
+        let inputs = vec![];
+        let expected_list_pointer_a = dyn_malloc::FIRST_DYNAMICALLY_ALLOCATED_ADDRESS;
+        let expected_list_pointer_b = expected_list_pointer_a + BFieldElement::new(16 + 2);
+        let expected_outputs = vec![
+            bfe_lit(expected_list_pointer_a),
+            bfe_lit(BFieldElement::new(2)),
+            bfe_lit(expected_list_pointer_b),
+            bfe_lit(BFieldElement::new(1)),
+        ];
 
-                let mut i: usize = 0;
-                while i < 16usize {
-                    a.push(i);
-                    i = i + 1;
-                }
+        let mut expected_output_memory: HashMap<BFieldElement, BFieldElement> = HashMap::default();
+        safe_list_new(expected_list_pointer_a, 16, &mut expected_output_memory);
 
-                return a;
-            }
-        })
-    }
+        safe_list_new(expected_list_pointer_b, 16, &mut expected_output_memory);
 
-    fn build_u64_vector_in_while_loop_rast() -> syn::ItemFn {
-        item_fn(parse_quote! {
-            fn build_vector_in_while_loop() -> Vec<u64> {
-                let mut a: Vec<u64> = Vec::<u64>::with_capacity(16);
+        let elem_1 = vec![BFieldElement::new(1000)];
+        safe_list_push(
+            expected_list_pointer_a,
+            elem_1.clone(),
+            &mut expected_output_memory,
+            elem_1.len(),
+        );
 
-                let mut i: usize = 0;
-                while i < 16usize {
-                    a.push(i as u64);
-                    i = i + 1;
-                }
+        let elem_2 = vec![BFieldElement::new(2000)];
+        safe_list_push(
+            expected_list_pointer_a,
+            elem_2.clone(),
+            &mut expected_output_memory,
+            elem_2.len(),
+        );
 
-                return a;
-            }
-        })
-    }
+        let elem_3 = vec![BFieldElement::new(3000), BFieldElement::new(0)];
+        safe_list_push(
+            expected_list_pointer_b,
+            elem_3.clone(),
+            &mut expected_output_memory,
+            elem_3.len(),
+        );
 
-    pub mod run_tests {
-        use itertools::Itertools;
-        use rand::random;
-        use triton_vm::{Digest, NonDeterminism};
-
-        use crate::ast_types::{self, DataType, ListType};
-
-        use super::*;
-
-        #[test]
-        fn very_simple_list_support_test() {
-            let inputs = vec![];
-            let expected_outputs = vec![u32_lit(2000)];
-            compare_prop_with_stack_safe_lists(
-                &very_simple_list_support(),
-                inputs,
-                expected_outputs,
-            );
-        }
-
-        #[test]
-        fn clear_support_test() {
-            fn clear_list_rast() -> syn::ItemFn {
-                item_fn(parse_quote! {
-                    fn clear_list() -> usize {
-                        let mut a: Vec<u32> = Vec::<u32>::with_capacity(17);
-                        a.push(2001u32);
-                        a.push(2002u32);
-                        a.push(2003u32);
-                        a.push(2004u32);
-                        a.push(2005u32);
-                        a.push(2006u32);
-                        a.push(2007u32);
-                        a.push(2008u32);
-
-                        // Length is 8
-                        a.clear();
-
-                        a.push(2009u32);
-                        a.push(2010u32);
-                        a.push(2011u32);
-
-                        // Length is 3
-                        return a.len();
-                    }
-                })
-            }
-
-            compare_prop_with_stack_safe_lists(&clear_list_rast(), vec![], vec![u32_lit(3)]);
-            compare_prop_with_stack_unsafe_lists(&clear_list_rast(), vec![], vec![u32_lit(3)]);
-        }
-
-        #[test]
-        fn simple_digest_list_support_test() {
-            let random_digest: Digest = random();
-            let inputs = vec![digest_lit(random_digest)];
-            let expected_outputs = vec![digest_lit(random_digest)];
-            compare_prop_with_stack_safe_lists(&simple_digest_list(), inputs, expected_outputs);
-        }
-
-        #[test]
-        fn build_digest_list_with_indexing_test() {
-            let random_digest0: Digest = random();
-            let random_digest1: Digest = random();
-            let random_digest2: Digest = random();
-            let inputs = vec![
-                digest_lit(random_digest1),
-                digest_lit(random_digest0),
-                digest_lit(random_digest2),
-            ];
-            let expected_outputs = vec![
-                digest_lit(random_digest0),
-                digest_lit(random_digest1),
-                digest_lit(random_digest2),
-            ];
-            compare_prop_with_stack_safe_lists(
-                &build_digest_list_with_indexing(),
-                inputs,
-                expected_outputs,
-            );
-        }
-
-        #[test]
-        fn simple_list_support_run_test() {
-            use tasm_lib::rust_shadowing_helper_functions::safe_list::safe_list_new;
-            use tasm_lib::rust_shadowing_helper_functions::safe_list::safe_list_pop;
-            use tasm_lib::rust_shadowing_helper_functions::safe_list::safe_list_push;
-
-            let inputs = vec![];
-            let outputs = vec![
-                bfe_lit(BFieldElement::one()),
-                u32_lit(2),
-                u64_lit(4000),
-                u64_lit(2000),
-            ];
-
-            let mut memory: HashMap<BFieldElement, BFieldElement> = HashMap::default();
-
-            // Free-pointer
-            // `2 * 17 + 2` is used by list. `1` is used by the dynamic allocator.
-            let total_memory_used = 2 * 17 + 2 + 1;
-            assert!(memory
-                .insert(BFieldElement::zero(), BFieldElement::new(total_memory_used))
-                .is_none());
-
-            let list_pointer = BFieldElement::one();
-            safe_list_new(list_pointer, 17, &mut memory);
-
-            let elem_0 = vec![BFieldElement::new(2000), BFieldElement::new(0)];
-            safe_list_push(list_pointer, elem_0.clone(), &mut memory, elem_0.len());
-
-            let elem_1 = vec![BFieldElement::new(5000), BFieldElement::new(0)];
-            safe_list_push(list_pointer, elem_1.clone(), &mut memory, elem_1.len());
-
-            let elem_2 = vec![BFieldElement::new(4000), BFieldElement::new(0)];
-            safe_list_push(list_pointer, elem_2.clone(), &mut memory, elem_2.len());
-
-            safe_list_pop(
-                list_pointer,
-                &mut memory,
-                ast_types::DataType::U64.stack_size(),
-            );
-
-            let input_memory = HashMap::default();
-            compare_prop_with_stack_and_memory_safe_lists(
-                &simple_list_support(),
-                inputs,
-                outputs,
-                input_memory,
-                Some(memory),
-            );
-        }
-
-        #[test]
-        fn simple_list_support_test() {
-            use tasm_lib::rust_shadowing_helper_functions::safe_list::safe_list_new;
-            use tasm_lib::rust_shadowing_helper_functions::safe_list::safe_list_push;
-
-            let mut memory = HashMap::default();
-            let list_pointer = BFieldElement::one();
-            safe_list_new(list_pointer, 43, &mut memory);
-
-            let elem_1 = vec![BFieldElement::new(2000), BFieldElement::new(0)];
-            safe_list_push(list_pointer, elem_1.clone(), &mut memory, elem_1.len());
-
-            let mut expected_final_memory = memory.clone();
-            for i in 0..10 {
-                let elem_i = vec![BFieldElement::new(i), BFieldElement::new(0)];
-                safe_list_push(
-                    list_pointer,
-                    elem_i.clone(),
-                    &mut expected_final_memory,
-                    elem_i.len(),
-                );
-            }
-
-            compare_prop_with_stack_and_memory_safe_lists(
-                &mut_list_argument(),
-                vec![bfe_lit(list_pointer)],
-                vec![],
-                memory,
-                Some(expected_final_memory),
-            );
-        }
-
-        #[test]
-        fn build_and_read_vector_in_while_loop_test() {
-            let mut vm_memory = HashMap::default();
-            let exec_result = execute_with_stack_memory_and_ins_safe_lists(
-                &build_and_read_u32_vector_in_while_loop_rast(),
-                vec![],
-                &mut vm_memory,
-                vec![],
-                NonDeterminism::new(vec![]),
-                1,
-            )
-            .unwrap();
-
-            // Verify that expected lists were built
-            let mut final_stack = exec_result.final_stack.clone();
-            let b_10 = final_stack.pop().unwrap();
-            assert_eq!(405, b_10.value());
-
-            let list_pointer_b = final_stack.pop().unwrap();
-            let expected_list_b = (400..416).map(u32_lit).rev().collect_vec();
-            assert_list_equal(expected_list_b, list_pointer_b, &vm_memory);
-
-            let list_pointer_a = final_stack.pop().unwrap();
-            let expected_list_a = (0..16).map(u32_lit).collect_vec();
-            assert_list_equal(expected_list_a, list_pointer_a, &vm_memory);
-
-            fn build_and_read_u32_vector_in_while_loop_rast() -> syn::ItemFn {
-                item_fn(parse_quote! {
-                    fn manage_vector() -> (Vec<u32>, Vec<u32>, u32) {
-                        let mut a: Vec<u32> = Vec::<u32>::with_capacity(16);
-
-                        let mut i: usize = 0;
-                        while i < 16usize {
-                            a.push(i);
-                            i = i + 1;
-                        }
-
-                        // Declare b vector
-                        i = 0;
-                        let mut b: Vec<u32> = Vec::<u32>::with_capacity(32);
-                        while i < 16 {
-                            b.push(0u32);
-                            i += 1;
-                        }
-
-                        // Construct b vector
-                        i = 0;
-                        while i < 16 {
-                            b[i] = a[15 - i] + 400;
-                            i += 1;
-                        }
-
-                        return (a, b, b[10]);
-                    }
-                })
-            }
-        }
-
-        #[test]
-        fn build_vector_in_while_loop_test() {
-            let mut vm_memory = HashMap::default();
-            let mut exec_result = execute_with_stack_memory_and_ins_safe_lists(
-                &build_u32_vector_in_while_loop_rast(),
-                vec![],
-                &mut vm_memory,
-                vec![],
-                NonDeterminism::new(vec![]),
-                DataType::List(Box::new(DataType::U32), ListType::Safe).stack_size() as isize,
-            )
-            .unwrap();
-            let mut list_pointer = exec_result.final_stack.last().unwrap();
-            let mut expected_list = (0..16).map(u32_lit).collect_vec();
-            assert_list_equal(expected_list, *list_pointer, &vm_memory);
-
-            vm_memory = HashMap::default();
-            exec_result = execute_with_stack_memory_and_ins_safe_lists(
-                &build_u64_vector_in_while_loop_rast(),
-                vec![],
-                &mut vm_memory,
-                vec![],
-                NonDeterminism::new(vec![]),
-                DataType::List(Box::new(DataType::U64), ListType::Safe).stack_size() as isize,
-            )
-            .unwrap();
-            list_pointer = exec_result.final_stack.last().unwrap();
-            expected_list = (0..16).map(u64_lit).collect_vec();
-            assert_list_equal(expected_list, *list_pointer, &vm_memory)
-        }
-
-        #[test]
-        fn polymorphic_vectors_test() {
-            use tasm_lib::rust_shadowing_helper_functions::safe_list::safe_list_new;
-            use tasm_lib::rust_shadowing_helper_functions::safe_list::safe_list_push;
-
-            let inputs = vec![];
-            let outputs = vec![
-                bfe_lit(BFieldElement::new(1)),
-                bfe_lit(BFieldElement::new(2)),
-                bfe_lit(BFieldElement::new(16 + 2 + 1)),
-                bfe_lit(BFieldElement::new(1)),
-            ];
-
-            let mut memory: HashMap<BFieldElement, BFieldElement> = HashMap::default();
-
-            // Dynamic allocator
-            let space_used = 1 + 16 + 2 + 16 * 2 + 2;
-            assert!(memory
-                .insert(BFieldElement::zero(), BFieldElement::new(space_used))
-                .is_none());
-
-            let list_pointer_a = BFieldElement::one();
-            safe_list_new(list_pointer_a, 16, &mut memory);
-
-            let list_pointer_b = BFieldElement::new(16 + 2 + 1);
-            safe_list_new(list_pointer_b, 16, &mut memory);
-
-            let elem_1 = vec![BFieldElement::new(1000)];
-            safe_list_push(list_pointer_a, elem_1.clone(), &mut memory, elem_1.len());
-
-            let elem_2 = vec![BFieldElement::new(2000)];
-            safe_list_push(list_pointer_a, elem_2.clone(), &mut memory, elem_2.len());
-
-            let elem_3 = vec![BFieldElement::new(3000), BFieldElement::new(0)];
-            safe_list_push(list_pointer_b, elem_3.clone(), &mut memory, elem_3.len());
-
-            let input_memory = HashMap::default();
-            compare_prop_with_stack_and_memory_safe_lists(
-                &polymorphic_vectors_rast(),
-                inputs,
-                outputs,
-                input_memory,
-                Some(memory),
-            );
-        }
+        let input_memory = HashMap::default();
+        compare_prop_with_stack_and_memory_safe_lists(
+            &rust_ast,
+            inputs,
+            expected_outputs,
+            input_memory,
+            Some(expected_output_memory),
+        );
     }
 }

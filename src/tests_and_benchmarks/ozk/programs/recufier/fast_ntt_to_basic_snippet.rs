@@ -93,9 +93,14 @@ mod tests {
             "xfe_ntt",
             crate::ast_types::ListType::Unsafe,
         );
+        let list_pointer = BFieldElement::new(100);
+        let list_length = BFieldElement::new(1);
+        let root_of_unity = BFieldElement::new(1);
         let init_memory: HashMap<BFieldElement, BFieldElement> = [
-            (BFieldElement::new(100), BFieldElement::new(1)),
-            (BFieldElement::new(101), BFieldElement::new(500)),
+            (list_pointer, list_length),
+            (list_pointer + BFieldElement::new(1), BFieldElement::new(50)),
+            (list_pointer + BFieldElement::new(2), BFieldElement::new(0)),
+            (list_pointer + BFieldElement::new(3), BFieldElement::new(0)),
         ]
         .iter()
         .cloned()
@@ -103,7 +108,7 @@ mod tests {
         compare_compiled_prop_with_stack_and_memory_and_ins(
             &compiled,
             "xfe_ntt",
-            vec![bfe_lit(1u64.into()), bfe_lit(1u64.into())],
+            vec![bfe_lit(list_pointer), bfe_lit(root_of_unity)],
             vec![],
             init_memory,
             None,
@@ -120,7 +125,7 @@ mod tests {
             );
         let as_bs = crate::tests_and_benchmarks::ozk::ozk_parsing::compile_to_basic_snippet(
             rust_ast,
-            std::collections::HashMap::default(),
+            HashMap::default(),
             crate::ast_types::ListType::Unsafe,
         );
         println!("{}", as_bs);
