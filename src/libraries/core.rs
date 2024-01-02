@@ -10,6 +10,7 @@ use crate::libraries::{Annotation, Library};
 use crate::tasm_code_generator::CompilerState;
 use crate::type_checker::CheckState;
 
+pub mod option_type;
 pub mod result_type;
 
 /// Everything that lives in the Rust `core` module
