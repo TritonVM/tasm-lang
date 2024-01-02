@@ -369,7 +369,7 @@ impl<'a> Graft<'a> {
         if rust_type_as_string == "Result" {
             // I guess, here we need to add the Result<T> type to our list of
             // known types.
-            return self.rust_result_to_data_type(&rust_type_path.path.segments[0].arguments);
+            return self.rust_result_type_to_data_type(&rust_type_path.path.segments[0].arguments);
         }
 
         // We only allow the user to use types that are capitalized
@@ -418,7 +418,7 @@ impl<'a> Graft<'a> {
         ast_types::DataType::Boxed(Box::new(inner_type))
     }
 
-    fn rust_result_to_data_type(&mut self, path_args: &PathArguments) -> DataType {
+    fn rust_result_type_to_data_type(&mut self, path_args: &PathArguments) -> DataType {
         use crate::libraries;
         let PathArguments::AngleBracketed(generics) = path_args else {
             panic!("Unsupported path argument {path_args:#?}");
@@ -431,7 +431,7 @@ impl<'a> Graft<'a> {
         };
         let ok_type = self.syn_type_to_ast_type(ok_type);
 
-        let resolved_type = libraries::core::result_type(ok_type);
+        let resolved_type = libraries::core::result_type::result_type(ok_type);
         self.imported_custom_types
             .add_type_context_if_new(resolved_type.clone());
         ast_types::DataType::Enum(Box::new(resolved_type.composite_type.try_into().unwrap()))
