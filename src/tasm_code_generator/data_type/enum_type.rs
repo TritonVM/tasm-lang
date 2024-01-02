@@ -29,18 +29,8 @@ impl EnumType {
 
         let (field_pointer_pointer, get_variant_data_pointers, subroutines) =
             self.get_variant_data_pointers_with_sizes(state);
-        let pointer_for_words_loaded_acc: u64 = state
-            .global_compiler_state
-            .snippet_state
-            .kmalloc(1)
-            .try_into()
-            .unwrap();
-        let pointer_for_discriminant_pointer: u64 = state
-            .global_compiler_state
-            .snippet_state
-            .kmalloc(1)
-            .try_into()
-            .unwrap();
+        let pointer_for_words_loaded_acc = state.global_compiler_state.snippet_state.kmalloc(1);
+        let pointer_for_discriminant_pointer = state.global_compiler_state.snippet_state.kmalloc(1);
         let get_variant_data_pointers_label = get_variant_data_pointers.get_label();
         for sr in [vec![get_variant_data_pointers], subroutines].concat() {
             state.add_library_function(sr);
@@ -216,12 +206,11 @@ impl EnumType {
             .unwrap_or_default();
 
         // Allocate two words for each field: field size and field pointer
-        let field_pointer_pointer: u64 = state
+        let field_pointer_pointer = state
             .global_compiler_state
             .snippet_state
             .kmalloc(2 * max_field_count as u32)
-            .try_into()
-            .unwrap();
+            .value();
 
         let mut subroutines: Vec<SubRoutine> = vec![];
         let mut set_all_field_pointers = vec![];

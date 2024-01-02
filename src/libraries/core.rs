@@ -38,7 +38,7 @@ pub(crate) fn result_type(ok_type: DataType) -> crate::composite_types::TypeCont
     let unwrap_method = unwrap_method(&enum_type);
 
     crate::composite_types::TypeContext {
-        composite_type: enum_type.try_into().unwrap(),
+        composite_type: enum_type.into(),
         methods: vec![is_ok_method, is_err_method, unwrap_method],
         associated_functions: vec![],
     }

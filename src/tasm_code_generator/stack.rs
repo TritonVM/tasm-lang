@@ -53,15 +53,12 @@ impl VStack {
         seek_addr: &ValueIdentifier,
     ) -> (usize, ast_types::DataType, Option<BFieldElement>) {
         let mut position: usize = 0;
-        for (_i, (found_addr, (data_type, spilled))) in self.inner.iter().rev().enumerate() {
+        for (found_addr, (data_type, spilled)) in self.inner.iter().rev() {
             if seek_addr == found_addr {
                 return (position, data_type.to_owned(), spilled.to_owned());
             }
 
             position += data_type.stack_size();
-
-            // By asserting after `+= data_type.size_of()`, we check that the deepest part
-            // of the sought value is addressable, not just the top part of the value.
         }
 
         panic!("Cannot find {seek_addr} on vstack")
