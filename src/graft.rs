@@ -1333,10 +1333,26 @@ impl<'a> Graft<'a> {
 
                         let match_condition = match pat {
                             syn::Pat::Box(_) => todo!(),
-                            syn::Pat::Ident(_) => todo!(),
                             syn::Pat::Lit(_) => todo!(),
                             syn::Pat::Macro(_) => todo!(),
                             syn::Pat::Or(_) => todo!(),
+                            syn::Pat::Ident(ident) => {
+                                // Enums that are in prelude can be matched with only the variant name, like `None`
+                                // instead of `Result::None`
+                                let enum_case = ident.ident.to_string();
+                                let enum_case_split = enum_case.split("::").collect_vec();
+                                let (type_name, variant_name) = match enum_case_split.len() {
+                                    1 => (None, enum_case_split[0].to_owned()),
+                                    2 => (Some(enum_case_split[0].to_owned()), enum_case_split[1].to_owned()),
+                                    _ => panic!("Expected `<Type>::<VariantName>` or `VariantName` for enum match case. Got: `{enum_case}`"),
+                                };
+
+                                ast::MatchCondition::EnumVariant(ast::EnumVariantSelector {
+                                    data_bindings: Vec::default(),
+                                    type_name,
+                                    variant_name,
+                                })
+                            }
                             syn::Pat::Path(syn::PatPath {
                                 attrs: _,
                                 qself: _,

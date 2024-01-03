@@ -11,10 +11,7 @@ pub(crate) fn option_type(payload_type: DataType) -> crate::composite_types::Typ
         is_copy: payload_type.is_copy(),
         name: "Option".to_owned(),
         variants: vec![
-            (
-                "None".to_owned(),
-                DataType::Tuple(vec![DataType::unit()].into()),
-            ),
+            ("None".to_owned(), DataType::unit()),
             ("Some".to_owned(), payload_type.clone()),
         ],
         is_prelude: true,
@@ -68,7 +65,7 @@ fn option_is_none_method(enum_type: &ast_types::EnumType) -> ast::Method<Typing>
     };
     let argument_type = DataType::Reference(Box::new(enum_type.into()));
     let method_signature = FnSignature {
-        name: "is_err".to_owned(),
+        name: "is_none".to_owned(),
         args: vec![AbstractArgument::ValueArgument(AbstractValueArg {
             name: "self".to_owned(),
             data_type: argument_type,

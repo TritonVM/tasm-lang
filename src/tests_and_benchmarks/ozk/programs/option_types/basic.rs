@@ -1,9 +1,10 @@
-use triton_vm::BFieldElement;
+use triton_vm::{BFieldElement, Digest};
 use twenty_first::shared_math::x_field_element::XFieldElement;
 
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
 #[allow(clippy::unnecessary_literal_unwrap)]
+#[allow(clippy::assertions_on_constants)]
 fn main() {
     let bfe: BFieldElement = tasm::tasm_io_read_stdin___bfe();
     let some_bfe: Option<BFieldElement> = Some(bfe);
@@ -17,6 +18,62 @@ fn main() {
 
     let none_xfe: Option<XFieldElement> = None;
     assert!(none_xfe.is_none());
+    let none_digest: Option<Digest> = None;
+    assert!(none_digest.is_none());
+    let none_bfe: Option<BFieldElement> = None;
+    assert!(none_bfe.is_none());
+
+    match some_xfe {
+        Some(inner) => {
+            tasm::tasm_io_write_to_stdout___xfe(inner);
+        }
+        None => {
+            assert!(false);
+        }
+    };
+
+    match some_bfe {
+        Some(inner) => {
+            tasm::tasm_io_write_to_stdout___bfe(inner);
+        }
+        None => {
+            assert!(false);
+        }
+    };
+    match some_bfe {
+        Some(inner) => {
+            tasm::tasm_io_write_to_stdout___bfe(inner);
+        }
+        _ => {
+            assert!(false);
+        }
+    };
+
+    match none_xfe {
+        Some(_) => {
+            assert!(false);
+        }
+        None => {
+            tasm::tasm_io_write_to_stdout___u32(100);
+        }
+    };
+    match none_xfe {
+        Some(_) => {
+            assert!(false);
+        }
+        _ => {
+            tasm::tasm_io_write_to_stdout___u32(100);
+        }
+    };
+
+    match none_digest {
+        Some(_) => {
+            assert!(false);
+        }
+        None => {
+            tasm::tasm_io_write_to_stdout___u32(101);
+        }
+    };
 
     return;
 }
@@ -41,7 +98,7 @@ mod test {
             rust_shadows::wrap_main_with_io(&main)(stdin.clone(), non_determinism.clone());
         let test_program = ozk_parsing::compile_for_test(
             "option_types",
-            "simple_is_some",
+            "basic",
             "main",
             crate::ast_types::ListType::Unsafe,
         );
