@@ -367,9 +367,11 @@ impl<'a> Graft<'a> {
         }
 
         if rust_type_as_string == "Result" {
-            // I guess, here we need to add the Result<T> type to our list of
-            // known types.
             return self.rust_result_type_to_data_type(&rust_type_path.path.segments[0].arguments);
+        }
+
+        if rust_type_as_string == "Option" {
+            return self.rust_option_type_to_data_type(&rust_type_path.path.segments[0].arguments);
         }
 
         // We only allow the user to use types that are capitalized
@@ -416,6 +418,28 @@ impl<'a> Graft<'a> {
         };
 
         ast_types::DataType::Boxed(Box::new(inner_type))
+    }
+
+    fn rust_option_type_to_data_type(&mut self, path_args: &PathArguments) -> DataType {
+        use crate::libraries;
+        let PathArguments::AngleBracketed(generics) = path_args else {
+            panic!("Unsupported path argument {path_args:#?}");
+        };
+        assert!(
+            generics.args.len().is_one(),
+            "`Option` must have exactly one generic"
+        );
+
+        let some_type_arg = &generics.args[0];
+        let syn::GenericArgument::Type(ok_type) = some_type_arg else {
+            panic!("Unsupported type {some_type_arg:#?}");
+        };
+        let some_type = self.syn_type_to_ast_type(ok_type);
+
+        let resolved_type = libraries::core::option_type::option_type(some_type);
+        self.imported_custom_types
+            .add_type_context_if_new(resolved_type.clone());
+        ast_types::DataType::Enum(Box::new(resolved_type.composite_type.try_into().unwrap()))
     }
 
     fn rust_result_type_to_data_type(&mut self, path_args: &PathArguments) -> DataType {
@@ -1309,10 +1333,26 @@ impl<'a> Graft<'a> {
 
                         let match_condition = match pat {
                             syn::Pat::Box(_) => todo!(),
-                            syn::Pat::Ident(_) => todo!(),
                             syn::Pat::Lit(_) => todo!(),
                             syn::Pat::Macro(_) => todo!(),
                             syn::Pat::Or(_) => todo!(),
+                            syn::Pat::Ident(ident) => {
+                                // Enums that are in prelude can be matched with only the variant name, like `None`
+                                // instead of `Result::None`
+                                let enum_case = ident.ident.to_string();
+                                let enum_case_split = enum_case.split("::").collect_vec();
+                                let (type_name, variant_name) = match enum_case_split.len() {
+                                    1 => (None, enum_case_split[0].to_owned()),
+                                    2 => (Some(enum_case_split[0].to_owned()), enum_case_split[1].to_owned()),
+                                    _ => panic!("Expected `<Type>::<VariantName>` or `VariantName` for enum match case. Got: `{enum_case}`"),
+                                };
+
+                                ast::MatchCondition::EnumVariant(ast::EnumVariantSelector {
+                                    data_bindings: Vec::default(),
+                                    type_name,
+                                    variant_name,
+                                })
+                            }
                             syn::Pat::Path(syn::PatPath {
                                 attrs: _,
                                 qself: _,

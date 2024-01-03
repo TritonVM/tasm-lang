@@ -336,6 +336,7 @@ fn annotate_stmt(
     env_fn_signature: &ast::FnSignature,
 ) {
     match stmt {
+        // `let a: u32 = 4;`
         ast::Stmt::Let(ast::LetStmt {
             var_name,
             data_type,
@@ -360,9 +361,14 @@ fn annotate_stmt(
             );
         }
 
+        // `a = 4;`, where `a` is declared as `mut`
         ast::Stmt::Assign(ast::AssignStmt { identifier, expr }) => {
-            let (identifier_type, mutable) =
-                annotate_identifier_type(identifier, state, env_fn_signature);
+            let (identifier_type, mutable, new_expr) =
+                annotate_identifier_type(identifier, None, state, env_fn_signature);
+            assert!(
+                new_expr.is_none(),
+                "Cannot rewrite expression outside of atomic variable expression"
+            );
             let assign_expr_hint = &identifier_type;
             let expr_type =
                 derive_annotate_expr_type(expr, Some(assign_expr_hint), state, env_fn_signature)
@@ -641,33 +647,59 @@ pub fn assert_type_equals(
     }
 }
 
-/// Set type and return type and whether the identifier was declared as mutable
+/// Set type and return (type, mutable, new_expr) tuple. `new_expr` indicates that the
+/// type of the node in the AST should be changed from identifier to something else.
 pub(crate) fn annotate_identifier_type(
     identifier: &mut ast::Identifier<Typing>,
+    hint: Option<&ast_types::DataType>,
     state: &mut CheckState,
     fn_signature: &ast::FnSignature,
-) -> (ast_types::DataType, bool) {
+) -> (ast_types::DataType, bool, Option<ast::Expr<Typing>>) {
     match identifier {
         // x
-        ast::Identifier::String(var_name, var_type) => match state.vtable.get(var_name) {
-            Some(found_type) => {
-                *var_type = Typing::KnownType(found_type.data_type.clone());
-                (found_type.data_type.clone(), found_type.mutable)
-            }
-            None => match state.ftable.get(var_name) {
-                Some(functions) => {
-                    assert!(
-                        functions.len().is_one(),
-                        "Duplicate function name: {var_name}"
-                    );
-                    let function = functions[0].clone();
-                    *var_type = Typing::KnownType(function.clone().into());
-                    let function_datatype: ast_types::DataType = function.into();
-                    (function_datatype, false)
+        ast::Identifier::String(var_name, var_type) => {
+            match state.vtable.get(var_name) {
+                Some(found_type) => {
+                    // Identifier is a declared variable
+                    *var_type = Typing::KnownType(found_type.data_type.clone());
+                    (found_type.data_type.clone(), found_type.mutable, None)
                 }
-                None => panic!("variable {var_name} must have known type"),
-            },
-        },
+                None => match state.ftable.get(var_name) {
+                    // Identifier is a declared function
+                    Some(functions) => {
+                        assert!(
+                            functions.len().is_one(),
+                            "Duplicate function name: {var_name}"
+                        );
+                        let function = functions[0].clone();
+                        *var_type = Typing::KnownType(function.clone().into());
+                        let function_datatype: ast_types::DataType = function.into();
+                        (function_datatype, false, None)
+                    }
+                    None => {
+                        // Identifier is variant type declared in `prelude` without associated data, like `None`.
+                        // Here, the identifier must be rewritten to an `EnumDeclaration` by the caller.
+                        let type_hint = match hint {
+                        Some(ty) => ty,
+                        None => panic!("type of variable or identifier \"{var_name}\" could not be resolved"),
+                    };
+                        let prelude_type = state
+                            .composite_types
+                            .prelude_variant_match(var_name, type_hint).expect("type of variable or identifier \"{var_name}\" could not be resolved");
+                        *var_type = Typing::KnownType(prelude_type.clone().into());
+
+                        (
+                            prelude_type.clone().into(),
+                            false,
+                            Some(ast::Expr::EnumDeclaration(ast::EnumDeclaration {
+                                enum_type: prelude_type.into(),
+                                variant_name: var_name.to_owned(),
+                            })),
+                        )
+                    }
+                },
+            }
+        }
 
         // x[e]
         ast::Identifier::Index(list_identifier, index_expr, known_type) => {
@@ -687,8 +719,12 @@ pub(crate) fn annotate_identifier_type(
             // type of `a` need to be forced to `Vec<T>`.
             // TODO: It's possible that the type of `list_identifier` needs to be forced to. But to
             // do that, this function probably needs the expression, and not just the identifier.
-            let (maybe_list_type, mutable) =
-                annotate_identifier_type(list_identifier, state, fn_signature);
+            let (maybe_list_type, mutable, rewrite_expr) =
+                annotate_identifier_type(list_identifier, None, state, fn_signature);
+            assert!(
+                rewrite_expr.is_none(),
+                "Cannot rewrite expression outside of atomic variable expression, like `a`."
+            );
             let mut forced_sequence_type = maybe_list_type.clone();
             let element_type = loop {
                 if let ast_types::DataType::List(elem_ty, _) = &forced_sequence_type {
@@ -736,17 +772,22 @@ pub(crate) fn annotate_identifier_type(
             list_identifier.force_type(&forced_sequence_type);
             *known_type = Typing::KnownType(element_type.clone());
 
-            (element_type, mutable)
+            (element_type, mutable, None)
         }
 
         // x.foo
         ast::Identifier::Field(ident, field_id, annot) => {
-            let (receiver_type, mutable) = annotate_identifier_type(ident, state, fn_signature);
+            let (receiver_type, mutable, rewrite_expr) =
+                annotate_identifier_type(ident, None, state, fn_signature);
+            assert!(
+                rewrite_expr.is_none(),
+                "Cannot rewrite expression outside of atomic variable expression"
+            );
             // Only structs have fields, so receiver_type must be a struct, or a pointer to a struct.
             let data_type = receiver_type.field_access_returned_type(field_id);
             *annot = Typing::KnownType(data_type.clone());
 
-            (data_type, mutable)
+            (data_type, mutable, None)
         }
     }
 }
@@ -1050,10 +1091,15 @@ fn derive_annotate_expr_type(
         }
 
         ast::Expr::Var(identifier) => match identifier.resolved() {
-            Some(ty) => Ok(ty),
+            Some(ty) => Ok(ty.to_owned()),
             None => {
-                annotate_identifier_type(identifier, state, env_fn_signature);
-                Ok(identifier.get_type())
+                let (identifier_type, _mutable, new_expr) =
+                    annotate_identifier_type(identifier, hint, state, env_fn_signature);
+                if let Some(new_expr) = new_expr {
+                    *expr = new_expr;
+                }
+
+                Ok(identifier_type)
             }
         },
 

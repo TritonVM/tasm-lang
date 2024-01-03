@@ -254,6 +254,23 @@ impl CompositeTypes {
     }
 
     /********** Type Checking **********/
+    pub(crate) fn prelude_variant_match(
+        &self,
+        variant_name: &str,
+        expected_type: &ast_types::DataType,
+    ) -> Option<EnumType> {
+        let expected_type = expected_type.as_enum_type();
+        let preludes = self.preludes();
+        let mut ret = None;
+        for prelude in preludes {
+            if prelude.has_variant_of_name(variant_name) && prelude == expected_type {
+                ret = Some(prelude);
+            }
+        }
+
+        ret
+    }
+
     pub(crate) fn methods_mut(&mut self) -> std::vec::IntoIter<&mut ast::Method<Typing>> {
         self.composite_types
             .iter_mut()
@@ -388,7 +405,7 @@ impl CompositeTypes {
     /// Return all enums that are included in `prelude`, meaning that
     /// the programmer only has to specify the variant name, not the type.
     /// E.g.: `Ok(5)` instead of `Return::Ok(5)`.
-    fn get_preludes(&self) -> Vec<EnumType> {
+    fn preludes(&self) -> Vec<EnumType> {
         let mut ret = vec![];
         for dtype in self.composite_types.iter() {
             if dtype.composite_type.is_prelude() {
@@ -420,7 +437,7 @@ impl CompositeTypes {
         let split_name = name.split("::").collect_vec();
 
         // Is this an enum constructor for a type in `prelude`? E.g. `Ok(...)`.
-        for prelude in self.get_preludes() {
+        for prelude in self.preludes() {
             if prelude.has_variant_of_name(split_name[0]) {
                 let variant_name = split_name[0];
                 if prelude
