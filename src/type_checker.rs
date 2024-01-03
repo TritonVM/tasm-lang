@@ -1372,14 +1372,26 @@ fn derive_annotate_expr_type(
             match binop {
                 // Overloaded for all arithmetic types.
                 Add => {
-                    let lhs_type =
-                        derive_annotate_expr_type(lhs_expr, hint, state, env_fn_signature)?;
-                    let rhs_type = derive_annotate_expr_type(
-                        rhs_expr,
-                        Some(&lhs_type),
-                        state,
-                        env_fn_signature,
-                    )?;
+                    let maybe_lhs_type =
+                        derive_annotate_expr_type(lhs_expr, hint, state, env_fn_signature);
+                    let rhs_hint = match hint {
+                        Some(hint) => Some(hint),
+                        None => match maybe_lhs_type {
+                            Ok(ref ty) => Some(ty),
+                            Err(_) => None,
+                        },
+                    };
+                    let rhs_type =
+                        derive_annotate_expr_type(rhs_expr, rhs_hint, state, env_fn_signature)?;
+                    let lhs_type = match maybe_lhs_type {
+                        Ok(ty) => ty,
+                        Err(_) => derive_annotate_expr_type(
+                            lhs_expr,
+                            Some(&rhs_type),
+                            state,
+                            env_fn_signature,
+                        )?,
+                    };
 
                     assert_type_equals(&lhs_type, &rhs_type, "add-expr");
                     assert!(
@@ -1486,16 +1498,25 @@ fn derive_annotate_expr_type(
 
                 // Overloaded for all primitive types.
                 Eq => {
-                    // FIXME: Cannot provide parent `hint` (since it's Bool)
+                    // Cannot provide parent `hint` (since it's Bool)
                     let no_hint = None;
-                    let lhs_type =
-                        derive_annotate_expr_type(lhs_expr, no_hint, state, env_fn_signature)?;
-                    let rhs_type = derive_annotate_expr_type(
-                        rhs_expr,
-                        Some(&lhs_type),
-                        state,
-                        env_fn_signature,
-                    )?;
+                    let maybe_lhs_type =
+                        derive_annotate_expr_type(lhs_expr, no_hint, state, env_fn_signature);
+                    let rhs_hint = match maybe_lhs_type {
+                        Ok(ref ty) => Some(ty),
+                        Err(_) => None,
+                    };
+                    let rhs_type =
+                        derive_annotate_expr_type(rhs_expr, rhs_hint, state, env_fn_signature)?;
+                    let lhs_type = match maybe_lhs_type {
+                        Ok(ty) => ty,
+                        Err(_) => derive_annotate_expr_type(
+                            lhs_expr,
+                            Some(&rhs_type),
+                            state,
+                            env_fn_signature,
+                        )?,
+                    };
 
                     assert_type_equals(&lhs_type, &rhs_type, "eq-expr");
                     assert!(
