@@ -336,6 +336,7 @@ fn annotate_stmt(
     env_fn_signature: &ast::FnSignature,
 ) {
     match stmt {
+        // `let a: u32 = 4;`
         ast::Stmt::Let(ast::LetStmt {
             var_name,
             data_type,
@@ -360,9 +361,14 @@ fn annotate_stmt(
             );
         }
 
+        // `a = 4;`, where `a` is declared as `mut`
         ast::Stmt::Assign(ast::AssignStmt { identifier, expr }) => {
-            let (identifier_type, mutable, _) =
+            let (identifier_type, mutable, new_expr) =
                 annotate_identifier_type(identifier, None, state, env_fn_signature);
+            assert!(
+                new_expr.is_none(),
+                "Cannot rewrite expression outside of atomic variable expression"
+            );
             let assign_expr_hint = &identifier_type;
             let expr_type =
                 derive_annotate_expr_type(expr, Some(assign_expr_hint), state, env_fn_signature)
@@ -641,7 +647,8 @@ pub fn assert_type_equals(
     }
 }
 
-/// Set type and return type and whether the identifier was declared as mutable
+/// Set type and return (type, mutable, new_expr) tuple. `new_expr` indicates that the
+/// type of the node in the AST should be changed from identifier to something else.
 pub(crate) fn annotate_identifier_type(
     identifier: &mut ast::Identifier<Typing>,
     hint: Option<&ast_types::DataType>,
@@ -671,6 +678,7 @@ pub(crate) fn annotate_identifier_type(
                     }
                     None => {
                         // Identifier is variant type declared in `prelude` without associated data, like `None`.
+                        // Here, the identifier must be rewritten to an `EnumDeclaration` by the caller.
                         let type_hint = match hint {
                         Some(ty) => ty,
                         None => panic!("type of variable or identifier \"{var_name}\" could not be resolved"),
@@ -711,8 +719,12 @@ pub(crate) fn annotate_identifier_type(
             // type of `a` need to be forced to `Vec<T>`.
             // TODO: It's possible that the type of `list_identifier` needs to be forced to. But to
             // do that, this function probably needs the expression, and not just the identifier.
-            let (maybe_list_type, mutable, _) =
+            let (maybe_list_type, mutable, rewrite_expr) =
                 annotate_identifier_type(list_identifier, None, state, fn_signature);
+            assert!(
+                rewrite_expr.is_none(),
+                "Cannot rewrite expression outside of atomic variable expression, like `a`."
+            );
             let mut forced_sequence_type = maybe_list_type.clone();
             let element_type = loop {
                 if let ast_types::DataType::List(elem_ty, _) = &forced_sequence_type {
@@ -765,8 +777,12 @@ pub(crate) fn annotate_identifier_type(
 
         // x.foo
         ast::Identifier::Field(ident, field_id, annot) => {
-            let (receiver_type, mutable, _) =
+            let (receiver_type, mutable, rewrite_expr) =
                 annotate_identifier_type(ident, None, state, fn_signature);
+            assert!(
+                rewrite_expr.is_none(),
+                "Cannot rewrite expression outside of atomic variable expression"
+            );
             // Only structs have fields, so receiver_type must be a struct, or a pointer to a struct.
             let data_type = receiver_type.field_access_returned_type(field_id);
             *annot = Typing::KnownType(data_type.clone());
@@ -1074,23 +1090,18 @@ fn derive_annotate_expr_type(
             }
         }
 
-        ast::Expr::Var(identifier) => {
-            let resolved = identifier.resolved().clone();
-            let (rewrite, ret) = match resolved {
-                Some(ty) => (None, Ok(ty.to_owned())),
-                None => {
-                    let (_, _, new_expr) =
-                        annotate_identifier_type(identifier, hint, state, env_fn_signature);
-                    (new_expr, Ok(identifier.get_type()))
+        ast::Expr::Var(identifier) => match identifier.resolved() {
+            Some(ty) => Ok(ty.to_owned()),
+            None => {
+                let (identifier_type, _mutable, new_expr) =
+                    annotate_identifier_type(identifier, hint, state, env_fn_signature);
+                if let Some(new_expr) = new_expr {
+                    *expr = new_expr;
                 }
-            };
 
-            if let Some(new_expr) = rewrite {
-                *expr = new_expr;
+                Ok(identifier_type)
             }
-
-            ret
-        }
+        },
 
         ast::Expr::Tuple(tuple_exprs) => {
             let no_hint = None;

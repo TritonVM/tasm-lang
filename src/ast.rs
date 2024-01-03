@@ -570,7 +570,6 @@ impl Identifier<Typing> {
             Identifier::Index(_, _, t) => t,
             Identifier::Field(_, _, t) => t,
         };
-        // matches!(t, Typing::KnownType(_))
         match t {
             Typing::UnknownType => None,
             Typing::KnownType(resolved_type) => Some(resolved_type.to_owned()),
