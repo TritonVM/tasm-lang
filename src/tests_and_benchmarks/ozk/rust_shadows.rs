@@ -223,17 +223,17 @@ pub(super) fn wrap_main_with_io(
 
 // Shadowing of `VmProofStream` functionality
 
-use crate::tests_and_benchmarks::ozk::programs::recufier::vm_proof_stream::VmProofStreamCompiled;
+use crate::tests_and_benchmarks::ozk::programs::recufier::vm_proof_stream::VmProofStream;
 
 pub(super) fn _tasm_recufier_proof_stream_dequeue(
-    proof_stream: &mut VmProofStreamCompiled,
+    proof_stream: &mut VmProofStream,
 ) -> Box<ProofItem> {
     proof_stream._dequeue_internal().unwrap()
 }
 
 type _VmHasherState = twenty_first::shared_math::tip5::Tip5State;
 
-impl VmProofStreamCompiled {
+impl VmProofStream {
     fn _new_internal(items: &[triton_vm::proof_item::ProofItem]) -> Self {
         Self {
             word_index: 1,
