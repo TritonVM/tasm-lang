@@ -214,13 +214,16 @@ fn annotate_method(
 
     if let ast::RoutineBody::Ast(stmts) = &mut method.body {
         // Verify that last statement of function exists, and that it is a `return` statement
-        let last_stmt = stmts
-            .iter()
-            .last()
-            .unwrap_or_else(|| panic!("{}: Function cannot be emtpy.", method.signature.name));
+        let last_stmt = stmts.iter().last().unwrap_or_else(|| {
+            panic!(
+                "Method `{}`: Function cannot be emtpy.",
+                method.signature.name
+            )
+        });
         assert!(
             matches!(last_stmt, ast::Stmt::Return(_)),
-            "Last line of function must be a `return`"
+            "Method: `{}`: Last line of method must be a `return`",
+            method.signature.name
         );
 
         // Type-annotate each statement in-place
@@ -262,7 +265,10 @@ fn annotate_fn_inner(
                     .insert(value_fn_arg.name.clone(), value_fn_arg.to_owned().into())
                     .is_some();
                 if duplicate_fn_arg {
-                    panic!("Duplicate function argument {}", value_fn_arg.name);
+                    panic!(
+                        "Duplicate function argument {} in function \"{}\"",
+                        value_fn_arg.name, function.signature.name
+                    );
                 }
             }
         }
@@ -276,20 +282,23 @@ fn annotate_fn_inner(
             .map(|x| x.data_type.stack_size())
             .sum::<usize>()
             < SIZE_OF_ACCESSIBLE_STACK,
-        "{}: Cannot handle function signatures with input size exceeding {} words",
+        "Function `{}`: Cannot handle function signatures with input size exceeding {} words",
         function.signature.name,
         SIZE_OF_ACCESSIBLE_STACK - 1
     );
 
     if let ast::RoutineBody::Ast(stmts) = &mut function.body {
         // Verify that last statement of function exists, and that it is a `return` statement
-        let last_stmt = stmts
-            .iter()
-            .last()
-            .unwrap_or_else(|| panic!("{}: Function cannot be emtpy.", function.signature.name));
+        let last_stmt = stmts.iter().last().unwrap_or_else(|| {
+            panic!(
+                "Function `{}`: Function cannot be emtpy.",
+                function.signature.name
+            )
+        });
         assert!(
             matches!(last_stmt, ast::Stmt::Return(_)),
-            "Last line of function must be a `return`"
+            "Function `{}`: Last line of function must be a `return` statement.",
+            function.signature.name
         );
 
         // Type-annotate each statement in-place
