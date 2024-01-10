@@ -5,38 +5,80 @@ use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
 #[allow(clippy::unnecessary_literal_unwrap)]
 #[allow(clippy::assertions_on_constants)]
-#[allow(unused_assignments)]
+#[allow(clippy::single_match)]
 fn main() {
+    // None -> None
     let mut none_value: Option<u64> = None;
-    assert!(none_value.is_none());
+    match none_value {
+        Some(_) => {
+            assert!(false);
+        }
+        None => {}
+    };
     none_value = None;
-    assert!(none_value.is_none());
+    match none_value {
+        Some(_) => {
+            assert!(false);
+        }
+        None => {}
+    };
 
+    // None -> Some
     let mut none_to_some_value: Option<u64> = None;
-    assert!(none_to_some_value.is_none());
-    none_to_some_value = Some((1u64 << 40) + 100);
-    assert!(none_to_some_value.is_some());
-
-    let mut some_to_none_value: Option<XFieldElement> = Some(tasm::tasm_io_read_stdin___xfe());
-    tasm::tasm_io_write_to_stdout___xfe(some_to_none_value.unwrap());
-    assert!(some_to_none_value.is_some());
-    some_to_none_value = None;
-    assert!(some_to_none_value.is_none());
-
-    let mut some_value: Option<Digest> = Some(tasm::tasm_io_read_stdin___digest());
-    tasm::tasm_io_write_to_stdout___digest(some_value.unwrap());
-    assert!(some_value.is_some());
-    some_value = Some(tasm::tasm_io_read_stdin___digest());
-    tasm::tasm_io_write_to_stdout___digest(some_value.unwrap());
-    assert!(some_value.is_some());
-
-    // Match statement to ensure stack size is tracked correctly
     match none_to_some_value {
+        Some(_) => {
+            assert!(false);
+        }
+        None => {}
+    };
+    none_to_some_value = Some((1u64 << 40) + 100);
+    match none_to_some_value {
+        Some(x) => {
+            tasm::tasm_io_write_to_stdout___u64(x);
+        }
         None => {
             assert!(false);
         }
-        Some(payload) => {
-            tasm::tasm_io_write_to_stdout___u64(payload);
+    };
+
+    // Some -> None
+    let mut some_to_none_value: Option<XFieldElement> = Some(tasm::tasm_io_read_stdin___xfe());
+    tasm::tasm_io_write_to_stdout___xfe(some_to_none_value.unwrap());
+    match some_to_none_value {
+        Some(x) => {
+            tasm::tasm_io_write_to_stdout___xfe(x);
+        }
+        None => {
+            assert!(false);
+        }
+    };
+    some_to_none_value = None;
+    match some_to_none_value {
+        Some(_) => {
+            assert!(false);
+        }
+        None => {}
+    };
+
+    // Some -> Some
+    let mut some_value: Option<Digest> = Some(tasm::tasm_io_read_stdin___digest());
+    tasm::tasm_io_write_to_stdout___digest(some_value.unwrap());
+    match some_value {
+        Some(x) => {
+            tasm::tasm_io_write_to_stdout___digest(x);
+        }
+        None => {
+            assert!(false);
+        }
+    };
+    some_value = Some(tasm::tasm_io_read_stdin___digest());
+    tasm::tasm_io_write_to_stdout___digest(some_value.unwrap());
+    match some_value {
+        Some(x) => {
+            tasm::tasm_io_write_to_stdout___digest(x);
+        }
+        None => {
+            assert!(false);
         }
     };
 

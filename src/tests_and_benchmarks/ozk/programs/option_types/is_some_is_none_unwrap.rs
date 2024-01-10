@@ -77,7 +77,7 @@ fn main() {
         }
     };
 
-    match none_digest.as_ref() {
+    match none_digest_boxed.as_ref() {
         Some(_) => {
             assert!(false);
         }

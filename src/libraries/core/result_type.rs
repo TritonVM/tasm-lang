@@ -3,7 +3,6 @@ use triton_vm::triton_asm;
 use crate::ast::{self, FnSignature};
 use crate::ast_types::DataType;
 use crate::ast_types::{self, AbstractArgument, AbstractValueArg};
-use crate::tasm_code_generator;
 use crate::type_checker::Typing;
 
 pub(crate) fn result_type(ok_type: DataType) -> crate::composite_types::TypeContext {
@@ -53,25 +52,11 @@ fn result_unwrap_method(enum_type: &ast_types::EnumType) -> ast::Method<Typing> 
 }
 
 fn result_is_err_method(enum_type: &ast_types::EnumType) -> ast::Method<Typing> {
-    let stack_size = enum_type.stack_size();
-    let swap_to_bottom = match stack_size {
-        0 => unreachable!(),
-        1 => triton_asm!(),
-        2..=16 => triton_asm!(swap { stack_size - 1 }),
-        _ => panic!("Can't handle this yet"), // This should work with spilling
-    };
-    let remove_data = match stack_size {
-        0 => unreachable!(),
-        1 => triton_asm!(pop 1),
-        2..=16 => tasm_code_generator::pop_n(stack_size - 1),
-        _ => panic!("Can't handle this yet"),
-    };
-    let is_ok_input_data_type = DataType::Boxed(Box::new(enum_type.into()));
     let method_signature = FnSignature {
         name: "is_err".to_owned(),
         args: vec![AbstractArgument::ValueArgument(AbstractValueArg {
             name: "self".to_owned(),
-            data_type: is_ok_input_data_type,
+            data_type: DataType::Boxed(Box::new(enum_type.into())),
             mutable: false,
         })],
         output: DataType::Bool,
@@ -80,11 +65,8 @@ fn result_is_err_method(enum_type: &ast_types::EnumType) -> ast::Method<Typing> 
 
     ast::Method {
         body: ast::RoutineBody::<Typing>::Instructions(triton_asm!(
-                // _ [ok_type] discriminant
-                {&swap_to_bottom}
-                // _ discriminant [ok_type']
-
-                {&remove_data}
+                // _ *discriminant
+                read_mem 1 pop 1
                 // _ discriminant
 
                 push 0
@@ -96,25 +78,11 @@ fn result_is_err_method(enum_type: &ast_types::EnumType) -> ast::Method<Typing> 
 }
 
 fn result_is_ok_method(enum_type: &ast_types::EnumType) -> ast::Method<Typing> {
-    let stack_size = enum_type.stack_size();
-    let swap_to_bottom = match stack_size {
-        0 => unreachable!(),
-        1 => triton_asm!(),
-        2..=16 => triton_asm!(swap { stack_size - 1 }),
-        _ => panic!("Can't handle this yet"), // This should work with spilling
-    };
-    let remove_data = match stack_size {
-        0 => unreachable!(),
-        1 => triton_asm!(pop 1),
-        2..=16 => tasm_code_generator::pop_n(stack_size - 1),
-        _ => panic!("Can't handle this yet"),
-    };
-    let is_ok_input_data_type = DataType::Boxed(Box::new(enum_type.into()));
     let method_signature = FnSignature {
         name: "is_ok".to_owned(),
         args: vec![AbstractArgument::ValueArgument(AbstractValueArg {
             name: "self".to_owned(),
-            data_type: is_ok_input_data_type,
+            data_type: DataType::Boxed(Box::new(enum_type.into())),
             mutable: false,
         })],
         output: DataType::Bool,
@@ -123,12 +91,9 @@ fn result_is_ok_method(enum_type: &ast_types::EnumType) -> ast::Method<Typing> {
 
     ast::Method {
         body: ast::RoutineBody::<Typing>::Instructions(triton_asm!(
-                // _ [ok_type] discriminant
-                {&swap_to_bottom}
-                // _ discriminant [ok_type']
-
-                {&remove_data}
-                // _ discriminant
+                // *discriminant
+                read_mem 1 pop 1
+                // discriminant
 
                 push 1
                 eq
