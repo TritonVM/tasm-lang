@@ -40,7 +40,6 @@ pub enum DataType {
     VoidPointer,
     Function(Box<FunctionType>),
     Boxed(Box<DataType>),
-    Reference(Box<DataType>),
     Unresolved(String),
 }
 
@@ -54,37 +53,11 @@ impl DataType {
                 variant,
             }) => match variant {
                 StructVariant::TupleStruct(ts) => ts.to_owned(),
-                StructVariant::NamedFields(_) => todo!(),
+                StructVariant::NamedFields(_) => {
+                    panic!("Type is not unnamed or named tuple. Type was: {self}")
+                }
             },
-            // TODO: Get rid of this mess by using `FieldId` in `Identifier` instead
-            DataType::Boxed(inner) => {
-                let inner = *inner.to_owned();
-                match inner {
-                    DataType::Struct(StructType {
-                        name: _,
-                        is_copy: _,
-                        variant,
-                    }) => match variant {
-                        StructVariant::TupleStruct(ts) => ts.to_owned(),
-                        StructVariant::NamedFields(_) => todo!(),
-                    },
-                    _ => panic!("Type is not unnamed or named tuple. Type was: {self}"),
-                }
-            }
-            DataType::Reference(inner) => {
-                let inner = *inner.to_owned();
-                match inner {
-                    DataType::Struct(StructType {
-                        name: _,
-                        is_copy: _,
-                        variant,
-                    }) => match variant {
-                        StructVariant::TupleStruct(ts) => ts.to_owned(),
-                        StructVariant::NamedFields(_) => todo!(),
-                    },
-                    _ => panic!("Type is not unnamed or named tuple. Type was: {self}"),
-                }
-            }
+            DataType::Boxed(inner) => inner.get_tuple_elements(),
             _ => panic!("Type is not unnamed or named tuple. Type was: {self}"),
         }
     }
@@ -109,7 +82,6 @@ impl DataType {
             DataType::Enum(enum_type) => enum_type.is_copy,
             DataType::Unresolved(_) => false,
             DataType::Boxed(_) => false,
-            DataType::Reference(_) => false,
         }
     }
 
@@ -151,7 +123,6 @@ impl DataType {
             },
             Unresolved(name) => name.to_string(),
             Boxed(ty) => format!("boxed_L{}R", ty.label_friendly_name()),
-            Reference(ty) => format!("reference_to_L{}R", ty.label_friendly_name()),
         }
     }
 
@@ -186,21 +157,6 @@ impl DataType {
     /// What type is returned when type is accessed with a field of name `field_name`?
     pub fn field_access_returned_type(&self, field_id: &FieldId) -> Self {
         match &self {
-            DataType::Reference(inner_type) => match &**inner_type {
-                DataType::Tuple(tuple) => {
-                    let tuple_index: usize = field_id.try_into().expect("Tuple must be accessed with a tuple index");
-                    tuple.fields[tuple_index].clone()
-                },
-                DataType::Struct(struct_type) => {
-                    let field_type = struct_type.get_field_type(field_id);
-                    if field_type.is_copy() {
-                        field_type
-                    } else {
-                        DataType::Boxed(Box::new(field_type))
-                    }
-                }
-                _ => todo!("type was: {self}"),
-            },
             DataType::Boxed(inner_type) => match &**inner_type {
                 DataType::Struct(struct_type) => {
                     let field_type = struct_type.get_field_type(field_id);
@@ -306,7 +262,6 @@ impl DataType {
             DataType::VoidPointer => panic!(),
             DataType::Function(_) => panic!(),
             DataType::Unresolved(_) => panic!(),
-            DataType::Reference(inner) => inner.bfield_codec_length(),
         }
     }
 
@@ -336,24 +291,18 @@ impl DataType {
             Self::Struct(inner_type) => inner_type.stack_size(),
             Self::Enum(enum_type) => enum_type.stack_size(),
             Self::Boxed(_inner) => 1,
-            Self::Reference(inner) => inner.stack_size(),
         }
     }
 
     pub fn unbox(&self) -> DataType {
         match self {
             DataType::Boxed(inner) => inner.unbox(),
-            DataType::Reference(inner) => inner.unbox(),
             dtype => dtype.to_owned(),
         }
     }
 
     pub fn is_boxed(&self) -> bool {
-        match self {
-            DataType::Boxed(_) => true,
-            DataType::Reference(inner) => inner.is_boxed(),
-            _ => false,
-        }
+        matches!(self, DataType::Boxed(_))
     }
 
     pub fn as_enum_type(&self) -> EnumType {
@@ -369,7 +318,6 @@ impl DataType {
             other => Tuple {
                 fields: vec![other.to_owned()],
             },
-            // _ => panic!("Expected tuple type. Got: {self}"),
         }
     }
 }
@@ -420,7 +368,6 @@ impl TryFrom<DataType> for tasm_lib::data_type::DataType {
                 DataType::Unresolved(_) => todo!(),
                 _ => Ok(tasm_lib::data_type::DataType::VoidPointer),
             },
-            DataType::Reference(inner) => (*inner).try_into(),
         }
     }
 }
@@ -453,8 +400,8 @@ impl Display for DataType {
             U32 => "u32".to_string(),
             U64 => "u64".to_string(),
             U128 => "u128".to_string(),
-            Bfe => "BField".to_string(),
-            Xfe => "XField".to_string(),
+            Bfe => "BFieldElement".to_string(),
+            Xfe => "XFieldElement".to_string(),
             Digest => "Digest".to_string(),
             List(ty, _list_type) => format!("Vec<{ty}>"),
             Array(array_type) => format!("[{}; {}]", array_type.element_type, array_type.length),
@@ -466,10 +413,12 @@ impl Display for DataType {
                 format!("Function: {input} -> {output}")
             }
             Struct(struct_type) => struct_type.name.to_owned(),
-            Enum(enum_type) => enum_type.name.to_owned(),
+            Enum(enum_type) => match &enum_type.type_parameter {
+                Some(type_param) => format!("{}<{}>", enum_type.name, type_param),
+                None => enum_type.name.to_owned(),
+            },
             Unresolved(name) => name.to_string(),
             Boxed(ty) => format!("Boxed<{ty}>"),
-            Reference(ty) => format!("*{ty}"),
         };
         write!(f, "{str}",)
     }

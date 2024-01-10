@@ -66,7 +66,7 @@ fn result_is_err_method(enum_type: &ast_types::EnumType) -> ast::Method<Typing> 
         2..=16 => tasm_code_generator::pop_n(stack_size - 1),
         _ => panic!("Can't handle this yet"),
     };
-    let is_ok_input_data_type = DataType::Reference(Box::new(enum_type.into()));
+    let is_ok_input_data_type = DataType::Boxed(Box::new(enum_type.into()));
     let method_signature = FnSignature {
         name: "is_err".to_owned(),
         args: vec![AbstractArgument::ValueArgument(AbstractValueArg {
@@ -109,7 +109,7 @@ fn result_is_ok_method(enum_type: &ast_types::EnumType) -> ast::Method<Typing> {
         2..=16 => tasm_code_generator::pop_n(stack_size - 1),
         _ => panic!("Can't handle this yet"),
     };
-    let is_ok_input_data_type = DataType::Reference(Box::new(enum_type.into()));
+    let is_ok_input_data_type = DataType::Boxed(Box::new(enum_type.into()));
     let method_signature = FnSignature {
         name: "is_ok".to_owned(),
         args: vec![AbstractArgument::ValueArgument(AbstractValueArg {

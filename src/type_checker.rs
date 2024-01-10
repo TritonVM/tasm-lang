@@ -757,8 +757,6 @@ pub(crate) fn annotate_identifier_type(
                     }
 
                     break &array_type.element_type;
-                } else if let ast_types::DataType::Reference(inner_type) = forced_sequence_type {
-                    forced_sequence_type = *inner_type.to_owned();
                 } else if let ast_types::DataType::Boxed(inner_type) = forced_sequence_type {
                     forced_sequence_type = *inner_type.to_owned();
                 } else {
@@ -885,24 +883,13 @@ fn get_method_signature(
                         return method.signature.to_owned();
                     }
 
-                    let auto_refd_forced_type =
-                        ast_types::DataType::Reference(Box::new(forced_type.clone()));
-                    if method.receiver_type() == auto_refd_forced_type {
-                        // TODO: Is this neccessary?
-                        if let ast::Expr::Var(var) = &mut method_call.args[0] {
-                            var.force_type(&auto_refd_forced_type);
-                        }
-
-                        return method.signature.to_owned();
-                    }
-
                     let auto_boxed_forced_type =
                         ast_types::DataType::Boxed(Box::new(forced_type.clone()));
                     if method.receiver_type() == auto_boxed_forced_type {
-                        // TODO: Is this neccessary?
-                        if let ast::Expr::Var(var) = &mut method_call.args[0] {
-                            var.force_type(&auto_boxed_forced_type);
-                        }
+                        // // TODO: I think this is wrong!
+                        // if let ast::Expr::Var(var) = &mut method_call.args[0] {
+                        //     var.force_type(&auto_boxed_forced_type);
+                        // }
 
                         return method.signature.to_owned();
                     }
@@ -928,33 +915,8 @@ fn get_method_signature(
             }
         }
 
-        // 2. otherwise, add one auto-ref (take & or &mut of the receiver), and,
-        // if some method's receiver matches &U, use it (an "autorefd method")
-        let auto_refd_forced_type = ast_types::DataType::Reference(Box::new(forced_type.clone()));
-        for lib in state.libraries.iter() {
-            if let Some(method_name) =
-                lib.get_method_name(&method_call.method_name, &auto_refd_forced_type)
-            {
-                method_call.associated_type = Some(forced_type);
-
-                // TODO: I'm not sure what this commented-out code does
-                if let ast::Expr::Var(var) = &mut method_call.args[0] {
-                    var.force_type(&auto_refd_forced_type);
-                }
-
-                return lib.method_name_to_signature(
-                    &method_name,
-                    &auto_refd_forced_type,
-                    &method_call.args,
-                    state,
-                );
-            }
-        }
-
-        // Keep stripping `References` until we find a match
-        if let ast_types::DataType::Reference(inner_type) = &forced_type {
-            forced_type = *inner_type.to_owned();
-        } else if let ast_types::DataType::Boxed(inner_type) = &forced_type {
+        // Keep stripping `Box` until we find a match
+        if let ast_types::DataType::Boxed(inner_type) = &forced_type {
             forced_type = *inner_type.to_owned();
         } else {
             try_again = false;
@@ -1028,7 +990,7 @@ fn derive_annotate_fn_call_args(
                 let arg_pos = arg_pos + 1;
                 assert_eq!(
                 arg_type, expr_type,
-                "Wrong type of function argument {arg_pos} function call '{arg_name}' in '{fn_name}'\n expected type \"{arg_type:#?}\", but got type  \"{expr_type:#?}\".",
+                "Wrong type of function argument {arg_pos} function call '{arg_name}' in '{fn_name}'\n \nexpected type \"{arg_type}\", but got type  \"{expr_type}\"\n\n",
             );
             }
         }
@@ -1324,10 +1286,6 @@ fn derive_annotate_expr_type(
                 }
                 Deref => {
                     match rhs_type {
-                        ast_types::DataType::Reference(inner_inner_type) => {
-                            *unaryop_type = Typing::KnownType(*inner_inner_type.clone());
-                            Ok(*inner_inner_type)
-                        },
                         ast_types::DataType::Boxed(inner_inner_type) => {
                             *unaryop_type = Typing::KnownType(*inner_inner_type.clone());
                             Ok(*inner_inner_type)
@@ -1336,33 +1294,9 @@ fn derive_annotate_expr_type(
                     }
                 }
                 Ref(_mutable) => {
-                    let resulting_type = ast_types::DataType::Reference(Box::new(rhs_type));
+                    let resulting_type = ast_types::DataType::Boxed(Box::new(rhs_type));
                     *unaryop_type = Typing::KnownType(resulting_type.clone());
                     Ok(resulting_type)
-                    // if inner_expr_type.is_copy() {
-                    //     let resulting_type = ast_types::DataType::Boxed(Box::new(inner_expr_type));
-                    //     *unaryop_type = Typing::KnownType(resulting_type.clone());
-                    //     resulting_type
-                    // } else {
-                    //     match inner_expr_type {
-                    //         ast_types::DataType::List(_, _) => {
-                    //             let resulting_type = ast_types::DataType::Boxed(Box::new(inner_expr_type));
-                    //             *unaryop_type = Typing::KnownType(resulting_type.clone());
-                    //             resulting_type
-                    //         }
-                    //         ast_types::DataType::Boxed(inner_inner_expr_type) => {
-                    //             match *inner_inner_expr_type {
-                    //                 ast_types::DataType::List(_, _) => {
-                    //                     let resulting_type = ast_types::DataType::Boxed(Box::new(*inner_inner_expr_type));
-                    //                     *unaryop_type = Typing::KnownType(resulting_type.clone());
-                    //                     resulting_type
-                    //                 },
-                    //                 _ => panic!("Can only reference Copy types or `Vec<T>` for now. Got: {inner_expr:?}")
-                    //             }
-                    //         },
-                    //         _ => panic!("Can only reference Copy types or `Vec<T>` for now. Got: {inner_expr:?}")
-                    // }
-                // }
                 },
             }
         }

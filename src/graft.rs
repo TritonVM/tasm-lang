@@ -220,13 +220,7 @@ impl<'a> Graft<'a> {
                 ..
             } = receiver;
             let receiver_data_type = match reference {
-                Some(_) => {
-                    if custom_type.is_copy() {
-                        ast_types::DataType::Reference(Box::new(custom_type.to_owned()))
-                    } else {
-                        ast_types::DataType::Boxed(Box::new(custom_type.to_owned()))
-                    }
-                }
+                Some(_) => ast_types::DataType::Boxed(Box::new(custom_type.to_owned())),
                 None => custom_type.to_owned(),
             };
 
@@ -482,12 +476,7 @@ impl<'a> Graft<'a> {
                 syn::Type::Path(type_path) => {
                     let inner_type = self.rust_type_path_to_data_type(&type_path);
                     // Structs that are not copy must be Boxed for reference arguments to work
-                    if matches!(inner_type, ast_types::DataType::Struct(_)) && !inner_type.is_copy()
-                    {
-                        ast_types::DataType::Boxed(Box::new(inner_type))
-                    } else {
-                        ast_types::DataType::Reference(Box::new(inner_type))
-                    }
+                    ast_types::DataType::Boxed(Box::new(inner_type))
                 }
                 _ => todo!(),
             },

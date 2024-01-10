@@ -479,15 +479,6 @@ impl<'a> CompilerState<'a> {
                             handle_named_fields_struct(named_fields_struct, field_id, lhs_location)
                         }
                     },
-                    ast_types::DataType::Reference(inner_type) => match *inner_type {
-                        ast_types::DataType::Struct(struct_type) => match struct_type.variant {
-                            StructVariant::TupleStruct(tuple) => {
-                                handle_tuple(tuple, field_id, lhs_location)
-                            }
-                            StructVariant::NamedFields(_) => todo!(),
-                        },
-                        _ => todo!("lhs_type: {lhs_type}"),
-                    },
                     _ => todo!("lhs_type: {lhs_type}"),
                 }
             }
