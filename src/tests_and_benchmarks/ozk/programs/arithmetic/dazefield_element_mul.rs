@@ -30,11 +30,11 @@ impl DazeFieldElement {
             .wrapping_sub((1 + !0xffff_ffff_0000_0001u64) * sub_res.1 as u64);
     }
 
-    fn canonical_representation(&self) -> u64 {
+    fn canonical_representation(self) -> u64 {
         return DazeFieldElement::montyred(self.0 as u128);
     }
 
-    fn valued(&self) -> u64 {
+    fn valued(self) -> u64 {
         return self.canonical_representation();
     }
 
@@ -49,8 +49,8 @@ fn main() {
     let a: DazeFieldElement = DazeFieldElement::new(tasm::tasm_io_read_stdin___bfe().value());
     let b: DazeFieldElement = DazeFieldElement::new(tasm::tasm_io_read_stdin___bfe().value());
     let res: DazeFieldElement = a.mul(b);
-    tasm::tasm_io_write_to_stdout___bfe(BFieldElement::new((&res).valued()));
-    tasm::tasm_io_write_to_stdout___u64((&res).valued());
+    tasm::tasm_io_write_to_stdout___bfe(BFieldElement::new(res.valued()));
+    tasm::tasm_io_write_to_stdout___u64(res.valued());
 
     return;
 }

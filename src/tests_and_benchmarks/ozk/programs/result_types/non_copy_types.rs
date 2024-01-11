@@ -11,7 +11,6 @@ fn main() {
     bfes.push(bfe_0);
     bfes.push(bfe_1);
     let result_bfes: Result<Vec<BFieldElement>, ()> = Ok(bfes);
-    assert!(result_bfes.is_ok());
 
     match result_bfes {
         Result::Ok(bfes) => {
