@@ -1,16 +1,17 @@
 #![allow(clippy::needless_borrow)]
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
-// Since struct is not copy, you cannot just call `&self` methods
-// without explicitly creating a `Box<NonCopyStruct>` value.
-struct NonCopyStruct(u64);
+// Expect a type check error
+struct SomeStruct(u64);
 
-impl NonCopyStruct {
+impl SomeStruct {
     #[allow(dead_code)]
-    fn new(value: u64) -> NonCopyStruct {
-        return NonCopyStruct(value + 0xabcde123u64);
+    fn new(value: u64) -> SomeStruct {
+        return SomeStruct(value + 0xabcde123u64);
     }
 
+    // This function expects `Box<SomeStruct>` as receiver but is called with a `SomeStruct` as receiver.
+    // So the type check should fail.
     #[allow(dead_code)]
     fn valued(&self) -> u64 {
         return self.0;
@@ -19,8 +20,8 @@ impl NonCopyStruct {
 
 #[allow(dead_code)]
 fn main() {
-    let a: NonCopyStruct = NonCopyStruct::new(tasm::tasm_io_read_stdin___u64());
-    tasm::tasm_io_write_to_stdout___u64((&a).valued());
+    let a: SomeStruct = SomeStruct::new(tasm::tasm_io_read_stdin___u64());
+    tasm::tasm_io_write_to_stdout___u64(a.valued()); // <-- Type check should fail here
     return;
 }
 
