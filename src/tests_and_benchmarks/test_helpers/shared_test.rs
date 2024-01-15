@@ -1,10 +1,13 @@
 use std::collections::HashMap;
 
+use anyhow::bail;
 use anyhow::Ok;
+use anyhow::Result;
 use itertools::Itertools;
 use tasm_lib::empty_stack;
 use tasm_lib::memory::dyn_malloc::DYN_MALLOC_ADDRESS;
 use tasm_lib::rust_shadowing_helper_functions;
+use tasm_lib::VmOutputState;
 use tasm_lib::DIGEST_LENGTH;
 use triton_vm::instruction::LabelledInstruction;
 use triton_vm::twenty_first::shared_math::b_field_element::BFIELD_ONE;
@@ -95,7 +98,7 @@ pub fn execute_compiled_with_stack_memory_and_ins_for_bench(
     std_in: Vec<BFieldElement>,
     non_determinism: NonDeterminism<BFieldElement>,
     expected_stack_diff: isize,
-) -> anyhow::Result<tasm_lib::ExecutionResult> {
+) -> Result<tasm_lib::ExecutionResult> {
     let mut stack = empty_stack();
     for input_arg in input_args {
         let input_arg_seq = input_arg.encode();
@@ -119,38 +122,39 @@ pub fn execute_compiled_with_stack_memory_and_ins_for_test(
     memory: &HashMap<BFieldElement, BFieldElement>,
     std_in: Vec<BFieldElement>,
     mut non_determinism: NonDeterminism<BFieldElement>,
-    _expected_stack_diff: isize,
-) -> anyhow::Result<tasm_lib::VmOutputState> {
+    expected_stack_diff: isize,
+) -> Result<VmOutputState> {
     let mut initial_stack = empty_stack();
     for input_arg in input_args {
         let input_arg_seq = input_arg.encode();
         initial_stack.append(&mut input_arg_seq.into_iter().rev().collect());
     }
+    let initial_stack_len = initial_stack.len() as isize;
 
-    assert!(
-        non_determinism.ram.is_empty() || memory.is_empty(),
-        "Cannot specify initial memory with both `memory` and `non_determinism`. \
-        Please pick only one."
-    );
+    if !non_determinism.ram.is_empty() && !memory.is_empty() {
+        bail!("Cannot specify initial memory with both `memory` and `non_determinism`. Please pick only one.");
+    }
     non_determinism.ram.extend(memory.clone());
 
     let program = Program::new(code);
-    let mut vm_state = VMState::new(
-        &program,
-        PublicInput::new(std_in.to_vec()),
-        non_determinism.clone(),
-    );
+    let mut vm_state = VMState::new(&program, PublicInput::new(std_in), non_determinism);
     vm_state.op_stack.stack = initial_stack;
     vm_state.run()?;
 
-    let sponge_state = vm_state
+    let terminal_stack_len = vm_state.op_stack.len() as isize;
+    let expected_terminal_stack_len = initial_stack_len + expected_stack_diff;
+    if terminal_stack_len != expected_terminal_stack_len {
+        bail!("Expected stack length to be {expected_terminal_stack_len} but was {terminal_stack_len}");
+    }
+
+    let final_sponge_state = vm_state
         .sponge_state
         .map(|state| tasm_lib::VmHasherState { state });
-    let output_state = tasm_lib::VmOutputState {
+    let output_state = VmOutputState {
         output: vm_state.public_output,
         final_stack: vm_state.op_stack.stack,
         final_ram: vm_state.ram,
-        final_sponge_state: sponge_state,
+        final_sponge_state,
     };
 
     Ok(output_state)
@@ -160,7 +164,7 @@ pub fn execute_with_stack_unsafe_lists(
     rust_ast: &syn::ItemFn,
     stack_start: Vec<ast::ExprLit<Typing>>,
     expected_stack_diff: isize,
-) -> anyhow::Result<tasm_lib::VmOutputState> {
+) -> Result<VmOutputState> {
     let (code, _fn_name) = compile_for_run_test(rust_ast, ast_types::ListType::Unsafe);
 
     // Run and return final VM state
@@ -178,7 +182,7 @@ pub fn execute_with_stack_safe_lists(
     rust_ast: &syn::ItemFn,
     stack_start: Vec<ast::ExprLit<Typing>>,
     expected_stack_diff: isize,
-) -> anyhow::Result<tasm_lib::VmOutputState> {
+) -> Result<VmOutputState> {
     let (code, _fn_name) = compile_for_run_test(rust_ast, ast_types::ListType::Safe);
 
     // Run and return final VM state
@@ -198,7 +202,7 @@ pub fn execute_with_stack_and_memory_safe_lists(
     input_args: Vec<ast::ExprLit<Typing>>,
     memory: &HashMap<BFieldElement, BFieldElement>,
     expected_stack_diff: isize,
-) -> anyhow::Result<tasm_lib::VmOutputState> {
+) -> Result<VmOutputState> {
     // Compile
     let (code, _fn_name) = compile_for_run_test(rust_ast, ast_types::ListType::Safe);
 
@@ -221,11 +225,9 @@ pub fn execute_with_stack_memory_and_ins_safe_lists(
     std_in: Vec<BFieldElement>,
     non_determinism: NonDeterminism<BFieldElement>,
     expected_stack_diff: isize,
-) -> anyhow::Result<tasm_lib::VmOutputState> {
-    // Compile
+) -> Result<VmOutputState> {
     let (code, _fn_name) = compile_for_run_test(rust_ast, ast_types::ListType::Safe);
 
-    // Run and compare
     execute_compiled_with_stack_memory_and_ins_for_test(
         &code,
         input_args,

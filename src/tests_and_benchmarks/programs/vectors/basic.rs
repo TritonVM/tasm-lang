@@ -237,13 +237,20 @@ pub mod run_tests {
 
     #[test]
     fn build_and_read_vector_in_while_loop_test() {
+        let item_type = DataType::U32;
+        let item_size = item_type.stack_size() as isize;
+
+        let list_type = DataType::List(Box::new(item_type), ListType::Safe);
+        let list_size = list_type.stack_size() as isize;
+        let expected_stack_diff = list_size + list_size + item_size;
+
         let exec_result = execute_with_stack_memory_and_ins_safe_lists(
             &build_and_read_u32_vector_in_while_loop_rast(),
             vec![],
             &HashMap::default(),
             vec![],
             NonDeterminism::new(vec![]),
-            1,
+            expected_stack_diff,
         )
         .unwrap();
 
@@ -263,30 +270,30 @@ pub mod run_tests {
         fn build_and_read_u32_vector_in_while_loop_rast() -> syn::ItemFn {
             item_fn(parse_quote! {
                 fn manage_vector() -> (Vec<u32>, Vec<u32>, u32) {
-                    let mut a: Vec<u32> = Vec::<u32>::with_capacity(16);
+                    let mut list_a: Vec<u32> = Vec::<u32>::with_capacity(16);
 
                     let mut i: usize = 0;
                     while i < 16usize {
-                        a.push(i);
+                        list_a.push(i);
                         i = i + 1;
                     }
 
                     // Declare b vector
                     i = 0;
-                    let mut b: Vec<u32> = Vec::<u32>::with_capacity(32);
+                    let mut list_b: Vec<u32> = Vec::<u32>::with_capacity(32);
                     while i < 16 {
-                        b.push(0u32);
+                        list_b.push(0u32);
                         i += 1;
                     }
 
                     // Construct b vector
                     i = 0;
                     while i < 16 {
-                        b[i] = a[15 - i] + 400;
+                        list_b[i] = list_a[15 - i] + 400;
                         i += 1;
                     }
 
-                    return (a, b, b[10]);
+                    return (list_a, list_b, list_b[10]);
                 }
             })
         }
