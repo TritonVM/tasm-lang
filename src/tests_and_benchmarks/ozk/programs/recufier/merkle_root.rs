@@ -35,7 +35,6 @@ fn main() {
 
 #[cfg(test)]
 mod test {
-    use std::collections::HashMap;
 
     use triton_vm::twenty_first::shared_math::other::random_elements;
     use triton_vm::twenty_first::util_types::merkle_tree::CpuParallel;
@@ -45,7 +44,7 @@ mod test {
     use crate::ast_types;
     use crate::tests_and_benchmarks::ozk::ozk_parsing;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
-    use crate::tests_and_benchmarks::test_helpers::shared_test::execute_compiled_with_stack_memory_and_ins_for_test;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::execute_compiled_with_stack_and_ins_for_test;
     use crate::tests_and_benchmarks::test_helpers::shared_test::init_memory_from;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 
@@ -69,10 +68,9 @@ mod test {
                 ozk_parsing::parse_function_and_structs("recufier", "merkle_root", "main");
             let expected_stack_diff = 0;
             let (code, _fn_name) = compile_for_run_test(&rust_ast, ast_types::ListType::Unsafe);
-            let vm_output = execute_compiled_with_stack_memory_and_ins_for_test(
+            let vm_output = execute_compiled_with_stack_and_ins_for_test(
                 &code,
                 vec![],
-                &HashMap::default(),
                 stdin,
                 non_determinism,
                 expected_stack_diff,

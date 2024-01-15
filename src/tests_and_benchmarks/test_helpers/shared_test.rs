@@ -92,7 +92,7 @@ pub fn graft_check_compile_prop(
     tasm.compose()
 }
 
-pub fn execute_compiled_with_stack_memory_and_ins_for_bench(
+pub fn execute_compiled_with_stack_and_ins_for_bench(
     code: &[LabelledInstruction],
     input_args: Vec<ast::ExprLit<Typing>>,
     std_in: Vec<BFieldElement>,
@@ -116,12 +116,11 @@ pub fn execute_compiled_with_stack_memory_and_ins_for_bench(
     )
 }
 
-pub fn execute_compiled_with_stack_memory_and_ins_for_test(
+pub fn execute_compiled_with_stack_and_ins_for_test(
     code: &[LabelledInstruction],
     input_args: Vec<ast::ExprLit<Typing>>,
-    memory: &HashMap<BFieldElement, BFieldElement>,
     std_in: Vec<BFieldElement>,
-    mut non_determinism: NonDeterminism<BFieldElement>,
+    non_determinism: NonDeterminism<BFieldElement>,
     expected_stack_diff: isize,
 ) -> Result<VmOutputState> {
     let mut initial_stack = empty_stack();
@@ -130,11 +129,6 @@ pub fn execute_compiled_with_stack_memory_and_ins_for_test(
         initial_stack.append(&mut input_arg_seq.into_iter().rev().collect());
     }
     let initial_stack_len = initial_stack.len() as isize;
-
-    if !non_determinism.ram.is_empty() && !memory.is_empty() {
-        bail!("Cannot specify initial memory with both `memory` and `non_determinism`. Please pick only one.");
-    }
-    non_determinism.ram.extend(memory.clone());
 
     let program = Program::new(code);
     let mut vm_state = VMState::new(&program, PublicInput::new(std_in), non_determinism);
@@ -168,10 +162,9 @@ pub fn execute_with_stack_unsafe_lists(
     let (code, _fn_name) = compile_for_run_test(rust_ast, ast_types::ListType::Unsafe);
 
     // Run and return final VM state
-    execute_compiled_with_stack_memory_and_ins_for_test(
+    execute_compiled_with_stack_and_ins_for_test(
         &code,
         stack_start,
-        &HashMap::default(),
         vec![],
         NonDeterminism::new(vec![]),
         expected_stack_diff,
@@ -184,12 +177,9 @@ pub fn execute_with_stack_safe_lists(
     expected_stack_diff: isize,
 ) -> Result<VmOutputState> {
     let (code, _fn_name) = compile_for_run_test(rust_ast, ast_types::ListType::Safe);
-
-    // Run and return final VM state
-    execute_compiled_with_stack_memory_and_ins_for_test(
+    execute_compiled_with_stack_and_ins_for_test(
         &code,
         stack_start,
-        &HashMap::default(),
         vec![],
         NonDeterminism::default(),
         expected_stack_diff,
@@ -197,54 +187,28 @@ pub fn execute_with_stack_safe_lists(
 }
 
 /// Execute a function with provided input and initial memory
-pub fn execute_with_stack_and_memory_safe_lists(
+pub fn execute_with_stack_and_ins_safe_lists(
     rust_ast: &syn::ItemFn,
     input_args: Vec<ast::ExprLit<Typing>>,
-    memory: &HashMap<BFieldElement, BFieldElement>,
-    expected_stack_diff: isize,
-) -> Result<VmOutputState> {
-    // Compile
-    let (code, _fn_name) = compile_for_run_test(rust_ast, ast_types::ListType::Safe);
-
-    // Run and return final VM state
-    execute_compiled_with_stack_memory_and_ins_for_test(
-        &code,
-        input_args,
-        memory,
-        vec![],
-        NonDeterminism::default(),
-        expected_stack_diff,
-    )
-}
-
-/// Execute a function with provided input and initial memory
-pub fn execute_with_stack_memory_and_ins_safe_lists(
-    rust_ast: &syn::ItemFn,
-    input_args: Vec<ast::ExprLit<Typing>>,
-    memory: &HashMap<BFieldElement, BFieldElement>,
     std_in: Vec<BFieldElement>,
     non_determinism: NonDeterminism<BFieldElement>,
     expected_stack_diff: isize,
 ) -> Result<VmOutputState> {
     let (code, _fn_name) = compile_for_run_test(rust_ast, ast_types::ListType::Safe);
 
-    execute_compiled_with_stack_memory_and_ins_for_test(
+    execute_compiled_with_stack_and_ins_for_test(
         &code,
         input_args,
-        memory,
         std_in,
         non_determinism,
         expected_stack_diff,
     )
 }
 
-#[allow(clippy::too_many_arguments)]
-pub fn compare_compiled_prop_with_stack_and_memory_and_ins(
+pub fn compare_compiled_prop_with_stack_and_ins(
     code: &[LabelledInstruction],
-    function_name: &str,
     input_args: Vec<ast::ExprLit<Typing>>,
     expected_outputs: Vec<ast::ExprLit<Typing>>,
-    init_memory: HashMap<BFieldElement, BFieldElement>,
     expected_final_memory: Option<HashMap<BFieldElement, BFieldElement>>,
     std_in: Vec<BFieldElement>,
     non_determinism: NonDeterminism<BFieldElement>,
@@ -260,142 +224,116 @@ pub fn compare_compiled_prop_with_stack_and_memory_and_ins(
             .iter()
             .map(|arg| arg.get_type().stack_size())
             .sum::<usize>();
-    let exec_result = execute_compiled_with_stack_memory_and_ins_for_test(
+    let exec_result = execute_compiled_with_stack_and_ins_for_test(
         code,
         input_args,
-        &init_memory,
         std_in,
         non_determinism,
         expected_final_stack.len() as isize - init_stack_length as isize,
     )
     .unwrap();
 
-    // Assert stack matches expected stack
-    assert_eq!(
-        expected_final_stack
-            .iter()
-            .skip(DIGEST_LENGTH)
-            .cloned()
-            .collect_vec(),
-        exec_result
-            .final_stack
-            .iter()
-            .skip(DIGEST_LENGTH)
-            .cloned()
-            .collect_vec(),
-        "Code execution must produce expected stack `{}`. \n\nTVM:\n{}\n\nExpected:\n{}\n\n\
-        Code was:\n{}",
-        function_name,
-        exec_result
-            .final_stack
-            .iter()
-            .map(|x| x.to_string())
-            .collect_vec()
-            .join(","),
-        expected_final_stack
-            .iter()
-            .map(|x| x.to_string())
-            .collect_vec()
-            .join(","),
-        code.iter().join("\n")
-    );
+    assert_stack_equivalence(expected_final_stack, exec_result.final_stack);
+    maybe_assert_ram_equivalence(expected_final_memory, exec_result.final_ram);
+}
 
-    // Verify that memory behaves as expected, if expected value is set. Don't bother verifying the
-    // value of the dyn malloc address though, as this is considered an implementation detail and is
-    // really hard to keep track of.
-    let mut final_ram = exec_result.final_ram.clone();
-    if expected_final_memory.as_ref().is_some()
-        && !expected_final_memory
-            .as_ref()
-            .unwrap()
-            .contains_key(&DYN_MALLOC_ADDRESS)
-    {
+fn assert_stack_equivalence(
+    expected_final_stack: Vec<BFieldElement>,
+    final_stack: Vec<BFieldElement>,
+) {
+    let skip_program_digest =
+        |stack: Vec<BFieldElement>| stack.into_iter().skip(DIGEST_LENGTH).collect_vec();
+    let stack_to_string = |stack: &[BFieldElement]| stack.iter().join(",");
+
+    let final_stack_str = stack_to_string(&final_stack);
+    let expected_stack_str = stack_to_string(&expected_final_stack);
+    assert_eq!(
+        skip_program_digest(expected_final_stack),
+        skip_program_digest(final_stack),
+        "TVM:\n{final_stack_str}\n\nExpected:\n{expected_stack_str}\n\n",
+    );
+}
+
+/// Verify that memory behaves as expected, if expected value is set. Don't bother verifying the value of the dyn
+/// malloc address though, as this is considered an implementation detail and is really hard to keep track of.
+fn maybe_assert_ram_equivalence(
+    expected_final_memory: Option<HashMap<BFieldElement, BFieldElement>>,
+    mut final_ram: HashMap<BFieldElement, BFieldElement>,
+) {
+    let Some(expected_final_memory) = expected_final_memory else {
+        return;
+    };
+
+    if !expected_final_memory.contains_key(&DYN_MALLOC_ADDRESS) {
         final_ram.remove(&DYN_MALLOC_ADDRESS);
     }
 
-    if let Some(efm) = expected_final_memory {
-        if final_ram != efm {
-            let mut expected_final_memory = efm.iter().collect_vec();
-            expected_final_memory
-                .sort_unstable_by(|&a, &b| a.0.value().partial_cmp(&b.0.value()).unwrap());
-            let expected_final_memory_str = expected_final_memory
-                .iter()
-                .map(|x| format!("({} => {})", x.0, x.1))
-                .collect_vec()
-                .join(",");
+    let ram_to_string = |ram: &HashMap<BFieldElement, BFieldElement>| {
+        ram.iter()
+            .sorted_by_key(|&(key, _)| key.value())
+            .map(|(k, v)| format!("({k} => {v})"))
+            .join(",")
+    };
 
-            let mut actual_memory = final_ram.iter().collect_vec();
-            actual_memory.sort_unstable_by(|&a, &b| a.0.value().partial_cmp(&b.0.value()).unwrap());
-            let actual_memory_str = actual_memory
-                .iter()
-                .map(|x| format!("({} => {})", x.0, x.1))
-                .collect_vec()
-                .join(",");
-            panic!(
-                "Memory must match expected value after execution.\n\nTVM: {actual_memory_str}\n\n\
-                Expected: {expected_final_memory_str}",
-            )
-        }
-    }
+    assert_eq!(
+        final_ram,
+        expected_final_memory,
+        "Memory must match expected value after execution.\
+        \n\nTVM:      {}\
+        \n\nExpected: {}",
+        ram_to_string(&final_ram),
+        ram_to_string(&expected_final_memory),
+    );
 }
 
-pub fn compare_prop_with_stack_and_memory_and_ins_unsafe_lists(
+pub fn compare_prop_with_stack_and_ins_unsafe_lists(
     item_fn: &syn::ItemFn,
     input_args: Vec<ast::ExprLit<Typing>>,
     expected_outputs: Vec<ast::ExprLit<Typing>>,
-    init_memory: HashMap<BFieldElement, BFieldElement>,
     expected_final_memory: Option<HashMap<BFieldElement, BFieldElement>>,
     std_in: Vec<BFieldElement>,
     non_determinism: NonDeterminism<BFieldElement>,
 ) {
-    let (code, function_name) = compile_for_run_test(item_fn, ast_types::ListType::Unsafe);
-    compare_compiled_prop_with_stack_and_memory_and_ins(
+    let (code, _) = compile_for_run_test(item_fn, ast_types::ListType::Unsafe);
+    compare_compiled_prop_with_stack_and_ins(
         &code,
-        &function_name,
         input_args,
         expected_outputs,
-        init_memory,
         expected_final_memory,
         std_in,
         non_determinism,
     )
 }
 
-pub fn compare_prop_with_stack_and_memory_and_ins_safe_lists(
+pub fn compare_prop_with_stack_and_ins_safe_lists(
     item_fn: &syn::ItemFn,
     input_args: Vec<ast::ExprLit<Typing>>,
     expected_outputs: Vec<ast::ExprLit<Typing>>,
-    init_memory: HashMap<BFieldElement, BFieldElement>,
     expected_final_memory: Option<HashMap<BFieldElement, BFieldElement>>,
     std_in: Vec<BFieldElement>,
     non_determinism: NonDeterminism<BFieldElement>,
 ) {
-    let (code, function_name) = compile_for_run_test(item_fn, ast_types::ListType::Safe);
-    compare_compiled_prop_with_stack_and_memory_and_ins(
+    let (code, _) = compile_for_run_test(item_fn, ast_types::ListType::Safe);
+    compare_compiled_prop_with_stack_and_ins(
         &code,
-        &function_name,
         input_args,
         expected_outputs,
-        init_memory,
         expected_final_memory,
         std_in,
         non_determinism,
     )
 }
 
-pub fn compare_prop_with_stack_and_memory_safe_lists(
+pub fn compare_prop_with_stack_safe_lists(
     item_fn: &syn::ItemFn,
     input_args: Vec<ast::ExprLit<Typing>>,
     expected_outputs: Vec<ast::ExprLit<Typing>>,
-    init_memory: HashMap<BFieldElement, BFieldElement>,
-    expected_final_memory: Option<HashMap<BFieldElement, BFieldElement>>,
 ) {
-    compare_prop_with_stack_and_memory_and_ins_safe_lists(
+    compare_prop_with_stack_and_ins_safe_lists(
         item_fn,
         input_args,
         expected_outputs,
-        init_memory,
-        expected_final_memory,
+        None,
         vec![],
         NonDeterminism::new(vec![]),
     )
@@ -406,30 +344,14 @@ pub fn compare_prop_with_stack_unsafe_lists(
     input_args: Vec<ast::ExprLit<Typing>>,
     expected_outputs: Vec<ast::ExprLit<Typing>>,
 ) {
-    let (code, function_name) = compile_for_run_test(item_fn, ast_types::ListType::Unsafe);
-    compare_compiled_prop_with_stack_and_memory_and_ins(
+    let (code, _) = compile_for_run_test(item_fn, ast_types::ListType::Unsafe);
+    compare_compiled_prop_with_stack_and_ins(
         &code,
-        &function_name,
         input_args,
         expected_outputs,
-        HashMap::default(),
         None,
         vec![],
         NonDeterminism::new(vec![]),
-    )
-}
-
-pub fn compare_prop_with_stack_safe_lists(
-    item_fn: &syn::ItemFn,
-    input_args: Vec<ast::ExprLit<Typing>>,
-    expected_outputs: Vec<ast::ExprLit<Typing>>,
-) {
-    compare_prop_with_stack_and_memory_safe_lists(
-        item_fn,
-        input_args,
-        expected_outputs,
-        HashMap::default(),
-        None,
     )
 }
 
@@ -437,16 +359,12 @@ pub fn multiple_compare_prop_with_stack_safe_lists(
     item_fn: &syn::ItemFn,
     test_cases: Vec<InputOutputTestCase>,
 ) {
-    // Compile
-    let (code, fn_name) = compile_for_run_test(item_fn, ast_types::ListType::Safe);
-
+    let (code, _) = compile_for_run_test(item_fn, ast_types::ListType::Safe);
     for test_case in test_cases {
-        compare_compiled_prop_with_stack_and_memory_and_ins(
+        compare_compiled_prop_with_stack_and_ins(
             &code,
-            &fn_name,
             test_case.input_args,
             test_case.expected_outputs,
-            HashMap::default(),
             None,
             vec![],
             NonDeterminism::new(vec![]),

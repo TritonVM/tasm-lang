@@ -132,11 +132,10 @@ mod run_tests {
     #[test]
     fn stdin_test() {
         let my_bfe = BFieldElement::new(42);
-        compare_prop_with_stack_and_memory_and_ins_safe_lists(
+        compare_prop_with_stack_and_ins_safe_lists(
             &stdin_rast(),
             vec![],
             vec![bfe_lit(my_bfe)],
-            HashMap::default(),
             Some(HashMap::default()),
             vec![my_bfe],
             NonDeterminism::new(vec![]),
@@ -147,11 +146,10 @@ mod run_tests {
     fn stdin_test_pair() {
         let my_bfe = BFieldElement::new(42);
         let my_bfe34 = BFieldElement::new(34);
-        compare_prop_with_stack_and_memory_and_ins_safe_lists(
+        compare_prop_with_stack_and_ins_safe_lists(
             &stdin_rast_pair(),
             vec![],
             vec![bfe_lit(my_bfe), bfe_lit(my_bfe34)],
-            HashMap::default(),
             Some(HashMap::default()),
             vec![my_bfe, my_bfe34],
             NonDeterminism::new(vec![]),
@@ -161,11 +159,10 @@ mod run_tests {
     #[test]
     fn secretin_test() {
         let my_bfe = BFieldElement::new(42);
-        compare_prop_with_stack_and_memory_and_ins_safe_lists(
+        compare_prop_with_stack_and_ins_safe_lists(
             &secretin_rast(),
             vec![],
             vec![bfe_lit(my_bfe)],
-            HashMap::default(),
             Some(HashMap::default()),
             vec![],
             NonDeterminism::new(vec![my_bfe]),
@@ -190,7 +187,7 @@ mod run_tests {
 
         let my_bfe = BFieldElement::new(42);
         let my_bfe999 = BFieldElement::new(999);
-        compare_prop_with_stack_and_memory_and_ins_safe_lists(
+        compare_prop_with_stack_and_ins_safe_lists(
             &rust_ast_to_compile,
             vec![],
             vec![
@@ -203,7 +200,6 @@ mod run_tests {
                 bfe_lit(my_bfe),
                 bfe_lit(my_bfe999),
             ],
-            HashMap::default(),
             None,
             vec![],
             NonDeterminism::new(vec![
@@ -228,7 +224,7 @@ mod run_tests {
         reversed_xfe.reverse();
         let mut reversed_digest = digest.encode();
         reversed_digest.reverse();
-        compare_prop_with_stack_and_memory_and_ins_safe_lists(
+        compare_prop_with_stack_and_ins_safe_lists(
             &stdin_rast_all_types(),
             vec![],
             vec![
@@ -239,7 +235,6 @@ mod run_tests {
                 xfe_lit(my_xfe),
                 digest_lit(digest),
             ],
-            HashMap::default(),
             None,
             [
                 vec![bool_to_bfe(my_bool)],
@@ -270,7 +265,7 @@ mod run_tests {
         reversed_xfe.reverse();
         let mut reversed_digest = digest.encode();
         reversed_digest.reverse();
-        compare_prop_with_stack_and_memory_and_ins_safe_lists(
+        compare_prop_with_stack_and_ins_safe_lists(
             &stdin_rast_all_types_one_liner(),
             vec![],
             vec![
@@ -281,7 +276,6 @@ mod run_tests {
                 xfe_lit(my_xfe),
                 digest_lit(digest),
             ],
-            HashMap::default(),
             Some(HashMap::default()),
             [
                 vec![bool_to_bfe(my_bool)],
@@ -312,7 +306,7 @@ mod run_tests {
         reversed_xfe.reverse();
         let mut reversed_digest = digest.encode();
         reversed_digest.reverse();
-        compare_prop_with_stack_and_memory_and_ins_safe_lists(
+        compare_prop_with_stack_and_ins_safe_lists(
             &secret_rast_all_types_one_liner(),
             vec![],
             vec![
@@ -323,7 +317,6 @@ mod run_tests {
                 xfe_lit(my_xfe),
                 digest_lit(digest),
             ],
-            HashMap::default(),
             Some(HashMap::default()),
             vec![],
             NonDeterminism::new(
@@ -347,7 +340,7 @@ mod run_tests {
         let my_u64 = 12343214213427u64;
         let my_bfe = BFieldElement::new(42);
         let my_xfe = XFieldElement::new([my_bfe, my_bfe, my_bfe]);
-        compare_prop_with_stack_and_memory_and_ins_safe_lists(
+        compare_prop_with_stack_and_ins_safe_lists(
             &stdin_rast_most_types(),
             vec![],
             vec![
@@ -357,7 +350,6 @@ mod run_tests {
                 bfe_lit(my_bfe),
                 xfe_lit(my_xfe),
             ],
-            HashMap::default(),
             None,
             [
                 vec![bool_to_bfe(my_bool)],
@@ -378,7 +370,7 @@ mod run_tests {
         let my_u64 = 12343214213427u64;
         let my_bfe = BFieldElement::new(42);
         let my_xfe = XFieldElement::new([my_bfe, my_bfe, my_bfe]);
-        compare_prop_with_stack_and_memory_and_ins_safe_lists(
+        compare_prop_with_stack_and_ins_safe_lists(
             &secretin_rast_most_types(),
             vec![],
             vec![
@@ -388,7 +380,6 @@ mod run_tests {
                 bfe_lit(my_bfe),
                 xfe_lit(my_xfe),
             ],
-            HashMap::default(),
             None,
             vec![],
             NonDeterminism::new(
@@ -408,11 +399,10 @@ mod run_tests {
     fn stdin_digest_test() {
         let my_bfe = BFieldElement::new(42);
         let my_digest = Digest::new([my_bfe, my_bfe, my_bfe, my_bfe, my_bfe]);
-        compare_prop_with_stack_and_memory_and_ins_safe_lists(
+        compare_prop_with_stack_and_ins_safe_lists(
             &stdin_rast_digest(),
             vec![],
             vec![digest_lit(my_digest)],
-            HashMap::default(),
             Some(HashMap::default()),
             my_digest.encode(),
             NonDeterminism::new(vec![]),
@@ -423,11 +413,10 @@ mod run_tests {
     fn secretin_digest_test() {
         let my_bfe = BFieldElement::new(42);
         let my_digest = Digest::new([my_bfe, my_bfe, my_bfe, my_bfe, my_bfe]);
-        compare_prop_with_stack_and_memory_and_ins_safe_lists(
+        compare_prop_with_stack_and_ins_safe_lists(
             &secretin_rast_digest(),
             vec![],
             vec![digest_lit(my_digest)],
-            HashMap::default(),
             Some(HashMap::default()),
             vec![],
             NonDeterminism::new(my_digest.encode()),

@@ -116,11 +116,10 @@ mod run_tests {
         let mut ram = non_determinism.ram.clone().into_iter().collect_vec();
         ram.sort_by_key(|x| x.0.value());
 
-        compare_prop_with_stack_and_memory_and_ins_safe_lists(
+        compare_prop_with_stack_and_ins_safe_lists(
             &hash_varlen_rast(),
             vec![bfe_lit(BFieldElement::one())],
             vec![digest_lit(H::hash_varlen(&random_bfes))],
-            HashMap::default(),
             None,
             vec![],
             non_determinism,
@@ -150,11 +149,10 @@ mod run_tests {
         let mut ram = non_determinism.ram.clone().into_iter().collect_vec();
         ram.sort_by_key(|x| x.0.value());
 
-        compare_prop_with_stack_and_memory_and_ins_unsafe_lists(
+        compare_prop_with_stack_and_ins_unsafe_lists(
             &hash_varlen_rast(),
             vec![bfe_lit(BFieldElement::one())],
             vec![digest_lit(H::hash_varlen(&random_bfes))],
-            HashMap::default(),
             None,
             vec![],
             non_determinism,

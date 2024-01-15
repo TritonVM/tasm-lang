@@ -19,7 +19,6 @@ fn main() {
 
 #[cfg(test)]
 mod test {
-    use std::collections::HashMap;
 
     use triton_vm::BFieldElement;
     use triton_vm::NonDeterminism;
@@ -51,10 +50,9 @@ mod test {
         let (parsed, _, _) =
             ozk_parsing::parse_function_and_structs("other", "returning_block_expr_u32", "main");
         let expected_stack_diff = 0;
-        let vm_output = execute_with_stack_memory_and_ins_safe_lists(
+        let vm_output = execute_with_stack_and_ins_safe_lists(
             &parsed,
             vec![],
-            &HashMap::default(),
             stdin,
             NonDeterminism::new(vec![]),
             expected_stack_diff,

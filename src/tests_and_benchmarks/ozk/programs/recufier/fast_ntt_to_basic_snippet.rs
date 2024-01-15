@@ -80,15 +80,16 @@ mod test {
 
     use triton_vm::BFieldElement;
     use triton_vm::NonDeterminism;
+    use twenty_first::shared_math::x_field_element::XFieldElement;
 
+    use crate::ast_types::ListType;
+    use crate::tests_and_benchmarks::ozk::ozk_parsing::*;
     use crate::tests_and_benchmarks::test_helpers::shared_test::bfe_lit;
-    use crate::tests_and_benchmarks::test_helpers::shared_test::compare_compiled_prop_with_stack_and_memory_and_ins;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::compare_compiled_prop_with_stack_and_ins;
 
     #[test]
     fn fast_xfe_ntt_to_basic_snippet_test() {
-        // This first test is only added to illustrate that it is possible to test these OZK functions
-        // before generating a `BasicSnippet` implementation from it.
-        let compiled = crate::tests_and_benchmarks::ozk::ozk_parsing::compile_for_test(
+        let compiled = compile_for_test(
             "recufier",
             "fast_ntt_to_basic_snippet",
             "xfe_ntt",
@@ -96,39 +97,31 @@ mod test {
         );
         let list_pointer = BFieldElement::new(100);
         let list_length = BFieldElement::new(1);
+        let item = XFieldElement::new([50, 0, 0].map(BFieldElement::new));
+        let init_memory = [list_length]
+            .into_iter()
+            .chain(item.coefficients)
+            .enumerate()
+            .map(|(i, v)| (BFieldElement::from(i as u32) + list_pointer, v))
+            .collect();
+        let non_determinism = NonDeterminism::default().with_ram(init_memory);
+
         let root_of_unity = BFieldElement::new(1);
-        let init_memory: HashMap<BFieldElement, BFieldElement> = [
-            (list_pointer, list_length),
-            (list_pointer + BFieldElement::new(1), BFieldElement::new(50)),
-            (list_pointer + BFieldElement::new(2), BFieldElement::new(0)),
-            (list_pointer + BFieldElement::new(3), BFieldElement::new(0)),
-        ]
-        .iter()
-        .cloned()
-        .collect();
-        compare_compiled_prop_with_stack_and_memory_and_ins(
+        let input_args = vec![bfe_lit(list_pointer), bfe_lit(root_of_unity)];
+
+        compare_compiled_prop_with_stack_and_ins(
             &compiled,
-            "xfe_ntt",
-            vec![bfe_lit(list_pointer), bfe_lit(root_of_unity)],
+            input_args,
             vec![],
-            init_memory,
             None,
             vec![],
-            NonDeterminism::new(vec![]),
+            non_determinism,
         );
 
         // Output what we came for: A `BasicSnippet` implementation constructed by the compiler
         let (rust_ast, _, _) =
-            crate::tests_and_benchmarks::ozk::ozk_parsing::parse_function_and_structs(
-                "recufier",
-                "fast_ntt_to_basic_snippet",
-                "xfe_ntt",
-            );
-        let as_bs = crate::tests_and_benchmarks::ozk::ozk_parsing::compile_to_basic_snippet(
-            rust_ast,
-            HashMap::default(),
-            crate::ast_types::ListType::Unsafe,
-        );
+            parse_function_and_structs("recufier", "fast_ntt_to_basic_snippet", "xfe_ntt");
+        let as_bs = compile_to_basic_snippet(rust_ast, HashMap::default(), ListType::Unsafe);
         println!("{}", as_bs);
     }
 }

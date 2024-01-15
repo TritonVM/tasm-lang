@@ -23,7 +23,6 @@ fn main() {
 
 #[cfg(test)]
 mod test {
-    use std::collections::HashMap;
 
     use triton_vm::twenty_first::shared_math::other::random_elements;
 
@@ -51,10 +50,9 @@ mod test {
             ozk_parsing::parse_function_and_structs("other", "hash_varlen", "main");
         let expected_stack_diff = 0;
         let (code, _fn_name) = compile_for_run_test(&rust_ast, ast_types::ListType::Unsafe);
-        let vm_output = execute_compiled_with_stack_memory_and_ins_for_test(
+        let vm_output = execute_compiled_with_stack_and_ins_for_test(
             &code,
             vec![],
-            &HashMap::default(),
             stdin,
             non_determinism,
             expected_stack_diff,

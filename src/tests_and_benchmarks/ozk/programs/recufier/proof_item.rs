@@ -72,9 +72,8 @@ impl ProofItem {
 }
 
 fn proof_item_stored_to_memory() {
-    let ap: Box<ProofItem> = Box::<ProofItem>::new(ProofItem::AuthenticationStructure(
-        Vec::<Digest>::with_capacity(0),
-    ));
+    let auth_path: Vec<Digest> = Vec::<Digest>::with_capacity(0);
+    let ap: Box<ProofItem> = Box::<ProofItem>::new(ProofItem::AuthenticationStructure(auth_path));
     assert!(!ap.include_in_fiat_shamir_heuristic());
 
     let merkle_root_pi: ProofItem = ProofItem::MerkleRoot(Digest::default());
@@ -104,14 +103,13 @@ fn proof_item_load_merkle_root_from_memory() {
 
 #[cfg(test)]
 mod test {
-    use std::collections::HashMap;
 
     use rand::random;
     use triton_vm::NonDeterminism;
 
     use crate::tests_and_benchmarks::ozk::ozk_parsing;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
-    use crate::tests_and_benchmarks::test_helpers::shared_test::execute_compiled_with_stack_memory_and_ins_for_test;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::execute_compiled_with_stack_and_ins_for_test;
     use crate::tests_and_benchmarks::test_helpers::shared_test::init_memory_from;
 
     use super::*;
@@ -134,10 +132,9 @@ mod test {
             crate::ast_types::ListType::Unsafe,
         );
 
-        let vm_output = execute_compiled_with_stack_memory_and_ins_for_test(
+        let vm_output = execute_compiled_with_stack_and_ins_for_test(
             &test_program,
             vec![],
-            &HashMap::default(),
             stdin,
             non_determinism,
             0,
@@ -169,10 +166,9 @@ mod test {
             crate::ast_types::ListType::Unsafe,
         );
 
-        let vm_output = execute_compiled_with_stack_memory_and_ins_for_test(
+        let vm_output = execute_compiled_with_stack_and_ins_for_test(
             &test_program,
             vec![],
-            &HashMap::default(),
             stdin,
             non_determinism,
             0,
@@ -199,10 +195,9 @@ mod test {
             "proof_item_load_merkle_root_from_memory",
             crate::ast_types::ListType::Unsafe,
         );
-        let vm_output = execute_compiled_with_stack_memory_and_ins_for_test(
+        let vm_output = execute_compiled_with_stack_and_ins_for_test(
             &test_program,
             vec![],
-            &HashMap::default(),
             stdin,
             non_determinism,
             0,

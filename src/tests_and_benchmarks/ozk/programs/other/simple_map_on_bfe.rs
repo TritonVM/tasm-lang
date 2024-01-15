@@ -29,7 +29,6 @@ fn main() {
 
 #[cfg(test)]
 mod test {
-    use std::collections::HashMap;
 
     use itertools::Itertools;
     use triton_vm::BFieldElement;
@@ -60,10 +59,9 @@ mod test {
         let (parsed, _, _) =
             ozk_parsing::parse_function_and_structs("other", "simple_map_on_bfe", "main");
         let expected_stack_diff = 0;
-        let vm_output = execute_with_stack_memory_and_ins_safe_lists(
+        let vm_output = execute_with_stack_and_ins_safe_lists(
             &parsed,
             vec![],
-            &HashMap::default(),
             stdin,
             non_determinism,
             expected_stack_diff,

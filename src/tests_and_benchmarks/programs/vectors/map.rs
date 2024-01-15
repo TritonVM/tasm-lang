@@ -18,14 +18,17 @@ mod tests {
     }
 
     mod run_tests {
-        use itertools::Itertools;
         use std::collections::HashMap;
+
+        use itertools::Itertools;
         use tasm_lib::rust_shadowing_helper_functions::safe_list::safe_list_insert;
         use triton_vm::twenty_first::shared_math::other::random_elements;
         use triton_vm::BFieldElement;
+        use triton_vm::NonDeterminism;
+
+        use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 
         use super::*;
-        use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 
         #[test]
         fn simple_map_mul_by_2_test() {
@@ -40,18 +43,14 @@ mod tests {
                 init_list_u64s.clone(),
                 &mut init_memory,
             );
-            println!(
-                "vm_memory: {}",
-                init_memory
-                    .iter()
-                    .sorted_by_key(|x| x.0.value())
-                    .map(|(k, v)| format!("({k} => {v})"))
-                    .join(",")
-            );
-            let exec_result = execute_with_stack_and_memory_safe_lists(
+
+            let std_in = vec![];
+            let non_determinism = NonDeterminism::default().with_ram(init_memory);
+            let exec_result = execute_with_stack_and_ins_safe_lists(
                 &simple_map_mul_by_2(),
                 vec![bfe_lit(input_list_pointer)],
-                &init_memory,
+                std_in,
+                non_determinism,
                 0,
             )
             .unwrap();

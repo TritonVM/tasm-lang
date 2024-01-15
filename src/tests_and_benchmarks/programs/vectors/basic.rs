@@ -183,13 +183,7 @@ pub mod run_tests {
             ast_types::DataType::U64.stack_size(),
         );
 
-        compare_prop_with_stack_and_memory_safe_lists(
-            &rust_ast,
-            inputs,
-            expected_outputs,
-            HashMap::default(),
-            Some(expected_final_memory),
-        );
+        compare_prop_with_stack_safe_lists(&rust_ast, inputs, expected_outputs);
     }
 
     #[test]
@@ -226,12 +220,17 @@ pub mod run_tests {
                 return;
             }
         });
-        compare_prop_with_stack_and_memory_safe_lists(
+
+        let expected_final_memory = None;
+        let std_in = vec![];
+        let non_determinism = NonDeterminism::default().with_ram(memory);
+        compare_prop_with_stack_and_ins_safe_lists(
             item_fn,
             vec![bfe_lit(list_pointer)],
             vec![],
-            memory,
-            Some(expected_final_memory),
+            expected_final_memory,
+            std_in,
+            non_determinism,
         );
     }
 
@@ -244,10 +243,9 @@ pub mod run_tests {
         let list_size = list_type.stack_size() as isize;
         let expected_stack_diff = list_size + list_size + item_size;
 
-        let exec_result = execute_with_stack_memory_and_ins_safe_lists(
+        let exec_result = execute_with_stack_and_ins_safe_lists(
             &build_and_read_u32_vector_in_while_loop_rast(),
             vec![],
-            &HashMap::default(),
             vec![],
             NonDeterminism::new(vec![]),
             expected_stack_diff,
@@ -301,7 +299,7 @@ pub mod run_tests {
 
     #[test]
     fn build_vector_in_while_loop_test() {
-        let mut exec_result = execute_with_stack_memory_and_ins_safe_lists(
+        let mut exec_result = execute_with_stack_and_ins_safe_lists(
             &item_fn(parse_quote! {
                 fn build_vector_in_while_loop() -> Vec<u32> {
                     let mut a: Vec<u32> = Vec::<u32>::with_capacity(16);
@@ -316,7 +314,6 @@ pub mod run_tests {
                 }
             }),
             vec![],
-            &HashMap::default(),
             vec![],
             NonDeterminism::new(vec![]),
             DataType::List(Box::new(DataType::U32), ListType::Safe).stack_size() as isize,
@@ -326,7 +323,7 @@ pub mod run_tests {
         let mut expected_list = (0..16).map(u32_lit).collect_vec();
         assert_list_equal(expected_list, *list_pointer, &exec_result.final_ram);
 
-        exec_result = execute_with_stack_memory_and_ins_safe_lists(
+        exec_result = execute_with_stack_and_ins_safe_lists(
             &item_fn(parse_quote! {
                 fn build_vector_in_while_loop() -> Vec<u64> {
                     let mut a: Vec<u64> = Vec::<u64>::with_capacity(16);
@@ -341,7 +338,6 @@ pub mod run_tests {
                 }
             }),
             vec![],
-            &HashMap::default(),
             vec![],
             NonDeterminism::new(vec![]),
             DataType::List(Box::new(DataType::U64), ListType::Safe).stack_size() as isize,
@@ -410,13 +406,6 @@ pub mod run_tests {
             elem_3.len(),
         );
 
-        let input_memory = HashMap::default();
-        compare_prop_with_stack_and_memory_safe_lists(
-            &rust_ast,
-            inputs,
-            expected_outputs,
-            input_memory,
-            Some(expected_output_memory),
-        );
+        compare_prop_with_stack_safe_lists(&rust_ast, inputs, expected_outputs);
     }
 }

@@ -55,7 +55,6 @@ fn main() {
 
 #[cfg(test)]
 mod test {
-    use std::collections::HashMap;
 
     use arbitrary::Unstructured;
     use itertools::Itertools;
@@ -63,7 +62,7 @@ mod test {
 
     use crate::tests_and_benchmarks::ozk::ozk_parsing;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
-    use crate::tests_and_benchmarks::test_helpers::shared_test::execute_compiled_with_stack_memory_and_ins_for_test;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::execute_compiled_with_stack_and_ins_for_test;
     use crate::tests_and_benchmarks::test_helpers::shared_test::init_memory_from;
 
     use super::*;
@@ -97,10 +96,9 @@ mod test {
                     ram.iter().map(|(p, v)| format!("{p} => {v}")).join(", ")
                 );
             }
-            let vm_output = execute_compiled_with_stack_memory_and_ins_for_test(
+            let vm_output = execute_compiled_with_stack_and_ins_for_test(
                 &test_program,
                 vec![],
-                &HashMap::default(),
                 stdin,
                 non_determinism.clone(),
                 0,

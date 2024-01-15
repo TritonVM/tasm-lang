@@ -47,14 +47,13 @@ fn main() {
 
 #[cfg(test)]
 mod test {
-    use std::collections::HashMap;
 
     use itertools::Itertools;
     use triton_vm::NonDeterminism;
 
     use crate::tests_and_benchmarks::ozk::ozk_parsing;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
-    use crate::tests_and_benchmarks::test_helpers::shared_test::execute_compiled_with_stack_memory_and_ins_for_test;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::execute_compiled_with_stack_and_ins_for_test;
 
     use super::*;
 
@@ -78,10 +77,9 @@ mod test {
             crate::ast_types::ListType::Unsafe,
         );
         println!("executing:\n{}", test_program.iter().join("\n"));
-        let vm_output = execute_compiled_with_stack_memory_and_ins_for_test(
+        let vm_output = execute_compiled_with_stack_and_ins_for_test(
             &test_program,
             vec![],
-            &HashMap::default(),
             std_in,
             non_determinism,
             0,

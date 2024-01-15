@@ -53,7 +53,6 @@ fn main() {
 
 #[cfg(test)]
 mod test {
-    use std::collections::HashMap;
 
     use itertools::Itertools;
     use rand::random;
@@ -62,7 +61,7 @@ mod test {
 
     use crate::tests_and_benchmarks::ozk::ozk_parsing;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
-    use crate::tests_and_benchmarks::test_helpers::shared_test::execute_compiled_with_stack_memory_and_ins_for_test;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::execute_compiled_with_stack_and_ins_for_test;
 
     use super::*;
 
@@ -102,10 +101,9 @@ mod test {
             "main",
             crate::ast_types::ListType::Unsafe,
         );
-        let vm_output = execute_compiled_with_stack_memory_and_ins_for_test(
+        let vm_output = execute_compiled_with_stack_and_ins_for_test(
             &test_program,
             vec![],
-            &HashMap::default(),
             stdin,
             non_determinism,
             0,

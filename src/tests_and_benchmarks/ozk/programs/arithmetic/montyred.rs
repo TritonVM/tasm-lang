@@ -53,7 +53,6 @@ fn main() {
 
 #[cfg(test)]
 mod test {
-    use std::collections::HashMap;
 
     use itertools::Itertools;
     use triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
@@ -95,10 +94,9 @@ mod test {
             crate::ast_types::ListType::Unsafe,
         );
         let expected_stack_diff = 0;
-        let vm_output = execute_compiled_with_stack_memory_and_ins_for_test(
+        let vm_output = execute_compiled_with_stack_and_ins_for_test(
             &test_program,
             vec![],
-            &HashMap::default(),
             vec![],
             NonDeterminism::new(vec![]),
             expected_stack_diff,

@@ -50,7 +50,7 @@ fn main() {
 }
 
 mod test {
-    use std::collections::HashMap;
+
     use std::default::Default;
 
     use rand::random;
@@ -74,10 +74,9 @@ mod test {
             "main",
             crate::ast_types::ListType::Unsafe,
         );
-        let vm_output = execute_compiled_with_stack_memory_and_ins_for_test(
+        let vm_output = execute_compiled_with_stack_and_ins_for_test(
             &test_program,
             vec![],
-            &HashMap::default(),
             stdin,
             NonDeterminism::default(),
             0,

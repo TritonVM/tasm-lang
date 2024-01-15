@@ -469,7 +469,6 @@ fn ensure_dyn_malloc_and_static_malloc_do_not_interfere_5_rast() -> syn::ItemFn 
 
 #[cfg(test)]
 mod run_tests {
-    use std::collections::HashMap;
 
     use itertools::Itertools;
     use triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
@@ -546,11 +545,10 @@ mod run_tests {
                 digest
             })
             .concat();
-        compare_prop_with_stack_and_memory_and_ins_safe_lists(
+        compare_prop_with_stack_and_ins_safe_lists(
             &spill_to_memory_overwrite_values(),
             vec![],
             vec![u32_lit(101), u32_lit(102)],
-            HashMap::default(),
             None,
             [reversed_digest].concat(),
             NonDeterminism::new(vec![]),
@@ -660,7 +658,7 @@ mod run_tests {
                 digest
             })
             .concat();
-        compare_prop_with_stack_and_memory_and_ins_safe_lists(
+        compare_prop_with_stack_and_ins_safe_lists(
             &spill_many_types(),
             vec![],
             vec![
@@ -672,7 +670,6 @@ mod run_tests {
                 digest_lit(digests[1]),
                 u32_lit(my_u32 * my_u32 * 4),
             ],
-            HashMap::default(),
             None,
             [
                 vec![BFieldElement::new(my_bool as u64)],
@@ -779,11 +776,9 @@ mod run_tests {
             }
         });
 
-        let init_vm_memory = HashMap::default();
-        let exec_result = execute_with_stack_and_memory_safe_lists(
+        let exec_result = execute_with_stack_safe_lists(
             &function,
             vec![],
-            &init_vm_memory,
             DataType::List(Box::new(DataType::U64), ListType::Safe).stack_size() as isize,
         )
         .unwrap();
@@ -801,10 +796,9 @@ mod run_tests {
 
     #[test]
     fn ensure_dyn_malloc_and_static_malloc_do_not_interfere_test_2() {
-        let exec_result = execute_with_stack_and_memory_safe_lists(
+        let exec_result = execute_with_stack_safe_lists(
             &ensure_dyn_malloc_and_static_malloc_do_not_interfere_2_rast(),
             vec![],
-            &HashMap::default(),
             DataType::List(Box::new(DataType::U64), ListType::Safe).stack_size() as isize,
         )
         .unwrap();
@@ -816,10 +810,9 @@ mod run_tests {
 
     #[test]
     fn ensure_dyn_malloc_and_static_malloc_do_not_interfere_test_3() {
-        let exec_result = execute_with_stack_and_memory_safe_lists(
+        let exec_result = execute_with_stack_safe_lists(
             &ensure_dyn_malloc_and_static_malloc_do_not_interfere_3_rast(),
             vec![],
-            &HashMap::default(),
             DataType::List(Box::new(DataType::U64), ListType::Safe).stack_size() as isize,
         )
         .unwrap();
@@ -833,10 +826,9 @@ mod run_tests {
     fn ensure_dyn_malloc_and_static_malloc_do_not_interfere_test_4() {
         // First run the program to get the list's pointer that is stored as the third-to-last
         // output.
-        let exec_result = execute_with_stack_and_memory_safe_lists(
+        let exec_result = execute_with_stack_safe_lists(
             &ensure_dyn_malloc_and_static_malloc_do_not_interfere_4_rast(),
             vec![],
-            &HashMap::default(),
             DataType::List(Box::new(DataType::U64), ListType::Safe).stack_size() as isize + 2,
         )
         .unwrap();
@@ -859,10 +851,9 @@ mod run_tests {
     fn ensure_dyn_malloc_and_static_malloc_do_not_interfere_test_5() {
         // First run the program to get the list's pointer that is stored as the 11th-to-last
         // output.
-        let exec_result = execute_with_stack_and_memory_safe_lists(
+        let exec_result = execute_with_stack_safe_lists(
             &ensure_dyn_malloc_and_static_malloc_do_not_interfere_5_rast(),
             vec![],
-            &HashMap::default(),
             12,
         )
         .unwrap();

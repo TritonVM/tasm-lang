@@ -16,7 +16,7 @@ use triton_vm::PublicInput;
 use crate::ast;
 use crate::type_checker::Typing;
 
-use super::test_helpers::shared_test::execute_compiled_with_stack_memory_and_ins_for_bench;
+use super::test_helpers::shared_test::execute_compiled_with_stack_and_ins_for_bench;
 
 pub mod mmr;
 
@@ -35,7 +35,7 @@ fn benchmark_code(
     expected_stack_diff: isize,
     case: BenchmarkCase,
 ) -> BenchmarkResult {
-    let execution_result = execute_compiled_with_stack_memory_and_ins_for_bench(
+    let execution_result = execute_compiled_with_stack_and_ins_for_bench(
         &code,
         benchmark_input.input_args,
         benchmark_input.std_in,

@@ -20,7 +20,7 @@ fn _crash_on_try() {
 }
 
 mod test {
-    use std::collections::HashMap;
+
     use std::default::Default;
     use triton_vm::NonDeterminism;
 
@@ -29,7 +29,7 @@ mod test {
 
     #[test]
     fn unwrap_crash_test() {
-        assert!(execute_compiled_with_stack_memory_and_ins_for_test(
+        assert!(execute_compiled_with_stack_and_ins_for_test(
             &ozk_parsing::compile_for_test(
                 "result_types",
                 "unwrap_crash",
@@ -37,14 +37,13 @@ mod test {
                 crate::ast_types::ListType::Unsafe,
             ),
             vec![],
-            &HashMap::default(),
             vec![],
             NonDeterminism::default(),
             0,
         )
         .is_err());
 
-        assert!(execute_compiled_with_stack_memory_and_ins_for_test(
+        assert!(execute_compiled_with_stack_and_ins_for_test(
             &ozk_parsing::compile_for_test(
                 "result_types",
                 "unwrap_crash",
@@ -52,7 +51,6 @@ mod test {
                 crate::ast_types::ListType::Unsafe,
             ),
             vec![],
-            &HashMap::default(),
             vec![],
             NonDeterminism::default(),
             0,

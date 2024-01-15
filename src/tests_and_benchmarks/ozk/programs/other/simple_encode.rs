@@ -22,7 +22,6 @@ fn main() {
 
 #[cfg(test)]
 mod test {
-    use std::collections::HashMap;
 
     use triton_vm::twenty_first::shared_math::other::random_elements;
     use triton_vm::NonDeterminism;
@@ -57,10 +56,9 @@ mod test {
         let (rust_ast, _, _) =
             ozk_parsing::parse_function_and_structs("other", "simple_encode", "main");
         let expected_stack_diff = 0;
-        let vm_output = execute_with_stack_memory_and_ins_safe_lists(
+        let vm_output = execute_with_stack_and_ins_safe_lists(
             &rust_ast,
             vec![],
-            &HashMap::default(),
             stdin,
             non_determinism,
             expected_stack_diff,

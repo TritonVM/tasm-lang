@@ -25,7 +25,6 @@ fn main() {
 
 #[cfg(test)]
 mod test {
-    use std::collections::HashMap;
 
     use itertools::Itertools;
     use rand::random;
@@ -62,10 +61,9 @@ mod test {
         );
         let expected_stack_diff = 0;
         println!("test_program:\n{}", test_program.iter().join("\n"));
-        let vm_output = execute_compiled_with_stack_memory_and_ins_for_test(
+        let vm_output = execute_compiled_with_stack_and_ins_for_test(
             &test_program,
             vec![],
-            &HashMap::default(),
             stdin,
             non_determinism,
             expected_stack_diff,

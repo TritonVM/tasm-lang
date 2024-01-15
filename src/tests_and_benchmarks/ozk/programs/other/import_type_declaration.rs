@@ -21,13 +21,12 @@ mod test {
     use super::*;
     use crate::tests_and_benchmarks::ozk::ozk_parsing;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
-    use crate::tests_and_benchmarks::test_helpers::shared_test::execute_compiled_with_stack_memory_and_ins_for_test;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::execute_compiled_with_stack_and_ins_for_test;
     use crate::tests_and_benchmarks::test_helpers::shared_test::init_memory_from;
     use arbitrary::Arbitrary;
     use arbitrary::Unstructured;
     use itertools::Itertools;
     use rand::random;
-    use std::collections::HashMap;
 
     #[test]
     fn import_type_declaration_test() {
@@ -47,10 +46,9 @@ mod test {
             "main",
             crate::ast_types::ListType::Unsafe,
         );
-        let vm_output = execute_compiled_with_stack_memory_and_ins_for_test(
+        let vm_output = execute_compiled_with_stack_and_ins_for_test(
             &test_program,
             vec![],
-            &HashMap::default(),
             stdin,
             non_determinism,
             0,

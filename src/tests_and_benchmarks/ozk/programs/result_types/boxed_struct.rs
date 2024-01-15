@@ -69,8 +69,6 @@ fn main() {
 }
 
 mod test {
-    use std::collections::HashMap;
-    use std::default::Default;
 
     use arbitrary::Unstructured;
     use itertools::Itertools;
@@ -100,10 +98,9 @@ mod test {
                 crate::ast_types::ListType::Unsafe,
             );
             println!("test_program:\n{}", test_program.iter().join("\n"));
-            let vm_output = execute_compiled_with_stack_memory_and_ins_for_test(
+            let vm_output = execute_compiled_with_stack_and_ins_for_test(
                 &test_program,
                 vec![],
-                &HashMap::default(),
                 stdin,
                 non_determinism.clone(),
                 0,
