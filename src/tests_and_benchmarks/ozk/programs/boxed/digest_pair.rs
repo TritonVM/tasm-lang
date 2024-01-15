@@ -1,5 +1,6 @@
-use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 use triton_vm::Digest;
+
+use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
 fn main() {
     let a: Digest = tasm::tasm_io_read_stdin___digest();
@@ -35,15 +36,20 @@ fn main() {
     return;
 }
 
-mod tests {
+#[cfg(test)]
+mod test {
     use std::collections::HashMap;
 
-    use super::*;
-    use crate::tests_and_benchmarks::ozk::rust_shadows;
-    use crate::tests_and_benchmarks::{ozk::ozk_parsing, test_helpers::shared_test::*};
     use itertools::Itertools;
+    use triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
+    use triton_vm::twenty_first::shared_math::other::random_elements;
     use triton_vm::NonDeterminism;
-    use twenty_first::shared_math::{bfield_codec::BFieldCodec, other::random_elements};
+
+    use crate::tests_and_benchmarks::ozk::ozk_parsing;
+    use crate::tests_and_benchmarks::ozk::rust_shadows;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::*;
+
+    use super::*;
 
     #[test]
     fn boxed_digest_pair_test() {

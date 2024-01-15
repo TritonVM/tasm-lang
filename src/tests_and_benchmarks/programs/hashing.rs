@@ -1,18 +1,23 @@
 #[cfg(test)]
 mod run_tests {
-    use crate::graft::item_fn;
-    use crate::tests_and_benchmarks::test_helpers::shared_test::*;
+    use std::collections::HashMap;
+    use std::vec;
+
     use itertools::Itertools;
-    use num::{One, Zero};
+    use num::One;
+    use num::Zero;
     use rand::random;
-    use std::{collections::HashMap, vec};
     use syn::parse_quote;
     use tasm_lib::rust_shadowing_helper_functions;
-    use triton_vm::{BFieldElement, Digest, NonDeterminism};
-    use twenty_first::{
-        shared_math::{other::random_elements, tip5::Tip5},
-        util_types::algebraic_hasher::AlgebraicHasher,
-    };
+    use triton_vm::twenty_first::shared_math::other::random_elements;
+    use triton_vm::twenty_first::shared_math::tip5::Tip5;
+    use triton_vm::twenty_first::util_types::algebraic_hasher::AlgebraicHasher;
+    use triton_vm::BFieldElement;
+    use triton_vm::Digest;
+    use triton_vm::NonDeterminism;
+
+    use crate::graft::item_fn;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 
     type H = Tip5;
 

@@ -1,4 +1,3 @@
-// Allows the use of input/output on the native architecture
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
 #[allow(clippy::needless_else)]
@@ -13,14 +12,16 @@ fn main() {
     return;
 }
 
-mod tests {
-    use super::*;
-    use crate::tests_and_benchmarks::{
-        ozk::{ozk_parsing, rust_shadows},
-        test_helpers::shared_test::*,
-    };
+#[cfg(test)]
+mod test {
     use itertools::Itertools;
     use triton_vm::NonDeterminism;
+
+    use crate::tests_and_benchmarks::ozk::ozk_parsing;
+    use crate::tests_and_benchmarks::ozk::rust_shadows;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::*;
+
+    use super::*;
 
     #[test]
     fn pe5_test() {
@@ -44,11 +45,11 @@ mod tests {
 }
 
 mod benches {
-    use crate::tests_and_benchmarks::{
-        benchmarks::{execute_and_write_benchmark, profile, BenchmarkInput},
-        ozk::ozk_parsing,
-        test_helpers::shared_test::*,
-    };
+    use crate::tests_and_benchmarks::benchmarks::execute_and_write_benchmark;
+    use crate::tests_and_benchmarks::benchmarks::profile;
+    use crate::tests_and_benchmarks::benchmarks::BenchmarkInput;
+    use crate::tests_and_benchmarks::ozk::ozk_parsing;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 
     #[test]
     fn pe5_bench() {

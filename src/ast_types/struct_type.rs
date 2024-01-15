@@ -1,8 +1,12 @@
-use itertools::Itertools;
 use std::fmt::Display;
 
-use super::{DataType, FieldId, Tuple};
+use itertools::Itertools;
+
 use crate::libraries::LibraryFunction;
+
+use super::DataType;
+use super::FieldId;
+use super::Tuple;
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct NamedFieldsStruct {

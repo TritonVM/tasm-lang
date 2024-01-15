@@ -1,6 +1,6 @@
 use num::One;
+use triton_vm::twenty_first::shared_math::traits::PrimitiveRootOfUnity;
 use triton_vm::BFieldElement;
-use twenty_first::shared_math::traits::PrimitiveRootOfUnity;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ArithmeticDomain {

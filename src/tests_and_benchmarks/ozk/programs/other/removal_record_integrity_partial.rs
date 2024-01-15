@@ -2,14 +2,15 @@
 #![allow(dead_code)]
 #![allow(unused_variables)]
 #![allow(clippy::vec_init_then_push)]
-use tasm_lib::{structure::tasm_object::TasmObject, VmHasher as H};
+
+use tasm_lib::structure::tasm_object::TasmObject;
+use tasm_lib::VmHasher as H;
+use triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
+use triton_vm::twenty_first::util_types::algebraic_hasher::AlgebraicHasher;
+use triton_vm::twenty_first::util_types::merkle_tree::CpuParallel;
+use triton_vm::twenty_first::util_types::merkle_tree_maker::MerkleTreeMaker;
+use triton_vm::BFieldElement;
 use triton_vm::Digest;
-use twenty_first::shared_math::bfield_codec::BFieldCodec;
-use twenty_first::util_types::algebraic_hasher::AlgebraicHasher;
-use twenty_first::util_types::merkle_tree_maker::MerkleTreeMaker;
-use twenty_first::{
-    shared_math::b_field_element::BFieldElement, util_types::merkle_tree::CpuParallel,
-};
 
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
@@ -152,8 +153,11 @@ fn main() {
     // assert_eq!(witness.kernel.mutator_set_hash, mutator_set_hash);
 }
 
-mod tests {
-    use super::*;
+#[cfg(test)]
+mod test {
+    use std::collections::HashMap;
+    use std::marker::PhantomData;
+
     use anyhow::bail;
     use itertools::Itertools;
     use num::One;
@@ -162,28 +166,27 @@ mod tests {
     use rand::Rng;
     use rand::RngCore;
     use rand::SeedableRng;
-    use std::collections::HashMap;
-    use std::marker::PhantomData;
     use tasm_lib::structure::tasm_object::TasmObject;
-    use twenty_first::amount::u32s::U32s;
-    use twenty_first::shared_math::b_field_element::BFieldElement;
-    use twenty_first::shared_math::bfield_codec::BFieldCodec;
-    use twenty_first::shared_math::other::log_2_floor;
-    use twenty_first::shared_math::tip5::Digest;
-    use twenty_first::shared_math::tip5::DIGEST_LENGTH;
-    use twenty_first::util_types::algebraic_hasher::AlgebraicHasher;
-    use twenty_first::util_types::algebraic_hasher::SpongeHasher;
-    use twenty_first::util_types::mmr::mmr_accumulator::MmrAccumulator;
-    use twenty_first::util_types::mmr::mmr_membership_proof::MmrMembershipProof;
-    use twenty_first::util_types::mmr::mmr_trait::Mmr;
-    use twenty_first::util_types::mmr::shared_basic::leaf_index_to_mt_index_and_peak_index;
-
     use tasm_lib::VmHasher;
+    use triton_vm::twenty_first::amount::u32s::U32s;
+    use triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
+    use triton_vm::twenty_first::shared_math::other::log_2_floor;
+    use triton_vm::twenty_first::shared_math::tip5::Digest;
+    use triton_vm::twenty_first::shared_math::tip5::DIGEST_LENGTH;
+    use triton_vm::twenty_first::util_types::algebraic_hasher::AlgebraicHasher;
+    use triton_vm::twenty_first::util_types::algebraic_hasher::SpongeHasher;
+    use triton_vm::twenty_first::util_types::mmr::mmr_accumulator::MmrAccumulator;
+    use triton_vm::twenty_first::util_types::mmr::mmr_membership_proof::MmrMembershipProof;
+    use triton_vm::twenty_first::util_types::mmr::mmr_trait::Mmr;
+    use triton_vm::twenty_first::util_types::mmr::shared_basic::leaf_index_to_mt_index_and_peak_index;
+    use triton_vm::BFieldElement;
 
     use crate::tests_and_benchmarks::ozk::ozk_parsing;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::execute_compiled_with_stack_memory_and_ins_for_test;
     use crate::tests_and_benchmarks::test_helpers::shared_test::init_memory_from;
+
+    use super::*;
 
     pub const NATIVE_COIN_TYPESCRIPT_DIGEST: Digest = Digest::new([
         BFieldElement::new(4843866011885844809),

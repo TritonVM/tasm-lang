@@ -1,7 +1,7 @@
 use super::simple_struct::*;
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
+use triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
 use triton_vm::BFieldElement;
-use twenty_first::shared_math::bfield_codec::BFieldCodec;
 
 fn main() {
     let ts: Box<SimpleStruct> =
@@ -16,7 +16,8 @@ fn main() {
     return;
 }
 
-mod tests {
+#[cfg(test)]
+mod test {
     use super::*;
     use crate::tests_and_benchmarks::ozk::ozk_parsing;
     use crate::tests_and_benchmarks::ozk::rust_shadows;

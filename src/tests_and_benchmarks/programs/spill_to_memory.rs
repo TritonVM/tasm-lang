@@ -472,17 +472,18 @@ mod run_tests {
     use std::collections::HashMap;
 
     use itertools::Itertools;
+    use triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
+    use triton_vm::twenty_first::shared_math::other::random_elements;
+    use triton_vm::twenty_first::shared_math::tip5::Digest;
+    use triton_vm::twenty_first::shared_math::x_field_element::XFieldElement;
+    use triton_vm::BFieldElement;
     use triton_vm::NonDeterminism;
-    use twenty_first::shared_math::{
-        b_field_element::BFieldElement, bfield_codec::BFieldCodec, other::random_elements,
-        tip5::Digest, x_field_element::XFieldElement,
-    };
+
+    use crate::ast_types::DataType;
+    use crate::ast_types::ListType;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 
     use super::*;
-    use crate::{
-        ast_types::{DataType, ListType},
-        tests_and_benchmarks::test_helpers::shared_test::*,
-    };
 
     #[test]
     fn spill_u64_values_to_memory_test() {

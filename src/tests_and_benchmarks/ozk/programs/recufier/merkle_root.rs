@@ -1,10 +1,12 @@
 #![allow(clippy::explicit_auto_deref)]
-// Allows the use of input/output on the native architecture
+
+use triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
+use triton_vm::twenty_first::util_types::algebraic_hasher::AlgebraicHasher;
+use triton_vm::BFieldElement;
+use triton_vm::Digest;
+
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
-use triton_vm::{BFieldElement, Digest};
-use twenty_first::{
-    shared_math::bfield_codec::BFieldCodec, util_types::algebraic_hasher::AlgebraicHasher,
-};
+
 type H = twenty_first::shared_math::tip5::Tip5;
 
 fn main() {
@@ -31,21 +33,23 @@ fn main() {
     return;
 }
 
-mod tests {
+#[cfg(test)]
+mod test {
     use std::collections::HashMap;
 
-    use super::*;
+    use triton_vm::twenty_first::shared_math::other::random_elements;
+    use triton_vm::twenty_first::util_types::merkle_tree::CpuParallel;
+    use triton_vm::twenty_first::util_types::merkle_tree::MerkleTree;
+    use triton_vm::twenty_first::util_types::merkle_tree_maker::MerkleTreeMaker;
+
     use crate::ast_types;
-    use crate::tests_and_benchmarks::test_helpers::shared_test::{
-        execute_compiled_with_stack_memory_and_ins_for_test, init_memory_from,
-    };
-    use crate::tests_and_benchmarks::{
-        ozk::{ozk_parsing, rust_shadows},
-        test_helpers::shared_test::*,
-    };
-    use twenty_first::shared_math::other::random_elements;
-    use twenty_first::util_types::merkle_tree::{CpuParallel, MerkleTree};
-    use twenty_first::util_types::merkle_tree_maker::MerkleTreeMaker;
+    use crate::tests_and_benchmarks::ozk::ozk_parsing;
+    use crate::tests_and_benchmarks::ozk::rust_shadows;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::execute_compiled_with_stack_memory_and_ins_for_test;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::init_memory_from;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::*;
+
+    use super::*;
 
     #[test]
     fn merkle_root_test() {
@@ -80,13 +84,15 @@ mod tests {
 }
 
 mod benches {
+    use triton_vm::twenty_first::shared_math::other::random_elements;
+
+    use crate::tests_and_benchmarks::benchmarks::execute_and_write_benchmark;
+    use crate::tests_and_benchmarks::benchmarks::profile;
+    use crate::tests_and_benchmarks::benchmarks::BenchmarkInput;
+    use crate::tests_and_benchmarks::ozk::ozk_parsing;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::*;
+
     use super::*;
-    use crate::tests_and_benchmarks::{
-        benchmarks::{execute_and_write_benchmark, profile, BenchmarkInput},
-        ozk::ozk_parsing,
-        test_helpers::shared_test::*,
-    };
-    use twenty_first::shared_math::other::random_elements;
 
     #[test]
     fn merkle_root_bench() {

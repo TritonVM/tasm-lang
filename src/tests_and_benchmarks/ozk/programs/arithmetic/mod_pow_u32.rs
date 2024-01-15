@@ -1,8 +1,8 @@
-// Allows the use of input/output on the native architecture
-use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 use num::One;
+use triton_vm::twenty_first::shared_math::traits::ModPowU32;
 use triton_vm::BFieldElement;
-use twenty_first::shared_math::traits::ModPowU32;
+
+use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
 fn main() {
     let base_number: BFieldElement = BFieldElement::new(144449u64);
@@ -20,13 +20,16 @@ fn main() {
     return;
 }
 
-mod tests {
+#[cfg(test)]
+mod test {
+    use triton_vm::BFieldElement;
+    use triton_vm::NonDeterminism;
+
+    use crate::tests_and_benchmarks::ozk::ozk_parsing;
+    use crate::tests_and_benchmarks::ozk::rust_shadows;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::*;
+
     use super::*;
-    use crate::tests_and_benchmarks::{
-        ozk::{ozk_parsing, rust_shadows},
-        test_helpers::shared_test::*,
-    };
-    use triton_vm::{BFieldElement, NonDeterminism};
 
     #[test]
     fn mod_pow_u32_test() {

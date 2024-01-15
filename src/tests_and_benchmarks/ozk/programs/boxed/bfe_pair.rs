@@ -1,5 +1,6 @@
-use crate::tests_and_benchmarks::ozk::rust_shadows::{self as tasm};
 use triton_vm::BFieldElement;
+
+use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
 fn main() {
     // Store two BFieldElements in memory. Then read them out again.
@@ -18,17 +19,19 @@ fn main() {
     return;
 }
 
-mod tests {
+#[cfg(test)]
+mod test {
     use std::collections::HashMap;
 
-    use super::*;
-    use crate::tests_and_benchmarks::{
-        ozk::{ozk_parsing, rust_shadows},
-        test_helpers::shared_test::*,
-    };
     use itertools::Itertools;
     use rand::random;
     use triton_vm::NonDeterminism;
+
+    use crate::tests_and_benchmarks::ozk::ozk_parsing;
+    use crate::tests_and_benchmarks::ozk::rust_shadows;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::*;
+
+    use super::*;
 
     #[test]
     fn boxed_bfe_pair_test() {

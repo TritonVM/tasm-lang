@@ -1,10 +1,14 @@
-use super::Library;
+use num::One;
+use triton_vm::instruction::LabelledInstruction;
+use triton_vm::triton_asm;
+
+use crate::ast;
+use crate::ast_types;
 use crate::graft::Graft;
 use crate::subroutine::SubRoutine;
 use crate::tasm_code_generator::write_n_words_to_memory_leaving_address;
-use crate::{ast, ast_types};
-use num::One;
-use triton_vm::{instruction::LabelledInstruction, triton_asm};
+
+use super::Library;
 
 #[derive(Debug)]
 pub struct Boxed;

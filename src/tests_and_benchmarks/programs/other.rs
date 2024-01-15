@@ -4,8 +4,9 @@ use crate::graft::item_fn;
 
 #[cfg(test)]
 mod compile_and_typecheck_tests {
-    use super::*;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
+
+    use super::*;
 
     #[test]
     fn inferred_literals_test() {
@@ -113,10 +114,12 @@ mod compile_and_typecheck_tests {
 
 #[cfg(test)]
 mod run_tests {
-    use rand::{thread_rng, Rng};
+    use rand::thread_rng;
+    use rand::Rng;
+
+    use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 
     use super::*;
-    use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 
     #[test]
     fn tasm_argument_evaluation_order_test() {

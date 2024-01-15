@@ -1,14 +1,15 @@
-use std::{collections::HashMap, fs};
+use std::collections::HashMap;
+use std::fs;
 
-use ast_types::ListType;
-use graft::CustomTypeRust;
 use itertools::Itertools;
 use triton_vm::instruction::LabelledInstruction;
 
-use crate::{
-    custom_type_resolver::resolve_custom_types, tasm_code_generator::compile_function,
-    type_checker::annotate_fn_outer,
-};
+use ast_types::ListType;
+use graft::CustomTypeRust;
+
+use crate::custom_type_resolver::resolve_custom_types;
+use crate::tasm_code_generator::compile_function;
+use crate::type_checker::annotate_fn_outer;
 
 pub mod ast;
 pub mod ast_types;

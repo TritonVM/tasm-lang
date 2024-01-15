@@ -5,11 +5,12 @@ use crate::graft::item_fn;
 #[cfg(test)]
 mod run_tests {
     use itertools::Itertools;
-    use num::{One, Zero};
+    use num::One;
+    use num::Zero;
     use rand::random;
-    use twenty_first::shared_math::{
-        b_field_element::BFieldElement, other::random_elements, traits::PrimitiveRootOfUnity,
-    };
+    use triton_vm::twenty_first::shared_math::other::random_elements;
+    use triton_vm::twenty_first::shared_math::traits::PrimitiveRootOfUnity;
+    use triton_vm::BFieldElement;
 
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 

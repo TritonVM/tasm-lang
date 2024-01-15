@@ -51,17 +51,20 @@ fn main() {
     return;
 }
 
-mod tests {
+#[cfg(test)]
+mod test {
     use std::collections::HashMap;
 
-    use super::*;
-    use crate::tests_and_benchmarks::{
-        ozk::{ozk_parsing, rust_shadows},
-        test_helpers::shared_test::*,
-    };
     use itertools::Itertools;
-    use triton_vm::{BFieldElement, NonDeterminism};
-    use twenty_first::shared_math::bfield_codec::BFieldCodec;
+    use triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
+    use triton_vm::BFieldElement;
+    use triton_vm::NonDeterminism;
+
+    use crate::tests_and_benchmarks::ozk::ozk_parsing;
+    use crate::tests_and_benchmarks::ozk::rust_shadows;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::*;
+
+    use super::*;
 
     #[test]
     fn montyred_test() {

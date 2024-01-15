@@ -1,11 +1,12 @@
 use triton_vm::triton_asm;
 
-use crate::ast::{self};
+use crate::ast;
 use crate::ast_types;
 use crate::graft::Graft;
 use crate::tasm_code_generator::CompilerState;
 
-use super::{tasm_lib_snippet_to_fn_signature, Library};
+use super::tasm_lib_snippet_to_fn_signature;
+use super::Library;
 
 const TASM_LIB_INDICATOR: &str = "tasm::";
 

@@ -1,10 +1,10 @@
-// Allows the use of input/output on the native architecture
-use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 use num::One;
+use triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
+use triton_vm::twenty_first::shared_math::traits::ModPowU32;
+use triton_vm::twenty_first::shared_math::x_field_element::XFieldElement;
 use triton_vm::BFieldElement;
-use twenty_first::shared_math::{
-    bfield_codec::BFieldCodec, traits::ModPowU32, x_field_element::XFieldElement,
-};
+
+use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
 #[allow(clippy::ptr_arg)]
 #[allow(clippy::vec_init_then_push)]
@@ -134,24 +134,23 @@ fn main() {
     return;
 }
 
-mod tests {
+#[cfg(test)]
+mod test {
     use std::collections::HashMap;
 
-    use super::*;
-    use crate::{
-        ast_types,
-        tests_and_benchmarks::{
-            ozk::{ozk_parsing, rust_shadows},
-            test_helpers::shared_test::*,
-        },
-    };
     use itertools::Itertools;
+    use triton_vm::twenty_first::shared_math::ntt;
+    use triton_vm::twenty_first::shared_math::other::log_2_floor;
+    use triton_vm::twenty_first::shared_math::other::random_elements;
+    use triton_vm::twenty_first::shared_math::traits::PrimitiveRootOfUnity;
     use triton_vm::BFieldElement;
-    use twenty_first::shared_math::{
-        ntt,
-        other::{log_2_floor, random_elements},
-        traits::PrimitiveRootOfUnity,
-    };
+
+    use crate::ast_types;
+    use crate::tests_and_benchmarks::ozk::ozk_parsing;
+    use crate::tests_and_benchmarks::ozk::rust_shadows;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::*;
+
+    use super::*;
 
     #[test]
     fn recursive_xfe_ntt_test() {

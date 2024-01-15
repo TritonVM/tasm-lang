@@ -25,7 +25,8 @@ fn main() {
     return;
 }
 
-mod tests {
+#[cfg(test)]
+mod test {
     use crate::tests_and_benchmarks::ozk::ozk_parsing;
 
     #[should_panic]

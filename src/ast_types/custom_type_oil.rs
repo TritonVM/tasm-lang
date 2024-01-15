@@ -1,6 +1,8 @@
 use anyhow::bail;
 
-use super::{DataType, EnumType, StructType};
+use super::DataType;
+use super::EnumType;
+use super::StructType;
 
 /// Helper-type used during parsing to handle all
 /// custom-types.

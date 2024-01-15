@@ -1,14 +1,19 @@
 use itertools::Itertools;
-use num::{One, Zero};
+use num::One;
+use num::Zero;
 use triton_vm::triton_asm;
-use twenty_first::shared_math::{
-    b_field_element::BFieldElement,
-    x_field_element::{XFieldElement, EXTENSION_DEGREE},
-};
+use triton_vm::twenty_first::shared_math::x_field_element::XFieldElement;
+use triton_vm::twenty_first::shared_math::x_field_element::EXTENSION_DEGREE;
+use triton_vm::BFieldElement;
 
-use crate::{ast, ast_types, graft::Graft, libraries::Library};
+use crate::ast;
+use crate::ast_types;
+use crate::graft::Graft;
+use crate::libraries::Library;
 
-use super::{bfe::BfeLibrary, LibraryFunction};
+use super::bfe::BfeLibrary;
+use super::LibraryFunction;
+
 const XFIELDELEMENT_LIB_INDICATOR: &str = "XFieldElement::";
 const ZERO_CONST_NAME: &str = "XFieldElement::zero";
 const ONE_CONST_NAME: &str = "XFieldElement::one";

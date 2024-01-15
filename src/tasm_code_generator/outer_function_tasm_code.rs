@@ -8,8 +8,8 @@ use triton_vm::instruction;
 use triton_vm::instruction::LabelledInstruction;
 use triton_vm::op_stack::NumberOfWords;
 use triton_vm::triton_asm;
+use triton_vm::BFieldElement;
 use triton_vm::Program;
-use twenty_first::shared_math::b_field_element::BFieldElement;
 
 use crate::ast;
 use crate::ast_types;

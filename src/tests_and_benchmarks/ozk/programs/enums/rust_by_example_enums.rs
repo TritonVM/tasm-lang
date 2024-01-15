@@ -64,16 +64,21 @@ fn main() {
     return;
 }
 
-mod tests {
-    use super::*;
+#[cfg(test)]
+mod test {
+    use std::collections::HashMap;
+
     use itertools::Itertools;
     use num::Zero;
-    use std::collections::HashMap;
-    use triton_vm::{BFieldElement, NonDeterminism};
-    use twenty_first::shared_math::bfield_codec::BFieldCodec;
+    use triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
+    use triton_vm::BFieldElement;
+    use triton_vm::NonDeterminism;
 
-    use crate::tests_and_benchmarks::ozk::{ozk_parsing, rust_shadows};
+    use crate::tests_and_benchmarks::ozk::ozk_parsing;
+    use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::execute_compiled_with_stack_memory_and_ins_for_test;
+
+    use super::*;
 
     #[test]
     fn rust_by_example_enums_test() {

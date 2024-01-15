@@ -1,9 +1,10 @@
 #![allow(clippy::assertions_on_constants)]
 
-// Allows the use of input/output on the native architecture
+use triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
+use triton_vm::BFieldElement;
+use triton_vm::Digest;
+
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
-use triton_vm::{BFieldElement, Digest};
-use twenty_first::shared_math::bfield_codec::BFieldCodec;
 
 #[derive(BFieldCodec)]
 pub enum EnumType {
@@ -36,16 +37,19 @@ fn main() {
     return;
 }
 
-mod tests {
-    use super::*;
-    use itertools::Itertools;
-    use rand::random;
+#[cfg(test)]
+mod test {
     use std::collections::HashMap;
 
-    use crate::tests_and_benchmarks::ozk::{ozk_parsing, rust_shadows};
-    use crate::tests_and_benchmarks::test_helpers::shared_test::{
-        execute_compiled_with_stack_memory_and_ins_for_test, init_memory_from,
-    };
+    use itertools::Itertools;
+    use rand::random;
+
+    use crate::tests_and_benchmarks::ozk::ozk_parsing;
+    use crate::tests_and_benchmarks::ozk::rust_shadows;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::execute_compiled_with_stack_memory_and_ins_for_test;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::init_memory_from;
+
+    use super::*;
 
     #[test]
     fn boxed_match_with_wildcard_binding_test() {

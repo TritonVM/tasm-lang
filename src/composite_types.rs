@@ -1,14 +1,17 @@
+use std::collections::HashMap;
+
 use itertools::Itertools;
 use num::One;
 use triton_vm::instruction::LabelledInstruction;
 
-use crate::{
-    ast,
-    ast_types::{self, CustomTypeOil, EnumType},
-    custom_type_resolver::CustomTypeResolution,
-    type_checker::{self, GetType, Typing},
-};
-use std::collections::HashMap;
+use crate::ast;
+use crate::ast_types;
+use crate::ast_types::CustomTypeOil;
+use crate::ast_types::EnumType;
+use crate::custom_type_resolver::CustomTypeResolution;
+use crate::type_checker;
+use crate::type_checker::GetType;
+use crate::type_checker::Typing;
 
 /// A type definition, its methods, and its association functions
 #[derive(Debug, Clone)]

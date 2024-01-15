@@ -1,8 +1,8 @@
-// Allows the use of input/output on the native architecture
-use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
+use triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
 use triton_vm::BFieldElement;
 use triton_vm::Digest;
-use twenty_first::shared_math::bfield_codec::BFieldCodec;
+
+use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
 fn main() {
     let a: Digest = tasm::tasm_io_read_stdin___digest();
@@ -20,16 +20,18 @@ fn main() {
     return;
 }
 
-mod tests {
+#[cfg(test)]
+mod test {
     use std::collections::HashMap;
 
-    use super::*;
-    use crate::tests_and_benchmarks::{
-        ozk::{ozk_parsing, rust_shadows},
-        test_helpers::shared_test::*,
-    };
+    use triton_vm::twenty_first::shared_math::other::random_elements;
     use triton_vm::NonDeterminism;
-    use twenty_first::shared_math::other::random_elements;
+
+    use crate::tests_and_benchmarks::ozk::ozk_parsing;
+    use crate::tests_and_benchmarks::ozk::rust_shadows;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::*;
+
+    use super::*;
 
     #[test]
     fn simple_encode_test() {

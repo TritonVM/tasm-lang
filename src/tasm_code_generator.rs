@@ -4,29 +4,36 @@ mod inner_function_tasm_code;
 mod outer_function_tasm_code;
 mod stack;
 
-use itertools::{Either, Itertools};
-use std::collections::{HashMap, HashSet};
+use itertools::Either;
+use itertools::Itertools;
+use std::collections::HashMap;
+use std::collections::HashSet;
 use std::fmt::Display;
 use tasm_lib;
 use tasm_lib::library::Library as SnippetState;
 use tasm_lib::traits::basic_snippet::BasicSnippet;
 use triton_vm::instruction::LabelledInstruction;
-use triton_vm::{triton_asm, triton_instr};
-use twenty_first::amount::u32s::U32s;
-use twenty_first::shared_math::b_field_element::BFieldElement;
-use twenty_first::shared_math::bfield_codec::BFieldCodec;
+use triton_vm::triton_asm;
+use triton_vm::triton_instr;
+use triton_vm::twenty_first::amount::u32s::U32s;
+use triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
+use triton_vm::BFieldElement;
 
-use self::function_state::{FunctionState, VarAddr};
+use self::function_state::FunctionState;
+use self::function_state::VarAddr;
 use self::inner_function_tasm_code::InnerFunctionTasmCode;
 use self::outer_function_tasm_code::OuterFunctionTasmCode;
 use self::stack::VStack;
-use crate::ast::{Identifier, RoutineBody};
-use crate::ast_types::{self, StructVariant};
+use crate::ast;
+use crate::ast::Identifier;
+use crate::ast::RoutineBody;
+use crate::ast_types;
+use crate::ast_types::StructVariant;
 use crate::composite_types::CompositeTypes;
-use crate::libraries::{self};
+use crate::libraries;
 use crate::subroutine::SubRoutine;
+use crate::type_checker;
 use crate::type_checker::GetType;
-use crate::{ast, type_checker};
 
 #[derive(Clone, Debug)]
 pub enum ValueLocation {

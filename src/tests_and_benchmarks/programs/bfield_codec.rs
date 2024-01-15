@@ -1,13 +1,16 @@
 #[cfg(test)]
 mod run_tests {
-    use crate::graft::item_fn;
-    use crate::tests_and_benchmarks::test_helpers::shared_test::*;
+    use std::vec;
+
     use itertools::Itertools;
     use rand::random;
-    use std::vec;
     use syn::parse_quote;
-    use triton_vm::{BFieldElement, Digest};
-    use twenty_first::shared_math::other::random_elements;
+    use triton_vm::twenty_first::shared_math::other::random_elements;
+    use triton_vm::BFieldElement;
+    use triton_vm::Digest;
+
+    use crate::graft::item_fn;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 
     #[test]
     fn bfe_encode_test() {

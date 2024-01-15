@@ -1,8 +1,8 @@
-// Allows the use of input/output on the native architecture
-use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 use tasm_lib::structure::tasm_object::TasmObject;
+use triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
 use triton_vm::BFieldElement;
-use twenty_first::shared_math::bfield_codec::BFieldCodec;
+
+use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
 const SIMPLE_STRUCTS_BFIELD_CODEC_START_ADDRESS: u64 = 2;
 
@@ -33,16 +33,19 @@ fn main() {
     return;
 }
 
-mod tests {
-    use super::*;
-    use rand::random;
+#[cfg(test)]
+mod test {
     use std::collections::HashMap;
+
+    use rand::random;
     use triton_vm::BFieldElement;
 
-    use crate::tests_and_benchmarks::ozk::{ozk_parsing, rust_shadows};
-    use crate::tests_and_benchmarks::test_helpers::shared_test::{
-        execute_compiled_with_stack_memory_and_ins_for_test, init_memory_from,
-    };
+    use crate::tests_and_benchmarks::ozk::ozk_parsing;
+    use crate::tests_and_benchmarks::ozk::rust_shadows;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::execute_compiled_with_stack_memory_and_ins_for_test;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::init_memory_from;
+
+    use super::*;
 
     #[test]
     fn basic_struct_method_test() {

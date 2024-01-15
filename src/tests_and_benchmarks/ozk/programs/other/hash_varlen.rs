@@ -1,12 +1,13 @@
 #![allow(clippy::explicit_auto_deref)]
 #![allow(clippy::needless_borrow)]
 
-// Allows the use of input/output on the native architecture
+use triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
+use triton_vm::twenty_first::util_types::algebraic_hasher::AlgebraicHasher;
+use triton_vm::BFieldElement;
+use triton_vm::Digest;
+
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
-use triton_vm::{BFieldElement, Digest};
-use twenty_first::{
-    shared_math::bfield_codec::BFieldCodec, util_types::algebraic_hasher::AlgebraicHasher,
-};
+
 type H = twenty_first::shared_math::tip5::Tip5;
 
 fn main() {
@@ -20,18 +21,18 @@ fn main() {
     return;
 }
 
-mod tests {
+#[cfg(test)]
+mod test {
     use std::collections::HashMap;
 
+    use triton_vm::twenty_first::shared_math::other::random_elements;
+
+    use crate::ast_types;
+    use crate::tests_and_benchmarks::ozk::ozk_parsing;
+    use crate::tests_and_benchmarks::ozk::rust_shadows;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::*;
+
     use super::*;
-    use crate::{
-        ast_types,
-        tests_and_benchmarks::{
-            ozk::{ozk_parsing, rust_shadows},
-            test_helpers::shared_test::*,
-        },
-    };
-    use twenty_first::shared_math::other::random_elements;
 
     #[test]
     fn hash_varlen_test() {

@@ -1,6 +1,7 @@
 use std::fmt::Display;
 
-use super::{DataType, FunctionType};
+use super::DataType;
+use super::FunctionType;
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum AbstractArgument {

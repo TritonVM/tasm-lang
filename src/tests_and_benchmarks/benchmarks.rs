@@ -1,16 +1,20 @@
-use std::{
-    collections::HashMap,
-    fs::create_dir_all,
-    io::Write,
-    path::{Path, PathBuf},
-};
+use std::collections::HashMap;
+use std::fs::create_dir_all;
+use std::io::Write;
+use std::path::Path;
+use std::path::PathBuf;
 
-use tasm_lib::snippet_bencher::{write_benchmarks, BenchmarkCase, BenchmarkResult};
-use triton_vm::{
-    instruction::LabelledInstruction, BFieldElement, NonDeterminism, Program, PublicInput,
-};
+use tasm_lib::snippet_bencher::write_benchmarks;
+use tasm_lib::snippet_bencher::BenchmarkCase;
+use tasm_lib::snippet_bencher::BenchmarkResult;
+use triton_vm::instruction::LabelledInstruction;
+use triton_vm::BFieldElement;
+use triton_vm::NonDeterminism;
+use triton_vm::Program;
+use triton_vm::PublicInput;
 
-use crate::{ast, type_checker::Typing};
+use crate::ast;
+use crate::type_checker::Typing;
 
 use super::test_helpers::shared_test::execute_compiled_with_stack_memory_and_ins_for_bench;
 

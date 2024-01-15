@@ -1,10 +1,11 @@
 use itertools::Itertools;
 use triton_vm::instruction::LabelledInstruction;
-use twenty_first::shared_math::b_field_element::BFieldElement;
+use triton_vm::BFieldElement;
 
 use crate::ast_types;
 
-use super::{copy_value_to_memory, ValueIdentifier};
+use super::copy_value_to_memory;
+use super::ValueIdentifier;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct Stack<T: Eq> {

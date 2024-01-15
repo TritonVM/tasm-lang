@@ -1,8 +1,8 @@
 use arbitrary::Arbitrary;
+use triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
+use triton_vm::twenty_first::shared_math::x_field_element::XFieldElement;
+use triton_vm::BFieldElement;
 use triton_vm::Digest;
-use twenty_first::shared_math::b_field_element::BFieldElement;
-use twenty_first::shared_math::bfield_codec::BFieldCodec;
-use twenty_first::shared_math::x_field_element::XFieldElement;
 
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
@@ -69,13 +69,15 @@ fn main() {
 }
 
 mod test {
-    use arbitrary::Unstructured;
-    use itertools::Itertools;
-    use rand::random;
     use std::collections::HashMap;
     use std::default::Default;
 
-    use crate::tests_and_benchmarks::ozk::{ozk_parsing, rust_shadows};
+    use arbitrary::Unstructured;
+    use itertools::Itertools;
+    use rand::random;
+
+    use crate::tests_and_benchmarks::ozk::ozk_parsing;
+    use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 
     use super::*;

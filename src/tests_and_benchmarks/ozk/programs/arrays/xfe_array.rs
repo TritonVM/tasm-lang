@@ -1,6 +1,7 @@
-use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
+use triton_vm::twenty_first::shared_math::x_field_element::XFieldElement;
 use triton_vm::BFieldElement;
-use twenty_first::shared_math::x_field_element::XFieldElement;
+
+use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
 fn main() {
     let k: BFieldElement = BFieldElement::new(1337);
@@ -52,15 +53,21 @@ fn main() {
     return;
 }
 
-mod tests {
-    use super::*;
-    use crate::tests_and_benchmarks::ozk::{ozk_parsing, rust_shadows};
-    use crate::tests_and_benchmarks::test_helpers::shared_test::execute_compiled_with_stack_memory_and_ins_for_test;
+#[cfg(test)]
+mod test {
+    use std::collections::HashMap;
+
     use itertools::Itertools;
     use rand::random;
-    use std::collections::HashMap;
-    use triton_vm::{BFieldElement, NonDeterminism};
-    use twenty_first::shared_math::bfield_codec::BFieldCodec;
+    use triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
+    use triton_vm::BFieldElement;
+    use triton_vm::NonDeterminism;
+
+    use crate::tests_and_benchmarks::ozk::ozk_parsing;
+    use crate::tests_and_benchmarks::ozk::rust_shadows;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::execute_compiled_with_stack_memory_and_ins_for_test;
+
+    use super::*;
 
     #[test]
     fn xfe_array_test() {

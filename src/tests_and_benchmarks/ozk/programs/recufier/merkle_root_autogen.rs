@@ -1,8 +1,7 @@
 #![allow(clippy::manual_swap)]
 
-// Allows the use of input/output on the native architecture
 use tasm_lib::Digest;
-use twenty_first::util_types::algebraic_hasher::AlgebraicHasher;
+use triton_vm::twenty_first::util_types::algebraic_hasher::AlgebraicHasher;
 type H = twenty_first::shared_math::tip5::Tip5;
 
 #[allow(clippy::ptr_arg)]
@@ -23,7 +22,8 @@ fn merkle_root(leafs: &Vec<Digest>, start: usize, stop: usize) -> Digest {
     return result;
 }
 
-mod tests {
+#[cfg(test)]
+mod test {
     #[test]
     fn merkle_root_to_basic_snippet_test() {
         let (rust_ast, _, _) =

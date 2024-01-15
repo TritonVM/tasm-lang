@@ -27,15 +27,19 @@ fn main() {
     return;
 }
 
-mod tests {
-    use super::*;
-    use crate::tests_and_benchmarks::{
-        ozk::{ozk_parsing, rust_shadows},
-        test_helpers::shared_test::*,
-    };
-    use itertools::Itertools;
+#[cfg(test)]
+mod test {
     use std::collections::HashMap;
-    use triton_vm::{BFieldElement, NonDeterminism};
+
+    use itertools::Itertools;
+    use triton_vm::BFieldElement;
+    use triton_vm::NonDeterminism;
+
+    use crate::tests_and_benchmarks::ozk::ozk_parsing;
+    use crate::tests_and_benchmarks::ozk::rust_shadows;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::*;
+
+    use super::*;
 
     #[test]
     fn simple_map_on_bfe_test() {
@@ -70,11 +74,16 @@ mod tests {
 }
 
 mod benches {
-    use crate::tests_and_benchmarks::benchmarks::{execute_and_write_benchmark, BenchmarkInput};
-    use crate::tests_and_benchmarks::{ozk::ozk_parsing, test_helpers::shared_test::*};
     use std::collections::HashMap;
-    use triton_vm::{BFieldElement, NonDeterminism};
-    use twenty_first::shared_math::other::random_elements;
+
+    use triton_vm::twenty_first::shared_math::other::random_elements;
+    use triton_vm::BFieldElement;
+    use triton_vm::NonDeterminism;
+
+    use crate::tests_and_benchmarks::benchmarks::execute_and_write_benchmark;
+    use crate::tests_and_benchmarks::benchmarks::BenchmarkInput;
+    use crate::tests_and_benchmarks::ozk::ozk_parsing;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 
     #[test]
     fn simple_map_bench() {

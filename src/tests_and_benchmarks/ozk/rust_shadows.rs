@@ -1,24 +1,30 @@
-use anyhow::bail;
-use num::Zero;
-use rand::{rngs::StdRng, Rng, RngCore, SeedableRng};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::thread_local;
 use std::vec::Vec;
-use tasm_lib::{Digest, VmHasher};
-use triton_vm::{
-    proof_item::{FriResponse, ProofItem},
-    table::master_table::{NUM_BASE_COLUMNS, NUM_EXT_COLUMNS},
-    BFieldElement, NonDeterminism,
-};
-use twenty_first::{
-    shared_math::{
-        b_field_element::{BFIELD_ONE, BFIELD_ZERO},
-        bfield_codec::BFieldCodec,
-        x_field_element::XFieldElement,
-    },
-    util_types::algebraic_hasher::{AlgebraicHasher, SpongeHasher},
-};
+
+use anyhow::bail;
+use num::Zero;
+use rand::rngs::StdRng;
+use rand::Rng;
+use rand::RngCore;
+use rand::SeedableRng;
+use tasm_lib::Digest;
+use tasm_lib::VmHasher;
+use triton_vm::proof_item::FriResponse;
+use triton_vm::proof_item::ProofItem;
+use triton_vm::table::master_table::NUM_BASE_COLUMNS;
+use triton_vm::table::master_table::NUM_EXT_COLUMNS;
+use triton_vm::twenty_first::shared_math::b_field_element::BFIELD_ONE;
+use triton_vm::twenty_first::shared_math::b_field_element::BFIELD_ZERO;
+use triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
+use triton_vm::twenty_first::shared_math::x_field_element::XFieldElement;
+use triton_vm::twenty_first::util_types::algebraic_hasher::AlgebraicHasher;
+use triton_vm::twenty_first::util_types::algebraic_hasher::SpongeHasher;
+use triton_vm::BFieldElement;
+use triton_vm::NonDeterminism;
+
+use crate::tests_and_benchmarks::ozk::programs::recufier::vm_proof_stream::VmProofStream;
 
 // This module contains functions for interacting with the input/output monad
 // implicit in a VM execution. It contains functions for mutating and verifying
@@ -222,8 +228,6 @@ pub(super) fn wrap_main_with_io(
 }
 
 // Shadowing of `VmProofStream` functionality
-
-use crate::tests_and_benchmarks::ozk::programs::recufier::vm_proof_stream::VmProofStream;
 
 pub(super) fn _tasm_recufier_proof_stream_dequeue(
     proof_stream: &mut VmProofStream,

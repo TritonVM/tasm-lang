@@ -1,13 +1,18 @@
 use tasm_lib::Digest;
-use triton_vm::{instruction::LabelledInstruction, triton_asm, BFieldElement};
-use twenty_first::shared_math::tip5::DIGEST_LENGTH;
+use triton_vm::instruction::LabelledInstruction;
+use triton_vm::triton_asm;
+use triton_vm::twenty_first::shared_math::tip5::DIGEST_LENGTH;
+use triton_vm::BFieldElement;
 
+use crate::ast;
+use crate::ast_types;
+use crate::graft::Graft;
+use crate::libraries::bfe::BfeLibrary;
 use crate::subroutine::SubRoutine;
-use crate::{
-    ast, ast_types, graft::Graft, libraries::bfe::BfeLibrary, tasm_code_generator::CompilerState,
-};
+use crate::tasm_code_generator::CompilerState;
 
-use super::{Library, LibraryFunction};
+use super::Library;
+use super::LibraryFunction;
 
 const HASHER_LIB_INDICATOR: &str = "H::";
 const HASH_PAIR_FUNCTION_NAME: &str = "H::hash_pair";

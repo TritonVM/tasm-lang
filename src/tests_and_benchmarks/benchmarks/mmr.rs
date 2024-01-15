@@ -3,18 +3,19 @@ mod benchmark {
     use std::collections::HashMap;
 
     use rand::random;
-    use tasm_lib::{rust_shadowing_helper_functions, Digest};
-    use triton_vm::{BFieldElement, NonDeterminism};
-    use twenty_first::{
-        shared_math::{other::random_elements, tip5::Tip5},
-        util_types::mmr::{mmr_accumulator::MmrAccumulator, mmr_trait::Mmr},
-    };
+    use tasm_lib::rust_shadowing_helper_functions;
+    use tasm_lib::Digest;
+    use triton_vm::twenty_first::shared_math::other::random_elements;
+    use triton_vm::twenty_first::shared_math::tip5::Tip5;
+    use triton_vm::twenty_first::util_types::mmr::mmr_accumulator::MmrAccumulator;
+    use triton_vm::twenty_first::util_types::mmr::mmr_trait::Mmr;
+    use triton_vm::BFieldElement;
+    use triton_vm::NonDeterminism;
 
-    use crate::tests_and_benchmarks::{
-        benchmarks::{execute_and_write_benchmark, BenchmarkInput},
-        programs,
-        test_helpers::shared_test::*,
-    };
+    use crate::tests_and_benchmarks::benchmarks::execute_and_write_benchmark;
+    use crate::tests_and_benchmarks::benchmarks::BenchmarkInput;
+    use crate::tests_and_benchmarks::programs;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 
     #[test]
     fn verify_mmr_ap_benchmark() {

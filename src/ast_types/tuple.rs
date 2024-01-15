@@ -1,9 +1,12 @@
 use itertools::Itertools;
 use triton_vm::triton_asm;
 
-use crate::{ast::FnSignature, libraries::LibraryFunction};
+use crate::ast::FnSignature;
+use crate::libraries::LibraryFunction;
 
-use super::{AbstractArgument, AbstractValueArg, DataType};
+use super::AbstractArgument;
+use super::AbstractValueArg;
+use super::DataType;
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct Tuple {

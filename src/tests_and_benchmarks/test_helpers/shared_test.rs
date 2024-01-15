@@ -2,19 +2,30 @@ use std::collections::HashMap;
 
 use anyhow::Ok;
 use itertools::Itertools;
+use tasm_lib::empty_stack;
 use tasm_lib::memory::dyn_malloc::DYN_MALLOC_ADDRESS;
-use tasm_lib::{empty_stack, rust_shadowing_helper_functions, DIGEST_LENGTH};
+use tasm_lib::rust_shadowing_helper_functions;
+use tasm_lib::DIGEST_LENGTH;
 use triton_vm::instruction::LabelledInstruction;
+use triton_vm::twenty_first::shared_math::b_field_element::BFIELD_ONE;
+use triton_vm::twenty_first::shared_math::b_field_element::BFIELD_ZERO;
+use triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
+use triton_vm::twenty_first::shared_math::x_field_element::XFieldElement;
 use triton_vm::vm::VMState;
-use triton_vm::{Digest, NonDeterminism, Program, PublicInput};
-use twenty_first::shared_math::b_field_element::{BFieldElement, BFIELD_ONE, BFIELD_ZERO};
-use twenty_first::shared_math::bfield_codec::BFieldCodec;
-use twenty_first::shared_math::x_field_element::XFieldElement;
+use triton_vm::BFieldElement;
+use triton_vm::Digest;
+use triton_vm::NonDeterminism;
+use triton_vm::Program;
+use triton_vm::PublicInput;
 
+use crate::ast;
+use crate::ast_types;
 use crate::composite_types::CompositeTypes;
 use crate::tasm_code_generator::compile_function;
-use crate::type_checker::{self, annotate_fn_outer, GetType, Typing};
-use crate::{ast, ast_types};
+use crate::type_checker;
+use crate::type_checker::annotate_fn_outer;
+use crate::type_checker::GetType;
+use crate::type_checker::Typing;
 
 #[derive(Debug, Clone)]
 pub struct InputOutputTestCase {

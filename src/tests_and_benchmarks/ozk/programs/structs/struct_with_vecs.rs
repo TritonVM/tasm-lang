@@ -1,8 +1,10 @@
-// Allows the use of input/output on the native architecture
-use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 use tasm_lib::structure::tasm_object::TasmObject;
-use triton_vm::{BFieldElement, Digest};
-use twenty_first::shared_math::{bfield_codec::BFieldCodec, x_field_element::XFieldElement};
+use triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
+use triton_vm::twenty_first::shared_math::x_field_element::XFieldElement;
+use triton_vm::BFieldElement;
+use triton_vm::Digest;
+
+use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
 #[derive(TasmObject, BFieldCodec)]
 struct TestStructWithVecs {
@@ -70,18 +72,21 @@ fn main() {
     return;
 }
 
-mod tests {
-    use super::*;
+#[cfg(test)]
+mod test {
+    use std::collections::HashMap;
+
     use itertools::Itertools;
     use rand::random;
-    use std::collections::HashMap;
+    use triton_vm::twenty_first::shared_math::other::random_elements;
     use triton_vm::BFieldElement;
-    use twenty_first::shared_math::other::random_elements;
 
-    use crate::tests_and_benchmarks::ozk::{ozk_parsing, rust_shadows};
-    use crate::tests_and_benchmarks::test_helpers::shared_test::{
-        execute_compiled_with_stack_memory_and_ins_for_test, init_memory_from,
-    };
+    use crate::tests_and_benchmarks::ozk::ozk_parsing;
+    use crate::tests_and_benchmarks::ozk::rust_shadows;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::execute_compiled_with_stack_memory_and_ins_for_test;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::init_memory_from;
+
+    use super::*;
 
     #[test]
     fn struct_with_vecs_test() {

@@ -1,6 +1,13 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
+use std::collections::HashSet;
 
-use crate::cfg::{self, Assignment, BasicBlock, ControlFlowGraph, Expr, Statement, Variable};
+use crate::cfg;
+use crate::cfg::Assignment;
+use crate::cfg::BasicBlock;
+use crate::cfg::ControlFlowGraph;
+use crate::cfg::Expr;
+use crate::cfg::Statement;
+use crate::cfg::Variable;
 
 pub fn convert(cfg: &mut ControlFlowGraph) {
     add_annotations(cfg);
@@ -285,7 +292,10 @@ fn substitute_names_in_basic_block(member: &mut BasicBlock, name_map: &HashMap<S
 #[cfg(test)]
 mod tests {
     use crate::ast_types::DataType;
-    use crate::cfg::{BasicBlock, Edge, Expr, ExprLit};
+    use crate::cfg::BasicBlock;
+    use crate::cfg::Edge;
+    use crate::cfg::Expr;
+    use crate::cfg::ExprLit;
 
     use super::*;
 

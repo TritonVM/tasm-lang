@@ -2,13 +2,12 @@ use tasm_lib::memory::dyn_malloc;
 use triton_vm::instruction::LabelledInstruction;
 use triton_vm::triton_asm;
 
+use crate::ast;
+use crate::ast_types;
 use crate::ast_types::DataType;
-use crate::tasm_code_generator::{write_n_words_to_memory_leaving_address, CompilerState};
-use crate::{
-    ast::{self},
-    ast_types,
-    graft::Graft,
-};
+use crate::graft::Graft;
+use crate::tasm_code_generator::write_n_words_to_memory_leaving_address;
+use crate::tasm_code_generator::CompilerState;
 
 use super::Library;
 

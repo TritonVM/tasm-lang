@@ -1,14 +1,17 @@
-use itertools::Itertools;
 use std::fmt::Display;
-use triton_vm::{instruction::LabelledInstruction, Digest};
-use twenty_first::shared_math::b_field_element::BFieldElement;
-use twenty_first::shared_math::bfield_codec::BFieldCodec;
-use twenty_first::shared_math::x_field_element::XFieldElement;
 
-use crate::{
-    ast_types::{self, AbstractArgument, DataType, FieldId},
-    type_checker::Typing,
-};
+use itertools::Itertools;
+use triton_vm::instruction::LabelledInstruction;
+use triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
+use triton_vm::twenty_first::shared_math::x_field_element::XFieldElement;
+use triton_vm::BFieldElement;
+use triton_vm::Digest;
+
+use crate::ast_types;
+use crate::ast_types::AbstractArgument;
+use crate::ast_types::DataType;
+use crate::ast_types::FieldId;
+use crate::type_checker::Typing;
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub(crate) enum RoutineBody<T> {

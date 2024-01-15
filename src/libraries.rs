@@ -1,11 +1,12 @@
-use crate::{
-    ast::{self, FnSignature},
-    ast_types::{self, ListType},
-    graft::Graft,
-    tasm_code_generator::CompilerState,
-    type_checker,
-};
 use std::fmt::Debug;
+
+use crate::ast;
+use crate::ast::FnSignature;
+use crate::ast_types;
+use crate::ast_types::ListType;
+use crate::graft::Graft;
+use crate::tasm_code_generator::CompilerState;
+use crate::type_checker;
 
 pub mod bfe;
 pub mod bfield_codec;

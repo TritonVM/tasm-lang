@@ -1,7 +1,8 @@
-use super::arithmetic_domain::*;
 use tasm_lib::structure::tasm_object::TasmObject;
+use triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
 use triton_vm::BFieldElement;
-use twenty_first::shared_math::bfield_codec::BFieldCodec;
+
+use super::arithmetic_domain::*;
 
 #[derive(Debug, Clone, PartialEq, Eq, BFieldCodec, TasmObject)]
 struct FriVerify {
@@ -38,14 +39,18 @@ fn main() {
     return;
 }
 
-mod tests {
-    use rand::random;
+#[cfg(test)]
+mod test {
     use std::collections::HashMap;
+
+    use rand::random;
     use triton_vm::NonDeterminism;
 
-    use super::*;
-    use crate::tests_and_benchmarks::ozk::{ozk_parsing, rust_shadows};
+    use crate::tests_and_benchmarks::ozk::ozk_parsing;
+    use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::execute_compiled_with_stack_memory_and_ins_for_test;
+
+    use super::*;
 
     #[test]
     fn fri_verify_test() {

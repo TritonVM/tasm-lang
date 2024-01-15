@@ -21,8 +21,8 @@ mod tests {
         use itertools::Itertools;
         use std::collections::HashMap;
         use tasm_lib::rust_shadowing_helper_functions::safe_list::safe_list_insert;
+        use triton_vm::twenty_first::shared_math::other::random_elements;
         use triton_vm::BFieldElement;
-        use twenty_first::shared_math::other::random_elements;
 
         use super::*;
         use crate::tests_and_benchmarks::test_helpers::shared_test::*;

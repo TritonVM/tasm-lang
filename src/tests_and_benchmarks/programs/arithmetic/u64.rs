@@ -54,11 +54,15 @@ fn divmoddi4_u64_rast() -> syn::ItemFn {
 #[cfg(test)]
 mod run_tests {
     use itertools::Itertools;
-    use rand::{random, thread_rng, Rng, RngCore};
-    use twenty_first::shared_math::other::random_elements;
+    use rand::random;
+    use rand::thread_rng;
+    use rand::Rng;
+    use rand::RngCore;
+    use triton_vm::twenty_first::shared_math::other::random_elements;
+
+    use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 
     use super::*;
-    use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 
     #[test]
     fn declare_u64_max_and_bits_test() {

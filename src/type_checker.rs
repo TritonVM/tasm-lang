@@ -1,14 +1,17 @@
 use anyhow::bail;
 use itertools::Itertools;
 use num::One;
-use std::collections::{HashMap, HashSet};
-use twenty_first::shared_math::b_field_element::BFieldElement;
-use twenty_first::shared_math::x_field_element::XFieldElement;
+use std::collections::HashMap;
+use std::collections::HashSet;
+use triton_vm::twenty_first::shared_math::x_field_element::XFieldElement;
+use triton_vm::BFieldElement;
 
+use crate::ast;
 use crate::ast::MethodCall;
+use crate::ast_types;
 use crate::composite_types::CompositeTypes;
+use crate::libraries;
 use crate::tasm_code_generator::SIZE_OF_ACCESSIBLE_STACK;
-use crate::{ast, ast_types, libraries};
 
 #[derive(Debug, Default, Clone, Hash, PartialEq, Eq)]
 pub enum Typing {

@@ -1,13 +1,15 @@
 #![allow(clippy::explicit_auto_deref)]
-// Allows the use of input/output on the native architecture
-use super::proof_item::*;
-use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
 use tasm_lib::structure::tasm_object::TasmObject;
-use triton_vm::{BFieldElement, Digest};
-use twenty_first::shared_math::bfield_codec::BFieldCodec;
-use twenty_first::shared_math::tip5::Tip5State;
-type _H = twenty_first::shared_math::tip5::Tip5;
+use triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
+use triton_vm::twenty_first::shared_math::tip5::Tip5State;
+use triton_vm::BFieldElement;
+use triton_vm::Digest;
+
+use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
+
+use super::proof_item::*;
+
 type VmHasherState = Tip5State;
 
 #[derive(Debug, Clone, BFieldCodec, TasmObject)]
@@ -33,17 +35,19 @@ fn main() {
     return;
 }
 
-mod tests {
+#[cfg(test)]
+mod test {
     use std::collections::HashMap;
 
-    use super::*;
-    use crate::tests_and_benchmarks::ozk::ozk_parsing::compile_for_test;
-    use crate::tests_and_benchmarks::ozk::rust_shadows;
-    use crate::tests_and_benchmarks::test_helpers::shared_test::{
-        execute_compiled_with_stack_memory_and_ins_for_test, init_memory_from,
-    };
     use num::Zero;
     use rand::random;
+
+    use crate::tests_and_benchmarks::ozk::ozk_parsing::compile_for_test;
+    use crate::tests_and_benchmarks::ozk::rust_shadows;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::execute_compiled_with_stack_memory_and_ins_for_test;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::init_memory_from;
+
+    use super::*;
 
     impl VmProofStream {
         // Is only used for test, does not need to be handled by TVM

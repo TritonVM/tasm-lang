@@ -1,6 +1,6 @@
 use tasm_lib::Digest;
+use triton_vm::twenty_first::shared_math::x_field_element::XFieldElement;
 use triton_vm::BFieldElement;
-use twenty_first::shared_math::x_field_element::XFieldElement;
 
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
@@ -25,13 +25,15 @@ fn main() {
 }
 
 mod test {
-    use itertools::Itertools;
     use std::collections::HashMap;
     use std::default::Default;
-    use triton_vm::NonDeterminism;
-    use twenty_first::shared_math::other::random_elements;
 
-    use crate::tests_and_benchmarks::ozk::{ozk_parsing, rust_shadows};
+    use itertools::Itertools;
+    use triton_vm::twenty_first::shared_math::other::random_elements;
+    use triton_vm::NonDeterminism;
+
+    use crate::tests_and_benchmarks::ozk::ozk_parsing;
+    use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 
     use super::*;

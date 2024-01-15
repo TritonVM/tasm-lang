@@ -3,10 +3,12 @@ use syn::token::Comma;
 use syn::ExprMethodCall;
 use triton_vm::instruction::LabelledInstruction;
 
-use crate::ast::{Expr, FnSignature};
+use crate::ast::Expr;
+use crate::ast::FnSignature;
 use crate::ast_types::DataType;
 use crate::graft::Graft;
-use crate::libraries::{Annotation, Library};
+use crate::libraries::Annotation;
+use crate::libraries::Library;
 use crate::tasm_code_generator::CompilerState;
 use crate::type_checker::CheckState;
 

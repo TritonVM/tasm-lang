@@ -1,9 +1,9 @@
 #![allow(clippy::manual_swap)]
 
-// Allows the use of input/output on the native architecture
 use num::One;
+use triton_vm::twenty_first::shared_math::traits::ModPowU32;
+use triton_vm::twenty_first::shared_math::x_field_element::XFieldElement;
 use triton_vm::BFieldElement;
-use twenty_first::shared_math::{traits::ModPowU32, x_field_element::XFieldElement};
 
 #[allow(clippy::ptr_arg)]
 #[allow(clippy::vec_init_then_push)]
@@ -74,14 +74,15 @@ fn xfe_ntt(x: &mut Vec<XFieldElement>, omega: BFieldElement) {
     return;
 }
 
-mod tests {
+#[cfg(test)]
+mod test {
     use std::collections::HashMap;
 
-    use triton_vm::{BFieldElement, NonDeterminism};
+    use triton_vm::BFieldElement;
+    use triton_vm::NonDeterminism;
 
-    use crate::tests_and_benchmarks::test_helpers::shared_test::{
-        bfe_lit, compare_compiled_prop_with_stack_and_memory_and_ins,
-    };
+    use crate::tests_and_benchmarks::test_helpers::shared_test::bfe_lit;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::compare_compiled_prop_with_stack_and_memory_and_ins;
 
     #[test]
     fn fast_xfe_ntt_to_basic_snippet_test() {

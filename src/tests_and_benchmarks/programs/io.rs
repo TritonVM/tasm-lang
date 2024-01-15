@@ -1,13 +1,17 @@
 mod run_tests {
+    use std::collections::HashMap;
+    use std::vec;
+
+    use rand::random;
+    use syn::parse_quote;
+    use triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
+    use triton_vm::twenty_first::shared_math::x_field_element::XFieldElement;
+    use triton_vm::BFieldElement;
+    use triton_vm::Digest;
+    use triton_vm::NonDeterminism;
+
     use crate::graft::item_fn;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
-    use rand::random;
-    use std::{collections::HashMap, vec};
-    use syn::parse_quote;
-    use triton_vm::{Digest, NonDeterminism};
-    use twenty_first::shared_math::{
-        b_field_element::BFieldElement, bfield_codec::BFieldCodec, x_field_element::XFieldElement,
-    };
 
     fn stdin_rast() -> syn::ItemFn {
         item_fn(parse_quote! {

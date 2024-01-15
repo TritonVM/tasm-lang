@@ -1,5 +1,5 @@
+use triton_vm::twenty_first::shared_math::x_field_element::XFieldElement;
 use triton_vm::Digest;
-use twenty_first::shared_math::x_field_element::XFieldElement;
 
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
@@ -92,7 +92,8 @@ mod test {
     use rand::random;
     use triton_vm::NonDeterminism;
 
-    use crate::tests_and_benchmarks::ozk::{ozk_parsing, rust_shadows};
+    use crate::tests_and_benchmarks::ozk::ozk_parsing;
+    use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 
     use super::*;

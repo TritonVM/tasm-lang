@@ -1,11 +1,13 @@
 use std::fs;
+
 use triton_vm::instruction::LabelledInstruction;
 
-use crate::{
-    ast_types, custom_type_resolver::resolve_custom_types, extract_types_and_function,
-    tasm_code_generator::compile_function, type_checker::annotate_fn_outer,
-    StructsAndMethodsRustAst,
-};
+use crate::ast_types;
+use crate::custom_type_resolver::resolve_custom_types;
+use crate::extract_types_and_function;
+use crate::tasm_code_generator::compile_function;
+use crate::type_checker::annotate_fn_outer;
+use crate::StructsAndMethodsRustAst;
 
 /// Return the Rust-AST for the `main` function and all custom types defined in the
 /// outermost module.

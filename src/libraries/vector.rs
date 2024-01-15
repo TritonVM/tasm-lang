@@ -3,15 +3,15 @@ use num::One;
 use tasm_lib::traits::basic_snippet::BasicSnippet;
 use triton_vm::triton_asm;
 
-use crate::{
-    ast,
-    ast_types::{self, ListType},
-    graft::Graft,
-    tasm_code_generator::CompilerState,
-    type_checker::GetType,
-};
+use crate::ast;
+use crate::ast_types;
+use crate::ast_types::ListType;
+use crate::graft::Graft;
+use crate::tasm_code_generator::CompilerState;
+use crate::type_checker::GetType;
 
-use super::{Library, LibraryFunction};
+use super::Library;
+use super::LibraryFunction;
 
 const VECTOR_LIB_INDICATOR: &str = "Vec::";
 

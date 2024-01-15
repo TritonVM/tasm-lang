@@ -1,8 +1,10 @@
-use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 use num::Zero;
 use tasm_lib::structure::tasm_object::TasmObject;
+use triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
+use triton_vm::twenty_first::shared_math::x_field_element::XFieldElement;
 use triton_vm::BFieldElement;
-use twenty_first::shared_math::{bfield_codec::BFieldCodec, x_field_element::XFieldElement};
+
+use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
 // Needs to be high enough to not interfere with the static memory allocator
 const SIMPLE_STRUCTS_BFIELD_CODEC_START_ADDRESS: u64 = 200;
@@ -63,20 +65,23 @@ fn main() {
     return;
 }
 
-mod tests {
-    use rand::prelude::Distribution;
-    use rand::{distributions::Standard, Rng};
+#[cfg(test)]
+mod test {
     use std::collections::HashMap;
-    use twenty_first::shared_math::other::random_elements;
 
-    use crate::tests_and_benchmarks::ozk::{ozk_parsing, rust_shadows};
-    use crate::tests_and_benchmarks::test_helpers::shared_test::{
-        execute_compiled_with_stack_memory_and_ins_for_test, init_memory_from,
-    };
+    use itertools::Itertools;
+    use rand::distributions::Standard;
+    use rand::prelude::Distribution;
+    use rand::random;
+    use rand::Rng;
+    use triton_vm::twenty_first::shared_math::other::random_elements;
+
+    use crate::tests_and_benchmarks::ozk::ozk_parsing;
+    use crate::tests_and_benchmarks::ozk::rust_shadows;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::execute_compiled_with_stack_memory_and_ins_for_test;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::init_memory_from;
 
     use super::*;
-    use itertools::Itertools;
-    use rand::random;
 
     impl Distribution<TestStruct> for Standard {
         fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> TestStruct {

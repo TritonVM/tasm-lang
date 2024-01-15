@@ -1,12 +1,18 @@
 use itertools::Itertools;
-use num::{One, Zero};
+use num::One;
+use num::Zero;
 use triton_vm::triton_asm;
-use twenty_first::shared_math::{b_field_element::BFieldElement, traits::PrimitiveRootOfUnity};
+use triton_vm::twenty_first::shared_math::traits::PrimitiveRootOfUnity;
+use triton_vm::BFieldElement;
 
+use crate::ast;
+use crate::ast_types;
+use crate::graft::Graft;
 use crate::subroutine::SubRoutine;
-use crate::{ast, ast_types, graft::Graft};
 
-use super::{tasm_lib_snippet_to_fn_signature, Library, LibraryFunction};
+use super::tasm_lib_snippet_to_fn_signature;
+use super::Library;
+use super::LibraryFunction;
 
 const BFE_STRUCT_NAME: &str = "BFieldElement";
 const FUNCTION_NAME_NEW_BFE: &str = "BFieldElement::new";

@@ -1,16 +1,10 @@
-pub mod abstract_argument;
-pub mod array_type;
-pub mod custom_type_oil;
-pub mod enum_type;
-pub mod field_id;
-pub mod function_type;
-pub mod list_type;
-pub mod struct_type;
-pub mod tuple;
+use std::fmt::Display;
+use std::str::FromStr;
 
 use anyhow::bail;
 use itertools::Itertools;
-use std::{fmt::Display, str::FromStr};
+
+use crate::ast::FnSignature;
 
 pub use self::abstract_argument::*;
 pub use self::array_type::ArrayType;
@@ -21,7 +15,16 @@ pub use self::function_type::FunctionType;
 pub use self::list_type::ListType;
 pub use self::struct_type::*;
 pub use self::tuple::Tuple;
-use crate::ast::FnSignature;
+
+pub mod abstract_argument;
+pub mod array_type;
+pub mod custom_type_oil;
+pub mod enum_type;
+pub mod field_id;
+pub mod function_type;
+pub mod list_type;
+pub mod struct_type;
+pub mod tuple;
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum DataType {

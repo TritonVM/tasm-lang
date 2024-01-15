@@ -1,8 +1,11 @@
-use itertools::Itertools;
-use num::{One, Zero};
 use std::collections::HashMap;
 use std::str::FromStr;
-use syn::{parse_quote, PathArguments};
+
+use itertools::Itertools;
+use num::One;
+use num::Zero;
+use syn::parse_quote;
+use syn::PathArguments;
 
 use crate::ast;
 use crate::ast::ReturningBlock;
@@ -1455,8 +1458,9 @@ pub fn item_fn(item: syn::Item) -> syn::ItemFn {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use syn::parse_quote;
+
+    use super::*;
 
     #[test]
     fn big_mmr_function() {

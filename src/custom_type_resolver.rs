@@ -1,9 +1,12 @@
-use crate::{
-    ast::*,
-    ast_types::{self, AbstractArgument, AbstractValueArg, CustomTypeOil, DataType, Tuple},
-    composite_types::CompositeTypes,
-    type_checker::Typing,
-};
+use crate::ast::*;
+use crate::ast_types;
+use crate::ast_types::AbstractArgument;
+use crate::ast_types::AbstractValueArg;
+use crate::ast_types::CustomTypeOil;
+use crate::ast_types::DataType;
+use crate::ast_types::Tuple;
+use crate::composite_types::CompositeTypes;
+use crate::type_checker::Typing;
 
 pub(crate) trait CustomTypeResolution {
     fn resolve_custom_types(&mut self, composite_types: &CompositeTypes);

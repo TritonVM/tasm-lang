@@ -1,14 +1,20 @@
 pub mod run_tests {
-    use crate::ast_types::{self, DataType, ListType};
-    use crate::{graft::item_fn, tests_and_benchmarks::test_helpers::shared_test::*};
+    use std::collections::HashMap;
+
     use itertools::Itertools;
     use num::One;
     use rand::random;
-    use std::collections::HashMap;
     use syn::parse_quote;
     use tasm_lib::memory::dyn_malloc;
     use triton_vm::BFieldElement;
-    use triton_vm::{Digest, NonDeterminism};
+    use triton_vm::Digest;
+    use triton_vm::NonDeterminism;
+
+    use crate::ast_types;
+    use crate::ast_types::DataType;
+    use crate::ast_types::ListType;
+    use crate::graft::item_fn;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 
     #[test]
     fn very_simple_list_support_test() {

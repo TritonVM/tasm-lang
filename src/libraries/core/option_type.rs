@@ -1,8 +1,11 @@
 use triton_vm::triton_asm;
 
-use crate::ast::{self, FnSignature};
+use crate::ast;
+use crate::ast::FnSignature;
+use crate::ast_types;
+use crate::ast_types::AbstractArgument;
+use crate::ast_types::AbstractValueArg;
 use crate::ast_types::DataType;
-use crate::ast_types::{self, AbstractArgument, AbstractValueArg};
 use crate::type_checker::Typing;
 
 pub(crate) fn option_type(payload_type: DataType) -> crate::composite_types::TypeContext {

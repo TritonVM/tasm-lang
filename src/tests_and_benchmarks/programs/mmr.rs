@@ -59,21 +59,24 @@ mod run_tests {
     use std::collections::HashMap;
 
     use itertools::Itertools;
-    use rand::{random, thread_rng, RngCore};
+    use rand::random;
+    use rand::thread_rng;
+    use rand::RngCore;
     use tasm_lib::rust_shadowing_helper_functions;
+    use triton_vm::twenty_first::shared_math::other::random_elements;
+    use triton_vm::twenty_first::shared_math::tip5::Digest;
+    use triton_vm::twenty_first::shared_math::tip5::Tip5;
+    use triton_vm::twenty_first::test_shared::mmr::get_rustyleveldb_ammr_from_digests;
+    use triton_vm::twenty_first::util_types::mmr;
+    use triton_vm::twenty_first::util_types::mmr::mmr_membership_proof::MmrMembershipProof;
+    use triton_vm::twenty_first::util_types::mmr::mmr_trait::Mmr;
+    use triton_vm::BFieldElement;
     use triton_vm::NonDeterminism;
-    use twenty_first::{
-        shared_math::{
-            b_field_element::BFieldElement,
-            other::random_elements,
-            tip5::{Digest, Tip5},
-        },
-        test_shared::mmr::get_rustyleveldb_ammr_from_digests,
-        util_types::mmr::{self, mmr_membership_proof::MmrMembershipProof, mmr_trait::Mmr},
-    };
+
+    use crate::ast_types::ListType;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 
     use super::*;
-    use crate::{ast_types::ListType, tests_and_benchmarks::test_helpers::shared_test::*};
 
     #[test]
     fn right_child_run_test() {

@@ -1,11 +1,13 @@
 #[cfg(test)]
 mod run_tests {
     use itertools::Itertools;
-    use rand::{thread_rng, Rng};
+    use rand::thread_rng;
+    use rand::Rng;
     use syn::parse_quote;
-    use twenty_first::shared_math::other::random_elements;
+    use triton_vm::twenty_first::shared_math::other::random_elements;
 
-    use crate::{graft::item_fn, tests_and_benchmarks::test_helpers::shared_test::*};
+    use crate::graft::item_fn;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 
     #[test]
     fn declare_u128_max_and_bits_test() {

@@ -1,11 +1,14 @@
 use tasm_lib::traits::basic_snippet::BasicSnippet;
 use triton_vm::triton_asm;
 
-use super::{Library, LibraryFunction};
-use crate::{
-    ast, ast_types, graft::Graft, tasm_code_generator::CompilerState,
-    type_checker::is_u32_based_type,
-};
+use crate::ast;
+use crate::ast_types;
+use crate::graft::Graft;
+use crate::tasm_code_generator::CompilerState;
+use crate::type_checker::is_u32_based_type;
+
+use super::Library;
+use super::LibraryFunction;
 
 #[derive(Clone, Debug)]
 pub struct UnsignedIntegersLib {

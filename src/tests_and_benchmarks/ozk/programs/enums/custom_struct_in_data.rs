@@ -20,14 +20,19 @@ fn main() {
     return;
 }
 
-mod tests {
-    use super::*;
-    use itertools::Itertools;
+#[cfg(test)]
+mod test {
     use std::collections::HashMap;
-    use triton_vm::{BFieldElement, NonDeterminism};
 
-    use crate::tests_and_benchmarks::ozk::{ozk_parsing, rust_shadows};
+    use itertools::Itertools;
+    use triton_vm::BFieldElement;
+    use triton_vm::NonDeterminism;
+
+    use crate::tests_and_benchmarks::ozk::ozk_parsing;
+    use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::execute_compiled_with_stack_memory_and_ins_for_test;
+
+    use super::*;
 
     #[test]
     fn custom_struct_in_enum_data_test() {

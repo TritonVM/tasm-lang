@@ -1,7 +1,7 @@
 use arbitrary::Arbitrary;
+use triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
+use triton_vm::BFieldElement;
 use triton_vm::Digest;
-use twenty_first::shared_math::b_field_element::BFieldElement;
-use twenty_first::shared_math::bfield_codec::BFieldCodec;
 
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
@@ -30,17 +30,20 @@ fn main() {
     return;
 }
 
+#[cfg(test)]
 mod tests {
-    use super::*;
+    use std::collections::HashMap;
+
     use arbitrary::Unstructured;
     use itertools::Itertools;
     use rand::random;
-    use std::collections::HashMap;
 
-    use crate::tests_and_benchmarks::ozk::{ozk_parsing, rust_shadows};
-    use crate::tests_and_benchmarks::test_helpers::shared_test::{
-        execute_compiled_with_stack_memory_and_ins_for_test, init_memory_from,
-    };
+    use crate::tests_and_benchmarks::ozk::ozk_parsing;
+    use crate::tests_and_benchmarks::ozk::rust_shadows;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::execute_compiled_with_stack_memory_and_ins_for_test;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::init_memory_from;
+
+    use super::*;
 
     #[test]
     fn enum_with_non_copy_struct_data_test() {

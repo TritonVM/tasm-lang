@@ -45,14 +45,18 @@ fn main() {
     return;
 }
 
-mod tests {
-    use super::*;
-    use itertools::Itertools;
+#[cfg(test)]
+mod test {
     use std::collections::HashMap;
+
+    use itertools::Itertools;
     use triton_vm::NonDeterminism;
 
-    use crate::tests_and_benchmarks::ozk::{ozk_parsing, rust_shadows};
+    use crate::tests_and_benchmarks::ozk::ozk_parsing;
+    use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::execute_compiled_with_stack_memory_and_ins_for_test;
+
+    use super::*;
 
     #[test]
     fn two_variants_no_data_test() {
