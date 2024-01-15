@@ -1,4 +1,7 @@
 /target
 
+### JetBrains IDEs ###
+**/.idea/**
+
 # Directory specified in Makefile
 /makefile-target
