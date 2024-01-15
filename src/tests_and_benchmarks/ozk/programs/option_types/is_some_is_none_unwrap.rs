@@ -7,23 +7,34 @@ use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 #[allow(clippy::assertions_on_constants)]
 fn main() {
     let bfe: BFieldElement = tasm::tasm_io_read_stdin___bfe();
-    let some_bfe: Option<BFieldElement> = Some(bfe);
-    assert!(some_bfe.is_some());
-    tasm::tasm_io_write_to_stdout___u64(some_bfe.unwrap().value());
+    let some_bfe_boxed: Box<Option<BFieldElement>> = Box::<Option<BFieldElement>>::new(Some(bfe));
+    assert!(some_bfe_boxed.is_some());
+    let some_bfe_stack: Option<BFieldElement> = Some(bfe);
+    tasm::tasm_io_write_to_stdout___u64(some_bfe_stack.unwrap().value());
 
     let xfe: XFieldElement = tasm::tasm_io_read_stdin___xfe();
-    let some_xfe: Option<XFieldElement> = Some(xfe);
-    assert!(some_xfe.is_some());
-    tasm::tasm_io_write_to_stdout___xfe(some_xfe.unwrap());
+    let some_xfe_boxed: Box<Option<XFieldElement>> = Box::<Option<XFieldElement>>::new(Some(xfe));
+    assert!(some_xfe_boxed.is_some());
+    let some_xfe_stack: Option<XFieldElement> = Some(xfe);
+    tasm::tasm_io_write_to_stdout___xfe(some_xfe_stack.unwrap());
+    let none_xfe_stack: Option<XFieldElement> = None;
+    let none_xfe_boxed: Box<Option<XFieldElement>> =
+        Box::<Option<XFieldElement>>::new(none_xfe_stack);
+    assert!(none_xfe_boxed.is_none());
 
-    let none_xfe: Option<XFieldElement> = None;
-    assert!(none_xfe.is_none());
-    let none_digest: Option<Digest> = None;
-    assert!(none_digest.is_none());
-    let none_bfe: Option<BFieldElement> = None;
-    assert!(none_bfe.is_none());
+    let none_digest_stack: Option<Digest> = None;
+    let none_digest_boxed: Box<Option<Digest>> = Box::<Option<Digest>>::new(none_digest_stack);
+    assert!(none_digest_boxed.is_none());
 
-    match some_xfe {
+    match some_xfe_boxed.as_ref() {
+        Some(inner) => {
+            tasm::tasm_io_write_to_stdout___xfe(*inner);
+        }
+        None => {
+            assert!(false);
+        }
+    };
+    match some_xfe_stack {
         Some(inner) => {
             tasm::tasm_io_write_to_stdout___xfe(inner);
         }
@@ -32,24 +43,24 @@ fn main() {
         }
     };
 
-    match some_bfe {
+    match some_bfe_boxed.as_ref() {
         Some(inner) => {
-            tasm::tasm_io_write_to_stdout___bfe(inner);
+            tasm::tasm_io_write_to_stdout___bfe(*inner);
         }
         None => {
             assert!(false);
         }
     };
-    match some_bfe {
+    match some_bfe_boxed.as_ref() {
         Some(inner) => {
-            tasm::tasm_io_write_to_stdout___bfe(inner);
+            tasm::tasm_io_write_to_stdout___bfe(*inner);
         }
         _ => {
             assert!(false);
         }
     };
 
-    match none_xfe {
+    match none_xfe_boxed.as_ref() {
         Some(_) => {
             assert!(false);
         }
@@ -57,7 +68,7 @@ fn main() {
             tasm::tasm_io_write_to_stdout___u32(100);
         }
     };
-    match none_xfe {
+    match none_xfe_boxed.as_ref() {
         Some(_) => {
             assert!(false);
         }
@@ -66,7 +77,7 @@ fn main() {
         }
     };
 
-    match none_digest {
+    match none_digest_boxed.as_ref() {
         Some(_) => {
             assert!(false);
         }
@@ -98,7 +109,7 @@ mod test {
             rust_shadows::wrap_main_with_io(&main)(stdin.clone(), non_determinism.clone());
         let test_program = ozk_parsing::compile_for_test(
             "option_types",
-            "basic",
+            "is_some_is_none_unwrap",
             "main",
             crate::ast_types::ListType::Unsafe,
         );

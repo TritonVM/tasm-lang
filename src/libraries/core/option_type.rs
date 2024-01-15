@@ -3,7 +3,6 @@ use triton_vm::triton_asm;
 use crate::ast::{self, FnSignature};
 use crate::ast_types::DataType;
 use crate::ast_types::{self, AbstractArgument, AbstractValueArg};
-use crate::tasm_code_generator;
 use crate::type_checker::Typing;
 
 pub(crate) fn option_type(payload_type: DataType) -> crate::composite_types::TypeContext {
@@ -50,20 +49,7 @@ fn option_unwrap_method(enum_type: &ast_types::EnumType) -> ast::Method<Typing> 
 }
 
 fn option_is_none_method(enum_type: &ast_types::EnumType) -> ast::Method<Typing> {
-    let stack_size = enum_type.stack_size();
-    let swap_to_bottom = match stack_size {
-        0 => unreachable!(),
-        1 => triton_asm!(),
-        2..=16 => triton_asm!(swap { stack_size - 1 }),
-        _ => panic!("Can't handle this yet"), // This should work with spilling
-    };
-    let remove_data = match stack_size {
-        0 => unreachable!(),
-        1 => triton_asm!(pop 1),
-        2..=16 => tasm_code_generator::pop_n(stack_size - 1),
-        _ => panic!("Can't handle this yet"),
-    };
-    let argument_type = DataType::Reference(Box::new(enum_type.into()));
+    let argument_type = DataType::Boxed(Box::new(enum_type.into()));
     let method_signature = FnSignature {
         name: "is_none".to_owned(),
         args: vec![AbstractArgument::ValueArgument(AbstractValueArg {
@@ -77,11 +63,12 @@ fn option_is_none_method(enum_type: &ast_types::EnumType) -> ast::Method<Typing>
 
     ast::Method {
         body: ast::RoutineBody::<Typing>::Instructions(triton_asm!(
-                // _ [ok_type] discriminant
-                {&swap_to_bottom}
-                // _ discriminant [ok_type']
+                // _ *discriminant
 
-                {&remove_data}
+                read_mem 1
+                // _ discriminant (*discriminant - 1)
+
+                pop 1
                 // _ discriminant
 
                 push 0
@@ -93,20 +80,7 @@ fn option_is_none_method(enum_type: &ast_types::EnumType) -> ast::Method<Typing>
 }
 
 fn option_is_some_method(enum_type: &ast_types::EnumType) -> ast::Method<Typing> {
-    let stack_size = enum_type.stack_size();
-    let swap_to_bottom = match stack_size {
-        0 => unreachable!(),
-        1 => triton_asm!(),
-        2..=16 => triton_asm!(swap { stack_size - 1 }),
-        _ => panic!("Can't handle this yet"), // This should work with spilling
-    };
-    let remove_data = match stack_size {
-        0 => unreachable!(),
-        1 => triton_asm!(pop 1),
-        2..=16 => tasm_code_generator::pop_n(stack_size - 1),
-        _ => panic!("Can't handle this yet"),
-    };
-    let argument_type = DataType::Reference(Box::new(enum_type.into()));
+    let argument_type = DataType::Boxed(Box::new(enum_type.into()));
     let method_signature = FnSignature {
         name: "is_some".to_owned(),
         args: vec![AbstractArgument::ValueArgument(AbstractValueArg {
@@ -120,11 +94,12 @@ fn option_is_some_method(enum_type: &ast_types::EnumType) -> ast::Method<Typing>
 
     ast::Method {
         body: ast::RoutineBody::<Typing>::Instructions(triton_asm!(
-                // _ [ok_type] discriminant
-                {&swap_to_bottom}
-                // _ discriminant [ok_type']
+                // _ *discriminant
 
-                {&remove_data}
+                read_mem 1
+                // _ discriminant (*discriminant - 1)
+
+                pop 1
                 // _ discriminant
 
                 push 1

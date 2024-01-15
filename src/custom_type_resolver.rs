@@ -275,7 +275,6 @@ impl DataType {
                 .iter()
                 .any(|(_name, dtype)| dtype.is_unresolved()),
             DataType::Array(array_type) => array_type.element_type.is_unresolved(),
-            DataType::Reference(inner_type) => inner_type.is_unresolved(),
             DataType::Bool => false,
             DataType::U32 => false,
             DataType::U64 => false,
@@ -350,9 +349,6 @@ impl CustomTypeResolution for DataType {
                     .element_type
                     .as_mut()
                     .resolve_custom_types(composite_types);
-            }
-            Reference(inner_type) => {
-                inner_type.resolve_custom_types(composite_types);
             }
 
             Bool => (),

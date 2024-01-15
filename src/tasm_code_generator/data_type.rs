@@ -64,7 +64,6 @@ impl ast_types::DataType {
             ast_types::DataType::Struct(struct_type) => struct_type.load_from_memory(state),
             ast_types::DataType::VoidPointer => todo!(),
             ast_types::DataType::Function(_) => todo!(),
-            ast_types::DataType::Reference(_) => todo!(),
             ast_types::DataType::Unresolved(_) => todo!(),
         }
     }
@@ -141,7 +140,6 @@ impl ast_types::DataType {
             Struct(_) => todo!(),
             Boxed(_) => todo!("Comparison of MemPointer not supported yet"),
             Unresolved(name) => panic!("Cannot compare unresolved type {name}"),
-            Reference(_) => panic!("Cannot compare references. Got {self}"),
             Enum(_) => todo!("Equality for enums not yet implemented"),
         }
     }

@@ -70,17 +70,6 @@ impl ProofItem {
     }
 }
 
-fn proof_item_on_stack() {
-    let ap: ProofItem = ProofItem::AuthenticationStructure(Vec::<Digest>::with_capacity(0));
-    assert!(!ap.include_in_fiat_shamir_heuristic());
-
-    let merkle_root_pi: ProofItem = ProofItem::MerkleRoot(Digest::default());
-    let merkle_root: Digest = merkle_root_pi.as_merkle_root();
-    tasm::tasm_io_write_to_stdout___digest(merkle_root);
-
-    return;
-}
-
 fn proof_item_stored_to_memory() {
     let ap: Box<ProofItem> = Box::<ProofItem>::new(ProofItem::AuthenticationStructure(
         Vec::<Digest>::with_capacity(0),
@@ -122,37 +111,6 @@ mod tests {
     use crate::tests_and_benchmarks::test_helpers::shared_test::{
         execute_compiled_with_stack_memory_and_ins_for_test, init_memory_from,
     };
-
-    #[test]
-    fn proof_item_on_stack_test() {
-        // Rust program on host machine
-        let stdin = vec![random(), random(), random(), random(), random()];
-        let non_determinism = NonDeterminism::default();
-        let native_output = rust_shadows::wrap_main_with_io(&proof_item_on_stack)(
-            stdin.clone(),
-            non_determinism.clone(),
-        );
-
-        // Run test on Triton-VM
-        let test_program = ozk_parsing::compile_for_test(
-            "recufier",
-            "proof_item",
-            "proof_item_on_stack",
-            crate::ast_types::ListType::Unsafe,
-        );
-
-        let vm_output = execute_compiled_with_stack_memory_and_ins_for_test(
-            &test_program,
-            vec![],
-            &HashMap::default(),
-            stdin,
-            non_determinism,
-            0,
-        )
-        .unwrap();
-
-        assert_eq!(native_output, vm_output.output);
-    }
 
     #[test]
     fn proof_item_stored_to_memory_test() {

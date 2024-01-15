@@ -16,13 +16,19 @@ struct NotCopyStruct {
 #[allow(clippy::len_zero)]
 fn main() {
     let a_stack_value: BFieldElement = BFieldElement::new(404);
-    let boxed_enum_type: Box<NotCopyStruct> =
+    let boxed_struct: Box<NotCopyStruct> =
         NotCopyStruct::decode(&tasm::load_from_memory(BFieldElement::new(84))).unwrap();
 
-    let as_ok: Result<Box<NotCopyStruct>, ()> = Ok(boxed_enum_type);
-    assert!(as_ok.is_ok());
+    let as_ok: Result<Box<NotCopyStruct>, ()> = Ok(boxed_struct);
+    let boxed_as_ok: Box<Result<Box<NotCopyStruct>, ()>> =
+        Box::<Result<Box<NotCopyStruct>, ()>>::new(as_ok);
+    assert!(boxed_as_ok.is_ok());
+    assert!(!boxed_as_ok.is_err());
 
-    match as_ok {
+    let boxed_struct_again: Box<NotCopyStruct> =
+        NotCopyStruct::decode(&tasm::load_from_memory(BFieldElement::new(84))).unwrap();
+    let as_ok_again: Result<Box<NotCopyStruct>, ()> = Ok(boxed_struct_again);
+    match as_ok_again {
         Result::Ok(inner) => {
             tasm::tasm_io_write_to_stdout___u32(inner.digests.len() as u32);
             tasm::tasm_io_write_to_stdout___u32(inner.xfes.len() as u32);
@@ -54,8 +60,10 @@ fn main() {
         }
     };
 
-    // assert!(as_ok.is_ok());
-    assert!(as_err.is_err());
+    let boxed_as_err: Box<Result<Box<NotCopyStruct>, ()>> =
+        Box::<Result<Box<NotCopyStruct>, ()>>::new(as_err);
+    assert!(!boxed_as_err.is_ok());
+    assert!(boxed_as_err.is_err());
 
     return;
 }
