@@ -11,7 +11,7 @@ itertools = "0.12"
 num = "0.4"
 rand = "0"
 syn = { version = "1.0", features = ["full", "extra-traits"] }
-tasm-lib = { git = "https://github.com/TritonVM/tasm-lib.git", rev = "544fa214" }
+tasm-lib = { git = "https://github.com/TritonVM/tasm-lib.git", rev = "e8a46a71" }
 triton-vm = "0.36"
 twenty-first = "0.36"
 
@@ -20,9 +20,12 @@ anyhow = "1"
 arbitrary = { version = "1", features = ["derive"] }
 field_count = "0.1.1"
 pretty_assertions = "1.4"
+proptest = "1.4"
+proptest-arbitrary-interop = "0.1"
 serde = { version = "1", features = ["derive"] }
 serde_derive = "1"
 serde_json = "1"
+test-strategy = "0.3"
 
 [dev-dependencies.cargo-husky]
 version = "1"
