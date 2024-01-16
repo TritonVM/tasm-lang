@@ -1,4 +1,3 @@
-use syn::Label;
 use triton_vm::instruction::LabelledInstruction;
 use triton_vm::triton_asm;
 use triton_vm::triton_instr;
@@ -25,9 +24,6 @@ impl EnumType {
             return call_subroutine;
         }
 
-        let as_dt: ast_types::DataType = self.into();
-        let static_length = as_dt.bfield_codec_static_length();
-        let variant_bfieldcodec_size = self.variant_bfieldcodec_size(state);
         let discriminant_pointer_internal = state.global_compiler_state.snippet_state.kmalloc(1);
         let data_begin_pointer_pointer_internal =
             state.global_compiler_state.snippet_state.kmalloc(1);
@@ -37,30 +33,13 @@ impl EnumType {
             discriminant_pointer_internal,
             data_begin_pointer_pointer_internal,
         );
-        let write_encoding_data_size = match static_length {
-            Some(_known_length) => triton_asm!(
-                // _ [data] [padding] (*pointer + 1)
-                // _ [data] [padding] *data_begin
-            ),
-            None => triton_asm!(
-                // _ [data] [padding] (*pointer + 1)
 
-                push {discriminant_pointer_internal}
-                read_mem 1
-                pop 1
-                // _ [data] [padding] (*pointer + 1) discriminant
-
-                {&variant_bfieldcodec_size}
-                // _ [data] [padding] (*pointer + 1) data_size
-
-                write_mem 1
-                // _ [data] [padding] (*pointer + 2)
-                // _ [data] [padding] *data_begin
-            ),
-        };
         let subroutine = triton_asm!(
             {store_subroutine_label}:
             // _ [data] [padding] discriminant *pointer
+            hint pointer: BFieldElement = stack[0]
+            hint discriminant: BFieldElement = stack[1]
+            hint padding_top: BFieldElement = stack[2]
 
             dup 1
             push {discriminant_pointer_internal}
@@ -70,9 +49,8 @@ impl EnumType {
 
             write_mem 1
             // _ [data] [padding] (*pointer + 1)
-
-            {&write_encoding_data_size}
             // _ [data] [padding] *data_begin
+            hint data_begin_pointer: BFieldElement = stack[0]
 
             push {data_begin_pointer_pointer_internal}
             write_mem 1
@@ -82,6 +60,7 @@ impl EnumType {
             {&pop_padding}
 
             // _ [data]
+            hint data_top: BFieldElement = stack[0]
 
             {&store_variant_data}
             // _
@@ -374,68 +353,6 @@ impl EnumType {
         pop_padding
     }
 
-    /// Return the code to get the word size of the data field on top of the stack
-    /// ```text
-    /// BEFORE: _ discriminant
-    /// AFTER: _ size_of_data
-    /// ```
-    pub(crate) fn variant_bfieldcodec_size(
-        &self,
-        state: &mut CompilerState,
-    ) -> Vec<LabelledInstruction> {
-        let mut push_encoding_to_stack = vec![];
-        for (haystack_discriminant, (variant_name, variant_type)) in
-            self.variants.iter().enumerate()
-        {
-            let set_size_for_variant_sr_label = format!(
-                "{}_find_field_data_size_{}",
-                self.label_friendly_name(),
-                variant_name
-            );
-            push_encoding_to_stack.extend(triton_asm!(
-                // _ discriminant
-                dup 0
-                push {haystack_discriminant}
-                eq
-                // _ discriminant (discriminant == haystack)
-
-                skiz call {set_size_for_variant_sr_label}
-                // _ (size) discriminant
-            ));
-
-            let subroutine = match variant_type.bfield_codec_static_length() {
-                Some(static_length) => {
-                    triton_asm!(
-                        {set_size_for_variant_sr_label}:
-                            // _ discriminant
-
-                            push { static_length }
-                            // _ discriminant size
-
-                            swap 1
-                            // _ size discriminant
-
-                            return
-                    )
-                }
-                None => {
-                    // Maybe we need more info here? Probably the data!
-                    todo!()
-                }
-            };
-            state.add_library_function(subroutine.try_into().unwrap());
-        }
-
-        push_encoding_to_stack.extend(triton_asm!(
-            // _ size discriminant
-            pop 1
-
-            // _ size
-        ));
-
-        push_encoding_to_stack
-    }
-
     // TODO: I don't think we're using the stored field sizes for anything.
     // Get rid of those!
     /// Return the code to get all field pointers for the discriminant whose
@@ -688,14 +605,14 @@ impl EnumType {
 
         let mut acc_code = triton_asm!(
             {label_for_subroutine}:
-
                 // _ *discriminant
+                hint discriminant_pointer: BFieldElement = stack[0]
+
                 dup 0
                 push 1
                 add
                 // _ *discriminant *first_field_or_field_size
         );
-        // let mut ret: Vec<Vec<LabelledInstruction>> = vec![];
 
         // Before this loop: _ *discriminant *first_field_or_field_size
         // Goal: _ *discriminant field_0 field_1 field_2 ...
@@ -704,6 +621,7 @@ impl EnumType {
                 Some(size) => {
                     triton_asm!(
                         // _ *discriminant *field
+                        hint field_pointer: BFieldElement = stack[0]
 
                         dup 0
                         // _ *discriminant *field *field
@@ -812,12 +730,6 @@ impl EnumType {
         constructor.body = [constructor.body, padding, discriminant].concat();
 
         constructor
-    }
-
-    /// Return a label for the subroutine which loads this enum type from
-    /// memory onto the stack
-    fn label_for_memory_loading_subroutine(&self) -> String {
-        format!("load_{}_to_stack", self.name)
     }
 }
 

@@ -91,7 +91,13 @@ impl ast_types::DataType {
                 triton_asm!()
             }
             ast_types::DataType::Enum(enum_type) => enum_type.store_to_memory(state),
-            ast_types::DataType::Struct(struct_type) => todo!(),
+            ast_types::DataType::Struct(struct_type) => {
+                if struct_type.is_copy {
+                    move_top_stack_value_to_memory(None, struct_type.stack_size())
+                } else {
+                    todo!()
+                }
+            }
             ast_types::DataType::VoidPointer => todo!(),
             ast_types::DataType::Function(_) => todo!(),
             ast_types::DataType::Unresolved(_) => todo!(),

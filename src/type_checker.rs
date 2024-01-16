@@ -797,11 +797,12 @@ pub(crate) fn annotate_identifier_type(
                 rewrite_expr.is_none(),
                 "Cannot rewrite expression outside of atomic variable expression"
             );
-            // Only structs have fields, so receiver_type must be a struct, or a pointer to a struct.
-            let data_type = receiver_type.field_access_returned_type(field_id);
-            *annot = Typing::KnownType(data_type.clone());
 
-            (data_type, mutable, None)
+            // Only structs have fields, so receiver_type must be a struct, or a pointer to a struct.
+            let field_type = receiver_type.field_access_returned_type(field_id);
+            *annot = Typing::KnownType(field_type.clone());
+
+            (field_type, mutable, None)
         }
     }
 }

@@ -1,5 +1,6 @@
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
+#[derive(Clone, Copy)]
 struct TupleStructA(u128, u64);
 
 impl TupleStructA {

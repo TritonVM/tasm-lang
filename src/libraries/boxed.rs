@@ -6,7 +6,6 @@ use crate::ast;
 use crate::ast_types;
 use crate::graft::Graft;
 use crate::subroutine::SubRoutine;
-use crate::tasm_code_generator::write_n_words_to_memory_leaving_address;
 
 use super::Library;
 
@@ -101,13 +100,8 @@ impl Library for Boxed {
         state: &mut crate::tasm_code_generator::CompilerState,
     ) -> Vec<triton_vm::instruction::LabelledInstruction> {
         if full_name == FUNCTION_NAME_NEW_BOX {
-            let box_new: SubRoutine = new_box_function_body(&type_parameter.unwrap(), state)
-                .try_into()
-                .unwrap();
-            let box_new_label = box_new.get_label();
-            state.add_library_function(box_new);
-
-            return triton_asm!(call { box_new_label });
+            let call_box_new = call_new_box(&type_parameter.unwrap(), state);
+            return call_box_new;
         }
 
         panic!("AllocBoxed does not known function with name {full_name}")
@@ -179,18 +173,6 @@ impl Boxed {
     }
 }
 
-/// BEFORE: _ [value] mem_address_start
-/// AFTER:  _ mem_address_start
-fn move_top_stack_value_to_memory_keep_address(top_value_size: usize) -> Vec<LabelledInstruction> {
-    let mut code = write_n_words_to_memory_leaving_address(top_value_size);
-
-    // reset memory address to its initial value
-    let decrement_value = -(top_value_size as isize);
-    code.extend(triton_asm!(push {decrement_value} add));
-
-    code
-}
-
 fn new_box_function_signature(inner_type: &ast_types::DataType) -> ast::FnSignature {
     ast::FnSignature {
         name: format!("box_new_{}", inner_type.label_friendly_name()),
@@ -210,26 +192,51 @@ fn new_box_function_signature(inner_type: &ast_types::DataType) -> ast::FnSignat
 /// BEFORE: _ [value]
 /// AFTER: _ *value
 /// ```
-fn new_box_function_body(
+fn call_new_box(
     inner_type: &ast_types::DataType,
     state: &mut crate::tasm_code_generator::CompilerState,
 ) -> Vec<LabelledInstruction> {
-    let dyn_malloc = state.import_snippet(Box::new(tasm_lib::memory::dyn_malloc::DynMalloc));
     let entrypoint = format!("box_new_{}", inner_type.label_friendly_name());
-    let inner_type_size = inner_type.stack_size(); // This is the maximum size that the enum can take up
+    let call_function = triton_asm!(call { entrypoint });
+    if state.contains_subroutine(&entrypoint) {
+        return call_function;
+    }
 
+    let dyn_malloc = state.import_snippet(Box::new(tasm_lib::memory::dyn_malloc::DynMalloc));
+
+    // TODO: I think this is the best we can do at compile-time. If we want the precise size,
+    // we probably need to get the size at run-time.
+    let inner_type_size = inner_type.stack_size();
+
+    let pointer_to_malloced_memory = state.static_memory_allocation(1);
     let store_words_code = inner_type.store_to_memory(state);
-
-    triton_asm!(
+    let subroutine: SubRoutine = triton_asm!(
         {entrypoint}:
             // dynamically allocate enough memory
             push {inner_type_size}
             call {dyn_malloc}
 
+            dup 0
+            push {pointer_to_malloced_memory}
+            write_mem 1
+            pop 1
+
             // _ [x] *memory_address
+
             {&store_words_code}
+            // _
+
+            push {pointer_to_malloced_memory}
+            read_mem 1
+            pop 1
 
             // _ *memory_address
             return
     )
+    .try_into()
+    .unwrap();
+
+    state.add_library_function(subroutine);
+
+    call_function
 }

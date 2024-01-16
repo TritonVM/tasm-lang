@@ -153,6 +153,12 @@ impl<'a> CompilerState<'a> {
             .contains_key(subroutine_label)
     }
 
+    pub(crate) fn static_memory_allocation(&mut self, num_words: usize) -> BFieldElement {
+        self.global_compiler_state
+            .snippet_state
+            .kmalloc(num_words as u32)
+    }
+
     /// Import a dependency in an idempotent manner, ensuring it's only ever imported once
     pub(crate) fn add_library_function(&mut self, subroutine: SubRoutine) {
         // TODO: Can't we include this in a nicer way by e.g. unwrapping inner

@@ -162,7 +162,6 @@ impl DataType {
                         DataType::Boxed(Box::new(field_type))
                     }
                 }
-                // TODO: We probably also want to allow field access to `Reference` types here
                 DataType::Tuple(tuple) => {
                     let tuple_index: usize = field_id.try_into().expect("Tuple must be accessed with a tuple index");
                     let field_type = tuple.fields[tuple_index].clone();
@@ -226,34 +225,7 @@ impl DataType {
                 .try_fold(0, |acc: usize, field_type| {
                     field_type.bfield_codec_static_length().map(|v| acc + v)
                 }),
-            DataType::Enum(enum_type) => {
-                if enum_type.variants.is_empty() {
-                    // No variants: length is 0
-                    Some(0)
-                } else if enum_type.variants.iter().all(|x| x.1.is_unit()) {
-                    // No variants have associated data: 1,
-                    Some(1)
-                } else {
-                    // Some variants have associated data:
-                    //   - if all variants have associated data of the same statically known length =>
-                    //     Some(this_length)
-                    //   else:
-                    //     None
-                    let variant_lengths = enum_type
-                        .variants
-                        .iter()
-                        .map(|variant| variant.1.bfield_codec_static_length())
-                        .collect_vec();
-                    if variant_lengths
-                        .iter()
-                        .all(|x| x.is_some() && x.unwrap() == variant_lengths[0].unwrap())
-                    {
-                        Some(variant_lengths[0].unwrap() + 1)
-                    } else {
-                        None
-                    }
-                }
-            }
+            DataType::Enum(enum_type) => enum_type.bfield_codec_static_length(),
             DataType::Boxed(inner_type) => inner_type.bfield_codec_static_length(),
             DataType::VoidPointer => panic!(),
             DataType::Function(_) => panic!(),
