@@ -42,6 +42,7 @@ mod test {
     use rand::random;
 
     use crate::tests_and_benchmarks::ozk::ozk_parsing::compile_for_test;
+    use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::execute_compiled_with_stack_and_ins_for_test;
     use crate::tests_and_benchmarks::test_helpers::shared_test::init_memory_from;
@@ -74,12 +75,9 @@ mod test {
         // let expected_output = merkle_tree.get_root().values().to_vec();
 
         // Test function in Triton VM
-        let test_program = compile_for_test(
-            "recufier",
-            "vm_proof_stream",
-            "main",
-            crate::ast_types::ListType::Unsafe,
-        );
+        let entrypoint_location = EntrypointLocation::disk("recufier", "vm_proof_stream", "main");
+        let test_program =
+            compile_for_test(&entrypoint_location, crate::ast_types::ListType::Unsafe);
         let vm_output = execute_compiled_with_stack_and_ins_for_test(
             &test_program,
             vec![],

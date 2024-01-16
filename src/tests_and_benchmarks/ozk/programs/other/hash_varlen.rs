@@ -28,6 +28,7 @@ mod test {
 
     use crate::ast_types;
     use crate::tests_and_benchmarks::ozk::ozk_parsing;
+    use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 
@@ -46,8 +47,8 @@ mod test {
         assert_eq!(native_output, expected_output);
 
         // Test function in Triton VM
-        let (rust_ast, _, _) =
-            ozk_parsing::parse_function_and_structs("other", "hash_varlen", "main");
+        let entrypoint_location = EntrypointLocation::disk("other", "hash_varlen", "main");
+        let (rust_ast, _) = ozk_parsing::parse_functions_and_types(&entrypoint_location);
         let expected_stack_diff = 0;
         let (code, _fn_name) = compile_for_run_test(&rust_ast, ast_types::ListType::Unsafe);
         let vm_output = execute_compiled_with_stack_and_ins_for_test(

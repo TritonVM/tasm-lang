@@ -28,15 +28,14 @@ fn main() {
 #[cfg(test)]
 mod test {
     use crate::tests_and_benchmarks::ozk::ozk_parsing;
+    use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
 
     #[should_panic]
     #[test]
     fn ref_struct_typecheck_fail_test() {
-        let _test_program = ozk_parsing::compile_for_test(
-            "boxed",
-            "ref_struct_typecheck_fail",
-            "main",
-            crate::ast_types::ListType::Unsafe,
-        );
+        let entrypoint_location =
+            EntrypointLocation::disk("boxed", "ref_struct_typecheck_fail", "main");
+        let _test_program =
+            ozk_parsing::compile_for_test(&entrypoint_location, crate::ast_types::ListType::Unsafe);
     }
 }

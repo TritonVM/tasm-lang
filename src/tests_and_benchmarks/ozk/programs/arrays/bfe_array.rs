@@ -95,12 +95,10 @@ mod test {
         assert_eq!(native_output, expected_output);
 
         // Run test on Triton-VM
-        let test_program = ozk_parsing::compile_for_test(
-            "arrays",
-            "bfe_array",
-            "main",
-            crate::ast_types::ListType::Unsafe,
-        );
+        let entrypoint_location =
+            ozk_parsing::EntrypointLocation::disk("arrays", "bfe_array", "main");
+        let test_program =
+            ozk_parsing::compile_for_test(&entrypoint_location, crate::ast_types::ListType::Unsafe);
         let vm_output = execute_compiled_with_stack_and_ins_for_test(
             &test_program,
             vec![],

@@ -26,6 +26,7 @@ mod test {
     use triton_vm::NonDeterminism;
 
     use crate::tests_and_benchmarks::ozk::ozk_parsing;
+    use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 
@@ -40,8 +41,8 @@ mod test {
             rust_shadows::wrap_main_with_io(&main)(stdin.clone(), non_determinism.clone());
 
         // Test function in Triton VM
-        let (parsed, _, _) =
-            ozk_parsing::parse_function_and_structs("project_euler", "pe2", "main");
+        let entrypoint_location = EntrypointLocation::disk("project_euler", "pe2", "main");
+        let (parsed, _) = ozk_parsing::parse_functions_and_types(&entrypoint_location);
         let expected_stack_diff = 0;
         let stack_start = vec![];
         let vm_output =
@@ -58,12 +59,13 @@ mod benches {
     use crate::tests_and_benchmarks::benchmarks::profile;
     use crate::tests_and_benchmarks::benchmarks::BenchmarkInput;
     use crate::tests_and_benchmarks::ozk::ozk_parsing;
+    use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 
     #[test]
     fn pe2_bench() {
-        let (parsed, _, _) =
-            ozk_parsing::parse_function_and_structs("project_euler", "pe2", "main");
+        let entrypoint_location = EntrypointLocation::disk("project_euler", "pe2", "main");
+        let (parsed, _) = ozk_parsing::parse_functions_and_types(&entrypoint_location);
         let (code, _) = compile_for_run_test(&parsed, crate::ast_types::ListType::Safe);
 
         let common_case = BenchmarkInput::default();

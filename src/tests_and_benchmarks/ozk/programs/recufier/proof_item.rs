@@ -108,6 +108,7 @@ mod test {
     use triton_vm::NonDeterminism;
 
     use crate::tests_and_benchmarks::ozk::ozk_parsing;
+    use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::execute_compiled_with_stack_and_ins_for_test;
     use crate::tests_and_benchmarks::test_helpers::shared_test::init_memory_from;
@@ -125,12 +126,10 @@ mod test {
         );
 
         // Run test on Triton-VM
-        let test_program = ozk_parsing::compile_for_test(
-            "recufier",
-            "proof_item",
-            "proof_item_stored_to_memory",
-            crate::ast_types::ListType::Unsafe,
-        );
+        let entrypoint_location =
+            EntrypointLocation::disk("recufier", "proof_item", "proof_item_stored_to_memory");
+        let test_program =
+            ozk_parsing::compile_for_test(&entrypoint_location, crate::ast_types::ListType::Unsafe);
 
         let vm_output = execute_compiled_with_stack_and_ins_for_test(
             &test_program,
@@ -159,12 +158,13 @@ mod test {
         );
 
         // Run test on Triton-VM
-        let test_program = ozk_parsing::compile_for_test(
+        let entrypoint_location = EntrypointLocation::disk(
             "recufier",
             "proof_item",
             "proof_item_load_auth_path_from_memory",
-            crate::ast_types::ListType::Unsafe,
         );
+        let test_program =
+            ozk_parsing::compile_for_test(&entrypoint_location, crate::ast_types::ListType::Unsafe);
 
         let vm_output = execute_compiled_with_stack_and_ins_for_test(
             &test_program,
@@ -189,12 +189,13 @@ mod test {
             &proof_item_load_merkle_root_from_memory,
         )(stdin.clone(), non_determinism.clone());
 
-        let test_program = ozk_parsing::compile_for_test(
+        let entrypoint_location = EntrypointLocation::disk(
             "recufier",
             "proof_item",
             "proof_item_load_merkle_root_from_memory",
-            crate::ast_types::ListType::Unsafe,
         );
+        let test_program =
+            ozk_parsing::compile_for_test(&entrypoint_location, crate::ast_types::ListType::Unsafe);
         let vm_output = execute_compiled_with_stack_and_ins_for_test(
             &test_program,
             vec![],

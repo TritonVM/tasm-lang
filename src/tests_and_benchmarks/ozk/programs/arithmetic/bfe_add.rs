@@ -25,6 +25,7 @@ mod test {
     use triton_vm::NonDeterminism;
 
     use crate::tests_and_benchmarks::ozk::ozk_parsing;
+    use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 
@@ -45,8 +46,8 @@ mod test {
         assert_eq!(native_output, expected_output);
 
         // Test function in Triton VM
-        let (parsed, _, _) =
-            ozk_parsing::parse_function_and_structs("arithmetic", "bfe_add", "main");
+        let entrypoint_location = EntrypointLocation::disk("arithmetic", "bfe_add", "main");
+        let (parsed, _) = ozk_parsing::parse_functions_and_types(&entrypoint_location);
         let expected_stack_diff = 0;
         let stack_start = vec![];
         let vm_output =

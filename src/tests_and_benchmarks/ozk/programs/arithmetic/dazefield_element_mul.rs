@@ -87,10 +87,13 @@ mod test {
             assert_eq!(native_output, expected_output);
 
             // Test function in Triton VM
-            let test_program = ozk_parsing::compile_for_test(
+            let entrypoint_location = ozk_parsing::EntrypointLocation::disk(
                 "arithmetic",
                 "dazefield_element_mul",
                 "main",
+            );
+            let test_program = ozk_parsing::compile_for_test(
+                &entrypoint_location,
                 crate::ast_types::ListType::Unsafe,
             );
             let expected_stack_diff = 0;
@@ -138,12 +141,10 @@ mod benches {
             ..Default::default()
         };
 
-        let code = ozk_parsing::compile_for_test(
-            "arithmetic",
-            "dazefield_element_mul",
-            "main",
-            crate::ast_types::ListType::Unsafe,
-        );
+        let entrypoint_location =
+            ozk_parsing::EntrypointLocation::disk("arithmetic", "dazefield_element_mul", "main");
+        let code =
+            ozk_parsing::compile_for_test(&entrypoint_location, crate::ast_types::ListType::Unsafe);
 
         let name = "dazefield_element_mul".to_owned();
         execute_and_write_benchmark(

@@ -45,6 +45,7 @@ mod test {
     use triton_vm::BFieldElement;
 
     use crate::tests_and_benchmarks::ozk::ozk_parsing;
+    use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::execute_compiled_with_stack_and_ins_for_test;
     use crate::tests_and_benchmarks::test_helpers::shared_test::init_memory_from;
@@ -87,12 +88,9 @@ mod test {
         assert_eq!(native_output, expected_output);
 
         // Run test on Triton-VM
-        let test_program = ozk_parsing::compile_for_test(
-            "structs",
-            "simple_struct",
-            "main",
-            crate::ast_types::ListType::Unsafe,
-        );
+        let entrypoint_location = EntrypointLocation::disk("structs", "simple_struct", "main");
+        let test_program =
+            ozk_parsing::compile_for_test(&entrypoint_location, crate::ast_types::ListType::Unsafe);
         let vm_output = execute_compiled_with_stack_and_ins_for_test(
             &test_program,
             vec![],

@@ -34,6 +34,7 @@ mod test {
     use triton_vm::NonDeterminism;
 
     use crate::tests_and_benchmarks::ozk::ozk_parsing;
+    use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 
@@ -55,12 +56,10 @@ mod test {
             rust_shadows::wrap_main_with_io(&main)(stdin.clone(), non_determinism.clone());
 
         // Test function in Triton VM
-        let test_program = ozk_parsing::compile_for_test(
-            "boxed",
-            "tuple_struct_two_elements_copy",
-            "main",
-            crate::ast_types::ListType::Unsafe,
-        );
+        let entrypoint_location =
+            EntrypointLocation::disk("boxed", "tuple_struct_two_elements_copy", "main");
+        let test_program =
+            ozk_parsing::compile_for_test(&entrypoint_location, crate::ast_types::ListType::Unsafe);
         let expected_stack_diff = 0;
         let vm_output = execute_compiled_with_stack_and_ins_for_test(
             &test_program,

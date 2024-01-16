@@ -119,6 +119,7 @@ mod test {
     use triton_vm::twenty_first::shared_math::other::random_elements;
 
     use crate::tests_and_benchmarks::ozk::ozk_parsing;
+    use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::execute_compiled_with_stack_and_ins_for_test;
     use crate::tests_and_benchmarks::test_helpers::shared_test::init_memory_from;
@@ -154,10 +155,10 @@ mod test {
                 rust_shadows::wrap_main_with_io(&main)(stdin.clone(), non_determinism.clone());
 
             // Run test on Triton-VM
+            let entrypoint_location =
+                EntrypointLocation::disk("enums", "boxed_advanced_tuple_data", "main");
             let test_program = ozk_parsing::compile_for_test(
-                "enums",
-                "boxed_advanced_tuple_data",
-                "main",
+                &entrypoint_location,
                 crate::ast_types::ListType::Unsafe,
             );
             let vm_output = execute_compiled_with_stack_and_ins_for_test(

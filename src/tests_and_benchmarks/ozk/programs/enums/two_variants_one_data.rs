@@ -60,6 +60,7 @@ mod test {
     use triton_vm::NonDeterminism;
 
     use crate::tests_and_benchmarks::ozk::ozk_parsing;
+    use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::execute_compiled_with_stack_and_ins_for_test;
 
@@ -88,12 +89,10 @@ mod test {
         assert_eq!(native_output, expected_output);
 
         // Run test on Triton-VM
-        let test_program = ozk_parsing::compile_for_test(
-            "enums",
-            "two_variants_one_data",
-            "main",
-            crate::ast_types::ListType::Unsafe,
-        );
+        let entrypoint_location =
+            EntrypointLocation::disk("enums", "two_variants_one_data", "main");
+        let test_program =
+            ozk_parsing::compile_for_test(&entrypoint_location, crate::ast_types::ListType::Unsafe);
         println!("executing:\n{}", test_program.iter().join("\n"));
         let vm_output = execute_compiled_with_stack_and_ins_for_test(
             &test_program,

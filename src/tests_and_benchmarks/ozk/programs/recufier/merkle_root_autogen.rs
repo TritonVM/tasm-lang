@@ -2,6 +2,7 @@
 
 use tasm_lib::Digest;
 use triton_vm::twenty_first::util_types::algebraic_hasher::AlgebraicHasher;
+
 type H = twenty_first::shared_math::tip5::Tip5;
 
 #[allow(clippy::ptr_arg)]
@@ -24,15 +25,16 @@ fn merkle_root(leafs: &Vec<Digest>, start: usize, stop: usize) -> Digest {
 
 #[cfg(test)]
 mod test {
+    use crate::tests_and_benchmarks::ozk::ozk_parsing::compile_to_basic_snippet;
+    use crate::tests_and_benchmarks::ozk::ozk_parsing::parse_functions_and_types;
+    use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
+
     #[test]
     fn merkle_root_to_basic_snippet_test() {
-        let (rust_ast, _, _) =
-            crate::tests_and_benchmarks::ozk::ozk_parsing::parse_function_and_structs(
-                "recufier",
-                "merkle_root_autogen",
-                "merkle_root",
-            );
-        let as_bs = crate::tests_and_benchmarks::ozk::ozk_parsing::compile_to_basic_snippet(
+        let entrypoint_location =
+            EntrypointLocation::disk("recufier", "merkle_root_autogen", "merkle_root");
+        let (rust_ast, _) = parse_functions_and_types(&entrypoint_location);
+        let as_bs = compile_to_basic_snippet(
             rust_ast,
             std::collections::HashMap::default(),
             crate::ast_types::ListType::Unsafe,

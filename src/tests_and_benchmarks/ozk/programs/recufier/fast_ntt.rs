@@ -146,6 +146,7 @@ mod test {
 
     use crate::ast_types;
     use crate::tests_and_benchmarks::ozk::ozk_parsing;
+    use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 
@@ -182,8 +183,8 @@ mod test {
             }
 
             // Test function in Triton VM
-            let (rust_ast, _, _) =
-                ozk_parsing::parse_function_and_structs("recufier", "fast_ntt", "main");
+            let entrypoint_location = EntrypointLocation::disk("recufier", "fast_ntt", "main");
+            let (rust_ast, _) = ozk_parsing::parse_functions_and_types(&entrypoint_location);
             let expected_stack_diff = 0;
             let (code, _fn_name) = compile_for_run_test(&rust_ast, ast_types::ListType::Unsafe);
             let vm_output = execute_compiled_with_stack_and_ins_for_test(
@@ -208,6 +209,7 @@ mod benches {
     use crate::tests_and_benchmarks::benchmarks::profile;
     use crate::tests_and_benchmarks::benchmarks::BenchmarkInput;
     use crate::tests_and_benchmarks::ozk::ozk_parsing;
+    use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 
     use super::*;
@@ -228,12 +230,9 @@ mod benches {
             }
         }
 
-        let code = ozk_parsing::compile_for_test(
-            "recufier",
-            "fast_ntt",
-            "main",
-            crate::ast_types::ListType::Unsafe,
-        );
+        let entrypoint_location = EntrypointLocation::disk("recufier", "fast_ntt", "main");
+        let code =
+            ozk_parsing::compile_for_test(&entrypoint_location, crate::ast_types::ListType::Unsafe);
 
         let common_case_input = get_input(32);
         let worst_case_input = get_input(64);

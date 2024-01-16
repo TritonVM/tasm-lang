@@ -87,12 +87,10 @@ mod test {
 
         // Test function in Triton VM
         // Run test on Triton-VM
-        let test_program = ozk_parsing::compile_for_test(
-            "arithmetic",
-            "montyred",
-            "main",
-            crate::ast_types::ListType::Unsafe,
-        );
+        let entrypoint_location =
+            ozk_parsing::EntrypointLocation::disk("arithmetic", "montyred", "main");
+        let test_program =
+            ozk_parsing::compile_for_test(&entrypoint_location, crate::ast_types::ListType::Unsafe);
         let expected_stack_diff = 0;
         let vm_output = execute_compiled_with_stack_and_ins_for_test(
             &test_program,

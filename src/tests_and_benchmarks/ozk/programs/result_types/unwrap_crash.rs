@@ -20,41 +20,36 @@ fn _crash_on_try() {
 }
 
 mod test {
-
     use std::default::Default;
+
     use triton_vm::NonDeterminism;
 
-    use crate::tests_and_benchmarks::ozk::ozk_parsing;
+    use crate::tests_and_benchmarks::ozk::ozk_parsing::compile_for_test;
+    use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 
     #[test]
     fn unwrap_crash_test() {
-        assert!(execute_compiled_with_stack_and_ins_for_test(
-            &ozk_parsing::compile_for_test(
-                "result_types",
-                "unwrap_crash",
-                "_crash_on_unwrap",
-                crate::ast_types::ListType::Unsafe,
-            ),
+        let entrypoint_location =
+            EntrypointLocation::disk("result_types", "unwrap_crash", "_crash_on_unwrap");
+        let execution_result = execute_compiled_with_stack_and_ins_for_test(
+            &compile_for_test(&entrypoint_location, crate::ast_types::ListType::Unsafe),
             vec![],
             vec![],
             NonDeterminism::default(),
             0,
-        )
-        .is_err());
+        );
+        assert!(execution_result.is_err());
 
-        assert!(execute_compiled_with_stack_and_ins_for_test(
-            &ozk_parsing::compile_for_test(
-                "result_types",
-                "unwrap_crash",
-                "_crash_on_try",
-                crate::ast_types::ListType::Unsafe,
-            ),
+        let entrypoint_location =
+            EntrypointLocation::disk("result_types", "unwrap_crash", "_crash_on_try");
+        let execution_result = execute_compiled_with_stack_and_ins_for_test(
+            &compile_for_test(&entrypoint_location, crate::ast_types::ListType::Unsafe),
             vec![],
             vec![],
             NonDeterminism::default(),
             0,
-        )
-        .is_err());
+        );
+        assert!(execution_result.is_err());
     }
 }

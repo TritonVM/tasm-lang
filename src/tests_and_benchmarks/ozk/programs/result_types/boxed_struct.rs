@@ -75,6 +75,7 @@ mod test {
     use rand::random;
 
     use crate::tests_and_benchmarks::ozk::ozk_parsing;
+    use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 
@@ -91,10 +92,10 @@ mod test {
             // Run program on host machine
             let native_output =
                 rust_shadows::wrap_main_with_io(&main)(stdin.clone(), non_determinism.clone());
+            let entrypoint_location =
+                EntrypointLocation::disk("result_types", "boxed_struct", "main");
             let test_program = ozk_parsing::compile_for_test(
-                "result_types",
-                "boxed_struct",
-                "main",
+                &entrypoint_location,
                 crate::ast_types::ListType::Unsafe,
             );
             println!("test_program:\n{}", test_program.iter().join("\n"));

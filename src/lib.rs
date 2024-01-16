@@ -28,25 +28,14 @@ pub mod tests_and_benchmarks;
 pub mod type_checker;
 
 pub(crate) fn extract_types_and_function(
-    parsed_file: syn::File,
-    function_name: Option<&str>,
-) -> (StructsAndMethodsRustAst, Option<syn::ItemFn>, Vec<String>) {
-    get_standard_setup!(ast_types::ListType::Unsafe, graft_config, _lib);
-    let mut outer_function: Option<syn::ItemFn> = None;
+    parsed_file: &syn::File,
+) -> (StructsAndMethodsRustAst, Vec<String>) {
+    get_standard_setup!(ListType::Unsafe, graft_config, _lib);
     let mut custom_types: HashMap<String, (Option<CustomTypeRust>, Vec<syn::ImplItemMethod>)> =
         HashMap::default();
     let mut dependencies = vec![];
-    for item in parsed_file.items {
+    for item in &parsed_file.items {
         match item {
-            // Top-level function declaration
-            syn::Item::Fn(func) => {
-                if let Some(function_name) = function_name {
-                    if func.sig.ident == function_name {
-                        outer_function = Some(func.to_owned());
-                    }
-                }
-            }
-
             // `impl` code block
             syn::Item::Impl(item_impl) => {
                 let type_name = graft_config
@@ -135,7 +124,7 @@ pub(crate) fn extract_types_and_function(
                     }
                 }
 
-                if let Some(module_name) = get_module_name(&tree) {
+                if let Some(module_name) = get_module_name(tree) {
                     dependencies.push(module_name);
                 }
             }
@@ -146,10 +135,17 @@ pub(crate) fn extract_types_and_function(
     // Each method must have a struct after parsing all code. So we can unwrap the Option type.
     let structs: StructsAndMethodsRustAst = custom_types
         .into_iter()
-        .map(|(struct_name, (option_struct, methods))| (struct_name.clone(), (option_struct.unwrap_or_else(|| panic!("Couldn't find struct definition for {struct_name} for which methods was defined")), methods)))
+        .map(|(struct_name, (option_struct, methods))| (
+            struct_name.clone(), (
+                option_struct.unwrap_or_else(
+                    || panic!("Couldn't find struct definition for {struct_name} for which methods was defined")
+                ),
+                methods
+            )
+        ))
         .collect();
 
-    (structs, outer_function, dependencies)
+    (structs, dependencies)
 }
 
 /// Mapping from name of a custom type to its type declaration and associated function
@@ -162,18 +158,15 @@ fn parse_function_and_types(file_path: &str) -> (syn::ItemFn, StructsAndMethodsR
 
     let content = fs::read_to_string(file_path).expect("Unable to read file {path}");
     let parsed_file: syn::File = syn::parse_str(&content).expect("Unable to parse rust code");
-    let (custom_types, main_parsed, dependencies) =
-        extract_types_and_function(parsed_file, Some("main"));
+    let entrypoint = extract_entrypoint(&parsed_file, "main");
+    let (custom_types, dependencies) = extract_types_and_function(&parsed_file);
 
     assert!(
         dependencies.is_empty(),
         "Cannot handle dependencies here yet. See the OZK testing framework for a solution."
     );
 
-    (
-        main_parsed.expect("Must have a `main` function"),
-        custom_types,
-    )
+    (entrypoint, custom_types)
 }
 
 pub(crate) fn compile_to_instructions(
@@ -205,4 +198,16 @@ pub fn compile_to_string(file_path: &str, list_type: ListType) -> String {
     compile_to_instructions(file_path, list_type)
         .iter()
         .join("\n")
+}
+
+fn extract_entrypoint(parsed_file: &syn::File, entrypoint: &str) -> syn::ItemFn {
+    for item in &parsed_file.items {
+        if let syn::Item::Fn(func) = item {
+            if func.sig.ident == entrypoint {
+                return func.to_owned();
+            }
+        }
+    }
+
+    panic!("Failed to locate entrypoint {entrypoint}");
 }

@@ -31,6 +31,7 @@ mod test {
     use triton_vm::NonDeterminism;
 
     use crate::tests_and_benchmarks::ozk::ozk_parsing;
+    use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::execute_compiled_with_stack_and_ins_for_test;
 
@@ -39,12 +40,10 @@ mod test {
     #[test]
     fn ref_struct_typecheck_succeed_bc_boxed_test() {
         // Verify compilation works
-        let test_program = ozk_parsing::compile_for_test(
-            "boxed",
-            "ref_struct_typecheck_succeed_bc_boxed",
-            "main",
-            crate::ast_types::ListType::Unsafe,
-        );
+        let entrypoint_location =
+            EntrypointLocation::disk("boxed", "ref_struct_typecheck_succeed_bc_boxed", "main");
+        let test_program =
+            ozk_parsing::compile_for_test(&entrypoint_location, crate::ast_types::ListType::Unsafe);
 
         // Test function in Triton VM
         let rand: u64 = random::<u64>() / 2;

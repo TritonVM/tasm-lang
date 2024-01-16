@@ -98,6 +98,7 @@ mod test {
     use triton_vm::NonDeterminism;
 
     use crate::tests_and_benchmarks::ozk::ozk_parsing;
+    use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 
@@ -109,12 +110,10 @@ mod test {
         let non_determinism = NonDeterminism::default();
         let native_output =
             rust_shadows::wrap_main_with_io(&main)(stdin.clone(), non_determinism.clone());
-        let test_program = ozk_parsing::compile_for_test(
-            "option_types",
-            "is_some_is_none_unwrap",
-            "main",
-            crate::ast_types::ListType::Unsafe,
-        );
+        let entrypoint_location =
+            EntrypointLocation::disk("option_types", "is_some_is_none_unwrap", "main");
+        let test_program =
+            ozk_parsing::compile_for_test(&entrypoint_location, crate::ast_types::ListType::Unsafe);
         let expected_stack_diff = 0;
         let vm_output = execute_compiled_with_stack_and_ins_for_test(
             &test_program,

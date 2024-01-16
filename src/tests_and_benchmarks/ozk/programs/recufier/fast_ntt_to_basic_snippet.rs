@@ -89,12 +89,9 @@ mod test {
 
     #[test]
     fn fast_xfe_ntt_to_basic_snippet_test() {
-        let compiled = compile_for_test(
-            "recufier",
-            "fast_ntt_to_basic_snippet",
-            "xfe_ntt",
-            crate::ast_types::ListType::Unsafe,
-        );
+        let entrypoint_location =
+            EntrypointLocation::disk("recufier", "fast_ntt_to_basic_snippet", "xfe_ntt");
+        let compiled = compile_for_test(&entrypoint_location, ListType::Unsafe);
         let list_pointer = BFieldElement::new(100);
         let list_length = BFieldElement::new(1);
         let item = XFieldElement::new([50, 0, 0].map(BFieldElement::new));
@@ -119,8 +116,9 @@ mod test {
         );
 
         // Output what we came for: A `BasicSnippet` implementation constructed by the compiler
-        let (rust_ast, _, _) =
-            parse_function_and_structs("recufier", "fast_ntt_to_basic_snippet", "xfe_ntt");
+        let entrypoint_location =
+            EntrypointLocation::disk("recufier", "fast_ntt_to_basic_snippet", "xfe_ntt");
+        let (rust_ast, _) = parse_functions_and_types(&entrypoint_location);
         let as_bs = compile_to_basic_snippet(rust_ast, HashMap::default(), ListType::Unsafe);
         println!("{}", as_bs);
     }
