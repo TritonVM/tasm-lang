@@ -314,7 +314,7 @@ impl<'a> CompilerState<'a> {
                         ast_types::DataType::List(_, ast_types::ListType::Safe) => 2,
                         lhs_type => panic!("Expected type was list. Got {lhs_type}."),
                     };
-                    let element_address = match element_type.bfield_codec_length() {
+                    let element_address = match element_type.bfield_codec_static_length() {
                         Some(static_element_size) => {
                             let relative_address = triton_asm!(
                                 {&index_code}
@@ -2935,7 +2935,7 @@ fn dereference(
     resulting_type: &ast_types::DataType,
     state: &mut CompilerState,
 ) -> Vec<LabelledInstruction> {
-    resulting_type.load_from_memory(None, state)
+    resulting_type.load_from_memory(state)
 }
 
 /// Return the code to load a value from memory. Leaves the stack with the read value on top.

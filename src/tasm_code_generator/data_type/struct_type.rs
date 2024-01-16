@@ -31,7 +31,7 @@ impl ast_types::StructType {
                     // *field
                 ));
 
-                let mut load_field = dtype.load_from_memory(None, state);
+                let mut load_field = dtype.load_from_memory(state);
 
                 code.append(&mut load_field);
             }
@@ -71,7 +71,7 @@ impl ast_types::StructType {
         {
             let pointer_pointer_for_this_field =
                 pointer_for_result + number_of_fields as u64 - 1 - field_count as u64;
-            match field_type.bfield_codec_length() {
+            match field_type.bfield_codec_static_length() {
                 Some(static_size) => {
                     code.append(&mut triton_asm!(
                         // _ *current_field
@@ -144,7 +144,7 @@ impl ast_types::StructType {
                 // known size, we can just add that number to the accumulator. Otherwise,
                 // we have to read the size of the field from RAM, and add that value
                 // to the pointer
-                match haystack_type.bfield_codec_length() {
+                match haystack_type.bfield_codec_static_length() {
                     Some(static_length) => static_pointer_addition += static_length,
                     None => {
                         if !static_pointer_addition.is_zero() {
@@ -160,7 +160,7 @@ impl ast_types::StructType {
 
         // If the requested field is dynamically sized, add one to address, to point to start
         // of the field instead of the size of the field.
-        match needle_type.unwrap().bfield_codec_length() {
+        match needle_type.unwrap().bfield_codec_static_length() {
             Some(_) => (),
             None => static_pointer_addition += 1,
         }

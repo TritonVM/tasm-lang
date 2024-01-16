@@ -99,4 +99,16 @@ impl EnumType {
         ]
         .concat()
     }
+
+    /// Use this if the type is used to make labels in the TASM code
+    pub fn label_friendly_name(&self) -> String {
+        match self.type_parameter.as_ref() {
+            // Use type parameter here to differentiate between
+            // methods for `Result<BFE>` and `Result<XFE>`.
+            Some(type_param) => {
+                format!("{}___{}", self.name, type_param.label_friendly_name())
+            }
+            None => self.name.to_owned(),
+        }
+    }
 }

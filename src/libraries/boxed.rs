@@ -206,15 +206,19 @@ fn new_box_function_signature(inner_type: &ast_types::DataType) -> ast::FnSignat
     }
 }
 
+/// ```text
+/// BEFORE: _ [value]
+/// AFTER: _ *value
+/// ```
 fn new_box_function_body(
     inner_type: &ast_types::DataType,
     state: &mut crate::tasm_code_generator::CompilerState,
 ) -> Vec<LabelledInstruction> {
     let dyn_malloc = state.import_snippet(Box::new(tasm_lib::memory::dyn_malloc::DynMalloc));
     let entrypoint = format!("box_new_{}", inner_type.label_friendly_name());
-    let inner_type_size = inner_type.stack_size();
+    let inner_type_size = inner_type.stack_size(); // This is the maximum size that the enum can take up
 
-    let move_to_memory_code = move_top_stack_value_to_memory_keep_address(inner_type_size);
+    let store_words_code = inner_type.store_to_memory(state);
 
     triton_asm!(
         {entrypoint}:
@@ -223,7 +227,7 @@ fn new_box_function_body(
             call {dyn_malloc}
 
             // _ [x] *memory_address
-            {&move_to_memory_code}
+            {&store_words_code}
 
             // _ *memory_address
             return

@@ -8,6 +8,8 @@ use crate::ast_types;
 use crate::tasm_code_generator::read_n_words_from_memory;
 use crate::tasm_code_generator::CompilerState;
 
+use super::move_top_stack_value_to_memory;
+
 pub mod enum_type;
 pub mod struct_type;
 
@@ -37,15 +39,12 @@ impl ast_types::DataType {
     }
 
     /// Return the code to copy a value in memory to the stack.
-    /// `position` refers to a memory address. If this is `None`, the
-    /// memory address is assumed to be on top of the stack.
-    /// BEFORE: _ <*value>
+    /// The memory address is assumed to be on top of the stack.
+    /// ```text
+    /// BEFORE: _ *value
     /// AFTER: _ [value]
-    pub(super) fn load_from_memory(
-        &self,
-        static_address: Option<BFieldElement>,
-        state: &mut CompilerState,
-    ) -> Vec<LabelledInstruction> {
+    /// ```
+    pub(super) fn load_from_memory(&self, state: &mut CompilerState) -> Vec<LabelledInstruction> {
         match self {
             ast_types::DataType::Bool
             | ast_types::DataType::U32
@@ -55,7 +54,7 @@ impl ast_types::DataType {
             | ast_types::DataType::Xfe
             | ast_types::DataType::Digest
             | ast_types::DataType::Tuple(_) => {
-                Self::copy_words_from_memory(static_address, self.stack_size())
+                Self::copy_words_from_memory(None, self.stack_size())
             }
             ast_types::DataType::List(_, _)
             | ast_types::DataType::Array(_)
@@ -64,6 +63,35 @@ impl ast_types::DataType {
             }
             ast_types::DataType::Enum(enum_type) => enum_type.load_from_memory(state),
             ast_types::DataType::Struct(struct_type) => struct_type.load_from_memory(state),
+            ast_types::DataType::VoidPointer => todo!(),
+            ast_types::DataType::Function(_) => todo!(),
+            ast_types::DataType::Unresolved(_) => todo!(),
+        }
+    }
+
+    /// ```text
+    /// BEFORE: _ [value] *value
+    /// AFTER: _
+    /// ```
+    pub(crate) fn store_to_memory(&self, state: &mut CompilerState) -> Vec<LabelledInstruction> {
+        match self {
+            ast_types::DataType::Bool
+            | ast_types::DataType::U32
+            | ast_types::DataType::U64
+            | ast_types::DataType::U128
+            | ast_types::DataType::Bfe
+            | ast_types::DataType::Xfe
+            | ast_types::DataType::Digest
+            | ast_types::DataType::Tuple(_) => {
+                move_top_stack_value_to_memory(None, self.stack_size())
+            }
+            ast_types::DataType::List(_, _)
+            | ast_types::DataType::Array(_)
+            | ast_types::DataType::Boxed(_) => {
+                triton_asm!()
+            }
+            ast_types::DataType::Enum(enum_type) => enum_type.store_to_memory(state),
+            ast_types::DataType::Struct(struct_type) => todo!(),
             ast_types::DataType::VoidPointer => todo!(),
             ast_types::DataType::Function(_) => todo!(),
             ast_types::DataType::Unresolved(_) => todo!(),
