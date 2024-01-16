@@ -26,7 +26,6 @@ mod test {
     use triton_vm::twenty_first::shared_math::other::random_elements;
     use triton_vm::NonDeterminism;
 
-    use crate::tests_and_benchmarks::ozk::ozk_parsing;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
@@ -55,7 +54,7 @@ mod test {
         assert_eq!(native_output, expected_output);
 
         let entrypoint_location = EntrypointLocation::disk("other", "simple_encode", "main");
-        let (rust_ast, _) = ozk_parsing::parse_functions_and_types(&entrypoint_location);
+        let rust_ast = entrypoint_location.extract_entrypoint();
         let expected_stack_diff = 0;
         let vm_output = execute_with_stack_and_ins_safe_lists(
             &rust_ast,

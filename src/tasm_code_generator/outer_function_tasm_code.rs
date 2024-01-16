@@ -311,29 +311,28 @@ impl OuterFunctionTasmCode {
 
         format!(
             "use crate::snippet::BasicSnippet;
-use crate::snippet::DataType;
-use crate::Library;
-use triton_vm::triton_asm;
+             use crate::snippet::DataType;
+             use crate::Library;
+             use triton_vm::triton_asm;
 
 
-pub struct {snippet_struct_name};
+             pub struct {snippet_struct_name};
 
-// This BasicSnippet implementation was autogenerate by the `tasm-lang` compiler
-// on {date}
-impl BasicSnippet for {snippet_struct_name} {{
-    {entrypoint_function}
+             // This BasicSnippet implementation was autogenerate by the `tasm-lang` compiler
+             // on {date}
+             impl BasicSnippet for {snippet_struct_name} {{
+                 {entrypoint_function}
 
-    {outputs_function}
+                 {outputs_function}
 
-    {inputs_function}
+                 {inputs_function}
 
-    {code_function}
-}}
-"
+                 {code_function}
+             }}
+             "
         )
     }
 
-    #[allow(dead_code)]
     /// Function for generating a list of instructions from a compile state
     pub(crate) fn compose(&self) -> Vec<LabelledInstruction> {
         let inner_body = match self

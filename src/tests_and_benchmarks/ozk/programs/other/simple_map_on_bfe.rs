@@ -34,7 +34,6 @@ mod test {
     use triton_vm::BFieldElement;
     use triton_vm::NonDeterminism;
 
-    use crate::tests_and_benchmarks::ozk::ozk_parsing;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
@@ -58,7 +57,7 @@ mod test {
 
         // Test function in Triton VM
         let entrypoint_location = EntrypointLocation::disk("other", "simple_map_on_bfe", "main");
-        let (parsed, _) = ozk_parsing::parse_functions_and_types(&entrypoint_location);
+        let parsed = entrypoint_location.extract_entrypoint();
         let expected_stack_diff = 0;
         let vm_output = execute_with_stack_and_ins_safe_lists(
             &parsed,
@@ -81,7 +80,6 @@ mod benches {
 
     use crate::tests_and_benchmarks::benchmarks::execute_and_write_benchmark;
     use crate::tests_and_benchmarks::benchmarks::BenchmarkInput;
-    use crate::tests_and_benchmarks::ozk::ozk_parsing::parse_functions_and_types;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 
@@ -103,7 +101,7 @@ mod benches {
 
         let module_name = "simple_map_on_bfe".to_string();
         let entrypoint_location = EntrypointLocation::disk("other", &module_name, "main");
-        let (parsed_code, _) = parse_functions_and_types(&entrypoint_location);
+        let parsed_code = entrypoint_location.extract_entrypoint();
         let (code, _fn_name) =
             compile_for_run_test(&parsed_code, crate::ast_types::ListType::Unsafe);
         execute_and_write_benchmark(module_name, code, common_case, worst_case, 0)

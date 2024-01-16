@@ -26,14 +26,13 @@ fn merkle_root(leafs: &Vec<Digest>, start: usize, stop: usize) -> Digest {
 #[cfg(test)]
 mod test {
     use crate::tests_and_benchmarks::ozk::ozk_parsing::compile_to_basic_snippet;
-    use crate::tests_and_benchmarks::ozk::ozk_parsing::parse_functions_and_types;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
 
     #[test]
     fn merkle_root_to_basic_snippet_test() {
         let entrypoint_location =
             EntrypointLocation::disk("recufier", "merkle_root_autogen", "merkle_root");
-        let (rust_ast, _) = parse_functions_and_types(&entrypoint_location);
+        let rust_ast = entrypoint_location.extract_entrypoint();
         let as_bs = compile_to_basic_snippet(
             rust_ast,
             std::collections::HashMap::default(),

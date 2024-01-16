@@ -50,7 +50,7 @@ impl EntrypointLocation {
         }
     }
 
-    /// Like `new`, but uses the GitHub repository as the source of the Rust code.
+    /// Like [`Self::disk`], but uses the GitHub repository as the source of the Rust code.
     pub fn github(directory: &str, module_name: &str, entrypoint: &str) -> Self {
         let mut location = Self::disk(directory, module_name, entrypoint);
         location.source_file_location.provider = SourceCodeProvider::GitHub;
@@ -60,10 +60,11 @@ impl EntrypointLocation {
     pub fn extract_entrypoint(&self) -> syn::ItemFn {
         let parsed_file = self.source_file_location.parse_file();
         for item in &parsed_file.items {
-            if let syn::Item::Fn(func) = item {
-                if func.sig.ident == self.entrypoint {
-                    return func.to_owned();
-                }
+            let syn::Item::Fn(func) = item else {
+                continue;
+            };
+            if func.sig.ident == self.entrypoint {
+                return func.to_owned();
             }
         }
 
@@ -105,16 +106,6 @@ impl SourceFileLocation {
     }
 }
 
-/// Return the Rust-AST for the given `entrypoint` function and all custom types defined in the outermost module.
-pub(super) fn parse_functions_and_types(
-    location: &EntrypointLocation,
-) -> (syn::ItemFn, StructsAndMethodsRustAst) {
-    let entrypoint = location.extract_entrypoint();
-    let custom_types = parse_functions_and_types_inner(&location.source_file_location);
-
-    (entrypoint, custom_types)
-}
-
 fn parse_functions_and_types_inner(location: &SourceFileLocation) -> StructsAndMethodsRustAst {
     let file = location.parse_file();
     let (mut custom_types, dependencies) = extract_types_and_function(&file);
@@ -137,7 +128,8 @@ pub(crate) fn compile_for_test(
 ) -> Vec<LabelledInstruction> {
     get_standard_setup!(list_type, graft_config, libraries);
 
-    let (entrypoint_fn, rust_struct_asts) = parse_functions_and_types(location);
+    let entrypoint_fn = location.extract_entrypoint();
+    let rust_struct_asts = parse_functions_and_types_inner(&location.source_file_location);
     let mut oil_ast = graft_config.graft_fn_decl(&entrypoint_fn);
     let mut composite_types =
         graft_config.graft_custom_types_methods_and_associated_functions(rust_struct_asts);
@@ -150,10 +142,12 @@ pub(crate) fn compile_for_test(
 
     let tasm = compile_function(&oil_ast, &libraries, &composite_types);
 
-    // compose
     tasm.compose()
 }
 
+/// Produce a [`BasicSnippet`][basic_snippet] through compilation and string interpolation.
+///
+/// [basic_snippet]: tasm_lib::traits::basic_snippet::BasicSnippet
 pub(crate) fn compile_to_basic_snippet(
     rust_ast: syn::ItemFn,
     structs_and_methods: StructsAndMethodsRustAst,

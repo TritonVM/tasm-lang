@@ -24,7 +24,6 @@ mod test {
     use triton_vm::BFieldElement;
     use triton_vm::NonDeterminism;
 
-    use crate::tests_and_benchmarks::ozk::ozk_parsing;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
@@ -47,11 +46,12 @@ mod test {
 
         // Test function in Triton VM
         let entrypoint_location = EntrypointLocation::disk("arithmetic", "bfe_add", "main");
-        let (parsed, _) = ozk_parsing::parse_functions_and_types(&entrypoint_location);
+        let entrypoint_fn = entrypoint_location.extract_entrypoint();
         let expected_stack_diff = 0;
         let stack_start = vec![];
         let vm_output =
-            execute_with_stack_safe_lists(&parsed, stack_start, expected_stack_diff).unwrap();
+            execute_with_stack_safe_lists(&entrypoint_fn, stack_start, expected_stack_diff)
+                .unwrap();
         assert_eq!(expected_output, vm_output.output);
     }
 }

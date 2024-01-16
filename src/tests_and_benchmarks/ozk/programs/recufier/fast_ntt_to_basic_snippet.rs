@@ -118,7 +118,7 @@ mod test {
         // Output what we came for: A `BasicSnippet` implementation constructed by the compiler
         let entrypoint_location =
             EntrypointLocation::disk("recufier", "fast_ntt_to_basic_snippet", "xfe_ntt");
-        let (rust_ast, _) = parse_functions_and_types(&entrypoint_location);
+        let rust_ast = entrypoint_location.extract_entrypoint();
         let as_bs = compile_to_basic_snippet(rust_ast, HashMap::default(), ListType::Unsafe);
         println!("{}", as_bs);
     }
