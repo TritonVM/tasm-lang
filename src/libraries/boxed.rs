@@ -202,39 +202,47 @@ fn call_new_box(
         return call_function;
     }
 
-    let dyn_malloc = state.import_snippet(Box::new(tasm_lib::memory::dyn_malloc::DynMalloc));
-
     // TODO: I think this is the best we can do at compile-time. If we want the precise size,
     // we probably need to get the size at run-time.
-    let inner_type_size = inner_type.stack_size();
-
-    let pointer_to_malloced_memory = state.static_memory_allocation(1);
     let store_words_code = inner_type.store_to_memory(state);
-    let subroutine: SubRoutine = triton_asm!(
-        {entrypoint}:
-            // dynamically allocate enough memory
-            push {inner_type_size}
-            call {dyn_malloc}
 
-            dup 0
-            push {pointer_to_malloced_memory}
-            write_mem 1
-            pop 1
+    // TODO: I'm not proud of this if/else. But it's the best I could come
+    // up with for types where Box::new() is the identity operator.
+    let subroutine = if store_words_code.is_empty() {
+        triton_asm!(
+            {entrypoint}:
+                return
+        )
+    } else {
+        let dyn_malloc = state.import_snippet(Box::new(tasm_lib::memory::dyn_malloc::DynMalloc));
+        let inner_type_size = inner_type.stack_size();
+        let pointer_to_malloced_memory = state.static_memory_allocation(1);
+        triton_asm!(
+            {entrypoint}:
+                // dynamically allocate enough memory
+                push {inner_type_size}
+                call {dyn_malloc}
 
-            // _ [x] *memory_address
+                dup 0
+                push {pointer_to_malloced_memory}
+                write_mem 1
+                pop 1
 
-            {&store_words_code}
-            // _
+                // _ [x] *memory_address
 
-            push {pointer_to_malloced_memory}
-            read_mem 1
-            pop 1
+                {&store_words_code}
+                // _
 
-            // _ *memory_address
-            return
-    )
-    .try_into()
-    .unwrap();
+                push {pointer_to_malloced_memory}
+                read_mem 1
+                pop 1
+
+                // _ *memory_address
+                return
+        )
+    };
+
+    let subroutine: SubRoutine = subroutine.try_into().unwrap();
 
     state.add_library_function(subroutine);
 
