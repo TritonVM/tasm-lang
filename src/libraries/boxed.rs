@@ -15,6 +15,7 @@ pub struct Boxed;
 
 const FUNCTION_NAME_NEW_BOX: &str = "Box::new";
 const AS_REF_METHOD_NAME: &str = "as_ref";
+const TO_OWNED_METHOD_NAME: &str = "to_owned";
 
 impl Library for Boxed {
     fn get_function_name(&self, full_name: &str) -> Option<String> {
@@ -28,9 +29,9 @@ impl Library for Boxed {
     fn get_method_name(
         &self,
         method_name: &str,
-        receiver_type: &crate::ast_types::DataType,
+        receiver_type: &ast_types::DataType,
     ) -> Option<String> {
-        if method_name == AS_REF_METHOD_NAME {
+        if matches!(method_name, AS_REF_METHOD_NAME | TO_OWNED_METHOD_NAME) {
             if let ast_types::DataType::Boxed(_inner) = receiver_type {
                 return Some(method_name.to_owned());
             }
@@ -42,33 +43,23 @@ impl Library for Boxed {
     fn method_name_to_signature(
         &self,
         method_name: &str,
-        receiver_type: &crate::ast_types::DataType,
-        _args: &[crate::ast::Expr<super::Annotation>],
+        receiver_type: &ast_types::DataType,
+        _args: &[ast::Expr<super::Annotation>],
         _type_checker_state: &crate::type_checker::CheckState,
-    ) -> crate::ast::FnSignature {
-        assert!(matches!(receiver_type, ast_types::DataType::Boxed(_inner)));
-        assert_eq!(AS_REF_METHOD_NAME, method_name);
-
-        ast::FnSignature {
-            name: String::from(AS_REF_METHOD_NAME),
-            args: vec![ast_types::AbstractArgument::ValueArgument(
-                ast_types::AbstractValueArg {
-                    name: "value".to_owned(),
-                    data_type: receiver_type.to_owned(),
-                    mutable: false,
-                },
-            )],
-            output: receiver_type.to_owned(),
-            arg_evaluation_order: Default::default(),
+    ) -> ast::FnSignature {
+        match method_name {
+            AS_REF_METHOD_NAME => Self::as_ref_method_signature(receiver_type),
+            TO_OWNED_METHOD_NAME => Self::to_owned_method_signature(receiver_type),
+            _ => panic!("unsupported method name"),
         }
     }
 
     fn function_name_to_signature(
         &self,
         full_name: &str,
-        type_parameter: Option<crate::ast_types::DataType>,
-        args: &[crate::ast::Expr<super::Annotation>],
-    ) -> crate::ast::FnSignature {
+        type_parameter: Option<ast_types::DataType>,
+        args: &[ast::Expr<super::Annotation>],
+    ) -> ast::FnSignature {
         if full_name == FUNCTION_NAME_NEW_BOX {
             assert!(
                 args.len().is_one(),
@@ -87,15 +78,18 @@ impl Library for Boxed {
     fn call_method(
         &self,
         method_name: &str,
-        receiver_type: &crate::ast_types::DataType,
-        _args: &[crate::ast::Expr<super::Annotation>],
+        receiver_type: &ast_types::DataType,
+        _args: &[ast::Expr<super::Annotation>],
         _state: &mut crate::tasm_code_generator::CompilerState,
-    ) -> Vec<triton_vm::instruction::LabelledInstruction> {
+    ) -> Vec<LabelledInstruction> {
         assert!(matches!(receiver_type, ast_types::DataType::Boxed(_inner)));
-        assert_eq!(AS_REF_METHOD_NAME, method_name);
+        assert!(matches!(
+            method_name,
+            AS_REF_METHOD_NAME | TO_OWNED_METHOD_NAME
+        ));
 
         // This can simply be implemented as the identity function, I think.
-        // The only reason we need this funciton is that Rustc demands it.
+        // The only reason we need this function is that Rustc demands it.
         triton_asm!()
     }
 
@@ -137,8 +131,51 @@ impl Library for Boxed {
         &self,
         _graft_config: &mut Graft,
         _rust_method_call: &syn::ExprMethodCall,
-    ) -> Option<crate::ast::Expr<super::Annotation>> {
+    ) -> Option<ast::Expr<super::Annotation>> {
         None
+    }
+}
+
+impl Boxed {
+    fn as_ref_method_signature(receiver_type: &ast_types::DataType) -> ast::FnSignature {
+        assert!(matches!(receiver_type, ast_types::DataType::Boxed(_inner)));
+
+        let argument = ast_types::AbstractArgument::ValueArgument(ast_types::AbstractValueArg {
+            name: "value".to_owned(),
+            data_type: receiver_type.to_owned(),
+            mutable: false,
+        });
+
+        ast::FnSignature {
+            name: String::from(AS_REF_METHOD_NAME),
+            args: vec![argument],
+            output: receiver_type.to_owned(),
+            arg_evaluation_order: Default::default(),
+        }
+    }
+
+    fn to_owned_method_signature(receiver_type: &ast_types::DataType) -> ast::FnSignature {
+        let ast_types::DataType::Boxed(inner_type) = receiver_type else {
+            panic!("\"{TO_OWNED_METHOD_NAME}\" can only be called on boxed types");
+        };
+        let inner_type = *inner_type.to_owned();
+        assert!(matches!(
+            inner_type,
+            ast_types::DataType::List(_, _) | ast_types::DataType::Array(_)
+        ));
+
+        let argument = ast_types::AbstractArgument::ValueArgument(ast_types::AbstractValueArg {
+            name: "self".to_owned(),
+            data_type: receiver_type.to_owned(),
+            mutable: false,
+        });
+
+        ast::FnSignature {
+            name: String::from(TO_OWNED_METHOD_NAME),
+            args: vec![argument],
+            output: inner_type,
+            arg_evaluation_order: Default::default(),
+        }
     }
 }
 

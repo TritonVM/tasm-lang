@@ -52,6 +52,21 @@ impl ProofItem {
         return is_included;
     }
 
+    pub fn as_authentication_structure(&self) -> Vec<Digest> {
+        #[allow(unused_assignments)]
+        let mut auth_structure: Vec<Digest> = Vec::<Digest>::with_capacity(0);
+        match self {
+            ProofItem::AuthenticationStructure(caps) => {
+                auth_structure = caps.to_owned();
+            }
+            _ => {
+                panic!();
+            }
+        };
+
+        return auth_structure;
+    }
+
     fn as_merkle_root(&self) -> Digest {
         #[allow(unused_assignments)]
         let mut root: Digest = Digest::default();
@@ -60,7 +75,7 @@ impl ProofItem {
                 root = *bs;
             }
             _ => {
-                panic!("wrong assumptions, buddy");
+                panic!();
             }
         };
 
@@ -68,22 +83,20 @@ impl ProofItem {
     }
 }
 
-fn proof_item_stored_to_memory() {
-    let auth_path: Vec<Digest> = Vec::<Digest>::with_capacity(0);
-    let ap: Box<ProofItem> = Box::<ProofItem>::new(ProofItem::AuthenticationStructure(auth_path));
-    assert!(!ap.include_in_fiat_shamir_heuristic());
-
-    let merkle_root_pi: ProofItem = ProofItem::MerkleRoot(Digest::default());
-    let merkle_root: Digest = merkle_root_pi.as_merkle_root();
-    tasm::tasm_io_write_to_stdout___digest(merkle_root);
-
-    return;
-}
-
-fn proof_item_load_auth_path_from_memory() {
-    let ap: Box<ProofItem> =
+fn proof_item_load_auth_structure_from_memory() {
+    let auth_struct: Box<ProofItem> =
         ProofItem::decode(&tasm::load_from_memory(BFieldElement::new(0))).unwrap();
-    assert!(!ap.include_in_fiat_shamir_heuristic());
+    assert!(!auth_struct.include_in_fiat_shamir_heuristic());
+
+    let auth_structure: Vec<Digest> = auth_struct.as_authentication_structure();
+
+    {
+        let mut i: usize = 0;
+        while i < auth_structure.len() {
+            tasm::tasm_io_write_to_stdout___digest(auth_structure[i]);
+            i += 1;
+        }
+    }
 
     return;
 }
@@ -100,11 +113,9 @@ fn proof_item_load_merkle_root_from_memory() {
 
 #[cfg(test)]
 mod test {
-    use proptest::collection::vec;
     use proptest::prelude::*;
     use proptest_arbitrary_interop::arb;
     use test_strategy::proptest;
-    use triton_vm::NonDeterminism;
 
     use crate::ast_types::ListType;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::compile_for_test;
@@ -116,33 +127,9 @@ mod test {
     use super::*;
 
     #[proptest]
-    fn proof_item_stored_to_memory_test(#[strategy(vec(arb(), 5))] std_in: Vec<BFieldElement>) {
-        // Rust program on host machine
-        let non_determinism = NonDeterminism::default();
-        let native_output = wrap_main_with_io(&proof_item_stored_to_memory)(
-            std_in.clone(),
-            non_determinism.clone(),
-        );
-
-        // Run test on Triton-VM
-        let entrypoint =
-            EntrypointLocation::disk("recufier", "proof_item", "proof_item_stored_to_memory");
-        let test_program = compile_for_test(&entrypoint, ListType::Unsafe);
-
-        let vm_output = execute_compiled_with_stack_and_ins_for_test(
-            &test_program,
-            vec![],
-            std_in,
-            non_determinism,
-            0,
-        )
-        .unwrap();
-
-        prop_assert_eq!(native_output, vm_output.output);
-    }
-
-    #[proptest]
-    fn proof_item_load_auth_path_from_memory_test(#[strategy(arb())] auth_structure: Vec<Digest>) {
+    fn proof_item_load_auth_structure_from_memory_test(
+        #[strategy(arb())] auth_structure: Vec<Digest>,
+    ) {
         // Rust program on host machine
         let stdin = vec![];
 
@@ -150,7 +137,7 @@ mod test {
         let proof_item = ProofItem::AuthenticationStructure(auth_structure);
         let non_determinism = init_memory_from(&proof_item, ap_start_address);
 
-        let native_output = wrap_main_with_io(&proof_item_load_auth_path_from_memory)(
+        let native_output = wrap_main_with_io(&proof_item_load_auth_structure_from_memory)(
             stdin.clone(),
             non_determinism.clone(),
         );
@@ -159,7 +146,7 @@ mod test {
         let entrypoint_location = EntrypointLocation::disk(
             "recufier",
             "proof_item",
-            "proof_item_load_auth_path_from_memory",
+            "proof_item_load_auth_structure_from_memory",
         );
         let test_program = compile_for_test(&entrypoint_location, ListType::Unsafe);
 
