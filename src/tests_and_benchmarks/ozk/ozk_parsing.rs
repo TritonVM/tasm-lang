@@ -59,16 +59,61 @@ impl EntrypointLocation {
 
     pub fn extract_entrypoint(&self) -> syn::ItemFn {
         let parsed_file = self.source_file_location.parse_file();
-        for item in &parsed_file.items {
+        let items = self.fetch_module_items_containing_entrypoint(&parsed_file.items);
+        self.extract_entrypoint_from_items(items)
+    }
+
+    fn fetch_module_items_containing_entrypoint<'a>(
+        &self,
+        mut items: &'a [syn::Item],
+    ) -> &'a [syn::Item] {
+        'mod_descend: for module_name in self.entrypoint_module_names() {
+            'item_iter: for item in items {
+                let syn::Item::Mod(module) = item else {
+                    continue 'item_iter;
+                };
+                if module.ident != module_name {
+                    continue 'item_iter;
+                }
+                let Some((_, ref module_items)) = module.content else {
+                    panic!("module \"{module_name}\" is empty");
+                };
+                items = module_items;
+                continue 'mod_descend;
+            }
+            panic!("Failed to locate module \"{module_name}\"");
+        }
+
+        items
+    }
+
+    fn extract_entrypoint_from_items(&self, items: &[syn::Item]) -> syn::ItemFn {
+        for item in items {
             let syn::Item::Fn(func) = item else {
                 continue;
             };
-            if func.sig.ident == self.entrypoint {
+            if func.sig.ident == self.entrypoint_signature_name() {
                 return func.to_owned();
             }
         }
 
         panic!("Failed to locate entrypoint {}", self.entrypoint);
+    }
+
+    fn entrypoint_module_names(&self) -> Vec<&str> {
+        let Some((modules, _)) = self.entrypoint.rsplit_once("::") else {
+            return vec![];
+        };
+
+        modules.split("::").collect()
+    }
+
+    fn entrypoint_signature_name(&self) -> &str {
+        let Some((_, entrypoint)) = self.entrypoint.rsplit_once("::") else {
+            return &self.entrypoint;
+        };
+
+        entrypoint
     }
 }
 
