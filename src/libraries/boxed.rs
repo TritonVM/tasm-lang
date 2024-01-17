@@ -1,4 +1,5 @@
 use num::One;
+use tasm_lib::memory::dyn_malloc::DynMalloc;
 use triton_vm::instruction::LabelledInstruction;
 use triton_vm::triton_asm;
 
@@ -202,47 +203,43 @@ fn call_new_box(
         return call_function;
     }
 
-    // TODO: I think this is the best we can do at compile-time. If we want the precise size,
-    // we probably need to get the size at run-time.
+    let value_pointer_pointer = state.static_memory_allocation(1);
+    let dyn_malloc_label = state.import_snippet(Box::new(DynMalloc));
+    let store_value = inner_type.store_to_memory(state);
+    const BIG_ALLOCATION: u32 = u32::MAX;
+    let subroutine = triton_asm!(
+        {entrypoint}:
 
-    // TODO: We need to both allocate *and* store to memory here.
-    let store_words_code = inner_type.store_to_memory(state);
+            // 1. Allocate:
+            // In order to do that, we need to know how many words to allocate, or we just
+            // allocate *enough*
+            push {BIG_ALLOCATION}
+            call {dyn_malloc_label}
 
-    // TODO: I'm not proud of this if/else. But it's the best I could come
-    // up with for types where Box::new() is the identity operator.
-    let subroutine = if store_words_code.is_empty() {
-        triton_asm!(
-            {entrypoint}:
-                return
-        )
-    } else {
-        let dyn_malloc = state.import_snippet(Box::new(tasm_lib::memory::dyn_malloc::DynMalloc));
-        let inner_type_size = inner_type.stack_size();
-        let pointer_to_malloced_memory = state.static_memory_allocation(1);
-        triton_asm!(
-            {entrypoint}:
-                // dynamically allocate enough memory
-                push {inner_type_size}
-                call {dyn_malloc}
+            // _ [value] *value
 
-                dup 0
-                push {pointer_to_malloced_memory}
-                write_mem 1
-                pop 1
+            // 2. store the *value in statically allocated memory,
+            // as the callee to store a value might not know how to preserve this value.
+            dup 0
+            push {value_pointer_pointer}
+            write_mem 1
+            pop 1
+            // _ [value] *value
 
-                // _ [x] *memory_address
+            // 3. Call `store_to_memory` on the data type.
+            {&store_value}
+            // _
 
-                {&store_words_code}
-                // _
+            // 4. Retrieve the stored pointer
+            push {value_pointer_pointer}
+            hint value_pointer_pointer = stack[0]
+            read_mem 1
+            pop 1
+            // _ *value
 
-                push {pointer_to_malloced_memory}
-                read_mem 1
-                pop 1
-
-                // _ *memory_address
-                return
-        )
-    };
+            // 5. Return
+            return
+    );
 
     let subroutine: SubRoutine = subroutine.try_into().unwrap();
 

@@ -1,6 +1,5 @@
 use itertools::Itertools;
 use num::One;
-use tasm_lib::memory::dyn_malloc::DynMalloc;
 use tasm_lib::memory::memcpy::MemCpy;
 use tasm_lib::traits::basic_snippet::BasicSnippet;
 use triton_vm::instruction::LabelledInstruction;

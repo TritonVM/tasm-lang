@@ -112,6 +112,8 @@ impl ast_types::StructType {
 
             // _ [[first_fields] ] *next_field
 
+            // Problem: This does not store the field size to memory, if needed
+
             subroutine.extend(move_field_to_memory);
         }
 

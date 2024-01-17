@@ -9,11 +9,11 @@ struct WithListField {
 
 fn main() {
     let mut list: Vec<BFieldElement> = Vec::<BFieldElement>::with_capacity(32);
-    // list.push(BFieldElement::new(102));
+    list.push(BFieldElement::new(102));
     // list.push(BFieldElement::new(2222));
     let wlf: WithListField = WithListField { bfes: list };
     let boxed: Box<WithListField> = Box::<WithListField>::new(wlf);
-    // tasm::tasm_io_write_to_stdout___bfe(boxed.bfes[0]);
+    tasm::tasm_io_write_to_stdout___bfe(boxed.bfes[0]);
     // tasm::tasm_io_write_to_stdout___bfe(boxed.bfes[1]);
 
     return;
@@ -36,8 +36,8 @@ mod test {
             crate::ast_types::ListType::Unsafe,
         );
         let mut list: Vec<BFieldElement> = Vec::<BFieldElement>::with_capacity(32);
-        // list.push(BFieldElement::new(102));
-        // list.push(BFieldElement::new(2222));
+        list.push(BFieldElement::new(102));
+        list.push(BFieldElement::new(2222));
         let wlf: WithListField = WithListField { bfes: list };
         let encoded = wlf.encode();
         println!("encoded:\n{}", encoded.iter().join("\n"));

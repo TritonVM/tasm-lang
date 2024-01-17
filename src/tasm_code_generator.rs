@@ -9,7 +9,6 @@ use itertools::Itertools;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::fmt::Display;
-use syn::Data;
 use tasm_lib;
 use tasm_lib::library::Library as SnippetState;
 use tasm_lib::traits::basic_snippet::BasicSnippet;
