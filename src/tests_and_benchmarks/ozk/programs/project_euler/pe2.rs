@@ -35,17 +35,16 @@ mod test {
     fn pe2_test() {
         // Test function on host machine
         let stdin = vec![];
-        let non_determinism = NonDeterminism::new(vec![]);
-        let native_output =
-            rust_shadows::wrap_main_with_io(&main)(stdin.clone(), non_determinism.clone());
+        let non_determinism = NonDeterminism::default();
+        let native_output = rust_shadows::wrap_main_with_io(&main)(stdin, non_determinism);
 
-        // Test function in Triton VM
-        let entrypoint_location = EntrypointLocation::disk("project_euler", "pe2", "main");
-        let parsed = entrypoint_location.extract_entrypoint();
-        let expected_stack_diff = 0;
-        let stack_start = vec![];
-        let vm_output =
-            execute_with_stack_safe_lists(&parsed, stack_start, expected_stack_diff).unwrap();
+        let entrypoint = EntrypointLocation::disk("project_euler", "pe2", "main");
+        let vm_output = TritonVMTestCase::new(entrypoint)
+            .with_safe_lists()
+            .expect_stack_difference(0)
+            .execute()
+            .unwrap();
+
         assert_eq!(native_output, vm_output.output);
         assert_eq!(4613732, native_output[0].value());
 

@@ -53,7 +53,6 @@ fn main() {
 
 #[cfg(test)]
 mod test {
-
     use itertools::Itertools;
     use rand::random;
     use triton_vm::BFieldElement;
@@ -61,7 +60,7 @@ mod test {
 
     use crate::tests_and_benchmarks::ozk::ozk_parsing;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
-    use crate::tests_and_benchmarks::test_helpers::shared_test::execute_compiled_with_stack_and_ins_for_test;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::TritonVMTestCase;
 
     use super::*;
 
@@ -73,6 +72,11 @@ mod test {
         let stdin = stdin.to_vec();
         assert_ne!(stdin[0], stdin[1]);
         assert_ne!(stdin[0], stdin[2]);
+
+        // Run test on host machine
+        let native_output =
+            rust_shadows::wrap_main_with_io(&main)(stdin.to_vec(), non_determinism.clone());
+        println!("native_output: {native_output:#?}");
 
         let expected_output = vec![
             stdin[7],
@@ -87,26 +91,16 @@ mod test {
             BFieldElement::new(400),
             BFieldElement::new(1 << 50),
         ];
-
-        // Run test on host machine
-        let native_output =
-            rust_shadows::wrap_main_with_io(&main)(stdin.to_vec(), non_determinism.clone());
-        println!("native_output: {native_output:#?}");
         assert_eq!(native_output, expected_output);
 
-        // Run test on Triton-VM
-        let entrypoint_location =
-            ozk_parsing::EntrypointLocation::disk("arrays", "bfe_array", "main");
-        let test_program =
-            ozk_parsing::compile_for_test(&entrypoint_location, crate::ast_types::ListType::Unsafe);
-        let vm_output = execute_compiled_with_stack_and_ins_for_test(
-            &test_program,
-            vec![],
-            stdin,
-            non_determinism,
-            0,
-        )
-        .unwrap();
+        let entrypoint = ozk_parsing::EntrypointLocation::disk("arrays", "bfe_array", "main");
+        let vm_output = TritonVMTestCase::new(entrypoint)
+            .with_std_in(stdin)
+            .with_non_determinism(non_determinism)
+            .expect_stack_difference(0)
+            .execute()
+            .unwrap();
+
         assert_eq!(expected_output, vm_output.output);
         println!("vm_output.output: {:#?}", vm_output.output);
 

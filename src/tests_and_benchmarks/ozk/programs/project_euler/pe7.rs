@@ -56,20 +56,19 @@ mod test {
         // Test function on host machine
         let timer = std::time::Instant::now();
         let stdin = vec![];
-        let non_determinism = NonDeterminism::new(vec![]);
+        let non_determinism = NonDeterminism::default();
         let native_output = rust_shadows::wrap_main_with_io(&main)(stdin, non_determinism);
         let prime_number_count: u32 = native_output[0].try_into().unwrap();
         let computed_element = native_output[1];
         let time_passed = timer.elapsed();
         println!("native_output for prime number {prime_number_count} (took {time_passed:?}): {computed_element}");
 
-        // Test function in Triton VM
-        let entrypoint_location = EntrypointLocation::disk("project_euler", "pe7", "main");
-        let parsed = entrypoint_location.extract_entrypoint();
-        let expected_stack_diff = 0;
-        let stack_start = vec![];
-        let vm_output =
-            execute_with_stack_unsafe_lists(&parsed, stack_start, expected_stack_diff).unwrap();
+        let entrypoint = EntrypointLocation::disk("project_euler", "pe7", "main");
+        let vm_output = TritonVMTestCase::new(entrypoint)
+            .expect_stack_difference(0)
+            .execute()
+            .unwrap();
+
         assert_eq!(native_output, vm_output.output);
 
         println!(

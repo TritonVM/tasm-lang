@@ -215,9 +215,6 @@ pub(super) fn tasm_arithmetic_u64_mul_two_u64s_to_u128_u64(lhs: u64, rhs: u64) -
 pub(super) fn wrap_main_with_io(
     main_func: &'static dyn Fn(),
 ) -> Box<dyn Fn(Vec<BFieldElement>, NonDeterminism<BFieldElement>) -> Vec<BFieldElement>> {
-    // TODO: It would be cool if `main_func` could return something, but I'm not sure that's possible.
-    // If it was possible, then that return value could be compared to the stack from Triton VM after
-    // execution.
     Box::new(
         |input: Vec<BFieldElement>, non_determinism: NonDeterminism<BFieldElement>| {
             init_io(input, non_determinism);

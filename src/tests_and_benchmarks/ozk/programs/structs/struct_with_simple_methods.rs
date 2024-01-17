@@ -39,11 +39,10 @@ mod test {
     use rand::random;
     use triton_vm::BFieldElement;
 
-    use crate::tests_and_benchmarks::ozk::ozk_parsing;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
-    use crate::tests_and_benchmarks::test_helpers::shared_test::execute_compiled_with_stack_and_ins_for_test;
     use crate::tests_and_benchmarks::test_helpers::shared_test::init_memory_from;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::TritonVMTestCase;
 
     use super::*;
 
@@ -59,25 +58,20 @@ mod test {
             &ts,
             BFieldElement::new(SIMPLE_STRUCTS_BFIELD_CODEC_START_ADDRESS),
         );
-        let expected_output = [ts.ab_sum().encode(), ts.cd_sum(2023).encode()].concat();
         let stdin = vec![];
         let native_output =
             rust_shadows::wrap_main_with_io(&main)(stdin.clone(), non_determinism.clone());
+
+        let expected_output = [ts.ab_sum().encode(), ts.cd_sum(2023).encode()].concat();
         assert_eq!(native_output, expected_output);
 
-        // Run test on Triton-VM
-        let entrypoint_location =
-            EntrypointLocation::disk("structs", "struct_with_simple_methods", "main");
-        let test_program =
-            ozk_parsing::compile_for_test(&entrypoint_location, crate::ast_types::ListType::Unsafe);
-        let vm_output = execute_compiled_with_stack_and_ins_for_test(
-            &test_program,
-            vec![],
-            stdin,
-            non_determinism,
-            0,
-        )
-        .unwrap();
+        let entrypoint = EntrypointLocation::disk("structs", "struct_with_simple_methods", "main");
+        let vm_output = TritonVMTestCase::new(entrypoint)
+            .with_non_determinism(non_determinism)
+            .expect_stack_difference(0)
+            .execute()
+            .unwrap();
+
         assert_eq!(expected_output, vm_output.output);
     }
 }

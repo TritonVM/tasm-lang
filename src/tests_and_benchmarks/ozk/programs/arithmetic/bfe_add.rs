@@ -44,14 +44,13 @@ mod test {
             rust_shadows::wrap_main_with_io(&main)(stdin.clone(), non_determinism.clone());
         assert_eq!(native_output, expected_output);
 
-        // Test function in Triton VM
-        let entrypoint_location = EntrypointLocation::disk("arithmetic", "bfe_add", "main");
-        let entrypoint_fn = entrypoint_location.extract_entrypoint();
-        let expected_stack_diff = 0;
-        let stack_start = vec![];
-        let vm_output =
-            execute_with_stack_safe_lists(&entrypoint_fn, stack_start, expected_stack_diff)
-                .unwrap();
+        let entrypoint = EntrypointLocation::disk("arithmetic", "bfe_add", "main");
+        let vm_output = TritonVMTestCase::new(entrypoint)
+            .with_safe_lists()
+            .expect_stack_difference(0)
+            .execute()
+            .unwrap();
+
         assert_eq!(expected_output, vm_output.output);
     }
 }

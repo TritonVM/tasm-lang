@@ -51,7 +51,7 @@ mod test {
 
     use crate::tests_and_benchmarks::ozk::ozk_parsing;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
-    use crate::tests_and_benchmarks::test_helpers::shared_test::execute_compiled_with_stack_and_ins_for_test;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::TritonVMTestCase;
 
     use super::*;
 
@@ -63,44 +63,26 @@ mod test {
         let stdin: [BFieldElement; 10] = random();
         let stdin = stdin.to_vec();
 
-        let expected_output = vec![
-            BFieldElement::new(1002),
-            // stdin[0],
-            // stdin[0],
-            // BFieldElement::new(1002),
-            // stdin[3],
-            // stdin[3],
-            // stdin[0],
-            // BFieldElement::new(100),
-            // BFieldElement::new(200),
-            // BFieldElement::new(400),
-            // BFieldElement::new(1 << 50),
-        ];
-
         // Run test on host machine
         let native_output =
             rust_shadows::wrap_main_with_io(&main)(stdin.to_vec(), non_determinism.clone());
+
+        let expected_output = vec![BFieldElement::new(1002)];
         assert_eq!(native_output, expected_output);
 
-        // Run test on Triton-VM
-        let entrypoint_location =
-            ozk_parsing::EntrypointLocation::disk("arrays", "bfe_array_boxed", "main");
-        let test_program =
-            ozk_parsing::compile_for_test(&entrypoint_location, crate::ast_types::ListType::Unsafe);
-        let vm_output = execute_compiled_with_stack_and_ins_for_test(
-            &test_program,
-            vec![],
-            stdin,
-            non_determinism,
-            0,
-        )
-        .unwrap();
+        let entrypoint = ozk_parsing::EntrypointLocation::disk("arrays", "bfe_array_boxed", "main");
+        let vm_output = TritonVMTestCase::new(entrypoint)
+            .with_std_in(stdin)
+            .with_non_determinism(non_determinism)
+            .expect_stack_difference(0)
+            .execute()
+            .unwrap();
+
         if expected_output != vm_output.output {
             panic!(
-                "expected_output:\n{}, got:\n{}. Code was:\n{}",
+                "expected_output:\n{}, got:\n{}",
                 expected_output.iter().join(", "),
                 vm_output.output.iter().join(", "),
-                test_program.iter().join("\n")
             );
         }
     }

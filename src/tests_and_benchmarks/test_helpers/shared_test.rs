@@ -25,6 +25,8 @@ use crate::ast;
 use crate::ast_types;
 use crate::composite_types::CompositeTypes;
 use crate::tasm_code_generator::compile_function;
+use crate::tests_and_benchmarks::ozk::ozk_parsing::compile_for_test;
+use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
 use crate::type_checker;
 use crate::type_checker::annotate_fn_outer;
 use crate::type_checker::GetType;
@@ -116,6 +118,123 @@ pub fn execute_compiled_with_stack_and_ins_for_bench(
     )
 }
 
+#[derive(Debug, Clone)]
+pub struct TritonVMTestCase {
+    entrypoint: EntrypointLocation,
+    list_type: ast_types::ListType,
+    input_args: Vec<ast::ExprLit<Typing>>,
+    std_in: Vec<BFieldElement>,
+    non_determinism: NonDeterminism<BFieldElement>,
+    expected_stack_difference: Option<isize>,
+}
+
+impl TritonVMTestCase {
+    pub fn new(entrypoint: EntrypointLocation) -> Self {
+        Self {
+            entrypoint,
+            list_type: ast_types::ListType::Unsafe,
+            input_args: vec![],
+            std_in: vec![],
+            non_determinism: NonDeterminism::default(),
+            expected_stack_difference: None,
+        }
+    }
+
+    pub fn with_safe_lists(mut self) -> Self {
+        self.list_type = ast_types::ListType::Safe;
+        self
+    }
+
+    pub fn with_input_args(mut self, input_args: Vec<ast::ExprLit<Typing>>) -> Self {
+        self.input_args = input_args;
+        self
+    }
+
+    pub fn with_std_in(mut self, std_in: Vec<BFieldElement>) -> Self {
+        self.std_in = std_in;
+        self
+    }
+
+    pub fn with_non_determinism(mut self, non_determinism: NonDeterminism<BFieldElement>) -> Self {
+        self.non_determinism = non_determinism;
+        self
+    }
+
+    pub fn expect_stack_difference(mut self, expected_stack_difference: isize) -> Self {
+        self.expected_stack_difference = Some(expected_stack_difference);
+        self
+    }
+
+    pub fn execute(self) -> Result<VmOutputState> {
+        let initial_stack = self.initial_stack();
+        let expected_terminal_stack_len = self
+            .expected_stack_difference
+            .map(|diff| initial_stack.len() as isize + diff);
+
+        let vm_state = self.run_triton_vm(initial_stack)?;
+        Self::check_expected_stack_difference(&vm_state, expected_terminal_stack_len)?;
+
+        Ok(Self::convert_vm_state_to_output_state(vm_state))
+    }
+
+    fn initial_stack(&self) -> Vec<BFieldElement> {
+        let mut initial_stack = empty_stack();
+        for input_arg in &self.input_args {
+            let input_arg_seq = input_arg.encode();
+            initial_stack.append(&mut input_arg_seq.into_iter().rev().collect());
+        }
+        initial_stack
+    }
+
+    fn run_triton_vm(self, initial_stack: Vec<BFieldElement>) -> Result<VMState> {
+        let mut vm_state = self.initial_vm_state(initial_stack);
+        vm_state.run()?;
+
+        Ok(vm_state)
+    }
+
+    fn initial_vm_state(self, initial_stack: Vec<BFieldElement>) -> VMState {
+        let program = Program::new(&self.compile());
+        let public_input = PublicInput::new(self.std_in);
+        let mut vm_state = VMState::new(&program, public_input, self.non_determinism);
+        vm_state.op_stack.stack = initial_stack;
+        vm_state
+    }
+
+    pub fn compile(&self) -> Vec<LabelledInstruction> {
+        compile_for_test(&self.entrypoint, self.list_type)
+    }
+
+    fn check_expected_stack_difference(
+        vm_state: &VMState,
+        expected_terminal_stack_len: Option<isize>,
+    ) -> Result<()> {
+        let terminal_stack_len = vm_state.op_stack.len() as isize;
+        let Some(expected_terminal_stack_len) = expected_terminal_stack_len else {
+            return Ok(());
+        };
+
+        if terminal_stack_len == expected_terminal_stack_len {
+            Ok(())
+        } else {
+            bail!("Expected stack length to be {expected_terminal_stack_len} but was {terminal_stack_len}")
+        }
+    }
+
+    fn convert_vm_state_to_output_state(vm_state: VMState) -> VmOutputState {
+        let final_sponge_state = vm_state
+            .sponge_state
+            .map(|state| tasm_lib::VmHasherState { state });
+
+        VmOutputState {
+            output: vm_state.public_output,
+            final_stack: vm_state.op_stack.stack,
+            final_ram: vm_state.ram,
+            final_sponge_state,
+        }
+    }
+}
+
 pub fn execute_compiled_with_stack_and_ins_for_test(
     code: &[LabelledInstruction],
     input_args: Vec<ast::ExprLit<Typing>>,
@@ -152,23 +271,6 @@ pub fn execute_compiled_with_stack_and_ins_for_test(
     };
 
     Ok(output_state)
-}
-
-pub fn execute_with_stack_unsafe_lists(
-    rust_ast: &syn::ItemFn,
-    stack_start: Vec<ast::ExprLit<Typing>>,
-    expected_stack_diff: isize,
-) -> Result<VmOutputState> {
-    let (code, _fn_name) = compile_for_run_test(rust_ast, ast_types::ListType::Unsafe);
-
-    // Run and return final VM state
-    execute_compiled_with_stack_and_ins_for_test(
-        &code,
-        stack_start,
-        vec![],
-        NonDeterminism::new(vec![]),
-        expected_stack_diff,
-    )
 }
 
 pub fn execute_with_stack_safe_lists(

@@ -26,7 +26,6 @@ mod test {
     use rand::random;
     use triton_vm::NonDeterminism;
 
-    use crate::tests_and_benchmarks::ozk::ozk_parsing;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
@@ -39,26 +38,20 @@ mod test {
         let a: BFieldElement = random();
         let b: BFieldElement = random();
         let stdin = vec![a, b];
-        let non_determinism = NonDeterminism::new(vec![]);
-        let expected_output = vec![b, a, a];
+        let non_determinism = NonDeterminism::default();
         let native_output =
             rust_shadows::wrap_main_with_io(&main)(stdin.clone(), non_determinism.clone());
+
+        let expected_output = vec![b, a, a];
         assert_eq!(native_output, expected_output);
 
-        // Test function in Triton VM
-        let entrypoint_location = EntrypointLocation::disk("boxed", "bfe_pair", "main");
-        let test_program =
-            ozk_parsing::compile_for_test(&entrypoint_location, crate::ast_types::ListType::Unsafe);
-        let expected_stack_diff = 0;
-        println!("test_program:\n{}", test_program.iter().join("\n"));
-        let vm_output = execute_compiled_with_stack_and_ins_for_test(
-            &test_program,
-            vec![],
-            stdin,
-            non_determinism,
-            expected_stack_diff,
-        )
-        .unwrap();
+        let entrypoint = EntrypointLocation::disk("boxed", "bfe_pair", "main");
+        let vm_output = TritonVMTestCase::new(entrypoint)
+            .with_std_in(stdin)
+            .expect_stack_difference(0)
+            .execute()
+            .unwrap();
+
         if expected_output != vm_output.output {
             panic!(
                 "expected:\n{}\n\ngot:\n{}",

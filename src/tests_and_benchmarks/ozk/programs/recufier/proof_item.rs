@@ -89,12 +89,10 @@ mod test {
     use proptest_arbitrary_interop::arb;
     use test_strategy::proptest;
 
-    use crate::ast_types::ListType;
-    use crate::tests_and_benchmarks::ozk::ozk_parsing::compile_for_test;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows::wrap_main_with_io;
-    use crate::tests_and_benchmarks::test_helpers::shared_test::execute_compiled_with_stack_and_ins_for_test;
     use crate::tests_and_benchmarks::test_helpers::shared_test::init_memory_from;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::TritonVMTestCase;
 
     use super::*;
 
@@ -128,26 +126,21 @@ mod test {
         let non_determinism = init_memory_from(&proof_item, ap_start_address);
 
         let native_output = wrap_main_with_io(&proof_item_load_auth_structure_from_memory)(
-            stdin.clone(),
+            stdin,
             non_determinism.clone(),
         );
 
         // Run test on Triton-VM
-        let entrypoint_location = EntrypointLocation::disk(
+        let entrypoint = EntrypointLocation::disk(
             "recufier",
             "proof_item",
             "test::proof_item_load_auth_structure_from_memory",
         );
-        let test_program = compile_for_test(&entrypoint_location, ListType::Unsafe);
-
-        let vm_output = execute_compiled_with_stack_and_ins_for_test(
-            &test_program,
-            vec![],
-            stdin,
-            non_determinism,
-            0,
-        )
-        .unwrap();
+        let vm_output = TritonVMTestCase::new(entrypoint)
+            .with_non_determinism(non_determinism)
+            .expect_stack_difference(0)
+            .execute()
+            .unwrap();
 
         prop_assert_eq!(native_output, vm_output.output);
     }
@@ -170,7 +163,7 @@ mod test {
         let non_determinism = init_memory_from(&proof_item, mr_start_address);
 
         let host_machine_output = wrap_main_with_io(&proof_item_load_merkle_root_from_memory)(
-            stdin.clone(),
+            stdin,
             non_determinism.clone(),
         );
 
@@ -179,15 +172,11 @@ mod test {
             "proof_item",
             "test::proof_item_load_merkle_root_from_memory",
         );
-        let test_program = compile_for_test(&entrypoint_location, ListType::Unsafe);
-        let vm_output = execute_compiled_with_stack_and_ins_for_test(
-            &test_program,
-            vec![],
-            stdin,
-            non_determinism,
-            0,
-        )
-        .unwrap();
+        let vm_output = TritonVMTestCase::new(entrypoint_location)
+            .with_non_determinism(non_determinism)
+            .expect_stack_difference(0)
+            .execute()
+            .unwrap();
 
         prop_assert_eq!(host_machine_output, vm_output.output);
     }
