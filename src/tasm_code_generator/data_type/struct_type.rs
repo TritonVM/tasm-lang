@@ -6,6 +6,8 @@ use triton_vm::BFieldElement;
 
 use crate::ast_types;
 use crate::ast_types::StructVariant;
+use crate::tasm_code_generator::move_top_stack_value_to_memory;
+use crate::tasm_code_generator::write_n_words_to_memory_leaving_address;
 use crate::tasm_code_generator::CompilerState;
 
 impl ast_types::StructType {
@@ -47,6 +49,80 @@ impl ast_types::StructType {
         } else {
             load_from_memory_struct_is_not_copy(self, state)
         }
+    }
+
+    /// ```text
+    /// BEFORE: _ [value] *value
+    /// AFTER: _
+    /// ```
+    pub(crate) fn store_to_memory(&self, state: &mut CompilerState) -> Vec<LabelledInstruction> {
+        self.store_to_memory_inner(state, false)
+    }
+
+    /// ```text
+    /// BEFORE: _ [value] *value
+    /// AFTER: _ *last_word + 1
+    /// ```
+    pub(crate) fn store_to_memory_leave_next_free_address(
+        &self,
+        state: &mut CompilerState,
+    ) -> Vec<LabelledInstruction> {
+        self.store_to_memory_inner(state, true)
+    }
+
+    /// ```text
+    /// BEFORE: _ [value] *value
+    /// AFTER: _ <*last_word + 1>
+    /// ```
+    fn store_to_memory_inner(
+        &self,
+        state: &mut CompilerState,
+        leave_last_address_plus_one: bool,
+    ) -> Vec<LabelledInstruction> {
+        if self.is_copy {
+            if leave_last_address_plus_one {
+                return write_n_words_to_memory_leaving_address(self.stack_size());
+            } else {
+                return move_top_stack_value_to_memory(None, self.stack_size());
+            }
+        }
+
+        let label_for_subroutine = if leave_last_address_plus_one {
+            format!(
+                "store_{}_to_memory_leave_last_address_plus_one",
+                self.label_friendly_name()
+            )
+        } else {
+            format!("store_{}_to_memory", self.label_friendly_name())
+        };
+        let call_store_sr = triton_asm!(call {
+            label_for_subroutine
+        });
+        if state.contains_subroutine(&label_for_subroutine) {
+            return call_store_sr;
+        }
+
+        let mut subroutine = triton_asm!(
+            {label_for_subroutine}:
+        );
+        for (_field_id, dtype) in self.field_ids_and_types() {
+            // _ [[fields]] *field
+            // _ [[other_fields] [next_field]] *field
+            let move_field_to_memory = dtype.store_to_memory_leave_next_free_address(state);
+
+            // _ [[first_fields] ] *next_field
+
+            subroutine.extend(move_field_to_memory);
+        }
+
+        if !leave_last_address_plus_one {
+            subroutine.extend(triton_asm!(pop 1));
+        };
+        subroutine.extend(triton_asm!(return));
+
+        state.add_library_function(subroutine.try_into().unwrap());
+
+        call_store_sr
     }
 
     /// Return the code to get all field pointers. The field pointers are stored

@@ -132,7 +132,7 @@ impl EnumType {
     }
 
     /// Use this if the type is used to make labels in the TASM code
-    pub fn label_friendly_name(&self) -> String {
+    pub(crate) fn label_friendly_name(&self) -> String {
         match self.type_parameter.as_ref() {
             // Use type parameter here to differentiate between
             // methods for `Result<BFE>` and `Result<XFE>`.

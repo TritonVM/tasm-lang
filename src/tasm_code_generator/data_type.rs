@@ -1,4 +1,6 @@
 use tasm_lib;
+use tasm_lib::memory::dyn_malloc::DynMalloc;
+use tasm_lib::memory::memcpy::MemCpy;
 use triton_vm::instruction::LabelledInstruction;
 use triton_vm::op_stack::OpStackElement;
 use triton_vm::triton_asm;
@@ -9,6 +11,7 @@ use crate::tasm_code_generator::read_n_words_from_memory;
 use crate::tasm_code_generator::CompilerState;
 
 use super::move_top_stack_value_to_memory;
+use super::write_n_words_to_memory_leaving_address;
 
 pub mod enum_type;
 pub mod struct_type;
@@ -71,6 +74,45 @@ impl ast_types::DataType {
 
     /// ```text
     /// BEFORE: _ [value] *value
+    /// AFTER: _ (*last_word + 1)
+    /// ```
+    pub(crate) fn store_to_memory_leave_next_free_address(
+        &self,
+        state: &mut CompilerState,
+    ) -> Vec<LabelledInstruction> {
+        match self {
+            ast_types::DataType::Bool
+            | ast_types::DataType::U32
+            | ast_types::DataType::U64
+            | ast_types::DataType::U128
+            | ast_types::DataType::Bfe
+            | ast_types::DataType::Xfe
+            | ast_types::DataType::Digest
+            | ast_types::DataType::Tuple(_) => {
+                write_n_words_to_memory_leaving_address(self.stack_size())
+            }
+            ast_types::DataType::List(_, _) => {
+                triton_asm!(
+                    // *list *new_list;
+                )
+            }
+            ast_types::DataType::Array(_) | ast_types::DataType::Boxed(_) => {
+                triton_asm!(push 1 add)
+            }
+            ast_types::DataType::Enum(enum_type) => {
+                enum_type.store_to_memory_leave_next_free_address(state)
+            }
+            ast_types::DataType::Struct(struct_type) => {
+                struct_type.store_to_memory_leave_next_free_address(state)
+            }
+            ast_types::DataType::VoidPointer => todo!(),
+            ast_types::DataType::Function(_) => todo!(),
+            ast_types::DataType::Unresolved(_) => todo!(),
+        }
+    }
+
+    /// ```text
+    /// BEFORE: _ [value] *value
     /// AFTER: _
     /// ```
     pub(crate) fn store_to_memory(&self, state: &mut CompilerState) -> Vec<LabelledInstruction> {
@@ -85,19 +127,14 @@ impl ast_types::DataType {
             | ast_types::DataType::Tuple(_) => {
                 move_top_stack_value_to_memory(None, self.stack_size())
             }
-            ast_types::DataType::List(_, _)
-            | ast_types::DataType::Array(_)
-            | ast_types::DataType::Boxed(_) => {
+            ast_types::DataType::List(element_type, list_type) => {
+                clone_vector(element_type, list_type, state)
+            }
+            ast_types::DataType::Array(_) | ast_types::DataType::Boxed(_) => {
                 triton_asm!()
             }
             ast_types::DataType::Enum(enum_type) => enum_type.store_to_memory(state),
-            ast_types::DataType::Struct(struct_type) => {
-                if struct_type.is_copy {
-                    move_top_stack_value_to_memory(None, struct_type.stack_size())
-                } else {
-                    todo!()
-                }
-            }
+            ast_types::DataType::Struct(struct_type) => struct_type.store_to_memory(state),
             ast_types::DataType::VoidPointer => todo!(),
             ast_types::DataType::Function(_) => todo!(),
             ast_types::DataType::Unresolved(_) => todo!(),
@@ -179,4 +216,56 @@ impl ast_types::DataType {
             Enum(_) => todo!("Equality for enums not yet implemented"),
         }
     }
+}
+
+/// Returns the code to make a new copy of a list. Allocates memory for the new list through
+/// the dynamic allocator.
+/// ```text
+/// BEFORE: _ *old_list
+/// AFTER: _ *new_list
+/// ```
+pub(crate) fn clone_vector(
+    element_type: &ast_types::DataType,
+    list_type: &ast_types::ListType,
+    state: &mut CompilerState,
+) -> Vec<LabelledInstruction> {
+    let element_size = element_type.stack_size();
+    let add_metadata_size = match list_type {
+        ast_types::ListType::Safe => triton_asm!(push 2 add),
+        ast_types::ListType::Unsafe => triton_asm!(push 1 add),
+    };
+    let memcpy_label = state.import_snippet(Box::new(MemCpy));
+    let dyn_malloc_label = state.import_snippet(Box::new(DynMalloc));
+    triton_asm!(
+        // _ *old_list
+
+        read_mem 1
+        // _ list_length (*old_list - 1)
+
+        push 1 add
+        // _ list_length *old_list
+
+        swap 1
+        // _ *old_list list_length
+
+        push {element_size}
+        mul
+        // _ *old_list size_of_elements
+
+        {&add_metadata_size}
+        // _ *old_list total_list_size
+
+        dup 0
+        call {dyn_malloc_label}
+        // _ *old_list total_list_size *new_list
+
+        swap 2
+        swap 1
+        dup 2
+        swap 1
+        // _ *new_list *old_list *new_list total_list_size
+
+        call {memcpy_label}
+        // _ *new_list
+    )
 }

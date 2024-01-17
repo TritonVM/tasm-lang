@@ -115,7 +115,7 @@ impl DataType {
                 let output = fn_type.output.label_friendly_name();
                 format!("function_from_L{}R__to_L{}R", input, output)
             }
-            Struct(struct_type) => struct_type.name.to_owned(),
+            Struct(struct_type) => struct_type.label_friendly_name(),
             Enum(enum_type) => enum_type.label_friendly_name(),
             Unresolved(name) => name.to_string(),
             Boxed(ty) => format!("boxed_L{}R", ty.label_friendly_name()),

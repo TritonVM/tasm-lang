@@ -1,4 +1,4 @@
-mod data_type;
+pub(crate) mod data_type;
 mod function_state;
 mod inner_function_tasm_code;
 mod outer_function_tasm_code;
@@ -9,6 +9,7 @@ use itertools::Itertools;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::fmt::Display;
+use syn::Data;
 use tasm_lib;
 use tasm_lib::library::Library as SnippetState;
 use tasm_lib::traits::basic_snippet::BasicSnippet;
@@ -1067,13 +1068,23 @@ fn compile_stmt(
     state: &mut CompilerState,
 ) -> Vec<LabelledInstruction> {
     match stmt {
-        ast::Stmt::Let(ast::LetStmt { var_name, expr, .. }) => {
+        ast::Stmt::Let(ast::LetStmt {
+            var_name,
+            expr,
+            data_type,
+            ..
+        }) => {
             let (expr_addr, expr_code) = compile_expr(expr, var_name, state);
+
+            let last_stack_for_value_plus_one = data_type.stack_size();
+            let asm_annotation_str =
+                format!("hint {var_name} = stack[0..{last_stack_for_value_plus_one}]");
+            let asm_annotation = triton_asm!({ asm_annotation_str });
             state
                 .function_state
                 .var_addr
                 .insert(var_name.clone(), expr_addr);
-            expr_code
+            [expr_code, asm_annotation].concat()
         }
 
         ast::Stmt::Assign(ast::AssignStmt { identifier, expr }) => {

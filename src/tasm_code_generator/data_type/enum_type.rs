@@ -11,6 +11,13 @@ use crate::tasm_code_generator::CompilerState;
 use crate::tasm_code_generator::SubRoutine;
 
 impl EnumType {
+    pub(crate) fn store_to_memory_leave_next_free_address(
+        &self,
+        _state: &mut CompilerState,
+    ) -> Vec<LabelledInstruction> {
+        todo!()
+    }
+
     /// ```text
     /// BEFORE: _ [data] [padding] discriminant *pointer
     /// AFTER: _
