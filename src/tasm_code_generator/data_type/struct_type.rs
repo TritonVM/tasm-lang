@@ -105,16 +105,64 @@ impl ast_types::StructType {
         let mut subroutine = triton_asm!(
             {label_for_subroutine}:
         );
-        for (_field_id, dtype) in self.field_ids_and_types() {
+
+        let field_pointer_pointer = state.static_memory_allocation(1);
+        for (_field_id, dtype) in self.field_ids_and_types_reversed() {
+            let field_has_dynamic_size = dtype.bfield_codec_static_length().is_none();
             // _ [[fields]] *field
             // _ [[other_fields] [next_field]] *field
+
+            let mut handle_field = if field_has_dynamic_size {
+                // Make room for size indicator and store current field pointer,
+                // so field size can be calculated
+                triton_asm!(
+                    dup 0
+                    // _ [[fields]] *field_size *field_size
+
+                    push {field_pointer_pointer}
+                    write_mem 1
+                    pop 1
+
+                    push 1
+                    add
+                    // _ [[fields]] *field
+                )
+            } else {
+                triton_asm!()
+            };
+
             let move_field_to_memory = dtype.store_to_memory_leave_next_free_address(state);
+            handle_field.extend(move_field_to_memory);
 
-            // _ [[first_fields] ] *next_field
+            // _ [[fields']] *next_field
+            if field_has_dynamic_size {
+                // Write size indicator for field
+                handle_field.extend(triton_asm!(
+                    push {field_pointer_pointer}
+                    read_mem 1
+                    pop 1
+                    // _ [[fields'] ] *next_field *field_size
 
-            // Problem: This does not store the field size to memory, if needed
+                    dup 1 dup 1
+                    // _ [[fields'] ] *next_field *field_size *next_field *field_size
 
-            subroutine.extend(move_field_to_memory);
+                    push -1
+                    mul
+                    add
+                    // _ [[fields'] ] *next_field *field_size (*next_field - *field_size)
+
+                    push -1
+                    add
+                    // _ [[fields'] ] *next_field *field_size field_size
+
+                    swap 1
+                    write_mem 1
+                    pop 1
+                    // _ [[fields'] ] *next_field
+                ));
+            }
+
+            subroutine.extend(handle_field);
         }
 
         if !leave_last_address_plus_one {
