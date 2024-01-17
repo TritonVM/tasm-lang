@@ -1,5 +1,3 @@
-#![allow(clippy::explicit_auto_deref)]
-
 use tasm_lib::structure::tasm_object::TasmObject;
 use triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
 use triton_vm::twenty_first::shared_math::tip5::Tip5State;

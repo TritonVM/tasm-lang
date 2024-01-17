@@ -5,7 +5,6 @@ use triton_vm::Digest;
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
 #[allow(clippy::unnecessary_literal_unwrap)]
-#[allow(clippy::assertions_on_constants)]
 fn main() {
     let bfe: BFieldElement = tasm::tasm_io_read_stdin___bfe();
     let ok_bfe: Result<BFieldElement, ()> = Ok(bfe);
@@ -14,7 +13,7 @@ fn main() {
             tasm::tasm_io_write_to_stdout___bfe(inner);
         }
         Err(_) => {
-            assert!(false);
+            panic!();
         }
     };
 
@@ -47,7 +46,7 @@ fn main() {
             assert!(bfe == bfe_again);
         }
         Result::Err(_) => {
-            assert!(false);
+            panic!();
         }
     };
 
@@ -59,7 +58,7 @@ fn main() {
             assert!(xfe == xfe_again);
         }
         Result::Err(_) => {
-            assert!(false);
+            panic!();
         }
     };
 
@@ -69,7 +68,7 @@ fn main() {
             assert!(digest == digest_again);
         }
         Result::Err(_) => {
-            assert!(false);
+            panic!();
         }
     };
 
@@ -78,7 +77,7 @@ fn main() {
     let digest_err: Result<Digest, ()> = Err(());
     match bfe_err {
         Result::Ok(_) => {
-            assert!(false);
+            panic!();
         }
         Result::Err(_) => {
             tasm::tasm_io_write_to_stdout___bfe(bfe);
@@ -86,7 +85,7 @@ fn main() {
     };
     match xfe_err {
         Result::Ok(_) => {
-            assert!(false);
+            panic!();
         }
         Result::Err(_) => {
             tasm::tasm_io_write_to_stdout___bfe(bfe);
@@ -94,7 +93,7 @@ fn main() {
     };
     match digest_err {
         Result::Ok(_) => {
-            assert!(false);
+            panic!();
         }
         Result::Err(_) => {
             tasm::tasm_io_write_to_stdout___bfe(bfe);

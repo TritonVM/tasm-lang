@@ -31,43 +31,40 @@ pub enum ProofItem {
 
 impl ProofItem {
     fn include_in_fiat_shamir_heuristic(&self) -> bool {
-        #[allow(unused_assignments)]
-        let mut ret: bool = false;
+        let mut is_included: bool = false;
         match self {
             ProofItem::MerkleRoot(_) => {
-                ret = true;
+                is_included = true;
             }
             ProofItem::OutOfDomainBaseRow(_) => {
-                ret = true;
+                is_included = true;
             }
             ProofItem::OutOfDomainExtRow(_) => {
-                ret = true;
+                is_included = true;
             }
             ProofItem::OutOfDomainQuotientSegments(_) => {
-                ret = true;
+                is_included = true;
             }
-            // all of the following are implied by a corresponding Merkle root
-            _ => {
-                ret = false;
-            }
+            // all other possibilities are implied by a corresponding Merkle root
+            _ => {}
         };
 
-        return ret;
+        return is_included;
     }
 
-    #[allow(clippy::assertions_on_constants)]
     fn as_merkle_root(&self) -> Digest {
-        let mut ret: Digest = Digest::default();
+        #[allow(unused_assignments)]
+        let mut root: Digest = Digest::default();
         match self {
             ProofItem::MerkleRoot(bs) => {
-                ret = *bs;
+                root = *bs;
             }
             _ => {
-                assert!(false);
+                panic!("wrong assumptions, buddy");
             }
         };
 
-        return ret;
+        return root;
     }
 }
 
@@ -104,6 +101,7 @@ fn proof_item_load_merkle_root_from_memory() {
 #[cfg(test)]
 mod test {
     use proptest::collection::vec;
+    use proptest::prelude::*;
     use proptest_arbitrary_interop::arb;
     use test_strategy::proptest;
     use triton_vm::NonDeterminism;
@@ -140,7 +138,7 @@ mod test {
         )
         .unwrap();
 
-        assert_eq!(native_output, vm_output.output);
+        prop_assert_eq!(native_output, vm_output.output);
     }
 
     #[proptest]
@@ -174,7 +172,7 @@ mod test {
         )
         .unwrap();
 
-        assert_eq!(native_output, vm_output.output);
+        prop_assert_eq!(native_output, vm_output.output);
     }
 
     #[proptest]
@@ -204,6 +202,6 @@ mod test {
         )
         .unwrap();
 
-        assert_eq!(host_machine_output, vm_output.output);
+        prop_assert_eq!(host_machine_output, vm_output.output);
     }
 }

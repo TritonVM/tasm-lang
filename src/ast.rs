@@ -146,6 +146,7 @@ pub(crate) enum Stmt<T> {
     If(IfStmt<T>),
     Block(BlockStmt<T>),
     Assert(AssertStmt<T>),
+    Panic(PanicStmt),
     FnDeclaration(Fn<T>),
     Match(MatchStmt<T>),
 }
@@ -215,6 +216,9 @@ pub(crate) struct AssertStmt<T> {
     pub expression: Expr<T>,
     // pub decription: Option<String>,
 }
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub(crate) struct PanicStmt;
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub(crate) struct WhileStmt<T> {

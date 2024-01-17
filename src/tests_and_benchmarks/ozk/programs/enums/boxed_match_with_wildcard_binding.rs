@@ -1,5 +1,3 @@
-#![allow(clippy::assertions_on_constants)]
-
 use triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
 use triton_vm::BFieldElement;
 use triton_vm::Digest;

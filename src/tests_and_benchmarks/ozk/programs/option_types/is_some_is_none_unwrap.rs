@@ -5,7 +5,6 @@ use triton_vm::Digest;
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
 #[allow(clippy::unnecessary_literal_unwrap)]
-#[allow(clippy::assertions_on_constants)]
 fn main() {
     let bfe: BFieldElement = tasm::tasm_io_read_stdin___bfe();
     let some_bfe_boxed: Box<Option<BFieldElement>> = Box::<Option<BFieldElement>>::new(Some(bfe));
@@ -32,7 +31,7 @@ fn main() {
             tasm::tasm_io_write_to_stdout___xfe(*inner);
         }
         None => {
-            assert!(false);
+            panic!();
         }
     };
     match some_xfe_stack {
@@ -40,7 +39,7 @@ fn main() {
             tasm::tasm_io_write_to_stdout___xfe(inner);
         }
         None => {
-            assert!(false);
+            panic!();
         }
     };
 
@@ -49,7 +48,7 @@ fn main() {
             tasm::tasm_io_write_to_stdout___bfe(*inner);
         }
         None => {
-            assert!(false);
+            panic!();
         }
     };
     match some_bfe_boxed.as_ref() {
@@ -57,13 +56,13 @@ fn main() {
             tasm::tasm_io_write_to_stdout___bfe(*inner);
         }
         _ => {
-            assert!(false);
+            panic!();
         }
     };
 
     match none_xfe_boxed.as_ref() {
         Some(_) => {
-            assert!(false);
+            panic!();
         }
         None => {
             tasm::tasm_io_write_to_stdout___u32(100);
@@ -71,7 +70,7 @@ fn main() {
     };
     match none_xfe_boxed.as_ref() {
         Some(_) => {
-            assert!(false);
+            panic!();
         }
         _ => {
             tasm::tasm_io_write_to_stdout___u32(100);
@@ -80,7 +79,7 @@ fn main() {
 
     match none_digest_boxed.as_ref() {
         Some(_) => {
-            assert!(false);
+            panic!();
         }
         None => {
             tasm::tasm_io_write_to_stdout___u32(101);

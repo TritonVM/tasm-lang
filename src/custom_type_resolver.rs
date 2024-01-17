@@ -125,10 +125,7 @@ impl CustomTypeResolution for Stmt<Typing> {
     fn resolve_custom_types(&mut self, composite_types: &CompositeTypes) {
         match self {
             Stmt::Let(LetStmt {
-                var_name: _,
-                mutable: _,
-                data_type,
-                expr,
+                data_type, expr, ..
             }) => {
                 data_type.resolve_custom_types(composite_types);
                 expr.resolve_custom_types(composite_types);
@@ -143,11 +140,9 @@ impl CustomTypeResolution for Stmt<Typing> {
                 }
             }
             Stmt::FnCall(FnCall {
-                name: _,
                 args,
                 type_parameter,
-                arg_evaluation_order: _,
-                annot: _,
+                ..
             }) => {
                 args.iter_mut()
                     .for_each(|x| x.resolve_custom_types(composite_types));
@@ -155,12 +150,7 @@ impl CustomTypeResolution for Stmt<Typing> {
                     typa.resolve_custom_types(composite_types)
                 }
             }
-            Stmt::MethodCall(MethodCall {
-                method_name: _,
-                args,
-                annot: _,
-                associated_type: _,
-            }) => {
+            Stmt::MethodCall(MethodCall { args, .. }) => {
                 args.iter_mut()
                     .for_each(|x| x.resolve_custom_types(composite_types));
             }
@@ -192,6 +182,7 @@ impl CustomTypeResolution for Stmt<Typing> {
             Stmt::Assert(AssertStmt { expression }) => {
                 expression.resolve_custom_types(composite_types)
             }
+            Stmt::Panic(_) => (),
             Stmt::FnDeclaration(Fn { signature, body }) => {
                 signature.resolve_custom_types(composite_types);
                 match body {

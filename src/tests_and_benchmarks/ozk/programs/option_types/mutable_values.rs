@@ -4,21 +4,20 @@ use triton_vm::Digest;
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
 #[allow(clippy::unnecessary_literal_unwrap)]
-#[allow(clippy::assertions_on_constants)]
 #[allow(clippy::single_match)]
 fn main() {
     // None -> None
     let mut none_value: Option<u64> = None;
     match none_value {
         Some(_) => {
-            assert!(false);
+            panic!();
         }
         None => {}
     };
     none_value = None;
     match none_value {
         Some(_) => {
-            assert!(false);
+            panic!();
         }
         None => {}
     };
@@ -27,7 +26,7 @@ fn main() {
     let mut none_to_some_value: Option<u64> = None;
     match none_to_some_value {
         Some(_) => {
-            assert!(false);
+            panic!();
         }
         None => {}
     };
@@ -37,7 +36,7 @@ fn main() {
             tasm::tasm_io_write_to_stdout___u64(x);
         }
         None => {
-            assert!(false);
+            panic!();
         }
     };
 
@@ -49,13 +48,13 @@ fn main() {
             tasm::tasm_io_write_to_stdout___xfe(x);
         }
         None => {
-            assert!(false);
+            panic!();
         }
     };
     some_to_none_value = None;
     match some_to_none_value {
         Some(_) => {
-            assert!(false);
+            panic!();
         }
         None => {}
     };
@@ -68,7 +67,7 @@ fn main() {
             tasm::tasm_io_write_to_stdout___digest(x);
         }
         None => {
-            assert!(false);
+            panic!();
         }
     };
     some_value = Some(tasm::tasm_io_read_stdin___digest());
@@ -78,7 +77,7 @@ fn main() {
             tasm::tasm_io_write_to_stdout___digest(x);
         }
         None => {
-            assert!(false);
+            panic!();
         }
     };
 

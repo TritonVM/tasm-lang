@@ -8,24 +8,20 @@ pub enum SimpleEnum {
     B,
 }
 
-#[allow(clippy::assertions_on_constants)]
 fn main() {
     let a: SimpleEnum = SimpleEnum::A(tasm::tasm_io_read_stdin___xfe());
     let b: SimpleEnum = SimpleEnum::B;
 
     match b {
         SimpleEnum::A(_xfe) => {
-            assert!(false);
+            panic!();
         }
-        SimpleEnum::B => {
-            assert!(true);
-        }
+        SimpleEnum::B => {}
     };
 
     match a {
         SimpleEnum::A(xfe) => {
             let i: u32 = 14;
-            assert!(true);
             tasm::tasm_io_write_to_stdout___xfe(xfe);
             tasm::tasm_io_write_to_stdout___u32(i);
             tasm::tasm_io_write_to_stdout___xfe(xfe);
@@ -38,12 +34,12 @@ fn main() {
                     tasm::tasm_io_write_to_stdout___xfe(xfe_1);
                 }
                 SimpleEnum::B => {
-                    assert!(false);
+                    panic!();
                 }
             };
         }
         SimpleEnum::B => {
-            assert!(false);
+            panic!();
         }
     };
 

@@ -3,7 +3,6 @@ use triton_vm::twenty_first::shared_math::x_field_element::XFieldElement;
 
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
-#[allow(clippy::assertions_on_constants)]
 fn main() {
     let xfe: XFieldElement = tasm::tasm_io_read_stdin___xfe();
     let good_xfe: Result<XFieldElement, ()> = Ok(xfe);
@@ -14,7 +13,7 @@ fn main() {
             tasm::tasm_io_write_to_stdout___xfe(xfe_again);
         }
         Err(_) => {
-            assert!(false);
+            panic!();
         }
     };
     match good_xfe {
@@ -23,14 +22,14 @@ fn main() {
             tasm::tasm_io_write_to_stdout___xfe(xfe_again);
         }
         _ => {
-            assert!(false);
+            panic!();
         }
     };
 
     let bad_xfe: Result<XFieldElement, ()> = Err(());
     match bad_xfe {
         Ok(_xfe) => {
-            assert!(false);
+            panic!();
         }
         Err(_) => {
             tasm::tasm_io_write_to_stdout___xfe(xfe + XFieldElement::one());
@@ -39,7 +38,7 @@ fn main() {
 
     match bad_xfe {
         Ok(_xfe) => {
-            assert!(false);
+            panic!();
         }
         _ => {
             tasm::tasm_io_write_to_stdout___xfe(xfe + XFieldElement::one());

@@ -3,42 +3,33 @@ pub enum SimpleEnum {
     B,
 }
 
-#[allow(clippy::assertions_on_constants)]
 #[allow(clippy::match_single_binding)]
 fn main() {
     let a: SimpleEnum = SimpleEnum::A;
     let b: SimpleEnum = SimpleEnum::B;
 
     match a {
-        SimpleEnum::A => {
-            assert!(true);
-        }
+        SimpleEnum::A => {}
         SimpleEnum::B => {
-            assert!(false);
+            panic!();
         }
     };
 
     match b {
         SimpleEnum::A => {
-            assert!(false);
+            panic!();
         }
-        SimpleEnum::B => {
-            assert!(true);
-        }
+        SimpleEnum::B => {}
     };
 
     match a {
-        _ => {
-            assert!(true);
-        }
+        _ => {}
     };
 
     match a {
-        SimpleEnum::A => {
-            assert!(true);
-        }
+        SimpleEnum::A => {}
         _ => {
-            assert!(false);
+            panic!();
         }
     };
 

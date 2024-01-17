@@ -2,7 +2,6 @@ use triton_vm::BFieldElement;
 
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
-#[allow(clippy::assertions_on_constants)]
 #[allow(clippy::vec_init_then_push)]
 fn main() {
     let bfe_0: BFieldElement = tasm::tasm_io_read_stdin___bfe();
@@ -19,7 +18,7 @@ fn main() {
             tasm::tasm_io_write_to_stdout___u32(bfes.len() as u32);
         }
         Result::Err(_) => {
-            assert!(false);
+            panic!();
         }
     };
 

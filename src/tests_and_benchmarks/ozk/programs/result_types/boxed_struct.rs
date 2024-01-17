@@ -12,7 +12,6 @@ struct NotCopyStruct {
     xfes: Vec<XFieldElement>,
 }
 
-#[allow(clippy::assertions_on_constants)]
 #[allow(clippy::len_zero)]
 fn main() {
     let a_stack_value: BFieldElement = BFieldElement::new(404);
@@ -46,14 +45,14 @@ fn main() {
             }
         }
         Result::Err(_) => {
-            assert!(false);
+            panic!();
         }
     };
 
     let as_err: Result<Box<NotCopyStruct>, ()> = Err(());
     match as_err {
         Result::Ok(_) => {
-            assert!(false);
+            panic!();
         }
         Result::Err(_) => {
             tasm::tasm_io_write_to_stdout___bfe(a_stack_value);

@@ -515,9 +515,9 @@ fn annotate_stmt(
                 ast_types::DataType::Enum(enum_type) => (enum_type, false),
                 ast_types::DataType::Boxed(inner) => match *inner.to_owned() {
                     ast_types::DataType::Enum(enum_type) => (enum_type, true),
-                    other => panic!("`match` statements are only supported on enum types. For now. Got {other}", )
+                    other => panic!("`match` statements are only supported on enum types. For now. Got {other}")
                 },
-                _ => panic!("`match` statements are only supported on enum types. For now. Got {match_expression_type}", )
+                _ => panic!("`match` statements are only supported on enum types. For now. Got {match_expression_type}")
             };
 
             let mut variants_encountered: HashSet<String> = HashSet::default();
@@ -526,9 +526,12 @@ fn annotate_stmt(
             for (i, arm) in arms.iter_mut().enumerate() {
                 match &arm.match_condition {
                     ast::MatchCondition::CatchAll => {
-                        assert!(
-                            i == arm_count - 1,
-                            "When using wildcard in match statement, wildcard must be used in last match arm. Match expression was for type {}", enum_type.name
+                        assert_eq!(
+                            i,
+                            arm_count - 1,
+                            "When using wildcard in match statement, wildcard must be used in last match arm. \
+                            Match expression was for type {}",
+                            enum_type.name
                         );
                         contains_wildcard_arm = true;
 
@@ -618,6 +621,7 @@ fn annotate_stmt(
             .unwrap();
             assert_type_equals(&expr_type, &ast_types::DataType::Bool, "assert expression");
         }
+        ast::Stmt::Panic(_) => (),
         ast::Stmt::FnDeclaration(function) => {
             // A local function can see all functions available in the outer scope.
             annotate_fn_inner(

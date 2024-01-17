@@ -5,10 +5,12 @@ use itertools::Itertools;
 use num::One;
 use num::Zero;
 use syn::parse_quote;
+use syn::ExprMacro;
 use syn::PathArguments;
 
 use crate::ast;
 use crate::ast::ReturningBlock;
+use crate::ast::Stmt;
 use crate::ast_types;
 use crate::ast_types::DataType;
 use crate::composite_types::CompositeTypes;
@@ -49,71 +51,18 @@ impl<'a> Graft<'a> {
         }
     }
 
-    #[allow(clippy::type_complexity)]
+    fn is_copy(attrs: &[syn::Attribute]) -> bool {
+        match attrs.len() {
+            0 => false,
+            1 => attrs[0].tokens.to_string().contains("Copy"),
+            _ => panic!("Can only handle one line of attributes for now."),
+        }
+    }
+
     pub(crate) fn graft_custom_types_methods_and_associated_functions(
         &mut self,
         structs_and_methods: HashMap<String, (CustomTypeRust, Vec<syn::ImplItemMethod>)>,
     ) -> CompositeTypes {
-        fn graft_enum_variants(
-            graft_config: &mut Graft,
-            variants: Vec<syn::Variant>,
-        ) -> Vec<(String, ast_types::DataType)> {
-            let mut grafted_variants = vec![];
-            for variant in variants {
-                let variant_name = variant.ident.to_string();
-                let field_type = graft_tuple_struct(graft_config, variant.fields);
-                grafted_variants.push((variant_name, ast_types::DataType::Tuple(field_type)));
-            }
-
-            grafted_variants
-        }
-
-        fn graft_struct_with_named_fields(
-            graft_config: &mut Graft,
-            struct_name: &str,
-            fields: syn::Fields,
-        ) -> ast_types::NamedFieldsStruct {
-            let mut ast_fields: Vec<(String, ast_types::DataType)> = vec![];
-            for field in fields.into_iter() {
-                // Ignore fields that are tagged as `tasm_object(ignore)`. These
-                // fields simply do not become part of the structure.
-                if !field.attrs.len().is_zero()
-                    && field.attrs.iter().any(|x| {
-                        x.path.segments[0].ident == "tasm_object"
-                            && x.tokens.to_string() == "(ignore)"
-                    })
-                {
-                    continue;
-                }
-
-                let field_name = field.ident.unwrap().to_string();
-                let datatype = graft_config.syn_type_to_ast_type(&field.ty);
-                ast_fields.push((field_name, datatype));
-            }
-
-            ast_types::NamedFieldsStruct {
-                fields: ast_fields,
-                name: struct_name.to_owned(),
-            }
-        }
-
-        fn graft_tuple_struct(graft_config: &mut Graft, fields: syn::Fields) -> ast_types::Tuple {
-            let mut ast_fields: Vec<ast_types::DataType> = vec![];
-            for field in fields {
-                ast_fields.push(graft_config.syn_type_to_ast_type(&field.ty));
-            }
-
-            ast_fields.into()
-        }
-
-        fn is_copy(attrs: &[syn::Attribute]) -> bool {
-            match attrs.len() {
-                1 => attrs[0].tokens.to_string().contains("Copy"),
-                0 => false,
-                _ => panic!("Can only handle one line of attributes for now."),
-            }
-        }
-
         let mut composite_types = CompositeTypes::default();
 
         // Handle composite data structures
@@ -136,9 +85,9 @@ impl<'a> Graft<'a> {
                     } = enum_item;
                     let name = ident.to_string();
 
-                    let is_copy = is_copy(&attrs);
+                    let is_copy = Self::is_copy(&attrs);
 
-                    let variants = graft_enum_variants(self, variants.into_iter().collect_vec());
+                    let variants = self.graft_enum_variants(variants.into_iter().collect_vec());
                     let enum_type = ast_types::EnumType {
                         name: name.clone(),
                         is_copy,
@@ -161,17 +110,17 @@ impl<'a> Graft<'a> {
                     } = struct_item;
                     let name = ident.to_string();
 
-                    let is_copy = is_copy(&attrs);
+                    let is_copy = Self::is_copy(&attrs);
 
                     // Rust structs come in three forms: with named fields, tuple structs, and
                     // unit structs. We don't yet support unit structs, so we can assume that
                     // the struct has at least *one* field.
                     let struct_type = match fields.iter().next().unwrap().ident {
                         Some(_) => ast_types::StructVariant::NamedFields(
-                            graft_struct_with_named_fields(self, &name, fields),
+                            self.graft_struct_with_named_fields(&name, fields),
                         ),
                         None => {
-                            ast_types::StructVariant::TupleStruct(graft_tuple_struct(self, fields))
+                            ast_types::StructVariant::TupleStruct(self.graft_tuple_struct(fields))
                         }
                     };
                     let struct_type = ast_types::StructType {
@@ -207,6 +156,54 @@ impl<'a> Graft<'a> {
         }
 
         composite_types
+    }
+
+    fn graft_enum_variants(&mut self, variants: Vec<syn::Variant>) -> Vec<(String, DataType)> {
+        let mut grafted_variants = vec![];
+        for variant in variants {
+            let variant_name = variant.ident.to_string();
+            let field_type = self.graft_tuple_struct(variant.fields);
+            grafted_variants.push((variant_name, DataType::Tuple(field_type)));
+        }
+
+        grafted_variants
+    }
+
+    fn graft_tuple_struct(&mut self, fields: syn::Fields) -> ast_types::Tuple {
+        let mut ast_fields: Vec<DataType> = vec![];
+        for field in fields {
+            ast_fields.push(self.syn_type_to_ast_type(&field.ty));
+        }
+
+        ast_fields.into()
+    }
+
+    fn graft_struct_with_named_fields(
+        &mut self,
+        struct_name: &str,
+        fields: syn::Fields,
+    ) -> ast_types::NamedFieldsStruct {
+        let mut ast_fields: Vec<(String, DataType)> = vec![];
+        for field in fields.into_iter() {
+            // Ignore fields that are tagged as `tasm_object(ignore)`. These
+            // fields simply do not become part of the structure.
+            if !field.attrs.len().is_zero()
+                && field.attrs.iter().any(|x| {
+                    x.path.segments[0].ident == "tasm_object" && x.tokens.to_string() == "(ignore)"
+                })
+            {
+                continue;
+            }
+
+            let field_name = field.ident.unwrap().to_string();
+            let datatype = self.syn_type_to_ast_type(&field.ty);
+            ast_fields.push((field_name, datatype));
+        }
+
+        ast_types::NamedFieldsStruct {
+            fields: ast_fields,
+            name: struct_name.to_owned(),
+        }
     }
 
     fn graft_method(
@@ -662,18 +659,17 @@ impl<'a> Graft<'a> {
 
     fn graft_field_expression(
         &mut self,
-        syn::ExprField {
-            attrs: _,
-            base,
-            dot_token: _,
-            member,
-        }: &syn::ExprField,
+        syn::ExprField { base, member, .. }: &syn::ExprField,
     ) -> ast::Identifier<Annotation> {
         let base_expression = self.graft_expr(base);
         let base_ident = match base_expression {
             ast::Expr::Var(ident) => ident,
             _ => {
-                panic!("Left-hand-side of tuple operator must be a declared variable. Declare more bindings if needed. Failed to parse expression: {base_expression} as an identifier");
+                panic!(
+                    "Left-hand-side of tuple operator must be a declared variable. \
+                     Declare more bindings if needed. \
+                     Failed to parse expression: {base_expression} as an identifier"
+                );
             }
         };
 
@@ -1101,350 +1097,370 @@ impl<'a> Graft<'a> {
         }
     }
 
-    pub fn graft_stmt(&mut self, rust_stmt: &syn::Stmt) -> ast::Stmt<Annotation> {
-        return match rust_stmt {
-            // variable declarations
-            syn::Stmt::Local(local) => graft_local_stmt(self, local),
-            // Expressions
-            syn::Stmt::Expr(expr) => graft_expr_stmt(self, expr),
-            // ExpressionsThings that end with a semi-colon
-            syn::Stmt::Semi(semi, _b) => graft_semi_stmt(self, semi),
-            // Handle declared functions
-            syn::Stmt::Item(item) => graft_item_stmt(self, item),
+    pub fn graft_stmt(&mut self, rust_stmt: &syn::Stmt) -> Stmt<Annotation> {
+        match rust_stmt {
+            syn::Stmt::Local(local) => self.graft_local_stmt(local),
+            syn::Stmt::Expr(expr) => self.graft_expr_stmt(expr),
+            syn::Stmt::Semi(semi, _b) => self.graft_semi_stmt(semi),
+            syn::Stmt::Item(item) => self.graft_item_stmt(item),
+        }
+    }
+
+    /// Handle declarations, i.e. `let a: u32 = 200;`
+    fn graft_local_stmt(&mut self, local: &syn::Local) -> Stmt<Annotation> {
+        let (ident, data_type, mutable): (String, DataType, bool) = match &local.pat {
+            syn::Pat::Type(pat_type) => {
+                let (dt, mutable): (DataType, bool) =
+                    self.pat_type_to_data_type_and_mutability(pat_type);
+                let ident: String = Graft::pat_to_name(&pat_type.pat);
+
+                (ident, dt, mutable)
+            }
+            syn::Pat::Ident(d) => {
+                // This would indicate that the explicit type is missing
+                let ident = d.ident.to_string();
+                panic!("Missing explicit type in declaration of '{ident}'");
+            }
+            other => panic!("unsupported: {other:?}"),
         };
 
-        /// Handle declarations, i.e. `let a: u32 = 200;`
-        fn graft_local_stmt(graft_config: &mut Graft, local: &syn::Local) -> ast::Stmt<Annotation> {
-            let (ident, data_type, mutable): (String, ast_types::DataType, bool) = match &local.pat
-            {
-                syn::Pat::Type(pat_type) => {
-                    let (dt, mutable): (ast_types::DataType, bool) =
-                        graft_config.pat_type_to_data_type_and_mutability(pat_type);
-                    let ident: String = Graft::pat_to_name(&pat_type.pat);
+        let init = local
+            .init
+            .as_ref()
+            .unwrap_or_else(|| panic!("must initialize \"{ident}\""));
+        let init_expr = init.1.as_ref();
+        let ast_expt = self.graft_expr(init_expr);
+        let let_stmt = ast::LetStmt {
+            var_name: ident,
+            data_type,
+            expr: ast_expt,
+            mutable,
+        };
+        Stmt::Let(let_stmt)
+    }
 
-                    (ident, dt, mutable)
-                }
-                syn::Pat::Ident(d) => {
-                    // This would indicate that the explicit type is missing
-                    let ident = d.ident.to_string();
-                    panic!("Missing explicit type in declaration of '{ident}'");
-                }
-                other => panic!("unsupported: {other:?}"),
-            };
+    /// Handle expressions
+    fn graft_expr_stmt(&mut self, expr: &syn::Expr) -> Stmt<Annotation> {
+        match expr {
+            syn::Expr::While(while_stmt) => {
+                let expr_while = while_stmt;
+                let while_condition = self.graft_expr(&expr_while.cond);
+                let while_stmts: Vec<Stmt<Annotation>> = while_stmt
+                    .body
+                    .stmts
+                    .iter()
+                    .map(|x| self.graft_stmt(x))
+                    .collect_vec();
 
-            let init = local.init.as_ref().unwrap();
-            let init_expr = init.1.as_ref();
-            let ast_expt = graft_config.graft_expr(init_expr);
-            let let_stmt = ast::LetStmt {
-                var_name: ident,
-                data_type,
-                expr: ast_expt,
-                mutable,
-            };
-            ast::Stmt::Let(let_stmt)
-        }
-
-        /// Handle expressions
-        fn graft_expr_stmt(graft_config: &mut Graft, expr: &syn::Expr) -> ast::Stmt<Annotation> {
-            match expr {
-                syn::Expr::While(while_stmt) => {
-                    let expr_while = while_stmt;
-                    let while_condition = graft_config.graft_expr(&expr_while.cond);
-                    let while_stmts: Vec<ast::Stmt<Annotation>> = while_stmt
-                        .body
-                        .stmts
-                        .iter()
-                        .map(|x| graft_config.graft_stmt(x))
-                        .collect_vec();
-
-                    let while_stmt = ast::WhileStmt {
-                        condition: while_condition,
-                        block: ast::BlockStmt { stmts: while_stmts },
-                    };
-                    ast::Stmt::While(while_stmt)
-                }
-                syn::Expr::If(if_expr) => {
-                    let if_condition = graft_config.graft_expr(&if_expr.cond);
-                    let then_stmts: Vec<ast::Stmt<Annotation>> = if_expr
-                        .then_branch
-                        .stmts
-                        .iter()
-                        .map(|x| graft_config.graft_stmt(x))
-                        .collect_vec();
-                    let else_stmts: Vec<ast::Stmt<Annotation>> = match if_expr.else_branch.as_ref()
-                    {
-                        Some(else_stmts) => match else_stmts.1.as_ref() {
-                            syn::Expr::Block(block) => block
-                                .block
-                                .stmts
-                                .iter()
-                                .map(|x| graft_config.graft_stmt(x))
-                                .collect(),
-                            other => panic!("unsupported: {other:?}"),
-                        },
-                        None => vec![],
-                    };
-
-                    let if_stmt = ast::IfStmt {
-                        condition: if_condition,
-                        then_branch: ast::BlockStmt { stmts: then_stmts },
-                        else_branch: ast::BlockStmt { stmts: else_stmts },
-                    };
-                    ast::Stmt::If(if_stmt)
-                }
-                syn::Expr::Block(syn::ExprBlock {
-                    attrs: _attrs,
-                    label: _label,
-                    block,
-                }) => {
-                    let stmts: Vec<ast::Stmt<Annotation>> = block
-                        .stmts
-                        .iter()
-                        .map(|x| graft_config.graft_stmt(x))
-                        .collect_vec();
-                    ast::Stmt::Block(ast::BlockStmt { stmts })
-                }
-                other => panic!("unsupported expression. make sure to end statements by semi-colon and to explicitly 'return':\n{other:?}"),
+                let while_stmt = ast::WhileStmt {
+                    condition: while_condition,
+                    block: ast::BlockStmt { stmts: while_stmts },
+                };
+                Stmt::While(while_stmt)
             }
+            syn::Expr::If(if_expr) => {
+                let if_condition = self.graft_expr(&if_expr.cond);
+                let then_stmts: Vec<Stmt<Annotation>> = if_expr
+                    .then_branch
+                    .stmts
+                    .iter()
+                    .map(|x| self.graft_stmt(x))
+                    .collect_vec();
+                let else_stmts: Vec<Stmt<Annotation>> = match if_expr.else_branch.as_ref() {
+                    Some(else_stmts) => match else_stmts.1.as_ref() {
+                        syn::Expr::Block(block) => block
+                            .block
+                            .stmts
+                            .iter()
+                            .map(|x| self.graft_stmt(x))
+                            .collect(),
+                        other => panic!("unsupported: {other:?}"),
+                    },
+                    None => vec![],
+                };
+
+                let if_stmt = ast::IfStmt {
+                    condition: if_condition,
+                    then_branch: ast::BlockStmt { stmts: then_stmts },
+                    else_branch: ast::BlockStmt { stmts: else_stmts },
+                };
+                Stmt::If(if_stmt)
+            }
+            syn::Expr::Block(syn::ExprBlock {
+                attrs: _attrs,
+                label: _label,
+                block,
+            }) => {
+                let stmts: Vec<Stmt<Annotation>> =
+                    block.stmts.iter().map(|x| self.graft_stmt(x)).collect_vec();
+                Stmt::Block(ast::BlockStmt { stmts })
+            }
+            other => panic!(
+                "unsupported expression. make sure to end statements by semi-colon \
+                     and to explicitly 'return':\n{other:?}"
+            ),
         }
+    }
 
-        /// Handle things that end with a semi-colon
-        fn graft_semi_stmt(graft_config: &mut Graft, semi: &syn::Expr) -> ast::Stmt<Annotation> {
-            match semi {
-                syn::Expr::Return(ret_expr) => {
-                    let optional_ret_expr = ret_expr
-                        .expr
-                        .as_ref()
-                        .map(|ret_expr| graft_config.graft_expr(ret_expr));
-                    ast::Stmt::Return(optional_ret_expr)
+    /// Handle things that end with a semi-colon
+    fn graft_semi_stmt(&mut self, semi: &syn::Expr) -> Stmt<Annotation> {
+        match semi {
+            syn::Expr::Return(ret_expr) => {
+                let optional_ret_expr = ret_expr
+                    .expr
+                    .as_ref()
+                    .map(|ret_expr| self.graft_expr(ret_expr));
+                Stmt::Return(optional_ret_expr)
+            }
+            syn::Expr::Call(call_exp) => {
+                // Handle a function call that's not an assignment or a return expression
+                let ast_fn_call = self.graft_call_exp(call_exp);
+
+                match ast_fn_call {
+                    ast::Expr::FnCall(fncall) => Stmt::FnCall(fncall),
+                    _ => panic!("function call as a statement cannot be a literal"),
                 }
-                syn::Expr::Call(call_exp) => {
-                    // Handle a function call that's not an assignment or a return expression
-                    let ast_fn_call = graft_config.graft_call_exp(call_exp);
-
-                    match ast_fn_call {
-                        ast::Expr::FnCall(fncall) => ast::Stmt::FnCall(fncall),
-                        _ => panic!("function call as a statement cannot be a literal"),
+            }
+            syn::Expr::Assign(syn::ExprAssign {
+                attrs: _,
+                left,
+                eq_token: _,
+                right,
+            }) => {
+                // let identifier_expr = assign.left.as_ref();
+                let left_expr = self.graft_expr(left);
+                let left_ident = match left_expr {
+                    ast::Expr::Var(ident) => ident,
+                    _ => {
+                        panic!(
+                            "Left-hand-side of tuple operator must be a declared variable. \
+                                 Declare more bindings if needed. Failed to parse expression: \
+                                 {left_expr} as an identifier"
+                        );
                     }
-                }
-                syn::Expr::Assign(syn::ExprAssign {
-                    attrs: _,
-                    left,
-                    eq_token: _,
-                    right,
-                }) => {
-                    // let identifier_expr = assign.left.as_ref();
-                    let left_expr = graft_config.graft_expr(left);
-                    let left_ident = match left_expr {
-                        ast::Expr::Var(ident) => ident,
-                        _ => {
-                            panic!("Left-hand-side of tuple operator must be a declared variable. Declare more bindings if needed. Failed to parse expression: {left_expr} as an identifier");
-                        }
-                    };
-                    let right_expr = graft_config.graft_expr(right);
-                    let assign_stmt = ast::AssignStmt {
-                        identifier: left_ident,
-                        expr: right_expr,
-                    };
-                    ast::Stmt::Assign(assign_stmt)
-                }
-                // Handle expressions of the type `i += 1`
-                syn::Expr::AssignOp(syn::ExprAssignOp {
-                    attrs: _,
-                    left,
-                    op,
-                    right,
-                }) => {
-                    // let identifier_expr = assign.left.as_ref();
-                    let identifier_expr = graft_config.graft_expr(left);
-                    let identifier = match identifier_expr {
-                        ast::Expr::Var(ident) => ident,
-                        _ => {
-                            panic!("Left-hand-side of tuple operator must be a declared variable. Declare more bindings if needed. Failed to parse expression: {identifier_expr} as an identifier");
-                        }
-                    };
-                    let assign_expr = graft_config.graft_binop_eq_expr(left, op, right);
-                    let assign_stmt = ast::AssignStmt {
-                        identifier,
-                        expr: assign_expr,
-                    };
-
-                    ast::Stmt::Assign(assign_stmt)
-                }
-                syn::Expr::MethodCall(method_call_expr) => {
-                    let grafted = graft_config.graft_method_call(method_call_expr);
-                    match grafted {
-                        ast::Expr::MethodCall(mc) => ast::Stmt::MethodCall(mc),
-                        _ => panic!("Statement method call must graft to method call"),
+                };
+                let right_expr = self.graft_expr(right);
+                let assign_stmt = ast::AssignStmt {
+                    identifier: left_ident,
+                    expr: right_expr,
+                };
+                Stmt::Assign(assign_stmt)
+            }
+            // Handle expressions of the type `i += 1`
+            syn::Expr::AssignOp(syn::ExprAssignOp {
+                attrs: _,
+                left,
+                op,
+                right,
+            }) => {
+                // let identifier_expr = assign.left.as_ref();
+                let identifier_expr = self.graft_expr(left);
+                let identifier = match identifier_expr {
+                    ast::Expr::Var(ident) => ident,
+                    _ => {
+                        panic!(
+                            "Left-hand-side of tuple operator must be a declared variable. \
+                                 Declare more bindings if needed. Failed to parse expression: \
+                                 {identifier_expr} as an identifier"
+                        );
                     }
+                };
+                let assign_expr = self.graft_binop_eq_expr(left, op, right);
+                let assign_stmt = ast::AssignStmt {
+                    identifier,
+                    expr: assign_expr,
+                };
+
+                Stmt::Assign(assign_stmt)
+            }
+            syn::Expr::MethodCall(method_call_expr) => {
+                let grafted = self.graft_method_call(method_call_expr);
+                match grafted {
+                    ast::Expr::MethodCall(mc) => Stmt::MethodCall(mc),
+                    _ => panic!("Statement method call must graft to method call"),
                 }
-                syn::Expr::Macro(expr_macro) => {
-                    let ident = Graft::path_to_ident(&expr_macro.mac.path);
-                    assert_eq!(
-                        "assert", ident,
-                        "Can currently only handle `assert!` macro. Got: {ident}"
-                    );
+            }
+            syn::Expr::Macro(expr_macro) => self.graft_expr_macro(expr_macro),
+            syn::Expr::Match(syn::ExprMatch {
+                attrs: _,
+                match_token: _,
+                expr,
+                brace_token: _,
+                arms,
+            }) => {
+                let match_expression = self.graft_expr(expr);
+                let mut match_arms = vec![];
+                for arm in arms.iter() {
+                    let syn::Arm {
+                        attrs: _,
+                        pat,
+                        guard: _,
+                        fat_arrow_token: _,
+                        body,
+                        comma: _,
+                    }: &syn::Arm = arm;
+                    let arm_body = self.graft_expr_stmt(body);
 
-                    // The macro tokens are interpreted as an expression.
-                    // We do not currently allow text associated with an assert statement,
-                    // as I could not figure out how to parse such a token stream that an
-                    // `assert( expr, "description" )` has.
-                    let tokens = &expr_macro.mac.tokens;
-                    let tokens_as_expr_syn: syn::Expr = parse_quote! { #tokens };
-                    let tokens_as_expr = graft_config.graft_expr(&tokens_as_expr_syn);
-                    ast::Stmt::Assert(ast::AssertStmt {
-                        expression: tokens_as_expr,
-                    })
-                }
-                syn::Expr::Match(syn::ExprMatch {
-                    attrs: _,
-                    match_token: _,
-                    expr,
-                    brace_token: _,
-                    arms,
-                }) => {
-                    let match_expression = graft_config.graft_expr(expr);
-                    let mut match_arms = vec![];
-                    for arm in arms.iter() {
-                        let syn::Arm {
-                            attrs: _,
-                            pat,
-                            guard: _,
-                            fat_arrow_token: _,
-                            body,
-                            comma: _,
-                        }: &syn::Arm = arm;
-                        let arm_body = graft_expr_stmt(graft_config, body);
+                    // TODO: Add support for `_` matching
+                    let arm_body = if let Stmt::Block(block_stmt) = arm_body {
+                        block_stmt
+                    } else {
+                        panic!("Expected block statement for match-arm's body")
+                    };
 
-                        // TODO: Add support for `_` matching
-                        let arm_body = if let ast::Stmt::Block(block_stmt) = arm_body {
-                            block_stmt
-                        } else {
-                            panic!("Expected block statement for match-arm's body")
-                        };
+                    let match_condition = match pat {
+                        syn::Pat::Box(_) => todo!(),
+                        syn::Pat::Lit(_) => todo!(),
+                        syn::Pat::Macro(_) => todo!(),
+                        syn::Pat::Or(_) => todo!(),
+                        syn::Pat::Ident(ident) => {
+                            // Enums that are in prelude can be matched with only the variant
+                            // name, like `None` instead of `Result::None`
+                            let enum_case = ident.ident.to_string();
+                            let enum_case_split = enum_case.split("::").collect_vec();
+                            let (type_name, variant_name) = match enum_case_split.len() {
+                                1 => (None, enum_case_split[0].to_owned()),
+                                2 => (
+                                    Some(enum_case_split[0].to_owned()),
+                                    enum_case_split[1].to_owned(),
+                                ),
+                                _ => panic!(
+                                    "Expected `<Type>::<VariantName>` or `VariantName` \
+                                         for enum match case. Got: `{enum_case}`"
+                                ),
+                            };
 
-                        let match_condition = match pat {
-                            syn::Pat::Box(_) => todo!(),
-                            syn::Pat::Lit(_) => todo!(),
-                            syn::Pat::Macro(_) => todo!(),
-                            syn::Pat::Or(_) => todo!(),
-                            syn::Pat::Ident(ident) => {
-                                // Enums that are in prelude can be matched with only the variant name, like `None`
-                                // instead of `Result::None`
-                                let enum_case = ident.ident.to_string();
-                                let enum_case_split = enum_case.split("::").collect_vec();
-                                let (type_name, variant_name) = match enum_case_split.len() {
-                                    1 => (None, enum_case_split[0].to_owned()),
-                                    2 => (Some(enum_case_split[0].to_owned()), enum_case_split[1].to_owned()),
-                                    _ => panic!("Expected `<Type>::<VariantName>` or `VariantName` for enum match case. Got: `{enum_case}`"),
-                                };
+                            ast::MatchCondition::EnumVariant(ast::EnumVariantSelector {
+                                data_bindings: Vec::default(),
+                                type_name,
+                                variant_name,
+                            })
+                        }
+                        syn::Pat::Path(syn::PatPath { path, .. }) => {
+                            // Enums that are in prelude can be matched with only the variant
+                            // name, like `None` instead of `Result::None`
+                            let enum_case = Graft::path_to_ident(path);
+                            let enum_case_split = enum_case.split("::").collect_vec();
+                            let (type_name, variant_name) = match enum_case_split.len() {
+                                1 => (None, enum_case_split[0].to_owned()),
+                                2 => (
+                                    Some(enum_case_split[0].to_owned()),
+                                    enum_case_split[1].to_owned(),
+                                ),
+                                _ => panic!(
+                                    "Expected `<Type>::<VariantName>` or `VariantName`\
+                                         for enum match case. Got: `{enum_case}`"
+                                ),
+                            };
 
-                                ast::MatchCondition::EnumVariant(ast::EnumVariantSelector {
-                                    data_bindings: Vec::default(),
-                                    type_name,
-                                    variant_name,
-                                })
-                            }
-                            syn::Pat::Path(syn::PatPath {
-                                attrs: _,
-                                qself: _,
-                                path,
-                            }) => {
-                                // Enums that are in prelude can be matched with only the variant name, like `None`
-                                // instead of `Result::None`
-                                let enum_case = Graft::path_to_ident(path);
-                                let enum_case_split = enum_case.split("::").collect_vec();
-                                let (type_name, variant_name) = match enum_case_split.len() {
-                                    1 => (None, enum_case_split[0].to_owned()),
-                                    2 => (Some(enum_case_split[0].to_owned()), enum_case_split[1].to_owned()),
-                                    _ => panic!("Expected `<Type>::<VariantName>` or `VariantName` for enum match case. Got: `{enum_case}`"),
-                                };
+                            ast::MatchCondition::EnumVariant(ast::EnumVariantSelector {
+                                data_bindings: Vec::default(),
+                                type_name,
+                                variant_name,
+                            })
+                        }
+                        syn::Pat::Range(_) => todo!(),
+                        syn::Pat::Reference(_) => todo!(),
+                        syn::Pat::Rest(_) => todo!(),
+                        syn::Pat::Slice(_) => todo!(),
+                        syn::Pat::Struct(_) => todo!(),
+                        syn::Pat::Tuple(_) => todo!(),
+                        syn::Pat::TupleStruct(syn::PatTupleStruct { pat, path, .. }) => {
+                            // Enums that are in prelude can be matched with only the variant
+                            // name, like `None` instead of `Result::None`
+                            let enum_case = Graft::path_to_ident(path);
+                            let enum_case_split = enum_case.split("::").collect_vec();
+                            let (type_name, variant_name) = match enum_case_split.len() {
+                                1 => (None, enum_case_split[0].to_owned()),
+                                2 => (
+                                    Some(enum_case_split[0].to_owned()),
+                                    enum_case_split[1].to_owned(),
+                                ),
+                                _ => panic!(
+                                    "Expected `<Type>::<VariantName>` or `<VariantName>` \
+                                         for enum match case. Got: `{enum_case}`"
+                                ),
+                            };
 
-                                ast::MatchCondition::EnumVariant(ast::EnumVariantSelector {
-                                    data_bindings: Vec::default(),
-                                    type_name,
-                                    variant_name,
-                                })
-                            }
-                            syn::Pat::Range(_) => todo!(),
-                            syn::Pat::Reference(_) => todo!(),
-                            syn::Pat::Rest(_) => todo!(),
-                            syn::Pat::Slice(_) => todo!(),
-                            syn::Pat::Struct(_) => todo!(),
-                            syn::Pat::Tuple(_) => todo!(),
-                            syn::Pat::TupleStruct(syn::PatTupleStruct {
-                                attrs: _,
-                                pat,
-                                path,
-                            }) => {
-                                // Enums that are in prelude can be matched with only the variant name, like `None`
-                                // instead of `Result::None`
-                                let enum_case = Graft::path_to_ident(path);
-                                let enum_case_split = enum_case.split("::").collect_vec();
-                                let (type_name, variant_name) = match enum_case_split.len() {
-                                    1 => (None, enum_case_split[0].to_owned()),
-                                    2 => (Some(enum_case_split[0].to_owned()), enum_case_split[1].to_owned()),
-                                    _ => panic!("Expected `<Type>::<VariantName>` or `<VariantName>` for enum match case. Got: `{enum_case}`"),
-                                };
-
-                                let mut data_bindings = vec![];
-                                for pat_elem in pat.elems.iter() {
-                                    match pat_elem {
-                                        syn::Pat::Ident(ident) => {
-                                            data_bindings.push(ast::PatternMatchedBinding {
-                                                mutable: ident.mutability.is_some(),
-                                                name: ident.ident.to_string(),
-                                            });
-                                        }
-                                        syn::Pat::Wild(_) => {
-                                            assert!(
-                                                pat.elems.len().is_one(),
-                                                "For now, wildcard binding must be only binding"
-                                            );
-                                        }
-                                        other => {
-                                            panic!("unsupported binding for match-arm: {other:?}")
-                                        }
+                            let mut data_bindings = vec![];
+                            for pat_elem in pat.elems.iter() {
+                                match pat_elem {
+                                    syn::Pat::Ident(ident) => {
+                                        data_bindings.push(ast::PatternMatchedBinding {
+                                            mutable: ident.mutability.is_some(),
+                                            name: ident.ident.to_string(),
+                                        });
+                                    }
+                                    syn::Pat::Wild(_) => {
+                                        assert!(
+                                            pat.elems.len().is_one(),
+                                            "For now, wildcard binding must be only binding"
+                                        );
+                                    }
+                                    other => {
+                                        panic!("unsupported binding for match-arm: {other:?}")
                                     }
                                 }
-
-                                ast::MatchCondition::EnumVariant(ast::EnumVariantSelector {
-                                    type_name,
-                                    variant_name,
-                                    data_bindings,
-                                })
                             }
-                            syn::Pat::Type(_) => todo!(),
-                            syn::Pat::Verbatim(_) => todo!(),
-                            syn::Pat::Wild(syn::PatWild {
-                                attrs: _,
-                                underscore_token: _,
-                            }) => ast::MatchCondition::CatchAll,
-                            _ => todo!(),
-                        };
-                        match_arms.push(ast::MatchArm {
-                            match_condition,
-                            body: arm_body,
-                        });
-                    }
 
-                    ast::Stmt::Match(ast::MatchStmt {
-                        arms: match_arms,
-                        match_expression,
-                    })
+                            ast::MatchCondition::EnumVariant(ast::EnumVariantSelector {
+                                type_name,
+                                variant_name,
+                                data_bindings,
+                            })
+                        }
+                        syn::Pat::Type(_) => todo!(),
+                        syn::Pat::Verbatim(_) => todo!(),
+                        syn::Pat::Wild(syn::PatWild {
+                            attrs: _,
+                            underscore_token: _,
+                        }) => ast::MatchCondition::CatchAll,
+                        _ => todo!(),
+                    };
+                    match_arms.push(ast::MatchArm {
+                        match_condition,
+                        body: arm_body,
+                    });
                 }
-                other => panic!("unsupported: {other:#?}"),
+
+                Stmt::Match(ast::MatchStmt {
+                    arms: match_arms,
+                    match_expression,
+                })
             }
+            other => panic!("unsupported: {other:#?}"),
         }
+    }
 
-        /// Handle locally declared functions: `fn foo(input: BFieldElement) -> BFieldelement { return input * input; }`
-        fn graft_item_stmt(graft_config: &mut Graft, item: &syn::Item) -> ast::Stmt<Annotation> {
-            match item {
-                syn::Item::Fn(item_fn) => {
-                    ast::Stmt::FnDeclaration(graft_config.graft_fn_decl(item_fn))
-                }
-                other => panic!("unsupported: {other:#?}"),
-            }
+    fn graft_expr_macro(&mut self, expr_macro: &ExprMacro) -> Stmt<Annotation> {
+        let ident = Graft::path_to_ident(&expr_macro.mac.path);
+        match ident.as_str() {
+            "panic" => self.graft_panic_macro(),
+            "assert" => self.graft_assert_macro(expr_macro),
+            _ => panic!("unsupported macro: {ident}"),
+        }
+    }
+
+    /// The macro tokens are interpreted as an expression. We do not currently allow text associated
+    /// with an assert statement, as I could not figure out how to parse such a token stream that an
+    /// `assert( expr, "description" )` has.
+    fn graft_assert_macro(&mut self, expr_macro: &ExprMacro) -> Stmt<Annotation> {
+        let tokens = &expr_macro.mac.tokens;
+        let tokens_as_expr_syn: syn::Expr = parse_quote! { #tokens };
+        let expression = self.graft_expr(&tokens_as_expr_syn);
+        Stmt::Assert(ast::AssertStmt { expression })
+    }
+
+    fn graft_panic_macro(&mut self) -> Stmt<Annotation> {
+        Stmt::Panic(ast::PanicStmt)
+    }
+
+    /// Handle locally declared functions:
+    /// `fn foo(input: BFieldElement) -> BFieldelement { return input * input; }`
+    fn graft_item_stmt(&mut self, item: &syn::Item) -> Stmt<Annotation> {
+        match item {
+            syn::Item::Fn(item_fn) => Stmt::FnDeclaration(self.graft_fn_decl(item_fn)),
+            other => panic!("unsupported: {other:#?}"),
         }
     }
 }
@@ -1473,7 +1489,8 @@ mod tests {
                 leaf_index: u64,
             ) -> Vec<Digest> {
                 // let (mut acc_mt_index, peak_index) =
-                let acc_mt_index_and_peak_index: (u64, u32) = leaf_index_to_mt_index_and_peak_index(leaf_index, leaf_count);
+                let acc_mt_index_and_peak_index: (u64, u32) =
+                    leaf_index_to_mt_index_and_peak_index(leaf_index, leaf_count);
                 let mut acc_hash: Digest = new_leaf;
                 let mut i: u32 = 0u32;
                 while acc_mt_index_and_peak_index.0 != 1u64 {
@@ -1532,27 +1549,28 @@ mod tests {
     #[test]
     fn leaf_count_to_node_count() {
         let tokens: syn::Item = parse_quote! {
-                fn leaf_count_to_node_count(leaf_count: u64) -> u64 {
-                    if leaf_count == 0u64 {
-                        return 0u64;
-                    }
+            fn leaf_count_to_node_count(leaf_count: u64) -> u64 {
+                if leaf_count == 0u64 {
+                    return 0u64;
+                }
 
-                    let rightmost_leaf_leaf_index: u64 = leaf_count - 1u64;
-                    let non_leaf_nodes_left: u64 = non_leaf_nodes_left(rightmost_leaf_leaf_index);
-                    let node_index_of_rightmost_leaf: u64 = leaf_index_to_node_index(rightmost_leaf_leaf_index);
+                let rightmost_leaf_leaf_index: u64 = leaf_count - 1u64;
+                let non_leaf_nodes_left: u64 = non_leaf_nodes_left(rightmost_leaf_leaf_index);
+                let node_index_of_rightmost_leaf: u64 =
+                    leaf_index_to_node_index(rightmost_leaf_leaf_index);
 
-                    let mut non_leaf_nodes_after: u64 = 0u64;
-                    let mut node_index: u64 = node_index_of_rightmost_leaf;
-                    let mut right_count: u64 = right_lineage_length(node_index);
-                    while right_count != 0u64 {
-                        non_leaf_nodes_after = non_leaf_nodes_after + 1u64;
-                        // go to parent (parent of right child has node index plus 1)
-                        node_index = node_index + 1u64;
-                        right_count = right_count - 1u64;
-                    }
+                let mut non_leaf_nodes_after: u64 = 0u64;
+                let mut node_index: u64 = node_index_of_rightmost_leaf;
+                let mut right_count: u64 = right_lineage_length(node_index);
+                while right_count != 0u64 {
+                    non_leaf_nodes_after = non_leaf_nodes_after + 1u64;
+                    // go to parent (parent of right child has node index plus 1)
+                    node_index = node_index + 1u64;
+                    right_count = right_count - 1u64;
+                }
 
-                    // Number of nodes is: non-leafs after, non-leafs before, and leaf count
-                    return non_leaf_nodes_after + non_leaf_nodes_left + leaf_count;
+                // Number of nodes is: non-leafs after, non-leafs before, and leaf count
+                return non_leaf_nodes_after + non_leaf_nodes_left + leaf_count;
             }
         };
 

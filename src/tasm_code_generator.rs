@@ -1061,12 +1061,7 @@ fn compile_stmt(
     state: &mut CompilerState,
 ) -> Vec<LabelledInstruction> {
     match stmt {
-        ast::Stmt::Let(ast::LetStmt {
-            var_name,
-            data_type: _,
-            expr,
-            mutable: _,
-        }) => {
+        ast::Stmt::Let(ast::LetStmt { var_name, expr, .. }) => {
             let (expr_addr, expr_code) = compile_expr(expr, var_name, state);
             state
                 .function_state
@@ -1296,6 +1291,7 @@ fn compile_stmt(
                 assert
             )
         }
+        ast::Stmt::Panic(_) => triton_asm! {push 0 hint panic = stack[0] assert},
         ast::Stmt::FnDeclaration(function) => {
             let compiled_fn = compile_function_inner(
                 function,

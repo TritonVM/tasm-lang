@@ -1,5 +1,3 @@
-#![allow(clippy::assertions_on_constants)]
-
 use num::Zero;
 use triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
 use triton_vm::twenty_first::shared_math::x_field_element::XFieldElement;
@@ -75,13 +73,14 @@ impl ProofItem {
     }
 
     fn get_merkle_root(&self) -> Digest {
+        #[allow(unused_assignments)]
         let mut root: Digest = Digest::default();
         match self {
             ProofItem::MerkleRoot(digest) => {
                 root = *digest;
             }
             _ => {
-                assert!(false);
+                panic!();
             }
         };
 
@@ -95,55 +94,54 @@ fn main() {
     tasm::tasm_io_write_to_stdout___bfe(boxed_proof_item.discriminant());
     tasm::tasm_io_write_to_stdout___digest(boxed_proof_item.get_merkle_root());
 
-    // Crash if not `MerkleRoot`
+    // Crash if not `MerkleRoot`. Explicitly don't use a wildcard.
     match *boxed_proof_item {
         ProofItem::AuthenticationStructure(_) => {
-            assert!(false);
+            panic!();
         }
         ProofItem::MasterBaseTableRows(_) => {
-            assert!(false);
+            panic!();
         }
         ProofItem::MasterExtTableRows(_) => {
-            assert!(false);
+            panic!();
         }
         ProofItem::OutOfDomainBaseRow(_) => {
-            assert!(false);
+            panic!();
         }
         ProofItem::OutOfDomainExtRow(_) => {
-            assert!(false);
+            panic!();
         }
         ProofItem::OutOfDomainQuotientSegments(_) => {
-            assert!(false);
+            panic!();
         }
         ProofItem::MerkleRoot(a) => {
             let b: BFieldElement = BFieldElement::new(10009 << 32);
             tasm::tasm_io_write_to_stdout___digest(a);
             tasm::tasm_io_write_to_stdout___bfe(b);
-            assert!(true);
         }
         ProofItem::Log2PaddedHeight(_) => {
-            assert!(false);
+            panic!();
         }
         ProofItem::QuotientSegmentsElements(_) => {
-            assert!(false);
+            panic!();
         }
         ProofItem::FriCodeword(_) => {
-            assert!(false);
+            panic!();
         }
         ProofItem::FriResponse(_) => {
-            assert!(false);
+            panic!();
         }
     };
 
     // With wildcard
+    #[allow(unused_assignments)]
     let mut d: BFieldElement = BFieldElement::new(100u64);
     match *boxed_proof_item {
         ProofItem::AuthenticationStructure(_) => {
-            assert!(false);
+            panic!();
         }
         _ => {
             let c: BFieldElement = BFieldElement::new(555u64 << 32);
-            assert!(true);
             tasm::tasm_io_write_to_stdout___bfe(c);
             d = BFieldElement::new(200u64);
         }
