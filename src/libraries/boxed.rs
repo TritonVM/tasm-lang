@@ -204,6 +204,8 @@ fn call_new_box(
 
     // TODO: I think this is the best we can do at compile-time. If we want the precise size,
     // we probably need to get the size at run-time.
+
+    // TODO: We need to both allocate *and* store to memory here.
     let store_words_code = inner_type.store_to_memory(state);
 
     // TODO: I'm not proud of this if/else. But it's the best I could come

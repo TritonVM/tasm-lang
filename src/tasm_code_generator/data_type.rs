@@ -128,7 +128,8 @@ impl ast_types::DataType {
                 move_top_stack_value_to_memory(None, self.stack_size())
             }
             ast_types::DataType::List(element_type, list_type) => {
-                clone_vector(element_type, list_type, state)
+                todo!()
+                // clone_vector(element_type, list_type, state)
             }
             ast_types::DataType::Array(_) | ast_types::DataType::Boxed(_) => {
                 triton_asm!()
