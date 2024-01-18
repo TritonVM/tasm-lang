@@ -97,7 +97,10 @@ impl ast_types::DataType {
                     state,
                 )
             }
-            ast_types::DataType::Array(_) | ast_types::DataType::Boxed(_) => {
+            ast_types::DataType::Array(array_type) => {
+                clone_array_to_allocated_memory_return_next_free_address(array_type, state)
+            }
+            ast_types::DataType::Boxed(_) => {
                 todo!()
             }
             ast_types::DataType::Enum(enum_type) => {
@@ -226,6 +229,35 @@ impl ast_types::DataType {
 /// BEFORE: _ *src_array *dst_array
 /// AFTER: _
 /// ``
+fn clone_array_to_allocated_memory_return_next_free_address(
+    array_type: &ast_types::ArrayType,
+    state: &mut CompilerState<'_>,
+) -> Vec<LabelledInstruction> {
+    let array_size = array_type.size_in_memory();
+    let memcpy_label = state.import_snippet(Box::new(MemCpy));
+
+    triton_asm!(
+        // _ *src_array *dst_array
+
+        push {array_size}
+        // _ *src_array *dst_array array_size
+
+        dup 1 dup 1 add
+        // _ *src_array *dst_array array_size next_free_address
+
+        swap 3 swap 2 swap 1
+        // _ next_free_address *src_array *dst_array array_size
+
+        call {memcpy_label}
+    )
+}
+
+/// Returns the code to make a new copy of an array. Memory must already
+/// be allocated by the caller.
+/// ```text
+/// BEFORE: _ *src_array *dst_array
+/// AFTER: _
+/// ``
 fn clone_array_to_allocated_memory(
     array_type: &ast_types::ArrayType,
     state: &mut CompilerState<'_>,
@@ -235,6 +267,8 @@ fn clone_array_to_allocated_memory(
 
     triton_asm!(
         push {array_size}
+
+        // _ *src_array *dst_array array_size
         call {memcpy_label}
     )
 }

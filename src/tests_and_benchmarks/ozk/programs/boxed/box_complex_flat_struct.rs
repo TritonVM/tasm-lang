@@ -11,6 +11,7 @@ struct WithListFields {
     xfe: XFieldElement,
     pair: (Digest, BFieldElement),
     digests: Vec<Digest>,
+    bfe_array: [BFieldElement; 6],
 }
 
 #[allow(clippy::redundant_field_names)]
@@ -41,6 +42,14 @@ fn main() {
             tasm::tasm_io_read_stdin___bfe(),
         ),
         digests: digests,
+        bfe_array: [
+            tasm::tasm_io_read_stdin___bfe(),
+            tasm::tasm_io_read_stdin___bfe(),
+            tasm::tasm_io_read_stdin___bfe(),
+            tasm::tasm_io_read_stdin___bfe(),
+            tasm::tasm_io_read_stdin___bfe(),
+            tasm::tasm_io_read_stdin___bfe(),
+        ],
     };
 
     let boxed: Box<WithListFields> = Box::<WithListFields>::new(a);
@@ -50,6 +59,8 @@ fn main() {
     tasm::tasm_io_write_to_stdout___xfe(boxed.xfes[0]);
     tasm::tasm_io_write_to_stdout___bfe(boxed.bfes[0]);
     tasm::tasm_io_write_to_stdout___bfe(boxed.bfes[2]);
+    tasm::tasm_io_write_to_stdout___bfe(boxed.bfe_array[1]);
+    tasm::tasm_io_write_to_stdout___bfe(boxed.bfe_array[4]);
 
     return;
 }
@@ -67,7 +78,7 @@ mod test {
     #[test]
     fn box_complex_flat_struct_test() {
         let non_determinism = NonDeterminism::default();
-        let stdin = random_elements(51);
+        let stdin = random_elements(52);
 
         let native_output =
             rust_shadows::wrap_main_with_io(&main)(stdin.clone(), non_determinism.clone());
