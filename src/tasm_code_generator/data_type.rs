@@ -131,9 +131,10 @@ impl ast_types::DataType {
             ast_types::DataType::List(element_type, list_type) => {
                 clone_vector_to_allocated_memory(element_type, list_type, state)
             }
-            ast_types::DataType::Array(_) | ast_types::DataType::Boxed(_) => {
-                todo!()
+            ast_types::DataType::Array(array_type) => {
+                clone_array_to_allocated_memory(array_type, state)
             }
+            ast_types::DataType::Boxed(_) => todo!(),
             ast_types::DataType::Enum(enum_type) => enum_type.store_to_memory(state),
             ast_types::DataType::Struct(struct_type) => struct_type.store_to_memory(state),
             ast_types::DataType::VoidPointer => todo!(),
@@ -217,6 +218,25 @@ impl ast_types::DataType {
             Enum(_) => todo!("Equality for enums not yet implemented"),
         }
     }
+}
+
+/// Returns the code to make a new copy of a list. Memory must already
+/// be allocated by the caller.
+/// ```text
+/// BEFORE: _ *src_array *dst_array
+/// AFTER: _
+/// ``
+fn clone_array_to_allocated_memory(
+    array_type: &ast_types::ArrayType,
+    state: &mut CompilerState<'_>,
+) -> Vec<LabelledInstruction> {
+    let array_size = array_type.size_in_memory();
+    let memcpy_label = state.import_snippet(Box::new(MemCpy));
+
+    triton_asm!(
+        push {array_size}
+        call {memcpy_label}
+    )
 }
 
 /// Returns the code to make a new copy of a list. Memory must already
