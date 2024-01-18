@@ -40,18 +40,17 @@ fn main() {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::{ozk_parsing, rust_shadows};
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
     use triton_vm::NonDeterminism;
 
     #[test]
     fn clone_from_vector_many() {
-        let code = ozk_parsing::compile_for_test(
-            "vectors",
-            "clone_from_many",
-            "main",
-            crate::ast_types::ListType::Unsafe,
-        );
+        let entrypoint_location = EntrypointLocation::disk("vectors", "clone_from_many", "main");
+        let code =
+            ozk_parsing::compile_for_test(&entrypoint_location, crate::ast_types::ListType::Unsafe);
+
         let stdin = vec![];
         let non_determinism = NonDeterminism::default();
         let expected_stack_diff = 0;

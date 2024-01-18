@@ -22,17 +22,16 @@ fn _main() {
 #[cfg(test)]
 mod test {
     use crate::tests_and_benchmarks::ozk::ozk_parsing;
+    use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
     use triton_vm::NonDeterminism;
 
     #[test]
     fn methods_on_nested_structs_simple_test() {
-        let test_program = ozk_parsing::compile_for_test(
-            "boxed",
-            "method_on_nested_struct_simple",
-            "_main",
-            crate::ast_types::ListType::Unsafe,
-        );
+        let entrypoint_location =
+            EntrypointLocation::disk("boxed", "method_on_nested_struct_simple", "_main");
+        let test_program =
+            ozk_parsing::compile_for_test(&entrypoint_location, crate::ast_types::ListType::Unsafe);
 
         let stdin = vec![];
         let non_determinism = NonDeterminism::new(vec![]);

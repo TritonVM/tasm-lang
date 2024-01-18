@@ -32,6 +32,7 @@ fn main() {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::{ozk_parsing, rust_shadows};
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
     use itertools::Itertools;
@@ -40,12 +41,10 @@ mod test {
 
     #[test]
     fn box_a_struct_with_two_list_fields() {
-        let code = ozk_parsing::compile_for_test(
-            "boxed",
-            "box_a_struct_with_two_list_fields",
-            "main",
-            crate::ast_types::ListType::Unsafe,
-        );
+        let entrypoint_location =
+            EntrypointLocation::disk("boxed", "box_a_struct_with_two_list_fields", "main");
+        let code =
+            ozk_parsing::compile_for_test(&entrypoint_location, crate::ast_types::ListType::Unsafe);
         println!("code:\n{}", code.iter().join("\n"));
         let stdin = random_elements(6);
         let non_determinism = NonDeterminism::default();

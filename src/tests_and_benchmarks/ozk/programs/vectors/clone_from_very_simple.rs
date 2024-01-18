@@ -15,18 +15,16 @@ fn main() {
 #[cfg(test)]
 mod test {
     use crate::tests_and_benchmarks::ozk::ozk_parsing;
+    use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
     use triton_vm::NonDeterminism;
 
     #[test]
     fn clone_from_very_simple() {
-        let code = ozk_parsing::compile_for_test(
-            "vectors",
-            "clone_from_very_simple",
-            "main",
-            crate::ast_types::ListType::Unsafe,
-        );
-
+        let entrypoint_location =
+            EntrypointLocation::disk("vectors", "clone_from_very_simple", "main");
+        let code =
+            ozk_parsing::compile_for_test(&entrypoint_location, crate::ast_types::ListType::Unsafe);
         let stdin = vec![];
         let non_determinism = NonDeterminism::default();
         let expected_stack_diff = 0;

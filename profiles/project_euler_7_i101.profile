@@ -1,14 +1,14 @@
 project_euler_7_i101:
 
 # call graph
- main: 67929
+ main: 67933
    tasm_arithmetic_u32_leadingzeros: 12
      tasm_arithmetic_u32_leadingzeros_non_zero: 4
    tasm_arithmetic_u32_safesub: 11
    tasm_arithmetic_u32_safesub: 11
    tasm_arithmetic_u32_safemul: 8
-   tasm_list_safeimplu32_new___bool: 35
-     tasm_memory_dyn_malloc: 25
+   tasm_list_safeimplu32_new___bool: 39
+     tasm_memory_dyn_malloc: 29
    tasm_list_safeimplu32_push___bool: 23
    tasm_list_safeimplu32_push___bool: 23
    _binop_Lt__LboolR_bool_20_while_loop: 28396
@@ -2896,16 +2896,16 @@ project_euler_7_i101:
      tasm_arithmetic_u32_safeadd: 8
    tasm_io_write_to_stdout___u32: 2
    tasm_io_write_to_stdout___u32: 2
- total: 67931
+ total: 67935
 
 # aggregated
- main: 67929
+ main: 67933
    tasm_arithmetic_u32_leadingzeros: 12
      tasm_arithmetic_u32_leadingzeros_non_zero: 4
    tasm_arithmetic_u32_safesub: 22
    tasm_arithmetic_u32_safemul: 808
-   tasm_list_safeimplu32_new___bool: 35
-     tasm_memory_dyn_malloc: 25
+   tasm_list_safeimplu32_new___bool: 39
+     tasm_memory_dyn_malloc: 29
    tasm_list_safeimplu32_push___bool: 13938
    _binop_Lt__LboolR_bool_20_while_loop: 28396
      tasm_arithmetic_u32_safeadd: 14432
@@ -2914,4 +2914,4 @@ project_euler_7_i101:
        _binop_Lt__LboolR_bool_45_while_loop: 26437
      _primes_cast_u32__LboolR_bool_35_else: 173
    tasm_io_write_to_stdout___u32: 4
- total: 67931
+ total: 67935

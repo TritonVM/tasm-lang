@@ -24,18 +24,17 @@ fn main() {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::{ozk_parsing, rust_shadows};
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
     use triton_vm::NonDeterminism;
 
     #[test]
     fn box_a_struct_with_list_field_simple() {
-        let test_program = ozk_parsing::compile_for_test(
-            "boxed",
-            "box_a_struct_with_list_field_simple",
-            "main",
-            crate::ast_types::ListType::Unsafe,
-        );
+        let entrypoint_location =
+            EntrypointLocation::disk("boxed", "box_a_struct_with_list_field_simple", "main");
+        let test_program =
+            ozk_parsing::compile_for_test(&entrypoint_location, crate::ast_types::ListType::Unsafe);
 
         let stdin = vec![];
         let non_determinism = NonDeterminism::default();

@@ -6,7 +6,7 @@ use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 struct OuterStruct(u64, MiddleStruct, InnerStruct);
 
 impl OuterStruct {
-    fn add0(&self, extra_arg: u64) -> u128 {
+    fn add(&self, extra_arg: u64) -> u128 {
         return self.0 as u128 + self.1 .2 as u128 + extra_arg as u128;
     }
 }
@@ -14,7 +14,7 @@ impl OuterStruct {
 struct MiddleStruct(Digest, InnerStruct, u32);
 
 impl MiddleStruct {
-    fn add1(&self) -> u128 {
+    fn add(&self) -> u128 {
         return self.1 .0 as u128 + self.2 as u128 + 4;
     }
 }
@@ -22,7 +22,7 @@ impl MiddleStruct {
 struct InnerStruct(u64, u32);
 
 impl InnerStruct {
-    fn add2(&self, extra_arg: u128) -> u128 {
+    fn add(&self, extra_arg: u128) -> u128 {
         let mid: u128 = self.0 as u128 + 14;
         return mid + self.1 as u128 - extra_arg;
     }
@@ -55,9 +55,9 @@ fn main() {
     assert!(1u32 << 21 == outer_struct_boxed.2 .1);
     assert!(1u32 << 31 == outer_struct_boxed.1 .2);
 
-    tasm::tasm_io_write_to_stdout___u128(outer_struct_boxed.add0(200));
-    tasm::tasm_io_write_to_stdout___u128(outer_struct_boxed.1.add1());
-    tasm::tasm_io_write_to_stdout___u128(outer_struct_boxed.2.add2(300));
+    tasm::tasm_io_write_to_stdout___u128(outer_struct_boxed.add(200));
+    tasm::tasm_io_write_to_stdout___u128(outer_struct_boxed.1.add());
+    tasm::tasm_io_write_to_stdout___u128(outer_struct_boxed.2.add(300));
 
     return;
 }
@@ -93,7 +93,7 @@ mod test {
 
         // Test function in Triton VM
         let entrypoint_location =
-            EntrypointLocation::disk("boxed", "methods_on_nested_structs", "main");
+            EntrypointLocation::disk("boxed", "methods_on_nested_structs_not_copy", "main");
         let test_program =
             ozk_parsing::compile_for_test(&entrypoint_location, crate::ast_types::ListType::Unsafe);
         let expected_stack_diff = 0;

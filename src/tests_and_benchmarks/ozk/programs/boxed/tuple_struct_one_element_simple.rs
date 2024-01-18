@@ -18,18 +18,17 @@ fn _main() {
 #[cfg(test)]
 mod test {
     use crate::tests_and_benchmarks::ozk::ozk_parsing;
+    use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
     use triton_vm::NonDeterminism;
 
     #[test]
     fn tuple_struct_one_element_simple_test() {
         let stdin = vec![];
-        let test_program = ozk_parsing::compile_for_test(
-            "boxed",
-            "tuple_struct_one_element_simple",
-            "_main",
-            crate::ast_types::ListType::Unsafe,
-        );
+        let entrypoint_location =
+            EntrypointLocation::disk("boxed", "tuple_struct_one_element_simple", "_main");
+        let test_program =
+            ozk_parsing::compile_for_test(&entrypoint_location, crate::ast_types::ListType::Unsafe);
         execute_compiled_with_stack_and_ins_for_test(
             &test_program,
             vec![],

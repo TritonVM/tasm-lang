@@ -27,6 +27,7 @@ fn main() {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::{ozk_parsing, rust_shadows};
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
     use itertools::Itertools;
@@ -34,12 +35,9 @@ mod test {
 
     #[test]
     fn clone_from_vector_simple() {
-        let code = ozk_parsing::compile_for_test(
-            "vectors",
-            "clone_from_simple",
-            "main",
-            crate::ast_types::ListType::Unsafe,
-        );
+        let entrypoint_location = EntrypointLocation::disk("vectors", "clone_from_simple", "main");
+        let code =
+            ozk_parsing::compile_for_test(&entrypoint_location, crate::ast_types::ListType::Unsafe);
         println!("code:\n{}", code.iter().join("\n"));
 
         let stdin = vec![];

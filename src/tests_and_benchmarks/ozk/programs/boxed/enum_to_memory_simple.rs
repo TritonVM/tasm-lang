@@ -111,6 +111,7 @@ fn in_memory_c() {
 mod test {
     use super::*;
     use crate::tests_and_benchmarks::ozk::ozk_parsing;
+    use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
     use itertools::Itertools;
@@ -155,10 +156,10 @@ mod test {
         ] {
             let native_output =
                 rust_shadows::wrap_main_with_io(func)(stdin.clone(), non_determinism.to_owned());
+            let entrypoint_location =
+                EntrypointLocation::disk("boxed", "enum_to_memory_simple", func_name);
             let test_program = ozk_parsing::compile_for_test(
-                "boxed",
-                "enum_to_memory_simple",
-                func_name,
+                &entrypoint_location,
                 crate::ast_types::ListType::Unsafe,
             );
             println!("code:\n\n{}", test_program.iter().join("\n"));
