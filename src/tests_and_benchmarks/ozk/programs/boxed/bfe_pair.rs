@@ -21,28 +21,22 @@ fn main() {
 
 #[cfg(test)]
 mod test {
-
-    use itertools::Itertools;
-    use rand::random;
-    use triton_vm::NonDeterminism;
-
+    use super::*;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
-
-    use super::*;
+    use rand::random;
+    use triton_vm::NonDeterminism;
 
     #[test]
     fn boxed_bfe_pair_test() {
-        // Test function on host machine
         let a: BFieldElement = random();
         let b: BFieldElement = random();
         let stdin = vec![a, b];
-        let non_determinism = NonDeterminism::default();
-        let native_output =
-            rust_shadows::wrap_main_with_io(&main)(stdin.clone(), non_determinism.clone());
-
         let expected_output = vec![b, a, a];
+
+        let native_output =
+            rust_shadows::wrap_main_with_io(&main)(stdin.clone(), NonDeterminism::default());
         assert_eq!(native_output, expected_output);
 
         let entrypoint = EntrypointLocation::disk("boxed", "bfe_pair", "main");
@@ -51,13 +45,6 @@ mod test {
             .expect_stack_difference(0)
             .execute()
             .unwrap();
-
-        if expected_output != vm_output.output {
-            panic!(
-                "expected:\n{}\n\ngot:\n{}",
-                expected_output.iter().join(","),
-                vm_output.output.iter().join(",")
-            );
-        }
+        assert_eq!(expected_output, vm_output.output);
     }
 }

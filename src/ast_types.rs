@@ -76,7 +76,7 @@ impl DataType {
             DataType::Bfe => true,
             DataType::Xfe => true,
             DataType::Digest => true,
-            DataType::Tuple(_) => true,
+            DataType::Tuple(tuple) => tuple.is_copy(),
             DataType::Array(array_type) => array_type.element_type.is_copy(),
             DataType::List(_, _) => false,
             DataType::VoidPointer => false,
@@ -105,10 +105,7 @@ impl DataType {
                 _array_type.length,
                 _array_type.element_type.label_friendly_name()
             ),
-            Tuple(tys) => format!(
-                "tuple_L{}R",
-                tys.into_iter().map(|x| x.label_friendly_name()).join("_")
-            ),
+            Tuple(tys) => tys.label_friendly_name(),
             VoidPointer => "void_pointer".to_string(),
             Function(fn_type) => {
                 let input = fn_type.input_argument.label_friendly_name();

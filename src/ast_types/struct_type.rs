@@ -158,13 +158,7 @@ impl StructType {
         &'a self,
     ) -> Box<dyn Iterator<Item = (FieldId, &'a DataType)> + 'a> {
         match &self.variant {
-            StructVariant::TupleStruct(ts) => Box::new(
-                ts.fields
-                    .iter()
-                    .enumerate()
-                    .rev()
-                    .map(|(tuple_idx, element_type)| (tuple_idx.into(), element_type)),
-            ),
+            StructVariant::TupleStruct(ts) => ts.field_ids_and_types_reversed(),
             StructVariant::NamedFields(nfs) => Box::new(
                 nfs.fields
                     .iter()

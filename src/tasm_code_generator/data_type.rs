@@ -14,6 +14,7 @@ use super::write_n_words_to_memory_leaving_address;
 
 pub mod enum_type;
 pub mod struct_type;
+pub mod tuple_type;
 
 impl ast_types::DataType {
     /// BEFORE: _ (*first_word | ∅)
@@ -72,6 +73,69 @@ impl ast_types::DataType {
     }
 
     /// ```text
+    /// BEFORE: _ [field] *field_or_field_size
+    /// AFTER: _ *next_field_or_field_size
+    /// ```
+    pub(super) fn encode_as_field_leave_next_free_address(
+        &self,
+        state: &mut CompilerState,
+        field_pointer_pointer: BFieldElement,
+    ) -> Vec<LabelledInstruction> {
+        let has_dynamic_size = self.bfield_codec_static_length().is_none();
+        let mut code = if has_dynamic_size {
+            // Make room for size indicator and store current field pointer,
+            // so field size can be calculated
+            triton_asm!(
+                dup 0
+                // _ [field] *field_size *field_size
+
+                push {field_pointer_pointer}
+                write_mem 1
+                pop 1
+
+                push 1
+                add
+                // _ [field] *field
+            )
+        } else {
+            triton_asm!()
+        };
+
+        let move_field_to_memory = self.store_to_memory_leave_next_free_address(state);
+        code.extend(move_field_to_memory);
+
+        // _ *next_field_or_field_size
+        if has_dynamic_size {
+            // Write size indicator for field
+            code.extend(triton_asm!(
+                push {field_pointer_pointer}
+                read_mem 1
+                pop 1
+                // _ *next_field *field_size
+
+                dup 1 dup 1
+                // _ *next_field *field_size *next_field *field_size
+
+                push -1
+                mul
+                add
+                // _ *next_field *field_size (*next_field - *field_size)
+
+                push -1
+                add
+                // _ *next_field *field_size field_size
+
+                swap 1
+                write_mem 1
+                pop 1
+                // _ *next_field
+            ));
+        }
+
+        code
+    }
+
+    /// ```text
     /// BEFORE: _ [value] *value
     /// AFTER: _ (*last_word + 1)
     /// ```
@@ -127,10 +191,10 @@ impl ast_types::DataType {
             | ast_types::DataType::U128
             | ast_types::DataType::Bfe
             | ast_types::DataType::Xfe
-            | ast_types::DataType::Digest
-            | ast_types::DataType::Tuple(_) => {
+            | ast_types::DataType::Digest => {
                 move_top_stack_value_to_memory(None, self.stack_size())
             }
+            ast_types::DataType::Tuple(tuple) => tuple.store_to_memory(state),
             ast_types::DataType::List(element_type, list_type) => {
                 clone_vector_to_allocated_memory(element_type, list_type, state)
             }

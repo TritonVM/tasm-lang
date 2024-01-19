@@ -7,6 +7,7 @@ use crate::libraries::LibraryFunction;
 use super::AbstractArgument;
 use super::AbstractValueArg;
 use super::DataType;
+use super::FieldId;
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct Tuple {
@@ -76,6 +77,29 @@ impl Tuple {
 
     pub(crate) fn stack_size(&self) -> usize {
         self.into_iter().map(|x| x.stack_size()).sum()
+    }
+
+    pub(crate) fn is_copy(&self) -> bool {
+        self.fields.iter().all(|x| x.is_copy())
+    }
+
+    pub(crate) fn label_friendly_name(&self) -> String {
+        format!(
+            "tuple_L{}R",
+            self.into_iter().map(|x| x.label_friendly_name()).join("_")
+        )
+    }
+
+    pub(crate) fn field_ids_and_types_reversed<'a>(
+        &'a self,
+    ) -> Box<dyn Iterator<Item = (FieldId, &'a DataType)> + 'a> {
+        Box::new(
+            self.fields
+                .iter()
+                .enumerate()
+                .rev()
+                .map(|(tuple_idx, element_type)| (tuple_idx.into(), element_type)),
+        )
     }
 
     pub(crate) fn constructor(
