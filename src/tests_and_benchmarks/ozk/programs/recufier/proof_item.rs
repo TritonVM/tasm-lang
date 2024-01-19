@@ -67,6 +67,21 @@ impl ProofItem {
         return auth_structure;
     }
 
+    pub fn as_master_base_table_rows(&self) -> Vec<Vec<BFieldElement>> {
+        #[allow(unused_assignments)]
+        let mut mbt_rows: Vec<Vec<BFieldElement>> = Vec::<Vec<BFieldElement>>::with_capacity(0);
+        match self {
+            ProofItem::MasterBaseTableRows(bss) => {
+                mbt_rows = bss.to_owned();
+            }
+            _ => {
+                panic!();
+            }
+        };
+
+        return mbt_rows;
+    }
+
     fn as_merkle_root(&self) -> Digest {
         #[allow(unused_assignments)]
         let mut root: Digest = Digest::default();
@@ -85,6 +100,7 @@ impl ProofItem {
 
 #[cfg(test)]
 mod test {
+    use proptest::collection::vec;
     use proptest::prelude::*;
     use proptest_arbitrary_interop::arb;
     use test_strategy::proptest;
@@ -114,23 +130,19 @@ mod test {
         return;
     }
 
-    #[proptest]
+    #[proptest(cases = 20)]
     fn proof_item_load_auth_structure_from_memory_test(
         #[strategy(arb())] auth_structure: Vec<Digest>,
     ) {
-        // Rust program on host machine
-        let stdin = vec![];
-
         let ap_start_address: BFieldElement = BFieldElement::new(0);
         let proof_item = ProofItem::AuthenticationStructure(auth_structure);
         let non_determinism = init_memory_from(&proof_item, ap_start_address);
 
         let native_output = wrap_main_with_io(&proof_item_load_auth_structure_from_memory)(
-            stdin,
+            vec![],
             non_determinism.clone(),
         );
 
-        // Run test on Triton-VM
         let entrypoint = EntrypointLocation::disk(
             "recufier",
             "proof_item",
@@ -145,6 +157,51 @@ mod test {
         prop_assert_eq!(native_output, vm_output.output);
     }
 
+    fn proof_item_load_master_base_table_rows_from_memory() {
+        let mbt_rows_item: Box<ProofItem> =
+            ProofItem::decode(&tasm::load_from_memory(BFieldElement::new(0))).unwrap();
+        assert!(!mbt_rows_item.include_in_fiat_shamir_heuristic());
+
+        let mbt_rows: Vec<Vec<BFieldElement>> = mbt_rows_item.as_master_base_table_rows();
+        if mbt_rows.len() > 0 {
+            let line_length: usize = mbt_rows[0].len();
+            let mut i: usize = 1;
+            while i < mbt_rows.len() {
+                assert!(line_length == mbt_rows[i].len());
+                i += 1;
+            }
+        }
+
+        return;
+    }
+
+    #[proptest(cases = 20)]
+    fn proof_item_load_master_base_table_rows_from_memory_test(
+        #[strategy(0_usize..100)] _line_length: usize,
+        #[strategy(vec(vec(arb(), #_line_length), 0..100))] mbt_rows: Vec<Vec<BFieldElement>>,
+    ) {
+        let proof_item = ProofItem::MasterBaseTableRows(mbt_rows);
+        let mbt_start_address = BFieldElement::new(0);
+        let non_determinism = init_memory_from(&proof_item, mbt_start_address);
+
+        let host_machine_output = wrap_main_with_io(
+            &proof_item_load_master_base_table_rows_from_memory,
+        )(vec![], non_determinism.clone());
+
+        let entrypoint_location = EntrypointLocation::disk(
+            "recufier",
+            "proof_item",
+            "test::proof_item_load_master_base_table_rows_from_memory",
+        );
+        let vm_output = TritonVMTestCase::new(entrypoint_location)
+            .with_non_determinism(non_determinism)
+            .expect_stack_difference(0)
+            .execute()
+            .unwrap();
+
+        prop_assert_eq!(host_machine_output, vm_output.output);
+    }
+
     fn proof_item_load_merkle_root_from_memory() {
         let merkle_root_pi: Box<ProofItem> =
             ProofItem::decode(&tasm::load_from_memory(BFieldElement::new(0))).unwrap();
@@ -155,7 +212,7 @@ mod test {
         return;
     }
 
-    #[proptest]
+    #[proptest(cases = 10)]
     fn proof_item_load_merkle_root_from_memory_test(#[strategy(arb())] root: Digest) {
         let stdin = vec![];
         let proof_item = ProofItem::MerkleRoot(root);

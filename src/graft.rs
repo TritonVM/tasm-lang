@@ -4,6 +4,7 @@ use std::str::FromStr;
 use itertools::Itertools;
 use num::One;
 use num::Zero;
+use quote::quote;
 use syn::parse_quote;
 use syn::ExprMacro;
 use syn::PathArguments;
@@ -1197,7 +1198,8 @@ impl<'a> Graft<'a> {
             }
             other => panic!(
                 "unsupported expression. make sure to end statements by semi-colon \
-                     and to explicitly 'return':\n{other:?}"
+                 and to explicitly 'return':\n{}",
+                quote!(#other),
             ),
         }
     }

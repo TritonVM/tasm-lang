@@ -2056,6 +2056,7 @@ dependencies = [
  "pretty_assertions",
  "proptest",
  "proptest-arbitrary-interop",
+ "quote",
  "rand",
  "reqwest",
  "serde",
