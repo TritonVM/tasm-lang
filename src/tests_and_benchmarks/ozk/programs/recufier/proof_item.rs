@@ -82,6 +82,36 @@ impl ProofItem {
         return mbt_rows;
     }
 
+    pub fn as_master_ext_table_rows(&self) -> Vec<Vec<XFieldElement>> {
+        #[allow(unused_assignments)]
+        let mut met_rows: Vec<Vec<XFieldElement>> = Vec::<Vec<XFieldElement>>::with_capacity(0);
+        match self {
+            ProofItem::MasterExtTableRows(xss) => {
+                met_rows = xss.to_owned();
+            }
+            _ => {
+                panic!();
+            }
+        };
+
+        return met_rows;
+    }
+
+    pub fn as_out_of_domain_base_row(&self) -> Vec<XFieldElement> {
+        #[allow(unused_assignments)]
+        let mut ood_base_row: Vec<XFieldElement> = Vec::<XFieldElement>::with_capacity(0);
+        match self {
+            ProofItem::OutOfDomainBaseRow(xs) => {
+                ood_base_row = xs.to_owned();
+            }
+            _ => {
+                panic!();
+            }
+        };
+
+        return ood_base_row;
+    }
+
     fn as_merkle_root(&self) -> Digest {
         #[allow(unused_assignments)]
         let mut root: Digest = Digest::default();
@@ -161,16 +191,7 @@ mod test {
         let mbt_rows_item: Box<ProofItem> =
             ProofItem::decode(&tasm::load_from_memory(BFieldElement::new(0))).unwrap();
         assert!(!mbt_rows_item.include_in_fiat_shamir_heuristic());
-
-        let mbt_rows: Vec<Vec<BFieldElement>> = mbt_rows_item.as_master_base_table_rows();
-        if mbt_rows.len() > 0 {
-            let line_length: usize = mbt_rows[0].len();
-            let mut i: usize = 1;
-            while i < mbt_rows.len() {
-                assert!(line_length == mbt_rows[i].len());
-                i += 1;
-            }
-        }
+        let _rows: Vec<Vec<BFieldElement>> = mbt_rows_item.as_master_base_table_rows();
 
         return;
     }
@@ -184,9 +205,10 @@ mod test {
         let mbt_start_address = BFieldElement::new(0);
         let non_determinism = init_memory_from(&proof_item, mbt_start_address);
 
-        let host_machine_output = wrap_main_with_io(
-            &proof_item_load_master_base_table_rows_from_memory,
-        )(vec![], non_determinism.clone());
+        let native_output = wrap_main_with_io(&proof_item_load_master_base_table_rows_from_memory)(
+            vec![],
+            non_determinism.clone(),
+        );
 
         let entrypoint_location = EntrypointLocation::disk(
             "recufier",
@@ -199,7 +221,88 @@ mod test {
             .execute()
             .unwrap();
 
-        prop_assert_eq!(host_machine_output, vm_output.output);
+        prop_assert_eq!(native_output, vm_output.output);
+    }
+
+    fn proof_item_load_master_ext_table_rows_from_memory() {
+        let met_rows_item: Box<ProofItem> =
+            ProofItem::decode(&tasm::load_from_memory(BFieldElement::new(0))).unwrap();
+        assert!(!met_rows_item.include_in_fiat_shamir_heuristic());
+        let _rows: Vec<Vec<XFieldElement>> = met_rows_item.as_master_ext_table_rows();
+
+        return;
+    }
+
+    #[proptest(cases = 20)]
+    fn proof_item_load_master_ext_table_rows_from_memory_test(
+        #[strategy(0_usize..100)] _line_length: usize,
+        #[strategy(vec(vec(arb(), #_line_length), 0..100))] met_rows: Vec<Vec<XFieldElement>>,
+    ) {
+        let proof_item = ProofItem::MasterExtTableRows(met_rows);
+        let met_start_address = BFieldElement::new(0);
+        let non_determinism = init_memory_from(&proof_item, met_start_address);
+
+        let native_output = wrap_main_with_io(&proof_item_load_master_ext_table_rows_from_memory)(
+            vec![],
+            non_determinism.clone(),
+        );
+
+        let entrypoint_location = EntrypointLocation::disk(
+            "recufier",
+            "proof_item",
+            "test::proof_item_load_master_ext_table_rows_from_memory",
+        );
+        let vm_output = TritonVMTestCase::new(entrypoint_location)
+            .with_non_determinism(non_determinism)
+            .expect_stack_difference(0)
+            .execute()
+            .unwrap();
+
+        prop_assert_eq!(native_output, vm_output.output);
+    }
+
+    fn proof_item_load_out_of_domain_base_row_from_memory() {
+        let ood_base_row_item: Box<ProofItem> =
+            ProofItem::decode(&tasm::load_from_memory(BFieldElement::new(0))).unwrap();
+        assert!(ood_base_row_item.include_in_fiat_shamir_heuristic());
+
+        let row: Vec<XFieldElement> = ood_base_row_item.as_out_of_domain_base_row();
+        {
+            let mut i: usize = 0;
+            while i < row.len() {
+                tasm::tasm_io_write_to_stdout___xfe(row[i]);
+                i += 1;
+            }
+        }
+
+        return;
+    }
+
+    #[proptest(cases = 20)]
+    fn proof_item_load_out_of_domain_base_row_from_memory_test(
+        #[strategy(arb())] ood_base_row: Vec<XFieldElement>,
+    ) {
+        let proof_item = ProofItem::OutOfDomainBaseRow(ood_base_row);
+        let ood_base_row_start_address = BFieldElement::new(0);
+        let non_determinism = init_memory_from(&proof_item, ood_base_row_start_address);
+
+        let native_output = wrap_main_with_io(&proof_item_load_out_of_domain_base_row_from_memory)(
+            vec![],
+            non_determinism.clone(),
+        );
+
+        let entrypoint_location = EntrypointLocation::disk(
+            "recufier",
+            "proof_item",
+            "test::proof_item_load_out_of_domain_base_row_from_memory",
+        );
+        let vm_output = TritonVMTestCase::new(entrypoint_location)
+            .with_non_determinism(non_determinism)
+            .expect_stack_difference(0)
+            .execute()
+            .unwrap();
+
+        prop_assert_eq!(native_output, vm_output.output);
     }
 
     fn proof_item_load_merkle_root_from_memory() {

@@ -815,44 +815,30 @@ fn get_fn_signature(
     env_fn_signature: &ast::FnSignature,
     output_type_hint: Option<&ast_types::DataType>,
 ) -> ast::FnSignature {
-    match state.ftable.get(name) {
-        None => (),
-        Some(fn_signatures) => {
-            match fn_signatures.len() {
-                0 => unreachable!(),
-                1 => return fn_signatures[0].clone(),
-                _ => {
-                    // find the 1st function that matches the types and matches the output
-                    // type *if* a type hint is provided.
-                    let types = args.iter().map(|x| x.get_type()).collect_vec();
-                    for sig in fn_signatures.iter() {
-                        if sig.matches(&types) {
-                            match output_type_hint {
-                                Some(some_hint) => {
-                                    if sig.output == *some_hint {
-                                        return sig.to_owned();
-                                    }
-                                }
-                                None => return sig.to_owned(),
-                            }
-                        }
-                    }
+    if let Some(fn_signatures) = state.ftable.get(name) {
+        match fn_signatures.len() {
+            0 => unreachable!("Function signature list must never be empty."),
+            1 => return fn_signatures[0].to_owned(),
+            _ => (), // continue
+        }
 
-                    println!("args[0].get_type: {:#?}", args[0].get_type());
-                    todo!("\nname: {name}\ntype_parameter: {type_parameter:#?}")
-                    // <-- We need to inspect types for this case
-                }
+        let types = args.iter().map(|arg| arg.get_type()).collect_vec();
+        for sig in fn_signatures.iter().filter(|sig| sig.matches(&types)) {
+            let Some(hint) = output_type_hint else {
+                return sig.to_owned();
+            };
+            if sig.output == *hint {
+                return sig.to_owned();
             }
         }
+
+        todo!("\nname: {name}\ntype_parameter: {type_parameter:#?}")
+        // <-- We need to inspect types for this case
     }
 
-    match state
-        .composite_types
-        .get_associated_function_signature(name)
-    {
-        None => (),
-        Some(afunc) => return afunc.to_owned(),
-    };
+    if let Some(afunc) = state.composite_types.associated_function_signature(name) {
+        return afunc.to_owned();
+    }
 
     // Function from libraries are in scope
     for lib in state.libraries.iter() {
@@ -861,7 +847,13 @@ fn get_fn_signature(
         }
     }
 
-    panic!("Function call in {} Don't know what type of value '{name}' returns! Type parameter was: {type_parameter:?}. ftable is:\n{}", env_fn_signature.name, state.ftable.keys().join("\n"))
+    panic!(
+        "Function call in {} – Don't know return type of \"{name}\"! \
+        Type parameter: {type_parameter:?}. \
+        ftable:\n{}",
+        env_fn_signature.name,
+        state.ftable.keys().join("\n")
+    )
 }
 
 fn get_method_signature(

@@ -290,7 +290,7 @@ impl CompositeTypes {
             .into_iter()
     }
 
-    pub(crate) fn get_associated_function_signature(&self, name: &str) -> Option<ast::FnSignature> {
+    pub(crate) fn associated_function_signature(&self, name: &str) -> Option<ast::FnSignature> {
         self.get_associated_function(name).map(|x| x.signature)
     }
 

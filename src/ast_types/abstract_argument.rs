@@ -1,28 +1,31 @@
 use std::fmt::Display;
+use std::fmt::Formatter;
+use std::fmt::Result;
 
 use super::DataType;
 use super::FunctionType;
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub enum AbstractArgument {
+pub(crate) enum AbstractArgument {
     FunctionArgument(AbstractFunctionArg),
     ValueArgument(AbstractValueArg),
 }
 
+impl AbstractArgument {
+    pub fn stack_size(&self) -> usize {
+        match self {
+            Self::FunctionArgument(_) => 0,
+            Self::ValueArgument(arg) => arg.data_type.stack_size(),
+        }
+    }
+}
+
 impl Display for AbstractArgument {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "{}",
-            match self {
-                AbstractArgument::ValueArgument(val_arg) => {
-                    format!("{}: {}", val_arg.name, val_arg.data_type)
-                }
-                AbstractArgument::FunctionArgument(fun_arg) => {
-                    format!("fn ({}): {}", fun_arg.abstract_name, fun_arg.function_type)
-                }
-            }
-        )
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        match self {
+            Self::FunctionArgument(arg) => write!(f, "{arg}"),
+            Self::ValueArgument(arg) => write!(f, "{arg}"),
+        }
     }
 }
 
@@ -30,6 +33,12 @@ impl Display for AbstractArgument {
 pub struct AbstractFunctionArg {
     pub abstract_name: String,
     pub function_type: FunctionType,
+}
+
+impl Display for AbstractFunctionArg {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        write!(f, "fn ({}): {}", self.abstract_name, self.function_type)
+    }
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
@@ -40,7 +49,7 @@ pub struct AbstractValueArg {
 }
 
 impl Display for AbstractValueArg {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         write!(f, "{}: {}", self.name, self.data_type)
     }
 }

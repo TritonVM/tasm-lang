@@ -71,13 +71,12 @@ impl<T> Method<T> {
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub(crate) struct Fn<T> {
     pub signature: FnSignature,
-    // TODO: Should probably be a BlockStmt<T> instead of Vec<Stmt>
     pub body: RoutineBody<T>,
 }
 
 impl<T> Fn<T> {
     pub fn get_tasm_label(&self) -> String {
-        self.signature.name.replace("::", "_assoc_funciton___of___")
+        self.signature.name.replace("::", "_assoc_function___of___")
     }
 }
 
@@ -92,15 +91,7 @@ pub(crate) struct FnSignature {
 impl FnSignature {
     /// Return the number of words that the function's input arguments take up on the stack
     pub(crate) fn input_arguments_stack_size(&self) -> usize {
-        let mut input_args_stack_size = 0;
-        for arg in self.args.iter() {
-            input_args_stack_size += match arg {
-                AbstractArgument::FunctionArgument(_) => 0,
-                AbstractArgument::ValueArgument(val_arg) => val_arg.data_type.stack_size(),
-            }
-        }
-
-        input_args_stack_size
+        self.args.iter().map(|arg| arg.stack_size()).sum()
     }
 
     /// Convert snippet implementing `BasicSnippet` from `tasm-lib` into a function signature.
@@ -139,7 +130,7 @@ impl FnSignature {
     }
 
     /// Returns a boolean indicating if the function signature matches a list of input types
-    pub fn matches(&self, types: &[ast_types::DataType]) -> bool {
+    pub fn matches(&self, types: &[DataType]) -> bool {
         if self.args.len() != types.len() {
             return false;
         }
@@ -147,7 +138,7 @@ impl FnSignature {
         for (arg, dtype) in self.args.iter().zip_eq(types.iter()) {
             match arg {
                 AbstractArgument::FunctionArgument(fun_arg) => {
-                    let ast_types::DataType::Function(fun) = dtype else {
+                    let DataType::Function(fun) = dtype else {
                         return false;
                     };
                     if fun_arg.function_type != **fun {

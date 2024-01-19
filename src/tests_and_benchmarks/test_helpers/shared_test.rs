@@ -180,8 +180,7 @@ impl TritonVMTestCase {
     fn initial_stack(&self) -> Vec<BFieldElement> {
         let mut initial_stack = empty_stack();
         for input_arg in &self.input_args {
-            let input_arg_seq = input_arg.encode();
-            initial_stack.append(&mut input_arg_seq.into_iter().rev().collect());
+            initial_stack.extend(input_arg.encode().into_iter().rev());
         }
         initial_stack
     }
