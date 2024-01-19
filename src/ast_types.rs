@@ -115,15 +115,8 @@ impl DataType {
                 let output = fn_type.output.label_friendly_name();
                 format!("function_from_L{}R__to_L{}R", input, output)
             }
-            Struct(struct_type) => struct_type.name.to_owned(),
-            Enum(enum_type) => match enum_type.type_parameter.as_ref() {
-                // Use type parameter here to differentiate between
-                // methods for `Result<BFE>` and `Result<XFE>`.
-                Some(type_param) => {
-                    format!("{}___{}", enum_type.name, type_param.label_friendly_name())
-                }
-                None => enum_type.name.to_owned(),
-            },
+            Struct(struct_type) => struct_type.label_friendly_name(),
+            Enum(enum_type) => enum_type.label_friendly_name(),
             Unresolved(name) => name.to_string(),
             Boxed(ty) => format!("boxed_L{}R", ty.label_friendly_name()),
         }
@@ -169,7 +162,6 @@ impl DataType {
                         DataType::Boxed(Box::new(field_type))
                     }
                 }
-                // TODO: We probably also want to allow field access to `Reference` types here
                 DataType::Tuple(tuple) => {
                     let tuple_index: usize = field_id.try_into().expect("Tuple must be accessed with a tuple index");
                     let field_type = tuple.fields[tuple_index].clone();
@@ -211,7 +203,7 @@ impl DataType {
     }
 
     // Notice that this implementation must match that derived by `BFieldCodec`
-    pub fn bfield_codec_length(&self) -> Option<usize> {
+    pub fn bfield_codec_static_length(&self) -> Option<usize> {
         match self {
             DataType::Bool => Some(1),
             DataType::U32 => Some(1),
@@ -221,47 +213,20 @@ impl DataType {
             DataType::Xfe => Some(3),
             DataType::Digest => Some(5),
             DataType::Array(array_type) => {
-                Some(array_type.element_type.bfield_codec_length()? * array_type.length)
+                Some(array_type.element_type.bfield_codec_static_length()? * array_type.length)
             }
             DataType::Tuple(inner_types) => inner_types
                 .into_iter()
-                .map(|x| x.bfield_codec_length())
+                .map(|x| x.bfield_codec_static_length())
                 .try_fold(0, |acc: usize, x| x.map(|x| x + acc)),
             DataType::List(_, _) => None,
             DataType::Struct(struct_type) => struct_type
                 .field_types()
                 .try_fold(0, |acc: usize, field_type| {
-                    field_type.bfield_codec_length().map(|v| acc + v)
+                    field_type.bfield_codec_static_length().map(|v| acc + v)
                 }),
-            DataType::Enum(enum_type) => {
-                if enum_type.variants.is_empty() {
-                    // No variants: length is 0
-                    Some(0)
-                } else if enum_type.variants.iter().all(|x| x.1.is_unit()) {
-                    // No variants have associated data: 1,
-                    Some(1)
-                } else {
-                    // Some variants have associated data:
-                    //   - if all variants have associated data of the same statically known length =>
-                    //     Some(this_length)
-                    //   else:
-                    //     None
-                    let variant_lengths = enum_type
-                        .variants
-                        .iter()
-                        .map(|variant| variant.1.bfield_codec_length())
-                        .collect_vec();
-                    if variant_lengths
-                        .iter()
-                        .all(|x| x.is_some() && x.unwrap() == variant_lengths[0].unwrap())
-                    {
-                        Some(variant_lengths[0].unwrap() + 1)
-                    } else {
-                        None
-                    }
-                }
-            }
-            DataType::Boxed(inner_type) => inner_type.bfield_codec_length(),
+            DataType::Enum(enum_type) => enum_type.bfield_codec_static_length(),
+            DataType::Boxed(inner_type) => inner_type.bfield_codec_static_length(),
             DataType::VoidPointer => panic!(),
             DataType::Function(_) => panic!(),
             DataType::Unresolved(_) => panic!(),

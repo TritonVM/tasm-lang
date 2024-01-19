@@ -173,4 +173,8 @@ impl StructType {
             ),
         }
     }
+
+    pub(crate) fn label_friendly_name(&self) -> String {
+        self.name.to_owned()
+    }
 }

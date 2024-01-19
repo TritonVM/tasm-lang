@@ -1,9 +1,9 @@
 project_euler_4_w_unsafe_lists_i10_to_50:
 
 # call graph
- main: 297179
-   tasm_list_unsafeimplu32_new___u32: 34
-     tasm_memory_dyn_malloc: 25
+ main: 297183
+   tasm_list_unsafeimplu32_new___u32: 38
+     tasm_memory_dyn_malloc: 29
    _binop_Neq__LboolR_bool_47_while_loop: 297132
      _binop_Neq__LboolR_bool_53_while_loop: 335
        tasm_arithmetic_u32_safeadd: 8
@@ -14676,12 +14676,12 @@ project_euler_4_w_unsafe_lists_i10_to_50:
        tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
    tasm_io_write_to_stdout___u32: 2
- total: 297181
+ total: 297185
 
 # aggregated
- main: 297179
-   tasm_list_unsafeimplu32_new___u32: 34
-     tasm_memory_dyn_malloc: 25
+ main: 297183
+   tasm_list_unsafeimplu32_new___u32: 38
+     tasm_memory_dyn_malloc: 29
    _binop_Neq__LboolR_bool_47_while_loop: 297132
      _binop_Neq__LboolR_bool_53_while_loop: 296123
      tasm_arithmetic_u32_safeadd: 22608
@@ -14698,4 +14698,4 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            _binop_Neq__LboolR_bool_34_else: 87
        _binop_And__LboolR_bool_66_then: 84
    tasm_io_write_to_stdout___u32: 2
- total: 297181
+ total: 297185

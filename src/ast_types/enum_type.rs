@@ -55,6 +55,37 @@ impl EnumType {
         );
     }
 
+    /// Get the word count of the encoding of this enum. Returns `None` if length
+    /// is not statically known.
+    pub(crate) fn bfield_codec_static_length(&self) -> Option<usize> {
+        if self.variants.is_empty() {
+            // No variants: length is 0
+            Some(0)
+        } else if self.variants.iter().all(|x| x.1.is_unit()) {
+            // No variants have associated data: 1,
+            Some(1)
+        } else {
+            // Some variants have associated data:
+            //   - if all variants have associated data of the same statically known length =>
+            //     Some(this_length)
+            //   else:
+            //     None
+            let variant_lengths = self
+                .variants
+                .iter()
+                .map(|variant| variant.1.bfield_codec_static_length())
+                .collect_vec();
+            if variant_lengths
+                .iter()
+                .all(|x| x.is_some() && x.unwrap() == variant_lengths[0].unwrap())
+            {
+                Some(variant_lengths[0].unwrap() + 1)
+            } else {
+                None
+            }
+        }
+    }
+
     /// Return the "discriminant" of an enum variant, an integer showing
     /// what variant the enum type takes.
     pub(crate) fn variant_discriminant(&self, variant_name: &str) -> usize {
@@ -98,5 +129,17 @@ impl EnumType {
             vec![DataType::Bfe],
         ]
         .concat()
+    }
+
+    /// Use this if the type is used to make labels in the TASM code
+    pub(crate) fn label_friendly_name(&self) -> String {
+        match self.type_parameter.as_ref() {
+            // Use type parameter here to differentiate between
+            // methods for `Result<BFE>` and `Result<XFE>`.
+            Some(type_param) => {
+                format!("{}___{}", self.name, type_param.label_friendly_name())
+            }
+            None => self.name.to_owned(),
+        }
     }
 }

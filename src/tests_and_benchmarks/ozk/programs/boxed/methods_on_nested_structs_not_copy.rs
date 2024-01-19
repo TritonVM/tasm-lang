@@ -93,7 +93,7 @@ mod test {
 
         // Test function in Triton VM
         let entrypoint_location =
-            EntrypointLocation::disk("boxed", "methods_on_nested_structs", "main");
+            EntrypointLocation::disk("boxed", "methods_on_nested_structs_not_copy", "main");
         let test_program =
             ozk_parsing::compile_for_test(&entrypoint_location, crate::ast_types::ListType::Unsafe);
         let expected_stack_diff = 0;

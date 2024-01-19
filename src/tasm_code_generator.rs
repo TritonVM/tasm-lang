@@ -1,4 +1,4 @@
-mod data_type;
+pub(crate) mod data_type;
 mod function_state;
 mod inner_function_tasm_code;
 mod outer_function_tasm_code;
@@ -151,6 +151,12 @@ impl<'a> CompilerState<'a> {
         self.global_compiler_state
             .library_snippets
             .contains_key(subroutine_label)
+    }
+
+    pub(crate) fn static_memory_allocation(&mut self, num_words: usize) -> BFieldElement {
+        self.global_compiler_state
+            .snippet_state
+            .kmalloc(num_words as u32)
     }
 
     /// Import a dependency in an idempotent manner, ensuring it's only ever imported once
@@ -314,7 +320,7 @@ impl<'a> CompilerState<'a> {
                         ast_types::DataType::List(_, ast_types::ListType::Safe) => 2,
                         lhs_type => panic!("Expected type was list. Got {lhs_type}."),
                     };
-                    let element_address = match element_type.bfield_codec_length() {
+                    let element_address = match element_type.bfield_codec_static_length() {
                         Some(static_element_size) => {
                             let relative_address = triton_asm!(
                                 {&index_code}
@@ -1061,13 +1067,23 @@ fn compile_stmt(
     state: &mut CompilerState,
 ) -> Vec<LabelledInstruction> {
     match stmt {
-        ast::Stmt::Let(ast::LetStmt { var_name, expr, .. }) => {
+        ast::Stmt::Let(ast::LetStmt {
+            var_name,
+            expr,
+            data_type,
+            ..
+        }) => {
             let (expr_addr, expr_code) = compile_expr(expr, var_name, state);
+
+            let last_stack_for_value_plus_one = data_type.stack_size();
+            let asm_annotation_str =
+                format!("hint {var_name} = stack[0..{last_stack_for_value_plus_one}]");
+            let asm_annotation = triton_asm!({ asm_annotation_str });
             state
                 .function_state
                 .var_addr
                 .insert(var_name.clone(), expr_addr);
-            expr_code
+            [expr_code, asm_annotation].concat()
         }
 
         ast::Stmt::Assign(ast::AssignStmt { identifier, expr }) => {
@@ -2935,7 +2951,7 @@ fn dereference(
     resulting_type: &ast_types::DataType,
     state: &mut CompilerState,
 ) -> Vec<LabelledInstruction> {
-    resulting_type.load_from_memory(None, state)
+    resulting_type.load_from_memory(state)
 }
 
 /// Return the code to load a value from memory. Leaves the stack with the read value on top.

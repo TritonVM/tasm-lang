@@ -1,0 +1,55 @@
+use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
+use triton_vm::BFieldElement;
+use twenty_first::shared_math::{bfield_codec::BFieldCodec, x_field_element::XFieldElement};
+
+#[derive(BFieldCodec)]
+struct WithListFields {
+    bfes: Vec<BFieldElement>,
+    xfes: Vec<XFieldElement>,
+}
+
+#[allow(clippy::redundant_field_names)]
+fn main() {
+    let mut bfes: Vec<BFieldElement> = Vec::<BFieldElement>::with_capacity(32);
+    let mut xfes: Vec<XFieldElement> = Vec::<XFieldElement>::with_capacity(32);
+    bfes.push(BFieldElement::new(102));
+    bfes.push(BFieldElement::new(2222));
+    xfes.push(tasm::tasm_io_read_stdin___xfe());
+    xfes.push(tasm::tasm_io_read_stdin___xfe());
+    let wlf: WithListFields = WithListFields {
+        bfes: bfes,
+        xfes: xfes,
+    };
+    let boxed: Box<WithListFields> = Box::<WithListFields>::new(wlf);
+    tasm::tasm_io_write_to_stdout___bfe(boxed.bfes[0]);
+    tasm::tasm_io_write_to_stdout___xfe(boxed.xfes[0]);
+    tasm::tasm_io_write_to_stdout___xfe(boxed.xfes[1]);
+    tasm::tasm_io_write_to_stdout___bfe(boxed.bfes[1]);
+
+    return;
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
+    use crate::tests_and_benchmarks::ozk::rust_shadows;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::*;
+    use triton_vm::NonDeterminism;
+    use twenty_first::shared_math::other::random_elements;
+
+    #[test]
+    fn box_a_struct_with_two_list_fields() {
+        let stdin = random_elements(6);
+        let native_output =
+            rust_shadows::wrap_main_with_io(&main)(stdin.clone(), NonDeterminism::default());
+        let entrypoint =
+            EntrypointLocation::disk("boxed", "box_a_struct_with_two_list_fields", "main");
+        let vm_output = TritonVMTestCase::new(entrypoint)
+            .with_std_in(stdin)
+            .expect_stack_difference(0)
+            .execute()
+            .unwrap();
+        assert_eq!(native_output, vm_output.output);
+    }
+}

@@ -24,43 +24,35 @@ fn main() {
 
 #[cfg(test)]
 mod test {
-
+    use super::*;
+    use crate::tests_and_benchmarks::ozk::ozk_parsing;
+    use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
+    use crate::tests_and_benchmarks::ozk::rust_shadows;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::TritonVMTestCase;
     use itertools::Itertools;
     use rand::random;
     use triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
     use triton_vm::NonDeterminism;
 
-    use crate::tests_and_benchmarks::ozk::ozk_parsing;
-    use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
-    use crate::tests_and_benchmarks::ozk::rust_shadows;
-    use crate::tests_and_benchmarks::test_helpers::shared_test::execute_compiled_with_stack_and_ins_for_test;
-
-    use super::*;
-
     #[test]
     fn ref_struct_typecheck_succeed_bc_boxed_test() {
-        // Verify compilation works
-        let entrypoint_location =
+        // Verify that compilation works
+        let entrypoint =
             EntrypointLocation::disk("boxed", "ref_struct_typecheck_succeed_bc_boxed", "main");
-        let test_program =
-            ozk_parsing::compile_for_test(&entrypoint_location, crate::ast_types::ListType::Unsafe);
+        let _test_program =
+            ozk_parsing::compile_for_test(&entrypoint, crate::ast_types::ListType::Unsafe);
 
         // Test function in Triton VM
         let rand: u64 = random::<u64>() / 2;
         let mut encoded = rand.encode();
         encoded.reverse();
         let stdin = encoded;
-        let non_determinism = NonDeterminism::new(vec![]);
         let expected_output = (rand + 0xabcde123u64).encode();
-        let expected_stack_diff = 0;
-        let vm_output = execute_compiled_with_stack_and_ins_for_test(
-            &test_program,
-            vec![],
-            stdin.clone(),
-            non_determinism.clone(),
-            expected_stack_diff,
-        )
-        .unwrap();
+        let vm_output = TritonVMTestCase::new(entrypoint)
+            .expect_stack_difference(0)
+            .with_std_in(stdin.clone())
+            .execute()
+            .unwrap();
         if expected_output != vm_output.output {
             panic!(
                 "expected:\n{}\n\ngot:\n{}",
@@ -71,7 +63,7 @@ mod test {
 
         // Test function on host machine
         let native_output =
-            rust_shadows::wrap_main_with_io(&main)(stdin.clone(), non_determinism.clone());
+            rust_shadows::wrap_main_with_io(&main)(stdin.clone(), NonDeterminism::default());
         assert_eq!(native_output, expected_output);
     }
 }

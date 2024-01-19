@@ -1,4 +1,5 @@
 use tasm_lib;
+use tasm_lib::memory::memcpy::MemCpy;
 use triton_vm::instruction::LabelledInstruction;
 use triton_vm::op_stack::OpStackElement;
 use triton_vm::triton_asm;
@@ -7,6 +8,9 @@ use triton_vm::BFieldElement;
 use crate::ast_types;
 use crate::tasm_code_generator::read_n_words_from_memory;
 use crate::tasm_code_generator::CompilerState;
+
+use super::move_top_stack_value_to_memory;
+use super::write_n_words_to_memory_leaving_address;
 
 pub mod enum_type;
 pub mod struct_type;
@@ -37,13 +41,42 @@ impl ast_types::DataType {
     }
 
     /// Return the code to copy a value in memory to the stack.
-    /// `position` refers to a memory address. If this is `None`, the
-    /// memory address is assumed to be on top of the stack.
-    /// BEFORE: _ <*value>
+    /// The memory address is assumed to be on top of the stack.
+    /// ```text
+    /// BEFORE: _ *value
     /// AFTER: _ [value]
-    pub(super) fn load_from_memory(
+    /// ```
+    pub(super) fn load_from_memory(&self, state: &mut CompilerState) -> Vec<LabelledInstruction> {
+        match self {
+            ast_types::DataType::Bool
+            | ast_types::DataType::U32
+            | ast_types::DataType::U64
+            | ast_types::DataType::U128
+            | ast_types::DataType::Bfe
+            | ast_types::DataType::Xfe
+            | ast_types::DataType::Digest
+            | ast_types::DataType::Tuple(_) => {
+                Self::copy_words_from_memory(None, self.stack_size())
+            }
+            ast_types::DataType::List(_, _)
+            | ast_types::DataType::Array(_)
+            | ast_types::DataType::Boxed(_) => {
+                triton_asm!()
+            }
+            ast_types::DataType::Enum(enum_type) => enum_type.load_from_memory(state),
+            ast_types::DataType::Struct(struct_type) => struct_type.load_from_memory(state),
+            ast_types::DataType::VoidPointer => todo!(),
+            ast_types::DataType::Function(_) => todo!(),
+            ast_types::DataType::Unresolved(_) => todo!(),
+        }
+    }
+
+    /// ```text
+    /// BEFORE: _ [value] *value
+    /// AFTER: _ (*last_word + 1)
+    /// ```
+    pub(crate) fn store_to_memory_leave_next_free_address(
         &self,
-        static_address: Option<BFieldElement>,
         state: &mut CompilerState,
     ) -> Vec<LabelledInstruction> {
         match self {
@@ -55,15 +88,58 @@ impl ast_types::DataType {
             | ast_types::DataType::Xfe
             | ast_types::DataType::Digest
             | ast_types::DataType::Tuple(_) => {
-                Self::copy_words_from_memory(static_address, self.stack_size())
+                write_n_words_to_memory_leaving_address(self.stack_size())
             }
-            ast_types::DataType::List(_, _)
-            | ast_types::DataType::Array(_)
-            | ast_types::DataType::Boxed(_) => {
-                triton_asm!()
+            ast_types::DataType::List(element_type, list_type) => {
+                clone_vector_to_allocated_memory_return_next_free_address(
+                    element_type,
+                    list_type,
+                    state,
+                )
             }
-            ast_types::DataType::Enum(enum_type) => enum_type.load_from_memory(state),
-            ast_types::DataType::Struct(struct_type) => struct_type.load_from_memory(state),
+            ast_types::DataType::Array(array_type) => {
+                clone_array_to_allocated_memory_return_next_free_address(array_type, state)
+            }
+            ast_types::DataType::Boxed(_) => {
+                todo!()
+            }
+            ast_types::DataType::Enum(enum_type) => {
+                enum_type.store_to_memory_leave_next_free_address(state)
+            }
+            ast_types::DataType::Struct(struct_type) => {
+                struct_type.store_to_memory_leave_next_free_address(state)
+            }
+            ast_types::DataType::VoidPointer => todo!(),
+            ast_types::DataType::Function(_) => todo!(),
+            ast_types::DataType::Unresolved(_) => todo!(),
+        }
+    }
+
+    /// ```text
+    /// BEFORE: _ [value] *value
+    /// AFTER: _
+    /// ```
+    pub(crate) fn store_to_memory(&self, state: &mut CompilerState) -> Vec<LabelledInstruction> {
+        match self {
+            ast_types::DataType::Bool
+            | ast_types::DataType::U32
+            | ast_types::DataType::U64
+            | ast_types::DataType::U128
+            | ast_types::DataType::Bfe
+            | ast_types::DataType::Xfe
+            | ast_types::DataType::Digest
+            | ast_types::DataType::Tuple(_) => {
+                move_top_stack_value_to_memory(None, self.stack_size())
+            }
+            ast_types::DataType::List(element_type, list_type) => {
+                clone_vector_to_allocated_memory(element_type, list_type, state)
+            }
+            ast_types::DataType::Array(array_type) => {
+                clone_array_to_allocated_memory(array_type, state)
+            }
+            ast_types::DataType::Boxed(_) => todo!(),
+            ast_types::DataType::Enum(enum_type) => enum_type.store_to_memory(state),
+            ast_types::DataType::Struct(struct_type) => struct_type.store_to_memory(state),
             ast_types::DataType::VoidPointer => todo!(),
             ast_types::DataType::Function(_) => todo!(),
             ast_types::DataType::Unresolved(_) => todo!(),
@@ -145,4 +221,157 @@ impl ast_types::DataType {
             Enum(_) => todo!("Equality for enums not yet implemented"),
         }
     }
+}
+
+/// Returns the code to make a new copy of a list. Memory must already
+/// be allocated by the caller.
+/// ```text
+/// BEFORE: _ *src_array *dst_array
+/// AFTER: _
+/// ``
+fn clone_array_to_allocated_memory_return_next_free_address(
+    array_type: &ast_types::ArrayType,
+    state: &mut CompilerState<'_>,
+) -> Vec<LabelledInstruction> {
+    let array_size = array_type.size_in_memory();
+    let memcpy_label = state.import_snippet(Box::new(MemCpy));
+
+    triton_asm!(
+        // _ *src_array *dst_array
+
+        push {array_size}
+        // _ *src_array *dst_array array_size
+
+        dup 1 dup 1 add
+        // _ *src_array *dst_array array_size next_free_address
+
+        swap 3 swap 2 swap 1
+        // _ next_free_address *src_array *dst_array array_size
+
+        call {memcpy_label}
+    )
+}
+
+/// Returns the code to make a new copy of an array. Memory must already
+/// be allocated by the caller.
+/// ```text
+/// BEFORE: _ *src_array *dst_array
+/// AFTER: _
+/// ``
+fn clone_array_to_allocated_memory(
+    array_type: &ast_types::ArrayType,
+    state: &mut CompilerState<'_>,
+) -> Vec<LabelledInstruction> {
+    let array_size = array_type.size_in_memory();
+    let memcpy_label = state.import_snippet(Box::new(MemCpy));
+
+    triton_asm!(
+        push {array_size}
+
+        // _ *src_array *dst_array array_size
+        call {memcpy_label}
+    )
+}
+
+/// Returns the code to make a new copy of a list. Memory must already
+/// be allocated by the caller.
+/// ```text
+/// BEFORE: _ *src_list *dst_list
+/// AFTER: _ (*dst_list + list_size + 1)
+/// ```
+fn clone_vector_to_allocated_memory_return_next_free_address(
+    element_type: &ast_types::DataType,
+    list_type: &ast_types::ListType,
+    state: &mut CompilerState,
+) -> Vec<LabelledInstruction> {
+    let element_size = element_type.stack_size();
+    let add_metadata_size = match list_type {
+        ast_types::ListType::Safe => triton_asm!(push 2 add),
+        ast_types::ListType::Unsafe => triton_asm!(push 1 add),
+    };
+    let memcpy_label = state.import_snippet(Box::new(MemCpy));
+
+    triton_asm!(
+        // _ *src_list *dst_list
+
+        swap 1
+        // _ *dst_list *src_list
+
+        read_mem 1
+        // _ *dst_list list_length (*src_list - 1)
+
+        push 1 add
+        // _ *dst_list list_length *src_list
+
+        swap 2
+        swap 1
+        // _ *src_list *dst_list list_length
+
+        push {element_size}
+        mul
+        // _ *src_list *dst_list size_of_elements
+
+        {&add_metadata_size}
+        // _ *src_list *dst_list total_list_size
+
+        dup 1 dup 1 add
+        // _ *src_list *dst_list total_list_size *next_free_word
+
+        dup 3 dup 3 dup 3
+        // _ *src_list *dst_list total_list_size *next_free_word *src_list *dst_list total_list_size
+
+        call {memcpy_label}
+        // _ *src_list *dst_list total_list_size *next_free_word
+
+        swap 3
+        pop 3
+        // _ *next_free_word
+    )
+}
+
+/// Returns the code to make a new copy of a list. Memory must already
+/// be allocated by the caller.
+/// ```text
+/// BEFORE: _ *src_list *dst_list
+/// AFTER: _
+/// ```
+fn clone_vector_to_allocated_memory(
+    element_type: &ast_types::DataType,
+    list_type: &ast_types::ListType,
+    state: &mut CompilerState,
+) -> Vec<LabelledInstruction> {
+    let element_size = element_type.stack_size();
+    let add_metadata_size = match list_type {
+        ast_types::ListType::Safe => triton_asm!(push 2 add),
+        ast_types::ListType::Unsafe => triton_asm!(push 1 add),
+    };
+    let memcpy_label = state.import_snippet(Box::new(MemCpy));
+
+    triton_asm!(
+        // _ *src_list *dst_list
+
+        swap 1
+        // _ *dst_list *src_list
+
+        read_mem 1
+        // _ *dst_list list_length (*src_list - 1)
+
+        push 1 add
+        // _ *dst_list list_length *src_list
+
+        swap 2
+        swap 1
+        // _ *src_list *dst_list list_length
+
+        push {element_size}
+        mul
+        // _ *src_list *dst_list size_of_elements
+
+        {&add_metadata_size}
+        // _ *src_list *dst_list total_list_size
+
+        call {memcpy_label}
+
+        // _
+    )
 }

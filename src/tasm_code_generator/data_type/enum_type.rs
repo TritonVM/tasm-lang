@@ -11,16 +11,79 @@ use crate::tasm_code_generator::CompilerState;
 use crate::tasm_code_generator::SubRoutine;
 
 impl EnumType {
-    /// Return a label for the subroutine which loads this enum type from
-    /// memory onto the stack
-    fn label_for_memory_loading_subroutine(&self) -> String {
-        format!("load_{}_to_stack", self.name)
+    pub(crate) fn store_to_memory_leave_next_free_address(
+        &self,
+        _state: &mut CompilerState,
+    ) -> Vec<LabelledInstruction> {
+        todo!()
+    }
+
+    /// ```text
+    /// BEFORE: _ [data] [padding] discriminant *pointer
+    /// AFTER: _
+    /// ```
+    pub(crate) fn store_to_memory(&self, state: &mut CompilerState) -> Vec<LabelledInstruction> {
+        let store_subroutine_label = format!("store_{}_to_memory", self.label_friendly_name());
+        let call_subroutine = triton_asm!(call {
+            store_subroutine_label
+        });
+        if state.contains_subroutine(&store_subroutine_label) {
+            return call_subroutine;
+        }
+
+        let discriminant_pointer_internal = state.global_compiler_state.snippet_state.kmalloc(1);
+        let data_begin_pointer_pointer_internal =
+            state.global_compiler_state.snippet_state.kmalloc(1);
+        let pop_padding = self.pop_padding(state, discriminant_pointer_internal);
+        let store_variant_data = self.store_variant_data(
+            state,
+            discriminant_pointer_internal,
+            data_begin_pointer_pointer_internal,
+        );
+
+        let subroutine = triton_asm!(
+            {store_subroutine_label}:
+            // _ [data] [padding] discriminant *pointer
+            hint pointer: BFieldElement = stack[0]
+            hint discriminant: BFieldElement = stack[1]
+            hint padding_top: BFieldElement = stack[2]
+
+            dup 1
+            push {discriminant_pointer_internal}
+            write_mem 1
+            pop 1
+            // _ [data] [padding] discriminant *pointer
+
+            write_mem 1
+            // _ [data] [padding] (*pointer + 1)
+            // _ [data] [padding] *data_begin
+            hint data_begin_pointer: BFieldElement = stack[0]
+
+            push {data_begin_pointer_pointer_internal}
+            write_mem 1
+            pop 1
+            // _ [data] [padding]
+
+            {&pop_padding}
+
+            // _ [data]
+            hint data_top: BFieldElement = stack[0]
+
+            {&store_variant_data}
+            // _
+
+            return
+        );
+
+        state.add_library_function(subroutine.try_into().unwrap());
+
+        call_subroutine
     }
 
     /// BEFORE: _ *discriminant
     /// AFTER:  _ [data] [padding] discriminant
     pub(crate) fn load_from_memory(&self, state: &mut CompilerState) -> Vec<LabelledInstruction> {
-        let load_subroutine_label = self.label_for_memory_loading_subroutine();
+        let load_subroutine_label = format!("load_{}_to_stack", self.label_friendly_name());
         if state.contains_subroutine(&load_subroutine_label) {
             return triton_asm!(call {
                 load_subroutine_label
@@ -93,7 +156,7 @@ impl EnumType {
             let data_fields = variant_type.as_tuple_type();
             let mut load_variant_fields = triton_asm!();
             for (field_count, data_field_type) in data_fields.fields.iter().enumerate() {
-                let load_field = data_field_type.load_from_memory(None, state);
+                let load_field = data_field_type.load_from_memory(state);
                 let field_stack_size = data_field_type.stack_size();
                 load_variant_fields.append(&mut triton_asm!(
                     // _ [data]
@@ -184,6 +247,119 @@ impl EnumType {
         })
     }
 
+    /// ```text
+    /// BEFORE: _ [data]
+    /// AFTER: _
+    /// ```
+    pub(crate) fn store_variant_data(
+        &self,
+        state: &mut CompilerState,
+        discriminant_pointer: BFieldElement,
+        data_begin_pointer_pointer: BFieldElement,
+    ) -> Vec<LabelledInstruction> {
+        let mut store_data = vec![];
+        for (haystack_discriminant, (variant_name, variant_type)) in
+            self.variants.iter().enumerate()
+        {
+            let store_variant_data_srlabel = format!(
+                "{}_store_variant_data_{}",
+                self.label_friendly_name(),
+                variant_name
+            );
+            store_data.extend(triton_asm!(
+                push {discriminant_pointer}
+                read_mem 1
+                pop 1
+
+                // _ [data] discriminant
+                push {haystack_discriminant}
+                eq
+                // _ [data] (discriminant == haystack)
+
+                skiz call {store_variant_data_srlabel}
+                // _
+            ));
+
+            let store_variant_data = variant_type.store_to_memory(state);
+            let variant_subroutine = triton_asm!(
+                // _ [data]
+                {store_variant_data_srlabel}:
+                    // _ [data]
+
+                    push {data_begin_pointer_pointer}
+                    read_mem 1
+                    pop 1
+                    // _ [data] *data
+
+                    {&store_variant_data}
+
+                    return
+            );
+
+            state.add_library_function(variant_subroutine.try_into().unwrap());
+        }
+
+        store_data
+    }
+
+    /// ```text
+    /// BEFORE: _ [data] [padding]
+    /// AFTER: _ [data]
+    /// ```
+    pub(crate) fn pop_padding(
+        &self,
+        state: &mut CompilerState,
+        discriminant_pointer: BFieldElement,
+    ) -> Vec<LabelledInstruction> {
+        let mut pop_padding = vec![];
+        for (haystack_discriminant, (variant_name, _variant_type)) in
+            self.variants.iter().enumerate()
+        {
+            let pop_padding_variant_srlabel = format!(
+                "{}_pop_padding_{}",
+                self.label_friendly_name(),
+                variant_name
+            );
+            pop_padding.extend(triton_asm!(
+                push {discriminant_pointer}
+                read_mem 1
+                pop 1
+
+                // _ [data] [padding] discriminant
+                push {haystack_discriminant}
+                eq
+                // _ [data] [padding] (discriminant == haystack)
+
+                skiz call {pop_padding_variant_srlabel}
+                // _ [data]
+            ));
+
+            let pop_instructions = {
+                let pad_size = self.padding_size(variant_name);
+                let num_full_pops = pad_size / 5;
+                let num_remaining_words = pad_size % 5;
+                let mut instructions = vec![triton_instr!(pop 5); num_full_pops];
+                if num_remaining_words > 0 {
+                    instructions.extend(triton_asm!(pop {
+                        num_remaining_words
+                    }));
+                }
+                instructions
+            };
+            let subroutine = triton_asm!(
+                // _ [data] [padding]
+                {pop_padding_variant_srlabel}:
+                    {&pop_instructions}
+                    // _ [data]
+
+                    return
+            );
+            state.add_library_function(subroutine.try_into().unwrap());
+        }
+
+        pop_padding
+    }
+
     // TODO: I don't think we're using the stored field sizes for anything.
     // Get rid of those!
     /// Return the code to get all field pointers for the discriminant whose
@@ -218,8 +394,11 @@ impl EnumType {
         for (haystack_discriminant, (variant_name, variant_type)) in
             self.variants.iter().enumerate()
         {
-            let subroutine_label =
-                format!("{}_find_pointers_subroutine_{}", self.name, variant_name);
+            let subroutine_label = format!(
+                "{}_find_pointers_subroutine_{}",
+                self.label_friendly_name(),
+                variant_name
+            );
             set_all_field_pointers.append(&mut triton_asm!(
                 // _ *discriminant
 
@@ -248,7 +427,7 @@ impl EnumType {
                 ),
                 1 => {
                     let data_field = &data_fields[0];
-                    let static_encoding_length = data_field.bfield_codec_length();
+                    let static_encoding_length = data_field.bfield_codec_static_length();
 
                     let write_field_pointer_and_size = match static_encoding_length {
                         Some(_static_size) => {
@@ -315,7 +494,7 @@ impl EnumType {
                     for field_count in 0..n {
                         let field_index = data_fields.element_count() - 1 - field_count;
                         let data_field = &data_fields[field_index];
-                        let static_encoding_length = data_field.bfield_codec_length();
+                        let static_encoding_length = data_field.bfield_codec_static_length();
                         let pointer_pointer = field_pointer_pointer + 2 * field_index as u64;
                         let mut write_field_pointer_and_size = match static_encoding_length {
                             Some(static_size) => {
@@ -433,22 +612,23 @@ impl EnumType {
 
         let mut acc_code = triton_asm!(
             {label_for_subroutine}:
-
                 // _ *discriminant
+                hint discriminant_pointer: BFieldElement = stack[0]
+
                 dup 0
                 push 1
                 add
                 // _ *discriminant *first_field_or_field_size
         );
-        // let mut ret: Vec<Vec<LabelledInstruction>> = vec![];
 
         // Before this loop: _ *discriminant *first_field_or_field_size
         // Goal: _ *discriminant field_0 field_1 field_2 ...
         for dtype in data_types.clone().into_iter().rev() {
-            let mut get_field_pointer = match dtype.bfield_codec_length() {
+            let mut get_field_pointer = match dtype.bfield_codec_static_length() {
                 Some(size) => {
                     triton_asm!(
                         // _ *discriminant *field
+                        hint field_pointer: BFieldElement = stack[0]
 
                         dup 0
                         // _ *discriminant *field *field

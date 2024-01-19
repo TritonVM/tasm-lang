@@ -79,18 +79,14 @@ fn main() {
 
 #[cfg(test)]
 mod test {
-
+    use super::*;
+    use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
+    use crate::tests_and_benchmarks::ozk::rust_shadows;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::*;
     use itertools::Itertools;
     use rand::random;
     use triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
     use triton_vm::NonDeterminism;
-
-    use crate::tests_and_benchmarks::ozk::ozk_parsing;
-    use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
-    use crate::tests_and_benchmarks::ozk::rust_shadows;
-    use crate::tests_and_benchmarks::test_helpers::shared_test::*;
-
-    use super::*;
 
     #[test]
     fn nested_tuples_test() {
@@ -122,25 +118,17 @@ mod test {
             b_dinner_1_encoded_reverse,
         ]
         .concat();
-        let non_determinism = NonDeterminism::new(vec![]);
         let native_output =
-            rust_shadows::wrap_main_with_io(&main)(stdin.clone(), non_determinism.clone());
+            rust_shadows::wrap_main_with_io(&main)(stdin.clone(), NonDeterminism::default());
         assert_eq!(native_output, expected_output);
 
         // Test function in Triton VM
-        let entrypoint_location = EntrypointLocation::disk("boxed", "nested_tuples", "main");
-        let test_program =
-            ozk_parsing::compile_for_test(&entrypoint_location, crate::ast_types::ListType::Unsafe);
-        let expected_stack_diff = 0;
-        println!("test_program:\n{}", test_program.iter().join("\n"));
-        let vm_output = execute_compiled_with_stack_and_ins_for_test(
-            &test_program,
-            vec![],
-            stdin,
-            NonDeterminism::new(vec![]),
-            expected_stack_diff,
-        )
-        .unwrap();
+        let entrypoint = EntrypointLocation::disk("boxed", "nested_tuples", "main");
+        let vm_output = TritonVMTestCase::new(entrypoint)
+            .with_std_in(stdin)
+            .expect_stack_difference(0)
+            .execute()
+            .unwrap();
         if expected_output != vm_output.output {
             panic!(
                 "expected:\n{}\n\ngot:\n{}",

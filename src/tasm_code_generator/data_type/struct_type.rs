@@ -6,6 +6,8 @@ use triton_vm::BFieldElement;
 
 use crate::ast_types;
 use crate::ast_types::StructVariant;
+use crate::tasm_code_generator::move_top_stack_value_to_memory;
+use crate::tasm_code_generator::write_n_words_to_memory_leaving_address;
 use crate::tasm_code_generator::CompilerState;
 
 impl ast_types::StructType {
@@ -31,7 +33,7 @@ impl ast_types::StructType {
                     // *field
                 ));
 
-                let mut load_field = dtype.load_from_memory(None, state);
+                let mut load_field = dtype.load_from_memory(state);
 
                 code.append(&mut load_field);
             }
@@ -47,6 +49,130 @@ impl ast_types::StructType {
         } else {
             load_from_memory_struct_is_not_copy(self, state)
         }
+    }
+
+    /// ```text
+    /// BEFORE: _ [value] *value
+    /// AFTER: _
+    /// ```
+    pub(crate) fn store_to_memory(&self, state: &mut CompilerState) -> Vec<LabelledInstruction> {
+        self.store_to_memory_inner(state, false)
+    }
+
+    /// ```text
+    /// BEFORE: _ [value] *value
+    /// AFTER: _ *last_word + 1
+    /// ```
+    pub(crate) fn store_to_memory_leave_next_free_address(
+        &self,
+        state: &mut CompilerState,
+    ) -> Vec<LabelledInstruction> {
+        self.store_to_memory_inner(state, true)
+    }
+
+    /// ```text
+    /// BEFORE: _ [value] *value
+    /// AFTER: _ <*last_word + 1>
+    /// ```
+    fn store_to_memory_inner(
+        &self,
+        state: &mut CompilerState,
+        leave_last_address_plus_one: bool,
+    ) -> Vec<LabelledInstruction> {
+        if self.is_copy {
+            if leave_last_address_plus_one {
+                return write_n_words_to_memory_leaving_address(self.stack_size());
+            } else {
+                return move_top_stack_value_to_memory(None, self.stack_size());
+            }
+        }
+
+        let label_for_subroutine = if leave_last_address_plus_one {
+            format!(
+                "store_{}_to_memory_leave_last_address_plus_one",
+                self.label_friendly_name()
+            )
+        } else {
+            format!("store_{}_to_memory", self.label_friendly_name())
+        };
+        let call_store_sr = triton_asm!(call {
+            label_for_subroutine
+        });
+        if state.contains_subroutine(&label_for_subroutine) {
+            return call_store_sr;
+        }
+
+        let mut subroutine = triton_asm!(
+            {label_for_subroutine}:
+        );
+
+        let field_pointer_pointer = state.static_memory_allocation(1);
+        for (_field_id, dtype) in self.field_ids_and_types_reversed() {
+            let field_has_dynamic_size = dtype.bfield_codec_static_length().is_none();
+            // _ [[fields]] *field
+            // _ [[other_fields] [next_field]] *field
+
+            let mut handle_field = if field_has_dynamic_size {
+                // Make room for size indicator and store current field pointer,
+                // so field size can be calculated
+                triton_asm!(
+                    dup 0
+                    // _ [[fields]] *field_size *field_size
+
+                    push {field_pointer_pointer}
+                    write_mem 1
+                    pop 1
+
+                    push 1
+                    add
+                    // _ [[fields]] *field
+                )
+            } else {
+                triton_asm!()
+            };
+
+            let move_field_to_memory = dtype.store_to_memory_leave_next_free_address(state);
+            handle_field.extend(move_field_to_memory);
+
+            // _ [[fields']] *next_field
+            if field_has_dynamic_size {
+                // Write size indicator for field
+                handle_field.extend(triton_asm!(
+                    push {field_pointer_pointer}
+                    read_mem 1
+                    pop 1
+                    // _ [[fields'] ] *next_field *field_size
+
+                    dup 1 dup 1
+                    // _ [[fields'] ] *next_field *field_size *next_field *field_size
+
+                    push -1
+                    mul
+                    add
+                    // _ [[fields'] ] *next_field *field_size (*next_field - *field_size)
+
+                    push -1
+                    add
+                    // _ [[fields'] ] *next_field *field_size field_size
+
+                    swap 1
+                    write_mem 1
+                    pop 1
+                    // _ [[fields'] ] *next_field
+                ));
+            }
+
+            subroutine.extend(handle_field);
+        }
+
+        if !leave_last_address_plus_one {
+            subroutine.extend(triton_asm!(pop 1));
+        };
+        subroutine.extend(triton_asm!(return));
+
+        state.add_library_function(subroutine.try_into().unwrap());
+
+        call_store_sr
     }
 
     /// Return the code to get all field pointers. The field pointers are stored
@@ -71,7 +197,7 @@ impl ast_types::StructType {
         {
             let pointer_pointer_for_this_field =
                 pointer_for_result + number_of_fields as u64 - 1 - field_count as u64;
-            match field_type.bfield_codec_length() {
+            match field_type.bfield_codec_static_length() {
                 Some(static_size) => {
                     code.append(&mut triton_asm!(
                         // _ *current_field
@@ -144,7 +270,7 @@ impl ast_types::StructType {
                 // known size, we can just add that number to the accumulator. Otherwise,
                 // we have to read the size of the field from RAM, and add that value
                 // to the pointer
-                match haystack_type.bfield_codec_length() {
+                match haystack_type.bfield_codec_static_length() {
                     Some(static_length) => static_pointer_addition += static_length,
                     None => {
                         if !static_pointer_addition.is_zero() {
@@ -160,7 +286,7 @@ impl ast_types::StructType {
 
         // If the requested field is dynamically sized, add one to address, to point to start
         // of the field instead of the size of the field.
-        match needle_type.unwrap().bfield_codec_length() {
+        match needle_type.unwrap().bfield_codec_static_length() {
             Some(_) => (),
             None => static_pointer_addition += 1,
         }

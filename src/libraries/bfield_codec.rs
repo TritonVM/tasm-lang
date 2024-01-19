@@ -43,7 +43,7 @@ impl BFieldCodecLib {
         receiver_type: &DataType,
         state: &mut CompilerState,
     ) -> (String, Vec<LabelledInstruction>) {
-        let encoding_length = receiver_type.bfield_codec_length().unwrap();
+        let encoding_length = receiver_type.bfield_codec_static_length().unwrap();
         let list_size_in_memory = (encoding_length + self.list_type.metadata_size()) as i32;
 
         // 1. Create a new list with the appropriate capacity
@@ -104,7 +104,7 @@ impl Library for BFieldCodecLib {
         if method_name == ENCODE_METHOD_NAME {
             // For now, we only allow `encode` to be called on values
             // with a statically known length.
-            if receiver_type.bfield_codec_length().is_some() {
+            if receiver_type.bfield_codec_static_length().is_some() {
                 return Some(method_name.to_owned());
             } else {
                 panic!(".encode() can only be called on values with a statically known length. Got: {receiver_type:#?}");
@@ -121,7 +121,8 @@ impl Library for BFieldCodecLib {
         _args: &[crate::ast::Expr<super::Annotation>],
         _type_checker_state: &crate::type_checker::CheckState,
     ) -> crate::ast::FnSignature {
-        if method_name == ENCODE_METHOD_NAME && receiver_type.bfield_codec_length().is_some() {
+        if method_name == ENCODE_METHOD_NAME && receiver_type.bfield_codec_static_length().is_some()
+        {
             self.encode_method_signature(receiver_type)
         } else {
             panic!("Unknown method in BFieldCodecLib. Got: {method_name} on receiver_type: {receiver_type}");
@@ -144,7 +145,9 @@ impl Library for BFieldCodecLib {
         _args: &[crate::ast::Expr<super::Annotation>],
         state: &mut crate::tasm_code_generator::CompilerState,
     ) -> Vec<triton_vm::instruction::LabelledInstruction> {
-        if !(method_name == ENCODE_METHOD_NAME && receiver_type.bfield_codec_length().is_some()) {
+        if !(method_name == ENCODE_METHOD_NAME
+            && receiver_type.bfield_codec_static_length().is_some())
+        {
             panic!("Unknown method in BFieldCodecLib. Got: {method_name} on receiver_type: {receiver_type}");
         }
 

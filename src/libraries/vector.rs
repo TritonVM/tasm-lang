@@ -1,6 +1,8 @@
 use itertools::Itertools;
 use num::One;
+use tasm_lib::memory::memcpy::MemCpy;
 use tasm_lib::traits::basic_snippet::BasicSnippet;
+use triton_vm::instruction::LabelledInstruction;
 use triton_vm::triton_asm;
 
 use crate::ast;
@@ -14,6 +16,12 @@ use super::Library;
 use super::LibraryFunction;
 
 const VECTOR_LIB_INDICATOR: &str = "Vec::";
+const CLONE_FROM_METHOD_NAME: &str = "clone_from";
+const PUSH_METHOD_NAME: &str = "push";
+const POP_METHOD_NAME: &str = "pop";
+const LEN_METHOD_NAME: &str = "len";
+const MAP_METHOD_NAME: &str = "map";
+const CLEAR_METHOD_NAME: &str = "clear";
 
 #[derive(Clone, Debug)]
 pub struct VectorLib {
@@ -36,7 +44,15 @@ impl Library for VectorLib {
         receiver_type: &ast_types::DataType,
     ) -> Option<String> {
         if let ast_types::DataType::List(_, _) = receiver_type {
-            if matches!(method_name, "push" | "pop" | "len" | "map" | "clear") {
+            if matches!(
+                method_name,
+                PUSH_METHOD_NAME
+                    | POP_METHOD_NAME
+                    | LEN_METHOD_NAME
+                    | MAP_METHOD_NAME
+                    | CLEAR_METHOD_NAME
+                    | CLONE_FROM_METHOD_NAME
+            ) {
                 return Some(method_name.to_owned());
             }
         }
@@ -59,12 +75,16 @@ impl Library for VectorLib {
 
         // Special-case on `map` as we need to dig into the type checker state to find the
         // function signature.
-        if fn_name == "map" {
+        if fn_name == MAP_METHOD_NAME {
             return self.fn_signature_for_map(args, type_checker_state);
         }
 
-        if fn_name == "clear" {
+        if fn_name == CLEAR_METHOD_NAME {
             return self.clear_method(&element_type).signature;
+        }
+
+        if fn_name == CLONE_FROM_METHOD_NAME {
+            return self.clone_from_method_signature(&element_type);
         }
 
         self.function_name_to_signature(fn_name, receiver_type.type_parameter(), args)
@@ -129,8 +149,12 @@ impl Library for VectorLib {
             )
             };
 
-        if method_name == "clear" {
+        if method_name == CLEAR_METHOD_NAME {
             return self.clear_method(&element_type).body;
+        }
+
+        if method_name == CLONE_FROM_METHOD_NAME {
+            return Self::clone_from_method_body(&element_type, &self.list_type, state);
         }
 
         // find inner function if needed
@@ -178,11 +202,9 @@ impl Library for VectorLib {
         graft_config: &mut Graft,
         rust_method_call: &syn::ExprMethodCall,
     ) -> Option<ast::Expr<super::Annotation>> {
-        const POP_NAME: &str = "pop";
         const COLLECT_VEC_NAME: &str = "collect_vec";
         const UNWRAP_NAME: &str = "unwrap";
         const INTO_ITER_NAME: &str = "into_iter";
-        const MAP_NAME: &str = "map";
 
         let last_method_name = rust_method_call.method.to_string();
 
@@ -197,7 +219,7 @@ impl Library for VectorLib {
                             ast::Expr::MethodCall(mc) => mc,
                             _ => return None,
                         };
-                        if inner_method_call.method_name != POP_NAME {
+                        if inner_method_call.method_name != POP_METHOD_NAME {
                             return None;
                         }
 
@@ -216,7 +238,7 @@ impl Library for VectorLib {
                                 .collect_vec(),
                         );
                         Some(ast::Expr::MethodCall(ast::MethodCall {
-                            method_name: POP_NAME.to_owned(),
+                            method_name: POP_METHOD_NAME.to_owned(),
                             args,
                             annot: Default::default(),
                             associated_type: None,
@@ -234,7 +256,7 @@ impl Library for VectorLib {
                             ast::Expr::MethodCall(mc) => mc,
                             _ => return None,
                         };
-                        if inner_method_call.method_name != MAP_NAME {
+                        if inner_method_call.method_name != MAP_METHOD_NAME {
                             return None;
                         }
 
@@ -272,7 +294,7 @@ impl Library for VectorLib {
                         );
 
                         Some(ast::Expr::MethodCall(ast::MethodCall {
-                            method_name: MAP_NAME.to_owned(),
+                            method_name: MAP_METHOD_NAME.to_owned(),
                             args,
                             annot: Default::default(),
                             associated_type: None,
@@ -293,7 +315,7 @@ impl VectorLib {
     /// Rust's `clear` method on `Vec<T>`.
     fn clear_method(&self, element_type: &ast_types::DataType) -> LibraryFunction {
         let fn_signature = ast::FnSignature {
-            name: "clear".to_owned(),
+            name: CLEAR_METHOD_NAME.to_owned(),
             args: vec![ast_types::AbstractArgument::ValueArgument(
                 ast_types::AbstractValueArg {
                     name: "list".to_owned(),
@@ -359,11 +381,75 @@ impl VectorLib {
                 mutable: false,
             });
         ast::FnSignature {
-            name: String::from("map"),
+            name: String::from(MAP_METHOD_NAME),
             // TODO: Use List<inner_fn_signature-args> here instead for betetr type checking
             args: vec![vector_as_arg, derived_inner_function_as_function_arg],
             output: ast_types::DataType::List(Box::new(inner_output.to_owned()), self.list_type),
             arg_evaluation_order: Default::default(),
+        }
+    }
+
+    fn clone_from_method_signature(&self, element_type: &ast_types::DataType) -> ast::FnSignature {
+        let self_type =
+            ast_types::DataType::List(Box::new(element_type.to_owned()), self.list_type);
+        let self_as_arg = ast_types::AbstractArgument::ValueArgument(ast_types::AbstractValueArg {
+            name: "self".to_owned(),
+            data_type: self_type.clone(),
+            mutable: true,
+        });
+        let source_type = ast_types::DataType::Boxed(Box::new(self_type.clone()));
+        let source_as_arg =
+            ast_types::AbstractArgument::ValueArgument(ast_types::AbstractValueArg {
+                name: "other".to_owned(),
+                data_type: source_type.clone(),
+                mutable: false,
+            });
+        ast::FnSignature {
+            name: CLONE_FROM_METHOD_NAME.to_owned(),
+            args: vec![self_as_arg, source_as_arg],
+            output: ast_types::DataType::unit(),
+            arg_evaluation_order: Default::default(),
+        }
+    }
+
+    /// Returns the code to copy a list from src into dest. Does not allocate.
+    /// ```text
+    /// BEFORE: _ *dest *src
+    /// AFTER: _
+    /// ```
+    fn clone_from_method_body(
+        element_type: &ast_types::DataType,
+        list_type: &ast_types::ListType,
+        state: &mut CompilerState,
+    ) -> Vec<LabelledInstruction> {
+        let element_size = element_type.stack_size();
+        let memcpy_label = state.import_snippet(Box::new(MemCpy));
+        match list_type {
+            ListType::Safe => todo!(),
+            ListType::Unsafe => triton_asm!(
+                // _ *dest *src
+
+                read_mem 1
+                // _ *dest src_len (*src - 1)
+
+                push 1 add
+                // _ *dest src_len *src
+
+                swap 2
+                swap 1
+                // _ *src *dest src_len
+
+                push {element_size}
+                mul
+                // _ *src *dest src_elements_size
+
+                push 1
+                add
+                // _ *src *dest total_list_size
+
+                call {memcpy_label}
+                // _
+            ),
         }
     }
 
@@ -379,10 +465,10 @@ impl VectorLib {
                 let data_type = type_parameter.clone().expect("Type parameter must be set when instantiating a vector: `Vec::<T>::with_capacity(n)`");
                 Some(self.list_type.with_capacity_snippet(data_type))
             }
-            "push" => Some(self.list_type.push_snippet(type_parameter.clone().unwrap())),
-            "pop" => Some(self.list_type.pop_snippet(type_parameter.clone().unwrap())),
-            "len" => Some(self.list_type.len_snippet(type_parameter.clone().unwrap())),
-            "map" => {
+            PUSH_METHOD_NAME => Some(self.list_type.push_snippet(type_parameter.clone().unwrap())),
+            POP_METHOD_NAME => Some(self.list_type.pop_snippet(type_parameter.clone().unwrap())),
+            LEN_METHOD_NAME => Some(self.list_type.len_snippet(type_parameter.clone().unwrap())),
+            MAP_METHOD_NAME => {
                 let inner_function_type =
                     if let ast_types::DataType::Function(fun_type) = args[1].get_type() {
                         fun_type
