@@ -6,6 +6,7 @@ use triton_vm::instruction::LabelledInstruction;
 use triton_vm::triton_asm;
 
 use crate::ast;
+use crate::ast::FnSignature;
 use crate::ast_types;
 use crate::ast_types::ListType;
 use crate::graft::Graft;
@@ -87,6 +88,10 @@ impl Library for VectorLib {
             return self.clone_from_method_signature(&element_type);
         }
 
+        if fn_name == PUSH_METHOD_NAME {
+            return self.push_method_signature(&element_type);
+        }
+
         self.function_name_to_signature(fn_name, receiver_type.type_parameter(), args)
     }
 
@@ -100,37 +105,7 @@ impl Library for VectorLib {
             .name_to_tasm_lib_snippet(fn_name, &type_parameter, args)
             .unwrap_or_else(|| panic!("Unknown function name {fn_name}"));
 
-        let name = snippet.entrypoint();
-        let mut args: Vec<ast_types::AbstractArgument> = vec![];
-        for (ty, name) in snippet.inputs().into_iter() {
-            let fn_arg = ast_types::AbstractValueArg {
-                name,
-                data_type: ast_types::DataType::from_tasm_lib_datatype(ty, self.list_type),
-                mutable: true,
-            };
-            args.push(ast_types::AbstractArgument::ValueArgument(fn_arg));
-        }
-
-        let mut output_types: Vec<ast_types::DataType> = vec![];
-        for (ty, _name) in snippet.outputs() {
-            output_types.push(ast_types::DataType::from_tasm_lib_datatype(
-                ty,
-                self.list_type,
-            ));
-        }
-
-        let output = match output_types.len() {
-            1 => output_types[0].clone(),
-            0 => ast_types::DataType::Tuple(vec![].into()),
-            _ => ast_types::DataType::Tuple(output_types.into()),
-        };
-
-        ast::FnSignature {
-            name,
-            args,
-            output,
-            arg_evaluation_order: Default::default(),
-        }
+        FnSignature::from_basic_snippet(snippet, self.list_type)
     }
 
     fn call_method(
@@ -155,6 +130,10 @@ impl Library for VectorLib {
 
         if method_name == CLONE_FROM_METHOD_NAME {
             return Self::clone_from_method_body(&element_type, &self.list_type, state);
+        }
+
+        if method_name == PUSH_METHOD_NAME {
+            return self.push_method_body(&element_type, state);
         }
 
         // find inner function if needed
@@ -342,6 +321,7 @@ impl VectorLib {
         }
     }
 
+    /// Returns the signature of the method `map`
     fn fn_signature_for_map(
         &self,
         args: &[ast::Expr<super::Annotation>],
@@ -389,6 +369,7 @@ impl VectorLib {
         }
     }
 
+    /// Returns the function signature of the method `clone_from`:
     fn clone_from_method_signature(&self, element_type: &ast_types::DataType) -> ast::FnSignature {
         let self_type =
             ast_types::DataType::List(Box::new(element_type.to_owned()), self.list_type);
@@ -453,6 +434,34 @@ impl VectorLib {
         }
     }
 
+    fn push_method_signature(&self, element_type: &ast_types::DataType) -> ast::FnSignature {
+        ast::FnSignature::from_basic_snippet(
+            self.list_type.push_snippet(element_type.clone()),
+            self.list_type,
+        )
+    }
+
+    fn push_method_body(
+        &self,
+        element_type: &ast_types::DataType,
+        state: &mut CompilerState,
+    ) -> Vec<LabelledInstruction> {
+        let entrypoint = if element_type.is_copy() {
+            let snippet = self.list_type.push_snippet(element_type.to_owned());
+            let entrypoint = snippet.entrypoint();
+            state.import_snippet(snippet);
+            entrypoint
+        } else {
+            // In this case, we would have to encode in accordance with `BFieldCodec`
+            // which is currently very expensive as each element needs to be reallocated
+            // *and* we would have to find the next free word in the vector data structure
+            // in memory.
+            unimplemented!("Can only construct vectors whose element type is `Copy`.");
+        };
+
+        triton_asm!(call { entrypoint })
+    }
+
     fn name_to_tasm_lib_snippet(
         &self,
         public_name: &str,
@@ -465,7 +474,6 @@ impl VectorLib {
                 let data_type = type_parameter.clone().expect("Type parameter must be set when instantiating a vector: `Vec::<T>::with_capacity(n)`");
                 Some(self.list_type.with_capacity_snippet(data_type))
             }
-            PUSH_METHOD_NAME => Some(self.list_type.push_snippet(type_parameter.clone().unwrap())),
             POP_METHOD_NAME => Some(self.list_type.pop_snippet(type_parameter.clone().unwrap())),
             LEN_METHOD_NAME => Some(self.list_type.len_snippet(type_parameter.clone().unwrap())),
             MAP_METHOD_NAME => {

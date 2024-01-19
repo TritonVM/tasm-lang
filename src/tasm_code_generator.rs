@@ -54,6 +54,8 @@ impl Display for ValueLocation {
 }
 
 impl ValueLocation {
+    /// Returns a boolean indicating if the value can be reached. Returns `false` if
+    /// value is buried more than 16 elements deep on the stack.
     fn is_accessible(&self, data_type: &ast_types::DataType) -> bool {
         match self {
             ValueLocation::StaticMemoryAddress(_) => true,
@@ -66,7 +68,7 @@ impl ValueLocation {
     }
 
     /// Given a value location, return the code to put the pointer on top of the stack.
-    fn get_value_pointer(
+    fn to_code(
         &self,
         state: &mut CompilerState,
         field_or_element_type: &ast_types::DataType,
@@ -295,8 +297,7 @@ impl<'a> CompilerState<'a> {
                 ) -> ValueLocation {
                     let element_type = element_type.get_type();
                     let lhs_location = state.locate_identifier(ident);
-                    let ident_addr_code =
-                        lhs_location.get_value_pointer(state, &element_type, ident);
+                    let ident_addr_code = lhs_location.to_code(state, &element_type, ident);
                     // stack: _ *sequence
 
                     state.new_value_identifier("list_expression", &ident.get_type());
@@ -365,6 +366,8 @@ impl<'a> CompilerState<'a> {
 
                                     push -1
                                     add
+                                    // _ *vec<T>[n+1]_size (index - 1)
+
                                     recurse
 
                             );
@@ -452,8 +455,7 @@ impl<'a> CompilerState<'a> {
                 let lhs_type = lhs.get_type();
                 match lhs.get_type() {
                     ast_types::DataType::Boxed(inner_type) => {
-                        let get_pointer =
-                            lhs_location.get_value_pointer(self, &known_type.get_type(), lhs);
+                        let get_pointer = lhs_location.to_code(self, &known_type.get_type(), lhs);
                         match *inner_type {
                             ast_types::DataType::Struct(inner_struct) => {
                                 let get_field_pointer_from_struct_pointer =

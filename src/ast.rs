@@ -1,6 +1,7 @@
 use std::fmt::Display;
 
 use itertools::Itertools;
+use tasm_lib::traits::basic_snippet::BasicSnippet;
 use triton_vm::instruction::LabelledInstruction;
 use triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
 use triton_vm::twenty_first::shared_math::x_field_element::XFieldElement;
@@ -89,6 +90,7 @@ pub(crate) struct FnSignature {
 }
 
 impl FnSignature {
+    /// Return the number of words that the function's input arguments take up on the stack
     pub(crate) fn input_arguments_stack_size(&self) -> usize {
         let mut input_args_stack_size = 0;
         for arg in self.args.iter() {
@@ -101,6 +103,42 @@ impl FnSignature {
         input_args_stack_size
     }
 
+    /// Convert snippet implementing `BasicSnippet` from `tasm-lib` into a function signature.
+    pub(crate) fn from_basic_snippet(
+        snippet: Box<dyn BasicSnippet>,
+        list_type: ast_types::list_type::ListType,
+    ) -> Self {
+        let name = snippet.entrypoint();
+        let mut args: Vec<ast_types::AbstractArgument> = vec![];
+        for (ty, name) in snippet.inputs().into_iter() {
+            let fn_arg = ast_types::AbstractValueArg {
+                name,
+                data_type: ast_types::DataType::from_tasm_lib_datatype(ty, list_type),
+                mutable: true,
+            };
+            args.push(ast_types::AbstractArgument::ValueArgument(fn_arg));
+        }
+
+        let mut output_types: Vec<ast_types::DataType> = vec![];
+        for (ty, _name) in snippet.outputs() {
+            output_types.push(ast_types::DataType::from_tasm_lib_datatype(ty, list_type));
+        }
+
+        let output = match output_types.len() {
+            1 => output_types[0].clone(),
+            0 => ast_types::DataType::Tuple(vec![].into()),
+            _ => ast_types::DataType::Tuple(output_types.into()),
+        };
+
+        Self {
+            name,
+            args,
+            output,
+            arg_evaluation_order: Default::default(),
+        }
+    }
+
+    /// Returns a boolean indicating if the function signature matches a list of input types
     pub fn matches(&self, types: &[ast_types::DataType]) -> bool {
         if self.args.len() != types.len() {
             return false;
