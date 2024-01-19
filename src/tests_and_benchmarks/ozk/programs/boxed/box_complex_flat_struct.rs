@@ -68,10 +68,9 @@ fn main() {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::tests_and_benchmarks::ozk::ozk_parsing;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
-    use crate::tests_and_benchmarks::test_helpers::shared_test::execute_compiled_with_stack_and_ins_for_test;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::TritonVMTestCase;
     use triton_vm::NonDeterminism;
     use twenty_first::shared_math::other::random_elements;
 
@@ -79,18 +78,14 @@ mod test {
     fn box_complex_flat_struct_test() {
         let non_determinism = NonDeterminism::default();
         let stdin = random_elements(52);
-
         let native_output =
             rust_shadows::wrap_main_with_io(&main)(stdin.clone(), non_determinism.clone());
-
-        let entrypoint_location =
-            EntrypointLocation::disk("boxed", "box_complex_flat_struct", "main");
-        let code =
-            ozk_parsing::compile_for_test(&entrypoint_location, crate::ast_types::ListType::Unsafe);
-        let vm_output =
-            execute_compiled_with_stack_and_ins_for_test(&code, vec![], stdin, non_determinism, 0)
-                .unwrap()
-                .output;
-        assert_eq!(native_output, vm_output);
+        let entrypoint = EntrypointLocation::disk("boxed", "box_complex_flat_struct", "main");
+        let vm_output = TritonVMTestCase::new(entrypoint)
+            .with_std_in(stdin)
+            .expect_stack_difference(0)
+            .execute()
+            .unwrap();
+        assert_eq!(native_output, vm_output.output);
     }
 }

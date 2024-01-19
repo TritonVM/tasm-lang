@@ -110,7 +110,6 @@ fn in_memory_c() {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::tests_and_benchmarks::ozk::ozk_parsing;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
@@ -118,7 +117,7 @@ mod test {
     use triton_vm::NonDeterminism;
 
     #[test]
-    fn box_test() {
+    fn enum_to_memory_simple_test() {
         let stdin = vec![];
         let no_nondeterminism = NonDeterminism::default();
         let a_encoded = NonDeterminism::default().with_ram(
@@ -156,33 +155,12 @@ mod test {
         ] {
             let native_output =
                 rust_shadows::wrap_main_with_io(func)(stdin.clone(), non_determinism.to_owned());
-            let entrypoint_location =
-                EntrypointLocation::disk("boxed", "enum_to_memory_simple", func_name);
-            let test_program = ozk_parsing::compile_for_test(
-                &entrypoint_location,
-                crate::ast_types::ListType::Unsafe,
-            );
-            println!("code:\n\n{}", test_program.iter().join("\n"));
-            println!(
-                "ram: {{{}}}",
-                non_determinism
-                    .ram
-                    .iter()
-                    .map(|(k, v)| format!("({k}: {v})"))
-                    .join("\n")
-            );
-            println!(
-                "b_encoded:\n[{}]",
-                SimpleEnum::B(4000).encode().iter().join(", ")
-            );
-            let vm_output = execute_compiled_with_stack_and_ins_for_test(
-                &test_program,
-                vec![],
-                stdin.clone(),
-                non_determinism.to_owned(),
-                0,
-            )
-            .unwrap();
+            let entrypoint = EntrypointLocation::disk("boxed", "enum_to_memory_simple", func_name);
+            let vm_output = TritonVMTestCase::new(entrypoint)
+                .with_non_determinism(non_determinism.to_owned())
+                .expect_stack_difference(0)
+                .execute()
+                .unwrap();
             if native_output != vm_output.output {
                 panic!(
                     "expected:\n{}\n\ngot:\n{}",

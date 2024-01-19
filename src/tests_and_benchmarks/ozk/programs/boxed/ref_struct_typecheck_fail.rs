@@ -33,9 +33,8 @@ mod test {
     #[should_panic]
     #[test]
     fn ref_struct_typecheck_fail_test() {
-        let entrypoint_location =
-            EntrypointLocation::disk("boxed", "ref_struct_typecheck_fail", "main");
+        let entrypoint = EntrypointLocation::disk("boxed", "ref_struct_typecheck_fail", "main");
         let _test_program =
-            ozk_parsing::compile_for_test(&entrypoint_location, crate::ast_types::ListType::Unsafe);
+            ozk_parsing::compile_for_test(&entrypoint, crate::ast_types::ListType::Unsafe);
     }
 }
