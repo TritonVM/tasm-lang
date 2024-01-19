@@ -1,3 +1,4 @@
+mod box_enum_simple;
 mod boxed_advanced_tuple_data;
 mod boxed_match_with_wildcard_binding;
 mod boxed_multiple_tuple_data;
