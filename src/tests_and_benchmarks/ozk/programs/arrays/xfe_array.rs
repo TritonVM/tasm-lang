@@ -55,79 +55,53 @@ fn main() {
 
 #[cfg(test)]
 mod test {
-
     use itertools::Itertools;
-    use rand::random;
     use triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
     use triton_vm::BFieldElement;
     use triton_vm::NonDeterminism;
 
-    use crate::tests_and_benchmarks::ozk::ozk_parsing;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
-    use crate::tests_and_benchmarks::test_helpers::shared_test::execute_compiled_with_stack_and_ins_for_test;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::TritonVMTestCase;
+
+    use proptest_arbitrary_interop::arb;
+    use test_strategy::proptest;
 
     use super::*;
 
-    #[test]
-    fn xfe_array_test() {
+    #[proptest(cases = 20)]
+    fn xfe_array_test(#[strategy(arb())] xfes: [XFieldElement; 4]) {
+        let std_in = xfes
+            .map(|xfe| xfe.encode().into_iter().rev())
+            .into_iter()
+            .flatten()
+            .collect_vec();
         let non_determinism = NonDeterminism::default();
 
-        let xfes: [XFieldElement; 4] = random();
-        let stdin = {
-            let mut ret = vec![];
-            for elem in xfes {
-                let mut elem = elem.encode();
-                elem.reverse();
-                ret.append(&mut elem);
-            }
-
-            ret
-        };
+        let native_output = rust_shadows::wrap_main_with_io(&main)(std_in.clone(), non_determinism);
+        println!("native_output: {native_output:#?}");
 
         let expected_output = vec![
             xfes[3].encode(),
             xfes[0].encode(),
-            XFieldElement::new([
-                BFieldElement::new(52),
-                BFieldElement::new(53),
-                BFieldElement::new(54),
-            ])
-            .encode(),
-            XFieldElement::new([
-                BFieldElement::new(52),
-                BFieldElement::new(53),
-                BFieldElement::new(54),
-            ])
-            .encode(),
+            XFieldElement::new([52, 53, 54].map(BFieldElement::new)).encode(),
+            XFieldElement::new([52, 53, 54].map(BFieldElement::new)).encode(),
             xfes[1].encode(),
             // a, b, c, l, k
-            vec![BFieldElement::new(100)],
-            vec![BFieldElement::new(200)],
-            vec![BFieldElement::new(400)],
+            [100, 200, 400].map(BFieldElement::new).to_vec(),
             xfes[2].encode(),
             vec![BFieldElement::new(1337)],
         ]
         .concat();
-
-        // Run test on host machine
-        let native_output =
-            rust_shadows::wrap_main_with_io(&main)(stdin.to_vec(), non_determinism.clone());
-        println!("native_output: {native_output:#?}");
         assert_eq!(native_output, expected_output);
 
-        // Run test on Triton-VM
         let entrypoint_location = EntrypointLocation::disk("arrays", "xfe_array", "main");
-        let test_program =
-            ozk_parsing::compile_for_test(&entrypoint_location, crate::ast_types::ListType::Unsafe);
-        let vm_output = execute_compiled_with_stack_and_ins_for_test(
-            &test_program,
-            vec![],
-            stdin,
-            non_determinism,
-            0,
-        )
-        .unwrap();
+        let vm_output = TritonVMTestCase::new(entrypoint_location)
+            .with_std_in(std_in)
+            .expect_stack_difference(0)
+            .execute()
+            .unwrap();
+
         assert_eq!(expected_output, vm_output.output);
         println!("vm_output.output: {:#?}", vm_output.output);
 

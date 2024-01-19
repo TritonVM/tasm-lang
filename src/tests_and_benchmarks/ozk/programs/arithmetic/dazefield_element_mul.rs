@@ -1,5 +1,3 @@
-#![allow(clippy::needless_borrow)]
-
 use triton_vm::BFieldElement;
 
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
@@ -58,9 +56,10 @@ fn main() {
 
 #[cfg(test)]
 mod test {
-
-    use itertools::Itertools;
-    use rand::random;
+    use proptest::collection::vec;
+    use proptest::prelude::*;
+    use proptest_arbitrary_interop::arb;
+    use test_strategy::proptest;
     use triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
     use triton_vm::BFieldElement;
     use triton_vm::NonDeterminism;
@@ -71,48 +70,24 @@ mod test {
 
     use super::*;
 
-    #[test]
-    fn dazefield_element_test() {
-        // Test function on host machine
-        let non_determinism = NonDeterminism::new(vec![]);
+    #[proptest(cases = 20)]
+    fn dazefield_element_test(#[strategy(vec(arb(), 2))] std_in: Vec<BFieldElement>) {
+        let native_output =
+            rust_shadows::wrap_main_with_io(&main)(std_in.clone(), NonDeterminism::default());
 
-        for _ in 0..4 {
-            let a: BFieldElement = random();
-            let b: BFieldElement = random();
-            let res = a * b;
-            let stdin: Vec<BFieldElement> = vec![a, b];
-            let expected_output = [vec![res], res.value().encode()].concat();
-            let native_output =
-                rust_shadows::wrap_main_with_io(&main)(stdin.clone(), non_determinism.clone());
-            assert_eq!(native_output, expected_output);
+        let res = std_in[0] * std_in[1];
+        let expected_output = [vec![res], res.value().encode()].concat();
+        assert_eq!(native_output, expected_output);
 
-            // Test function in Triton VM
-            let entrypoint_location = ozk_parsing::EntrypointLocation::disk(
-                "arithmetic",
-                "dazefield_element_mul",
-                "main",
-            );
-            let test_program = ozk_parsing::compile_for_test(
-                &entrypoint_location,
-                crate::ast_types::ListType::Unsafe,
-            );
-            let expected_stack_diff = 0;
-            let vm_output = execute_compiled_with_stack_and_ins_for_test(
-                &test_program,
-                vec![],
-                stdin,
-                NonDeterminism::new(vec![]),
-                expected_stack_diff,
-            )
+        let entrypoint_location =
+            ozk_parsing::EntrypointLocation::disk("arithmetic", "dazefield_element_mul", "main");
+        let vm_output = TritonVMTestCase::new(entrypoint_location)
+            .with_std_in(std_in)
+            .expect_stack_difference(0)
+            .execute()
             .unwrap();
-            if expected_output != vm_output.output {
-                panic!(
-                    "expected:\n{}\n\ngot:\n{}",
-                    expected_output.iter().join(","),
-                    vm_output.output.iter().join(",")
-                );
-            }
-        }
+
+        prop_assert_eq!(expected_output, vm_output.output);
     }
 }
 

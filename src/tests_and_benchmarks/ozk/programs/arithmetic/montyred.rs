@@ -67,9 +67,8 @@ mod test {
 
     #[test]
     fn montyred_test() {
-        // Test function on host machine
         let stdin = vec![];
-        let non_determinism = NonDeterminism::new(vec![]);
+        let non_determinism = NonDeterminism::default();
         let expected_output = [
             BFieldElement::montyred(1u128 << 90).encode(),
             BFieldElement::montyred(1).encode(),
@@ -81,25 +80,16 @@ mod test {
             BFieldElement::montyred(2u128 * 0xFFFFFFFE00000001u128).encode(),
         ]
         .concat();
-        let native_output =
-            rust_shadows::wrap_main_with_io(&main)(stdin.clone(), non_determinism.clone());
+        let native_output = rust_shadows::wrap_main_with_io(&main)(stdin, non_determinism);
         assert_eq!(native_output, expected_output);
 
-        // Test function in Triton VM
-        // Run test on Triton-VM
         let entrypoint_location =
             ozk_parsing::EntrypointLocation::disk("arithmetic", "montyred", "main");
-        let test_program =
-            ozk_parsing::compile_for_test(&entrypoint_location, crate::ast_types::ListType::Unsafe);
-        let expected_stack_diff = 0;
-        let vm_output = execute_compiled_with_stack_and_ins_for_test(
-            &test_program,
-            vec![],
-            vec![],
-            NonDeterminism::new(vec![]),
-            expected_stack_diff,
-        )
-        .unwrap();
+        let vm_output = TritonVMTestCase::new(entrypoint_location)
+            .expect_stack_difference(0)
+            .execute()
+            .unwrap();
+
         if expected_output != vm_output.output {
             panic!(
                 "expected:\n{}\n\ngot:\n{}",
