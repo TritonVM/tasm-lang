@@ -1,5 +1,6 @@
 mod box_enum_dyn_sized_variant_field;
 mod box_enum_simple;
+mod box_enum_two_dyn_sized_variant_fields;
 mod boxed_advanced_tuple_data;
 mod boxed_match_with_wildcard_binding;
 mod boxed_multiple_tuple_data;

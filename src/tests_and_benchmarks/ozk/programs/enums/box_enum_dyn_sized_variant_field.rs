@@ -33,7 +33,6 @@ mod test {
     use super::*;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::test_helpers::shared_test::TritonVMTestCase;
-    use itertools::Itertools;
     use rand::random;
     use triton_vm::NonDeterminism;
 
