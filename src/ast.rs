@@ -418,6 +418,10 @@ pub(crate) enum Expr<T> {
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub(crate) enum ArrayExpression<T> {
     ElementsSpecified(Vec<Expr<T>>),
+    Repeat {
+        element: Box<Expr<T>>,
+        length: usize,
+    },
 }
 
 impl<T> Display for ArrayExpression<T> {
@@ -426,6 +430,7 @@ impl<T> Display for ArrayExpression<T> {
             ArrayExpression::ElementsSpecified(elements) => {
                 format!("[{}]", elements.iter().join(","))
             }
+            ArrayExpression::Repeat { element, length } => format!("[{element}; {length}]"),
         };
         write!(f, "{str}")
     }
@@ -435,6 +440,7 @@ impl<T> ArrayExpression<T> {
     pub fn len(&self) -> usize {
         match &self {
             ArrayExpression::ElementsSpecified(elements) => elements.len(),
+            ArrayExpression::Repeat { length, .. } => *length,
         }
     }
 }

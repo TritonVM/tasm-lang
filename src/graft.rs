@@ -572,21 +572,59 @@ impl<'a> Graft<'a> {
 
     fn graft_return_type(&mut self, rust_return_type: &syn::ReturnType) -> ast_types::DataType {
         match rust_return_type {
-            syn::ReturnType::Type(_, path) => match path.as_ref() {
-                syn::Type::Path(type_path) => self.rust_type_path_to_data_type(type_path),
-                syn::Type::Tuple(tuple_type) => {
-                    let output_elements = tuple_type
-                        .elems
-                        .iter()
-                        .map(|x| self.syn_type_to_ast_type(x))
-                        .collect_vec();
-
-                    ast_types::DataType::Tuple(output_elements.into())
-                }
-                _ => panic!("unsupported: {path:?}"),
-            },
             syn::ReturnType::Default => ast_types::DataType::Tuple(vec![].into()),
+            syn::ReturnType::Type(_, path) => self.graft_non_default_return_type(path.as_ref()),
         }
+    }
+
+    fn graft_non_default_return_type(&mut self, rust_return_path: &syn::Type) -> DataType {
+        match rust_return_path {
+            syn::Type::Path(type_path) => self.rust_type_path_to_data_type(type_path),
+            syn::Type::Tuple(tuple_type) => self.graft_tuple_return_type(tuple_type),
+            syn::Type::Array(array_type) => self.graft_array_return_type(array_type),
+            _ => panic!("unsupported: {}", quote!(#rust_return_path)),
+        }
+    }
+
+    fn graft_tuple_return_type(&mut self, tuple_type: &syn::TypeTuple) -> DataType {
+        let output_elements = tuple_type
+            .elems
+            .iter()
+            .map(|x| self.syn_type_to_ast_type(x))
+            .collect_vec();
+
+        ast_types::DataType::Tuple(output_elements.into())
+    }
+
+    fn graft_array_return_type(&mut self, array_type: &syn::TypeArray) -> DataType {
+        let syn::TypeArray { elem, len, .. } = array_type;
+        let syn::Expr::Lit(len) = len else {
+            let wrong_len = quote!(#len);
+            panic!("return type array length must be a literal, not {wrong_len}")
+        };
+        let length = self.parse_literal_as_usize(len);
+
+        let element_type = Box::new(self.syn_type_to_ast_type(elem));
+        let array_type = ast_types::ArrayType {
+            element_type,
+            length,
+        };
+
+        ast_types::DataType::Array(array_type)
+    }
+
+    fn parse_literal_as_usize(&self, len: &syn::ExprLit) -> usize {
+        let syn::ExprLit { lit: len, .. } = len;
+        let syn::Lit::Int(len) = len else {
+            let wrong_len = quote!(#len);
+            panic!("return type array length must be an integer literal, not {wrong_len}")
+        };
+        let Ok(len) = len.base10_parse::<usize>() else {
+            let wrong_len = quote!(#len);
+            panic!("return type array length must be an integer literal, not {wrong_len}")
+        };
+
+        len
     }
 
     /// Return type argument found in path
@@ -937,18 +975,13 @@ impl<'a> Graft<'a> {
                     panic!("unsupported index expression: {index_expr:#?}");
                 }
             }
-            syn::Expr::Cast(syn::ExprCast {
-                attrs: _attrs,
-                expr,
-                as_token: _as_token,
-                ty,
-            }) => {
+            syn::Expr::Cast(syn::ExprCast { expr, ty, .. }) => {
                 let unboxed_ty: syn::Type = *(*ty).to_owned();
                 let as_type = self.syn_type_to_ast_type(&unboxed_ty);
                 let ast_expr = self.graft_expr(expr);
                 ast::Expr::Cast(Box::new(ast_expr), as_type)
             }
-            syn::Expr::Unary(syn::ExprUnary { attrs: _, op, expr }) => {
+            syn::Expr::Unary(syn::ExprUnary { op, expr, .. }) => {
                 let inner_expr = self.graft_expr(expr);
                 let ast_op = match op {
                     syn::UnOp::Not(_) => ast::UnaryOp::Not,
@@ -958,11 +991,7 @@ impl<'a> Graft<'a> {
                 ast::Expr::Unary(ast_op, Box::new(inner_expr), Default::default())
             }
             syn::Expr::Reference(syn::ExprReference {
-                attrs: _,
-                and_token: _,
-                raw: _,
-                mutability,
-                expr,
+                mutability, expr, ..
             }) => {
                 let inner_expr = self.graft_expr(expr);
                 ast::Expr::Unary(
@@ -971,40 +1000,26 @@ impl<'a> Graft<'a> {
                     Default::default(),
                 )
             }
-            syn::Expr::Block(syn::ExprBlock {
-                attrs: _,
-                label: _,
-                block,
-            }) => {
+            syn::Expr::Block(syn::ExprBlock { block, .. }) => {
                 let (returning_expr, stmts) = block.stmts.split_last().unwrap();
 
                 // Last line must be an expression, cannot be a binding or anything else.
-                let return_expr = match returning_expr {
-                    syn::Stmt::Local(_) => panic!(),
-                    syn::Stmt::Item(_) => panic!(),
-                    syn::Stmt::Expr(expr) => self.graft_expr(expr),
-                    syn::Stmt::Semi(_, _) => panic!(),
+                let syn::Stmt::Expr(expr) = returning_expr else {
+                    panic!()
                 };
+                let return_expr = self.graft_expr(expr);
 
                 let stmts = stmts.iter().map(|x| self.graft_stmt(x)).collect();
                 ast::Expr::ReturningBlock(Box::new(ast::ReturningBlock { stmts, return_expr }))
             }
-            syn::Expr::Array(syn::ExprArray {
-                attrs: _,
-                bracket_token: _,
-                elems,
-            }) => {
+            syn::Expr::Array(syn::ExprArray { elems, .. }) => {
                 let elements = elems.iter().map(|x| self.graft_expr(x));
                 ast::Expr::Array(
                     ast::ArrayExpression::ElementsSpecified(elements.collect_vec()),
                     Default::default(),
                 )
             }
-            syn::Expr::Try(syn::ExprTry {
-                attrs: _,
-                expr,
-                question_token: _,
-            }) => {
+            syn::Expr::Try(syn::ExprTry { expr, .. }) => {
                 // `?` is the same as `unwrap` for this compiler
                 ast::Expr::MethodCall(ast::MethodCall {
                     method_name: "unwrap".to_owned(),
@@ -1013,11 +1028,12 @@ impl<'a> Graft<'a> {
                     associated_type: Default::default(),
                 })
             }
-            other => panic!("unsupported: {other:?}"),
+            syn::Expr::Repeat(repeat) => self.graft_expr_repeat(repeat),
+            other => panic!("unsupported: {}", quote!(#other)),
         }
     }
 
-    fn graft_lit(&mut self, rust_val: &syn::Lit) -> ast::ExprLit<Annotation> {
+    fn graft_lit(&self, rust_val: &syn::Lit) -> ast::ExprLit<Annotation> {
         use ast::ExprLit::*;
 
         match rust_val {
@@ -1025,27 +1041,23 @@ impl<'a> Graft<'a> {
             syn::Lit::Int(int_lit) => {
                 let int_lit_str = int_lit.token().to_string();
 
-                // Despite its name `base10_parse` can handle hex. Don't ask me why.
-                if let Some(_int_lit_stripped) = int_lit_str.strip_suffix("u32") {
-                    if let Ok(int_u32) = int_lit.base10_parse::<u32>() {
-                        return ast::ExprLit::U32(int_u32);
-                    }
-                }
-
                 // `usize` is just an alias for `u32` in this compiler
-                if let Some(_int_lit_stripped) = int_lit_str.strip_suffix("usize") {
+                if int_lit_str.strip_suffix("u32").is_some()
+                    || int_lit_str.strip_suffix("usize").is_some()
+                {
+                    // Despite its name `base10_parse` can handle hex. Don't ask me why.
                     if let Ok(int_u32) = int_lit.base10_parse::<u32>() {
                         return ast::ExprLit::U32(int_u32);
                     }
                 }
 
-                if let Some(_int_lit_stripped) = int_lit_str.strip_suffix("u64") {
+                if int_lit_str.strip_suffix("u64").is_some() {
                     if let Ok(int_u64) = int_lit.base10_parse::<u64>() {
                         return ast::ExprLit::U64(int_u64);
                     }
                 }
 
-                if let Some(_int_lit_stripped) = int_lit_str.strip_suffix("u128") {
+                if int_lit_str.strip_suffix("u128").is_some() {
                     if let Ok(int_u128) = int_lit.base10_parse::<u128>() {
                         return ast::ExprLit::U128(int_u128);
                     }
@@ -1096,6 +1108,20 @@ impl<'a> Graft<'a> {
             syn::BinOp::ShrEq(_) => ast::BinOp::Shr,
             other => panic!("unsupported for eq binop: {other:?}"),
         }
+    }
+
+    fn graft_expr_repeat(&mut self, expr_repeat: &syn::ExprRepeat) -> ast::Expr<Annotation> {
+        let syn::ExprRepeat { expr, len, .. } = expr_repeat;
+        let syn::Expr::Lit(len) = len.as_ref() else {
+            let wrong_len = quote!(#len);
+            panic!("return type array length must be a literal, not {wrong_len}")
+        };
+        let array_expression = ast::ArrayExpression::Repeat {
+            element: Box::new(self.graft_expr(expr)),
+            length: self.parse_literal_as_usize(len),
+        };
+
+        ast::Expr::Array(array_expression, Default::default())
     }
 
     pub fn graft_stmt(&mut self, rust_stmt: &syn::Stmt) -> Stmt<Annotation> {

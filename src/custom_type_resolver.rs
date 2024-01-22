@@ -50,6 +50,9 @@ impl CustomTypeResolution for Expr<Typing> {
                 ArrayExpression::ElementsSpecified(elements_exprs) => elements_exprs
                     .iter_mut()
                     .for_each(|x| x.resolve_custom_types(composite_types)),
+                ArrayExpression::Repeat { element, .. } => {
+                    element.resolve_custom_types(composite_types)
+                }
             },
             Expr::FnCall(FnCall {
                 name: _,

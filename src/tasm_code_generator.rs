@@ -25,6 +25,7 @@ use self::inner_function_tasm_code::InnerFunctionTasmCode;
 use self::outer_function_tasm_code::OuterFunctionTasmCode;
 use self::stack::VStack;
 use crate::ast;
+use crate::ast::ArrayExpression;
 use crate::ast::Identifier;
 use crate::ast::RoutineBody;
 use crate::ast_types;
@@ -1847,7 +1848,7 @@ fn compile_method_call(
 
 fn compile_expr(
     expr: &ast::Expr<type_checker::Typing>,
-    _context: &str,
+    context: &str,
     state: &mut CompilerState,
 ) -> (ValueIdentifier, Vec<LabelledInstruction>) {
     let result_type = expr.get_type();
@@ -1958,49 +1959,7 @@ fn compile_expr(
         }
 
         ast::Expr::Array(array_expr, array_type) => {
-            // Compile elements left-to-right and store each element in memory
-
-            // TODO: This does not handle arrays of elements whose sizes
-            // are not known at compile time.
-
-            let ast_types::DataType::Array(array_type) = array_type.get_type() else {
-                panic!("Type must be array");
-            };
-            let element_size: usize = array_type.element_type.stack_size();
-            let total_size_in_memory: usize = array_type.size_in_memory();
-
-            let array_pointer = state
-                .global_compiler_state
-                .snippet_state
-                .kmalloc(total_size_in_memory as u32);
-
-            let mut element_pointer = array_pointer;
-            let store_array_in_memory = match array_expr {
-                ast::ArrayExpression::ElementsSpecified(element_expressions) => element_expressions
-                    .iter()
-                    .enumerate()
-                    .map(|(arg_pos, arg_expr)| {
-                        let context = format!("_array_{arg_pos}");
-                        let (_, evaluate_element) = compile_expr(arg_expr, &context, state);
-                        let move_element_to_memory =
-                            move_top_stack_value_to_memory(Some(element_pointer), element_size);
-                        element_pointer += BFieldElement::from(element_size as u32);
-
-                        state.function_state.vstack.pop().unwrap();
-
-                        triton_asm!(
-                            {&evaluate_element}
-                            {&move_element_to_memory}
-                        )
-                    })
-                    .concat(),
-            };
-
-            let push_array_pointer_to_stack = triton_asm!(push { array_pointer.to_string() });
-            triton_asm!(
-                {&store_array_in_memory}
-                {&push_array_pointer_to_stack}
-            )
+            compile_array_expr(state, array_expr, array_type)
         }
 
         ast::Expr::Tuple(exprs) => {
@@ -2762,8 +2721,8 @@ fn compile_expr(
             // the `then` or `else` branches are entered.
             state.function_state.vstack.pop();
 
-            let (then_addr, then_code) = compile_returning_block_expr(_context, state, then_branch);
-            let (else_addr, else_code) = compile_returning_block_expr(_context, state, else_branch);
+            let (then_addr, then_code) = compile_returning_block_expr(context, state, then_branch);
+            let (else_addr, else_code) = compile_returning_block_expr(context, state, else_branch);
 
             // Both branches are compiled as subroutines which are called depending on what `cond`
             // evaluates to.
@@ -2807,7 +2766,7 @@ fn compile_expr(
         }
 
         ast::Expr::ReturningBlock(ret_block) => {
-            let (_, code) = compile_returning_block_expr(_context, state, ret_block);
+            let (_, code) = compile_returning_block_expr(context, state, ret_block);
 
             code
         }
@@ -2894,6 +2853,76 @@ fn compile_expr(
         .unwrap_or_default();
 
     (addr, [code, spill_code].concat())
+}
+
+fn compile_array_expr(
+    state: &mut CompilerState,
+    array_expr: &ArrayExpression<type_checker::Typing>,
+    array_type: &type_checker::Typing,
+) -> Vec<LabelledInstruction> {
+    // Compile elements left-to-right and store each element in memory
+
+    // TODO: This does not handle arrays of elements whose sizes
+    // are not known at compile time.
+
+    let ast_types::DataType::Array(array_type) = array_type.get_type() else {
+        panic!("Type must be array");
+    };
+    let element_size: usize = array_type.element_type.stack_size();
+    let total_size_in_memory: usize = array_type.size_in_memory();
+
+    // todo: this should be dynamically allocated so that a.foo() + b.foo() works
+    let array_pointer = state
+        .global_compiler_state
+        .snippet_state
+        .kmalloc(total_size_in_memory as u32);
+
+    let mut element_pointer = array_pointer;
+    let store_array_in_memory = match array_expr {
+        ast::ArrayExpression::ElementsSpecified(element_expressions) => element_expressions
+            .iter()
+            .enumerate()
+            .map(|(arg_pos, arg_expr)| {
+                let context = format!("_array_{arg_pos}");
+                let (_, evaluate_element) = compile_expr(arg_expr, &context, state);
+                let move_element_to_memory =
+                    move_top_stack_value_to_memory(Some(element_pointer), element_size);
+                element_pointer += BFieldElement::from(element_size as u32);
+
+                state.function_state.vstack.pop().unwrap();
+
+                triton_asm!(
+                    {&evaluate_element}
+                    {&move_element_to_memory}
+                )
+            })
+            .concat(),
+
+        ArrayExpression::Repeat { element, length } => {
+            let context = "_array_repeat";
+            let (_, evaluate_element) = compile_expr(element, context, state);
+            let copy_element_to_memory_length_times = (0..*length)
+                .flat_map(|_| {
+                    let code = copy_top_stack_value_to_memory(element_pointer, element_size);
+                    element_pointer += BFieldElement::from(element_size as u32);
+                    code
+                })
+                .collect_vec();
+            let clean_up_element = pop_n(element_size);
+
+            triton_asm!(
+                {&evaluate_element}
+                {&copy_element_to_memory_length_times}
+                {&clean_up_element}
+            )
+        }
+    };
+
+    let push_array_pointer_to_stack = triton_asm!(push { array_pointer.to_string() });
+    triton_asm!(
+        {&store_array_in_memory}
+        {&push_array_pointer_to_stack}
+    )
 }
 
 fn compile_returning_block_expr(

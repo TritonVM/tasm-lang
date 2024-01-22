@@ -1,4 +1,5 @@
 use arbitrary::Arbitrary;
+use num::Zero;
 use triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
 use triton_vm::twenty_first::shared_math::x_field_element::XFieldElement;
 use triton_vm::BFieldElement;
@@ -112,6 +113,36 @@ impl ProofItem {
         return ood_base_row;
     }
 
+    pub fn as_out_of_domain_ext_row(&self) -> Vec<XFieldElement> {
+        #[allow(unused_assignments)]
+        let mut ood_ext_row: Vec<XFieldElement> = Vec::<XFieldElement>::with_capacity(0);
+        match self {
+            ProofItem::OutOfDomainExtRow(xs) => {
+                ood_ext_row = xs.to_owned();
+            }
+            _ => {
+                panic!();
+            }
+        };
+
+        return ood_ext_row;
+    }
+
+    pub fn as_out_of_domain_quotient_segments(&self) -> [XFieldElement; 4] {
+        #[allow(unused_assignments)]
+        let mut ood_quotient_segments: [XFieldElement; 4] = [XFieldElement::zero(); 4];
+        match self {
+            ProofItem::OutOfDomainQuotientSegments(xs) => {
+                ood_quotient_segments = *xs;
+            }
+            _ => {
+                panic!();
+            }
+        };
+
+        return ood_quotient_segments;
+    }
+
     fn as_merkle_root(&self) -> Digest {
         #[allow(unused_assignments)]
         let mut root: Digest = Digest::default();
@@ -126,6 +157,77 @@ impl ProofItem {
 
         return root;
     }
+
+    pub fn as_log2_padded_height(&self) -> u32 {
+        #[allow(unused_assignments)]
+        let mut log2_padded_height: u32 = 0;
+        match self {
+            ProofItem::Log2PaddedHeight(height) => {
+                log2_padded_height = *height;
+            }
+            _ => {
+                panic!();
+            }
+        };
+
+        return log2_padded_height;
+    }
+
+    // todo: enable this once arrays work in lib
+    /*
+    pub fn as_quotient_segments_elements(&self) -> Vec<[XFieldElement; 4]> {
+        #[allow(unused_assignments)]
+        let mut quotient_segments_elements: Vec<[XFieldElement; 4]> =
+            Vec::<[XFieldElement; 4]>::with_capacity(0);
+        match self {
+            ProofItem::QuotientSegmentsElements(xss) => {
+                quotient_segments_elements = xss.to_owned();
+            }
+            _ => {
+                panic!();
+            }
+        };
+
+        return quotient_segments_elements;
+    }*/
+
+    pub fn as_fri_codeword(&self) -> Vec<XFieldElement> {
+        #[allow(unused_assignments)]
+        let mut fri_codeword: Vec<XFieldElement> = Vec::<XFieldElement>::with_capacity(0);
+        match self {
+            ProofItem::FriCodeword(xs) => {
+                fri_codeword = xs.to_owned();
+            }
+            _ => {
+                panic!();
+            }
+        };
+
+        return fri_codeword;
+    }
+
+    // todo: enable this, figure out `to_owned()` for `FriResponse`
+    /*
+    pub fn as_fri_response(&self) -> FriResponse {
+        let auth_structure: Vec<Digest> = Vec::<Digest>::with_capacity(0);
+        let revealed_leaves: Vec<XFieldElement> = Vec::<XFieldElement>::with_capacity(0);
+        #[allow(unused_assignments)]
+        let mut fri_response: FriResponse = FriResponse {
+            auth_structure,
+            revealed_leaves,
+        };
+
+        match self {
+            ProofItem::FriResponse(response) => {
+                fri_response = response.to_owned();
+            }
+            _ => {
+                panic!();
+            }
+        };
+
+        return fri_response;
+    }*/
 }
 
 #[cfg(test)]
@@ -305,6 +407,94 @@ mod test {
         prop_assert_eq!(native_output, vm_output.output);
     }
 
+    fn proof_item_load_out_of_domain_ext_row_from_memory() {
+        let ood_ext_row_item: Box<ProofItem> =
+            ProofItem::decode(&tasm::load_from_memory(BFieldElement::new(0))).unwrap();
+        assert!(ood_ext_row_item.include_in_fiat_shamir_heuristic());
+
+        let row: Vec<XFieldElement> = ood_ext_row_item.as_out_of_domain_ext_row();
+        {
+            let mut i: usize = 0;
+            while i < row.len() {
+                tasm::tasm_io_write_to_stdout___xfe(row[i]);
+                i += 1;
+            }
+        }
+
+        return;
+    }
+
+    #[proptest(cases = 20)]
+    fn proof_item_load_out_of_domain_ext_row_from_memory_test(
+        #[strategy(arb())] ood_ext_row: Vec<XFieldElement>,
+    ) {
+        let proof_item = ProofItem::OutOfDomainExtRow(ood_ext_row);
+        let ood_ext_row_start_address = BFieldElement::new(0);
+        let non_determinism = init_memory_from(&proof_item, ood_ext_row_start_address);
+
+        let native_output = wrap_main_with_io(&proof_item_load_out_of_domain_ext_row_from_memory)(
+            vec![],
+            non_determinism.clone(),
+        );
+
+        let entrypoint_location = EntrypointLocation::disk(
+            "recufier",
+            "proof_item",
+            "test::proof_item_load_out_of_domain_ext_row_from_memory",
+        );
+        let vm_output = TritonVMTestCase::new(entrypoint_location)
+            .with_non_determinism(non_determinism)
+            .expect_stack_difference(0)
+            .execute()
+            .unwrap();
+
+        prop_assert_eq!(native_output, vm_output.output);
+    }
+
+    fn proof_item_load_out_of_domain_quotient_segments_from_memory() {
+        let ood_quotient_segments_item: Box<ProofItem> =
+            ProofItem::decode(&tasm::load_from_memory(BFieldElement::new(0))).unwrap();
+        assert!(ood_quotient_segments_item.include_in_fiat_shamir_heuristic());
+
+        let segments: [XFieldElement; 4] =
+            ood_quotient_segments_item.as_out_of_domain_quotient_segments();
+        {
+            let mut i: usize = 0;
+            while i < segments.len() {
+                tasm::tasm_io_write_to_stdout___xfe(segments[i]);
+                i += 1;
+            }
+        }
+
+        return;
+    }
+
+    #[proptest(cases = 20)]
+    fn proof_item_load_out_of_domain_quotient_segments_from_memory_test(
+        #[strategy(arb())] ood_quotient_segments: [XFieldElement; 4],
+    ) {
+        let proof_item = ProofItem::OutOfDomainQuotientSegments(ood_quotient_segments);
+        let ood_quotient_segments_start_address = BFieldElement::new(0);
+        let non_determinism = init_memory_from(&proof_item, ood_quotient_segments_start_address);
+
+        let native_output = wrap_main_with_io(
+            &proof_item_load_out_of_domain_quotient_segments_from_memory,
+        )(vec![], non_determinism.clone());
+
+        let entrypoint_location = EntrypointLocation::disk(
+            "recufier",
+            "proof_item",
+            "test::proof_item_load_out_of_domain_quotient_segments_from_memory",
+        );
+        let vm_output = TritonVMTestCase::new(entrypoint_location)
+            .with_non_determinism(non_determinism)
+            .expect_stack_difference(0)
+            .execute()
+            .unwrap();
+
+        prop_assert_eq!(native_output, vm_output.output);
+    }
+
     fn proof_item_load_merkle_root_from_memory() {
         let merkle_root_pi: Box<ProofItem> =
             ProofItem::decode(&tasm::load_from_memory(BFieldElement::new(0))).unwrap();
@@ -339,5 +529,87 @@ mod test {
             .unwrap();
 
         prop_assert_eq!(host_machine_output, vm_output.output);
+    }
+
+    fn proof_item_load_log2_padded_height_from_memory() {
+        let log2_padded_height_pi: Box<ProofItem> =
+            ProofItem::decode(&tasm::load_from_memory(BFieldElement::new(0))).unwrap();
+        assert!(!log2_padded_height_pi.include_in_fiat_shamir_heuristic());
+        let log2_padded_height: u32 = log2_padded_height_pi.as_log2_padded_height();
+        tasm::tasm_io_write_to_stdout___u32(log2_padded_height);
+
+        return;
+    }
+
+    #[proptest(cases = 10)]
+    fn proof_item_load_log2_padded_height_from_memory_test(
+        #[strategy(0_u32..100)] log2_padded_height: u32,
+    ) {
+        let stdin = vec![];
+        let proof_item = ProofItem::Log2PaddedHeight(log2_padded_height);
+        let lph_start_address = BFieldElement::new(0);
+        let non_determinism = init_memory_from(&proof_item, lph_start_address);
+
+        let native_output = wrap_main_with_io(&proof_item_load_log2_padded_height_from_memory)(
+            stdin,
+            non_determinism.clone(),
+        );
+
+        let entrypoint_location = EntrypointLocation::disk(
+            "recufier",
+            "proof_item",
+            "test::proof_item_load_log2_padded_height_from_memory",
+        );
+        let vm_output = TritonVMTestCase::new(entrypoint_location)
+            .with_non_determinism(non_determinism)
+            .expect_stack_difference(0)
+            .execute()
+            .unwrap();
+
+        prop_assert_eq!(native_output, vm_output.output);
+    }
+
+    fn proof_item_load_fri_codeword_from_memory() {
+        let fri_codeword_pi: Box<ProofItem> =
+            ProofItem::decode(&tasm::load_from_memory(BFieldElement::new(0))).unwrap();
+        assert!(!fri_codeword_pi.include_in_fiat_shamir_heuristic());
+        let fri_codeword: Vec<XFieldElement> = fri_codeword_pi.as_fri_codeword();
+
+        {
+            let mut i: usize = 0;
+            while i < fri_codeword.len() {
+                tasm::tasm_io_write_to_stdout___xfe(fri_codeword[i]);
+                i += 1;
+            }
+        }
+
+        return;
+    }
+
+    #[proptest(cases = 20)]
+    fn proof_item_load_fri_codeword_from_memory_test(
+        #[strategy(arb())] fri_codeword: Vec<XFieldElement>,
+    ) {
+        let proof_item = ProofItem::FriCodeword(fri_codeword);
+        let fri_codeword_start_address = BFieldElement::new(0);
+        let non_determinism = init_memory_from(&proof_item, fri_codeword_start_address);
+
+        let native_output = wrap_main_with_io(&proof_item_load_fri_codeword_from_memory)(
+            vec![],
+            non_determinism.clone(),
+        );
+
+        let entrypoint_location = EntrypointLocation::disk(
+            "recufier",
+            "proof_item",
+            "test::proof_item_load_fri_codeword_from_memory",
+        );
+        let vm_output = TritonVMTestCase::new(entrypoint_location)
+            .with_non_determinism(non_determinism)
+            .expect_stack_difference(0)
+            .execute()
+            .unwrap();
+
+        prop_assert_eq!(native_output, vm_output.output);
     }
 }

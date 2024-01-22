@@ -1094,28 +1094,14 @@ fn derive_annotate_expr_type(
         }
 
         ast::Expr::Array(array_expr, array_type) => {
-            let mut hint = None;
-            let length = match array_expr {
-                ast::ArrayExpression::ElementsSpecified(elem_expressions) => {
-                    for element_expression in elem_expressions.iter_mut() {
-                        let expr_type = derive_annotate_expr_type(
-                            element_expression,
-                            hint.as_ref(),
-                            state,
-                            env_fn_signature,
-                        )?;
-                        assert!(Some(expr_type.to_owned()) == hint || hint.is_none(), "All expressions in array declaration must evaluate to the same type. Got {} and {}.", hint.unwrap(), expr_type);
-                        hint = Some(expr_type);
-                    }
+            let resolved_element_type = array_element_type(state, env_fn_signature, array_expr)?;
+            let element_type = resolved_element_type
+                .expect("Cannot derive type for empty array")
+                .to_owned();
 
-                    elem_expressions.len()
-                }
-            };
             let derived_type = ast_types::DataType::Array(ast_types::ArrayType {
-                element_type: Box::new(
-                    hint.expect("Cannot derive type for empty array").to_owned(),
-                ),
-                length,
+                element_type: Box::new(element_type),
+                length: array_expr.len(),
             });
             *array_type = Typing::KnownType(derived_type.clone());
             Ok(derived_type)
@@ -1672,6 +1658,40 @@ fn derive_annotate_expr_type(
     };
 
     res
+}
+
+fn array_element_type(
+    state: &mut CheckState,
+    env_fn_signature: &ast::FnSignature,
+    array_expr: &mut ast::ArrayExpression<Typing>,
+) -> anyhow::Result<Option<ast_types::DataType>> {
+    let mut resolved_element_type = None;
+    match array_expr {
+        ast::ArrayExpression::ElementsSpecified(elem_expressions) => {
+            for element_expression in elem_expressions.iter_mut() {
+                let expr_type = derive_annotate_expr_type(
+                    element_expression,
+                    resolved_element_type.as_ref(),
+                    state,
+                    env_fn_signature,
+                )?;
+                if let Some(hint) = resolved_element_type {
+                    assert_eq!(
+                        hint, expr_type,
+                        "All expressions in array declaration must evaluate to the same type. \
+                        Got {hint} and {expr_type}.",
+                    );
+                }
+                resolved_element_type = Some(expr_type);
+            }
+        }
+        ast::ArrayExpression::Repeat { element, .. } => {
+            let expr_type = derive_annotate_expr_type(element, None, state, env_fn_signature)?;
+            resolved_element_type = Some(expr_type);
+        }
+    };
+
+    Ok(resolved_element_type)
 }
 
 fn derive_annotate_returning_block_expr(
