@@ -1536,6 +1536,115 @@ fn compile_match_stmt_boxed_expr(
 }
 
 /// Compile a match-statement where the matched-against value lives on the stack
+/// ```text
+/// BEFORE: _ [expression_payload] expression_discriminant
+/// AFTER: _ [result]
+/// ```
+fn compile_match_expr_stack_value(
+    match_expr: &ast::MatchExpr<type_checker::Typing>,
+    state: &mut CompilerState,
+    match_expr_id: &ValueIdentifier,
+) -> Vec<LabelledInstruction> {
+    let match_expression_enum_type = match_expr.match_expression.get_type().as_enum_type();
+
+    let outer_vstack = state.function_state.vstack.clone();
+    let outer_bindings = state.function_state.var_addr.clone();
+    let result_size = match_expr.get_type().stack_size();
+    let dup_discriminant_to_top = triton_asm!(dup { result_size });
+
+    let mut match_code = triton_asm!(dup 0);
+    for (arm_counter, arm) in match_expr.arms.iter().enumerate() {
+        // At start of each loop-iteration, stack is:
+        // stack: _ [variant_payload] expr_disc <[maybe_result]> expr_disc
+
+        let arm_subroutine_label = format!("{match_expr_id}_body_{arm_counter}");
+
+        match &arm.match_condition {
+            ast::MatchCondition::EnumVariant(enum_variant_selector) => {
+                let arm_variant_discriminant = match_expression_enum_type
+                    .variant_discriminant(&enum_variant_selector.variant_name);
+
+                match_code.extend(triton_asm!(
+                    // _ [variant_payload] expr_disc <[maybe_result]> expr_disc
+
+                    dup 0
+                    push {arm_variant_discriminant}
+                    // _ [variant_payload] expr_disc <[maybe_result]> expr_disc expr_disc needle_discriminant
+
+                    eq
+                    skiz
+                    // _ [variant_payload] expr_disc <[maybe_result]> expr_disc (expr_disc == needle_discriminant)
+
+                    call {arm_subroutine_label}
+                    // _ [variant_payload] expr_disc <[maybe_result]> expr_disc
+                ));
+
+                // Split compiler's view of evaluated expression from
+                // _ [enum_value]
+                // into
+                // _ [enum_data] [padding] discriminant
+                let new_ids = state.split_value(
+                    match_expr_id,
+                    match_expression_enum_type
+                        .decompose_variant(&enum_variant_selector.variant_name),
+                );
+
+                // Insert bindings from pattern-match into stack view for arm-body
+                enum_variant_selector
+                    .data_bindings
+                    .iter()
+                    .zip(new_ids.iter())
+                    .for_each(|(binding, new_id)| {
+                        state
+                            .function_state
+                            .var_addr
+                            .insert(binding.name.to_owned(), new_id.clone());
+                    });
+
+                let (_, body_code) = compile_returning_block_expr("arm-body", state, &arm.body);
+
+                let subroutine_code = triton_asm!(
+                    {arm_subroutine_label}:
+                        // _ [variant_payload] expr_disc expr_disc
+
+                        pop 1
+                        // _ [variant_payload] expr_disc
+                        // _ [enum_data] [padding] expr_disc
+
+                        {&body_code}
+                        // _ [enum_data] [padding] expr_disc [result]
+
+                        {&dup_discriminant_to_top}
+                        // _ [enum_data] [padding] expr_disc [result] expr_disc
+
+                        return
+                );
+
+                state
+                    .function_state
+                    .subroutines
+                    .push(subroutine_code.try_into().unwrap());
+            }
+            ast::MatchCondition::CatchAll => todo!(),
+        }
+
+        // Restore stack view and bindings view for next loop-iteration
+        state
+            .function_state
+            .restore_stack_and_bindings(&outer_vstack, &outer_bindings);
+    }
+
+    match_code.extend(triton_asm!(
+        // _ [variant_payload] expr_disc [result] expr_disc
+
+        pop 1
+        // _ [variant_payload] expr_disc [result]
+    ));
+
+    triton_asm!({ &match_code })
+}
+
+/// Compile a match-statement where the matched-against value lives on the stack
 fn compile_match_stmt_stack_expr(
     ast::MatchStmt {
         arms,
@@ -1669,7 +1778,7 @@ fn compile_match_stmt_stack_expr(
         match_code.push(triton_instr!(pop 1));
     }
 
-    triton_asm!({ &match_code })
+    match_code
 }
 
 fn compile_fn_call(
@@ -2838,7 +2947,7 @@ fn compile_expr(
                 _ => todo!("previous_type: {previous_type}; result_type: {result_type}"),
             }
         }
-        ast::Expr::Match(match_expr) => compile_match_expr(match_expr, context, state),
+        ast::Expr::Match(match_expr) => compile_match_expr(match_expr, state),
     };
 
     // Update compiler's view of the stack with the new value. Check if value needs to
@@ -2858,7 +2967,6 @@ fn compile_expr(
 
 fn compile_match_expr(
     match_expr: &ast::MatchExpr<type_checker::Typing>,
-    context: &str,
     state: &mut CompilerState,
 ) -> Vec<LabelledInstruction> {
     let vstack_init = state.function_state.vstack.clone();
@@ -2871,25 +2979,23 @@ fn compile_match_expr(
          But {match_expr_id} required memory spilling"
     );
 
-    todo!()
-
-    // let match_arms = todo();
+    let match_arms = compile_match_expr_stack_value(match_expr, state, &match_expr_id);
 
     // Remove match-expression from stack
-    // let restore_stack_code = state.restore_stack_code(&vstack_init, &var_addr_init);
+    let restore_stack_code = state.restore_stack_code(&vstack_init, &var_addr_init);
 
-    // triton_asm!(
-    //     // _
-    //     {&match_expr_evaluation}
-    //     // _ match_expr
+    triton_asm!(
+        // _
+        {&match_expr_evaluation}
+        // _ match_expr
 
-    //     {&match_arms}
-    //     // _ match_expr
+        {&match_arms}
+        // _ match_expr
 
-    //     {&restore_stack_code}
+        {&restore_stack_code}
 
-    //     // _
-    // )
+        // _
+    )
 }
 
 fn compile_array_expr(

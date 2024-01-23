@@ -110,6 +110,12 @@ impl<T: GetType + std::fmt::Debug> GetType for ast::ExprIf<T> {
     }
 }
 
+impl<T: GetType + std::fmt::Debug> GetType for ast::MatchExpr<T> {
+    fn get_type(&self) -> ast_types::DataType {
+        self.arms.first().unwrap().body.get_type()
+    }
+}
+
 impl<T: GetType> GetType for ast::Identifier<T> {
     fn get_type(&self) -> ast_types::DataType {
         match self {
@@ -367,7 +373,7 @@ fn annotate_stmt(
             assert_type_equals(
                 &derived_type,
                 data_type,
-                &format!("let-statement of {var_name}"),
+                format!("let-statement of {var_name}"),
             );
             state.vtable.insert(
                 var_name.clone(),
