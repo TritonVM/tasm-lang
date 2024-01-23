@@ -174,7 +174,7 @@ pub(crate) enum Stmt<T> {
     If(IfStmt<T>),
     Block(BlockStmt<T>),
     Assert(AssertStmt<T>),
-    Panic(PanicStmt),
+    Panic(PanicMacro),
     FnDeclaration(Fn<T>),
     Match(MatchStmt<T>),
 }
@@ -283,7 +283,7 @@ pub(crate) struct AssertStmt<T> {
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub(crate) struct PanicStmt;
+pub(crate) struct PanicMacro;
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub(crate) struct WhileStmt<T> {
@@ -448,8 +448,8 @@ pub(crate) enum Expr<T> {
     Cast(Box<Expr<T>>, DataType),
     ReturningBlock(Box<ReturningBlock<T>>),
     Struct(StructExpr<T>),
-    // Index(Box<Expr<T>>, Box<Expr<T>>), // a_expr[i_expr]    (a + 5)[3]
-    // TODO: VM-specific intrinsics (hash, absorb, squeeze, etc.)
+    Panic(PanicMacro), // Index(Box<Expr<T>>, Box<Expr<T>>), // a_expr[i_expr]    (a + 5)[3]
+                       // TODO: VM-specific intrinsics (hash, absorb, squeeze, etc.)
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
@@ -521,6 +521,7 @@ impl<T> Expr<T> {
                 "match_expr_{}",
                 match_expr.match_expression.label_friendly_name()
             ),
+            Expr::Panic(_) => "panic_macro".to_owned(),
         }
     }
 }
@@ -559,6 +560,7 @@ impl<T> Display for Expr<T> {
                 )
             }
             Expr::Match(match_expr) => format!("match expression: {}", match_expr.match_expression),
+            Expr::Panic(_) => "panic".to_owned(),
         };
 
         write!(f, "{str}")

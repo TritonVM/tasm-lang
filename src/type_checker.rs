@@ -82,6 +82,7 @@ impl<T: GetType + std::fmt::Debug> GetType for ast::Expr<T> {
             ast::Expr::Unary(_, _, t) => t.get_type(),
             ast::Expr::ReturningBlock(ret_block) => ret_block.get_type(),
             ast::Expr::Match(match_expr) => match_expr.arms.first().unwrap().body.get_type(),
+            ast::Expr::Panic(_) => ast_types::DataType::Never,
         }
     }
 }
@@ -1781,6 +1782,7 @@ fn derive_annotate_expr_type(
 
             Ok(arm_ret_type.unwrap().to_owned())
         }
+        ast::Expr::Panic(_) => Ok(ast_types::DataType::Never),
     };
 
     res

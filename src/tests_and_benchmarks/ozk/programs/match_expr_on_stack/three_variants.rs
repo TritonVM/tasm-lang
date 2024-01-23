@@ -1,11 +1,6 @@
+use super::three_variants_type::*;
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 use tasm_lib::Digest;
-
-enum ThreeVariants {
-    A,
-    B(u128),
-    C(Digest),
-}
 
 #[allow(clippy::collapsible_else_if)]
 fn main() {
