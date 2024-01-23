@@ -82,7 +82,7 @@ impl<T: GetType + std::fmt::Debug> GetType for ast::Expr<T> {
             ast::Expr::Unary(_, _, t) => t.get_type(),
             ast::Expr::ReturningBlock(ret_block) => ret_block.get_type(),
             ast::Expr::Match(match_expr) => match_expr.arms.first().unwrap().body.get_type(),
-            ast::Expr::Panic(_) => ast_types::DataType::Never,
+            ast::Expr::Panic(_, t) => t.get_type(),
         }
     }
 }
@@ -1016,6 +1016,14 @@ fn derive_annotate_expr_type(
     env_fn_signature: &ast::FnSignature,
 ) -> anyhow::Result<ast_types::DataType> {
     let res = match expr {
+        ast::Expr::Panic(_, resolved_type) => {
+            if let Some(h) = hint {
+                *resolved_type = Typing::KnownType(h.to_owned());
+                Ok(h.to_owned())
+            } else {
+                bail!("Cannot resolve `Never` type without type hint")
+            }
+        }
         ast::Expr::Lit(ast::ExprLit::Bool(_)) => Ok(ast_types::DataType::Bool),
         ast::Expr::Lit(ast::ExprLit::U32(_)) => Ok(ast_types::DataType::U32),
         ast::Expr::Lit(ast::ExprLit::U64(_)) => Ok(ast_types::DataType::U64),
@@ -1782,7 +1790,6 @@ fn derive_annotate_expr_type(
 
             Ok(arm_ret_type.unwrap().to_owned())
         }
-        ast::Expr::Panic(_) => Ok(ast_types::DataType::Never),
     };
 
     res

@@ -2948,7 +2948,7 @@ fn compile_expr(
             }
         }
         ast::Expr::Match(match_expr) => compile_match_expr(match_expr, state),
-        ast::Expr::Panic(_) => triton_asm!(push 0 assert),
+        ast::Expr::Panic(_, _) => triton_asm!(push 0 assert),
     };
 
     // Update compiler's view of the stack with the new value. Check if value needs to

@@ -106,7 +106,7 @@ impl CustomTypeResolution for Expr<Typing> {
                     arm.body.resolve_custom_types(composite_types);
                 }
             }
-            Expr::Panic(_) => (),
+            Expr::Panic(_, _) => (),
         }
     }
 }

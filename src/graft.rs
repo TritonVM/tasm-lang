@@ -1377,7 +1377,7 @@ impl<'a> Graft<'a> {
     }
 
     fn graft_panic_macro_expr(&self) -> ast::Expr<Annotation> {
-        ast::Expr::Panic(ast::PanicMacro)
+        ast::Expr::Panic(ast::PanicMacro, Default::default())
     }
 
     /// Handle locally declared functions:
