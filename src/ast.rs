@@ -1,6 +1,5 @@
-use std::fmt::Display;
-
 use itertools::Itertools;
+use std::fmt::Display;
 use tasm_lib::traits::basic_snippet::BasicSnippet;
 use triton_vm::instruction::LabelledInstruction;
 use triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
@@ -183,11 +182,11 @@ pub(crate) enum Stmt<T> {
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub(crate) struct MatchStmt<T> {
     pub match_expression: Expr<T>,
-    pub arms: Vec<MatchArm<T>>,
+    pub arms: Vec<MatchStmtArm<T>>,
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub(crate) struct MatchArm<T> {
+pub(crate) struct MatchStmtArm<T> {
     pub match_condition: MatchCondition,
     pub body: BlockStmt<T>,
 }
@@ -196,6 +195,19 @@ pub(crate) struct MatchArm<T> {
 pub(crate) enum MatchCondition {
     CatchAll,
     EnumVariant(EnumVariantSelector),
+}
+
+impl Display for MatchCondition {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                MatchCondition::CatchAll => String::from("_"),
+                MatchCondition::EnumVariant(inner) => inner.to_string(),
+            }
+        )
+    }
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
@@ -208,6 +220,20 @@ pub(crate) struct EnumVariantSelector {
 
     // `baz`
     pub data_bindings: Vec<PatternMatchedBinding>,
+}
+
+impl Display for EnumVariantSelector {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self.data_bindings.len() {
+            0 => write!(f, "{}", self.variant_name),
+            _ => write!(
+                f,
+                "{}({})",
+                self.variant_name,
+                self.data_bindings.iter().join(",")
+            ),
+        }
+    }
 }
 
 impl EnumVariantSelector {
@@ -238,6 +264,16 @@ pub(crate) struct PatternMatchedBinding {
     pub name: String,
     pub mutable: bool,
     // Add `ref` here also?
+}
+
+impl Display for PatternMatchedBinding {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if self.mutable {
+            write!(f, "mut {}", self.name)
+        } else {
+            write!(f, "{}", self.name)
+        }
+    }
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
@@ -408,11 +444,24 @@ pub(crate) enum Expr<T> {
     Binop(Box<Expr<T>>, BinOp, Box<Expr<T>>, T),
     Unary(UnaryOp, Box<Expr<T>>, T),
     If(ExprIf<T>),
+    Match(MatchExpr<T>),
     Cast(Box<Expr<T>>, DataType),
     ReturningBlock(Box<ReturningBlock<T>>),
     Struct(StructExpr<T>),
     // Index(Box<Expr<T>>, Box<Expr<T>>), // a_expr[i_expr]    (a + 5)[3]
     // TODO: VM-specific intrinsics (hash, absorb, squeeze, etc.)
+}
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub(crate) struct MatchExpr<T> {
+    pub match_expression: Box<Expr<T>>,
+    pub arms: Vec<MatchExprArm<T>>,
+}
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub(crate) struct MatchExprArm<T> {
+    pub match_condition: MatchCondition,
+    pub body: ReturningBlock<T>,
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
@@ -468,6 +517,10 @@ impl<T> Expr<T> {
             Expr::EnumDeclaration(enum_init) => {
                 format!("enum_init_{}", enum_init.label_friendly_name())
             }
+            Expr::Match(match_expr) => format!(
+                "match_expr_{}",
+                match_expr.match_expression.label_friendly_name()
+            ),
         }
     }
 }
@@ -505,6 +558,7 @@ impl<T> Display for Expr<T> {
                     enum_decl.enum_type.label_friendly_name()
                 )
             }
+            Expr::Match(match_expr) => format!("match expression: {}", match_expr.match_expression),
         };
 
         write!(f, "{str}")
@@ -559,6 +613,12 @@ pub(crate) struct ExprIf<T> {
 pub(crate) struct ReturningBlock<T> {
     pub stmts: Vec<Stmt<T>>,
     pub return_expr: Expr<T>,
+}
+
+impl<T> Display for ReturningBlock<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "...\n{}", self.return_expr)
+    }
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]

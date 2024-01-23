@@ -1571,10 +1571,10 @@ fn compile_match_stmt_stack_expr(
                 // We know that variant discriminant is on top
                 let arm_variant_discriminant = match_expression_enum_type
                     .variant_discriminant(&enum_variant_selector.variant_name);
-                match_code.append(&mut triton_asm!(
-                    // dup {contains_wildcard as u32}
+                match_code.extend(triton_asm!(
                     {&match_expr_discriminant}
                     // _ match_expr <no_arm_taken> match_expr_discriminant
+
                     push {arm_variant_discriminant}
                     // _ match_expr <no_arm_taken> match_expr_discriminant needle_discriminant
 
@@ -2838,6 +2838,7 @@ fn compile_expr(
                 _ => todo!("previous_type: {previous_type}; result_type: {result_type}"),
             }
         }
+        ast::Expr::Match(match_expr) => compile_match_expr(match_expr, context, state),
     };
 
     // Update compiler's view of the stack with the new value. Check if value needs to
@@ -2853,6 +2854,42 @@ fn compile_expr(
         .unwrap_or_default();
 
     (addr, [code, spill_code].concat())
+}
+
+fn compile_match_expr(
+    match_expr: &ast::MatchExpr<type_checker::Typing>,
+    context: &str,
+    state: &mut CompilerState,
+) -> Vec<LabelledInstruction> {
+    let vstack_init = state.function_state.vstack.clone();
+    let var_addr_init = state.function_state.var_addr.clone();
+    let (match_expr_id, match_expr_evaluation) =
+        compile_expr(&match_expr.match_expression, "match-expr", state);
+    assert!(
+        !state.function_state.spill_required.contains(&match_expr_id),
+        "Cannot handle memory-spill of evaluated match expressions.
+         But {match_expr_id} required memory spilling"
+    );
+
+    todo!()
+
+    // let match_arms = todo();
+
+    // Remove match-expression from stack
+    // let restore_stack_code = state.restore_stack_code(&vstack_init, &var_addr_init);
+
+    // triton_asm!(
+    //     // _
+    //     {&match_expr_evaluation}
+    //     // _ match_expr
+
+    //     {&match_arms}
+    //     // _ match_expr
+
+    //     {&restore_stack_code}
+
+    //     // _
+    // )
 }
 
 fn compile_array_expr(
