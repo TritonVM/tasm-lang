@@ -34,6 +34,7 @@ use crate::ast_types::StructVariant;
 use crate::composite_types::CompositeTypes;
 use crate::libraries;
 use crate::subroutine::SubRoutine;
+use crate::tasm_code_generator::match_code::compile_match_expr_boxed_value;
 use crate::tasm_code_generator::match_code::compile_match_expr_stack_value;
 use crate::tasm_code_generator::match_code::compile_match_stmt_boxed_expr;
 use crate::tasm_code_generator::match_code::compile_match_stmt_stack_expr;
@@ -2569,22 +2570,21 @@ fn compile_match_expr(
          But {match_expr_id} required memory spilling"
     );
 
-    let match_arms = match match_expr.match_expression.get_type() {
-        ast_types::DataType::Enum(_) => {
-            compile_match_expr_stack_value(match_expr, state, &match_expr_id)
-        }
+    let (match_arms, restore_stack_code) = match match_expr.match_expression.get_type() {
+        ast_types::DataType::Enum(_) => (
+            compile_match_expr_stack_value(match_expr, state, &match_expr_id),
+            state.clear_all_but_top_stack_value_above_height(vstack_init.get_stack_height()),
+        ),
         ast_types::DataType::Boxed(inner) => match *inner.to_owned() {
-            ast_types::DataType::Enum(_) => {
-                todo!()
-            }
+            ast_types::DataType::Enum(_) => (
+                // the boxed version of code generator cleans its own vstack. So we shouldn't also do that here.
+                compile_match_expr_boxed_value(match_expr, state, &match_expr_id),
+                triton_asm!(),
+            ),
             _ => unreachable!(),
         },
         _ => unreachable!(),
     };
-
-    // Remove match-expression from stack
-    let restore_stack_code =
-        state.clear_all_but_top_stack_value_above_height(vstack_init.get_stack_height());
 
     triton_asm!(
         // _
@@ -2592,7 +2592,7 @@ fn compile_match_expr(
         // _ [match_expr]
 
         {&match_arms}
-        // _ [match_expr] [result]
+        // _ <[match_expr]> [result]
 
         {&restore_stack_code}
         // _ [result]
