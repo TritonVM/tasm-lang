@@ -44,6 +44,7 @@ pub enum DataType {
     Function(Box<FunctionType>),
     Boxed(Box<DataType>),
     Unresolved(String),
+    Never,
 }
 
 impl DataType {
@@ -85,6 +86,7 @@ impl DataType {
             DataType::Enum(enum_type) => enum_type.is_copy,
             DataType::Unresolved(_) => false,
             DataType::Boxed(_) => false,
+            DataType::Never => todo!(),
         }
     }
 
@@ -116,6 +118,7 @@ impl DataType {
             Enum(enum_type) => enum_type.label_friendly_name(),
             Unresolved(name) => name.to_string(),
             Boxed(ty) => format!("boxed_L{}R", ty.label_friendly_name()),
+            Never => "never_type".to_string(),
         }
     }
 
@@ -227,6 +230,7 @@ impl DataType {
             DataType::VoidPointer => panic!(),
             DataType::Function(_) => panic!(),
             DataType::Unresolved(_) => panic!(),
+            DataType::Never => todo!(),
         }
     }
 
@@ -256,6 +260,7 @@ impl DataType {
             Self::Struct(inner_type) => inner_type.stack_size(),
             Self::Enum(enum_type) => enum_type.stack_size(),
             Self::Boxed(_inner) => 1,
+            Self::Never => todo!(),
         }
     }
 
@@ -333,6 +338,7 @@ impl TryFrom<DataType> for tasm_lib::data_type::DataType {
                 DataType::Unresolved(_) => todo!(),
                 _ => Ok(tasm_lib::data_type::DataType::VoidPointer),
             },
+            DataType::Never => todo!(),
         }
     }
 }
@@ -384,6 +390,7 @@ impl Display for DataType {
             },
             Unresolved(name) => name.to_string(),
             Boxed(ty) => format!("Boxed<{ty}>"),
+            Never => todo!(),
         };
         write!(f, "{str}",)
     }

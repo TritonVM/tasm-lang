@@ -1015,6 +1015,7 @@ impl<'a> Graft<'a> {
             }
             syn::Expr::Repeat(repeat) => self.graft_expr_repeat(repeat),
             syn::Expr::Match(expr_match) => self.graft_expr_match(expr_match),
+            syn::Expr::Macro(_expr_macro) => self.graft_panic_macro_expr(),
             other => panic!("unsupported: {}", quote!(#other)),
         }
     }
@@ -1355,7 +1356,7 @@ impl<'a> Graft<'a> {
     fn graft_expr_macro(&mut self, expr_macro: &ExprMacro) -> Stmt<Annotation> {
         let ident = Graft::path_to_ident(&expr_macro.mac.path);
         match ident.as_str() {
-            "panic" => self.graft_panic_macro(),
+            "panic" => self.graft_panic_macro_stmt(),
             "assert" => self.graft_assert_macro(expr_macro),
             _ => panic!("unsupported macro: {ident}"),
         }
@@ -1371,8 +1372,12 @@ impl<'a> Graft<'a> {
         Stmt::Assert(ast::AssertStmt { expression })
     }
 
-    fn graft_panic_macro(&mut self) -> Stmt<Annotation> {
-        Stmt::Panic(ast::PanicStmt)
+    fn graft_panic_macro_stmt(&mut self) -> Stmt<Annotation> {
+        Stmt::Panic(ast::PanicMacro)
+    }
+
+    fn graft_panic_macro_expr(&self) -> ast::Expr<Annotation> {
+        ast::Expr::Panic(ast::PanicMacro, Default::default())
     }
 
     /// Handle locally declared functions:

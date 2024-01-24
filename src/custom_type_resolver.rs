@@ -106,6 +106,7 @@ impl CustomTypeResolution for Expr<Typing> {
                     arm.body.resolve_custom_types(composite_types);
                 }
             }
+            Expr::Panic(_, _) => (),
         }
     }
 }
@@ -288,6 +289,7 @@ impl DataType {
             DataType::Xfe => false,
             DataType::Digest => false,
             DataType::VoidPointer => false,
+            DataType::Never => false,
         }
     }
 }
@@ -364,6 +366,7 @@ impl CustomTypeResolution for DataType {
             Xfe => (),
             Digest => (),
             VoidPointer => (),
+            Never => (),
         }
     }
 }

@@ -82,6 +82,7 @@ impl<T: GetType + std::fmt::Debug> GetType for ast::Expr<T> {
             ast::Expr::Unary(_, _, t) => t.get_type(),
             ast::Expr::ReturningBlock(ret_block) => ret_block.get_type(),
             ast::Expr::Match(match_expr) => match_expr.arms.first().unwrap().body.get_type(),
+            ast::Expr::Panic(_, t) => t.get_type(),
         }
     }
 }
@@ -138,7 +139,7 @@ impl<T: GetType> GetType for ast::MethodCall<T> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct CheckState<'a> {
     pub(crate) libraries: &'a [Box<dyn libraries::Library>],
 
@@ -367,7 +368,7 @@ fn annotate_stmt(
                 panic!("let-assign cannot shadow existing variable '{var_name}'!");
             }
 
-            let let_expr_hint: Option<&ast_types::DataType> = Some(data_type);
+            let let_expr_hint: Option<ast_types::DataType> = Some(data_type.to_owned());
             let derived_type =
                 derive_annotate_expr_type(expr, let_expr_hint, state, env_fn_signature).unwrap();
             assert_type_equals(
@@ -390,9 +391,13 @@ fn annotate_stmt(
                 "Cannot rewrite expression outside of atomic variable expression"
             );
             let assign_expr_hint = &identifier_type;
-            let expr_type =
-                derive_annotate_expr_type(expr, Some(assign_expr_hint), state, env_fn_signature)
-                    .unwrap();
+            let expr_type = derive_annotate_expr_type(
+                expr,
+                Some(assign_expr_hint.to_owned()),
+                state,
+                env_fn_signature,
+            )
+            .unwrap();
 
             // Only allow assignment if binding was declared as mutable
             assert_type_equals(&identifier_type, &expr_type, "assign-statement");
@@ -416,7 +421,7 @@ fn annotate_stmt(
                 )
             }
             (Some(ret_expr), _) => {
-                let hint = &env_fn_signature.output;
+                let hint = env_fn_signature.output.to_owned();
                 let expr_ret_type =
                     derive_annotate_expr_type(ret_expr, Some(hint), state, env_fn_signature)
                         .unwrap();
@@ -478,13 +483,9 @@ fn annotate_stmt(
 
         ast::Stmt::While(ast::WhileStmt { condition, block }) => {
             let condition_hint = ast_types::DataType::Bool;
-            let condition_type = derive_annotate_expr_type(
-                condition,
-                Some(&condition_hint),
-                state,
-                env_fn_signature,
-            )
-            .unwrap();
+            let condition_type =
+                derive_annotate_expr_type(condition, Some(condition_hint), state, env_fn_signature)
+                    .unwrap();
             assert_type_equals(
                 &condition_type,
                 &ast_types::DataType::Bool,
@@ -499,13 +500,9 @@ fn annotate_stmt(
             else_branch,
         }) => {
             let condition_hint = ast_types::DataType::Bool;
-            let condition_type = derive_annotate_expr_type(
-                condition,
-                Some(&condition_hint),
-                state,
-                env_fn_signature,
-            )
-            .unwrap();
+            let condition_type =
+                derive_annotate_expr_type(condition, Some(condition_hint), state, env_fn_signature)
+                    .unwrap();
             assert_type_equals(&condition_type, &ast_types::DataType::Bool, "if-condition");
 
             annotate_block_stmt(then_branch, env_fn_signature, state);
@@ -622,7 +619,7 @@ fn annotate_stmt(
         ast::Stmt::Assert(assert_expr) => {
             let expr_type = derive_annotate_expr_type(
                 &mut assert_expr.expression,
-                Some(&ast_types::DataType::Bool),
+                Some(ast_types::DataType::Bool),
                 state,
                 env_fn_signature,
             )
@@ -675,7 +672,7 @@ pub fn assert_type_equals(
 /// type of the node in the AST should be changed from identifier to something else.
 pub(crate) fn annotate_identifier_type(
     identifier: &mut ast::Identifier<Typing>,
-    hint: Option<&ast_types::DataType>,
+    hint: Option<ast_types::DataType>,
     state: &mut CheckState,
     fn_signature: &ast::FnSignature,
 ) -> (ast_types::DataType, bool, Option<ast::Expr<Typing>>) {
@@ -709,7 +706,7 @@ pub(crate) fn annotate_identifier_type(
                     };
                         let prelude_type = state
                             .composite_types
-                            .prelude_variant_match(var_name, type_hint).expect("type of variable or identifier \"{var_name}\" could not be resolved");
+                            .prelude_variant_match(var_name, &type_hint).expect("type of variable or identifier \"{var_name}\" could not be resolved");
                         *var_type = Typing::KnownType(prelude_type.clone().into());
 
                         (
@@ -730,7 +727,7 @@ pub(crate) fn annotate_identifier_type(
             let index_hint = ast_types::DataType::U32;
             let index_type = match index_expr.as_mut() {
                 ast::IndexExpr::Dynamic(index_expr) => {
-                    derive_annotate_expr_type(index_expr, Some(&index_hint), state, fn_signature)
+                    derive_annotate_expr_type(index_expr, Some(index_hint), state, fn_signature)
                         .unwrap()
                 }
                 ast::IndexExpr::Static(_) => ast_types::DataType::U32,
@@ -821,7 +818,7 @@ fn get_fn_signature(
     type_parameter: &Option<ast_types::DataType>,
     args: &[ast::Expr<Typing>],
     env_fn_signature: &ast::FnSignature,
-    output_type_hint: Option<&ast_types::DataType>,
+    output_type_hint: Option<ast_types::DataType>,
 ) -> ast::FnSignature {
     if let Some(fn_signatures) = state.ftable.get(name) {
         match fn_signatures.len() {
@@ -832,7 +829,7 @@ fn get_fn_signature(
 
         let types = args.iter().map(|arg| arg.get_type()).collect_vec();
         for sig in fn_signatures.iter().filter(|sig| sig.matches(&types)) {
-            let Some(hint) = output_type_hint else {
+            let Some(hint) = &output_type_hint else {
                 return sig.to_owned();
             };
             if sig.output == *hint {
@@ -964,11 +961,11 @@ fn derive_annotate_fn_call_args(
             ast_types::AbstractArgument::FunctionArgument(abstract_function) => {
                 // arg_expr must evaluate to a FnCall here
 
-                let arg_hint = Some(&abstract_function.function_type.input_argument);
+                let arg_hint = Some(abstract_function.function_type.input_argument.clone());
                 derive_annotate_expr_type(arg_expr, arg_hint, state, callees_fn_signature).unwrap()
             }
             ast_types::AbstractArgument::ValueArgument(abstract_value) => {
-                let arg_hint = Some(&abstract_value.data_type);
+                let arg_hint = Some(abstract_value.data_type.clone());
                 derive_annotate_expr_type(arg_expr, arg_hint, state, callees_fn_signature).unwrap()
             }
         })
@@ -1010,11 +1007,19 @@ fn derive_annotate_fn_call_args(
 /// with specified type hints might pass.
 fn derive_annotate_expr_type(
     expr: &mut ast::Expr<Typing>,
-    hint: Option<&ast_types::DataType>,
+    hint: Option<ast_types::DataType>,
     state: &mut CheckState,
     env_fn_signature: &ast::FnSignature,
 ) -> anyhow::Result<ast_types::DataType> {
     let res = match expr {
+        ast::Expr::Panic(_, resolved_type) => {
+            if let Some(h) = hint {
+                *resolved_type = Typing::KnownType(h.to_owned());
+                Ok(h.to_owned())
+            } else {
+                bail!("Cannot resolve `Never` type without type hint")
+            }
+        }
         ast::Expr::Lit(ast::ExprLit::Bool(_)) => Ok(ast_types::DataType::Bool),
         ast::Expr::Lit(ast::ExprLit::U32(_)) => Ok(ast_types::DataType::U32),
         ast::Expr::Lit(ast::ExprLit::U64(_)) => Ok(ast_types::DataType::U64),
@@ -1034,7 +1039,7 @@ fn derive_annotate_expr_type(
         ast::Expr::Lit(ast::ExprLit::GenericNum(n, _t)) => {
             use ast_types::DataType::*;
 
-            match hint {
+            match hint.as_ref() {
                 Some(&U32) => {
                     let err = format!("Cannot infer number literal {n} as u32");
                     let n: u32 = (*n).try_into().expect(&err);
@@ -1086,7 +1091,9 @@ fn derive_annotate_expr_type(
             let no_hint = None;
             let tuple_types = tuple_exprs
                 .iter_mut()
-                .map(|expr| derive_annotate_expr_type(expr, no_hint, state, env_fn_signature))
+                .map(|expr| {
+                    derive_annotate_expr_type(expr, no_hint.clone(), state, env_fn_signature)
+                })
                 .collect_vec();
             if tuple_types.iter().all(|x| x.is_ok()) {
                 Ok(ast_types::DataType::Tuple(
@@ -1138,7 +1145,7 @@ fn derive_annotate_expr_type(
                     .field_access_returned_type(&field_id);
                 let derived_field_type = derive_annotate_expr_type(
                     expr,
-                    Some(&expected_field_type),
+                    Some(expected_field_type.clone()),
                     state,
                     env_fn_signature,
                 )
@@ -1301,11 +1308,11 @@ fn derive_annotate_expr_type(
                 // Overloaded for all arithmetic types.
                 Add => {
                     let maybe_lhs_type =
-                        derive_annotate_expr_type(lhs_expr, hint, state, env_fn_signature);
-                    let rhs_hint = match hint {
-                        Some(hint) => Some(hint),
-                        None => match maybe_lhs_type {
-                            Ok(ref ty) => Some(ty),
+                        derive_annotate_expr_type(lhs_expr, hint.clone(), state, env_fn_signature);
+                    let rhs_hint = match &hint {
+                        Some(hint) => Some(hint.to_owned()),
+                        None => match &maybe_lhs_type {
+                            Ok(ty) => Some(ty.to_owned()),
                             Err(_) => None,
                         },
                     };
@@ -1315,7 +1322,7 @@ fn derive_annotate_expr_type(
                         Ok(ty) => ty,
                         Err(_) => derive_annotate_expr_type(
                             lhs_expr,
-                            Some(&rhs_type),
+                            Some(rhs_type.clone()),
                             state,
                             env_fn_signature,
                         )?,
@@ -1332,9 +1339,13 @@ fn derive_annotate_expr_type(
 
                 // Restricted to bool only.
                 And => {
-                    let bool_hint = Some(&ast_types::DataType::Bool);
-                    let lhs_type =
-                        derive_annotate_expr_type(lhs_expr, bool_hint, state, env_fn_signature)?;
+                    let bool_hint = Some(ast_types::DataType::Bool);
+                    let lhs_type = derive_annotate_expr_type(
+                        lhs_expr,
+                        bool_hint.clone(),
+                        state,
+                        env_fn_signature,
+                    )?;
                     let rhs_type =
                         derive_annotate_expr_type(rhs_expr, bool_hint, state, env_fn_signature)?;
 
@@ -1350,7 +1361,7 @@ fn derive_annotate_expr_type(
                         derive_annotate_expr_type(lhs_expr, hint, state, env_fn_signature)?;
                     let rhs_type = derive_annotate_expr_type(
                         rhs_expr,
-                        Some(&lhs_type),
+                        Some(lhs_type.clone()),
                         state,
                         env_fn_signature,
                     )?;
@@ -1370,7 +1381,7 @@ fn derive_annotate_expr_type(
                         derive_annotate_expr_type(lhs_expr, hint, state, env_fn_signature)?;
                     let rhs_type = derive_annotate_expr_type(
                         rhs_expr,
-                        Some(&lhs_type),
+                        Some(lhs_type.clone()),
                         state,
                         env_fn_signature,
                     )?;
@@ -1390,7 +1401,7 @@ fn derive_annotate_expr_type(
                         derive_annotate_expr_type(lhs_expr, hint, state, env_fn_signature)?;
                     let rhs_type = derive_annotate_expr_type(
                         rhs_expr,
-                        Some(&lhs_type),
+                        Some(lhs_type.clone()),
                         state,
                         env_fn_signature,
                     )?;
@@ -1410,7 +1421,7 @@ fn derive_annotate_expr_type(
                         derive_annotate_expr_type(lhs_expr, hint, state, env_fn_signature)?;
                     let rhs_type = derive_annotate_expr_type(
                         rhs_expr,
-                        Some(&lhs_type),
+                        Some(lhs_type.clone()),
                         state,
                         env_fn_signature,
                     )?;
@@ -1430,17 +1441,17 @@ fn derive_annotate_expr_type(
                     let no_hint = None;
                     let maybe_lhs_type =
                         derive_annotate_expr_type(lhs_expr, no_hint, state, env_fn_signature);
-                    let rhs_hint = match maybe_lhs_type {
-                        Ok(ref ty) => Some(ty),
+                    let rhs_hint = match maybe_lhs_type.as_ref() {
+                        Ok(ty) => Some(ty.to_owned()),
                         Err(_) => None,
                     };
                     let rhs_type =
                         derive_annotate_expr_type(rhs_expr, rhs_hint, state, env_fn_signature)?;
-                    let lhs_type = match maybe_lhs_type {
-                        Ok(ty) => ty,
+                    let lhs_type = match maybe_lhs_type.as_ref() {
+                        Ok(ty) => ty.to_owned(),
                         Err(_) => derive_annotate_expr_type(
                             lhs_expr,
-                            Some(&rhs_type),
+                            Some(rhs_type.clone()),
                             state,
                             env_fn_signature,
                         )?,
@@ -1463,7 +1474,7 @@ fn derive_annotate_expr_type(
                         derive_annotate_expr_type(lhs_expr, no_hint, state, env_fn_signature)?;
                     let rhs_type = derive_annotate_expr_type(
                         rhs_expr,
-                        Some(&lhs_type),
+                        Some(lhs_type.clone()),
                         state,
                         env_fn_signature,
                     )?;
@@ -1483,7 +1494,7 @@ fn derive_annotate_expr_type(
                         derive_annotate_expr_type(lhs_expr, hint, state, env_fn_signature)?;
                     let rhs_type = derive_annotate_expr_type(
                         rhs_expr,
-                        Some(&lhs_type),
+                        Some(lhs_type.clone()),
                         state,
                         env_fn_signature,
                     )?;
@@ -1513,7 +1524,7 @@ fn derive_annotate_expr_type(
                         derive_annotate_expr_type(lhs_expr, no_hint, state, env_fn_signature)?;
                     let rhs_type = derive_annotate_expr_type(
                         rhs_expr,
-                        Some(&lhs_type),
+                        Some(lhs_type.clone()),
                         state,
                         env_fn_signature,
                     )?;
@@ -1530,7 +1541,7 @@ fn derive_annotate_expr_type(
                 // Restricted to bool only.
                 Or => {
                     let lhs_type =
-                        derive_annotate_expr_type(lhs_expr, hint, state, env_fn_signature)?;
+                        derive_annotate_expr_type(lhs_expr, hint.clone(), state, env_fn_signature)?;
                     let rhs_type =
                         derive_annotate_expr_type(rhs_expr, hint, state, env_fn_signature)?;
 
@@ -1543,10 +1554,10 @@ fn derive_annotate_expr_type(
                 // Restricted to U32-based types. (Triton VM limitation)
                 Rem => {
                     let lhs_type =
-                        derive_annotate_expr_type(lhs_expr, hint, state, env_fn_signature)?;
+                        derive_annotate_expr_type(lhs_expr, hint.clone(), state, env_fn_signature)?;
                     let rhs_type = derive_annotate_expr_type(
                         rhs_expr,
-                        Some(&lhs_type),
+                        Some(lhs_type.clone()),
                         state,
                         env_fn_signature,
                     )?;
@@ -1570,7 +1581,7 @@ fn derive_annotate_expr_type(
                         "Cannot shift-left for type '{lhs_type}' (not u32-based)"
                     );
 
-                    let rhs_hint = Some(&ast_types::DataType::U32);
+                    let rhs_hint = Some(ast_types::DataType::U32);
                     let rhs_type =
                         derive_annotate_expr_type(rhs_expr, rhs_hint, state, env_fn_signature)?;
 
@@ -1589,7 +1600,7 @@ fn derive_annotate_expr_type(
                         "Cannot shift-right for type '{lhs_type}' (not u32-based)"
                     );
 
-                    let rhs_hint = Some(&ast_types::DataType::U32);
+                    let rhs_hint = Some(ast_types::DataType::U32);
                     let rhs_type =
                         derive_annotate_expr_type(rhs_expr, rhs_hint, state, env_fn_signature)?;
 
@@ -1604,7 +1615,7 @@ fn derive_annotate_expr_type(
                         derive_annotate_expr_type(lhs_expr, hint, state, env_fn_signature)?;
                     let rhs_type = derive_annotate_expr_type(
                         rhs_expr,
-                        Some(&lhs_type),
+                        Some(lhs_type.clone()),
                         state,
                         env_fn_signature,
                     )?;
@@ -1628,7 +1639,7 @@ fn derive_annotate_expr_type(
             let condition_hint = ast_types::DataType::Bool;
             let condition_type = derive_annotate_expr_type(
                 condition,
-                Some(&condition_hint),
+                Some(condition_hint),
                 state,
                 env_fn_signature,
             )?;
@@ -1638,21 +1649,44 @@ fn derive_annotate_expr_type(
                 "if-condition-expr",
             );
 
-            let then_type =
-                derive_annotate_returning_block_expr(then_branch, hint, state, env_fn_signature);
-            let else_type =
-                derive_annotate_returning_block_expr(else_branch, hint, state, env_fn_signature);
+            let mut resolved_return_type = hint;
+            let mut branches = [then_branch.as_mut(), else_branch.as_mut()];
 
-            assert_type_equals(&then_type, &else_type, "if-then-else-expr");
+            // Loop over all branches until we have resolved one of them
+            for branch in branches.iter_mut() {
+                match derive_annotate_returning_block_expr(
+                    branch,
+                    resolved_return_type.clone(),
+                    state,
+                    env_fn_signature,
+                ) {
+                    Ok(resolved) => {
+                        resolved_return_type = Some(resolved);
+                    }
+                    Err(_) => continue,
+                }
+            }
 
-            Ok(then_type)
+            // Then check that all branches return the same type
+            for branch in branches.iter_mut() {
+                let branch_type = derive_annotate_returning_block_expr(
+                    branch,
+                    resolved_return_type.clone(),
+                    state,
+                    env_fn_signature,
+                )?;
+                assert_type_equals(
+                    resolved_return_type.as_ref().unwrap(),
+                    &branch_type,
+                    "if-then-else-expr",
+                );
+            }
+
+            Ok(resolved_return_type.unwrap())
         }
-        ast::Expr::ReturningBlock(ret_block) => Ok(derive_annotate_returning_block_expr(
-            ret_block,
-            hint,
-            state,
-            env_fn_signature,
-        )),
+        ast::Expr::ReturningBlock(ret_block) => {
+            derive_annotate_returning_block_expr(ret_block, hint, state, env_fn_signature)
+        }
 
         ast::Expr::Cast(expr, to_type) => {
             let from_type = derive_annotate_expr_type(expr, None, state, env_fn_signature)?;
@@ -1663,151 +1697,192 @@ fn derive_annotate_expr_type(
 
             Ok(to_type.to_owned())
         }
-        ast::Expr::Match(ast::MatchExpr {
-            arms,
-            match_expression,
-        }) => {
-            // Verify that match-expression returns an enum-type
-            let match_expression_type =
-                derive_annotate_expr_type(match_expression, None, state, env_fn_signature).unwrap();
-            let (enum_type, is_boxed) = match match_expression_type {
-                ast_types::DataType::Enum(enum_type) => (enum_type, false),
-                ast_types::DataType::Boxed(inner) => match *inner.to_owned() {
-                    ast_types::DataType::Enum(enum_type) => (enum_type, true),
-                    other => panic!("`match` statements are only supported on enum types. For now. Got {other}")
-                },
-                _ => panic!("`match` statements are only supported on enum types. For now. Got {match_expression_type}")
-            };
-
-            let mut variants_encountered: HashSet<String> = HashSet::default();
-            let arm_count = arms.len();
-            let mut contains_wildcard_arm = false;
-            let mut arm_ret_type = None;
-            for (i, arm) in arms.iter_mut().enumerate() {
-                match &arm.match_condition {
-                    ast::MatchCondition::CatchAll => {
-                        assert_eq!(
-                            i,
-                            arm_count - 1,
-                            "When using wildcard in match statement, wildcard must be used in last match arm. \
-                            Match expression was for type {}",
-                            enum_type.name
-                        );
-                        contains_wildcard_arm = true;
-
-                        arm_ret_type = Some(derive_annotate_arm_body(
-                            &mut arm.body,
-                            arm_ret_type,
-                            state,
-                            env_fn_signature,
-                            i,
-                        ));
-                    }
-                    ast::MatchCondition::EnumVariant(ast::EnumVariantSelector {
-                        type_name,
-                        variant_name,
-                        data_bindings,
-                    }) => {
-                        assert!(
-                            variants_encountered.insert(variant_name.clone()),
-                            "Repeated variant name {} in match statement on {} encounter",
-                            variant_name,
-                            enum_type.name
-                        );
-
-                        match type_name {
-                            Some(enum_type_name) => {
-                                assert_eq!(
-                                    &enum_type.name,
-                                    enum_type_name,
-                                    "Match conditions on type {} must all be of same type. Got bad type: {enum_type_name}", enum_type.name);
-                            }
-                            None => {
-                                assert!(enum_type.is_prelude, "Only enums specified in prelude may use only the variant name in a match arm");
-                            }
-                        };
-
-                        let variant_data_tuple =
-                            enum_type.variant_data_type(variant_name).as_tuple_type();
-                        assert!(data_bindings.is_empty() || variant_data_tuple.element_count() == data_bindings.len(), "Number of bindings must match number of elements in variant data tuple");
-                        assert!(
-                            data_bindings.iter().map(|x| &x.name).all_unique(),
-                            "Name repetition in pattern matching not allowed"
-                        );
-
-                        data_bindings.iter().enumerate().for_each(|(i, x)| {
-                            let new_binding_type = if is_boxed {
-                                ast_types::DataType::Boxed(Box::new(
-                                    variant_data_tuple.fields[i].to_owned(),
-                                ))
-                            } else {
-                                variant_data_tuple.fields[i].to_owned()
-                            };
-
-                            state.vtable.insert(
-                                x.name.to_owned(),
-                                DataTypeAndMutability::new(&new_binding_type, x.mutable),
-                            );
-                        });
-
-                        arm_ret_type = Some(derive_annotate_arm_body(
-                            &mut arm.body,
-                            arm_ret_type,
-                            state,
-                            env_fn_signature,
-                            i,
-                        ));
-
-                        // Remove bindings set in match-arm after body's type check
-                        data_bindings.iter().for_each(|x| {
-                            state.vtable.remove(&x.name);
-                        });
-                    }
-                }
-            }
-
-            // Verify that all cases where covered, *or* a wildcard was encountered.
-            assert!(
-                variants_encountered.len() == enum_type.variants.len() || contains_wildcard_arm,
-                "All cases must be covered for match-expression for {}. Missing variants: {}.",
-                enum_type.name,
-                enum_type
-                    .variants
-                    .iter()
-                    .map(|x| &x.0)
-                    .filter(|x| !variants_encountered.contains(*x))
-                    .join(",")
-            );
-
-            Ok(arm_ret_type.unwrap().to_owned())
+        ast::Expr::Match(match_expr) => {
+            derive_annotate_match_expression(match_expr, state, env_fn_signature, hint)
         }
     };
 
     res
 }
 
-fn derive_annotate_arm_body(
-    arm_body: &mut ast::ReturningBlock<Typing>,
-    first_arm_ret_type: Option<ast_types::DataType>,
+/// Derive return type and annotate a `match` expression
+/// let a: u32 = match b {
+///    Some(val) => { 42 },
+///    None => { 0 },
+/// };
+fn derive_annotate_match_expression(
+    match_expr: &mut ast::MatchExpr<Typing>,
     state: &mut CheckState<'_>,
     env_fn_signature: &ast::FnSignature,
-    arm_index: usize,
-) -> ast_types::DataType {
-    let arm_ret_type = derive_annotate_returning_block_expr(
-        arm_body,
-        first_arm_ret_type.as_ref(),
+    hint: Option<ast_types::DataType>,
+) -> Result<ast_types::DataType, anyhow::Error> {
+    let match_expression_type = derive_annotate_expr_type(
+        &mut match_expr.match_expression,
+        None,
         state,
         env_fn_signature,
-    );
-    if let Some(first_arm_ret_type) = first_arm_ret_type.as_ref() {
+    )
+    .unwrap();
+    let (enum_type, is_boxed) = match match_expression_type {
+        ast_types::DataType::Enum(enum_type) => (enum_type, false),
+        ast_types::DataType::Boxed(inner) => match *inner.to_owned() {
+            ast_types::DataType::Enum(enum_type) => (enum_type, true),
+            other => panic!("`match` statements are only supported on enum types. For now. Got {other}")
+        },
+        _ => panic!("`match` statements are only supported on enum types. For now. Got {match_expression_type}")
+    };
+
+    // Loop over all arms until *one* of them has a known return type
+    let mut resolved_return_type = hint;
+    for arm in match_expr.arms.iter_mut() {
+        if let Ok(resolved) = resolve_match_arm_return_type(
+            arm,
+            resolved_return_type.clone(),
+            state,
+            enum_type.as_ref(),
+            is_boxed,
+            env_fn_signature,
+        ) {
+            resolved_return_type = Some(resolved);
+            break;
+        };
+    }
+    let resolved_return_type = resolved_return_type.unwrap_or_else(|| {
+        panic!(
+            "Could not resolve return type for any arm of match expression for {}",
+            enum_type.name
+        )
+    });
+
+    // Loop over all arms to verify that they agree on the return type
+    let mut variants_encountered: HashSet<String> = HashSet::default();
+    let arm_count = match_expr.arms.len();
+    let mut contains_wildcard_arm = false;
+    for (i, arm) in match_expr.arms.iter_mut().enumerate() {
+        let arm_ret_type = resolve_match_arm_return_type(
+            arm,
+            Some(resolved_return_type.clone()),
+            state,
+            enum_type.as_ref(),
+            is_boxed,
+            env_fn_signature,
+        )?;
         assert_type_equals(
-            first_arm_ret_type,
+            &resolved_return_type,
             &arm_ret_type,
-            format!("match-arm {arm_index} for expression"),
+            format!("Return type for match-arm {i}"),
         );
+
+        match &arm.match_condition {
+            ast::MatchCondition::CatchAll => {
+                assert_eq!(
+                    i,
+                    arm_count - 1,
+                    "When using wildcard in match statement, wildcard must be used in last match arm. \
+                            Match expression was for type {}",
+                    enum_type.name
+                );
+                contains_wildcard_arm = true;
+            }
+            ast::MatchCondition::EnumVariant(ast::EnumVariantSelector {
+                type_name,
+                variant_name,
+                data_bindings,
+            }) => {
+                assert!(
+                    variants_encountered.insert(variant_name.clone()),
+                    "Repeated variant name {} in match statement on {} encounter",
+                    variant_name,
+                    enum_type.name
+                );
+
+                match type_name {
+                    Some(enum_type_name) => {
+                        assert_eq!(
+                            &enum_type.name,
+                            enum_type_name,
+                            "Match conditions on type {} must all be of same type. Got bad type: {enum_type_name}", enum_type.name);
+                    }
+                    None => {
+                        assert!(enum_type.is_prelude, "Only enums specified in prelude may use only the variant name in a match arm");
+                    }
+                };
+
+                let variant_data_tuple = enum_type.variant_data_type(variant_name).as_tuple_type();
+                assert!(
+                    data_bindings.is_empty()
+                        || variant_data_tuple.element_count() == data_bindings.len(),
+                    "Number of bindings must match number of elements in variant data tuple"
+                );
+                assert!(
+                    data_bindings.iter().map(|x| &x.name).all_unique(),
+                    "Name repetition in pattern matching not allowed"
+                );
+            }
+        }
     }
 
-    arm_ret_type
+    assert!(
+        variants_encountered.len() == enum_type.variants.len() || contains_wildcard_arm,
+        "All cases must be covered for match-expression for {}. Missing variants: {}.",
+        enum_type.name,
+        enum_type
+            .variants
+            .iter()
+            .map(|x| &x.0)
+            .filter(|x| !variants_encountered.contains(*x))
+            .join(",")
+    );
+
+    Ok(resolved_return_type)
+}
+
+/// Resolve the return type of a match arm. Does not mutate state.
+fn resolve_match_arm_return_type(
+    arm: &mut ast::MatchExprArm<Typing>,
+    hint: Option<ast_types::DataType>,
+    state: &mut CheckState,
+    enum_type: &ast_types::EnumType,
+    is_boxed: bool,
+    env_fn_signature: &ast::FnSignature,
+) -> anyhow::Result<ast_types::DataType> {
+    match &arm.match_condition {
+        ast::MatchCondition::EnumVariant(enum_variant_selector) => {
+            let variant_data_tuple = enum_type
+                .variant_data_type(&enum_variant_selector.variant_name)
+                .as_tuple_type();
+            enum_variant_selector
+                .data_bindings
+                .iter()
+                .enumerate()
+                .for_each(|(i, x)| {
+                    let new_binding_type = if is_boxed {
+                        ast_types::DataType::Boxed(Box::new(
+                            variant_data_tuple.fields[i].to_owned(),
+                        ))
+                    } else {
+                        variant_data_tuple.fields[i].to_owned()
+                    };
+
+                    state.vtable.insert(
+                        x.name.to_owned(),
+                        DataTypeAndMutability::new(&new_binding_type, x.mutable),
+                    );
+                });
+            let ret =
+                derive_annotate_returning_block_expr(&mut arm.body, hint, state, env_fn_signature);
+
+            // Remove bindings set in match-arm after body's type check
+            enum_variant_selector.data_bindings.iter().for_each(|x| {
+                state.vtable.remove(&x.name);
+            });
+
+            ret
+        }
+        ast::MatchCondition::CatchAll => {
+            derive_annotate_returning_block_expr(&mut arm.body, hint, state, env_fn_signature)
+        }
+    }
 }
 
 fn array_element_type(
@@ -1821,13 +1896,13 @@ fn array_element_type(
             for element_expression in elem_expressions.iter_mut() {
                 let expr_type = derive_annotate_expr_type(
                     element_expression,
-                    resolved_element_type.as_ref(),
+                    resolved_element_type.clone(),
                     state,
                     env_fn_signature,
                 )?;
-                if let Some(hint) = resolved_element_type {
+                if let Some(hint) = &resolved_element_type {
                     assert_eq!(
-                        hint, expr_type,
+                        *hint, expr_type,
                         "All expressions in array declaration must evaluate to the same type. \
                         Got {hint} and {expr_type}.",
                     );
@@ -1846,20 +1921,20 @@ fn array_element_type(
 
 fn derive_annotate_returning_block_expr(
     ret_block: &mut ast::ReturningBlock<Typing>,
-    hint: Option<&ast_types::DataType>,
+    hint: Option<ast_types::DataType>,
     state: &mut CheckState,
     env_fn_signature: &ast::FnSignature,
-) -> ast_types::DataType {
+) -> anyhow::Result<ast_types::DataType> {
     let vtable_before = state.vtable.clone();
     ret_block
         .stmts
         .iter_mut()
         .for_each(|stmt| annotate_stmt(stmt, state, env_fn_signature));
-    let ret_type =
-        derive_annotate_expr_type(&mut ret_block.return_expr, hint, state, env_fn_signature)
-            .unwrap();
+    let resolved_return_type =
+        derive_annotate_expr_type(&mut ret_block.return_expr, hint, state, env_fn_signature);
     state.vtable = vtable_before.clone();
-    ret_type
+
+    resolved_return_type
 }
 
 /// A type that can be used as address in `read_mem` and `write_mem` calls.
