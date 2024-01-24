@@ -368,7 +368,7 @@ fn annotate_stmt(
                 panic!("let-assign cannot shadow existing variable '{var_name}'!");
             }
 
-            let let_expr_hint: Option<&ast_types::DataType> = Some(data_type);
+            let let_expr_hint: Option<ast_types::DataType> = Some(data_type.to_owned());
             let derived_type =
                 derive_annotate_expr_type(expr, let_expr_hint, state, env_fn_signature).unwrap();
             assert_type_equals(
@@ -391,9 +391,13 @@ fn annotate_stmt(
                 "Cannot rewrite expression outside of atomic variable expression"
             );
             let assign_expr_hint = &identifier_type;
-            let expr_type =
-                derive_annotate_expr_type(expr, Some(assign_expr_hint), state, env_fn_signature)
-                    .unwrap();
+            let expr_type = derive_annotate_expr_type(
+                expr,
+                Some(assign_expr_hint.to_owned()),
+                state,
+                env_fn_signature,
+            )
+            .unwrap();
 
             // Only allow assignment if binding was declared as mutable
             assert_type_equals(&identifier_type, &expr_type, "assign-statement");
@@ -417,7 +421,7 @@ fn annotate_stmt(
                 )
             }
             (Some(ret_expr), _) => {
-                let hint = &env_fn_signature.output;
+                let hint = env_fn_signature.output.to_owned();
                 let expr_ret_type =
                     derive_annotate_expr_type(ret_expr, Some(hint), state, env_fn_signature)
                         .unwrap();
@@ -479,13 +483,9 @@ fn annotate_stmt(
 
         ast::Stmt::While(ast::WhileStmt { condition, block }) => {
             let condition_hint = ast_types::DataType::Bool;
-            let condition_type = derive_annotate_expr_type(
-                condition,
-                Some(&condition_hint),
-                state,
-                env_fn_signature,
-            )
-            .unwrap();
+            let condition_type =
+                derive_annotate_expr_type(condition, Some(condition_hint), state, env_fn_signature)
+                    .unwrap();
             assert_type_equals(
                 &condition_type,
                 &ast_types::DataType::Bool,
@@ -500,13 +500,9 @@ fn annotate_stmt(
             else_branch,
         }) => {
             let condition_hint = ast_types::DataType::Bool;
-            let condition_type = derive_annotate_expr_type(
-                condition,
-                Some(&condition_hint),
-                state,
-                env_fn_signature,
-            )
-            .unwrap();
+            let condition_type =
+                derive_annotate_expr_type(condition, Some(condition_hint), state, env_fn_signature)
+                    .unwrap();
             assert_type_equals(&condition_type, &ast_types::DataType::Bool, "if-condition");
 
             annotate_block_stmt(then_branch, env_fn_signature, state);
@@ -623,7 +619,7 @@ fn annotate_stmt(
         ast::Stmt::Assert(assert_expr) => {
             let expr_type = derive_annotate_expr_type(
                 &mut assert_expr.expression,
-                Some(&ast_types::DataType::Bool),
+                Some(ast_types::DataType::Bool),
                 state,
                 env_fn_signature,
             )
@@ -676,7 +672,7 @@ pub fn assert_type_equals(
 /// type of the node in the AST should be changed from identifier to something else.
 pub(crate) fn annotate_identifier_type(
     identifier: &mut ast::Identifier<Typing>,
-    hint: Option<&ast_types::DataType>,
+    hint: Option<ast_types::DataType>,
     state: &mut CheckState,
     fn_signature: &ast::FnSignature,
 ) -> (ast_types::DataType, bool, Option<ast::Expr<Typing>>) {
@@ -710,7 +706,7 @@ pub(crate) fn annotate_identifier_type(
                     };
                         let prelude_type = state
                             .composite_types
-                            .prelude_variant_match(var_name, type_hint).expect("type of variable or identifier \"{var_name}\" could not be resolved");
+                            .prelude_variant_match(var_name, &type_hint).expect("type of variable or identifier \"{var_name}\" could not be resolved");
                         *var_type = Typing::KnownType(prelude_type.clone().into());
 
                         (
@@ -731,7 +727,7 @@ pub(crate) fn annotate_identifier_type(
             let index_hint = ast_types::DataType::U32;
             let index_type = match index_expr.as_mut() {
                 ast::IndexExpr::Dynamic(index_expr) => {
-                    derive_annotate_expr_type(index_expr, Some(&index_hint), state, fn_signature)
+                    derive_annotate_expr_type(index_expr, Some(index_hint), state, fn_signature)
                         .unwrap()
                 }
                 ast::IndexExpr::Static(_) => ast_types::DataType::U32,
@@ -822,7 +818,7 @@ fn get_fn_signature(
     type_parameter: &Option<ast_types::DataType>,
     args: &[ast::Expr<Typing>],
     env_fn_signature: &ast::FnSignature,
-    output_type_hint: Option<&ast_types::DataType>,
+    output_type_hint: Option<ast_types::DataType>,
 ) -> ast::FnSignature {
     if let Some(fn_signatures) = state.ftable.get(name) {
         match fn_signatures.len() {
@@ -833,7 +829,7 @@ fn get_fn_signature(
 
         let types = args.iter().map(|arg| arg.get_type()).collect_vec();
         for sig in fn_signatures.iter().filter(|sig| sig.matches(&types)) {
-            let Some(hint) = output_type_hint else {
+            let Some(hint) = &output_type_hint else {
                 return sig.to_owned();
             };
             if sig.output == *hint {
@@ -965,11 +961,11 @@ fn derive_annotate_fn_call_args(
             ast_types::AbstractArgument::FunctionArgument(abstract_function) => {
                 // arg_expr must evaluate to a FnCall here
 
-                let arg_hint = Some(&abstract_function.function_type.input_argument);
+                let arg_hint = Some(abstract_function.function_type.input_argument.clone());
                 derive_annotate_expr_type(arg_expr, arg_hint, state, callees_fn_signature).unwrap()
             }
             ast_types::AbstractArgument::ValueArgument(abstract_value) => {
-                let arg_hint = Some(&abstract_value.data_type);
+                let arg_hint = Some(abstract_value.data_type.clone());
                 derive_annotate_expr_type(arg_expr, arg_hint, state, callees_fn_signature).unwrap()
             }
         })
@@ -1011,7 +1007,7 @@ fn derive_annotate_fn_call_args(
 /// with specified type hints might pass.
 fn derive_annotate_expr_type(
     expr: &mut ast::Expr<Typing>,
-    hint: Option<&ast_types::DataType>,
+    hint: Option<ast_types::DataType>,
     state: &mut CheckState,
     env_fn_signature: &ast::FnSignature,
 ) -> anyhow::Result<ast_types::DataType> {
@@ -1043,7 +1039,7 @@ fn derive_annotate_expr_type(
         ast::Expr::Lit(ast::ExprLit::GenericNum(n, _t)) => {
             use ast_types::DataType::*;
 
-            match hint {
+            match hint.as_ref() {
                 Some(&U32) => {
                     let err = format!("Cannot infer number literal {n} as u32");
                     let n: u32 = (*n).try_into().expect(&err);
@@ -1095,7 +1091,9 @@ fn derive_annotate_expr_type(
             let no_hint = None;
             let tuple_types = tuple_exprs
                 .iter_mut()
-                .map(|expr| derive_annotate_expr_type(expr, no_hint, state, env_fn_signature))
+                .map(|expr| {
+                    derive_annotate_expr_type(expr, no_hint.clone(), state, env_fn_signature)
+                })
                 .collect_vec();
             if tuple_types.iter().all(|x| x.is_ok()) {
                 Ok(ast_types::DataType::Tuple(
@@ -1147,7 +1145,7 @@ fn derive_annotate_expr_type(
                     .field_access_returned_type(&field_id);
                 let derived_field_type = derive_annotate_expr_type(
                     expr,
-                    Some(&expected_field_type),
+                    Some(expected_field_type.clone()),
                     state,
                     env_fn_signature,
                 )
@@ -1310,11 +1308,11 @@ fn derive_annotate_expr_type(
                 // Overloaded for all arithmetic types.
                 Add => {
                     let maybe_lhs_type =
-                        derive_annotate_expr_type(lhs_expr, hint, state, env_fn_signature);
-                    let rhs_hint = match hint {
-                        Some(hint) => Some(hint),
-                        None => match maybe_lhs_type {
-                            Ok(ref ty) => Some(ty),
+                        derive_annotate_expr_type(lhs_expr, hint.clone(), state, env_fn_signature);
+                    let rhs_hint = match &hint {
+                        Some(hint) => Some(hint.to_owned()),
+                        None => match &maybe_lhs_type {
+                            Ok(ty) => Some(ty.to_owned()),
                             Err(_) => None,
                         },
                     };
@@ -1324,7 +1322,7 @@ fn derive_annotate_expr_type(
                         Ok(ty) => ty,
                         Err(_) => derive_annotate_expr_type(
                             lhs_expr,
-                            Some(&rhs_type),
+                            Some(rhs_type.clone()),
                             state,
                             env_fn_signature,
                         )?,
@@ -1341,9 +1339,13 @@ fn derive_annotate_expr_type(
 
                 // Restricted to bool only.
                 And => {
-                    let bool_hint = Some(&ast_types::DataType::Bool);
-                    let lhs_type =
-                        derive_annotate_expr_type(lhs_expr, bool_hint, state, env_fn_signature)?;
+                    let bool_hint = Some(ast_types::DataType::Bool);
+                    let lhs_type = derive_annotate_expr_type(
+                        lhs_expr,
+                        bool_hint.clone(),
+                        state,
+                        env_fn_signature,
+                    )?;
                     let rhs_type =
                         derive_annotate_expr_type(rhs_expr, bool_hint, state, env_fn_signature)?;
 
@@ -1359,7 +1361,7 @@ fn derive_annotate_expr_type(
                         derive_annotate_expr_type(lhs_expr, hint, state, env_fn_signature)?;
                     let rhs_type = derive_annotate_expr_type(
                         rhs_expr,
-                        Some(&lhs_type),
+                        Some(lhs_type.clone()),
                         state,
                         env_fn_signature,
                     )?;
@@ -1379,7 +1381,7 @@ fn derive_annotate_expr_type(
                         derive_annotate_expr_type(lhs_expr, hint, state, env_fn_signature)?;
                     let rhs_type = derive_annotate_expr_type(
                         rhs_expr,
-                        Some(&lhs_type),
+                        Some(lhs_type.clone()),
                         state,
                         env_fn_signature,
                     )?;
@@ -1399,7 +1401,7 @@ fn derive_annotate_expr_type(
                         derive_annotate_expr_type(lhs_expr, hint, state, env_fn_signature)?;
                     let rhs_type = derive_annotate_expr_type(
                         rhs_expr,
-                        Some(&lhs_type),
+                        Some(lhs_type.clone()),
                         state,
                         env_fn_signature,
                     )?;
@@ -1419,7 +1421,7 @@ fn derive_annotate_expr_type(
                         derive_annotate_expr_type(lhs_expr, hint, state, env_fn_signature)?;
                     let rhs_type = derive_annotate_expr_type(
                         rhs_expr,
-                        Some(&lhs_type),
+                        Some(lhs_type.clone()),
                         state,
                         env_fn_signature,
                     )?;
@@ -1439,17 +1441,17 @@ fn derive_annotate_expr_type(
                     let no_hint = None;
                     let maybe_lhs_type =
                         derive_annotate_expr_type(lhs_expr, no_hint, state, env_fn_signature);
-                    let rhs_hint = match maybe_lhs_type {
-                        Ok(ref ty) => Some(ty),
+                    let rhs_hint = match maybe_lhs_type.as_ref() {
+                        Ok(ty) => Some(ty.to_owned()),
                         Err(_) => None,
                     };
                     let rhs_type =
                         derive_annotate_expr_type(rhs_expr, rhs_hint, state, env_fn_signature)?;
-                    let lhs_type = match maybe_lhs_type {
-                        Ok(ty) => ty,
+                    let lhs_type = match maybe_lhs_type.as_ref() {
+                        Ok(ty) => ty.to_owned(),
                         Err(_) => derive_annotate_expr_type(
                             lhs_expr,
-                            Some(&rhs_type),
+                            Some(rhs_type.clone()),
                             state,
                             env_fn_signature,
                         )?,
@@ -1472,7 +1474,7 @@ fn derive_annotate_expr_type(
                         derive_annotate_expr_type(lhs_expr, no_hint, state, env_fn_signature)?;
                     let rhs_type = derive_annotate_expr_type(
                         rhs_expr,
-                        Some(&lhs_type),
+                        Some(lhs_type.clone()),
                         state,
                         env_fn_signature,
                     )?;
@@ -1492,7 +1494,7 @@ fn derive_annotate_expr_type(
                         derive_annotate_expr_type(lhs_expr, hint, state, env_fn_signature)?;
                     let rhs_type = derive_annotate_expr_type(
                         rhs_expr,
-                        Some(&lhs_type),
+                        Some(lhs_type.clone()),
                         state,
                         env_fn_signature,
                     )?;
@@ -1522,7 +1524,7 @@ fn derive_annotate_expr_type(
                         derive_annotate_expr_type(lhs_expr, no_hint, state, env_fn_signature)?;
                     let rhs_type = derive_annotate_expr_type(
                         rhs_expr,
-                        Some(&lhs_type),
+                        Some(lhs_type.clone()),
                         state,
                         env_fn_signature,
                     )?;
@@ -1539,7 +1541,7 @@ fn derive_annotate_expr_type(
                 // Restricted to bool only.
                 Or => {
                     let lhs_type =
-                        derive_annotate_expr_type(lhs_expr, hint, state, env_fn_signature)?;
+                        derive_annotate_expr_type(lhs_expr, hint.clone(), state, env_fn_signature)?;
                     let rhs_type =
                         derive_annotate_expr_type(rhs_expr, hint, state, env_fn_signature)?;
 
@@ -1552,10 +1554,10 @@ fn derive_annotate_expr_type(
                 // Restricted to U32-based types. (Triton VM limitation)
                 Rem => {
                     let lhs_type =
-                        derive_annotate_expr_type(lhs_expr, hint, state, env_fn_signature)?;
+                        derive_annotate_expr_type(lhs_expr, hint.clone(), state, env_fn_signature)?;
                     let rhs_type = derive_annotate_expr_type(
                         rhs_expr,
-                        Some(&lhs_type),
+                        Some(lhs_type.clone()),
                         state,
                         env_fn_signature,
                     )?;
@@ -1579,7 +1581,7 @@ fn derive_annotate_expr_type(
                         "Cannot shift-left for type '{lhs_type}' (not u32-based)"
                     );
 
-                    let rhs_hint = Some(&ast_types::DataType::U32);
+                    let rhs_hint = Some(ast_types::DataType::U32);
                     let rhs_type =
                         derive_annotate_expr_type(rhs_expr, rhs_hint, state, env_fn_signature)?;
 
@@ -1598,7 +1600,7 @@ fn derive_annotate_expr_type(
                         "Cannot shift-right for type '{lhs_type}' (not u32-based)"
                     );
 
-                    let rhs_hint = Some(&ast_types::DataType::U32);
+                    let rhs_hint = Some(ast_types::DataType::U32);
                     let rhs_type =
                         derive_annotate_expr_type(rhs_expr, rhs_hint, state, env_fn_signature)?;
 
@@ -1613,7 +1615,7 @@ fn derive_annotate_expr_type(
                         derive_annotate_expr_type(lhs_expr, hint, state, env_fn_signature)?;
                     let rhs_type = derive_annotate_expr_type(
                         rhs_expr,
-                        Some(&lhs_type),
+                        Some(lhs_type.clone()),
                         state,
                         env_fn_signature,
                     )?;
@@ -1637,7 +1639,7 @@ fn derive_annotate_expr_type(
             let condition_hint = ast_types::DataType::Bool;
             let condition_type = derive_annotate_expr_type(
                 condition,
-                Some(&condition_hint),
+                Some(condition_hint),
                 state,
                 env_fn_signature,
             )?;
@@ -1647,21 +1649,42 @@ fn derive_annotate_expr_type(
                 "if-condition-expr",
             );
 
-            let then_type =
-                derive_annotate_returning_block_expr(then_branch, hint, state, env_fn_signature);
-            let else_type =
-                derive_annotate_returning_block_expr(else_branch, hint, state, env_fn_signature);
+            let mut return_type_hint = hint;
+            let mut branches = [then_branch.as_mut(), else_branch.as_mut()];
+            for branch in branches.iter_mut() {
+                match derive_annotate_returning_block_expr(
+                    branch,
+                    return_type_hint.clone(),
+                    state,
+                    env_fn_signature,
+                ) {
+                    Ok(resolved) => {
+                        return_type_hint = Some(resolved);
+                    }
+                    Err(_) => continue,
+                }
+            }
+
+            let then_type = derive_annotate_returning_block_expr(
+                then_branch,
+                return_type_hint.clone(),
+                state,
+                env_fn_signature,
+            )?;
+            let else_type = derive_annotate_returning_block_expr(
+                else_branch,
+                return_type_hint,
+                state,
+                env_fn_signature,
+            )?;
 
             assert_type_equals(&then_type, &else_type, "if-then-else-expr");
 
             Ok(then_type)
         }
-        ast::Expr::ReturningBlock(ret_block) => Ok(derive_annotate_returning_block_expr(
-            ret_block,
-            hint,
-            state,
-            env_fn_signature,
-        )),
+        ast::Expr::ReturningBlock(ret_block) => {
+            derive_annotate_returning_block_expr(ret_block, hint, state, env_fn_signature)
+        }
 
         ast::Expr::Cast(expr, to_type) => {
             let from_type = derive_annotate_expr_type(expr, None, state, env_fn_signature)?;
@@ -1710,7 +1733,7 @@ fn derive_annotate_expr_type(
                             state,
                             env_fn_signature,
                             i,
-                        ));
+                        )?);
                     }
                     ast::MatchCondition::EnumVariant(ast::EnumVariantSelector {
                         type_name,
@@ -1765,7 +1788,7 @@ fn derive_annotate_expr_type(
                             state,
                             env_fn_signature,
                             i,
-                        ));
+                        )?);
 
                         // Remove bindings set in match-arm after body's type check
                         data_bindings.iter().for_each(|x| {
@@ -1801,13 +1824,13 @@ fn derive_annotate_arm_body(
     state: &mut CheckState<'_>,
     env_fn_signature: &ast::FnSignature,
     arm_index: usize,
-) -> ast_types::DataType {
+) -> anyhow::Result<ast_types::DataType> {
     let arm_ret_type = derive_annotate_returning_block_expr(
         arm_body,
-        first_arm_ret_type.as_ref(),
+        first_arm_ret_type.clone(),
         state,
         env_fn_signature,
-    );
+    )?;
     if let Some(first_arm_ret_type) = first_arm_ret_type.as_ref() {
         assert_type_equals(
             first_arm_ret_type,
@@ -1816,7 +1839,7 @@ fn derive_annotate_arm_body(
         );
     }
 
-    arm_ret_type
+    Ok(arm_ret_type)
 }
 
 fn array_element_type(
@@ -1830,13 +1853,13 @@ fn array_element_type(
             for element_expression in elem_expressions.iter_mut() {
                 let expr_type = derive_annotate_expr_type(
                     element_expression,
-                    resolved_element_type.as_ref(),
+                    resolved_element_type.clone(),
                     state,
                     env_fn_signature,
                 )?;
-                if let Some(hint) = resolved_element_type {
+                if let Some(hint) = &resolved_element_type {
                     assert_eq!(
-                        hint, expr_type,
+                        *hint, expr_type,
                         "All expressions in array declaration must evaluate to the same type. \
                         Got {hint} and {expr_type}.",
                     );
@@ -1855,20 +1878,20 @@ fn array_element_type(
 
 fn derive_annotate_returning_block_expr(
     ret_block: &mut ast::ReturningBlock<Typing>,
-    hint: Option<&ast_types::DataType>,
+    hint: Option<ast_types::DataType>,
     state: &mut CheckState,
     env_fn_signature: &ast::FnSignature,
-) -> ast_types::DataType {
+) -> anyhow::Result<ast_types::DataType> {
     let vtable_before = state.vtable.clone();
     ret_block
         .stmts
         .iter_mut()
         .for_each(|stmt| annotate_stmt(stmt, state, env_fn_signature));
-    let ret_type =
-        derive_annotate_expr_type(&mut ret_block.return_expr, hint, state, env_fn_signature)
-            .unwrap();
+    let resolved_return_type =
+        derive_annotate_expr_type(&mut ret_block.return_expr, hint, state, env_fn_signature);
     state.vtable = vtable_before.clone();
-    ret_type
+
+    resolved_return_type
 }
 
 /// A type that can be used as address in `read_mem` and `write_mem` calls.
