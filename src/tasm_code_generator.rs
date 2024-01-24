@@ -1664,32 +1664,20 @@ fn compile_match_expr_stack_value(
 
 /// Compile a match-statement where the matched-against value lives on the stack
 fn compile_match_stmt_stack_expr(
-    ast::MatchStmt {
-        arms,
-        match_expression,
-    }: &ast::MatchStmt<type_checker::Typing>,
+    match_stmt: &ast::MatchStmt<type_checker::Typing>,
     state: &mut CompilerState,
     match_expr_id: &ValueIdentifier,
 ) -> Vec<LabelledInstruction> {
-    let contains_catch_all = arms
-        .iter()
-        .any(|x| matches!(x.match_condition, ast::MatchCondition::CatchAll));
+    let mut match_code = triton_asm!();
 
-    let mut match_code = if contains_catch_all {
-        // Indicate that no arm body has been executed yet. For catch_all arm-conditions.
-        triton_asm!(push 1)
-    } else {
-        triton_asm!()
-    };
-
-    let match_expression_enum_type = match_expression.get_type().as_enum_type();
+    let match_expression_enum_type = match_stmt.match_expression.get_type().as_enum_type();
 
     let outer_vstack = state.function_state.vstack.clone();
     let outer_bindings = state.function_state.var_addr.clone();
-    let match_expr_discriminant = triton_asm!(dup {contains_catch_all as u32});
-    for (arm_counter, arm) in arms.iter().enumerate() {
+    let match_expr_discriminant = triton_asm!(dup 0);
+    for (arm_counter, arm) in match_stmt.arms.iter().enumerate() {
         // At start of each loop-iteration, stack is:
-        // stack: _ [expression_variant_data] expression_variant_discriminant <no_arm_taken>
+        // stack: _ [expression_variant_data] expression_variant_discriminant
 
         let arm_subroutine_label = format!("{match_expr_id}_body_{arm_counter}");
 
@@ -1700,26 +1688,15 @@ fn compile_match_stmt_stack_expr(
                     .variant_discriminant(&enum_variant_selector.variant_name);
                 match_code.extend(triton_asm!(
                     {&match_expr_discriminant}
-                    // _ match_expr <no_arm_taken> match_expr_discriminant
+                    // _ match_expr match_expr_discriminant
 
                     push {arm_variant_discriminant}
-                    // _ match_expr <no_arm_taken> match_expr_discriminant needle_discriminant
+                    // _ match_expr match_expr_discriminant needle_discriminant
 
                     eq
                     skiz
                     call {arm_subroutine_label}
                 ));
-
-                let remove_old_any_arm_taken_indicator = if contains_catch_all {
-                    triton_asm!(pop 1)
-                } else {
-                    triton_asm!()
-                };
-                let set_new_no_arm_taken_indicator = if contains_catch_all {
-                    triton_asm!(push 0)
-                } else {
-                    triton_asm!()
-                };
 
                 // Split compiler's view of evaluated expression from
                 // _ [enum_value]
@@ -1748,12 +1725,10 @@ fn compile_match_stmt_stack_expr(
                 // This arm-body changes the `arm_taken` bool but otherwise leaves the stack unchanged
                 let subroutine_code = triton_asm!(
                     {arm_subroutine_label}:
-                        {&remove_old_any_arm_taken_indicator}
                         // stack: _ [expression_variant_data] [padding] expression_variant_discriminant
 
                         {&body_code}
 
-                        {&set_new_no_arm_taken_indicator}
                         return
                 );
 
@@ -1763,12 +1738,18 @@ fn compile_match_stmt_stack_expr(
                     .push(subroutine_code.try_into().unwrap());
             }
             ast::MatchCondition::CatchAll => {
-                // CatchAll (`_`) is guaranteed to be the last arm. So we only have to check if any
-                // previous arm was taken
+                let predicate = match_stmt.compile_catch_all_predicate();
                 match_code.append(&mut triton_asm!(
+                    // _ match_expr
+
+                    {&match_expr_discriminant}
+                    // _ match_expr match_expr_discriminant
+
+                    {&predicate}
+                    // _ match_expr take_catch_all_branch
+
                     skiz
                     call {arm_subroutine_label}
-                    push 0 // push 0 to make stack-cleanup code-path independent
                 ));
 
                 let body_code = compile_block_stmt(&arm.body, state);
@@ -1781,7 +1762,6 @@ fn compile_match_stmt_stack_expr(
                     .function_state
                     .subroutines
                     .push(subroutine_code.try_into().unwrap());
-                // stack: _  [expression_variant_data] expression_variant_discriminant <no_arm_taken>
             }
         }
 
@@ -1789,11 +1769,6 @@ fn compile_match_stmt_stack_expr(
         state
             .function_state
             .restore_stack_and_bindings(&outer_vstack, &outer_bindings);
-    }
-
-    // Cleanup stack by removing evaluated expression and `any_arm_taken_bool` indicator
-    if contains_catch_all {
-        match_code.push(triton_instr!(pop 1));
     }
 
     match_code
