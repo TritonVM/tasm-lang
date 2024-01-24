@@ -11,7 +11,7 @@ use test_strategy::proptest;
 use triton_vm::BFieldElement;
 use triton_vm::NonDeterminism;
 
-fn wildcat_covers_a() {
+fn catch_all_covers_a() {
     let val: ThreeVariants = ThreeVariants::random_from_std_in();
 
     let a: u32 = match val {
@@ -46,19 +46,19 @@ fn wildcat_covers_a() {
 }
 
 #[proptest(cases = 10)]
-fn wildcat_covers_a_test(
+fn catch_all_covers_a_test(
     #[strategy(vec(arb(), DIGEST_LENGTH))] std_in: Vec<BFieldElement>,
     #[strategy(arb())] input: u32,
 ) {
     let std_in = [vec![BFieldElement::new(input as u64)], std_in].concat();
-    let native_output = rust_shadows::wrap_main_with_io(&wildcat_covers_a)(
+    let native_output = rust_shadows::wrap_main_with_io(&catch_all_covers_a)(
         std_in.clone(),
         NonDeterminism::default(),
     );
     let entrypoint = EntrypointLocation::disk(
         "match_expr_on_stack",
-        "wildcat_condition",
-        "wildcat_covers_a",
+        "catch_all_condition",
+        "catch_all_covers_a",
     );
     let vm_output = TritonVMTestCase::new(entrypoint)
         .with_std_in(std_in)
@@ -68,7 +68,7 @@ fn wildcat_covers_a_test(
     prop_assert_eq!(native_output, vm_output.output);
 }
 
-fn wildcat_covers_b() {
+fn catch_all_covers_b() {
     let val: ThreeVariants = ThreeVariants::random_from_std_in();
     let a: u32 = match val {
         ThreeVariants::A => {
@@ -101,19 +101,19 @@ fn wildcat_covers_b() {
 }
 
 #[proptest(cases = 10)]
-fn wildcat_covers_b_test(
+fn catch_all_covers_b_test(
     #[strategy(vec(arb(), DIGEST_LENGTH))] std_in: Vec<BFieldElement>,
     #[strategy(arb())] input: u32,
 ) {
     let std_in = [vec![BFieldElement::new(input as u64)], std_in].concat();
-    let native_output = rust_shadows::wrap_main_with_io(&wildcat_covers_b)(
+    let native_output = rust_shadows::wrap_main_with_io(&catch_all_covers_b)(
         std_in.clone(),
         NonDeterminism::default(),
     );
     let entrypoint = EntrypointLocation::disk(
         "match_expr_on_stack",
-        "wildcat_condition",
-        "wildcat_covers_b",
+        "catch_all_condition",
+        "catch_all_covers_b",
     );
     let vm_output = TritonVMTestCase::new(entrypoint)
         .with_std_in(std_in)
@@ -123,7 +123,7 @@ fn wildcat_covers_b_test(
     prop_assert_eq!(native_output, vm_output.output);
 }
 
-fn wildcat_covers_c() {
+fn catch_all_covers_c() {
     let val: ThreeVariants = ThreeVariants::random_from_std_in();
 
     let a: u32 = match val {
@@ -156,19 +156,19 @@ fn wildcat_covers_c() {
 }
 
 #[proptest(cases = 10)]
-fn wildcat_covers_c_test(
+fn catch_all_covers_c_test(
     #[strategy(vec(arb(), DIGEST_LENGTH))] std_in: Vec<BFieldElement>,
     #[strategy(arb())] input: u32,
 ) {
     let std_in = [vec![BFieldElement::new(input as u64)], std_in].concat();
-    let native_output = rust_shadows::wrap_main_with_io(&wildcat_covers_c)(
+    let native_output = rust_shadows::wrap_main_with_io(&catch_all_covers_c)(
         std_in.clone(),
         NonDeterminism::default(),
     );
     let entrypoint = EntrypointLocation::disk(
         "match_expr_on_stack",
-        "wildcat_condition",
-        "wildcat_covers_c",
+        "catch_all_condition",
+        "catch_all_covers_c",
     );
     let vm_output = TritonVMTestCase::new(entrypoint)
         .with_std_in(std_in)
@@ -178,7 +178,7 @@ fn wildcat_covers_c_test(
     prop_assert_eq!(native_output, vm_output.output);
 }
 
-fn wildcat_covers_a_and_b() {
+fn catch_all_covers_a_and_b() {
     let val: ThreeVariants = ThreeVariants::random_from_std_in();
     let function_val: u32 = 1234;
 
@@ -207,19 +207,19 @@ fn wildcat_covers_a_and_b() {
 }
 
 #[proptest(cases = 10)]
-fn wildcat_covers_a_and_b_test(
+fn catch_all_covers_a_and_b_test(
     #[strategy(vec(arb(), DIGEST_LENGTH))] std_in: Vec<BFieldElement>,
     #[strategy(arb())] input: u32,
 ) {
     let std_in = [vec![BFieldElement::new(input as u64)], std_in].concat();
-    let native_output = rust_shadows::wrap_main_with_io(&wildcat_covers_a_and_b)(
+    let native_output = rust_shadows::wrap_main_with_io(&catch_all_covers_a_and_b)(
         std_in.clone(),
         NonDeterminism::default(),
     );
     let entrypoint = EntrypointLocation::disk(
         "match_expr_on_stack",
-        "wildcat_condition",
-        "wildcat_covers_a_and_b",
+        "catch_all_condition",
+        "catch_all_covers_a_and_b",
     );
     let vm_output = TritonVMTestCase::new(entrypoint)
         .with_std_in(std_in)
@@ -229,7 +229,7 @@ fn wildcat_covers_a_and_b_test(
     prop_assert_eq!(native_output, vm_output.output);
 }
 
-fn wildcat_covers_a_and_c() {
+fn catch_all_covers_a_and_c() {
     let val: ThreeVariants = ThreeVariants::random_from_std_in();
     let function_val: u32 = 1234;
 
@@ -260,19 +260,19 @@ fn wildcat_covers_a_and_c() {
 }
 
 #[proptest(cases = 10)]
-fn wildcat_covers_a_and_c_test(
+fn catch_all_covers_a_and_c_test(
     #[strategy(vec(arb(), DIGEST_LENGTH))] std_in: Vec<BFieldElement>,
     #[strategy(arb())] input: u32,
 ) {
     let std_in = [vec![BFieldElement::new(input as u64)], std_in].concat();
-    let native_output = rust_shadows::wrap_main_with_io(&wildcat_covers_a_and_c)(
+    let native_output = rust_shadows::wrap_main_with_io(&catch_all_covers_a_and_c)(
         std_in.clone(),
         NonDeterminism::default(),
     );
     let entrypoint = EntrypointLocation::disk(
         "match_expr_on_stack",
-        "wildcat_condition",
-        "wildcat_covers_a_and_c",
+        "catch_all_condition",
+        "catch_all_covers_a_and_c",
     );
     let vm_output = TritonVMTestCase::new(entrypoint)
         .with_std_in(std_in)
@@ -282,7 +282,7 @@ fn wildcat_covers_a_and_c_test(
     prop_assert_eq!(native_output, vm_output.output);
 }
 
-fn wildcat_covers_b_and_c() {
+fn catch_all_covers_b_and_c() {
     let val: ThreeVariants = ThreeVariants::random_from_std_in();
     let a: u32 = match val {
         ThreeVariants::A => {
@@ -308,19 +308,19 @@ fn wildcat_covers_b_and_c() {
 }
 
 #[proptest(cases = 10)]
-fn wildcat_covers_b_and_c_test(
+fn catch_all_covers_b_and_c_test(
     #[strategy(vec(arb(), DIGEST_LENGTH))] std_in: Vec<BFieldElement>,
     #[strategy(arb())] input: u32,
 ) {
     let std_in = [vec![BFieldElement::new(input as u64)], std_in].concat();
-    let native_output = rust_shadows::wrap_main_with_io(&wildcat_covers_b_and_c)(
+    let native_output = rust_shadows::wrap_main_with_io(&catch_all_covers_b_and_c)(
         std_in.clone(),
         NonDeterminism::default(),
     );
     let entrypoint = EntrypointLocation::disk(
         "match_expr_on_stack",
-        "wildcat_condition",
-        "wildcat_covers_b_and_c",
+        "catch_all_condition",
+        "catch_all_covers_b_and_c",
     );
     let vm_output = TritonVMTestCase::new(entrypoint)
         .with_std_in(std_in)
@@ -331,7 +331,7 @@ fn wildcat_covers_b_and_c_test(
 }
 
 #[allow(clippy::match_single_binding)]
-fn wildcat_covers_a_b_c() {
+fn catch_all_covers_a_b_c() {
     let val: ThreeVariants = ThreeVariants::random_from_std_in();
     let a: u32 = match val {
         _ => {
@@ -350,19 +350,19 @@ fn wildcat_covers_a_b_c() {
 }
 
 #[proptest(cases = 10)]
-fn wildcat_covers_a_b_c_test(
+fn catch_all_covers_a_b_c_test(
     #[strategy(vec(arb(), DIGEST_LENGTH))] std_in: Vec<BFieldElement>,
     #[strategy(arb())] input: u32,
 ) {
     let std_in = [vec![BFieldElement::new(input as u64)], std_in].concat();
-    let native_output = rust_shadows::wrap_main_with_io(&wildcat_covers_a_b_c)(
+    let native_output = rust_shadows::wrap_main_with_io(&catch_all_covers_a_b_c)(
         std_in.clone(),
         NonDeterminism::default(),
     );
     let entrypoint = EntrypointLocation::disk(
         "match_expr_on_stack",
-        "wildcat_condition",
-        "wildcat_covers_a_b_c",
+        "catch_all_condition",
+        "catch_all_covers_a_b_c",
     );
     let vm_output = TritonVMTestCase::new(entrypoint)
         .with_std_in(std_in)

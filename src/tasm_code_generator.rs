@@ -1377,13 +1377,13 @@ fn compile_match_stmt_boxed_expr(
     state: &mut CompilerState,
     match_expr_id: &ValueIdentifier,
 ) -> Vec<LabelledInstruction> {
-    let contains_wildcard = arms
+    let contains_catch_all = arms
         .iter()
         .any(|x| matches!(x.match_condition, ast::MatchCondition::CatchAll));
 
     let mut match_code = vec![];
-    let match_expr_discriminant = if contains_wildcard {
-        // Indicate that no arm body has been executed yet. For wildcard arm-conditions.
+    let match_expr_discriminant = if contains_catch_all {
+        // Indicate that no arm body has been executed yet. For catch_all arm-conditions.
         match_code.push(triton_instr!(push 1));
         triton_asm!(
                     // *match_expr no_arm_taken_indicator
@@ -1434,12 +1434,12 @@ fn compile_match_stmt_boxed_expr(
                     // _ match_expr <no_arm_taken>
                 ));
 
-                let remove_old_any_arm_taken_indicator = if contains_wildcard {
+                let remove_old_any_arm_taken_indicator = if contains_catch_all {
                     triton_asm!(pop 1)
                 } else {
                     triton_asm!()
                 };
-                let set_new_no_arm_taken_indicator = if contains_wildcard {
+                let set_new_no_arm_taken_indicator = if contains_catch_all {
                     triton_asm!(push 0)
                 } else {
                     triton_asm!()
@@ -1529,7 +1529,7 @@ fn compile_match_stmt_boxed_expr(
     }
 
     // Cleanup stack by removing evaluated expresison and `any_arm_taken_bool` indicator
-    if contains_wildcard {
+    if contains_catch_all {
         match_code.push(triton_instr!(pop 1));
     }
 
@@ -1671,12 +1671,12 @@ fn compile_match_stmt_stack_expr(
     state: &mut CompilerState,
     match_expr_id: &ValueIdentifier,
 ) -> Vec<LabelledInstruction> {
-    let contains_wildcard = arms
+    let contains_catch_all = arms
         .iter()
         .any(|x| matches!(x.match_condition, ast::MatchCondition::CatchAll));
 
-    let mut match_code = if contains_wildcard {
-        // Indicate that no arm body has been executed yet. For wildcard arm-conditions.
+    let mut match_code = if contains_catch_all {
+        // Indicate that no arm body has been executed yet. For catch_all arm-conditions.
         triton_asm!(push 1)
     } else {
         triton_asm!()
@@ -1686,7 +1686,7 @@ fn compile_match_stmt_stack_expr(
 
     let outer_vstack = state.function_state.vstack.clone();
     let outer_bindings = state.function_state.var_addr.clone();
-    let match_expr_discriminant = triton_asm!(dup {contains_wildcard as u32});
+    let match_expr_discriminant = triton_asm!(dup {contains_catch_all as u32});
     for (arm_counter, arm) in arms.iter().enumerate() {
         // At start of each loop-iteration, stack is:
         // stack: _ [expression_variant_data] expression_variant_discriminant <no_arm_taken>
@@ -1710,12 +1710,12 @@ fn compile_match_stmt_stack_expr(
                     call {arm_subroutine_label}
                 ));
 
-                let remove_old_any_arm_taken_indicator = if contains_wildcard {
+                let remove_old_any_arm_taken_indicator = if contains_catch_all {
                     triton_asm!(pop 1)
                 } else {
                     triton_asm!()
                 };
-                let set_new_no_arm_taken_indicator = if contains_wildcard {
+                let set_new_no_arm_taken_indicator = if contains_catch_all {
                     triton_asm!(push 0)
                 } else {
                     triton_asm!()
@@ -1792,7 +1792,7 @@ fn compile_match_stmt_stack_expr(
     }
 
     // Cleanup stack by removing evaluated expression and `any_arm_taken_bool` indicator
-    if contains_wildcard {
+    if contains_catch_all {
         match_code.push(triton_instr!(pop 1));
     }
 

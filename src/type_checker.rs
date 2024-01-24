@@ -527,18 +527,18 @@ fn annotate_stmt(
 
             let mut variants_encountered: HashSet<String> = HashSet::default();
             let arm_count = arms.len();
-            let mut contains_wildcard_arm = false;
+            let mut contains_catch_all_arm = false;
             for (i, arm) in arms.iter_mut().enumerate() {
                 match &arm.match_condition {
                     ast::MatchCondition::CatchAll => {
                         assert_eq!(
                             i,
                             arm_count - 1,
-                            "When using wildcard in match statement, wildcard must be used in last match arm. \
+                            "When using catch_all in match statement, catch_all must be used in last match arm. \
                             Match expression was for type {}",
                             enum_type.name
                         );
-                        contains_wildcard_arm = true;
+                        contains_catch_all_arm = true;
 
                         annotate_block_stmt(&mut arm.body, env_fn_signature, state);
                     }
@@ -599,9 +599,9 @@ fn annotate_stmt(
                 }
             }
 
-            // Verify that all cases where covered, *or* a wildcard was encountered.
+            // Verify that all cases where covered, *or* a catch_all was encountered.
             assert!(
-                variants_encountered.len() == enum_type.variants.len() || contains_wildcard_arm,
+                variants_encountered.len() == enum_type.variants.len() || contains_catch_all_arm,
                 "All cases must be covered for match-expression for {}. Missing variants: {}.",
                 enum_type.name,
                 enum_type
@@ -1756,7 +1756,7 @@ fn derive_annotate_match_expression(
     // Loop over all arms to verify that they agree on the return type
     let mut variants_encountered: HashSet<String> = HashSet::default();
     let arm_count = match_expr.arms.len();
-    let mut contains_wildcard_arm = false;
+    let mut contains_catch_all_arm = false;
     for (i, arm) in match_expr.arms.iter_mut().enumerate() {
         let arm_ret_type = resolve_match_arm_return_type(
             arm,
@@ -1777,11 +1777,11 @@ fn derive_annotate_match_expression(
                 assert_eq!(
                     i,
                     arm_count - 1,
-                    "When using wildcard in match statement, wildcard must be used in last match arm. \
+                    "When using catch_all in match statement, catch_all must be used in last match arm. \
                             Match expression was for type {}",
                     enum_type.name
                 );
-                contains_wildcard_arm = true;
+                contains_catch_all_arm = true;
             }
             ast::MatchCondition::EnumVariant(ast::EnumVariantSelector {
                 type_name,
@@ -1822,7 +1822,7 @@ fn derive_annotate_match_expression(
     }
 
     assert!(
-        variants_encountered.len() == enum_type.variants.len() || contains_wildcard_arm,
+        variants_encountered.len() == enum_type.variants.len() || contains_catch_all_arm,
         "All cases must be covered for match-expression for {}. Missing variants: {}.",
         enum_type.name,
         enum_type
