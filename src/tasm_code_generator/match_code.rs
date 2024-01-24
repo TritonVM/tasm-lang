@@ -647,6 +647,11 @@ pub(super) fn compile_match_expr_boxed_value(
                 );
                 let subroutine_code = triton_asm!(
                     {arm_subroutine_label}:
+                        // _
+
+                        push {match_expression_pointer_pointer}
+                        read_mem 1
+                        pop 1
                         // _ *match_expression
 
                         call {label_for_bindings_subroutine}
@@ -667,7 +672,55 @@ pub(super) fn compile_match_expr_boxed_value(
                     .subroutines
                     .push(subroutine_code.try_into().unwrap());
             }
-            MatchCondition::CatchAll => todo!(),
+            MatchCondition::CatchAll => {
+                let catch_all_predicate = match_expr.compile_catch_all_predicate();
+                match_code.extend(triton_asm!(
+                    // _ <[maybe_result]>
+
+                    {&get_discriminant}
+                    // _ <[maybe_result]> discriminant
+
+                    push {&catch_all_predicate}
+                    // _ <[maybe_result]> take_catch_all_branch
+
+                    call {arm_subroutine_label}
+                    // _ <[maybe_result']>
+                ));
+
+                let (_, body_code) = compile_returning_block_expr("arm-body", state, &arm.body);
+
+                let leave_only_result = state.clear_all_but_top_stack_value_above_height(
+                    outer_vstack.get_stack_height() - 1,
+                );
+                let result_hint = format!(
+                    "hint match_arm_result: {return_type} = stack[0..{}]",
+                    return_type.stack_size()
+                );
+
+                let subroutine_code = triton_asm!(
+                    {arm_subroutine_label}:
+                        // _
+
+                        push {match_expression_pointer_pointer}
+                        read_mem 1
+                        pop 1
+                        // _ *match_expression
+
+                        {&body_code}
+                        // _ *match_expression [result]
+
+                        {&leave_only_result}
+                        {result_hint}
+                        // _ [result]
+
+                        return
+                );
+
+                state
+                    .function_state
+                    .subroutines
+                    .push(subroutine_code.try_into().unwrap());
+            }
         }
 
         // Restore stack view and bindings view for next loop-iteration
