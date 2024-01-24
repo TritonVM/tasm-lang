@@ -214,16 +214,15 @@ impl CompositeTypes {
     /// Return a type context that must be uniquely identified by its name.
     /// Otherwise this function panics.
     pub(crate) fn get_unique_by_name(&self, type_name: &str) -> TypeContext {
-        match self.by_name.get(type_name) {
-            None => panic!("Did not find composite type with name {type_name}"),
-            Some(indices) => {
-                assert!(
-                    indices.len().is_one(),
-                    "Type with name {type_name} was defined more than once."
-                );
-                self.composite_types[indices[0]].clone()
-            }
-        }
+        let Some(indices) = self.by_name.get(type_name) else {
+            panic!("Did not find composite type with name {type_name}");
+        };
+
+        assert!(
+            indices.len().is_one(),
+            "Type \"{type_name}\" was defined more than once."
+        );
+        self.composite_types[indices[0]].clone()
     }
 
     /// Return a mutable pointer to a type context that must be uniquely identified

@@ -907,7 +907,7 @@ impl<'a> CompilerState<'a> {
         assert_eq!(
             height,
             self.function_state.vstack.get_stack_height(),
-            "Cannot clear stack to position that is not alligned with a value"
+            "Cannot clear stack to position that is not aligned with a value"
         );
 
         self.function_state.vstack.push(top_element);
@@ -2971,7 +2971,6 @@ fn compile_match_expr(
     state: &mut CompilerState,
 ) -> Vec<LabelledInstruction> {
     let vstack_init = state.function_state.vstack.clone();
-    let var_addr_init = state.function_state.var_addr.clone();
     let (match_expr_id, match_expr_evaluation) =
         compile_expr(&match_expr.match_expression, "match-expr", state);
     assert!(
@@ -2983,7 +2982,8 @@ fn compile_match_expr(
     let match_arms = compile_match_expr_stack_value(match_expr, state, &match_expr_id);
 
     // Remove match-expression from stack
-    let restore_stack_code = state.restore_stack_code(&vstack_init, &var_addr_init);
+    let restore_stack_code =
+        state.clear_all_but_top_stack_value_above_height(vstack_init.get_stack_height());
 
     triton_asm!(
         // _
@@ -2991,11 +2991,10 @@ fn compile_match_expr(
         // _ match_expr
 
         {&match_arms}
-        // _ match_expr
+        // _ [variant_payload] expr_disc [result]
 
         {&restore_stack_code}
-
-        // _
+        // _ [result]
     )
 }
 

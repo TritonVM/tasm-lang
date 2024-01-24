@@ -197,6 +197,9 @@ impl TritonVMTestCase {
         let public_input = PublicInput::new(self.std_in);
         let mut vm_state = VMState::new(&program, public_input, self.non_determinism);
         vm_state.op_stack.stack = initial_stack;
+
+        tasm_lib::maybe_write_debuggable_program_to_disk(&program, &vm_state);
+
         vm_state
     }
 

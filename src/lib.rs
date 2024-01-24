@@ -10,6 +10,11 @@ use syn::ItemStruct;
 use syn::UseTree;
 use triton_vm::instruction::LabelledInstruction;
 
+// TODO: The following import is necessary until `tasm-lib` branch `prelude` is incorporated there.
+#[allow(clippy::single_component_path_imports)]
+#[allow(unused_imports)]
+use twenty_first;
+
 use ast_types::ListType;
 use graft::CustomTypeRust;
 
