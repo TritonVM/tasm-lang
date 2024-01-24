@@ -1,11 +1,14 @@
-use std::collections::HashSet;
-
 use itertools::Itertools;
 use num::One;
+use std::collections::HashSet;
 use triton_vm::instruction::LabelledInstruction;
 use triton_vm::triton_asm;
-use triton_vm::triton_instr;
 
+use super::compile_block_stmt;
+use super::compile_returning_block_expr;
+use super::pop_n;
+use super::CompilerState;
+use super::ValueIdentifier;
 use crate::ast;
 use crate::ast::MatchCondition;
 use crate::ast::MatchExpr;
@@ -14,12 +17,6 @@ use crate::ast_types;
 use crate::type_checker;
 use crate::type_checker::GetType;
 use crate::type_checker::Typing;
-
-use super::compile_block_stmt;
-use super::compile_returning_block_expr;
-use super::pop_n;
-use super::CompilerState;
-use super::ValueIdentifier;
 
 impl MatchExpr<Typing> {
     /// Return the code that evaluates to true iff the catch-all branch in a match statement
@@ -35,10 +32,11 @@ impl MatchExpr<Typing> {
             .map(|x| &x.match_condition)
             .cloned()
             .collect_vec();
-        compile_catch_all_predicate_inner(
-            &match_conditions,
-            self.match_expression.get_type().as_enum_type(),
-        )
+        let enum_type = match self.match_expression.get_type() {
+            ast_types::DataType::Boxed(inner) => inner.as_enum_type(),
+            other => other.as_enum_type(),
+        };
+        compile_catch_all_predicate_inner(&match_conditions, enum_type)
     }
 }
 
@@ -56,10 +54,11 @@ impl MatchStmt<Typing> {
             .map(|x| &x.match_condition)
             .cloned()
             .collect_vec();
-        compile_catch_all_predicate_inner(
-            &match_conditions,
-            self.match_expression.get_type().as_enum_type(),
-        )
+        let enum_type = match self.match_expression.get_type() {
+            ast_types::DataType::Boxed(inner) => inner.as_enum_type(),
+            other => other.as_enum_type(),
+        };
+        compile_catch_all_predicate_inner(&match_conditions, enum_type)
     }
 }
 
@@ -270,47 +269,32 @@ pub(super) fn compile_match_stmt_stack_expr(
 /// AFTER: *match_expression
 /// ```
 pub(super) fn compile_match_stmt_boxed_expr(
-    ast::MatchStmt {
-        arms,
-        match_expression,
-    }: &ast::MatchStmt<type_checker::Typing>,
+    match_stmt: &ast::MatchStmt<type_checker::Typing>,
     state: &mut CompilerState,
     match_expr_id: &ValueIdentifier,
 ) -> Vec<LabelledInstruction> {
     // Notice that `*match_expression`` is equivalent to `*discriminant`
-    let contains_catch_all = arms
-        .iter()
-        .any(|x| matches!(x.match_condition, ast::MatchCondition::CatchAll));
+    let match_expr_discriminant = triton_asm!(
+        // _ *match_expr
+        read_mem 1 push 1 add
+        // _ discriminant *match_expr
 
-    let mut match_code = vec![];
-    let match_expr_discriminant = if contains_catch_all {
-        // Indicate that no arm body has been executed yet. For catch_all arm-conditions.
-        match_code.push(triton_instr!(push 1));
-        triton_asm!(
-                    // *match_expr no_arm_taken_indicator
-            swap 1  // no_arm_taken_indicator *match_expr
-            read_mem 1 push 1 add
-                    // no_arm_taken_indicator discriminant *match_expr
-            swap 2  // *match_expr discriminant no_arm_taken_indicator
-            swap 1  // *match_expr no_arm_taken_indicator discriminant
-        )
-    } else {
-        triton_asm!(
-                    // *match_expr
-            read_mem 1 push 1 add
-                    // discriminant *match_expr
-            swap 1  // *match_expr discriminant
-        )
-    };
+        swap 1
+        // _ *match_expr discriminant
+    );
 
     // Get enum_type
-    let match_expression_enum_type = match_expression.get_type().unbox().as_enum_type();
+    let match_expression_enum_type = match_stmt
+        .match_expression
+        .get_type()
+        .unbox()
+        .as_enum_type();
     let outer_vstack = state.function_state.vstack.clone();
     let outer_bindings = state.function_state.var_addr.clone();
-
-    for (arm_counter, arm) in arms.iter().enumerate() {
+    let mut match_code = vec![];
+    for (arm_counter, arm) in match_stmt.arms.iter().enumerate() {
         // At start of each loop-iternation, stack is:
-        // stack: _ *match_expression <no_arm_taken>
+        // stack: _ *match_expression
 
         let arm_subroutine_label = format!("{match_expr_id}_body_{arm_counter}");
 
@@ -320,31 +304,21 @@ pub(super) fn compile_match_stmt_boxed_expr(
                     .variant_discriminant(&enum_variant_selector.variant_name);
 
                 match_code.append(&mut triton_asm!(
-                    // _ match_expr <no_arm_taken>
+                    // _ *match_expr
 
                     {&match_expr_discriminant}
-                    // _ *match_expr <no_arm_taken> match_expr_discriminant
+                    // _ *match_expr discriminant
+
                     push {arm_variant_discriminant}
-                    // _ match_expr <no_arm_taken> match_expr_discriminant needle_discriminant
+                    // _ *match_expr discriminant needle_discriminant
 
                     eq
-                    // _ match_expr <no_arm_taken> (match_expr_discriminant == needle_discriminant)
+                    // _ *match_expr (discriminant == needle_discriminant)
 
                     skiz
                     call {arm_subroutine_label}
-                    // _ match_expr <no_arm_taken>
+                    // _ *match_expr
                 ));
-
-                let remove_old_any_arm_taken_indicator = if contains_catch_all {
-                    triton_asm!(pop 1)
-                } else {
-                    triton_asm!()
-                };
-                let set_new_no_arm_taken_indicator = if contains_catch_all {
-                    triton_asm!(push 0)
-                } else {
-                    triton_asm!()
-                };
 
                 let tuple_type = enum_variant_selector.get_bindings_type(
                     &match_expression_enum_type
@@ -379,20 +353,18 @@ pub(super) fn compile_match_stmt_boxed_expr(
                 let pop_local_bindings = pop_n(enum_variant_selector.data_bindings.len());
                 let subroutine_code = triton_asm!(
                     {arm_subroutine_label}:
-                        {&remove_old_any_arm_taken_indicator}
                         // _ *discriminant
 
                         call {label_for_bindings_subroutine}
-                        // _ *enum_expr [*variant-data-fields]
+                        // _ *match_expr [*variant-data-fields]
 
                         {&body_code}
-                        // _ *enum_expr [*variant-data-fields]
+                        // _ *match_expr [*variant-data-fields]
 
                         // We can just pop local binding from top of stack, since a statement cannot return anything
                         {&pop_local_bindings}
-                        // _ *enum_expr
+                        // _ *match_expr
 
-                        {&set_new_no_arm_taken_indicator}
                         return
                 );
 
@@ -402,12 +374,19 @@ pub(super) fn compile_match_stmt_boxed_expr(
                     .push(subroutine_code.try_into().unwrap());
             }
             ast::MatchCondition::CatchAll => {
-                // CatchAll (`_`) is guaranteed to be the last arm. So we only have to check if any
-                // previous arm was taken
+                let predicate = match_stmt.compile_catch_all_predicate();
                 match_code.append(&mut triton_asm!(
+                    // _ *match_expr
+
+                    {&match_expr_discriminant}
+                    // _ *match_expr discriminant
+
+                    {&predicate}
+                    // _ *match_expr take_catch_all_branch
+
                     skiz
                     call {arm_subroutine_label}
-                    push 0 // push 0 to make stack-cleanup code-path independent
+                    // _ *match_expr
                 ));
 
                 let body_code = compile_block_stmt(&arm.body, state);
@@ -427,11 +406,6 @@ pub(super) fn compile_match_stmt_boxed_expr(
         state
             .function_state
             .restore_stack_and_bindings(&outer_vstack, &outer_bindings);
-    }
-
-    // Cleanup stack by removing evaluated expresison and `any_arm_taken_bool` indicator
-    if contains_catch_all {
-        match_code.push(triton_instr!(pop 1));
     }
 
     match_code
