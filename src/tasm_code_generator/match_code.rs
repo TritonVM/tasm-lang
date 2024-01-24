@@ -1,6 +1,7 @@
 use std::collections::HashSet;
 
 use itertools::Itertools;
+use num::One;
 use triton_vm::instruction::LabelledInstruction;
 use triton_vm::triton_asm;
 
@@ -78,6 +79,24 @@ fn compile_catch_all_predicate_inner(
         })
         .map(|x| enum_type.variant_discriminant(&x.variant_name))
         .collect();
+
+    // Special-case on the common pattern of *two* match arms, where
+    // the latter is a catch-all
+    if discriminants_explicitly.len().is_one() {
+        let only_explicit_discriminant = discriminants_explicitly.iter().next().unwrap();
+        return triton_asm!(
+            // _ discriminant
+
+            push {only_explicit_discriminant}
+            eq
+            // _ (discriminant == discriminant_covered_explicitly)
+
+            push 0
+            eq
+            // _ (discriminant != discriminant_covered_explicitly)
+        );
+    }
+
     let mut discriminants_covered_by_catch_all = all_discriminants
         .difference(&discriminants_explicitly)
         .collect_vec();
