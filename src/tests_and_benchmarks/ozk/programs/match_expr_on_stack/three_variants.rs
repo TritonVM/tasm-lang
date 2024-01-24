@@ -53,6 +53,8 @@ fn main() {
     };
 
     tasm::tasm_io_write_to_stdout___u32(final_discriminant);
+
+    return;
 }
 
 #[cfg(test)]
@@ -71,13 +73,14 @@ mod test {
             .into_iter()
             .map(|x| BFieldElement::new(x as u64))
             .collect();
-        rust_shadows::wrap_main_with_io(&main)(input.clone(), NonDeterminism::default());
-        let entrypoint =
-            EntrypointLocation::disk("match_expr_on_stack", "option_type", "test::most_basic");
-        TritonVMTestCase::new(entrypoint)
+        let native_output =
+            rust_shadows::wrap_main_with_io(&main)(input.clone(), NonDeterminism::default());
+        let entrypoint = EntrypointLocation::disk("match_expr_on_stack", "three_variants", "main");
+        let vm_output = TritonVMTestCase::new(entrypoint)
             .with_std_in(input)
             .expect_stack_difference(0)
             .execute()
             .unwrap();
+        assert_eq!(native_output, vm_output.output);
     }
 }
