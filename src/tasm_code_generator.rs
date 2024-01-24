@@ -1,6 +1,7 @@
 pub(crate) mod data_type;
 mod function_state;
 mod inner_function_tasm_code;
+mod match_code;
 mod outer_function_tasm_code;
 mod stack;
 
@@ -1555,7 +1556,7 @@ fn compile_match_expr_stack_value(
     let mut match_code = triton_asm!(dup 0);
     for (arm_counter, arm) in match_expr.arms.iter().enumerate() {
         // At start of each loop-iteration, stack is:
-        // stack: _ [variant_payload] expr_disc <[maybe_result]> expr_disc
+        // stack: _ [variant_payload] actual_discriminant <[maybe_result]> actual_discriminant
 
         let arm_subroutine_label = format!("{match_expr_id}_body_{arm_counter}");
 
@@ -1565,18 +1566,18 @@ fn compile_match_expr_stack_value(
                     .variant_discriminant(&enum_variant_selector.variant_name);
 
                 match_code.extend(triton_asm!(
-                    // _ [variant_payload] expr_disc <[maybe_result]> expr_disc
+                    // _ [variant_payload] actual_discriminant <[maybe_result]> actual_discriminant
 
                     dup 0
                     push {arm_variant_discriminant}
-                    // _ [variant_payload] expr_disc <[maybe_result]> expr_disc expr_disc needle_discriminant
+                    // _ [variant_payload] actual_discriminant <[maybe_result]> actual_discriminant actual_discriminant needle_discriminant
 
                     eq
                     skiz
-                    // _ [variant_payload] expr_disc <[maybe_result]> expr_disc (expr_disc == needle_discriminant)
+                    // _ [variant_payload] actual_discriminant <[maybe_result]> actual_discriminant (actual_discriminant == needle_discriminant)
 
                     call {arm_subroutine_label}
-                    // _ [variant_payload] expr_disc <[maybe_result]> expr_disc
+                    // _ [variant_payload] actual_discriminant <[maybe_result]> actual_discriminant
                 ));
 
                 // Split compiler's view of evaluated expression from
@@ -1600,33 +1601,50 @@ fn compile_match_expr_stack_value(
                             .var_addr
                             .insert(binding.name.to_owned(), new_id.clone());
                     });
-
-                let (_, body_code) = compile_returning_block_expr("arm-body", state, &arm.body);
-
-                let subroutine_code = triton_asm!(
-                    {arm_subroutine_label}:
-                        // _ [variant_payload] expr_disc expr_disc
-
-                        pop 1
-                        // _ [variant_payload] expr_disc
-                        // _ [enum_data] [padding] expr_disc
-
-                        {&body_code}
-                        // _ [enum_data] [padding] expr_disc [result]
-
-                        {&dup_discriminant_to_top}
-                        // _ [enum_data] [padding] expr_disc [result] expr_disc
-
-                        return
-                );
-
-                state
-                    .function_state
-                    .subroutines
-                    .push(subroutine_code.try_into().unwrap());
             }
-            ast::MatchCondition::CatchAll => todo!(),
+            ast::MatchCondition::CatchAll => {
+                let catch_all_predicate = match_expr.compile_catch_all_predicate();
+
+                // Statically compile a function taking discriminant as input
+                // and returns a bool indicating if the wild-card match arm
+                // should execute.
+                // This function can be compiled from a `MatchExpr` value.
+                match_code.extend(triton_asm!(
+                    // _ [variant_payload] actual_discriminant <[maybe_result]> actual_discriminant
+
+                    dup 0
+                    {&catch_all_predicate}
+                    // _ [variant_payload] actual_discriminant <[maybe_result]> actual_discriminant take_catch_all_branch
+
+                    skiz
+                    call {arm_subroutine_label}
+                ));
+            }
         }
+
+        let (_, body_code) = compile_returning_block_expr("arm-body", state, &arm.body);
+
+        let subroutine_code = triton_asm!(
+            {arm_subroutine_label}:
+                // _ [variant_payload] actual_discriminant actual_discriminant
+
+                pop 1
+                // _ [variant_payload] actual_discriminant
+                // _ [enum_data] [padding] actual_discriminant
+
+                {&body_code}
+                // _ [enum_data] [padding] actual_discriminant [result]
+
+                {&dup_discriminant_to_top}
+                // _ [enum_data] [padding] actual_discriminant [result] actual_discriminant
+
+                return
+        );
+
+        state
+            .function_state
+            .subroutines
+            .push(subroutine_code.try_into().unwrap());
 
         // Restore stack view and bindings view for next loop-iteration
         state
@@ -1635,10 +1653,10 @@ fn compile_match_expr_stack_value(
     }
 
     match_code.extend(triton_asm!(
-        // _ [variant_payload] expr_disc [result] expr_disc
+        // _ [variant_payload] actual_discriminant [result] actual_discriminant
 
         pop 1
-        // _ [variant_payload] expr_disc [result]
+        // _ [variant_payload] actual_discriminant [result]
     ));
 
     triton_asm!({ &match_code })

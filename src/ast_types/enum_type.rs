@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use itertools::Itertools;
 
 use super::DataType;
@@ -53,6 +55,11 @@ impl EnumType {
             "variant name \"{variant_name}\" is not defined for enum {}",
             self.name
         );
+    }
+
+    /// Return a collection of all discriminants this enum type can take
+    pub(crate) fn all_discriminants(&self) -> HashSet<usize> {
+        (0..self.variants.len()).collect()
     }
 
     /// Get the word count of the encoding of this enum. Returns `None` if length
