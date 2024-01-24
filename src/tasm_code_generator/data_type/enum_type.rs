@@ -589,8 +589,10 @@ impl EnumType {
 
     /// Return the subroutine label for putting pointers to field
     /// elements on top of the stack
+    /// ```text
     /// BEFORE: _ *discriminant
     /// AFTER: _ *discriminant [*variant-data-fields]
+    /// ```
     pub(crate) fn get_variant_data_fields_in_memory(
         &self,
         enum_variant_selector: &ast::EnumVariantSelector,

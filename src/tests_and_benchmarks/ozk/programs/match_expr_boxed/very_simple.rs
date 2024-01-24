@@ -10,7 +10,7 @@ enum SimpleEnum {
 
 fn main() {
     let boxed_enum_type: Box<SimpleEnum> =
-        SimpleEnum::decode(&tasm::load_from_memory(BFieldElement::new(0))).unwrap();
+        SimpleEnum::decode(&tasm::load_from_memory(BFieldElement::new(2))).unwrap();
     let evaluated_discriminant: u32 = match boxed_enum_type.as_ref() {
         SimpleEnum::A => {
             //
@@ -39,7 +39,7 @@ mod test {
     #[test]
     fn very_simple_test() {
         let variant_a = SimpleEnum::A;
-        let non_determinism_a = init_memory_from(&variant_a, BFieldElement::new(0));
+        let non_determinism_a = init_memory_from(&variant_a, BFieldElement::new(2));
         let native_output_a =
             rust_shadows::wrap_main_with_io(&main)(Vec::default(), non_determinism_a.clone());
         let entrypoint = EntrypointLocation::disk("match_expr_boxed", "very_simple", "main");
@@ -51,7 +51,7 @@ mod test {
         assert_eq!(native_output_a, vm_output_a.output);
 
         let variant_b = SimpleEnum::B(BFieldElement::new(12345678901234567890));
-        let non_determinism_b = init_memory_from(&variant_b, BFieldElement::new(0));
+        let non_determinism_b = init_memory_from(&variant_b, BFieldElement::new(2));
         let native_output_b =
             rust_shadows::wrap_main_with_io(&main)(Vec::default(), non_determinism_b.clone());
         let vm_output_b = TritonVMTestCase::new(entrypoint)

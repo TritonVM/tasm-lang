@@ -115,20 +115,20 @@ fn compile_catch_all_predicate_inner(
     let mut code = triton_asm!(push 0);
     for discriminant_covered in discriminants_covered_by_catch_all {
         code.extend(triton_asm!(
-            // _ actual_discriminant take_catch_all_branch
+            // _ discriminant take_catch_all_branch
 
             dup 1
             push {discriminant_covered}
             eq
-            // _ actual_discriminant take_catch_all_branch (actual_discriminant == discriminant_covered)
+            // _ discriminant take_catch_all_branch (discriminant == discriminant_covered)
 
             add
-            // _ actual_discriminant take_catch_all_branch'
+            // _ discriminant take_catch_all_branch'
         ));
     }
 
     code.extend(triton_asm!(
-        // _ actual_discriminant take_catch_all_branch
+        // _ discriminant take_catch_all_branch
         swap 1
         pop 1
 
@@ -293,7 +293,7 @@ pub(super) fn compile_match_stmt_boxed_expr(
     let outer_bindings = state.function_state.var_addr.clone();
     let mut match_code = vec![];
     for (arm_counter, arm) in match_stmt.arms.iter().enumerate() {
-        // At start of each loop-iternation, stack is:
+        // At start of each loop-iteration, stack is:
         // stack: _ *match_expression
 
         let arm_subroutine_label = format!("{match_expr_id}_body_{arm_counter}");
@@ -431,7 +431,7 @@ pub(super) fn compile_match_expr_stack_value(
     let mut match_code = triton_asm!(dup 0);
     for (arm_counter, arm) in match_expr.arms.iter().enumerate() {
         // At start of each loop-iteration, stack is:
-        // stack: _ [variant_payload] actual_discriminant <[maybe_result]> actual_discriminant
+        // stack: _ [variant_payload] discriminant <[maybe_result]> discriminant
 
         let arm_subroutine_label = format!("{match_expr_id}_body_{arm_counter}");
 
@@ -441,18 +441,18 @@ pub(super) fn compile_match_expr_stack_value(
                     .variant_discriminant(&enum_variant_selector.variant_name);
 
                 match_code.extend(triton_asm!(
-                    // _ [variant_payload] actual_discriminant <[maybe_result]> actual_discriminant
+                    // _ [variant_payload] discriminant <[maybe_result]> discriminant
 
                     dup 0
                     push {arm_variant_discriminant}
-                    // _ [variant_payload] actual_discriminant <[maybe_result]> actual_discriminant actual_discriminant needle_discriminant
+                    // _ [variant_payload] discriminant <[maybe_result]> discriminant discriminant needle_discriminant
 
                     eq
                     skiz
-                    // _ [variant_payload] actual_discriminant <[maybe_result]> actual_discriminant (actual_discriminant == needle_discriminant)
+                    // _ [variant_payload] discriminant <[maybe_result]> discriminant (discriminant == needle_discriminant)
 
                     call {arm_subroutine_label}
-                    // _ [variant_payload] actual_discriminant <[maybe_result]> actual_discriminant
+                    // _ [variant_payload] discriminant <[maybe_result]> discriminant
                 ));
 
                 // Split compiler's view of evaluated expression from
@@ -485,11 +485,11 @@ pub(super) fn compile_match_expr_stack_value(
                 // should execute.
                 // This function can be compiled from a `MatchExpr` value.
                 match_code.extend(triton_asm!(
-                    // _ [variant_payload] actual_discriminant <[maybe_result]> actual_discriminant
+                    // _ [variant_payload] discriminant <[maybe_result]> discriminant
 
                     dup 0
                     {&catch_all_predicate}
-                    // _ [variant_payload] actual_discriminant <[maybe_result]> actual_discriminant take_catch_all_branch
+                    // _ [variant_payload] discriminant <[maybe_result]> discriminant take_catch_all_branch
 
                     skiz
                     call {arm_subroutine_label}
@@ -501,17 +501,17 @@ pub(super) fn compile_match_expr_stack_value(
 
         let subroutine_code = triton_asm!(
             {arm_subroutine_label}:
-                // _ [variant_payload] actual_discriminant actual_discriminant
+                // _ [variant_payload] discriminant discriminant
 
                 pop 1
-                // _ [variant_payload] actual_discriminant
-                // _ [enum_data] [padding] actual_discriminant
+                // _ [variant_payload] discriminant
+                // _ [enum_data] [padding] discriminant
 
                 {&body_code}
-                // _ [enum_data] [padding] actual_discriminant [result]
+                // _ [enum_data] [padding] discriminant [result]
 
                 {&dup_discriminant_to_top}
-                // _ [enum_data] [padding] actual_discriminant [result] actual_discriminant
+                // _ [enum_data] [padding] discriminant [result] discriminant
 
                 return
         );
@@ -675,9 +675,6 @@ pub(super) fn compile_match_expr_boxed_value(
             .function_state
             .restore_stack_and_bindings(&outer_vstack, &outer_bindings);
     }
-
-    // We popped the `*match_expression` value from the stack. Inform compiler about that.
-    state.function_state.vstack.pop().unwrap();
 
     match_code
 }
