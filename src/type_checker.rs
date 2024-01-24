@@ -1631,59 +1631,7 @@ fn derive_annotate_expr_type(
             }
         }
 
-        ast::Expr::If(ast::ExprIf {
-            condition,
-            then_branch,
-            else_branch,
-        }) => {
-            let condition_hint = ast_types::DataType::Bool;
-            let condition_type = derive_annotate_expr_type(
-                condition,
-                Some(condition_hint),
-                state,
-                env_fn_signature,
-            )?;
-            assert_type_equals(
-                &condition_type,
-                &ast_types::DataType::Bool,
-                "if-condition-expr",
-            );
-
-            let mut resolved_return_type = hint;
-            let mut branches = [then_branch.as_mut(), else_branch.as_mut()];
-
-            // Loop over all branches until we have resolved one of them
-            for branch in branches.iter_mut() {
-                match derive_annotate_returning_block_expr(
-                    branch,
-                    resolved_return_type.clone(),
-                    state,
-                    env_fn_signature,
-                ) {
-                    Ok(resolved) => {
-                        resolved_return_type = Some(resolved);
-                    }
-                    Err(_) => continue,
-                }
-            }
-
-            // Then check that all branches return the same type
-            for branch in branches.iter_mut() {
-                let branch_type = derive_annotate_returning_block_expr(
-                    branch,
-                    resolved_return_type.clone(),
-                    state,
-                    env_fn_signature,
-                )?;
-                assert_type_equals(
-                    resolved_return_type.as_ref().unwrap(),
-                    &branch_type,
-                    "if-then-else-expr",
-                );
-            }
-
-            Ok(resolved_return_type.unwrap())
-        }
+        ast::Expr::If(expr_if) => derive_annotate_expr_if(hint, state, env_fn_signature, expr_if),
         ast::Expr::ReturningBlock(ret_block) => {
             derive_annotate_returning_block_expr(ret_block, hint, state, env_fn_signature)
         }
@@ -1703,6 +1651,57 @@ fn derive_annotate_expr_type(
     };
 
     res
+}
+
+fn derive_annotate_expr_if(
+    hint: Option<ast_types::DataType>,
+    state: &mut CheckState,
+    env_fn_signature: &ast::FnSignature,
+    expr_if: &mut ast::ExprIf<Typing>,
+) -> anyhow::Result<ast_types::DataType> {
+    let ast::ExprIf {
+        condition,
+        then_branch,
+        else_branch,
+    } = expr_if;
+    let condition_hint = ast_types::DataType::Bool;
+    let condition_type = derive_annotate_expr_type(
+        condition,
+        Some(condition_hint.clone()),
+        state,
+        env_fn_signature,
+    )?;
+    assert_type_equals(&condition_type, &condition_hint, "if-condition-expr");
+
+    let mut resolved_return_type = hint.clone();
+    let mut branches = [then_branch.as_mut(), else_branch.as_mut()];
+
+    // Loop over all branches until we have resolved one of them
+    for branch in branches.iter_mut() {
+        if let Ok(resolved_type) =
+            derive_annotate_returning_block_expr(branch, hint.clone(), state, env_fn_signature)
+        {
+            resolved_return_type = Some(resolved_type);
+            break;
+        };
+    }
+
+    let Some(resolved_return_type) = resolved_return_type else {
+        panic!("Could not resolve return type for any branch of if-then-else expression");
+    };
+
+    // Then check that all branches return the same type
+    for branch in branches.iter_mut() {
+        let branch_type = derive_annotate_returning_block_expr(
+            branch,
+            Some(resolved_return_type.clone()),
+            state,
+            env_fn_signature,
+        )?;
+        assert_type_equals(&resolved_return_type, &branch_type, "if-then-else-expr");
+    }
+
+    Ok(resolved_return_type)
 }
 
 /// Derive return type and annotate a `match` expression
@@ -1747,12 +1746,12 @@ fn derive_annotate_match_expression(
             break;
         };
     }
-    let resolved_return_type = resolved_return_type.unwrap_or_else(|| {
+    let Some(resolved_return_type) = resolved_return_type else {
         panic!(
             "Could not resolve return type for any arm of match expression for {}",
             enum_type.name
         )
-    });
+    };
 
     // Loop over all arms to verify that they agree on the return type
     let mut variants_encountered: HashSet<String> = HashSet::default();
