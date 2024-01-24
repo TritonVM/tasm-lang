@@ -139,7 +139,7 @@ impl<T: GetType> GetType for ast::MethodCall<T> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct CheckState<'a> {
     pub(crate) libraries: &'a [Box<dyn libraries::Library>],
 
@@ -1649,38 +1649,40 @@ fn derive_annotate_expr_type(
                 "if-condition-expr",
             );
 
-            let mut return_type_hint = hint;
+            let mut resolved_return_type = hint;
             let mut branches = [then_branch.as_mut(), else_branch.as_mut()];
+
+            // Loop over all branches until we have resolved one of them
             for branch in branches.iter_mut() {
                 match derive_annotate_returning_block_expr(
                     branch,
-                    return_type_hint.clone(),
+                    resolved_return_type.clone(),
                     state,
                     env_fn_signature,
                 ) {
                     Ok(resolved) => {
-                        return_type_hint = Some(resolved);
+                        resolved_return_type = Some(resolved);
                     }
                     Err(_) => continue,
                 }
             }
 
-            let then_type = derive_annotate_returning_block_expr(
-                then_branch,
-                return_type_hint.clone(),
-                state,
-                env_fn_signature,
-            )?;
-            let else_type = derive_annotate_returning_block_expr(
-                else_branch,
-                return_type_hint,
-                state,
-                env_fn_signature,
-            )?;
+            // Then check that all branches return the same type
+            for branch in branches.iter_mut() {
+                let branch_type = derive_annotate_returning_block_expr(
+                    branch,
+                    resolved_return_type.clone(),
+                    state,
+                    env_fn_signature,
+                )?;
+                assert_type_equals(
+                    resolved_return_type.as_ref().unwrap(),
+                    &branch_type,
+                    "if-then-else-expr",
+                );
+            }
 
-            assert_type_equals(&then_type, &else_type, "if-then-else-expr");
-
-            Ok(then_type)
+            Ok(resolved_return_type.unwrap())
         }
         ast::Expr::ReturningBlock(ret_block) => {
             derive_annotate_returning_block_expr(ret_block, hint, state, env_fn_signature)
@@ -1695,151 +1697,192 @@ fn derive_annotate_expr_type(
 
             Ok(to_type.to_owned())
         }
-        ast::Expr::Match(ast::MatchExpr {
-            arms,
-            match_expression,
-        }) => {
-            // Verify that match-expression returns an enum-type
-            let match_expression_type =
-                derive_annotate_expr_type(match_expression, None, state, env_fn_signature).unwrap();
-            let (enum_type, is_boxed) = match match_expression_type {
-                ast_types::DataType::Enum(enum_type) => (enum_type, false),
-                ast_types::DataType::Boxed(inner) => match *inner.to_owned() {
-                    ast_types::DataType::Enum(enum_type) => (enum_type, true),
-                    other => panic!("`match` statements are only supported on enum types. For now. Got {other}")
-                },
-                _ => panic!("`match` statements are only supported on enum types. For now. Got {match_expression_type}")
-            };
-
-            let mut variants_encountered: HashSet<String> = HashSet::default();
-            let arm_count = arms.len();
-            let mut contains_wildcard_arm = false;
-            let mut arm_ret_type = None;
-            for (i, arm) in arms.iter_mut().enumerate() {
-                match &arm.match_condition {
-                    ast::MatchCondition::CatchAll => {
-                        assert_eq!(
-                            i,
-                            arm_count - 1,
-                            "When using wildcard in match statement, wildcard must be used in last match arm. \
-                            Match expression was for type {}",
-                            enum_type.name
-                        );
-                        contains_wildcard_arm = true;
-
-                        arm_ret_type = Some(derive_annotate_arm_body(
-                            &mut arm.body,
-                            arm_ret_type,
-                            state,
-                            env_fn_signature,
-                            i,
-                        )?);
-                    }
-                    ast::MatchCondition::EnumVariant(ast::EnumVariantSelector {
-                        type_name,
-                        variant_name,
-                        data_bindings,
-                    }) => {
-                        assert!(
-                            variants_encountered.insert(variant_name.clone()),
-                            "Repeated variant name {} in match statement on {} encounter",
-                            variant_name,
-                            enum_type.name
-                        );
-
-                        match type_name {
-                            Some(enum_type_name) => {
-                                assert_eq!(
-                                    &enum_type.name,
-                                    enum_type_name,
-                                    "Match conditions on type {} must all be of same type. Got bad type: {enum_type_name}", enum_type.name);
-                            }
-                            None => {
-                                assert!(enum_type.is_prelude, "Only enums specified in prelude may use only the variant name in a match arm");
-                            }
-                        };
-
-                        let variant_data_tuple =
-                            enum_type.variant_data_type(variant_name).as_tuple_type();
-                        assert!(data_bindings.is_empty() || variant_data_tuple.element_count() == data_bindings.len(), "Number of bindings must match number of elements in variant data tuple");
-                        assert!(
-                            data_bindings.iter().map(|x| &x.name).all_unique(),
-                            "Name repetition in pattern matching not allowed"
-                        );
-
-                        data_bindings.iter().enumerate().for_each(|(i, x)| {
-                            let new_binding_type = if is_boxed {
-                                ast_types::DataType::Boxed(Box::new(
-                                    variant_data_tuple.fields[i].to_owned(),
-                                ))
-                            } else {
-                                variant_data_tuple.fields[i].to_owned()
-                            };
-
-                            state.vtable.insert(
-                                x.name.to_owned(),
-                                DataTypeAndMutability::new(&new_binding_type, x.mutable),
-                            );
-                        });
-
-                        arm_ret_type = Some(derive_annotate_arm_body(
-                            &mut arm.body,
-                            arm_ret_type,
-                            state,
-                            env_fn_signature,
-                            i,
-                        )?);
-
-                        // Remove bindings set in match-arm after body's type check
-                        data_bindings.iter().for_each(|x| {
-                            state.vtable.remove(&x.name);
-                        });
-                    }
-                }
-            }
-
-            // Verify that all cases where covered, *or* a wildcard was encountered.
-            assert!(
-                variants_encountered.len() == enum_type.variants.len() || contains_wildcard_arm,
-                "All cases must be covered for match-expression for {}. Missing variants: {}.",
-                enum_type.name,
-                enum_type
-                    .variants
-                    .iter()
-                    .map(|x| &x.0)
-                    .filter(|x| !variants_encountered.contains(*x))
-                    .join(",")
-            );
-
-            Ok(arm_ret_type.unwrap().to_owned())
+        ast::Expr::Match(match_expr) => {
+            derive_annotate_match_expression(match_expr, state, env_fn_signature, hint)
         }
     };
 
     res
 }
 
-fn derive_annotate_arm_body(
-    arm_body: &mut ast::ReturningBlock<Typing>,
-    first_arm_ret_type: Option<ast_types::DataType>,
+/// Derive return type and annotate a `match` expression
+/// let a: u32 = match b {
+///    Some(val) => { 42 },
+///    None => { 0 },
+/// };
+fn derive_annotate_match_expression(
+    match_expr: &mut ast::MatchExpr<Typing>,
     state: &mut CheckState<'_>,
     env_fn_signature: &ast::FnSignature,
-    arm_index: usize,
-) -> anyhow::Result<ast_types::DataType> {
-    let arm_ret_type = derive_annotate_returning_block_expr(
-        arm_body,
-        first_arm_ret_type.clone(),
+    hint: Option<ast_types::DataType>,
+) -> Result<ast_types::DataType, anyhow::Error> {
+    let match_expression_type = derive_annotate_expr_type(
+        &mut match_expr.match_expression,
+        None,
         state,
         env_fn_signature,
-    )?;
-    if let Some(first_arm_ret_type) = first_arm_ret_type.as_ref() {
+    )
+    .unwrap();
+    let (enum_type, is_boxed) = match match_expression_type {
+        ast_types::DataType::Enum(enum_type) => (enum_type, false),
+        ast_types::DataType::Boxed(inner) => match *inner.to_owned() {
+            ast_types::DataType::Enum(enum_type) => (enum_type, true),
+            other => panic!("`match` statements are only supported on enum types. For now. Got {other}")
+        },
+        _ => panic!("`match` statements are only supported on enum types. For now. Got {match_expression_type}")
+    };
+
+    // Loop over all arms until *one* of them has a known return type
+    let mut resolved_return_type = hint;
+    for arm in match_expr.arms.iter_mut() {
+        if let Ok(resolved) = resolve_match_arm_return_type(
+            arm,
+            resolved_return_type.clone(),
+            state,
+            enum_type.as_ref(),
+            is_boxed,
+            env_fn_signature,
+        ) {
+            resolved_return_type = Some(resolved);
+            break;
+        };
+    }
+    let resolved_return_type = resolved_return_type.unwrap_or_else(|| {
+        panic!(
+            "Could not resolve return type for any arm of match expression for {}",
+            enum_type.name
+        )
+    });
+
+    // Loop over all arms to verify that they agree on the return type
+    let mut variants_encountered: HashSet<String> = HashSet::default();
+    let arm_count = match_expr.arms.len();
+    let mut contains_wildcard_arm = false;
+    for (i, arm) in match_expr.arms.iter_mut().enumerate() {
+        let arm_ret_type = resolve_match_arm_return_type(
+            arm,
+            Some(resolved_return_type.clone()),
+            state,
+            enum_type.as_ref(),
+            is_boxed,
+            env_fn_signature,
+        )?;
         assert_type_equals(
-            first_arm_ret_type,
+            &resolved_return_type,
             &arm_ret_type,
-            format!("match-arm {arm_index} for expression"),
+            format!("Return type for match-arm {i}"),
         );
+
+        match &arm.match_condition {
+            ast::MatchCondition::CatchAll => {
+                assert_eq!(
+                    i,
+                    arm_count - 1,
+                    "When using wildcard in match statement, wildcard must be used in last match arm. \
+                            Match expression was for type {}",
+                    enum_type.name
+                );
+                contains_wildcard_arm = true;
+            }
+            ast::MatchCondition::EnumVariant(ast::EnumVariantSelector {
+                type_name,
+                variant_name,
+                data_bindings,
+            }) => {
+                assert!(
+                    variants_encountered.insert(variant_name.clone()),
+                    "Repeated variant name {} in match statement on {} encounter",
+                    variant_name,
+                    enum_type.name
+                );
+
+                match type_name {
+                    Some(enum_type_name) => {
+                        assert_eq!(
+                            &enum_type.name,
+                            enum_type_name,
+                            "Match conditions on type {} must all be of same type. Got bad type: {enum_type_name}", enum_type.name);
+                    }
+                    None => {
+                        assert!(enum_type.is_prelude, "Only enums specified in prelude may use only the variant name in a match arm");
+                    }
+                };
+
+                let variant_data_tuple = enum_type.variant_data_type(variant_name).as_tuple_type();
+                assert!(
+                    data_bindings.is_empty()
+                        || variant_data_tuple.element_count() == data_bindings.len(),
+                    "Number of bindings must match number of elements in variant data tuple"
+                );
+                assert!(
+                    data_bindings.iter().map(|x| &x.name).all_unique(),
+                    "Name repetition in pattern matching not allowed"
+                );
+            }
+        }
     }
 
-    Ok(arm_ret_type)
+    assert!(
+        variants_encountered.len() == enum_type.variants.len() || contains_wildcard_arm,
+        "All cases must be covered for match-expression for {}. Missing variants: {}.",
+        enum_type.name,
+        enum_type
+            .variants
+            .iter()
+            .map(|x| &x.0)
+            .filter(|x| !variants_encountered.contains(*x))
+            .join(",")
+    );
+
+    Ok(resolved_return_type)
+}
+
+/// Resolve the return type of a match arm. Does not mutate state.
+fn resolve_match_arm_return_type(
+    arm: &mut ast::MatchExprArm<Typing>,
+    hint: Option<ast_types::DataType>,
+    state: &mut CheckState,
+    enum_type: &ast_types::EnumType,
+    is_boxed: bool,
+    env_fn_signature: &ast::FnSignature,
+) -> anyhow::Result<ast_types::DataType> {
+    match &arm.match_condition {
+        ast::MatchCondition::EnumVariant(enum_variant_selector) => {
+            let variant_data_tuple = enum_type
+                .variant_data_type(&enum_variant_selector.variant_name)
+                .as_tuple_type();
+            enum_variant_selector
+                .data_bindings
+                .iter()
+                .enumerate()
+                .for_each(|(i, x)| {
+                    let new_binding_type = if is_boxed {
+                        ast_types::DataType::Boxed(Box::new(
+                            variant_data_tuple.fields[i].to_owned(),
+                        ))
+                    } else {
+                        variant_data_tuple.fields[i].to_owned()
+                    };
+
+                    state.vtable.insert(
+                        x.name.to_owned(),
+                        DataTypeAndMutability::new(&new_binding_type, x.mutable),
+                    );
+                });
+            let ret =
+                derive_annotate_returning_block_expr(&mut arm.body, hint, state, env_fn_signature);
+
+            // Remove bindings set in match-arm after body's type check
+            enum_variant_selector.data_bindings.iter().for_each(|x| {
+                state.vtable.remove(&x.name);
+            });
+
+            ret
+        }
+        ast::MatchCondition::CatchAll => {
+            derive_annotate_returning_block_expr(&mut arm.body, hint, state, env_fn_signature)
+        }
+    }
 }
 
 fn array_element_type(
