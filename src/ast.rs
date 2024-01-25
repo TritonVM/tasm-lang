@@ -1,6 +1,5 @@
-use std::fmt::Display;
-
 use itertools::Itertools;
+use std::fmt::Display;
 use tasm_lib::traits::basic_snippet::BasicSnippet;
 use triton_vm::instruction::LabelledInstruction;
 use triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
@@ -71,13 +70,12 @@ impl<T> Method<T> {
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub(crate) struct Fn<T> {
     pub signature: FnSignature,
-    // TODO: Should probably be a BlockStmt<T> instead of Vec<Stmt>
     pub body: RoutineBody<T>,
 }
 
 impl<T> Fn<T> {
     pub fn get_tasm_label(&self) -> String {
-        self.signature.name.replace("::", "_assoc_funciton___of___")
+        self.signature.name.replace("::", "_assoc_function___of___")
     }
 }
 
@@ -92,15 +90,7 @@ pub(crate) struct FnSignature {
 impl FnSignature {
     /// Return the number of words that the function's input arguments take up on the stack
     pub(crate) fn input_arguments_stack_size(&self) -> usize {
-        let mut input_args_stack_size = 0;
-        for arg in self.args.iter() {
-            input_args_stack_size += match arg {
-                AbstractArgument::FunctionArgument(_) => 0,
-                AbstractArgument::ValueArgument(val_arg) => val_arg.data_type.stack_size(),
-            }
-        }
-
-        input_args_stack_size
+        self.args.iter().map(|arg| arg.stack_size()).sum()
     }
 
     /// Convert snippet implementing `BasicSnippet` from `tasm-lib` into a function signature.
@@ -139,7 +129,7 @@ impl FnSignature {
     }
 
     /// Returns a boolean indicating if the function signature matches a list of input types
-    pub fn matches(&self, types: &[ast_types::DataType]) -> bool {
+    pub fn matches(&self, types: &[DataType]) -> bool {
         if self.args.len() != types.len() {
             return false;
         }
@@ -147,7 +137,7 @@ impl FnSignature {
         for (arg, dtype) in self.args.iter().zip_eq(types.iter()) {
             match arg {
                 AbstractArgument::FunctionArgument(fun_arg) => {
-                    let ast_types::DataType::Function(fun) = dtype else {
+                    let DataType::Function(fun) = dtype else {
                         return false;
                     };
                     if fun_arg.function_type != **fun {
@@ -184,7 +174,7 @@ pub(crate) enum Stmt<T> {
     If(IfStmt<T>),
     Block(BlockStmt<T>),
     Assert(AssertStmt<T>),
-    Panic(PanicStmt),
+    Panic(PanicMacro),
     FnDeclaration(Fn<T>),
     Match(MatchStmt<T>),
 }
@@ -192,11 +182,11 @@ pub(crate) enum Stmt<T> {
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub(crate) struct MatchStmt<T> {
     pub match_expression: Expr<T>,
-    pub arms: Vec<MatchArm<T>>,
+    pub arms: Vec<MatchStmtArm<T>>,
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub(crate) struct MatchArm<T> {
+pub(crate) struct MatchStmtArm<T> {
     pub match_condition: MatchCondition,
     pub body: BlockStmt<T>,
 }
@@ -205,6 +195,19 @@ pub(crate) struct MatchArm<T> {
 pub(crate) enum MatchCondition {
     CatchAll,
     EnumVariant(EnumVariantSelector),
+}
+
+impl Display for MatchCondition {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                MatchCondition::CatchAll => String::from("_"),
+                MatchCondition::EnumVariant(inner) => inner.to_string(),
+            }
+        )
+    }
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
@@ -217,6 +220,57 @@ pub(crate) struct EnumVariantSelector {
 
     // `baz`
     pub data_bindings: Vec<PatternMatchedBinding>,
+}
+
+impl Display for EnumVariantSelector {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self.data_bindings.len() {
+            0 => write!(f, "{}", self.variant_name),
+            _ => write!(
+                f,
+                "{}({})",
+                self.variant_name,
+                self.data_bindings.iter().join(",")
+            ),
+        }
+    }
+}
+
+impl MatchCondition {
+    pub(crate) fn data_type_of_bindings(
+        &self,
+        enum_type: &ast_types::EnumType,
+    ) -> ast_types::Tuple {
+        match self {
+            Self::CatchAll => ast_types::Tuple::unit(),
+            Self::EnumVariant(selector) => selector.get_bindings_type(enum_type),
+        }
+    }
+
+    pub(crate) fn data_binding_declarations(&self) -> Vec<PatternMatchedBinding> {
+        match self {
+            Self::CatchAll => vec![],
+            Self::EnumVariant(selector) => selector.data_bindings.to_owned(),
+        }
+    }
+
+    pub(crate) fn declarations_and_their_types(
+        &self,
+        enum_type: &ast_types::EnumType,
+    ) -> impl Iterator<Item = (PatternMatchedBinding, ast_types::DataType)> {
+        let tuple_type = self.data_type_of_bindings(enum_type);
+        let data_bindings = self.data_binding_declarations();
+
+        data_bindings.into_iter().zip_eq(tuple_type.fields)
+    }
+
+    /// Return the label for the subroutine that creates the bindings defined by this match-condition.
+    pub(crate) fn label_for_binding_subroutine(&self, boxed: bool) -> String {
+        match self {
+            Self::CatchAll => "__catch_all_bindings_subroutine".to_owned(),
+            Self::EnumVariant(selector) => selector.label_for_binding_subroutine(boxed),
+        }
+    }
 }
 
 impl EnumVariantSelector {
@@ -233,11 +287,13 @@ impl EnumVariantSelector {
     }
 
     /// Return the composite type of this match-arm binding
-    pub(crate) fn get_bindings_type(&self, data_type: &ast_types::Tuple) -> ast_types::Tuple {
+    pub(crate) fn get_bindings_type(&self, enum_type: &ast_types::EnumType) -> ast_types::Tuple {
         if self.data_bindings.is_empty() {
             ast_types::Tuple::unit()
         } else {
-            data_type.to_owned()
+            enum_type
+                .variant_data_type(&self.variant_name)
+                .as_tuple_type()
         }
     }
 }
@@ -249,6 +305,16 @@ pub(crate) struct PatternMatchedBinding {
     // Add `ref` here also?
 }
 
+impl Display for PatternMatchedBinding {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if self.mutable {
+            write!(f, "mut {}", self.name)
+        } else {
+            write!(f, "{}", self.name)
+        }
+    }
+}
+
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub(crate) struct AssertStmt<T> {
     pub expression: Expr<T>,
@@ -256,7 +322,7 @@ pub(crate) struct AssertStmt<T> {
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub(crate) struct PanicStmt;
+pub(crate) struct PanicMacro;
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub(crate) struct WhileStmt<T> {
@@ -417,16 +483,33 @@ pub(crate) enum Expr<T> {
     Binop(Box<Expr<T>>, BinOp, Box<Expr<T>>, T),
     Unary(UnaryOp, Box<Expr<T>>, T),
     If(ExprIf<T>),
+    Match(MatchExpr<T>),
     Cast(Box<Expr<T>>, DataType),
     ReturningBlock(Box<ReturningBlock<T>>),
     Struct(StructExpr<T>),
-    // Index(Box<Expr<T>>, Box<Expr<T>>), // a_expr[i_expr]    (a + 5)[3]
-    // TODO: VM-specific intrinsics (hash, absorb, squeeze, etc.)
+    Panic(PanicMacro, T), // Index(Box<Expr<T>>, Box<Expr<T>>), // a_expr[i_expr]    (a + 5)[3]
+                          // TODO: VM-specific intrinsics (hash, absorb, squeeze, etc.)
+}
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub(crate) struct MatchExpr<T> {
+    pub match_expression: Box<Expr<T>>,
+    pub arms: Vec<MatchExprArm<T>>,
+}
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub(crate) struct MatchExprArm<T> {
+    pub match_condition: MatchCondition,
+    pub body: ReturningBlock<T>,
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub(crate) enum ArrayExpression<T> {
     ElementsSpecified(Vec<Expr<T>>),
+    Repeat {
+        element: Box<Expr<T>>,
+        length: usize,
+    },
 }
 
 impl<T> Display for ArrayExpression<T> {
@@ -435,6 +518,7 @@ impl<T> Display for ArrayExpression<T> {
             ArrayExpression::ElementsSpecified(elements) => {
                 format!("[{}]", elements.iter().join(","))
             }
+            ArrayExpression::Repeat { element, length } => format!("[{element}; {length}]"),
         };
         write!(f, "{str}")
     }
@@ -444,6 +528,7 @@ impl<T> ArrayExpression<T> {
     pub fn len(&self) -> usize {
         match &self {
             ArrayExpression::ElementsSpecified(elements) => elements.len(),
+            ArrayExpression::Repeat { length, .. } => *length,
         }
     }
 }
@@ -471,6 +556,11 @@ impl<T> Expr<T> {
             Expr::EnumDeclaration(enum_init) => {
                 format!("enum_init_{}", enum_init.label_friendly_name())
             }
+            Expr::Match(match_expr) => format!(
+                "match_expr_{}",
+                match_expr.match_expression.label_friendly_name()
+            ),
+            Expr::Panic(_, _) => "panic_macro".to_owned(),
         }
     }
 }
@@ -508,6 +598,8 @@ impl<T> Display for Expr<T> {
                     enum_decl.enum_type.label_friendly_name()
                 )
             }
+            Expr::Match(match_expr) => format!("match expression: {}", match_expr.match_expression),
+            Expr::Panic(_, _) => "panic".to_owned(),
         };
 
         write!(f, "{str}")
@@ -562,6 +654,12 @@ pub(crate) struct ExprIf<T> {
 pub(crate) struct ReturningBlock<T> {
     pub stmts: Vec<Stmt<T>>,
     pub return_expr: Expr<T>,
+}
+
+impl<T> Display for ReturningBlock<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "...\n{}", self.return_expr)
+    }
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]

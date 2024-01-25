@@ -1,6 +1,7 @@
 pub(crate) mod data_type;
 mod function_state;
 mod inner_function_tasm_code;
+mod match_code;
 mod outer_function_tasm_code;
 mod stack;
 
@@ -32,6 +33,11 @@ use crate::ast_types::StructVariant;
 use crate::composite_types::CompositeTypes;
 use crate::libraries;
 use crate::subroutine::SubRoutine;
+use crate::tasm_code_generator::data_type::array_type::compile_array_expr;
+use crate::tasm_code_generator::match_code::compile_match_expr_boxed_value;
+use crate::tasm_code_generator::match_code::compile_match_expr_stack_value;
+use crate::tasm_code_generator::match_code::compile_match_stmt_boxed_expr;
+use crate::tasm_code_generator::match_code::compile_match_stmt_stack_expr;
 use crate::type_checker;
 use crate::type_checker::GetType;
 
@@ -556,6 +562,25 @@ impl<'a> CompilerState<'a> {
             static_allocations: self.global_compiler_state.static_allocations.clone(),
         }
     }
+
+    fn add_boxed_match_arm_binding_to_scope(
+        &mut self,
+        binding_and_its_type: (ast::PatternMatchedBinding, ast_types::DataType),
+    ) {
+        let (binding, element_type) = binding_and_its_type;
+        let dtype = ast_types::DataType::Boxed(Box::new(element_type));
+        let (new_binding_id, spill_addr) =
+            self.new_value_identifier("in_memory_split_value", &dtype);
+        assert!(
+            spill_addr.is_none(),
+            "Cannot handle memory-spilling in match-arm bindings yet. Required spilling of binding '{}'",
+            binding.name
+        );
+
+        self.function_state
+            .var_addr
+            .insert(binding.name, new_binding_id);
+    }
 }
 
 pub const SIZE_OF_ACCESSIBLE_STACK: usize = triton_vm::op_stack::NUM_OP_STACK_REGISTERS;
@@ -805,32 +830,6 @@ impl<'a> CompilerState<'a> {
         &mut self,
         height: usize,
     ) -> Vec<LabelledInstruction> {
-        /// Code generation for removing elements from the bottom of the stack while preserving
-        /// the order of the values above.
-        fn clear_bottom_of_stack(
-            top_value_size: usize,
-            words_to_remove: usize,
-        ) -> Vec<LabelledInstruction> {
-            match (top_value_size, words_to_remove) {
-                (3, 2) => triton_asm!(swap 2 swap 4 pop 1 swap 2 pop 1),
-                (4, 2) => triton_asm!(swap 1 swap 3 swap 5 pop 1 swap 1 swap 3 pop 1),
-                (6, 2) => triton_asm!(swap 2 swap 4 swap 6 pop 1 swap 2 swap 4 swap 6 pop 1),
-                (4, 3) => triton_asm!(swap 3 swap 6 pop 1 swap 3 pop 1 swap 3 pop 1),
-                (5, 3) => triton_asm!(swap 4 swap 7 pop 1 swap 2 swap 5 pop 1 swap 3 pop 1 swap 1),
-                (6, 4) => triton_asm!(swap 4 swap 8 pop 1 swap 4 swap 8 pop 1 swap 4 pop 1 swap 4 pop 1),
-                (8, 4) => triton_asm!(swap 4 swap 8 pop 1 swap 4 swap 8 pop 1 swap 4 swap 8 pop 1 swap 4 swap 8 pop 1),
-                (n, 1) => {
-                    let mut swaps = vec![];
-                    for i in 1..=n {
-                        swaps.append(&mut triton_asm!(swap {i}));
-                    }
-
-                    triton_asm!({&swaps} pop 1)
-                }
-                _ => panic!("Unsupported. Please cover more special cases. Got: {top_value_size}, {words_to_remove}"),
-            }
-        }
-
         let height_of_affected_stack: usize =
             self.function_state.vstack.get_stack_height() - height;
 
@@ -886,15 +885,8 @@ impl<'a> CompilerState<'a> {
             code.extend(load_from_memory(memory_location, top_value_size));
 
             code
-        } else if words_to_remove != 0 {
-            // Here, the number of words under the top element is less than the size of
-            // the top element. We special-case this as the order on the stack
-            // must be preserved, which is non-trivial.
-            clear_bottom_of_stack(top_value_size, words_to_remove)
         } else {
-            // The case where nothing has to be done since there is nothing below the
-            // top value that needs to be removed
-            vec![]
+            Self::clear_bottom_of_stack(top_value_size, words_to_remove)
         };
 
         // Clean up vstack
@@ -906,12 +898,37 @@ impl<'a> CompilerState<'a> {
         assert_eq!(
             height,
             self.function_state.vstack.get_stack_height(),
-            "Cannot clear stack to position that is not alligned with a value"
+            "Cannot clear stack to position that is not aligned with a value"
         );
 
         self.function_state.vstack.push(top_element);
 
         code
+    }
+
+    /// Code generation for removing elements from the bottom of the stack while preserving
+    /// the order of the values above.
+    fn clear_bottom_of_stack(
+        top_value_size: usize,
+        words_to_remove: usize,
+    ) -> Vec<LabelledInstruction> {
+        match (top_value_size, words_to_remove) {
+            (_, 0) => vec![],
+            (n, 1) => {
+                let swaps = (1..=n).flat_map(|i| triton_asm!(swap {i})).collect_vec();
+                triton_asm!({&swaps} pop 1)
+            }
+            (3, 2) => triton_asm!(swap 2 swap 4 pop 1 swap 2 pop 1),
+            (4, 2) => triton_asm!(swap 1 swap 3 swap 5 pop 1 swap 1 swap 3 pop 1),
+            (5, 2) => triton_asm!(swap 5 pop 1 swap 5 pop 1 swap 2 swap 4 swap 1 swap 3),
+            (6, 2) => triton_asm!(swap 2 swap 4 swap 6 pop 1 swap 2 swap 4 swap 6 pop 1),
+            (4, 3) => triton_asm!(swap 3 swap 6 pop 1 swap 3 pop 1 swap 3 pop 1),
+            (5, 3) => triton_asm!(swap 4 swap 7 pop 1 swap 2 swap 5 pop 1 swap 3 pop 1 swap 1),
+            (6, 4) => triton_asm!(swap 4 swap 8 pop 1 swap 4 swap 8 pop 1 swap 4 pop 1 swap 4 pop 1),
+            (8, 4) => triton_asm!(swap 4 swap 8 pop 1 swap 4 swap 8 pop 1 swap 4 swap 8 pop 1 swap 4 swap 8 pop 1),
+
+            _ => panic!("Unsupported. Please cover more special cases. Got: {top_value_size}, {words_to_remove}"),
+        }
     }
 
     /// Helper function for debugging
@@ -1333,12 +1350,13 @@ fn compile_stmt(
                 "Cannot handle memory-spill of evaluated match expressions. But {match_expr_id} required memory spilling"
             );
 
-            // stack: // _ [enum]
             let match_stmt = match match_stmt.match_expression.get_type() {
+                // stack: _ [enum]
                 ast_types::DataType::Enum(_) => {
                     compile_match_stmt_stack_expr(match_stmt, state, &match_expr_id)
                 }
                 ast_types::DataType::Boxed(inner) => match *inner.to_owned() {
+                    // stack: _ *enum
                     ast_types::DataType::Enum(_) => {
                         compile_match_stmt_boxed_expr(match_stmt, state, &match_expr_id)
                     }
@@ -1364,311 +1382,6 @@ fn compile_stmt(
             )
         }
     }
-}
-
-/// Compile a match-statement where the matched-against value lives in memory
-fn compile_match_stmt_boxed_expr(
-    ast::MatchStmt {
-        arms,
-        match_expression,
-    }: &ast::MatchStmt<type_checker::Typing>,
-    state: &mut CompilerState,
-    match_expr_id: &ValueIdentifier,
-) -> Vec<LabelledInstruction> {
-    let contains_wildcard = arms
-        .iter()
-        .any(|x| matches!(x.match_condition, ast::MatchCondition::CatchAll));
-
-    let mut match_code = vec![];
-    let match_expr_discriminant = if contains_wildcard {
-        // Indicate that no arm body has been executed yet. For wildcard arm-conditions.
-        match_code.push(triton_instr!(push 1));
-        triton_asm!(
-                    // *match_expr no_arm_taken_indicator
-            swap 1  // no_arm_taken_indicator *match_expr
-            read_mem 1 push 1 add
-                    // no_arm_taken_indicator discriminant *match_expr
-            swap 2  // *match_expr discriminant no_arm_taken_indicator
-            swap 1  // *match_expr no_arm_taken_indicator discriminant
-        )
-    } else {
-        triton_asm!(
-                    // *match_expr
-            read_mem 1 push 1 add
-                    // discriminant *match_expr
-            swap 1  // *match_expr discriminant
-        )
-    };
-
-    // Get enum_type
-    let match_expression_enum_type = match_expression.get_type().unbox().as_enum_type();
-    let outer_vstack = state.function_state.vstack.clone();
-    let outer_bindings = state.function_state.var_addr.clone();
-
-    for (arm_counter, arm) in arms.iter().enumerate() {
-        // At start of each loop-iternation, stack is:
-        // stack: _ *match_expression <no_arm_taken>
-
-        let arm_subroutine_label = format!("{match_expr_id}_body_{arm_counter}");
-
-        match &arm.match_condition {
-            ast::MatchCondition::EnumVariant(enum_variant_selector) => {
-                let arm_variant_discriminant = match_expression_enum_type
-                    .variant_discriminant(&enum_variant_selector.variant_name);
-
-                match_code.append(&mut triton_asm!(
-                    // _ match_expr <no_arm_taken>
-
-                    {&match_expr_discriminant}
-                    // _ *match_expr <no_arm_taken> match_expr_discriminant
-                    push {arm_variant_discriminant}
-                    // _ match_expr <no_arm_taken> match_expr_discriminant needle_discriminant
-
-                    eq
-                    // _ match_expr <no_arm_taken> (match_expr_discriminant == needle_discriminant)
-
-                    skiz
-                    call {arm_subroutine_label}
-                    // _ match_expr <no_arm_taken>
-                ));
-
-                let remove_old_any_arm_taken_indicator = if contains_wildcard {
-                    triton_asm!(pop 1)
-                } else {
-                    triton_asm!()
-                };
-                let set_new_no_arm_taken_indicator = if contains_wildcard {
-                    triton_asm!(push 0)
-                } else {
-                    triton_asm!()
-                };
-
-                let tuple_type = enum_variant_selector.get_bindings_type(
-                    &match_expression_enum_type
-                        .variant_data_type(&enum_variant_selector.variant_name)
-                        .as_tuple_type(),
-                );
-
-                let label_for_bindings_subroutine = match_expression_enum_type
-                    .get_variant_data_fields_in_memory(enum_variant_selector, state);
-
-                enum_variant_selector
-                    .data_bindings
-                    .iter()
-                    .zip_eq(tuple_type.fields.iter())
-                    .for_each(|(binding, element_type)| {
-                        let dtype = ast_types::DataType::Boxed(Box::new(element_type.to_owned()));
-                        let (new_binding_id, spill_addr) =
-                            state.new_value_identifier("in_memory_split_value", &dtype);
-                        assert!(spill_addr.is_none(), "Cannot handle memory-spilling in match-arm bindings yet. Required spilling of binding '{}'", binding.name);
-                        // push relative address, add to absolute address
-                        // to get *new* absolute address.
-                        // Then insert this boxed type into `var_addr`
-
-                        state
-                        .function_state
-                        .var_addr
-                        .insert(binding.name.to_owned(), new_binding_id);
-                    });
-
-                let body_code = compile_block_stmt(&arm.body, state);
-
-                let pop_local_bindings = pop_n(enum_variant_selector.data_bindings.len());
-                let subroutine_code = triton_asm!(
-                    {arm_subroutine_label}:
-                        {&remove_old_any_arm_taken_indicator}
-                        // _ *discriminant
-
-                        call {label_for_bindings_subroutine}
-                        // _ *enum_expr [*variant-data-fields]
-
-                        {&body_code}
-                        // _ *enum_expr [*variant-data-fields]
-
-                        // We can just pop local binding from top of stack, since a statement cannot return anything
-                        {&pop_local_bindings}
-                        // _ *enum_expr
-
-                        {&set_new_no_arm_taken_indicator}
-                        return
-                );
-
-                state
-                    .function_state
-                    .subroutines
-                    .push(subroutine_code.try_into().unwrap());
-            }
-            ast::MatchCondition::CatchAll => {
-                // CatchAll (`_`) is guaranteed to be the last arm. So we only have to check if any
-                // previous arm was taken
-                match_code.append(&mut triton_asm!(
-                    skiz
-                    call {arm_subroutine_label}
-                    push 0 // push 0 to make stack-cleanup code-path independent
-                ));
-
-                let body_code = compile_block_stmt(&arm.body, state);
-                let subroutine_code = triton_asm!(
-                    {arm_subroutine_label}:
-                        {&body_code}
-                        return
-                );
-                state
-                    .function_state
-                    .subroutines
-                    .push(subroutine_code.try_into().unwrap());
-            }
-        }
-
-        // Restore stack view and bindings view for next loop-iteration
-        state
-            .function_state
-            .restore_stack_and_bindings(&outer_vstack, &outer_bindings);
-    }
-
-    // Cleanup stack by removing evaluated expresison and `any_arm_taken_bool` indicator
-    if contains_wildcard {
-        match_code.push(triton_instr!(pop 1));
-    }
-
-    triton_asm!({ &match_code })
-}
-
-/// Compile a match-statement where the matched-against value lives on the stack
-fn compile_match_stmt_stack_expr(
-    ast::MatchStmt {
-        arms,
-        match_expression,
-    }: &ast::MatchStmt<type_checker::Typing>,
-    state: &mut CompilerState,
-    match_expr_id: &ValueIdentifier,
-) -> Vec<LabelledInstruction> {
-    let contains_wildcard = arms
-        .iter()
-        .any(|x| matches!(x.match_condition, ast::MatchCondition::CatchAll));
-
-    let mut match_code = if contains_wildcard {
-        // Indicate that no arm body has been executed yet. For wildcard arm-conditions.
-        triton_asm!(push 1)
-    } else {
-        triton_asm!()
-    };
-
-    let match_expression_enum_type = match_expression.get_type().as_enum_type();
-
-    let outer_vstack = state.function_state.vstack.clone();
-    let outer_bindings = state.function_state.var_addr.clone();
-    let match_expr_discriminant = triton_asm!(dup {contains_wildcard as u32});
-    for (arm_counter, arm) in arms.iter().enumerate() {
-        // At start of each loop-iteration, stack is:
-        // stack: _ [expression_variant_data] expression_variant_discriminant <no_arm_taken>
-
-        let arm_subroutine_label = format!("{match_expr_id}_body_{arm_counter}");
-
-        match &arm.match_condition {
-            ast::MatchCondition::EnumVariant(enum_variant_selector) => {
-                // We know that variant discriminant is on top
-                let arm_variant_discriminant = match_expression_enum_type
-                    .variant_discriminant(&enum_variant_selector.variant_name);
-                match_code.append(&mut triton_asm!(
-                    // dup {contains_wildcard as u32}
-                    {&match_expr_discriminant}
-                    // _ match_expr <no_arm_taken> match_expr_discriminant
-                    push {arm_variant_discriminant}
-                    // _ match_expr <no_arm_taken> match_expr_discriminant needle_discriminant
-
-                    eq
-                    skiz
-                    call {arm_subroutine_label}
-                ));
-
-                let remove_old_any_arm_taken_indicator = if contains_wildcard {
-                    triton_asm!(pop 1)
-                } else {
-                    triton_asm!()
-                };
-                let set_new_no_arm_taken_indicator = if contains_wildcard {
-                    triton_asm!(push 0)
-                } else {
-                    triton_asm!()
-                };
-
-                // Split compiler's view of evaluated expression from
-                // _ [enum_value]
-                // into
-                // _ [enum_data] [padding] discriminant
-                let new_ids = state.split_value(
-                    match_expr_id,
-                    match_expression_enum_type
-                        .decompose_variant(&enum_variant_selector.variant_name),
-                );
-
-                // Insert bindings from pattern-match into stack view for arm-body
-                enum_variant_selector
-                    .data_bindings
-                    .iter()
-                    .zip(new_ids.iter())
-                    .for_each(|(binding, new_id)| {
-                        state
-                            .function_state
-                            .var_addr
-                            .insert(binding.name.to_owned(), new_id.clone());
-                    });
-
-                let body_code = compile_block_stmt(&arm.body, state);
-
-                // This arm-body changes the `arm_taken` bool but otherwise leaves the stack unchanged
-                let subroutine_code = triton_asm!(
-                    {arm_subroutine_label}:
-                        {&remove_old_any_arm_taken_indicator}
-                        // stack: _ [expression_variant_data] [padding] expression_variant_discriminant
-
-                        {&body_code}
-
-                        {&set_new_no_arm_taken_indicator}
-                        return
-                );
-
-                state
-                    .function_state
-                    .subroutines
-                    .push(subroutine_code.try_into().unwrap());
-            }
-            ast::MatchCondition::CatchAll => {
-                // CatchAll (`_`) is guaranteed to be the last arm. So we only have to check if any
-                // previous arm was taken
-                match_code.append(&mut triton_asm!(
-                    skiz
-                    call {arm_subroutine_label}
-                    push 0 // push 0 to make stack-cleanup code-path independent
-                ));
-
-                let body_code = compile_block_stmt(&arm.body, state);
-                let subroutine_code = triton_asm!(
-                    {arm_subroutine_label}:
-                        {&body_code}
-                        return
-                );
-                state
-                    .function_state
-                    .subroutines
-                    .push(subroutine_code.try_into().unwrap());
-                // stack: _  [expression_variant_data] expression_variant_discriminant <no_arm_taken>
-            }
-        }
-
-        // Restore stack view and bindings view for next loop-iteration
-        state
-            .function_state
-            .restore_stack_and_bindings(&outer_vstack, &outer_bindings);
-    }
-
-    // Cleanup stack by removing evaluated expression and `any_arm_taken_bool` indicator
-    if contains_wildcard {
-        match_code.push(triton_instr!(pop 1));
-    }
-
-    triton_asm!({ &match_code })
 }
 
 fn compile_fn_call(
@@ -1847,7 +1560,7 @@ fn compile_method_call(
 
 fn compile_expr(
     expr: &ast::Expr<type_checker::Typing>,
-    _context: &str,
+    context: &str,
     state: &mut CompilerState,
 ) -> (ValueIdentifier, Vec<LabelledInstruction>) {
     let result_type = expr.get_type();
@@ -1958,49 +1671,7 @@ fn compile_expr(
         }
 
         ast::Expr::Array(array_expr, array_type) => {
-            // Compile elements left-to-right and store each element in memory
-
-            // TODO: This does not handle arrays of elements whose sizes
-            // are not known at compile time.
-
-            let ast_types::DataType::Array(array_type) = array_type.get_type() else {
-                panic!("Type must be array");
-            };
-            let element_size: usize = array_type.element_type.stack_size();
-            let total_size_in_memory: usize = array_type.size_in_memory();
-
-            let array_pointer = state
-                .global_compiler_state
-                .snippet_state
-                .kmalloc(total_size_in_memory as u32);
-
-            let mut element_pointer = array_pointer;
-            let store_array_in_memory = match array_expr {
-                ast::ArrayExpression::ElementsSpecified(element_expressions) => element_expressions
-                    .iter()
-                    .enumerate()
-                    .map(|(arg_pos, arg_expr)| {
-                        let context = format!("_array_{arg_pos}");
-                        let (_, evaluate_element) = compile_expr(arg_expr, &context, state);
-                        let move_element_to_memory =
-                            move_top_stack_value_to_memory(Some(element_pointer), element_size);
-                        element_pointer += BFieldElement::from(element_size as u32);
-
-                        state.function_state.vstack.pop().unwrap();
-
-                        triton_asm!(
-                            {&evaluate_element}
-                            {&move_element_to_memory}
-                        )
-                    })
-                    .concat(),
-            };
-
-            let push_array_pointer_to_stack = triton_asm!(push { array_pointer.to_string() });
-            triton_asm!(
-                {&store_array_in_memory}
-                {&push_array_pointer_to_stack}
-            )
+            compile_array_expr(state, array_expr, array_type)
         }
 
         ast::Expr::Tuple(exprs) => {
@@ -2045,7 +1716,7 @@ fn compile_expr(
         }
 
         ast::Expr::EnumDeclaration(enum_decl) => {
-            // Compile an enum-declaration without associated data
+            // Compile an enum-declaration without associated data: `let a = Foo::Bar;`
             // Padding is done to ensure that all instances of this enum have
             // the same size on the stack.
             let padding = enum_decl
@@ -2322,7 +1993,6 @@ fn compile_expr(
                             state.function_state.vstack.pop();
                             state.function_state.vstack.pop();
 
-                            // vec![lhs_expr_code, rhs_expr_code, bfe_div_code].concat()
                             triton_asm!(
                                 {&lhs_expr_code}
                                 {&rhs_expr_code}
@@ -2355,8 +2025,6 @@ fn compile_expr(
                     use ast_types::DataType::*;
                     match result_type {
                         U32 => {
-                            // TODO: Consider evaluating in opposite order to save a clock-cycle by removing `swap1`
-                            // below. This would change the "left-to-right" convention though.
                             let (_lhs_expr_addr, lhs_expr_code) =
                                 compile_expr(lhs_expr, "_binop_lhs", state);
                             let (_rhs_expr_addr, rhs_expr_code) =
@@ -2762,8 +2430,8 @@ fn compile_expr(
             // the `then` or `else` branches are entered.
             state.function_state.vstack.pop();
 
-            let (then_addr, then_code) = compile_returning_block_expr(_context, state, then_branch);
-            let (else_addr, else_code) = compile_returning_block_expr(_context, state, else_branch);
+            let (then_addr, then_code) = compile_returning_block_expr(context, state, then_branch);
+            let (else_addr, else_code) = compile_returning_block_expr(context, state, else_branch);
 
             // Both branches are compiled as subroutines which are called depending on what `cond`
             // evaluates to.
@@ -2807,7 +2475,7 @@ fn compile_expr(
         }
 
         ast::Expr::ReturningBlock(ret_block) => {
-            let (_, code) = compile_returning_block_expr(_context, state, ret_block);
+            let (_, code) = compile_returning_block_expr(context, state, ret_block);
 
             code
         }
@@ -2879,6 +2547,8 @@ fn compile_expr(
                 _ => todo!("previous_type: {previous_type}; result_type: {result_type}"),
             }
         }
+        ast::Expr::Match(match_expr) => compile_match_expr(match_expr, state),
+        ast::Expr::Panic(_, _) => triton_asm!(push 0 hint panic = stack[0] assert),
     };
 
     // Update compiler's view of the stack with the new value. Check if value needs to
@@ -2894,6 +2564,48 @@ fn compile_expr(
         .unwrap_or_default();
 
     (addr, [code, spill_code].concat())
+}
+
+fn compile_match_expr(
+    match_expr: &ast::MatchExpr<type_checker::Typing>,
+    state: &mut CompilerState,
+) -> Vec<LabelledInstruction> {
+    let vstack_init = state.function_state.vstack.clone();
+    let (match_expr_id, match_expr_evaluation) =
+        compile_expr(&match_expr.match_expression, "match-expr", state);
+    assert!(
+        !state.function_state.spill_required.contains(&match_expr_id),
+        "Cannot handle memory-spill of evaluated match expressions.
+         But {match_expr_id} required memory spilling"
+    );
+
+    let (match_arms, restore_stack_code) = match match_expr.match_expression.get_type() {
+        ast_types::DataType::Enum(_) => (
+            compile_match_expr_stack_value(match_expr, state, &match_expr_id),
+            state.clear_all_but_top_stack_value_above_height(vstack_init.get_stack_height()),
+        ),
+        ast_types::DataType::Boxed(inner) => match *inner.to_owned() {
+            ast_types::DataType::Enum(_) => (
+                // the boxed version of code generator cleans its own vstack. So we shouldn't also do that here.
+                compile_match_expr_boxed_value(match_expr, state, &match_expr_id),
+                triton_asm!(),
+            ),
+            _ => unreachable!(),
+        },
+        _ => unreachable!(),
+    };
+
+    triton_asm!(
+        // _
+        {&match_expr_evaluation}
+        // _ [match_expr]
+
+        {&match_arms}
+        // _ <[match_expr]> [result]
+
+        {&restore_stack_code}
+        // _ [result]
+    )
 }
 
 fn compile_returning_block_expr(
@@ -2915,9 +2627,7 @@ fn compile_returning_block_expr(
         state,
     );
 
-    // Cleanup stack and variable name mapping after `then` body. Preserve the return
-    // value from the `then` branch on the stack, but not on vstack as this value is
-    // not visible to the `else` branch.
+    // Cleanup stack and local variable names.
     let cleanup_code =
         state.clear_all_but_top_stack_value_above_height(start_vstack.get_stack_height());
 

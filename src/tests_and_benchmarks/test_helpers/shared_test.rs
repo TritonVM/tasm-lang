@@ -145,11 +145,6 @@ impl TritonVMTestCase {
         self
     }
 
-    pub fn with_input_args(mut self, input_args: Vec<ast::ExprLit<Typing>>) -> Self {
-        self.input_args = input_args;
-        self
-    }
-
     pub fn with_std_in(mut self, std_in: Vec<BFieldElement>) -> Self {
         self.std_in = std_in;
         self
@@ -180,8 +175,7 @@ impl TritonVMTestCase {
     fn initial_stack(&self) -> Vec<BFieldElement> {
         let mut initial_stack = empty_stack();
         for input_arg in &self.input_args {
-            let input_arg_seq = input_arg.encode();
-            initial_stack.append(&mut input_arg_seq.into_iter().rev().collect());
+            initial_stack.extend(input_arg.encode().into_iter().rev());
         }
         initial_stack
     }
@@ -198,6 +192,9 @@ impl TritonVMTestCase {
         let public_input = PublicInput::new(self.std_in);
         let mut vm_state = VMState::new(&program, public_input, self.non_determinism);
         vm_state.op_stack.stack = initial_stack;
+
+        tasm_lib::maybe_write_debuggable_program_to_disk(&program, &vm_state);
+
         vm_state
     }
 

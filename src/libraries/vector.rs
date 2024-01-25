@@ -477,15 +477,10 @@ impl VectorLib {
             POP_METHOD_NAME => Some(self.list_type.pop_snippet(type_parameter.clone().unwrap())),
             LEN_METHOD_NAME => Some(self.list_type.len_snippet(type_parameter.clone().unwrap())),
             MAP_METHOD_NAME => {
-                let inner_function_type =
-                    if let ast_types::DataType::Function(fun_type) = args[1].get_type() {
-                        fun_type
-                    } else {
-                        panic!()
-                    };
-                let inner_function_name = if let ast::Expr::Var(ident) = &args[1] {
-                    ident
-                } else {
+                let ast_types::DataType::Function(inner_function_type) = args[1].get_type() else {
+                    panic!()
+                };
+                let ast::Expr::Var(inner_function_name) = &args[1] else {
                     panic!()
                 };
 

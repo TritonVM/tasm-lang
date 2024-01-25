@@ -50,6 +50,9 @@ impl CustomTypeResolution for Expr<Typing> {
                 ArrayExpression::ElementsSpecified(elements_exprs) => elements_exprs
                     .iter_mut()
                     .for_each(|x| x.resolve_custom_types(composite_types)),
+                ArrayExpression::Repeat { element, .. } => {
+                    element.resolve_custom_types(composite_types)
+                }
             },
             Expr::FnCall(FnCall {
                 name: _,
@@ -95,6 +98,15 @@ impl CustomTypeResolution for Expr<Typing> {
             Expr::EnumDeclaration(enum_decl) => {
                 enum_decl.enum_type.resolve_custom_types(composite_types);
             }
+            Expr::Match(match_expr) => {
+                match_expr
+                    .match_expression
+                    .resolve_custom_types(composite_types);
+                for arm in match_expr.arms.iter_mut() {
+                    arm.body.resolve_custom_types(composite_types);
+                }
+            }
+            Expr::Panic(_, _) => (),
         }
     }
 }
@@ -212,7 +224,7 @@ pub(crate) fn resolve_custom_types(function: &mut Fn<Typing>, custom_types: &mut
     function.resolve_custom_types(custom_types);
 }
 
-impl CustomTypeResolution for MatchArm<Typing> {
+impl CustomTypeResolution for MatchStmtArm<Typing> {
     fn resolve_custom_types(&mut self, composite_types: &CompositeTypes) {
         self.body.resolve_custom_types(composite_types);
     }
@@ -277,6 +289,7 @@ impl DataType {
             DataType::Xfe => false,
             DataType::Digest => false,
             DataType::VoidPointer => false,
+            DataType::Never => false,
         }
     }
 }
@@ -353,6 +366,7 @@ impl CustomTypeResolution for DataType {
             Xfe => (),
             Digest => (),
             VoidPointer => (),
+            Never => (),
         }
     }
 }

@@ -5,3 +5,7 @@
 
 # Directory specified in Makefile
 /makefile-target
+
+# Files for Triton-VM debugger
+program.tasm
+vm_state.json

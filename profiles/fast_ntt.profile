@@ -3036,30 +3036,50 @@ fast_ntt:
  total: 61387
 
 # aggregated
- main: 61385
-   tasm_io_read_stdin___bfe: 2
-   tasm_list_unsafeimplu32_length___xfe: 15
-   tasm_arithmetic_u32_leadingzeros: 12
-     tasm_arithmetic_u32_leadingzeros_non_zero: 4
-   tasm_arithmetic_u32_safesub: 22
-   xfe_ntt: 57086
-     _binop_Neq__LboolR_bool_29_while_loop: 26082
-       bitreverse: 22464
-         _binop_Lt__LboolR_bool_9_while_loop: 21952
-           tasm_arithmetic_u32_shiftleft: 3520
-           tasm_arithmetic_u32_or: 2240
-           tasm_arithmetic_u32_shiftright: 4480
-     tasm_arithmetic_u32_safeadd: 13376
-       _binop_Lt__LboolR_bool_35_else: 40
-       _binop_Lt__LboolR_bool_35_then: 1320
-     _binop_Neq__LboolR_bool_58_while_loop: 30956
-       tasm_arithmetic_u32_safemul: 656
-       _binop_Lt__LboolR_bool_69_while_loop: 30318
-         _binop_Neq__LboolR_bool_74_while_loop: 27882
-   _binop_Lt__LboolR_bool_186_while_loop: 1128
-     tasm_io_write_to_stdout___xfe: 64
-   xfe_intt: 29965
-     bfe_new_from_u64: 5
-     _binop_Lt__LboolR_bool_149_while_loop: 1384
-   _binop_Lt__LboolR_bool_201_while_loop: 1672
- total: 61387
+ main: 61385 (1)
+   tasm_io_read_stdin___bfe: 2 (0.00003258125)
+   tasm_list_unsafeimplu32_length___xfe: 3 (0.000048871872)
+   tasm_arithmetic_u32_leadingzeros: 12 (0.00019548749)
+     tasm_arithmetic_u32_leadingzeros_non_zero: 4 (0.0000651625)
+   tasm_arithmetic_u32_safesub: 22 (0.00035839374)
+   xfe_ntt: 28543 (0.4649833)
+     tasm_list_unsafeimplu32_length___xfe: 9 (0.00014661562)
+     _binop_Neq__LboolR_bool_29_while_loop: 13041 (0.21244603)
+       bitreverse: 11232 (0.18297629)
+         _binop_Lt__LboolR_bool_9_while_loop: 10976 (0.1788059)
+           tasm_arithmetic_u32_shiftleft: 1760 (0.0286715)
+           tasm_arithmetic_u32_or: 1120 (0.0182455)
+           tasm_arithmetic_u32_shiftright: 2240 (0.036491)
+           tasm_arithmetic_u32_safeadd: 6008 (0.097874075)
+       _binop_Lt__LboolR_bool_35_else: 20 (0.0003258125)
+       tasm_arithmetic_u32_safeadd: 552 (0.008992425)
+       _binop_Lt__LboolR_bool_35_then: 660 (0.010751813)
+     _binop_Neq__LboolR_bool_58_while_loop: 15478 (0.2521463)
+       tasm_arithmetic_u32_safemul: 80 (0.00130325)
+       _binop_Lt__LboolR_bool_69_while_loop: 15159 (0.24694958)
+         _binop_Neq__LboolR_bool_74_while_loop: 13941 (0.2271076)
+         tasm_arithmetic_u32_safemul: 328 (0.005343325)
+         tasm_arithmetic_u32_safeadd: 544 (0.0088621)
+   _binop_Lt__LboolR_bool_186_while_loop: 1128 (0.018375825)
+     tasm_io_write_to_stdout___xfe: 64 (0.0010426)
+     tasm_arithmetic_u32_safeadd: 512 (0.0083408)
+   xfe_intt: 29965 (0.48814857)
+     xfe_ntt: 28543 (0.4649833)
+       tasm_list_unsafeimplu32_length___xfe: 3 (0.000048871872)
+       _binop_Neq__LboolR_bool_29_while_loop: 13041 (0.21244603)
+         bitreverse: 11232 (0.18297629)
+           _binop_Lt__LboolR_bool_9_while_loop: 10976 (0.1788059)
+             tasm_arithmetic_u32_shiftleft: 1760 (0.0286715)
+             tasm_arithmetic_u32_or: 1120 (0.0182455)
+             tasm_arithmetic_u32_shiftright: 2240 (0.036491)
+             tasm_arithmetic_u32_safeadd: 5760 (0.093834)
+         _binop_Lt__LboolR_bool_35_else: 20 (0.0003258125)
+         _binop_Lt__LboolR_bool_35_then: 660 (0.010751813)
+       _binop_Neq__LboolR_bool_58_while_loop: 15478 (0.2521463)
+         _binop_Lt__LboolR_bool_69_while_loop: 15159 (0.24694958)
+           _binop_Neq__LboolR_bool_74_while_loop: 13941 (0.2271076)
+           tasm_arithmetic_u32_safemul: 248 (0.004040075)
+     bfe_new_from_u64: 5 (0.00008145312)
+     _binop_Lt__LboolR_bool_149_while_loop: 1384 (0.022546224)
+   _binop_Lt__LboolR_bool_201_while_loop: 1672 (0.027237924)
+ total: 61387 (1.0000325)

@@ -11,3 +11,9 @@ impl ArrayType {
         self.element_type.stack_size() * self.length
     }
 }
+
+impl From<&ArrayType> for DataType {
+    fn from(array_type: &ArrayType) -> Self {
+        DataType::Array(array_type.to_owned())
+    }
+}

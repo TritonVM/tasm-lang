@@ -81,7 +81,7 @@ mod test {
         let native_output = rust_shadows::wrap_main_with_io(&main)(std_in.clone(), non_determinism);
         println!("native_output: {native_output:#?}");
 
-        let expected_output = vec![
+        let expected_output = [
             xfes[3].encode(),
             xfes[0].encode(),
             XFieldElement::new([52, 53, 54].map(BFieldElement::new)).encode(),

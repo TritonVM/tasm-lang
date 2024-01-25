@@ -10,10 +10,13 @@ pub(crate) struct InnerFunctionTasmCode {
 
 impl InnerFunctionTasmCode {
     /// Return a dummy value, needed to allow recursive calls for methods.
+    /// This dummy-value is guaranteed to crash if it is ever invoked.
     pub fn dummy_value(name: &str) -> Self {
         Self {
             name: name.to_owned(),
-            call_depth_zero_code: triton_asm!({name}: return).try_into().unwrap(),
+            call_depth_zero_code: triton_asm!({name}: push 0 assert return)
+                .try_into()
+                .unwrap(),
             sub_routines: vec![],
         }
     }
