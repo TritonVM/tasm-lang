@@ -619,8 +619,10 @@ pub(super) fn compile_match_expr_boxed_value(
         let leave_only_result =
             state.clear_all_but_top_stack_value_above_height(height_of_stack_that_must_not_change);
         let return_type_size = return_type.stack_size();
-        let result_hint =
-            format!("hint match_arm_result: {return_type} = stack[0..{return_type_size}]");
+        let result_hint = format!(
+            "hint match_arm_result: {} = stack[0..{return_type_size}]",
+            return_type.label_friendly_name()
+        );
 
         let subroutine_code = triton_asm!(
             {arm_subroutine_label}:
