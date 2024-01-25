@@ -91,7 +91,7 @@ fn compile_catch_all_predicate_inner(
     // Special-case on the common pattern of *two* match arms, where
     // the latter is a catch-all
     if discriminants_explicitly.len().is_one() {
-        let only_explicit_discriminant = discriminants_explicitly.iter().next().unwrap();
+        let only_explicit_discriminant = *discriminants_explicitly.iter().next().unwrap();
         return triton_asm!(
             // _ discriminant
 
@@ -680,9 +680,10 @@ pub(super) fn compile_match_expr_boxed_value(
                     {&get_discriminant}
                     // _ <[maybe_result]> discriminant
 
-                    push {&catch_all_predicate}
+                    {&catch_all_predicate}
                     // _ <[maybe_result]> take_catch_all_branch
 
+                    skiz
                     call {arm_subroutine_label}
                     // _ <[maybe_result']>
                 ));
