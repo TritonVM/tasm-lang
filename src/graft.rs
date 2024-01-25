@@ -990,7 +990,7 @@ impl<'a> Graft<'a> {
 
                 // Last line must be an expression, cannot be a binding or anything else.
                 let syn::Stmt::Expr(expr) = returning_expr else {
-                    panic!()
+                    panic!("Got: {returning_expr:#?}")
                 };
                 let return_expr = self.graft_expr(expr);
 

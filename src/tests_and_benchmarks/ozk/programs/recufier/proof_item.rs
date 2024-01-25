@@ -1,5 +1,4 @@
 use arbitrary::Arbitrary;
-use num::Zero;
 use triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
 use triton_vm::twenty_first::shared_math::x_field_element::XFieldElement;
 use triton_vm::BFieldElement;
@@ -32,145 +31,131 @@ pub enum ProofItem {
 
 impl ProofItem {
     fn include_in_fiat_shamir_heuristic(&self) -> bool {
-        let mut is_included: bool = false;
-        match self {
+        return match self {
             ProofItem::MerkleRoot(_) => {
-                is_included = true;
+                //
+                true
             }
             ProofItem::OutOfDomainBaseRow(_) => {
-                is_included = true;
+                //
+                true
             }
             ProofItem::OutOfDomainExtRow(_) => {
-                is_included = true;
+                //
+                true
             }
             ProofItem::OutOfDomainQuotientSegments(_) => {
-                is_included = true;
+                //
+                true
             }
             // all other possibilities are implied by a corresponding Merkle root
-            _ => {}
+            _ => {
+                //
+                false
+            }
         };
-
-        return is_included;
     }
 
     pub fn as_authentication_structure(&self) -> Vec<Digest> {
-        #[allow(unused_assignments)]
-        let mut auth_structure: Vec<Digest> = Vec::<Digest>::with_capacity(0);
-        match self {
+        return match self {
             ProofItem::AuthenticationStructure(caps) => {
-                auth_structure = caps.to_owned();
+                //
+                caps.to_owned()
             }
             _ => {
-                panic!();
+                //
+                panic!()
             }
         };
-
-        return auth_structure;
     }
 
     pub fn as_master_base_table_rows(&self) -> Vec<Vec<BFieldElement>> {
-        #[allow(unused_assignments)]
-        let mut mbt_rows: Vec<Vec<BFieldElement>> = Vec::<Vec<BFieldElement>>::with_capacity(0);
-        match self {
+        return match self {
             ProofItem::MasterBaseTableRows(bss) => {
-                mbt_rows = bss.to_owned();
+                //
+                bss.to_owned()
             }
             _ => {
-                panic!();
+                //
+                panic!()
             }
         };
-
-        return mbt_rows;
     }
 
     pub fn as_master_ext_table_rows(&self) -> Vec<Vec<XFieldElement>> {
-        #[allow(unused_assignments)]
-        let mut met_rows: Vec<Vec<XFieldElement>> = Vec::<Vec<XFieldElement>>::with_capacity(0);
-        match self {
+        return match self {
             ProofItem::MasterExtTableRows(xss) => {
-                met_rows = xss.to_owned();
+                //
+                xss.to_owned()
             }
             _ => {
-                panic!();
+                //
+                panic!()
             }
         };
-
-        return met_rows;
     }
 
     pub fn as_out_of_domain_base_row(&self) -> Vec<XFieldElement> {
-        #[allow(unused_assignments)]
-        let mut ood_base_row: Vec<XFieldElement> = Vec::<XFieldElement>::with_capacity(0);
-        match self {
+        return match self {
             ProofItem::OutOfDomainBaseRow(xs) => {
-                ood_base_row = xs.to_owned();
+                //
+                xs.to_owned()
             }
             _ => {
-                panic!();
+                //
+                panic!()
             }
         };
-
-        return ood_base_row;
     }
 
     pub fn as_out_of_domain_ext_row(&self) -> Vec<XFieldElement> {
-        #[allow(unused_assignments)]
-        let mut ood_ext_row: Vec<XFieldElement> = Vec::<XFieldElement>::with_capacity(0);
-        match self {
+        return match self {
             ProofItem::OutOfDomainExtRow(xs) => {
-                ood_ext_row = xs.to_owned();
+                //
+                xs.to_owned()
             }
             _ => {
-                panic!();
+                //
+                panic!()
             }
         };
-
-        return ood_ext_row;
     }
 
     pub fn as_out_of_domain_quotient_segments(&self) -> [XFieldElement; 4] {
-        #[allow(unused_assignments)]
-        let mut ood_quotient_segments: [XFieldElement; 4] = [XFieldElement::zero(); 4];
-        match self {
+        return match self {
             ProofItem::OutOfDomainQuotientSegments(xs) => {
-                ood_quotient_segments = *xs;
+                //
+                *xs
             }
             _ => {
-                panic!();
+                panic!()
             }
         };
-
-        return ood_quotient_segments;
     }
 
     fn as_merkle_root(&self) -> Digest {
-        #[allow(unused_assignments)]
-        let mut root: Digest = Digest::default();
-        match self {
+        return match self {
             ProofItem::MerkleRoot(bs) => {
-                root = *bs;
+                //
+                *bs
             }
             _ => {
-                panic!();
+                panic!()
             }
         };
-
-        return root;
     }
 
     pub fn as_log2_padded_height(&self) -> u32 {
-        #[allow(unused_assignments)]
-        let mut log2_padded_height: u32 = 0;
-        match self {
+        return match self {
             ProofItem::Log2PaddedHeight(height) => {
-                log2_padded_height = *height;
+                //
+                *height
             }
             _ => {
-                panic!();
+                //
+                panic!()
             }
         };
-
-        return log2_padded_height;
     }
 
     // todo: enable this once arrays work in lib
@@ -192,18 +177,15 @@ impl ProofItem {
     }*/
 
     pub fn as_fri_codeword(&self) -> Vec<XFieldElement> {
-        #[allow(unused_assignments)]
-        let mut fri_codeword: Vec<XFieldElement> = Vec::<XFieldElement>::with_capacity(0);
-        match self {
+        return match self {
             ProofItem::FriCodeword(xs) => {
-                fri_codeword = xs.to_owned();
+                //
+                xs.to_owned()
             }
             _ => {
-                panic!();
+                panic!()
             }
         };
-
-        return fri_codeword;
     }
 
     // todo: enable this, figure out `to_owned()` for `FriResponse`
@@ -459,11 +441,15 @@ mod test {
         let segments: [XFieldElement; 4] =
             ood_quotient_segments_item.as_out_of_domain_quotient_segments();
         {
-            let mut i: usize = 0;
-            while i < segments.len() {
-                tasm::tasm_io_write_to_stdout___xfe(segments[i]);
-                i += 1;
-            }
+            tasm::tasm_io_write_to_stdout___xfe(segments[0]);
+            tasm::tasm_io_write_to_stdout___xfe(segments[1]);
+            tasm::tasm_io_write_to_stdout___xfe(segments[2]);
+            tasm::tasm_io_write_to_stdout___xfe(segments[3]);
+            // let mut i: usize = 0;
+            // while i < segments.len() {
+            //     tasm::tasm_io_write_to_stdout___xfe(segments[i]);
+            //     i += 1;
+            // }
         }
 
         return;
