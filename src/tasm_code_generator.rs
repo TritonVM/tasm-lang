@@ -830,32 +830,6 @@ impl<'a> CompilerState<'a> {
         &mut self,
         height: usize,
     ) -> Vec<LabelledInstruction> {
-        /// Code generation for removing elements from the bottom of the stack while preserving
-        /// the order of the values above.
-        fn clear_bottom_of_stack(
-            top_value_size: usize,
-            words_to_remove: usize,
-        ) -> Vec<LabelledInstruction> {
-            match (top_value_size, words_to_remove) {
-                (3, 2) => triton_asm!(swap 2 swap 4 pop 1 swap 2 pop 1),
-                (4, 2) => triton_asm!(swap 1 swap 3 swap 5 pop 1 swap 1 swap 3 pop 1),
-                (6, 2) => triton_asm!(swap 2 swap 4 swap 6 pop 1 swap 2 swap 4 swap 6 pop 1),
-                (4, 3) => triton_asm!(swap 3 swap 6 pop 1 swap 3 pop 1 swap 3 pop 1),
-                (5, 3) => triton_asm!(swap 4 swap 7 pop 1 swap 2 swap 5 pop 1 swap 3 pop 1 swap 1),
-                (6, 4) => triton_asm!(swap 4 swap 8 pop 1 swap 4 swap 8 pop 1 swap 4 pop 1 swap 4 pop 1),
-                (8, 4) => triton_asm!(swap 4 swap 8 pop 1 swap 4 swap 8 pop 1 swap 4 swap 8 pop 1 swap 4 swap 8 pop 1),
-                (n, 1) => {
-                    let mut swaps = vec![];
-                    for i in 1..=n {
-                        swaps.append(&mut triton_asm!(swap {i}));
-                    }
-
-                    triton_asm!({&swaps} pop 1)
-                }
-                _ => panic!("Unsupported. Please cover more special cases. Got: {top_value_size}, {words_to_remove}"),
-            }
-        }
-
         let height_of_affected_stack: usize =
             self.function_state.vstack.get_stack_height() - height;
 
@@ -911,15 +885,8 @@ impl<'a> CompilerState<'a> {
             code.extend(load_from_memory(memory_location, top_value_size));
 
             code
-        } else if words_to_remove != 0 {
-            // Here, the number of words under the top element is less than the size of
-            // the top element. We special-case this as the order on the stack
-            // must be preserved, which is non-trivial.
-            clear_bottom_of_stack(top_value_size, words_to_remove)
         } else {
-            // The case where nothing has to be done since there is nothing below the
-            // top value that needs to be removed
-            vec![]
+            Self::clear_bottom_of_stack(top_value_size, words_to_remove)
         };
 
         // Clean up vstack
@@ -937,6 +904,31 @@ impl<'a> CompilerState<'a> {
         self.function_state.vstack.push(top_element);
 
         code
+    }
+
+    /// Code generation for removing elements from the bottom of the stack while preserving
+    /// the order of the values above.
+    fn clear_bottom_of_stack(
+        top_value_size: usize,
+        words_to_remove: usize,
+    ) -> Vec<LabelledInstruction> {
+        match (top_value_size, words_to_remove) {
+            (_, 0) => vec![],
+            (n, 1) => {
+                let swaps = (1..=n).flat_map(|i| triton_asm!(swap {i})).collect_vec();
+                triton_asm!({&swaps} pop 1)
+            }
+            (3, 2) => triton_asm!(swap 2 swap 4 pop 1 swap 2 pop 1),
+            (4, 2) => triton_asm!(swap 1 swap 3 swap 5 pop 1 swap 1 swap 3 pop 1),
+            (5, 2) => triton_asm!(swap 5 pop 1 swap 5 pop 1 swap 2 swap 4 swap 1 swap 3),
+            (6, 2) => triton_asm!(swap 2 swap 4 swap 6 pop 1 swap 2 swap 4 swap 6 pop 1),
+            (4, 3) => triton_asm!(swap 3 swap 6 pop 1 swap 3 pop 1 swap 3 pop 1),
+            (5, 3) => triton_asm!(swap 4 swap 7 pop 1 swap 2 swap 5 pop 1 swap 3 pop 1 swap 1),
+            (6, 4) => triton_asm!(swap 4 swap 8 pop 1 swap 4 swap 8 pop 1 swap 4 pop 1 swap 4 pop 1),
+            (8, 4) => triton_asm!(swap 4 swap 8 pop 1 swap 4 swap 8 pop 1 swap 4 swap 8 pop 1 swap 4 swap 8 pop 1),
+
+            _ => panic!("Unsupported. Please cover more special cases. Got: {top_value_size}, {words_to_remove}"),
+        }
     }
 
     /// Helper function for debugging
