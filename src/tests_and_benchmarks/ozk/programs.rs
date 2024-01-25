@@ -4,6 +4,7 @@ mod boxed;
 mod enums;
 mod match_expr_boxed;
 mod match_expr_on_stack;
+mod match_stmt_boxed;
 mod option_types;
 mod other;
 mod project_euler;
