@@ -12,6 +12,7 @@ use crate::tasm_code_generator::CompilerState;
 use super::move_top_stack_value_to_memory;
 use super::write_n_words_to_memory_leaving_address;
 
+pub mod array_type;
 pub mod enum_type;
 pub mod struct_type;
 pub mod tuple_type;

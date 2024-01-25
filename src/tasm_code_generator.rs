@@ -26,7 +26,6 @@ use self::inner_function_tasm_code::InnerFunctionTasmCode;
 use self::outer_function_tasm_code::OuterFunctionTasmCode;
 use self::stack::VStack;
 use crate::ast;
-use crate::ast::ArrayExpression;
 use crate::ast::Identifier;
 use crate::ast::RoutineBody;
 use crate::ast_types;
@@ -34,6 +33,7 @@ use crate::ast_types::StructVariant;
 use crate::composite_types::CompositeTypes;
 use crate::libraries;
 use crate::subroutine::SubRoutine;
+use crate::tasm_code_generator::data_type::array_type::compile_array_expr;
 use crate::tasm_code_generator::match_code::compile_match_expr_boxed_value;
 use crate::tasm_code_generator::match_code::compile_match_expr_stack_value;
 use crate::tasm_code_generator::match_code::compile_match_stmt_boxed_expr;
@@ -1350,12 +1350,13 @@ fn compile_stmt(
                 "Cannot handle memory-spill of evaluated match expressions. But {match_expr_id} required memory spilling"
             );
 
-            // stack: _ [enum]
             let match_stmt = match match_stmt.match_expression.get_type() {
+                // stack: _ [enum]
                 ast_types::DataType::Enum(_) => {
                     compile_match_stmt_stack_expr(match_stmt, state, &match_expr_id)
                 }
                 ast_types::DataType::Boxed(inner) => match *inner.to_owned() {
+                    // stack: _ *enum
                     ast_types::DataType::Enum(_) => {
                         compile_match_stmt_boxed_expr(match_stmt, state, &match_expr_id)
                     }
@@ -1715,7 +1716,7 @@ fn compile_expr(
         }
 
         ast::Expr::EnumDeclaration(enum_decl) => {
-            // Compile an enum-declaration without associated data
+            // Compile an enum-declaration without associated data: `let a = Foo::Bar;`
             // Padding is done to ensure that all instances of this enum have
             // the same size on the stack.
             let padding = enum_decl
@@ -1992,7 +1993,6 @@ fn compile_expr(
                             state.function_state.vstack.pop();
                             state.function_state.vstack.pop();
 
-                            // vec![lhs_expr_code, rhs_expr_code, bfe_div_code].concat()
                             triton_asm!(
                                 {&lhs_expr_code}
                                 {&rhs_expr_code}
@@ -2025,8 +2025,6 @@ fn compile_expr(
                     use ast_types::DataType::*;
                     match result_type {
                         U32 => {
-                            // TODO: Consider evaluating in opposite order to save a clock-cycle by removing `swap1`
-                            // below. This would change the "left-to-right" convention though.
                             let (_lhs_expr_addr, lhs_expr_code) =
                                 compile_expr(lhs_expr, "_binop_lhs", state);
                             let (_rhs_expr_addr, rhs_expr_code) =
@@ -2607,131 +2605,6 @@ fn compile_match_expr(
 
         {&restore_stack_code}
         // _ [result]
-    )
-}
-
-fn compile_array_expr(
-    state: &mut CompilerState,
-    array_expr: &ArrayExpression<type_checker::Typing>,
-    array_type: &type_checker::Typing,
-) -> Vec<LabelledInstruction> {
-    // Compile elements left-to-right and store each element in memory
-
-    // TODO: This does not handle arrays of elements whose sizes
-    // are not known at compile time.
-
-    let ast_types::DataType::Array(array_type) = &array_type.get_type() else {
-        panic!("Type must be array");
-    };
-
-    let total_size_in_memory: usize = array_type.size_in_memory();
-    let dyn_malloc_snippet_label =
-        state.import_snippet(Box::new(tasm_lib::memory::dyn_malloc::DynMalloc));
-    let allocate_memory_for_array = triton_asm!(
-        // _
-
-        push {total_size_in_memory}
-        call {dyn_malloc_snippet_label}
-
-        // _ *array
-
-        dup 0
-        // _ *array *array
-    );
-    state.new_value_identifier("array_pointer", &(array_type.into()));
-    state.new_value_identifier("array_pointer", &(array_type.into()));
-    let element_size: usize = array_type.element_type.stack_size();
-    let move_element_to_memory = write_n_words_to_memory_leaving_address(element_size);
-
-    let store_array_in_memory = match array_expr {
-        ast::ArrayExpression::ElementsSpecified(element_expressions) => {
-            element_expressions
-                .iter()
-                .enumerate()
-                .map(|(arg_pos, arg_expr)| {
-                    let context = format!("_array_{arg_pos}");
-                    let (_, evaluate_element) = compile_expr(arg_expr, &context, state);
-                    state.function_state.vstack.pop().unwrap();
-
-                    triton_asm!(
-                        // _ *array *free_word
-
-                        {&evaluate_element}
-                        // _ *array *free_word [elem]
-
-                        dup {element_size}
-                        // _ *array *free_word [elem] *free_word
-
-                        {&move_element_to_memory}
-                        // _ *array *free_word *next_free_word
-
-                        swap 1
-                        pop 1
-                        // _ *array *next_free_word
-                    )
-                })
-                .concat()
-        }
-
-        ArrayExpression::Repeat { element, length } => {
-            let context = "_array_repeat";
-            let (_, evaluate_element) = compile_expr(element, context, state);
-            state.function_state.vstack.pop().unwrap();
-
-            let dup_element = format!("dup {}\n", element_size - 1).repeat(element_size);
-
-            let copy_element_to_memory_length_times = (0..*length)
-                .flat_map(|_| {
-                    triton_asm!(
-                        // _ *array *free_word [elem]
-
-                        {dup_element}
-                        // _ *array *free_word [elem] [elem]
-
-                        dup {2 * element_size}
-                        // _ *array *free_word [elem] [elem] *free_word
-
-                        {&move_element_to_memory}
-                        // _ *array *free_word [elem] *next_free_word
-
-                        swap {1 + element_size}
-                        pop 1
-                        // _ *array *next_free_word [elem]
-                    )
-                })
-                .collect_vec();
-
-            let clean_up_element = pop_n(element_size);
-
-            triton_asm!(
-                // _ *array *array
-
-                {&evaluate_element}
-                // _ *array *array [elem]
-
-                {&copy_element_to_memory_length_times}
-                // _ *array *next_free_word [elem]
-
-                {&clean_up_element}
-                // _ *array *next_free_word
-            )
-        }
-    };
-
-    // Remove the added array pointers from compiler's view of stack
-    state.function_state.vstack.pop().unwrap();
-    state.function_state.vstack.pop().unwrap();
-
-    triton_asm!(
-        // _
-        {&allocate_memory_for_array}
-        // _ *array *array
-
-        {&store_array_in_memory}
-        // _ *array *next_free_word
-
-        pop 1
-        // _ *array
     )
 }
 
