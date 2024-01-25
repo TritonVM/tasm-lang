@@ -14679,23 +14679,25 @@ project_euler_4_w_unsafe_lists_i10_to_50:
  total: 297185
 
 # aggregated
- main: 297183
-   tasm_list_unsafeimplu32_new___u32: 38
-     tasm_memory_dyn_malloc: 29
-   _binop_Neq__LboolR_bool_47_while_loop: 297132
-     _binop_Neq__LboolR_bool_53_while_loop: 296123
-     tasm_arithmetic_u32_safeadd: 22608
-       tasm_arithmetic_u32_safemul: 6560
-       find_decimal_digits: 130092
-         _binop_Neq__LboolR_bool_6_while_loop: 122712
-           tasm_list_unsafeimplu32_push___u32: 49428
-       list_is_palindrome: 115181
-         tasm_list_unsafeimplu32_length___u32: 2460
-         _binop_Neq__LboolR_bool_23_while_loop: 105341
-           tasm_arithmetic_u32_safesub: 24332
-           _binop_Neq__LboolR_bool_34_then: 6114
-       _binop_And__LboolR_bool_66_else: 806
-           _binop_Neq__LboolR_bool_34_else: 87
-       _binop_And__LboolR_bool_66_then: 84
-   tasm_io_write_to_stdout___u32: 2
- total: 297185
+ main: 297183 (1)
+   tasm_list_unsafeimplu32_new___u32: 38 (0.00012786734)
+     tasm_memory_dyn_malloc: 29 (0.00009758297)
+   _binop_Neq__LboolR_bool_47_while_loop: 297132 (0.9998284)
+     _binop_Neq__LboolR_bool_53_while_loop: 296123 (0.9964332)
+       tasm_arithmetic_u32_safeadd: 13440 (0.04522466)
+       tasm_arithmetic_u32_safemul: 6560 (0.022073941)
+       find_decimal_digits: 130092 (0.4377505)
+         _binop_Neq__LboolR_bool_6_while_loop: 122712 (0.4129173)
+           tasm_list_unsafeimplu32_push___u32: 49428 (0.16632175)
+       list_is_palindrome: 115181 (0.387576)
+         tasm_list_unsafeimplu32_length___u32: 2460 (0.008277728)
+         _binop_Neq__LboolR_bool_23_while_loop: 105341 (0.3544651)
+           tasm_arithmetic_u32_safesub: 24332 (0.08187548)
+           _binop_Neq__LboolR_bool_34_then: 6114 (0.020573182)
+           tasm_arithmetic_u32_safeadd: 8848 (0.0297729)
+       _binop_And__LboolR_bool_66_else: 806 (0.0027121336)
+     tasm_arithmetic_u32_safeadd: 320 (0.0010767776)
+           _binop_Neq__LboolR_bool_34_else: 87 (0.0002927489)
+       _binop_And__LboolR_bool_66_then: 84 (0.00028265413)
+   tasm_io_write_to_stdout___u32: 2 (0.00000672986)
+ total: 297185 (1.0000067)

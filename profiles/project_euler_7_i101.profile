@@ -2899,19 +2899,23 @@ project_euler_7_i101:
  total: 67935
 
 # aggregated
- main: 67933
-   tasm_arithmetic_u32_leadingzeros: 12
-     tasm_arithmetic_u32_leadingzeros_non_zero: 4
-   tasm_arithmetic_u32_safesub: 22
-   tasm_arithmetic_u32_safemul: 808
-   tasm_list_safeimplu32_new___bool: 39
-     tasm_memory_dyn_malloc: 29
-   tasm_list_safeimplu32_push___bool: 13938
-   _binop_Lt__LboolR_bool_20_while_loop: 28396
-     tasm_arithmetic_u32_safeadd: 14432
-   _binop_Lt__LboolR_bool_31_while_loop: 39373
-     _primes_cast_u32__LboolR_bool_35_then: 29637
-       _binop_Lt__LboolR_bool_45_while_loop: 26437
-     _primes_cast_u32__LboolR_bool_35_else: 173
-   tasm_io_write_to_stdout___u32: 4
- total: 67935
+ main: 67933 (1)
+   tasm_arithmetic_u32_leadingzeros: 12 (0.00017664464)
+     tasm_arithmetic_u32_leadingzeros_non_zero: 4 (0.000058881546)
+   tasm_arithmetic_u32_safesub: 22 (0.0003238485)
+   tasm_arithmetic_u32_safemul: 8 (0.00011776309)
+   tasm_list_safeimplu32_new___bool: 39 (0.00057409506)
+     tasm_memory_dyn_malloc: 29 (0.0004268912)
+   tasm_list_safeimplu32_push___bool: 46 (0.00067713775)
+   _binop_Lt__LboolR_bool_20_while_loop: 28396 (0.4180001)
+     tasm_list_safeimplu32_push___bool: 13892 (0.20449561)
+     tasm_arithmetic_u32_safeadd: 7016 (0.10327823)
+   _binop_Lt__LboolR_bool_31_while_loop: 39373 (0.5795858)
+     _primes_cast_u32__LboolR_bool_35_then: 29637 (0.4362681)
+       tasm_arithmetic_u32_safeadd: 800 (0.011776309)
+       tasm_arithmetic_u32_safemul: 800 (0.011776309)
+       _binop_Lt__LboolR_bool_45_while_loop: 26437 (0.38916284)
+         tasm_arithmetic_u32_safeadd: 6616 (0.09739008)
+     _primes_cast_u32__LboolR_bool_35_else: 173 (0.0025466268)
+   tasm_io_write_to_stdout___u32: 4 (0.000058881546)
+ total: 67935 (1.0000294)
