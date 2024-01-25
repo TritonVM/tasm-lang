@@ -145,11 +145,6 @@ impl TritonVMTestCase {
         self
     }
 
-    pub fn with_input_args(mut self, input_args: Vec<ast::ExprLit<Typing>>) -> Self {
-        self.input_args = input_args;
-        self
-    }
-
     pub fn with_std_in(mut self, std_in: Vec<BFieldElement>) -> Self {
         self.std_in = std_in;
         self
