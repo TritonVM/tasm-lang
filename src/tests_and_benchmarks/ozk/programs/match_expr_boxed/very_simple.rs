@@ -33,7 +33,7 @@ mod test {
     use crate::tests_and_benchmarks::test_helpers::shared_test::TritonVMTestCase;
 
     #[test]
-    fn very_simple_test() {
+    fn variant_a_test() {
         let variant_a = SimpleEnum::A;
         let non_determinism_a = init_memory_from(&variant_a, BFieldElement::new(2));
         let native_output_a =
@@ -45,11 +45,15 @@ mod test {
             .execute()
             .unwrap();
         assert_eq!(native_output_a, vm_output_a.output);
+    }
 
+    #[test]
+    fn variant_b_test() {
         let variant_b = SimpleEnum::B(BFieldElement::new(12345678901234567890));
         let non_determinism_b = init_memory_from(&variant_b, BFieldElement::new(2));
         let native_output_b =
             rust_shadows::wrap_main_with_io(&main)(Vec::default(), non_determinism_b.clone());
+        let entrypoint = EntrypointLocation::disk("match_expr_boxed", "very_simple", "main");
         let vm_output_b = TritonVMTestCase::new(entrypoint)
             .expect_stack_difference(0)
             .with_non_determinism(non_determinism_b)

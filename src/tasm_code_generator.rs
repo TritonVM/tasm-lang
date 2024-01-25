@@ -562,6 +562,25 @@ impl<'a> CompilerState<'a> {
             static_allocations: self.global_compiler_state.static_allocations.clone(),
         }
     }
+
+    fn add_boxed_match_arm_binding_to_scope(
+        &mut self,
+        binding_and_its_type: (ast::PatternMatchedBinding, ast_types::DataType),
+    ) {
+        let (binding, element_type) = binding_and_its_type;
+        let dtype = ast_types::DataType::Boxed(Box::new(element_type));
+        let (new_binding_id, spill_addr) =
+            self.new_value_identifier("in_memory_split_value", &dtype);
+        assert!(
+            spill_addr.is_none(),
+            "Cannot handle memory-spilling in match-arm bindings yet. Required spilling of binding '{}'",
+            binding.name
+        );
+
+        self.function_state
+            .var_addr
+            .insert(binding.name, new_binding_id);
+    }
 }
 
 pub const SIZE_OF_ACCESSIBLE_STACK: usize = triton_vm::op_stack::NUM_OP_STACK_REGISTERS;
@@ -2688,9 +2707,7 @@ fn compile_returning_block_expr(
         state,
     );
 
-    // Cleanup stack and variable name mapping after `then` body. Preserve the return
-    // value from the `then` branch on the stack, but not on vstack as this value is
-    // not visible to the `else` branch.
+    // Cleanup stack and local variable names.
     let cleanup_code =
         state.clear_all_but_top_stack_value_above_height(start_vstack.get_stack_height());
 

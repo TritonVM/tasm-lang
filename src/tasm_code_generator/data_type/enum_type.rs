@@ -591,26 +591,19 @@ impl EnumType {
     /// elements on top of the stack
     /// ```text
     /// BEFORE: _ *discriminant
-    /// AFTER: _ *discriminant [*variant-data-fields]
+    /// AFTER:  _ *discriminant [*variant-data-fields]
     /// ```
     pub(crate) fn get_variant_data_fields_in_memory(
         &self,
-        enum_variant_selector: &ast::EnumVariantSelector,
+        match_condition: &ast::MatchCondition,
         state: &mut CompilerState,
     ) -> String {
-        let data_types = enum_variant_selector.get_bindings_type(
-            &self
-                .variant_data_type(&enum_variant_selector.variant_name)
-                .as_tuple_type(),
-        );
-
-        let label_for_subroutine = enum_variant_selector.label_for_binding_subroutine(true);
-
-        // If subroutine was already constructed and included, just return the label, otherwise
-        // build the subroutine and include it in state.
+        let label_for_subroutine = match_condition.label_for_binding_subroutine(true);
         if state.contains_subroutine(&label_for_subroutine) {
             return label_for_subroutine;
         }
+
+        let data_type_of_bindings = match_condition.data_type_of_bindings(self);
 
         let mut acc_code = triton_asm!(
             {label_for_subroutine}:
@@ -625,7 +618,7 @@ impl EnumType {
 
         // Before this loop: _ *discriminant *first_field_or_field_size
         // Goal: _ *discriminant field_0 field_1 field_2 ...
-        for dtype in data_types.clone().into_iter().rev() {
+        for dtype in data_type_of_bindings.clone().into_iter().rev() {
             let mut get_field_pointer = match dtype.bfield_codec_static_length() {
                 Some(size) => {
                     triton_asm!(
@@ -668,7 +661,7 @@ impl EnumType {
         // _ *discriminant [*field_0, *field_1, *field_2]
 
         // So we need to flip top `n` words on the stack
-        let flip_code = match data_types.element_count() {
+        let flip_code = match data_type_of_bindings.element_count() {
             0 => triton_asm!(),
             1 => triton_asm!(),
             2 => triton_asm!(swap 1),

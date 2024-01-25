@@ -236,6 +236,43 @@ impl Display for EnumVariantSelector {
     }
 }
 
+impl MatchCondition {
+    pub(crate) fn data_type_of_bindings(
+        &self,
+        enum_type: &ast_types::EnumType,
+    ) -> ast_types::Tuple {
+        match self {
+            Self::CatchAll => ast_types::Tuple::unit(),
+            Self::EnumVariant(selector) => selector.get_bindings_type(enum_type),
+        }
+    }
+
+    pub(crate) fn data_binding_declarations(&self) -> Vec<PatternMatchedBinding> {
+        match self {
+            Self::CatchAll => vec![],
+            Self::EnumVariant(selector) => selector.data_bindings.to_owned(),
+        }
+    }
+
+    pub(crate) fn declarations_and_their_types(
+        &self,
+        enum_type: &ast_types::EnumType,
+    ) -> impl Iterator<Item = (PatternMatchedBinding, ast_types::DataType)> {
+        let tuple_type = self.data_type_of_bindings(enum_type);
+        let data_bindings = self.data_binding_declarations();
+
+        data_bindings.into_iter().zip_eq(tuple_type.fields)
+    }
+
+    /// Return the label for the subroutine that creates the bindings defined by this match-condition.
+    pub(crate) fn label_for_binding_subroutine(&self, boxed: bool) -> String {
+        match self {
+            Self::CatchAll => "__catch_all_bindings_subroutine".to_owned(),
+            Self::EnumVariant(selector) => selector.label_for_binding_subroutine(boxed),
+        }
+    }
+}
+
 impl EnumVariantSelector {
     /// Return the label for the subroutine that creates the bindings defined in this
     /// match-arm.
@@ -250,11 +287,13 @@ impl EnumVariantSelector {
     }
 
     /// Return the composite type of this match-arm binding
-    pub(crate) fn get_bindings_type(&self, data_type: &ast_types::Tuple) -> ast_types::Tuple {
+    pub(crate) fn get_bindings_type(&self, enum_type: &ast_types::EnumType) -> ast_types::Tuple {
         if self.data_bindings.is_empty() {
             ast_types::Tuple::unit()
         } else {
-            data_type.to_owned()
+            enum_type
+                .variant_data_type(&self.variant_name)
+                .as_tuple_type()
         }
     }
 }

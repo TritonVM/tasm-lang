@@ -65,7 +65,7 @@ impl MatchStmt<Typing> {
 /// Generate the code for the predicate determining if a catch-all branch should be taken.
 /// ```text
 /// BEFORE: _ discriminant
-/// AFTER: _ take_catch_all_branch
+/// AFTER:  _ take_catch_all_branch
 /// ```
 fn compile_catch_all_predicate_inner(
     match_conditions: &[MatchCondition],
@@ -265,8 +265,8 @@ pub(super) fn compile_match_stmt_stack_expr(
 
 /// Compile a match-statement where the matched-against value lives in memory
 /// ```text
-/// BEFORE: *match_expression
-/// AFTER: *match_expression
+/// BEFORE: _ *match_expression
+/// AFTER:  _ *match_expression
 /// ```
 pub(super) fn compile_match_stmt_boxed_expr(
     match_stmt: &ast::MatchStmt<type_checker::Typing>,
@@ -303,7 +303,7 @@ pub(super) fn compile_match_stmt_boxed_expr(
                 let arm_variant_discriminant = match_expression_enum_type
                     .variant_discriminant(&enum_variant_selector.variant_name);
 
-                match_code.append(&mut triton_asm!(
+                match_code.extend(triton_asm!(
                     // _ *match_expr
 
                     {&match_expr_discriminant}
@@ -319,63 +319,10 @@ pub(super) fn compile_match_stmt_boxed_expr(
                     call {arm_subroutine_label}
                     // _ *match_expr
                 ));
-
-                let tuple_type = enum_variant_selector.get_bindings_type(
-                    &match_expression_enum_type
-                        .variant_data_type(&enum_variant_selector.variant_name)
-                        .as_tuple_type(),
-                );
-
-                let label_for_bindings_subroutine = match_expression_enum_type
-                    .get_variant_data_fields_in_memory(enum_variant_selector, state);
-
-                enum_variant_selector
-                    .data_bindings
-                    .iter()
-                    .zip_eq(tuple_type.fields.iter())
-                    .for_each(|(binding, element_type)| {
-                        let dtype = ast_types::DataType::Boxed(Box::new(element_type.to_owned()));
-                        let (new_binding_id, spill_addr) =
-                            state.new_value_identifier("in_memory_split_value", &dtype);
-                        assert!(spill_addr.is_none(), "Cannot handle memory-spilling in match-arm bindings yet. Required spilling of binding '{}'", binding.name);
-                        // push relative address, add to absolute address
-                        // to get *new* absolute address.
-                        // Then insert this boxed type into `var_addr`
-
-                        state
-                        .function_state
-                        .var_addr
-                        .insert(binding.name.to_owned(), new_binding_id);
-                    });
-
-                let body_code = compile_block_stmt(&arm.body, state);
-
-                let pop_local_bindings = pop_n(enum_variant_selector.data_bindings.len());
-                let subroutine_code = triton_asm!(
-                    {arm_subroutine_label}:
-                        // _ *discriminant
-
-                        call {label_for_bindings_subroutine}
-                        // _ *match_expr [*variant-data-fields]
-
-                        {&body_code}
-                        // _ *match_expr [*variant-data-fields]
-
-                        // We can just pop local binding from top of stack, since a statement cannot return anything
-                        {&pop_local_bindings}
-                        // _ *match_expr
-
-                        return
-                );
-
-                state
-                    .function_state
-                    .subroutines
-                    .push(subroutine_code.try_into().unwrap());
             }
             ast::MatchCondition::CatchAll => {
                 let predicate = match_stmt.compile_catch_all_predicate();
-                match_code.append(&mut triton_asm!(
+                match_code.extend(triton_asm!(
                     // _ *match_expr
 
                     {&match_expr_discriminant}
@@ -388,19 +335,44 @@ pub(super) fn compile_match_stmt_boxed_expr(
                     call {arm_subroutine_label}
                     // _ *match_expr
                 ));
-
-                let body_code = compile_block_stmt(&arm.body, state);
-                let subroutine_code = triton_asm!(
-                    {arm_subroutine_label}:
-                        {&body_code}
-                        return
-                );
-                state
-                    .function_state
-                    .subroutines
-                    .push(subroutine_code.try_into().unwrap());
             }
         }
+
+        arm.match_condition
+            .declarations_and_their_types(&match_expression_enum_type)
+            .for_each(|decl| state.add_boxed_match_arm_binding_to_scope(decl));
+
+        let label_for_bindings_subroutine = match_expression_enum_type
+            .get_variant_data_fields_in_memory(&arm.match_condition, state);
+
+        let body_code = compile_block_stmt(&arm.body, state);
+
+        let pop_local_bindings = match &arm.match_condition {
+            MatchCondition::CatchAll => vec![],
+            MatchCondition::EnumVariant(selector) => pop_n(selector.data_bindings.len()),
+        };
+
+        let subroutine_code = triton_asm!(
+            {arm_subroutine_label}:
+                // _ *discriminant
+
+                call {label_for_bindings_subroutine}
+                // _ *match_expr [*variant-data-fields]
+
+                {&body_code}
+                // _ *match_expr [*variant-data-fields]
+
+                // We can just pop local binding from top of stack, since a statement cannot return anything
+                {&pop_local_bindings}
+                // _ *match_expr
+
+                return
+        );
+
+        state
+            .function_state
+            .subroutines
+            .push(subroutine_code.try_into().unwrap());
 
         // Restore stack view and bindings view for next loop-iteration
         state
@@ -540,7 +512,7 @@ pub(super) fn compile_match_expr_stack_value(
 /// Compile a match-statement where the matched-against value lives, boxed, in memory
 /// ```text
 /// BEFORE: _ *match_expression
-/// AFTER: _ [result]
+/// AFTER:  _ [result]
 /// ```
 pub(super) fn compile_match_expr_boxed_value(
     match_expr: &ast::MatchExpr<type_checker::Typing>,
@@ -556,6 +528,12 @@ pub(super) fn compile_match_expr_boxed_value(
         .as_enum_type();
 
     let outer_vstack = state.function_state.vstack.clone();
+    state.show_vstack_values();
+    let mut vstack_without_match_expression_pointer = outer_vstack.clone();
+    vstack_without_match_expression_pointer.pop().unwrap();
+    let height_of_stack_that_must_not_change =
+        vstack_without_match_expression_pointer.get_stack_height();
+
     let outer_bindings = state.function_state.var_addr.clone();
     let return_type = match_expr.get_type();
     let match_expression_pointer_pointer = state.global_compiler_state.snippet_state.kmalloc(1);
@@ -583,16 +561,15 @@ pub(super) fn compile_match_expr_boxed_value(
         pop 1
         // _
     );
-    for (arm_counter, arm) in match_expr.arms.iter().enumerate() {
-        // At start of each loop-iteration, stack is:
-        // stack: _ <[maybe_result]>
 
+    for (arm_counter, arm) in match_expr.arms.iter().enumerate() {
+        // INVARIANT: _ <[maybe_result]>
         let arm_subroutine_label = format!("{match_expr_id}_body_{arm_counter}");
 
         match &arm.match_condition {
-            ast::MatchCondition::EnumVariant(enum_variant_selector) => {
-                let arm_variant_discriminant = match_expression_enum_type
-                    .variant_discriminant(&enum_variant_selector.variant_name);
+            ast::MatchCondition::EnumVariant(selector) => {
+                let arm_variant_discriminant =
+                    match_expression_enum_type.variant_discriminant(&selector.variant_name);
 
                 match_code.extend(triton_asm!(
                     // _ <[maybe_result]>
@@ -601,76 +578,15 @@ pub(super) fn compile_match_expr_boxed_value(
                     // _ <[maybe_result]> discriminant
 
                     push {arm_variant_discriminant}
-                    // _ <[maybe_result]> discriminant needle_discriminant
+                    // _ <[maybe_result]> discriminant arm_variant_discriminant
 
                     eq
                     skiz
-                    // _ <[maybe_result]> (discriminant == needle_discriminant)
+                    // _ <[maybe_result]>
 
                     call {arm_subroutine_label}
                     // _ <[maybe_result']>
                 ));
-
-                let tuple_type = enum_variant_selector.get_bindings_type(
-                    &match_expression_enum_type
-                        .variant_data_type(&enum_variant_selector.variant_name)
-                        .as_tuple_type(),
-                );
-
-                let label_for_bindings_subroutine = match_expression_enum_type
-                    .get_variant_data_fields_in_memory(enum_variant_selector, state);
-
-                enum_variant_selector
-                    .data_bindings
-                    .iter()
-                    .zip_eq(tuple_type.fields.iter())
-                    .for_each(|(binding, element_type)| {
-                        let dtype = ast_types::DataType::Boxed(Box::new(element_type.to_owned()));
-                        let (new_binding_id, spill_addr) =
-                            state.new_value_identifier("in_memory_split_value", &dtype);
-                        assert!(spill_addr.is_none(), "Cannot handle memory-spilling in match-arm bindings yet. Required spilling of binding '{}'", binding.name);
-
-                        state
-                        .function_state
-                        .var_addr
-                        .insert(binding.name.to_owned(), new_binding_id);
-                    });
-
-                let (_, body_code) = compile_returning_block_expr("arm-body", state, &arm.body);
-
-                let leave_only_result = state.clear_all_but_top_stack_value_above_height(
-                    outer_vstack.get_stack_height() - 1,
-                );
-                let result_hint = format!(
-                    "hint match_arm_result: {return_type} = stack[0..{}]",
-                    return_type.stack_size()
-                );
-                let subroutine_code = triton_asm!(
-                    {arm_subroutine_label}:
-                        // _
-
-                        push {match_expression_pointer_pointer}
-                        read_mem 1
-                        pop 1
-                        // _ *match_expression
-
-                        call {label_for_bindings_subroutine}
-                        // _ *match_expression [*variant-data-fields]
-
-                        {&body_code}
-                        // _ *match_expression [*variant-data-fields] [result]
-
-                        {&leave_only_result}
-                        {result_hint}
-                        // _ [result]
-
-                        return
-                );
-
-                state
-                    .function_state
-                    .subroutines
-                    .push(subroutine_code.try_into().unwrap());
             }
             MatchCondition::CatchAll => {
                 let catch_all_predicate = match_expr.compile_catch_all_predicate();
@@ -687,48 +603,60 @@ pub(super) fn compile_match_expr_boxed_value(
                     call {arm_subroutine_label}
                     // _ <[maybe_result']>
                 ));
-
-                let (_, body_code) = compile_returning_block_expr("arm-body", state, &arm.body);
-
-                let leave_only_result = state.clear_all_but_top_stack_value_above_height(
-                    outer_vstack.get_stack_height() - 1,
-                );
-                let result_hint = format!(
-                    "hint match_arm_result: {return_type} = stack[0..{}]",
-                    return_type.stack_size()
-                );
-
-                let subroutine_code = triton_asm!(
-                    {arm_subroutine_label}:
-                        // _
-
-                        push {match_expression_pointer_pointer}
-                        read_mem 1
-                        pop 1
-                        // _ *match_expression
-
-                        {&body_code}
-                        // _ *match_expression [result]
-
-                        {&leave_only_result}
-                        {result_hint}
-                        // _ [result]
-
-                        return
-                );
-
-                state
-                    .function_state
-                    .subroutines
-                    .push(subroutine_code.try_into().unwrap());
             }
         }
+
+        arm.match_condition
+            .declarations_and_their_types(&match_expression_enum_type)
+            .for_each(|decl| state.add_boxed_match_arm_binding_to_scope(decl));
+
+        let label_for_bindings_subroutine = match_expression_enum_type
+            .get_variant_data_fields_in_memory(&arm.match_condition, state);
+
+        let (_, body_code) = compile_returning_block_expr("arm-body", state, &arm.body);
+        state.new_value_identifier("match_expr_body_res", &return_type);
+
+        let leave_only_result =
+            state.clear_all_but_top_stack_value_above_height(height_of_stack_that_must_not_change);
+        let return_type_size = return_type.stack_size();
+        let result_hint =
+            format!("hint match_arm_result: {return_type} = stack[0..{return_type_size}]");
+
+        let subroutine_code = triton_asm!(
+            {arm_subroutine_label}:
+                // _
+
+                push {match_expression_pointer_pointer}
+                read_mem 1
+                pop 1
+                // _ *match_expression
+
+                call {label_for_bindings_subroutine}
+                // _ *match_expression [*variant-data-fields]
+
+                {&body_code}
+                // _ *match_expression [*variant-data-fields] [result]
+
+                {&leave_only_result}
+                {result_hint}
+                // _ [result]
+
+                return
+        );
+
+        state
+            .function_state
+            .subroutines
+            .push(subroutine_code.try_into().unwrap());
 
         // Restore stack view and bindings view for next loop-iteration
         state
             .function_state
             .restore_stack_and_bindings(&outer_vstack, &outer_bindings);
     }
+
+    // remove input argument `*match_expression` from compiler's view of stack
+    state.function_state.vstack.pop();
 
     match_code
 }
