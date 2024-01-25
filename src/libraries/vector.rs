@@ -63,7 +63,7 @@ impl Library for VectorLib {
 
     fn method_name_to_signature(
         &self,
-        fn_name: &str,
+        method_name: &str,
         receiver_type: &ast_types::DataType,
         args: &[ast::Expr<super::Annotation>],
         type_checker_state: &crate::type_checker::CheckState,
@@ -76,23 +76,27 @@ impl Library for VectorLib {
 
         // Special-case on `map` as we need to dig into the type checker state to find the
         // function signature.
-        if fn_name == MAP_METHOD_NAME {
+        if method_name == MAP_METHOD_NAME {
             return self.fn_signature_for_map(args, type_checker_state);
         }
 
-        if fn_name == CLEAR_METHOD_NAME {
+        if method_name == CLEAR_METHOD_NAME {
             return self.clear_method(&element_type).signature;
         }
 
-        if fn_name == CLONE_FROM_METHOD_NAME {
+        if method_name == CLONE_FROM_METHOD_NAME {
             return self.clone_from_method_signature(&element_type);
         }
 
-        if fn_name == PUSH_METHOD_NAME {
+        if method_name == PUSH_METHOD_NAME {
             return self.push_method_signature(&element_type);
         }
 
-        self.function_name_to_signature(fn_name, receiver_type.type_parameter(), args)
+        if method_name == LEN_METHOD_NAME {
+            return self.len_method_signature(&element_type);
+        }
+
+        self.function_name_to_signature(method_name, receiver_type.type_parameter(), args)
     }
 
     fn function_name_to_signature(
@@ -134,6 +138,10 @@ impl Library for VectorLib {
 
         if method_name == PUSH_METHOD_NAME {
             return self.push_method_body(&element_type, state);
+        }
+
+        if method_name == LEN_METHOD_NAME {
+            return self.len_method_body();
         }
 
         // find inner function if needed
@@ -462,6 +470,33 @@ impl VectorLib {
         triton_asm!(call { entrypoint })
     }
 
+    fn len_method_signature(&self, element_type: &ast_types::DataType) -> ast::FnSignature {
+        let self_type =
+            ast_types::DataType::List(Box::new(element_type.to_owned()), self.list_type);
+        let self_as_arg = ast_types::AbstractArgument::ValueArgument(ast_types::AbstractValueArg {
+            name: "self".to_owned(),
+            data_type: self_type.clone(),
+            mutable: false,
+        });
+        ast::FnSignature {
+            name: LEN_METHOD_NAME.to_owned(),
+            args: vec![self_as_arg],
+            output: ast_types::DataType::U32,
+            arg_evaluation_order: Default::default(),
+        }
+    }
+
+    fn len_method_body(&self) -> Vec<LabelledInstruction> {
+        triton_asm!(
+            // _ *list
+            read_mem 1
+            // _ length (*list - 1)
+
+            pop 1
+            // _ length
+        )
+    }
+
     fn name_to_tasm_lib_snippet(
         &self,
         public_name: &str,
@@ -475,7 +510,6 @@ impl VectorLib {
                 Some(self.list_type.with_capacity_snippet(data_type))
             }
             POP_METHOD_NAME => Some(self.list_type.pop_snippet(type_parameter.clone().unwrap())),
-            LEN_METHOD_NAME => Some(self.list_type.len_snippet(type_parameter.clone().unwrap())),
             MAP_METHOD_NAME => {
                 let ast_types::DataType::Function(inner_function_type) = args[1].get_type() else {
                     panic!()

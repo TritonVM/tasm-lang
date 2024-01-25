@@ -1,11 +1,11 @@
 project_euler_4_w_unsafe_lists_i10_to_50:
 
 # call graph
- main: 297183
+ main: 295543
    tasm_list_unsafeimplu32_new___u32: 38
      tasm_memory_dyn_malloc: 29
-   _binop_Neq__LboolR_bool_47_while_loop: 297132
-     _binop_Neq__LboolR_bool_53_while_loop: 335
+   _binop_Neq__LboolR_bool_47_while_loop: 295492
+     _binop_Neq__LboolR_bool_53_while_loop: 333
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
        find_decimal_digits: 144
@@ -13,8 +13,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -24,7 +23,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _binop_Neq__LboolR_bool_53_while_loop: 651
+     _binop_Neq__LboolR_bool_53_while_loop: 647
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
        find_decimal_digits: 144
@@ -32,8 +31,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -48,8 +46,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 106
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 104
          _binop_Neq__LboolR_bool_23_while_loop: 94
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -59,7 +56,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _binop_Neq__LboolR_bool_53_while_loop: 967
+     _binop_Neq__LboolR_bool_53_while_loop: 961
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
        find_decimal_digits: 144
@@ -67,8 +64,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -83,8 +79,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -99,75 +94,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
-         _binop_Neq__LboolR_bool_23_while_loop: 99
-           tasm_arithmetic_u32_safesub: 11
-           tasm_arithmetic_u32_safesub: 11
-           _binop_Neq__LboolR_bool_34_then: 6
-           tasm_arithmetic_u32_safeadd: 8
-       _binop_And__LboolR_bool_66_else: 1
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safeadd: 8
-     tasm_arithmetic_u32_safeadd: 8
-     _binop_Neq__LboolR_bool_53_while_loop: 1283
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safemul: 8
-       find_decimal_digits: 144
-         _binop_Neq__LboolR_bool_6_while_loop: 135
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
-         _binop_Neq__LboolR_bool_23_while_loop: 99
-           tasm_arithmetic_u32_safesub: 11
-           tasm_arithmetic_u32_safesub: 11
-           _binop_Neq__LboolR_bool_34_then: 6
-           tasm_arithmetic_u32_safeadd: 8
-       _binop_And__LboolR_bool_66_else: 1
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safemul: 8
-       find_decimal_digits: 144
-         _binop_Neq__LboolR_bool_6_while_loop: 135
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
-         _binop_Neq__LboolR_bool_23_while_loop: 99
-           tasm_arithmetic_u32_safesub: 11
-           tasm_arithmetic_u32_safesub: 11
-           _binop_Neq__LboolR_bool_34_then: 6
-           tasm_arithmetic_u32_safeadd: 8
-       _binop_And__LboolR_bool_66_else: 1
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safemul: 8
-       find_decimal_digits: 144
-         _binop_Neq__LboolR_bool_6_while_loop: 135
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
-         _binop_Neq__LboolR_bool_23_while_loop: 99
-           tasm_arithmetic_u32_safesub: 11
-           tasm_arithmetic_u32_safesub: 11
-           _binop_Neq__LboolR_bool_34_then: 6
-           tasm_arithmetic_u32_safeadd: 8
-       _binop_And__LboolR_bool_66_else: 1
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safemul: 8
-       find_decimal_digits: 144
-         _binop_Neq__LboolR_bool_6_while_loop: 135
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -177,7 +104,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _binop_Neq__LboolR_bool_53_while_loop: 1599
+     _binop_Neq__LboolR_bool_53_while_loop: 1275
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
        find_decimal_digits: 144
@@ -185,8 +112,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -201,8 +127,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -217,8 +142,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -233,24 +157,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
-         _binop_Neq__LboolR_bool_23_while_loop: 99
-           tasm_arithmetic_u32_safesub: 11
-           tasm_arithmetic_u32_safesub: 11
-           _binop_Neq__LboolR_bool_34_then: 6
-           tasm_arithmetic_u32_safeadd: 8
-       _binop_And__LboolR_bool_66_else: 1
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safemul: 8
-       find_decimal_digits: 144
-         _binop_Neq__LboolR_bool_6_while_loop: 135
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -260,7 +167,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _binop_Neq__LboolR_bool_53_while_loop: 1915
+     _binop_Neq__LboolR_bool_53_while_loop: 1589
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
        find_decimal_digits: 144
@@ -268,8 +175,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -284,8 +190,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -300,8 +205,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -316,8 +220,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -332,24 +235,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
-         _binop_Neq__LboolR_bool_23_while_loop: 99
-           tasm_arithmetic_u32_safesub: 11
-           tasm_arithmetic_u32_safesub: 11
-           _binop_Neq__LboolR_bool_34_then: 6
-           tasm_arithmetic_u32_safeadd: 8
-       _binop_And__LboolR_bool_66_else: 1
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safemul: 8
-       find_decimal_digits: 144
-         _binop_Neq__LboolR_bool_6_while_loop: 135
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -359,7 +245,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _binop_Neq__LboolR_bool_53_while_loop: 2231
+     _binop_Neq__LboolR_bool_53_while_loop: 1903
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
        find_decimal_digits: 144
@@ -367,8 +253,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -383,8 +268,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -399,8 +283,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -415,8 +298,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -431,8 +313,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -447,24 +328,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
-         _binop_Neq__LboolR_bool_23_while_loop: 99
-           tasm_arithmetic_u32_safesub: 11
-           tasm_arithmetic_u32_safesub: 11
-           _binop_Neq__LboolR_bool_34_then: 6
-           tasm_arithmetic_u32_safeadd: 8
-       _binop_And__LboolR_bool_66_else: 1
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safemul: 8
-       find_decimal_digits: 144
-         _binop_Neq__LboolR_bool_6_while_loop: 135
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -474,7 +338,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _binop_Neq__LboolR_bool_53_while_loop: 2547
+     _binop_Neq__LboolR_bool_53_while_loop: 2217
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
        find_decimal_digits: 144
@@ -482,8 +346,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -498,8 +361,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -514,8 +376,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -530,8 +391,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -546,8 +406,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -562,8 +421,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -578,8 +436,115 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 106
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
+         _binop_Neq__LboolR_bool_23_while_loop: 99
+           tasm_arithmetic_u32_safesub: 11
+           tasm_arithmetic_u32_safesub: 11
+           _binop_Neq__LboolR_bool_34_then: 6
+           tasm_arithmetic_u32_safeadd: 8
+       _binop_And__LboolR_bool_66_else: 1
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safeadd: 8
+     tasm_arithmetic_u32_safeadd: 8
+     _binop_Neq__LboolR_bool_53_while_loop: 2531
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safemul: 8
+       find_decimal_digits: 144
+         _binop_Neq__LboolR_bool_6_while_loop: 135
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+       list_is_palindrome: 109
+         _binop_Neq__LboolR_bool_23_while_loop: 99
+           tasm_arithmetic_u32_safesub: 11
+           tasm_arithmetic_u32_safesub: 11
+           _binop_Neq__LboolR_bool_34_then: 6
+           tasm_arithmetic_u32_safeadd: 8
+       _binop_And__LboolR_bool_66_else: 1
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safemul: 8
+       find_decimal_digits: 144
+         _binop_Neq__LboolR_bool_6_while_loop: 135
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+       list_is_palindrome: 109
+         _binop_Neq__LboolR_bool_23_while_loop: 99
+           tasm_arithmetic_u32_safesub: 11
+           tasm_arithmetic_u32_safesub: 11
+           _binop_Neq__LboolR_bool_34_then: 6
+           tasm_arithmetic_u32_safeadd: 8
+       _binop_And__LboolR_bool_66_else: 1
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safemul: 8
+       find_decimal_digits: 144
+         _binop_Neq__LboolR_bool_6_while_loop: 135
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+       list_is_palindrome: 109
+         _binop_Neq__LboolR_bool_23_while_loop: 99
+           tasm_arithmetic_u32_safesub: 11
+           tasm_arithmetic_u32_safesub: 11
+           _binop_Neq__LboolR_bool_34_then: 6
+           tasm_arithmetic_u32_safeadd: 8
+       _binop_And__LboolR_bool_66_else: 1
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safemul: 8
+       find_decimal_digits: 144
+         _binop_Neq__LboolR_bool_6_while_loop: 135
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+       list_is_palindrome: 109
+         _binop_Neq__LboolR_bool_23_while_loop: 99
+           tasm_arithmetic_u32_safesub: 11
+           tasm_arithmetic_u32_safesub: 11
+           _binop_Neq__LboolR_bool_34_then: 6
+           tasm_arithmetic_u32_safeadd: 8
+       _binop_And__LboolR_bool_66_else: 1
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safemul: 8
+       find_decimal_digits: 144
+         _binop_Neq__LboolR_bool_6_while_loop: 135
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+       list_is_palindrome: 109
+         _binop_Neq__LboolR_bool_23_while_loop: 99
+           tasm_arithmetic_u32_safesub: 11
+           tasm_arithmetic_u32_safesub: 11
+           _binop_Neq__LboolR_bool_34_then: 6
+           tasm_arithmetic_u32_safeadd: 8
+       _binop_And__LboolR_bool_66_else: 1
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safemul: 8
+       find_decimal_digits: 144
+         _binop_Neq__LboolR_bool_6_while_loop: 135
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+       list_is_palindrome: 109
+         _binop_Neq__LboolR_bool_23_while_loop: 99
+           tasm_arithmetic_u32_safesub: 11
+           tasm_arithmetic_u32_safesub: 11
+           _binop_Neq__LboolR_bool_34_then: 6
+           tasm_arithmetic_u32_safeadd: 8
+       _binop_And__LboolR_bool_66_else: 1
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safemul: 8
+       find_decimal_digits: 144
+         _binop_Neq__LboolR_bool_6_while_loop: 135
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+       list_is_palindrome: 104
          _binop_Neq__LboolR_bool_23_while_loop: 94
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -594,8 +559,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -605,7 +569,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _binop_Neq__LboolR_bool_53_while_loop: 2858
+     _binop_Neq__LboolR_bool_53_while_loop: 2840
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
        find_decimal_digits: 144
@@ -613,8 +577,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -629,8 +592,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -645,8 +607,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -661,8 +622,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -677,8 +637,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 106
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 104
          _binop_Neq__LboolR_bool_23_while_loop: 94
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -693,8 +652,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -709,8 +667,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -725,8 +682,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -741,8 +697,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -752,7 +707,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _binop_Neq__LboolR_bool_53_while_loop: 3179
+     _binop_Neq__LboolR_bool_53_while_loop: 3159
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
        find_decimal_digits: 144
@@ -760,8 +715,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -776,8 +730,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -792,8 +745,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -808,8 +760,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -824,8 +775,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -840,8 +790,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -856,8 +805,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -872,8 +820,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 106
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 104
          _binop_Neq__LboolR_bool_23_while_loop: 94
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -888,8 +835,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -904,187 +850,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
-         _binop_Neq__LboolR_bool_23_while_loop: 99
-           tasm_arithmetic_u32_safesub: 11
-           tasm_arithmetic_u32_safesub: 11
-           _binop_Neq__LboolR_bool_34_then: 6
-           tasm_arithmetic_u32_safeadd: 8
-       _binop_And__LboolR_bool_66_else: 1
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safeadd: 8
-     tasm_arithmetic_u32_safeadd: 8
-     _binop_Neq__LboolR_bool_53_while_loop: 3495
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safemul: 8
-       find_decimal_digits: 144
-         _binop_Neq__LboolR_bool_6_while_loop: 135
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
-         _binop_Neq__LboolR_bool_23_while_loop: 99
-           tasm_arithmetic_u32_safesub: 11
-           tasm_arithmetic_u32_safesub: 11
-           _binop_Neq__LboolR_bool_34_then: 6
-           tasm_arithmetic_u32_safeadd: 8
-       _binop_And__LboolR_bool_66_else: 1
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safemul: 8
-       find_decimal_digits: 144
-         _binop_Neq__LboolR_bool_6_while_loop: 135
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
-         _binop_Neq__LboolR_bool_23_while_loop: 99
-           tasm_arithmetic_u32_safesub: 11
-           tasm_arithmetic_u32_safesub: 11
-           _binop_Neq__LboolR_bool_34_then: 6
-           tasm_arithmetic_u32_safeadd: 8
-       _binop_And__LboolR_bool_66_else: 1
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safemul: 8
-       find_decimal_digits: 144
-         _binop_Neq__LboolR_bool_6_while_loop: 135
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
-         _binop_Neq__LboolR_bool_23_while_loop: 99
-           tasm_arithmetic_u32_safesub: 11
-           tasm_arithmetic_u32_safesub: 11
-           _binop_Neq__LboolR_bool_34_then: 6
-           tasm_arithmetic_u32_safeadd: 8
-       _binop_And__LboolR_bool_66_else: 1
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safemul: 8
-       find_decimal_digits: 144
-         _binop_Neq__LboolR_bool_6_while_loop: 135
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
-         _binop_Neq__LboolR_bool_23_while_loop: 99
-           tasm_arithmetic_u32_safesub: 11
-           tasm_arithmetic_u32_safesub: 11
-           _binop_Neq__LboolR_bool_34_then: 6
-           tasm_arithmetic_u32_safeadd: 8
-       _binop_And__LboolR_bool_66_else: 1
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safemul: 8
-       find_decimal_digits: 144
-         _binop_Neq__LboolR_bool_6_while_loop: 135
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
-         _binop_Neq__LboolR_bool_23_while_loop: 99
-           tasm_arithmetic_u32_safesub: 11
-           tasm_arithmetic_u32_safesub: 11
-           _binop_Neq__LboolR_bool_34_then: 6
-           tasm_arithmetic_u32_safeadd: 8
-       _binop_And__LboolR_bool_66_else: 1
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safemul: 8
-       find_decimal_digits: 144
-         _binop_Neq__LboolR_bool_6_while_loop: 135
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
-         _binop_Neq__LboolR_bool_23_while_loop: 99
-           tasm_arithmetic_u32_safesub: 11
-           tasm_arithmetic_u32_safesub: 11
-           _binop_Neq__LboolR_bool_34_then: 6
-           tasm_arithmetic_u32_safeadd: 8
-       _binop_And__LboolR_bool_66_else: 1
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safemul: 8
-       find_decimal_digits: 144
-         _binop_Neq__LboolR_bool_6_while_loop: 135
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
-         _binop_Neq__LboolR_bool_23_while_loop: 99
-           tasm_arithmetic_u32_safesub: 11
-           tasm_arithmetic_u32_safesub: 11
-           _binop_Neq__LboolR_bool_34_then: 6
-           tasm_arithmetic_u32_safeadd: 8
-       _binop_And__LboolR_bool_66_else: 1
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safemul: 8
-       find_decimal_digits: 144
-         _binop_Neq__LboolR_bool_6_while_loop: 135
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
-         _binop_Neq__LboolR_bool_23_while_loop: 99
-           tasm_arithmetic_u32_safesub: 11
-           tasm_arithmetic_u32_safesub: 11
-           _binop_Neq__LboolR_bool_34_then: 6
-           tasm_arithmetic_u32_safeadd: 8
-       _binop_And__LboolR_bool_66_else: 1
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safemul: 8
-       find_decimal_digits: 144
-         _binop_Neq__LboolR_bool_6_while_loop: 135
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
-         _binop_Neq__LboolR_bool_23_while_loop: 99
-           tasm_arithmetic_u32_safesub: 11
-           tasm_arithmetic_u32_safesub: 11
-           _binop_Neq__LboolR_bool_34_then: 6
-           tasm_arithmetic_u32_safeadd: 8
-       _binop_And__LboolR_bool_66_else: 1
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safemul: 8
-       find_decimal_digits: 144
-         _binop_Neq__LboolR_bool_6_while_loop: 135
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
-         _binop_Neq__LboolR_bool_23_while_loop: 99
-           tasm_arithmetic_u32_safesub: 11
-           tasm_arithmetic_u32_safesub: 11
-           _binop_Neq__LboolR_bool_34_then: 6
-           tasm_arithmetic_u32_safeadd: 8
-       _binop_And__LboolR_bool_66_else: 1
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safemul: 8
-       find_decimal_digits: 144
-         _binop_Neq__LboolR_bool_6_while_loop: 135
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -1094,7 +860,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _binop_Neq__LboolR_bool_53_while_loop: 3806
+     _binop_Neq__LboolR_bool_53_while_loop: 3473
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
        find_decimal_digits: 144
@@ -1102,8 +868,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -1118,8 +883,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -1134,8 +898,175 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 106
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
+         _binop_Neq__LboolR_bool_23_while_loop: 99
+           tasm_arithmetic_u32_safesub: 11
+           tasm_arithmetic_u32_safesub: 11
+           _binop_Neq__LboolR_bool_34_then: 6
+           tasm_arithmetic_u32_safeadd: 8
+       _binop_And__LboolR_bool_66_else: 1
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safemul: 8
+       find_decimal_digits: 144
+         _binop_Neq__LboolR_bool_6_while_loop: 135
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+       list_is_palindrome: 109
+         _binop_Neq__LboolR_bool_23_while_loop: 99
+           tasm_arithmetic_u32_safesub: 11
+           tasm_arithmetic_u32_safesub: 11
+           _binop_Neq__LboolR_bool_34_then: 6
+           tasm_arithmetic_u32_safeadd: 8
+       _binop_And__LboolR_bool_66_else: 1
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safemul: 8
+       find_decimal_digits: 144
+         _binop_Neq__LboolR_bool_6_while_loop: 135
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+       list_is_palindrome: 109
+         _binop_Neq__LboolR_bool_23_while_loop: 99
+           tasm_arithmetic_u32_safesub: 11
+           tasm_arithmetic_u32_safesub: 11
+           _binop_Neq__LboolR_bool_34_then: 6
+           tasm_arithmetic_u32_safeadd: 8
+       _binop_And__LboolR_bool_66_else: 1
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safemul: 8
+       find_decimal_digits: 144
+         _binop_Neq__LboolR_bool_6_while_loop: 135
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+       list_is_palindrome: 109
+         _binop_Neq__LboolR_bool_23_while_loop: 99
+           tasm_arithmetic_u32_safesub: 11
+           tasm_arithmetic_u32_safesub: 11
+           _binop_Neq__LboolR_bool_34_then: 6
+           tasm_arithmetic_u32_safeadd: 8
+       _binop_And__LboolR_bool_66_else: 1
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safemul: 8
+       find_decimal_digits: 144
+         _binop_Neq__LboolR_bool_6_while_loop: 135
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+       list_is_palindrome: 109
+         _binop_Neq__LboolR_bool_23_while_loop: 99
+           tasm_arithmetic_u32_safesub: 11
+           tasm_arithmetic_u32_safesub: 11
+           _binop_Neq__LboolR_bool_34_then: 6
+           tasm_arithmetic_u32_safeadd: 8
+       _binop_And__LboolR_bool_66_else: 1
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safemul: 8
+       find_decimal_digits: 144
+         _binop_Neq__LboolR_bool_6_while_loop: 135
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+       list_is_palindrome: 109
+         _binop_Neq__LboolR_bool_23_while_loop: 99
+           tasm_arithmetic_u32_safesub: 11
+           tasm_arithmetic_u32_safesub: 11
+           _binop_Neq__LboolR_bool_34_then: 6
+           tasm_arithmetic_u32_safeadd: 8
+       _binop_And__LboolR_bool_66_else: 1
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safemul: 8
+       find_decimal_digits: 144
+         _binop_Neq__LboolR_bool_6_while_loop: 135
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+       list_is_palindrome: 109
+         _binop_Neq__LboolR_bool_23_while_loop: 99
+           tasm_arithmetic_u32_safesub: 11
+           tasm_arithmetic_u32_safesub: 11
+           _binop_Neq__LboolR_bool_34_then: 6
+           tasm_arithmetic_u32_safeadd: 8
+       _binop_And__LboolR_bool_66_else: 1
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safemul: 8
+       find_decimal_digits: 144
+         _binop_Neq__LboolR_bool_6_while_loop: 135
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+       list_is_palindrome: 109
+         _binop_Neq__LboolR_bool_23_while_loop: 99
+           tasm_arithmetic_u32_safesub: 11
+           tasm_arithmetic_u32_safesub: 11
+           _binop_Neq__LboolR_bool_34_then: 6
+           tasm_arithmetic_u32_safeadd: 8
+       _binop_And__LboolR_bool_66_else: 1
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safemul: 8
+       find_decimal_digits: 144
+         _binop_Neq__LboolR_bool_6_while_loop: 135
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+       list_is_palindrome: 109
+         _binop_Neq__LboolR_bool_23_while_loop: 99
+           tasm_arithmetic_u32_safesub: 11
+           tasm_arithmetic_u32_safesub: 11
+           _binop_Neq__LboolR_bool_34_then: 6
+           tasm_arithmetic_u32_safeadd: 8
+       _binop_And__LboolR_bool_66_else: 1
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safeadd: 8
+     tasm_arithmetic_u32_safeadd: 8
+     _binop_Neq__LboolR_bool_53_while_loop: 3782
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safemul: 8
+       find_decimal_digits: 144
+         _binop_Neq__LboolR_bool_6_while_loop: 135
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+       list_is_palindrome: 109
+         _binop_Neq__LboolR_bool_23_while_loop: 99
+           tasm_arithmetic_u32_safesub: 11
+           tasm_arithmetic_u32_safesub: 11
+           _binop_Neq__LboolR_bool_34_then: 6
+           tasm_arithmetic_u32_safeadd: 8
+       _binop_And__LboolR_bool_66_else: 1
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safemul: 8
+       find_decimal_digits: 144
+         _binop_Neq__LboolR_bool_6_while_loop: 135
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+       list_is_palindrome: 109
+         _binop_Neq__LboolR_bool_23_while_loop: 99
+           tasm_arithmetic_u32_safesub: 11
+           tasm_arithmetic_u32_safesub: 11
+           _binop_Neq__LboolR_bool_34_then: 6
+           tasm_arithmetic_u32_safeadd: 8
+       _binop_And__LboolR_bool_66_else: 1
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safemul: 8
+       find_decimal_digits: 144
+         _binop_Neq__LboolR_bool_6_while_loop: 135
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+       list_is_palindrome: 104
          _binop_Neq__LboolR_bool_23_while_loop: 94
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -1150,8 +1081,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -1166,8 +1096,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -1182,8 +1111,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -1198,8 +1126,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -1214,8 +1141,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -1230,8 +1156,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -1246,8 +1171,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -1262,8 +1186,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -1278,8 +1201,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -1289,7 +1211,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _binop_Neq__LboolR_bool_53_while_loop: 4122
+     _binop_Neq__LboolR_bool_53_while_loop: 4096
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
        find_decimal_digits: 144
@@ -1297,8 +1219,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -1313,8 +1234,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 106
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 104
          _binop_Neq__LboolR_bool_23_while_loop: 94
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -1329,8 +1249,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -1345,8 +1264,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -1361,8 +1279,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -1377,8 +1294,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -1393,8 +1309,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -1409,8 +1324,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -1425,8 +1339,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -1441,8 +1354,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -1457,8 +1369,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -1473,8 +1384,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -1489,8 +1399,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 106
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 104
          _binop_Neq__LboolR_bool_23_while_loop: 94
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -1500,7 +1409,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _binop_Neq__LboolR_bool_53_while_loop: 4438
+     _binop_Neq__LboolR_bool_53_while_loop: 4410
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
        find_decimal_digits: 144
@@ -1508,8 +1417,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -1524,8 +1432,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -1540,8 +1447,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -1556,8 +1462,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -1572,8 +1477,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -1588,8 +1492,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -1604,8 +1507,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -1620,8 +1522,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -1636,8 +1537,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 106
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 104
          _binop_Neq__LboolR_bool_23_while_loop: 94
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -1652,8 +1552,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -1668,8 +1567,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -1684,8 +1582,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -1700,8 +1597,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -1716,251 +1612,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
-         _binop_Neq__LboolR_bool_23_while_loop: 99
-           tasm_arithmetic_u32_safesub: 11
-           tasm_arithmetic_u32_safesub: 11
-           _binop_Neq__LboolR_bool_34_then: 6
-           tasm_arithmetic_u32_safeadd: 8
-       _binop_And__LboolR_bool_66_else: 1
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safeadd: 8
-     tasm_arithmetic_u32_safeadd: 8
-     _binop_Neq__LboolR_bool_53_while_loop: 4759
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safemul: 8
-       find_decimal_digits: 144
-         _binop_Neq__LboolR_bool_6_while_loop: 135
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
-         _binop_Neq__LboolR_bool_23_while_loop: 99
-           tasm_arithmetic_u32_safesub: 11
-           tasm_arithmetic_u32_safesub: 11
-           _binop_Neq__LboolR_bool_34_then: 6
-           tasm_arithmetic_u32_safeadd: 8
-       _binop_And__LboolR_bool_66_else: 1
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safemul: 8
-       find_decimal_digits: 144
-         _binop_Neq__LboolR_bool_6_while_loop: 135
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
-         _binop_Neq__LboolR_bool_23_while_loop: 99
-           tasm_arithmetic_u32_safesub: 11
-           tasm_arithmetic_u32_safesub: 11
-           _binop_Neq__LboolR_bool_34_then: 6
-           tasm_arithmetic_u32_safeadd: 8
-       _binop_And__LboolR_bool_66_else: 1
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safemul: 8
-       find_decimal_digits: 144
-         _binop_Neq__LboolR_bool_6_while_loop: 135
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
-         _binop_Neq__LboolR_bool_23_while_loop: 99
-           tasm_arithmetic_u32_safesub: 11
-           tasm_arithmetic_u32_safesub: 11
-           _binop_Neq__LboolR_bool_34_then: 6
-           tasm_arithmetic_u32_safeadd: 8
-       _binop_And__LboolR_bool_66_else: 1
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safemul: 8
-       find_decimal_digits: 144
-         _binop_Neq__LboolR_bool_6_while_loop: 135
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
-         _binop_Neq__LboolR_bool_23_while_loop: 99
-           tasm_arithmetic_u32_safesub: 11
-           tasm_arithmetic_u32_safesub: 11
-           _binop_Neq__LboolR_bool_34_then: 6
-           tasm_arithmetic_u32_safeadd: 8
-       _binop_And__LboolR_bool_66_else: 1
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safemul: 8
-       find_decimal_digits: 144
-         _binop_Neq__LboolR_bool_6_while_loop: 135
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
-         _binop_Neq__LboolR_bool_23_while_loop: 99
-           tasm_arithmetic_u32_safesub: 11
-           tasm_arithmetic_u32_safesub: 11
-           _binop_Neq__LboolR_bool_34_then: 6
-           tasm_arithmetic_u32_safeadd: 8
-       _binop_And__LboolR_bool_66_else: 1
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safemul: 8
-       find_decimal_digits: 144
-         _binop_Neq__LboolR_bool_6_while_loop: 135
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
-         _binop_Neq__LboolR_bool_23_while_loop: 99
-           tasm_arithmetic_u32_safesub: 11
-           tasm_arithmetic_u32_safesub: 11
-           _binop_Neq__LboolR_bool_34_then: 6
-           tasm_arithmetic_u32_safeadd: 8
-       _binop_And__LboolR_bool_66_else: 1
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safemul: 8
-       find_decimal_digits: 144
-         _binop_Neq__LboolR_bool_6_while_loop: 135
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
-         _binop_Neq__LboolR_bool_23_while_loop: 99
-           tasm_arithmetic_u32_safesub: 11
-           tasm_arithmetic_u32_safesub: 11
-           _binop_Neq__LboolR_bool_34_then: 6
-           tasm_arithmetic_u32_safeadd: 8
-       _binop_And__LboolR_bool_66_else: 1
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safemul: 8
-       find_decimal_digits: 144
-         _binop_Neq__LboolR_bool_6_while_loop: 135
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
-         _binop_Neq__LboolR_bool_23_while_loop: 99
-           tasm_arithmetic_u32_safesub: 11
-           tasm_arithmetic_u32_safesub: 11
-           _binop_Neq__LboolR_bool_34_then: 6
-           tasm_arithmetic_u32_safeadd: 8
-       _binop_And__LboolR_bool_66_else: 1
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safemul: 8
-       find_decimal_digits: 144
-         _binop_Neq__LboolR_bool_6_while_loop: 135
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
-         _binop_Neq__LboolR_bool_23_while_loop: 99
-           tasm_arithmetic_u32_safesub: 11
-           tasm_arithmetic_u32_safesub: 11
-           _binop_Neq__LboolR_bool_34_then: 6
-           tasm_arithmetic_u32_safeadd: 8
-       _binop_And__LboolR_bool_66_else: 1
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safemul: 8
-       find_decimal_digits: 144
-         _binop_Neq__LboolR_bool_6_while_loop: 135
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
-         _binop_Neq__LboolR_bool_23_while_loop: 99
-           tasm_arithmetic_u32_safesub: 11
-           tasm_arithmetic_u32_safesub: 11
-           _binop_Neq__LboolR_bool_34_then: 6
-           tasm_arithmetic_u32_safeadd: 8
-       _binop_And__LboolR_bool_66_else: 1
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safemul: 8
-       find_decimal_digits: 144
-         _binop_Neq__LboolR_bool_6_while_loop: 135
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
-         _binop_Neq__LboolR_bool_23_while_loop: 99
-           tasm_arithmetic_u32_safesub: 11
-           tasm_arithmetic_u32_safesub: 11
-           _binop_Neq__LboolR_bool_34_then: 6
-           tasm_arithmetic_u32_safeadd: 8
-       _binop_And__LboolR_bool_66_else: 1
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safemul: 8
-       find_decimal_digits: 144
-         _binop_Neq__LboolR_bool_6_while_loop: 135
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
-         _binop_Neq__LboolR_bool_23_while_loop: 99
-           tasm_arithmetic_u32_safesub: 11
-           tasm_arithmetic_u32_safesub: 11
-           _binop_Neq__LboolR_bool_34_then: 6
-           tasm_arithmetic_u32_safeadd: 8
-       _binop_And__LboolR_bool_66_else: 1
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safemul: 8
-       find_decimal_digits: 144
-         _binop_Neq__LboolR_bool_6_while_loop: 135
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
-         _binop_Neq__LboolR_bool_23_while_loop: 99
-           tasm_arithmetic_u32_safesub: 11
-           tasm_arithmetic_u32_safesub: 11
-           _binop_Neq__LboolR_bool_34_then: 6
-           tasm_arithmetic_u32_safeadd: 8
-       _binop_And__LboolR_bool_66_else: 1
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safemul: 8
-       find_decimal_digits: 144
-         _binop_Neq__LboolR_bool_6_while_loop: 135
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
-         _binop_Neq__LboolR_bool_23_while_loop: 99
-           tasm_arithmetic_u32_safesub: 11
-           tasm_arithmetic_u32_safesub: 11
-           _binop_Neq__LboolR_bool_34_then: 6
-           tasm_arithmetic_u32_safeadd: 8
-       _binop_And__LboolR_bool_66_else: 1
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safemul: 8
-       find_decimal_digits: 144
-         _binop_Neq__LboolR_bool_6_while_loop: 135
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -1970,7 +1622,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _binop_Neq__LboolR_bool_53_while_loop: 5075
+     _binop_Neq__LboolR_bool_53_while_loop: 4729
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
        find_decimal_digits: 144
@@ -1978,8 +1630,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -1994,8 +1645,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -2010,8 +1660,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -2026,8 +1675,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -2042,8 +1690,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -2058,8 +1705,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -2074,8 +1720,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -2090,8 +1735,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -2106,8 +1750,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -2122,8 +1765,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -2138,8 +1780,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -2154,8 +1795,235 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 106
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
+         _binop_Neq__LboolR_bool_23_while_loop: 99
+           tasm_arithmetic_u32_safesub: 11
+           tasm_arithmetic_u32_safesub: 11
+           _binop_Neq__LboolR_bool_34_then: 6
+           tasm_arithmetic_u32_safeadd: 8
+       _binop_And__LboolR_bool_66_else: 1
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safemul: 8
+       find_decimal_digits: 144
+         _binop_Neq__LboolR_bool_6_while_loop: 135
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+       list_is_palindrome: 109
+         _binop_Neq__LboolR_bool_23_while_loop: 99
+           tasm_arithmetic_u32_safesub: 11
+           tasm_arithmetic_u32_safesub: 11
+           _binop_Neq__LboolR_bool_34_then: 6
+           tasm_arithmetic_u32_safeadd: 8
+       _binop_And__LboolR_bool_66_else: 1
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safemul: 8
+       find_decimal_digits: 144
+         _binop_Neq__LboolR_bool_6_while_loop: 135
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+       list_is_palindrome: 109
+         _binop_Neq__LboolR_bool_23_while_loop: 99
+           tasm_arithmetic_u32_safesub: 11
+           tasm_arithmetic_u32_safesub: 11
+           _binop_Neq__LboolR_bool_34_then: 6
+           tasm_arithmetic_u32_safeadd: 8
+       _binop_And__LboolR_bool_66_else: 1
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safemul: 8
+       find_decimal_digits: 144
+         _binop_Neq__LboolR_bool_6_while_loop: 135
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+       list_is_palindrome: 109
+         _binop_Neq__LboolR_bool_23_while_loop: 99
+           tasm_arithmetic_u32_safesub: 11
+           tasm_arithmetic_u32_safesub: 11
+           _binop_Neq__LboolR_bool_34_then: 6
+           tasm_arithmetic_u32_safeadd: 8
+       _binop_And__LboolR_bool_66_else: 1
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safeadd: 8
+     tasm_arithmetic_u32_safeadd: 8
+     _binop_Neq__LboolR_bool_53_while_loop: 5043
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safemul: 8
+       find_decimal_digits: 144
+         _binop_Neq__LboolR_bool_6_while_loop: 135
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+       list_is_palindrome: 109
+         _binop_Neq__LboolR_bool_23_while_loop: 99
+           tasm_arithmetic_u32_safesub: 11
+           tasm_arithmetic_u32_safesub: 11
+           _binop_Neq__LboolR_bool_34_then: 6
+           tasm_arithmetic_u32_safeadd: 8
+       _binop_And__LboolR_bool_66_else: 1
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safemul: 8
+       find_decimal_digits: 144
+         _binop_Neq__LboolR_bool_6_while_loop: 135
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+       list_is_palindrome: 109
+         _binop_Neq__LboolR_bool_23_while_loop: 99
+           tasm_arithmetic_u32_safesub: 11
+           tasm_arithmetic_u32_safesub: 11
+           _binop_Neq__LboolR_bool_34_then: 6
+           tasm_arithmetic_u32_safeadd: 8
+       _binop_And__LboolR_bool_66_else: 1
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safemul: 8
+       find_decimal_digits: 144
+         _binop_Neq__LboolR_bool_6_while_loop: 135
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+       list_is_palindrome: 109
+         _binop_Neq__LboolR_bool_23_while_loop: 99
+           tasm_arithmetic_u32_safesub: 11
+           tasm_arithmetic_u32_safesub: 11
+           _binop_Neq__LboolR_bool_34_then: 6
+           tasm_arithmetic_u32_safeadd: 8
+       _binop_And__LboolR_bool_66_else: 1
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safemul: 8
+       find_decimal_digits: 144
+         _binop_Neq__LboolR_bool_6_while_loop: 135
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+       list_is_palindrome: 109
+         _binop_Neq__LboolR_bool_23_while_loop: 99
+           tasm_arithmetic_u32_safesub: 11
+           tasm_arithmetic_u32_safesub: 11
+           _binop_Neq__LboolR_bool_34_then: 6
+           tasm_arithmetic_u32_safeadd: 8
+       _binop_And__LboolR_bool_66_else: 1
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safemul: 8
+       find_decimal_digits: 144
+         _binop_Neq__LboolR_bool_6_while_loop: 135
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+       list_is_palindrome: 109
+         _binop_Neq__LboolR_bool_23_while_loop: 99
+           tasm_arithmetic_u32_safesub: 11
+           tasm_arithmetic_u32_safesub: 11
+           _binop_Neq__LboolR_bool_34_then: 6
+           tasm_arithmetic_u32_safeadd: 8
+       _binop_And__LboolR_bool_66_else: 1
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safemul: 8
+       find_decimal_digits: 144
+         _binop_Neq__LboolR_bool_6_while_loop: 135
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+       list_is_palindrome: 109
+         _binop_Neq__LboolR_bool_23_while_loop: 99
+           tasm_arithmetic_u32_safesub: 11
+           tasm_arithmetic_u32_safesub: 11
+           _binop_Neq__LboolR_bool_34_then: 6
+           tasm_arithmetic_u32_safeadd: 8
+       _binop_And__LboolR_bool_66_else: 1
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safemul: 8
+       find_decimal_digits: 144
+         _binop_Neq__LboolR_bool_6_while_loop: 135
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+       list_is_palindrome: 109
+         _binop_Neq__LboolR_bool_23_while_loop: 99
+           tasm_arithmetic_u32_safesub: 11
+           tasm_arithmetic_u32_safesub: 11
+           _binop_Neq__LboolR_bool_34_then: 6
+           tasm_arithmetic_u32_safeadd: 8
+       _binop_And__LboolR_bool_66_else: 1
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safemul: 8
+       find_decimal_digits: 144
+         _binop_Neq__LboolR_bool_6_while_loop: 135
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+       list_is_palindrome: 109
+         _binop_Neq__LboolR_bool_23_while_loop: 99
+           tasm_arithmetic_u32_safesub: 11
+           tasm_arithmetic_u32_safesub: 11
+           _binop_Neq__LboolR_bool_34_then: 6
+           tasm_arithmetic_u32_safeadd: 8
+       _binop_And__LboolR_bool_66_else: 1
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safemul: 8
+       find_decimal_digits: 144
+         _binop_Neq__LboolR_bool_6_while_loop: 135
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+       list_is_palindrome: 109
+         _binop_Neq__LboolR_bool_23_while_loop: 99
+           tasm_arithmetic_u32_safesub: 11
+           tasm_arithmetic_u32_safesub: 11
+           _binop_Neq__LboolR_bool_34_then: 6
+           tasm_arithmetic_u32_safeadd: 8
+       _binop_And__LboolR_bool_66_else: 1
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safemul: 8
+       find_decimal_digits: 144
+         _binop_Neq__LboolR_bool_6_while_loop: 135
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+       list_is_palindrome: 109
+         _binop_Neq__LboolR_bool_23_while_loop: 99
+           tasm_arithmetic_u32_safesub: 11
+           tasm_arithmetic_u32_safesub: 11
+           _binop_Neq__LboolR_bool_34_then: 6
+           tasm_arithmetic_u32_safeadd: 8
+       _binop_And__LboolR_bool_66_else: 1
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safemul: 8
+       find_decimal_digits: 144
+         _binop_Neq__LboolR_bool_6_while_loop: 135
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+       list_is_palindrome: 109
+         _binop_Neq__LboolR_bool_23_while_loop: 99
+           tasm_arithmetic_u32_safesub: 11
+           tasm_arithmetic_u32_safesub: 11
+           _binop_Neq__LboolR_bool_34_then: 6
+           tasm_arithmetic_u32_safeadd: 8
+       _binop_And__LboolR_bool_66_else: 1
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safemul: 8
+       find_decimal_digits: 144
+         _binop_Neq__LboolR_bool_6_while_loop: 135
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+       list_is_palindrome: 104
          _binop_Neq__LboolR_bool_23_while_loop: 94
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -2170,8 +2038,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -2186,8 +2053,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 106
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 104
          _binop_Neq__LboolR_bool_23_while_loop: 94
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -2202,8 +2068,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -2218,8 +2083,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -2229,7 +2093,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _binop_Neq__LboolR_bool_53_while_loop: 5386
+     _binop_Neq__LboolR_bool_53_while_loop: 5352
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
        find_decimal_digits: 144
@@ -2237,8 +2101,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -2253,8 +2116,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -2269,8 +2131,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -2285,8 +2146,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -2301,8 +2161,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -2317,8 +2176,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -2333,8 +2191,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -2349,8 +2206,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -2365,8 +2221,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -2381,8 +2236,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 106
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 104
          _binop_Neq__LboolR_bool_23_while_loop: 94
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -2397,8 +2251,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -2413,8 +2266,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -2429,8 +2281,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -2445,8 +2296,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -2461,8 +2311,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -2477,8 +2326,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -2493,8 +2341,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 106
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 104
          _binop_Neq__LboolR_bool_23_while_loop: 94
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -2504,7 +2351,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _binop_Neq__LboolR_bool_53_while_loop: 5707
+     _binop_Neq__LboolR_bool_53_while_loop: 5671
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
        find_decimal_digits: 144
@@ -2512,8 +2359,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -2528,8 +2374,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -2544,8 +2389,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -2560,8 +2404,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -2576,8 +2419,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -2592,8 +2434,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -2608,8 +2449,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -2624,8 +2464,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -2640,8 +2479,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -2656,8 +2494,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -2672,8 +2509,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -2688,8 +2524,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -2704,8 +2539,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -2720,8 +2554,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -2736,8 +2569,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -2752,8 +2584,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -2768,8 +2599,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -2784,8 +2614,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -2795,7 +2624,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _binop_Neq__LboolR_bool_53_while_loop: 6018
+     _binop_Neq__LboolR_bool_53_while_loop: 5980
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
        find_decimal_digits: 144
@@ -2803,8 +2632,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -2819,8 +2647,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -2835,8 +2662,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -2851,8 +2677,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -2867,8 +2692,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -2883,8 +2707,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -2899,8 +2722,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -2915,8 +2737,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -2931,8 +2752,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -2947,8 +2767,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -2963,8 +2782,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -2979,8 +2797,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -2995,8 +2812,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 106
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 104
          _binop_Neq__LboolR_bool_23_while_loop: 94
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -3011,8 +2827,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -3027,8 +2842,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -3043,8 +2857,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -3059,8 +2872,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -3075,8 +2887,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -3091,8 +2902,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -3102,7 +2912,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _binop_Neq__LboolR_bool_53_while_loop: 6334
+     _binop_Neq__LboolR_bool_53_while_loop: 6294
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
        find_decimal_digits: 144
@@ -3110,8 +2920,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -3126,8 +2935,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -3142,8 +2950,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -3158,8 +2965,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -3174,8 +2980,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -3190,8 +2995,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -3206,8 +3010,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 106
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 104
          _binop_Neq__LboolR_bool_23_while_loop: 94
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -3222,8 +3025,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -3238,8 +3040,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -3254,8 +3055,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -3270,8 +3070,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -3286,8 +3085,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -3302,8 +3100,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -3318,8 +3115,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -3334,8 +3130,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 106
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 104
          _binop_Neq__LboolR_bool_23_while_loop: 94
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -3350,8 +3145,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -3366,8 +3160,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -3382,8 +3175,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -3398,8 +3190,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -3414,347 +3205,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
-         _binop_Neq__LboolR_bool_23_while_loop: 99
-           tasm_arithmetic_u32_safesub: 11
-           tasm_arithmetic_u32_safesub: 11
-           _binop_Neq__LboolR_bool_34_then: 6
-           tasm_arithmetic_u32_safeadd: 8
-       _binop_And__LboolR_bool_66_else: 1
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safeadd: 8
-     tasm_arithmetic_u32_safeadd: 8
-     _binop_Neq__LboolR_bool_53_while_loop: 6655
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safemul: 8
-       find_decimal_digits: 144
-         _binop_Neq__LboolR_bool_6_while_loop: 135
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
-         _binop_Neq__LboolR_bool_23_while_loop: 99
-           tasm_arithmetic_u32_safesub: 11
-           tasm_arithmetic_u32_safesub: 11
-           _binop_Neq__LboolR_bool_34_then: 6
-           tasm_arithmetic_u32_safeadd: 8
-       _binop_And__LboolR_bool_66_else: 1
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safemul: 8
-       find_decimal_digits: 144
-         _binop_Neq__LboolR_bool_6_while_loop: 135
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
-         _binop_Neq__LboolR_bool_23_while_loop: 99
-           tasm_arithmetic_u32_safesub: 11
-           tasm_arithmetic_u32_safesub: 11
-           _binop_Neq__LboolR_bool_34_then: 6
-           tasm_arithmetic_u32_safeadd: 8
-       _binop_And__LboolR_bool_66_else: 1
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safemul: 8
-       find_decimal_digits: 144
-         _binop_Neq__LboolR_bool_6_while_loop: 135
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
-         _binop_Neq__LboolR_bool_23_while_loop: 99
-           tasm_arithmetic_u32_safesub: 11
-           tasm_arithmetic_u32_safesub: 11
-           _binop_Neq__LboolR_bool_34_then: 6
-           tasm_arithmetic_u32_safeadd: 8
-       _binop_And__LboolR_bool_66_else: 1
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safemul: 8
-       find_decimal_digits: 144
-         _binop_Neq__LboolR_bool_6_while_loop: 135
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
-         _binop_Neq__LboolR_bool_23_while_loop: 99
-           tasm_arithmetic_u32_safesub: 11
-           tasm_arithmetic_u32_safesub: 11
-           _binop_Neq__LboolR_bool_34_then: 6
-           tasm_arithmetic_u32_safeadd: 8
-       _binop_And__LboolR_bool_66_else: 1
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safemul: 8
-       find_decimal_digits: 144
-         _binop_Neq__LboolR_bool_6_while_loop: 135
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
-         _binop_Neq__LboolR_bool_23_while_loop: 99
-           tasm_arithmetic_u32_safesub: 11
-           tasm_arithmetic_u32_safesub: 11
-           _binop_Neq__LboolR_bool_34_then: 6
-           tasm_arithmetic_u32_safeadd: 8
-       _binop_And__LboolR_bool_66_else: 1
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safemul: 8
-       find_decimal_digits: 144
-         _binop_Neq__LboolR_bool_6_while_loop: 135
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
-         _binop_Neq__LboolR_bool_23_while_loop: 99
-           tasm_arithmetic_u32_safesub: 11
-           tasm_arithmetic_u32_safesub: 11
-           _binop_Neq__LboolR_bool_34_then: 6
-           tasm_arithmetic_u32_safeadd: 8
-       _binop_And__LboolR_bool_66_else: 1
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safemul: 8
-       find_decimal_digits: 144
-         _binop_Neq__LboolR_bool_6_while_loop: 135
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
-         _binop_Neq__LboolR_bool_23_while_loop: 99
-           tasm_arithmetic_u32_safesub: 11
-           tasm_arithmetic_u32_safesub: 11
-           _binop_Neq__LboolR_bool_34_then: 6
-           tasm_arithmetic_u32_safeadd: 8
-       _binop_And__LboolR_bool_66_else: 1
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safemul: 8
-       find_decimal_digits: 144
-         _binop_Neq__LboolR_bool_6_while_loop: 135
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
-         _binop_Neq__LboolR_bool_23_while_loop: 99
-           tasm_arithmetic_u32_safesub: 11
-           tasm_arithmetic_u32_safesub: 11
-           _binop_Neq__LboolR_bool_34_then: 6
-           tasm_arithmetic_u32_safeadd: 8
-       _binop_And__LboolR_bool_66_else: 1
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safemul: 8
-       find_decimal_digits: 144
-         _binop_Neq__LboolR_bool_6_while_loop: 135
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
-         _binop_Neq__LboolR_bool_23_while_loop: 99
-           tasm_arithmetic_u32_safesub: 11
-           tasm_arithmetic_u32_safesub: 11
-           _binop_Neq__LboolR_bool_34_then: 6
-           tasm_arithmetic_u32_safeadd: 8
-       _binop_And__LboolR_bool_66_else: 1
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safemul: 8
-       find_decimal_digits: 144
-         _binop_Neq__LboolR_bool_6_while_loop: 135
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
-         _binop_Neq__LboolR_bool_23_while_loop: 99
-           tasm_arithmetic_u32_safesub: 11
-           tasm_arithmetic_u32_safesub: 11
-           _binop_Neq__LboolR_bool_34_then: 6
-           tasm_arithmetic_u32_safeadd: 8
-       _binop_And__LboolR_bool_66_else: 1
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safemul: 8
-       find_decimal_digits: 144
-         _binop_Neq__LboolR_bool_6_while_loop: 135
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
-         _binop_Neq__LboolR_bool_23_while_loop: 99
-           tasm_arithmetic_u32_safesub: 11
-           tasm_arithmetic_u32_safesub: 11
-           _binop_Neq__LboolR_bool_34_then: 6
-           tasm_arithmetic_u32_safeadd: 8
-       _binop_And__LboolR_bool_66_else: 1
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safemul: 8
-       find_decimal_digits: 144
-         _binop_Neq__LboolR_bool_6_while_loop: 135
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
-         _binop_Neq__LboolR_bool_23_while_loop: 99
-           tasm_arithmetic_u32_safesub: 11
-           tasm_arithmetic_u32_safesub: 11
-           _binop_Neq__LboolR_bool_34_then: 6
-           tasm_arithmetic_u32_safeadd: 8
-       _binop_And__LboolR_bool_66_else: 1
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safemul: 8
-       find_decimal_digits: 144
-         _binop_Neq__LboolR_bool_6_while_loop: 135
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
-         _binop_Neq__LboolR_bool_23_while_loop: 99
-           tasm_arithmetic_u32_safesub: 11
-           tasm_arithmetic_u32_safesub: 11
-           _binop_Neq__LboolR_bool_34_then: 6
-           tasm_arithmetic_u32_safeadd: 8
-       _binop_And__LboolR_bool_66_else: 1
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safemul: 8
-       find_decimal_digits: 144
-         _binop_Neq__LboolR_bool_6_while_loop: 135
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
-         _binop_Neq__LboolR_bool_23_while_loop: 99
-           tasm_arithmetic_u32_safesub: 11
-           tasm_arithmetic_u32_safesub: 11
-           _binop_Neq__LboolR_bool_34_then: 6
-           tasm_arithmetic_u32_safeadd: 8
-       _binop_And__LboolR_bool_66_else: 1
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safemul: 8
-       find_decimal_digits: 144
-         _binop_Neq__LboolR_bool_6_while_loop: 135
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
-         _binop_Neq__LboolR_bool_23_while_loop: 99
-           tasm_arithmetic_u32_safesub: 11
-           tasm_arithmetic_u32_safesub: 11
-           _binop_Neq__LboolR_bool_34_then: 6
-           tasm_arithmetic_u32_safeadd: 8
-       _binop_And__LboolR_bool_66_else: 1
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safemul: 8
-       find_decimal_digits: 144
-         _binop_Neq__LboolR_bool_6_while_loop: 135
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
-         _binop_Neq__LboolR_bool_23_while_loop: 99
-           tasm_arithmetic_u32_safesub: 11
-           tasm_arithmetic_u32_safesub: 11
-           _binop_Neq__LboolR_bool_34_then: 6
-           tasm_arithmetic_u32_safeadd: 8
-       _binop_And__LboolR_bool_66_else: 1
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safemul: 8
-       find_decimal_digits: 144
-         _binop_Neq__LboolR_bool_6_while_loop: 135
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
-         _binop_Neq__LboolR_bool_23_while_loop: 99
-           tasm_arithmetic_u32_safesub: 11
-           tasm_arithmetic_u32_safesub: 11
-           _binop_Neq__LboolR_bool_34_then: 6
-           tasm_arithmetic_u32_safeadd: 8
-       _binop_And__LboolR_bool_66_else: 1
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safemul: 8
-       find_decimal_digits: 144
-         _binop_Neq__LboolR_bool_6_while_loop: 135
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
-         _binop_Neq__LboolR_bool_23_while_loop: 99
-           tasm_arithmetic_u32_safesub: 11
-           tasm_arithmetic_u32_safesub: 11
-           _binop_Neq__LboolR_bool_34_then: 6
-           tasm_arithmetic_u32_safeadd: 8
-       _binop_And__LboolR_bool_66_else: 1
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safemul: 8
-       find_decimal_digits: 144
-         _binop_Neq__LboolR_bool_6_while_loop: 135
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
-         _binop_Neq__LboolR_bool_23_while_loop: 99
-           tasm_arithmetic_u32_safesub: 11
-           tasm_arithmetic_u32_safesub: 11
-           _binop_Neq__LboolR_bool_34_then: 6
-           tasm_arithmetic_u32_safeadd: 8
-       _binop_And__LboolR_bool_66_else: 1
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safemul: 8
-       find_decimal_digits: 144
-         _binop_Neq__LboolR_bool_6_while_loop: 135
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
-         _binop_Neq__LboolR_bool_23_while_loop: 99
-           tasm_arithmetic_u32_safesub: 11
-           tasm_arithmetic_u32_safesub: 11
-           _binop_Neq__LboolR_bool_34_then: 6
-           tasm_arithmetic_u32_safeadd: 8
-       _binop_And__LboolR_bool_66_else: 1
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safeadd: 8
-       tasm_arithmetic_u32_safemul: 8
-       find_decimal_digits: 144
-         _binop_Neq__LboolR_bool_6_while_loop: 135
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-           tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -3764,7 +3215,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _binop_Neq__LboolR_bool_53_while_loop: 6966
+     _binop_Neq__LboolR_bool_53_while_loop: 6613
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
        find_decimal_digits: 144
@@ -3772,8 +3223,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -3788,8 +3238,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -3804,8 +3253,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -3820,8 +3268,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -3836,8 +3283,325 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 106
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
+         _binop_Neq__LboolR_bool_23_while_loop: 99
+           tasm_arithmetic_u32_safesub: 11
+           tasm_arithmetic_u32_safesub: 11
+           _binop_Neq__LboolR_bool_34_then: 6
+           tasm_arithmetic_u32_safeadd: 8
+       _binop_And__LboolR_bool_66_else: 1
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safemul: 8
+       find_decimal_digits: 144
+         _binop_Neq__LboolR_bool_6_while_loop: 135
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+       list_is_palindrome: 109
+         _binop_Neq__LboolR_bool_23_while_loop: 99
+           tasm_arithmetic_u32_safesub: 11
+           tasm_arithmetic_u32_safesub: 11
+           _binop_Neq__LboolR_bool_34_then: 6
+           tasm_arithmetic_u32_safeadd: 8
+       _binop_And__LboolR_bool_66_else: 1
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safemul: 8
+       find_decimal_digits: 144
+         _binop_Neq__LboolR_bool_6_while_loop: 135
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+       list_is_palindrome: 109
+         _binop_Neq__LboolR_bool_23_while_loop: 99
+           tasm_arithmetic_u32_safesub: 11
+           tasm_arithmetic_u32_safesub: 11
+           _binop_Neq__LboolR_bool_34_then: 6
+           tasm_arithmetic_u32_safeadd: 8
+       _binop_And__LboolR_bool_66_else: 1
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safemul: 8
+       find_decimal_digits: 144
+         _binop_Neq__LboolR_bool_6_while_loop: 135
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+       list_is_palindrome: 109
+         _binop_Neq__LboolR_bool_23_while_loop: 99
+           tasm_arithmetic_u32_safesub: 11
+           tasm_arithmetic_u32_safesub: 11
+           _binop_Neq__LboolR_bool_34_then: 6
+           tasm_arithmetic_u32_safeadd: 8
+       _binop_And__LboolR_bool_66_else: 1
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safemul: 8
+       find_decimal_digits: 144
+         _binop_Neq__LboolR_bool_6_while_loop: 135
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+       list_is_palindrome: 109
+         _binop_Neq__LboolR_bool_23_while_loop: 99
+           tasm_arithmetic_u32_safesub: 11
+           tasm_arithmetic_u32_safesub: 11
+           _binop_Neq__LboolR_bool_34_then: 6
+           tasm_arithmetic_u32_safeadd: 8
+       _binop_And__LboolR_bool_66_else: 1
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safemul: 8
+       find_decimal_digits: 144
+         _binop_Neq__LboolR_bool_6_while_loop: 135
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+       list_is_palindrome: 109
+         _binop_Neq__LboolR_bool_23_while_loop: 99
+           tasm_arithmetic_u32_safesub: 11
+           tasm_arithmetic_u32_safesub: 11
+           _binop_Neq__LboolR_bool_34_then: 6
+           tasm_arithmetic_u32_safeadd: 8
+       _binop_And__LboolR_bool_66_else: 1
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safemul: 8
+       find_decimal_digits: 144
+         _binop_Neq__LboolR_bool_6_while_loop: 135
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+       list_is_palindrome: 109
+         _binop_Neq__LboolR_bool_23_while_loop: 99
+           tasm_arithmetic_u32_safesub: 11
+           tasm_arithmetic_u32_safesub: 11
+           _binop_Neq__LboolR_bool_34_then: 6
+           tasm_arithmetic_u32_safeadd: 8
+       _binop_And__LboolR_bool_66_else: 1
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safemul: 8
+       find_decimal_digits: 144
+         _binop_Neq__LboolR_bool_6_while_loop: 135
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+       list_is_palindrome: 109
+         _binop_Neq__LboolR_bool_23_while_loop: 99
+           tasm_arithmetic_u32_safesub: 11
+           tasm_arithmetic_u32_safesub: 11
+           _binop_Neq__LboolR_bool_34_then: 6
+           tasm_arithmetic_u32_safeadd: 8
+       _binop_And__LboolR_bool_66_else: 1
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safemul: 8
+       find_decimal_digits: 144
+         _binop_Neq__LboolR_bool_6_while_loop: 135
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+       list_is_palindrome: 109
+         _binop_Neq__LboolR_bool_23_while_loop: 99
+           tasm_arithmetic_u32_safesub: 11
+           tasm_arithmetic_u32_safesub: 11
+           _binop_Neq__LboolR_bool_34_then: 6
+           tasm_arithmetic_u32_safeadd: 8
+       _binop_And__LboolR_bool_66_else: 1
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safemul: 8
+       find_decimal_digits: 144
+         _binop_Neq__LboolR_bool_6_while_loop: 135
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+       list_is_palindrome: 109
+         _binop_Neq__LboolR_bool_23_while_loop: 99
+           tasm_arithmetic_u32_safesub: 11
+           tasm_arithmetic_u32_safesub: 11
+           _binop_Neq__LboolR_bool_34_then: 6
+           tasm_arithmetic_u32_safeadd: 8
+       _binop_And__LboolR_bool_66_else: 1
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safemul: 8
+       find_decimal_digits: 144
+         _binop_Neq__LboolR_bool_6_while_loop: 135
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+       list_is_palindrome: 109
+         _binop_Neq__LboolR_bool_23_while_loop: 99
+           tasm_arithmetic_u32_safesub: 11
+           tasm_arithmetic_u32_safesub: 11
+           _binop_Neq__LboolR_bool_34_then: 6
+           tasm_arithmetic_u32_safeadd: 8
+       _binop_And__LboolR_bool_66_else: 1
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safemul: 8
+       find_decimal_digits: 144
+         _binop_Neq__LboolR_bool_6_while_loop: 135
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+       list_is_palindrome: 109
+         _binop_Neq__LboolR_bool_23_while_loop: 99
+           tasm_arithmetic_u32_safesub: 11
+           tasm_arithmetic_u32_safesub: 11
+           _binop_Neq__LboolR_bool_34_then: 6
+           tasm_arithmetic_u32_safeadd: 8
+       _binop_And__LboolR_bool_66_else: 1
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safemul: 8
+       find_decimal_digits: 144
+         _binop_Neq__LboolR_bool_6_while_loop: 135
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+       list_is_palindrome: 109
+         _binop_Neq__LboolR_bool_23_while_loop: 99
+           tasm_arithmetic_u32_safesub: 11
+           tasm_arithmetic_u32_safesub: 11
+           _binop_Neq__LboolR_bool_34_then: 6
+           tasm_arithmetic_u32_safeadd: 8
+       _binop_And__LboolR_bool_66_else: 1
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safemul: 8
+       find_decimal_digits: 144
+         _binop_Neq__LboolR_bool_6_while_loop: 135
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+       list_is_palindrome: 109
+         _binop_Neq__LboolR_bool_23_while_loop: 99
+           tasm_arithmetic_u32_safesub: 11
+           tasm_arithmetic_u32_safesub: 11
+           _binop_Neq__LboolR_bool_34_then: 6
+           tasm_arithmetic_u32_safeadd: 8
+       _binop_And__LboolR_bool_66_else: 1
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safemul: 8
+       find_decimal_digits: 144
+         _binop_Neq__LboolR_bool_6_while_loop: 135
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+       list_is_palindrome: 109
+         _binop_Neq__LboolR_bool_23_while_loop: 99
+           tasm_arithmetic_u32_safesub: 11
+           tasm_arithmetic_u32_safesub: 11
+           _binop_Neq__LboolR_bool_34_then: 6
+           tasm_arithmetic_u32_safeadd: 8
+       _binop_And__LboolR_bool_66_else: 1
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safemul: 8
+       find_decimal_digits: 144
+         _binop_Neq__LboolR_bool_6_while_loop: 135
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+       list_is_palindrome: 109
+         _binop_Neq__LboolR_bool_23_while_loop: 99
+           tasm_arithmetic_u32_safesub: 11
+           tasm_arithmetic_u32_safesub: 11
+           _binop_Neq__LboolR_bool_34_then: 6
+           tasm_arithmetic_u32_safeadd: 8
+       _binop_And__LboolR_bool_66_else: 1
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safemul: 8
+       find_decimal_digits: 144
+         _binop_Neq__LboolR_bool_6_while_loop: 135
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+       list_is_palindrome: 109
+         _binop_Neq__LboolR_bool_23_while_loop: 99
+           tasm_arithmetic_u32_safesub: 11
+           tasm_arithmetic_u32_safesub: 11
+           _binop_Neq__LboolR_bool_34_then: 6
+           tasm_arithmetic_u32_safeadd: 8
+       _binop_And__LboolR_bool_66_else: 1
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safeadd: 8
+     tasm_arithmetic_u32_safeadd: 8
+     _binop_Neq__LboolR_bool_53_while_loop: 6922
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safemul: 8
+       find_decimal_digits: 144
+         _binop_Neq__LboolR_bool_6_while_loop: 135
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+       list_is_palindrome: 109
+         _binop_Neq__LboolR_bool_23_while_loop: 99
+           tasm_arithmetic_u32_safesub: 11
+           tasm_arithmetic_u32_safesub: 11
+           _binop_Neq__LboolR_bool_34_then: 6
+           tasm_arithmetic_u32_safeadd: 8
+       _binop_And__LboolR_bool_66_else: 1
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safemul: 8
+       find_decimal_digits: 144
+         _binop_Neq__LboolR_bool_6_while_loop: 135
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+       list_is_palindrome: 109
+         _binop_Neq__LboolR_bool_23_while_loop: 99
+           tasm_arithmetic_u32_safesub: 11
+           tasm_arithmetic_u32_safesub: 11
+           _binop_Neq__LboolR_bool_34_then: 6
+           tasm_arithmetic_u32_safeadd: 8
+       _binop_And__LboolR_bool_66_else: 1
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safemul: 8
+       find_decimal_digits: 144
+         _binop_Neq__LboolR_bool_6_while_loop: 135
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+       list_is_palindrome: 109
+         _binop_Neq__LboolR_bool_23_while_loop: 99
+           tasm_arithmetic_u32_safesub: 11
+           tasm_arithmetic_u32_safesub: 11
+           _binop_Neq__LboolR_bool_34_then: 6
+           tasm_arithmetic_u32_safeadd: 8
+       _binop_And__LboolR_bool_66_else: 1
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safemul: 8
+       find_decimal_digits: 144
+         _binop_Neq__LboolR_bool_6_while_loop: 135
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+       list_is_palindrome: 109
+         _binop_Neq__LboolR_bool_23_while_loop: 99
+           tasm_arithmetic_u32_safesub: 11
+           tasm_arithmetic_u32_safesub: 11
+           _binop_Neq__LboolR_bool_34_then: 6
+           tasm_arithmetic_u32_safeadd: 8
+       _binop_And__LboolR_bool_66_else: 1
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safeadd: 8
+       tasm_arithmetic_u32_safemul: 8
+       find_decimal_digits: 144
+         _binop_Neq__LboolR_bool_6_while_loop: 135
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+           tasm_list_unsafeimplu32_push___u32: 18
+       list_is_palindrome: 104
          _binop_Neq__LboolR_bool_23_while_loop: 94
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -3852,8 +3616,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -3868,8 +3631,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -3884,8 +3646,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -3900,8 +3661,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -3916,8 +3676,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -3932,8 +3691,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -3948,8 +3706,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -3964,8 +3721,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -3980,8 +3736,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -3996,8 +3751,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -4012,8 +3766,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -4028,8 +3781,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -4044,8 +3796,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -4060,8 +3811,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 106
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 104
          _binop_Neq__LboolR_bool_23_while_loop: 94
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -4076,8 +3826,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -4092,8 +3841,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -4108,8 +3856,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -4119,7 +3866,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _binop_Neq__LboolR_bool_53_while_loop: 7415
+     _binop_Neq__LboolR_bool_53_while_loop: 7369
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
        find_decimal_digits: 144
@@ -4127,8 +3874,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -4143,8 +3889,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -4159,8 +3904,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -4175,8 +3919,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -4191,8 +3934,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -4207,8 +3949,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -4223,8 +3964,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -4239,8 +3979,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -4255,8 +3994,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -4271,8 +4009,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -4287,8 +4024,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -4303,8 +4039,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -4319,8 +4054,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -4335,8 +4069,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -4351,8 +4084,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -4367,8 +4099,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -4383,8 +4114,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -4399,8 +4129,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -4415,8 +4144,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -4431,8 +4159,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -4447,8 +4174,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -4463,8 +4189,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -4480,8 +4205,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -4495,7 +4219,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _binop_Neq__LboolR_bool_53_while_loop: 7977
+     _binop_Neq__LboolR_bool_53_while_loop: 7929
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
        find_decimal_digits: 144
@@ -4503,8 +4227,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -4519,8 +4242,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 106
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 104
          _binop_Neq__LboolR_bool_23_while_loop: 94
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -4535,8 +4257,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -4551,8 +4272,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -4567,8 +4287,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -4583,8 +4302,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -4599,8 +4317,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -4615,8 +4332,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -4631,8 +4347,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -4647,8 +4362,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -4663,8 +4377,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -4679,8 +4392,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -4695,8 +4407,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -4711,8 +4422,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -4727,8 +4437,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -4743,8 +4452,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -4759,8 +4467,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 106
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 104
          _binop_Neq__LboolR_bool_23_while_loop: 94
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -4775,8 +4482,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -4791,8 +4497,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -4807,8 +4512,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -4823,8 +4527,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -4840,8 +4543,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -4861,8 +4563,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -4882,8 +4583,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -4897,7 +4597,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _binop_Neq__LboolR_bool_53_while_loop: 8554
+     _binop_Neq__LboolR_bool_53_while_loop: 8504
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
        find_decimal_digits: 144
@@ -4905,8 +4605,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -4921,8 +4620,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -4937,8 +4635,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -4953,8 +4650,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -4969,8 +4665,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -4985,8 +4680,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -5001,8 +4695,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -5017,8 +4710,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -5033,8 +4725,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -5049,8 +4740,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 106
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 104
          _binop_Neq__LboolR_bool_23_while_loop: 94
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -5065,8 +4755,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -5081,8 +4770,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -5097,8 +4785,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -5113,8 +4800,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -5129,8 +4815,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -5145,8 +4830,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -5161,8 +4845,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -5177,8 +4860,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -5193,8 +4875,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -5209,8 +4890,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -5226,8 +4906,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -5247,8 +4926,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -5268,8 +4946,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -5289,8 +4966,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -5310,8 +4986,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -5325,7 +5000,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _binop_Neq__LboolR_bool_53_while_loop: 9116
+     _binop_Neq__LboolR_bool_53_while_loop: 9064
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
        find_decimal_digits: 144
@@ -5333,8 +5008,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -5349,8 +5023,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -5365,8 +5038,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -5381,8 +5053,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -5397,8 +5068,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -5413,8 +5083,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 106
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 104
          _binop_Neq__LboolR_bool_23_while_loop: 94
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -5429,8 +5098,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -5445,8 +5113,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 106
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 104
          _binop_Neq__LboolR_bool_23_while_loop: 94
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -5461,8 +5128,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -5477,8 +5143,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -5493,8 +5158,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -5509,8 +5173,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -5525,8 +5188,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -5541,8 +5203,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -5557,8 +5218,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -5573,8 +5233,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -5589,8 +5248,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -5605,8 +5263,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -5621,8 +5278,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -5638,8 +5294,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -5659,8 +5314,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -5680,8 +5334,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -5701,8 +5354,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -5722,8 +5374,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -5743,8 +5394,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -5764,8 +5414,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 192
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 190
          _binop_Neq__LboolR_bool_23_while_loop: 180
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -5779,7 +5428,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _binop_Neq__LboolR_bool_53_while_loop: 9683
+     _binop_Neq__LboolR_bool_53_while_loop: 9629
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
        find_decimal_digits: 144
@@ -5787,8 +5436,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -5803,8 +5451,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -5819,8 +5466,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -5835,8 +5481,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -5851,8 +5496,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -5867,8 +5511,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -5883,8 +5526,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -5899,8 +5541,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -5915,8 +5556,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -5931,8 +5571,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -5947,8 +5586,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -5963,8 +5601,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -5979,8 +5616,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -5995,8 +5631,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 106
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 104
          _binop_Neq__LboolR_bool_23_while_loop: 94
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -6011,8 +5646,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -6027,8 +5661,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -6043,8 +5676,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -6059,8 +5691,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -6076,8 +5707,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 192
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 190
          _binop_Neq__LboolR_bool_23_while_loop: 180
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -6097,8 +5727,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -6118,8 +5747,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -6139,8 +5767,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 192
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 190
          _binop_Neq__LboolR_bool_23_while_loop: 180
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -6160,8 +5787,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -6181,8 +5807,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -6202,8 +5827,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 192
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 190
          _binop_Neq__LboolR_bool_23_while_loop: 180
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -6223,8 +5847,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -6244,8 +5867,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -6259,7 +5881,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _binop_Neq__LboolR_bool_53_while_loop: 10112
+     _binop_Neq__LboolR_bool_53_while_loop: 10056
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
        find_decimal_digits: 144
@@ -6267,8 +5889,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -6283,8 +5904,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -6299,8 +5919,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 106
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 104
          _binop_Neq__LboolR_bool_23_while_loop: 94
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -6315,8 +5934,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -6331,8 +5949,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -6347,8 +5964,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 106
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 104
          _binop_Neq__LboolR_bool_23_while_loop: 94
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -6363,8 +5979,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -6379,8 +5994,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -6395,8 +6009,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 106
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 104
          _binop_Neq__LboolR_bool_23_while_loop: 94
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -6411,8 +6024,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -6427,8 +6039,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -6443,8 +6054,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 106
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 104
          _binop_Neq__LboolR_bool_23_while_loop: 94
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -6459,8 +6069,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -6475,8 +6084,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -6491,8 +6099,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 106
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 104
          _binop_Neq__LboolR_bool_23_while_loop: 94
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -6507,8 +6114,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -6523,8 +6129,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -6539,8 +6144,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 106
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 104
          _binop_Neq__LboolR_bool_23_while_loop: 94
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -6556,8 +6160,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -6577,8 +6180,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -6598,8 +6200,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 192
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 190
          _binop_Neq__LboolR_bool_23_while_loop: 180
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -6619,8 +6220,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -6640,8 +6240,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -6661,8 +6260,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 187
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 185
          _binop_Neq__LboolR_bool_23_while_loop: 175
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -6682,8 +6280,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -6703,8 +6300,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -6724,8 +6320,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 192
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 190
          _binop_Neq__LboolR_bool_23_while_loop: 180
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -6745,8 +6340,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -6760,7 +6354,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _binop_Neq__LboolR_bool_53_while_loop: 10699
+     _binop_Neq__LboolR_bool_53_while_loop: 10641
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
        find_decimal_digits: 144
@@ -6768,8 +6362,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -6784,8 +6377,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -6800,8 +6392,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -6816,8 +6407,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 106
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 104
          _binop_Neq__LboolR_bool_23_while_loop: 94
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -6832,8 +6422,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -6848,8 +6437,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -6864,8 +6452,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -6880,8 +6467,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 106
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 104
          _binop_Neq__LboolR_bool_23_while_loop: 94
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -6896,8 +6482,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -6912,8 +6497,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -6928,8 +6512,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -6944,8 +6527,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -6960,8 +6542,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -6976,8 +6557,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -6992,8 +6572,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -7008,8 +6587,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -7024,8 +6602,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -7041,8 +6618,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -7062,8 +6638,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -7083,8 +6658,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -7104,8 +6678,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -7125,8 +6698,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -7146,8 +6718,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -7167,8 +6738,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -7188,8 +6758,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -7209,8 +6778,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 192
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 190
          _binop_Neq__LboolR_bool_23_while_loop: 180
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -7230,8 +6798,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -7251,8 +6818,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -7272,8 +6838,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 192
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 190
          _binop_Neq__LboolR_bool_23_while_loop: 180
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -7287,7 +6852,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _binop_Neq__LboolR_bool_53_while_loop: 11266
+     _binop_Neq__LboolR_bool_53_while_loop: 11206
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
        find_decimal_digits: 144
@@ -7295,8 +6860,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -7311,8 +6875,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -7327,8 +6890,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -7343,8 +6905,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -7359,8 +6920,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -7375,8 +6935,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 106
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 104
          _binop_Neq__LboolR_bool_23_while_loop: 94
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -7391,8 +6950,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -7407,8 +6965,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -7423,8 +6980,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -7439,8 +6995,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -7455,8 +7010,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -7471,8 +7025,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -7487,8 +7040,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 106
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 104
          _binop_Neq__LboolR_bool_23_while_loop: 94
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -7503,8 +7055,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -7519,8 +7070,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -7535,8 +7085,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -7552,8 +7101,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -7573,8 +7121,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -7594,8 +7141,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -7615,8 +7161,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 192
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 190
          _binop_Neq__LboolR_bool_23_while_loop: 180
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -7636,8 +7181,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -7657,8 +7201,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -7678,8 +7221,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -7699,8 +7241,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -7720,8 +7261,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -7741,8 +7281,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -7762,8 +7301,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -7783,8 +7321,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 192
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 190
          _binop_Neq__LboolR_bool_23_while_loop: 180
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -7804,8 +7341,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -7825,8 +7361,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 192
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 190
          _binop_Neq__LboolR_bool_23_while_loop: 180
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -7840,7 +7375,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _binop_Neq__LboolR_bool_53_while_loop: 11853
+     _binop_Neq__LboolR_bool_53_while_loop: 11791
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
        find_decimal_digits: 144
@@ -7848,8 +7383,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -7864,8 +7398,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -7880,8 +7413,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -7896,8 +7428,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -7912,8 +7443,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -7928,8 +7458,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -7944,8 +7473,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -7960,8 +7488,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -7976,8 +7503,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -7992,8 +7518,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -8008,8 +7533,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -8024,8 +7548,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -8040,8 +7563,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -8056,8 +7578,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -8072,8 +7593,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -8089,8 +7609,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 192
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 190
          _binop_Neq__LboolR_bool_23_while_loop: 180
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -8110,8 +7629,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -8131,8 +7649,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -8152,8 +7669,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -8173,8 +7689,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -8194,8 +7709,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -8215,8 +7729,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -8236,8 +7749,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -8257,8 +7769,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -8278,8 +7789,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -8299,8 +7809,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -8320,8 +7829,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 192
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 190
          _binop_Neq__LboolR_bool_23_while_loop: 180
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -8341,8 +7849,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -8362,8 +7869,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -8383,8 +7889,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -8404,8 +7909,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -8419,7 +7923,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _binop_Neq__LboolR_bool_53_while_loop: 12287
+     _binop_Neq__LboolR_bool_53_while_loop: 12223
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
        find_decimal_digits: 144
@@ -8427,8 +7931,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -8443,8 +7946,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -8459,8 +7961,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -8475,8 +7976,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -8491,8 +7991,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -8507,8 +8006,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -8523,8 +8021,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 106
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 104
          _binop_Neq__LboolR_bool_23_while_loop: 94
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -8539,8 +8036,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -8555,8 +8051,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -8571,8 +8066,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -8587,8 +8081,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -8603,8 +8096,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -8619,8 +8111,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -8635,8 +8126,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -8651,8 +8141,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -8668,8 +8157,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -8689,8 +8177,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -8710,8 +8197,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -8731,8 +8217,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -8752,8 +8237,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -8773,8 +8257,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -8794,8 +8277,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 192
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 190
          _binop_Neq__LboolR_bool_23_while_loop: 180
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -8815,8 +8297,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -8836,8 +8317,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -8857,8 +8337,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -8878,8 +8357,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -8899,8 +8377,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -8920,8 +8397,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -8941,8 +8417,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 192
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 190
          _binop_Neq__LboolR_bool_23_while_loop: 180
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -8962,8 +8437,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -8983,8 +8457,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -9004,8 +8477,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 192
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 190
          _binop_Neq__LboolR_bool_23_while_loop: 180
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -9019,7 +8491,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _binop_Neq__LboolR_bool_53_while_loop: 12869
+     _binop_Neq__LboolR_bool_53_while_loop: 12803
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
        find_decimal_digits: 144
@@ -9027,8 +8499,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -9043,8 +8514,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -9059,8 +8529,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -9075,8 +8544,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -9091,8 +8559,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -9107,8 +8574,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -9123,8 +8589,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -9139,8 +8604,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -9155,8 +8619,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -9171,8 +8634,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -9187,8 +8649,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -9203,8 +8664,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -9219,8 +8679,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -9235,8 +8694,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -9252,8 +8710,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 192
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 190
          _binop_Neq__LboolR_bool_23_while_loop: 180
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -9273,8 +8730,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -9294,8 +8750,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -9315,8 +8770,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -9336,8 +8790,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -9357,8 +8810,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -9378,8 +8830,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -9399,8 +8850,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -9420,8 +8870,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -9441,8 +8890,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -9462,8 +8910,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -9483,8 +8930,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -9504,8 +8950,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -9525,8 +8970,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 192
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 190
          _binop_Neq__LboolR_bool_23_while_loop: 180
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -9546,8 +8990,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -9567,8 +9010,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -9588,8 +9030,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -9609,8 +9050,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -9630,8 +9070,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -9645,7 +9084,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _binop_Neq__LboolR_bool_53_while_loop: 13298
+     _binop_Neq__LboolR_bool_53_while_loop: 13230
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
        find_decimal_digits: 144
@@ -9653,8 +9092,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -9669,8 +9107,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -9685,8 +9122,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -9701,8 +9137,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -9717,8 +9152,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -9733,8 +9167,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -9749,8 +9182,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -9765,8 +9197,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -9781,8 +9212,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -9797,8 +9227,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -9813,8 +9242,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -9829,8 +9257,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -9845,8 +9272,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -9861,8 +9287,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 106
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 104
          _binop_Neq__LboolR_bool_23_while_loop: 94
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -9878,8 +9303,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -9899,8 +9323,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -9920,8 +9343,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 192
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 190
          _binop_Neq__LboolR_bool_23_while_loop: 180
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -9941,8 +9363,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 192
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 190
          _binop_Neq__LboolR_bool_23_while_loop: 180
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -9962,8 +9383,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -9983,8 +9403,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -10004,8 +9423,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -10025,8 +9443,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 192
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 190
          _binop_Neq__LboolR_bool_23_while_loop: 180
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -10046,8 +9463,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -10067,8 +9483,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -10088,8 +9503,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -10109,8 +9523,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -10130,8 +9543,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -10151,8 +9563,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 192
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 190
          _binop_Neq__LboolR_bool_23_while_loop: 180
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -10172,8 +9583,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -10193,8 +9603,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -10214,8 +9623,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -10235,8 +9643,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -10256,8 +9663,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -10277,8 +9683,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -10292,7 +9697,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _binop_Neq__LboolR_bool_53_while_loop: 13885
+     _binop_Neq__LboolR_bool_53_while_loop: 13815
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
        find_decimal_digits: 144
@@ -10300,8 +9705,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -10316,8 +9720,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 106
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 104
          _binop_Neq__LboolR_bool_23_while_loop: 94
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -10332,8 +9735,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -10348,8 +9750,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -10364,8 +9765,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 106
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 104
          _binop_Neq__LboolR_bool_23_while_loop: 94
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -10380,8 +9780,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -10396,8 +9795,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -10412,8 +9810,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -10428,8 +9825,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -10444,8 +9840,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -10460,8 +9855,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -10476,8 +9870,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -10492,8 +9885,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -10509,8 +9901,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -10530,8 +9921,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -10551,8 +9941,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -10572,8 +9961,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -10593,8 +9981,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -10614,8 +10001,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -10635,8 +10021,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -10656,8 +10041,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -10677,8 +10061,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -10698,8 +10081,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -10719,8 +10101,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -10740,8 +10121,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -10761,8 +10141,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -10782,8 +10161,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -10803,8 +10181,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -10824,8 +10201,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -10845,8 +10221,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -10866,8 +10241,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -10887,8 +10261,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -10908,8 +10281,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -10929,8 +10301,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -10950,8 +10321,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -10965,7 +10335,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _binop_Neq__LboolR_bool_53_while_loop: 14324
+     _binop_Neq__LboolR_bool_53_while_loop: 14252
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
        find_decimal_digits: 144
@@ -10973,8 +10343,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -10989,8 +10358,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -11005,8 +10373,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -11021,8 +10388,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 106
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 104
          _binop_Neq__LboolR_bool_23_while_loop: 94
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -11037,8 +10403,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -11053,8 +10418,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -11069,8 +10433,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -11085,8 +10448,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -11101,8 +10463,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -11117,8 +10478,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -11133,8 +10493,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -11149,8 +10508,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -11165,8 +10523,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -11182,8 +10539,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -11203,8 +10559,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -11224,8 +10579,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -11245,8 +10599,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -11266,8 +10619,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -11287,8 +10639,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -11308,8 +10659,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -11329,8 +10679,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -11350,8 +10699,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -11371,8 +10719,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 192
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 190
          _binop_Neq__LboolR_bool_23_while_loop: 180
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -11392,8 +10739,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -11413,8 +10759,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -11434,8 +10779,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -11455,8 +10799,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -11476,8 +10819,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 192
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 190
          _binop_Neq__LboolR_bool_23_while_loop: 180
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -11497,8 +10839,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -11518,8 +10859,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -11539,8 +10879,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -11560,8 +10899,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -11581,8 +10919,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -11602,8 +10939,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -11623,8 +10959,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -11644,8 +10979,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -11659,7 +10993,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _binop_Neq__LboolR_bool_53_while_loop: 14891
+     _binop_Neq__LboolR_bool_53_while_loop: 14817
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
        find_decimal_digits: 144
@@ -11667,8 +11001,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -11683,8 +11016,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -11699,8 +11031,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -11715,8 +11046,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -11731,8 +11061,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -11747,8 +11076,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -11763,8 +11091,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -11779,8 +11106,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -11795,8 +11121,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 106
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 104
          _binop_Neq__LboolR_bool_23_while_loop: 94
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -11811,8 +11136,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -11827,8 +11151,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -11843,8 +11166,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -11860,8 +11182,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -11881,8 +11202,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -11902,8 +11222,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -11923,8 +11242,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -11944,8 +11262,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -11965,8 +11282,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -11986,8 +11302,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -12007,8 +11322,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 192
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 190
          _binop_Neq__LboolR_bool_23_while_loop: 180
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -12028,8 +11342,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -12049,8 +11362,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -12070,8 +11382,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -12091,8 +11402,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -12112,8 +11422,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -12133,8 +11442,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -12154,8 +11462,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -12175,8 +11482,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -12196,8 +11502,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -12217,8 +11522,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -12238,8 +11542,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -12259,8 +11562,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 192
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 190
          _binop_Neq__LboolR_bool_23_while_loop: 180
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -12280,8 +11582,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -12301,8 +11602,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -12322,8 +11622,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -12343,8 +11642,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -12364,8 +11662,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 192
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 190
          _binop_Neq__LboolR_bool_23_while_loop: 180
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -12379,7 +11676,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _binop_Neq__LboolR_bool_53_while_loop: 15325
+     _binop_Neq__LboolR_bool_53_while_loop: 15249
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
        find_decimal_digits: 144
@@ -12387,8 +11684,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -12403,8 +11699,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -12419,8 +11714,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -12435,8 +11729,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -12451,8 +11744,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -12467,8 +11759,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -12483,8 +11774,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -12499,8 +11789,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -12515,8 +11804,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -12531,8 +11819,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -12547,8 +11834,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -12563,8 +11849,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -12580,8 +11865,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -12601,8 +11885,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 192
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 190
          _binop_Neq__LboolR_bool_23_while_loop: 180
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -12622,8 +11905,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -12643,8 +11925,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -12664,8 +11945,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 192
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 190
          _binop_Neq__LboolR_bool_23_while_loop: 180
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -12685,8 +11965,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -12706,8 +11985,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -12727,8 +12005,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -12748,8 +12025,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -12769,8 +12045,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -12790,8 +12065,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -12811,8 +12085,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 187
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 185
          _binop_Neq__LboolR_bool_23_while_loop: 175
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -12832,8 +12105,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -12853,8 +12125,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -12874,8 +12145,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -12895,8 +12165,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -12916,8 +12185,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -12937,8 +12205,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -12958,8 +12225,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 192
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 190
          _binop_Neq__LboolR_bool_23_while_loop: 180
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -12979,8 +12245,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -13000,8 +12265,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -13021,8 +12285,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -13042,8 +12305,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -13063,8 +12325,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 192
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 190
          _binop_Neq__LboolR_bool_23_while_loop: 180
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -13084,8 +12345,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 192
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 190
          _binop_Neq__LboolR_bool_23_while_loop: 180
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -13105,8 +12365,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -13120,7 +12379,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _binop_Neq__LboolR_bool_53_while_loop: 15907
+     _binop_Neq__LboolR_bool_53_while_loop: 15829
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
        find_decimal_digits: 144
@@ -13128,8 +12387,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -13144,8 +12402,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -13160,8 +12417,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -13176,8 +12432,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -13192,8 +12447,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -13208,8 +12462,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -13224,8 +12477,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -13240,8 +12492,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -13256,8 +12507,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -13272,8 +12522,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -13288,8 +12537,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -13305,8 +12553,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 192
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 190
          _binop_Neq__LboolR_bool_23_while_loop: 180
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -13326,8 +12573,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -13347,8 +12593,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -13368,8 +12613,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -13389,8 +12633,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -13410,8 +12653,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -13431,8 +12673,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -13452,8 +12693,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -13473,8 +12713,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -13494,8 +12733,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 192
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 190
          _binop_Neq__LboolR_bool_23_while_loop: 180
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -13515,8 +12753,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -13536,8 +12773,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -13557,8 +12793,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -13578,8 +12813,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -13599,8 +12833,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -13620,8 +12853,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -13641,8 +12873,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 192
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 190
          _binop_Neq__LboolR_bool_23_while_loop: 180
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -13662,8 +12893,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -13683,8 +12913,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -13704,8 +12933,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -13725,8 +12953,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -13746,8 +12973,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -13767,8 +12993,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -13788,8 +13013,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 187
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 185
          _binop_Neq__LboolR_bool_23_while_loop: 175
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -13809,8 +13033,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -13830,8 +13053,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -13851,8 +13073,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -13872,8 +13093,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -13887,7 +13107,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _binop_Neq__LboolR_bool_53_while_loop: 16336
+     _binop_Neq__LboolR_bool_53_while_loop: 16256
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
        find_decimal_digits: 144
@@ -13895,8 +13115,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -13911,8 +13130,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -13927,8 +13145,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -13943,8 +13160,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -13959,8 +13175,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 106
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 104
          _binop_Neq__LboolR_bool_23_while_loop: 94
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -13975,8 +13190,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -13991,8 +13205,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -14007,8 +13220,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -14023,8 +13235,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -14039,8 +13250,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -14055,8 +13265,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 111
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 109
          _binop_Neq__LboolR_bool_23_while_loop: 99
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -14072,8 +13281,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -14093,8 +13301,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -14114,8 +13321,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -14135,8 +13341,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -14156,8 +13361,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 192
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 190
          _binop_Neq__LboolR_bool_23_while_loop: 180
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -14177,8 +13381,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -14198,8 +13401,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -14219,8 +13421,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -14240,8 +13441,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 192
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 190
          _binop_Neq__LboolR_bool_23_while_loop: 180
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -14261,8 +13461,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -14282,8 +13481,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -14303,8 +13501,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -14324,8 +13521,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -14345,8 +13541,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 192
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 190
          _binop_Neq__LboolR_bool_23_while_loop: 180
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -14366,8 +13561,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -14387,8 +13581,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -14408,8 +13601,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -14429,8 +13621,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -14450,8 +13641,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 192
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 190
          _binop_Neq__LboolR_bool_23_while_loop: 180
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -14471,8 +13661,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -14492,8 +13681,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 192
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 190
          _binop_Neq__LboolR_bool_23_while_loop: 180
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -14513,8 +13701,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -14534,8 +13721,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -14555,8 +13741,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -14576,8 +13761,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -14597,8 +13781,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -14618,8 +13801,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -14639,8 +13821,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 192
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 190
          _binop_Neq__LboolR_bool_23_while_loop: 180
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -14660,8 +13841,7 @@ project_euler_4_w_unsafe_lists_i10_to_50:
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
            tasm_list_unsafeimplu32_push___u32: 18
-       list_is_palindrome: 197
-         tasm_list_unsafeimplu32_length___u32: 3
+       list_is_palindrome: 195
          _binop_Neq__LboolR_bool_23_while_loop: 185
            tasm_arithmetic_u32_safesub: 11
            tasm_arithmetic_u32_safesub: 11
@@ -14676,28 +13856,27 @@ project_euler_4_w_unsafe_lists_i10_to_50:
        tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
    tasm_io_write_to_stdout___u32: 2
- total: 297185
+ total: 295545
 
 # aggregated
- main: 297183 (1)
-   tasm_list_unsafeimplu32_new___u32: 38 (0.00012786734)
-     tasm_memory_dyn_malloc: 29 (0.00009758297)
-   _binop_Neq__LboolR_bool_47_while_loop: 297132 (0.9998284)
-     _binop_Neq__LboolR_bool_53_while_loop: 296123 (0.9964332)
-       tasm_arithmetic_u32_safeadd: 13440 (0.04522466)
-       tasm_arithmetic_u32_safemul: 6560 (0.022073941)
-       find_decimal_digits: 130092 (0.4377505)
-         _binop_Neq__LboolR_bool_6_while_loop: 122712 (0.4129173)
-           tasm_list_unsafeimplu32_push___u32: 49428 (0.16632175)
-       list_is_palindrome: 115181 (0.387576)
-         tasm_list_unsafeimplu32_length___u32: 2460 (0.008277728)
-         _binop_Neq__LboolR_bool_23_while_loop: 105341 (0.3544651)
-           tasm_arithmetic_u32_safesub: 24332 (0.08187548)
-           _binop_Neq__LboolR_bool_34_then: 6114 (0.020573182)
-           tasm_arithmetic_u32_safeadd: 8848 (0.0297729)
-       _binop_And__LboolR_bool_66_else: 806 (0.0027121336)
-     tasm_arithmetic_u32_safeadd: 320 (0.0010767776)
-           _binop_Neq__LboolR_bool_34_else: 87 (0.0002927489)
-       _binop_And__LboolR_bool_66_then: 84 (0.00028265413)
-   tasm_io_write_to_stdout___u32: 2 (0.00000672986)
- total: 297185 (1.0000067)
+ main: 295543 (1)
+   tasm_list_unsafeimplu32_new___u32: 38 (0.0001285769)
+     tasm_memory_dyn_malloc: 29 (0.00009812447)
+   _binop_Neq__LboolR_bool_47_while_loop: 295492 (0.99982744)
+     _binop_Neq__LboolR_bool_53_while_loop: 294483 (0.9964134)
+       tasm_arithmetic_u32_safeadd: 13440 (0.045475617)
+       tasm_arithmetic_u32_safemul: 6560 (0.022196433)
+       find_decimal_digits: 130092 (0.44017962)
+         _binop_Neq__LboolR_bool_6_while_loop: 122712 (0.4152086)
+           tasm_list_unsafeimplu32_push___u32: 49428 (0.1672447)
+       list_is_palindrome: 113541 (0.3841776)
+         _binop_Neq__LboolR_bool_23_while_loop: 105341 (0.35643205)
+           tasm_arithmetic_u32_safesub: 24332 (0.08232981)
+           _binop_Neq__LboolR_bool_34_then: 6114 (0.020687345)
+           tasm_arithmetic_u32_safeadd: 8848 (0.029938115)
+       _binop_And__LboolR_bool_66_else: 806 (0.0027271835)
+     tasm_arithmetic_u32_safeadd: 320 (0.0010827527)
+           _binop_Neq__LboolR_bool_34_else: 87 (0.0002943734)
+       _binop_And__LboolR_bool_66_then: 84 (0.0002842226)
+   tasm_io_write_to_stdout___u32: 2 (0.000006767205)
+ total: 295545 (1.0000068)

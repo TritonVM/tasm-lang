@@ -158,23 +158,18 @@ impl ProofItem {
         };
     }
 
-    // todo: enable this once arrays work in lib
-    /*
     pub fn as_quotient_segments_elements(&self) -> Vec<[XFieldElement; 4]> {
-        #[allow(unused_assignments)]
-        let mut quotient_segments_elements: Vec<[XFieldElement; 4]> =
-            Vec::<[XFieldElement; 4]>::with_capacity(0);
-        match self {
+        return match self {
             ProofItem::QuotientSegmentsElements(xss) => {
-                quotient_segments_elements = xss.to_owned();
+                //
+                xss.to_owned()
             }
             _ => {
-                panic!();
+                //
+                panic!()
             }
         };
-
-        return quotient_segments_elements;
-    }*/
+    }
 
     pub fn as_fri_codeword(&self) -> Vec<XFieldElement> {
         return match self {
@@ -545,6 +540,53 @@ mod test {
             "recufier",
             "proof_item",
             "test::proof_item_load_log2_padded_height_from_memory",
+        );
+        let vm_output = TritonVMTestCase::new(entrypoint_location)
+            .with_non_determinism(non_determinism)
+            .expect_stack_difference(0)
+            .execute()
+            .unwrap();
+
+        prop_assert_eq!(native_output, vm_output.output);
+    }
+
+    fn proof_item_load_quotient_segments_elements_from_memory() {
+        let quotient_segments_elements_pi: Box<ProofItem> =
+            ProofItem::decode(&tasm::load_from_memory(BFieldElement::new(0))).unwrap();
+        assert!(!quotient_segments_elements_pi.include_in_fiat_shamir_heuristic());
+        let quotient_segments_elements: Vec<[XFieldElement; 4]> =
+            quotient_segments_elements_pi.as_quotient_segments_elements();
+        {
+            let mut i: usize = 0;
+            while i < quotient_segments_elements.len() {
+                tasm::tasm_io_write_to_stdout___xfe(quotient_segments_elements[i][0]);
+                tasm::tasm_io_write_to_stdout___xfe(quotient_segments_elements[i][1]);
+                tasm::tasm_io_write_to_stdout___xfe(quotient_segments_elements[i][2]);
+                tasm::tasm_io_write_to_stdout___xfe(quotient_segments_elements[i][3]);
+                i += 1;
+            }
+        }
+
+        return;
+    }
+
+    #[proptest(cases = 10)]
+    fn proof_item_load_quotient_segments_elements_memory_test(
+        #[strategy(arb())] quotient_segments_elements: Vec<[XFieldElement; 4]>,
+    ) {
+        let stdin = vec![];
+        let proof_item = ProofItem::QuotientSegmentsElements(quotient_segments_elements);
+        let lph_start_address = BFieldElement::new(0);
+        let non_determinism = init_memory_from(&proof_item, lph_start_address);
+
+        let native_output = wrap_main_with_io(
+            &proof_item_load_quotient_segments_elements_from_memory,
+        )(stdin, non_determinism.clone());
+
+        let entrypoint_location = EntrypointLocation::disk(
+            "recufier",
+            "proof_item",
+            "test::proof_item_load_quotient_segments_elements_from_memory",
         );
         let vm_output = TritonVMTestCase::new(entrypoint_location)
             .with_non_determinism(non_determinism)
