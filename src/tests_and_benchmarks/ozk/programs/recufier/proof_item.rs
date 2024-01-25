@@ -183,28 +183,18 @@ impl ProofItem {
         };
     }
 
-    // todo: enable this, figure out `to_owned()` for `FriResponse`
-    /*
-    pub fn as_fri_response(&self) -> FriResponse {
-        let auth_structure: Vec<Digest> = Vec::<Digest>::with_capacity(0);
-        let revealed_leaves: Vec<XFieldElement> = Vec::<XFieldElement>::with_capacity(0);
-        #[allow(unused_assignments)]
-        let mut fri_response: FriResponse = FriResponse {
-            auth_structure,
-            revealed_leaves,
-        };
-
-        match self {
+    pub fn as_fri_response(&self) -> &FriResponse {
+        return match self {
             ProofItem::FriResponse(response) => {
-                fri_response = response.to_owned();
+                //
+                response
             }
             _ => {
-                panic!();
+                //
+                panic!()
             }
         };
-
-        return fri_response;
-    }*/
+    }
 }
 
 #[cfg(test)]
@@ -631,6 +621,49 @@ mod test {
             "recufier",
             "proof_item",
             "test::proof_item_load_fri_codeword_from_memory",
+        );
+        let vm_output = TritonVMTestCase::new(entrypoint_location)
+            .with_non_determinism(non_determinism)
+            .expect_stack_difference(0)
+            .execute()
+            .unwrap();
+
+        prop_assert_eq!(native_output, vm_output.output);
+    }
+
+    // as_fri_response
+    fn proof_item_load_as_fri_response_from_memory() {
+        let fri_response_pi: Box<ProofItem> =
+            ProofItem::decode(&tasm::load_from_memory(BFieldElement::new(0))).unwrap();
+        assert!(!fri_response_pi.include_in_fiat_shamir_heuristic());
+        let fri_response: &FriResponse = fri_response_pi.as_fri_response();
+
+        {
+            let mut i: usize = 0;
+            while i < fri_response.auth_structure.len() {
+                tasm::tasm_io_write_to_stdout___digest(fri_response.auth_structure[i]);
+                i += 1;
+            }
+        }
+
+        return;
+    }
+
+    #[proptest(cases = 20)]
+    fn proof_item_load_fri_response_from_memory_test(#[strategy(arb())] fri_response: FriResponse) {
+        let proof_item = ProofItem::FriResponse(fri_response);
+        let fri_response_start_address = BFieldElement::new(0);
+        let non_determinism = init_memory_from(&proof_item, fri_response_start_address);
+
+        let native_output = wrap_main_with_io(&proof_item_load_as_fri_response_from_memory)(
+            vec![],
+            non_determinism.clone(),
+        );
+
+        let entrypoint_location = EntrypointLocation::disk(
+            "recufier",
+            "proof_item",
+            "test::proof_item_load_as_fri_response_from_memory",
         );
         let vm_output = TritonVMTestCase::new(entrypoint_location)
             .with_non_determinism(non_determinism)
