@@ -18,15 +18,15 @@ const GITHUB_TVM_URL: &str =
 
 #[derive(Debug, Clone)]
 pub(crate) struct EntrypointLocation {
-    pub entrypoint: String,
-    pub source_file_location: SourceFileLocation,
+    pub(crate) entrypoint: String,
+    pub(crate) source_file_location: SourceFileLocation,
 }
 
 #[derive(Debug, Clone)]
 pub(crate) struct SourceFileLocation {
-    pub directory: String,
-    pub module_name: String,
-    pub provider: SourceCodeProvider,
+    pub(crate) directory: String,
+    pub(crate) module_name: String,
+    pub(crate) provider: SourceCodeProvider,
 }
 
 #[derive(Debug, Clone, Copy, Default)]
@@ -37,7 +37,7 @@ pub(crate) enum SourceCodeProvider {
 }
 
 impl EntrypointLocation {
-    pub fn disk(directory: &str, module_name: &str, entrypoint: &str) -> Self {
+    pub(crate) fn disk(directory: &str, module_name: &str, entrypoint: &str) -> Self {
         let source_file_location = SourceFileLocation {
             directory: directory.to_owned(),
             module_name: module_name.to_owned(),
@@ -51,13 +51,13 @@ impl EntrypointLocation {
     }
 
     /// Like [`Self::disk`], but uses the GitHub repository as the source of the Rust code.
-    pub fn github(directory: &str, module_name: &str, entrypoint: &str) -> Self {
+    pub(crate) fn github(directory: &str, module_name: &str, entrypoint: &str) -> Self {
         let mut location = Self::disk(directory, module_name, entrypoint);
         location.source_file_location.provider = SourceCodeProvider::GitHub;
         location
     }
 
-    pub fn extract_entrypoint(&self) -> syn::ItemFn {
+    pub(crate) fn extract_entrypoint(&self) -> syn::ItemFn {
         let parsed_file = self.source_file_location.parse_file();
         let items = self.fetch_module_items_containing_entrypoint(&parsed_file.items);
         self.extract_entrypoint_from_items(items)
@@ -118,7 +118,7 @@ impl EntrypointLocation {
 }
 
 impl SourceFileLocation {
-    pub fn parse_file(&self) -> syn::File {
+    pub(crate) fn parse_file(&self) -> syn::File {
         let file = match self.provider {
             SourceCodeProvider::Disk => self.read_file_from_disk(),
             SourceCodeProvider::GitHub => self.read_file_from_github(),

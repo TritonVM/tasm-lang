@@ -1,4 +1,4 @@
-pub enum SimpleEnum {
+pub(crate) enum SimpleEnum {
     A,
     B,
 }

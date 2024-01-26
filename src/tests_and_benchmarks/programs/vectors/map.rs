@@ -2,7 +2,7 @@
 mod tests {
     use syn::parse_quote;
 
-    use crate::graft::item_fn;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::item_fn;
 
     fn simple_map_mul_by_2() -> syn::ItemFn {
         item_fn(parse_quote! {

@@ -5,16 +5,16 @@ use crate::tasm_code_generator::VStack;
 use std::collections::HashMap;
 use std::collections::HashSet;
 
-pub type VarAddr = HashMap<String, ValueIdentifier>;
+pub(crate) type VarAddr = HashMap<String, ValueIdentifier>;
 
 /// State for managing the compilation of a single function
 #[derive(Clone, Debug, Default)]
 
 pub(crate) struct FunctionState {
-    pub vstack: VStack,
-    pub var_addr: VarAddr,
-    pub spill_required: HashSet<ValueIdentifier>,
-    pub subroutines: Vec<SubRoutine>,
+    pub(crate) vstack: VStack,
+    pub(crate) var_addr: VarAddr,
+    pub(crate) spill_required: HashSet<ValueIdentifier>,
+    pub(crate) subroutines: Vec<SubRoutine>,
 }
 
 impl FunctionState {

@@ -6,7 +6,6 @@ mod run_tests {
     use syn::parse_quote;
     use triton_vm::twenty_first::shared_math::other::random_elements;
 
-    use crate::graft::item_fn;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 
     #[test]

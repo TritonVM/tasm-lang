@@ -21,8 +21,8 @@ const DEFAULT_DIGEST_FUNCTION: &str = "Digest::default";
 const NEW_DIGEST_FUNCTION: &str = "Digest::new";
 
 #[derive(Clone, Debug)]
-pub struct HasherLib {
-    pub list_type: ast_types::ListType,
+pub(crate) struct HasherLib {
+    pub(crate) list_type: ast_types::ListType,
 }
 
 impl Library for HasherLib {

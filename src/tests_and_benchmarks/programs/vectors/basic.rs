@@ -1,4 +1,4 @@
-pub mod run_tests {
+pub(crate) mod run_tests {
     use std::collections::HashMap;
 
     use itertools::Itertools;
@@ -13,7 +13,7 @@ pub mod run_tests {
     use crate::ast_types;
     use crate::ast_types::DataType;
     use crate::ast_types::ListType;
-    use crate::graft::item_fn;
+
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 
     #[test]

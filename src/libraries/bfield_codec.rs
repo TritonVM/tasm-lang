@@ -14,8 +14,8 @@ use super::Library;
 const ENCODE_METHOD_NAME: &str = "encode";
 
 #[derive(Clone, Debug)]
-pub struct BFieldCodecLib {
-    pub list_type: ast_types::ListType,
+pub(crate) struct BFieldCodecLib {
+    pub(crate) list_type: ast_types::ListType,
 }
 
 impl BFieldCodecLib {

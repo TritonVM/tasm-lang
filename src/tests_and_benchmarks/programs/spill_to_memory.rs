@@ -1,6 +1,5 @@
+use crate::tests_and_benchmarks::test_helpers::shared_test::item_fn;
 use syn::parse_quote;
-
-use crate::graft::item_fn;
 
 fn spill_u64_values_to_memory_rast() -> syn::ItemFn {
     item_fn(parse_quote! {

@@ -8,26 +8,26 @@ use crate::graft::Graft;
 use crate::tasm_code_generator::CompilerState;
 use crate::type_checker;
 
-pub mod bfe;
-pub mod bfield_codec;
-pub mod boxed;
-pub mod core;
-pub mod hasher;
-pub mod tasm;
-pub mod unsigned_integers;
-pub mod vector;
-pub mod xfe;
+pub(crate) mod bfe;
+pub(crate) mod bfield_codec;
+pub(crate) mod boxed;
+pub(crate) mod core;
+pub(crate) mod hasher;
+pub(crate) mod tasm;
+pub(crate) mod unsigned_integers;
+pub(crate) mod vector;
+pub(crate) mod xfe;
 
 type Annotation = type_checker::Typing;
 
 #[derive(Debug)]
 pub(crate) struct LibraryFunction {
-    pub signature: FnSignature,
-    pub body: Vec<triton_vm::instruction::LabelledInstruction>,
+    pub(crate) signature: FnSignature,
+    pub(crate) body: Vec<triton_vm::instruction::LabelledInstruction>,
 }
 
-pub struct LibraryConfig {
-    pub list_type: ast_types::ListType,
+pub(crate) struct LibraryConfig {
+    pub(crate) list_type: ast_types::ListType,
 }
 
 pub(crate) fn all_libraries<'a>(config: LibraryConfig) -> Vec<Box<dyn Library + 'a>> {

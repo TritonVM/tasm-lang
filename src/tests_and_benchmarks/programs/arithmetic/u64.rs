@@ -1,6 +1,5 @@
+use crate::tests_and_benchmarks::test_helpers::shared_test::item_fn;
 use syn::parse_quote;
-
-use crate::graft::item_fn;
 
 fn divmoddi4_u64_rast() -> syn::ItemFn {
     // This code shows how to do u64 div-mod using only u32 div-mod primitives.

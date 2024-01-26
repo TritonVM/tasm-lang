@@ -21,7 +21,7 @@ const FUNCTION_NAME_NEW: &str = "XFieldElement::new";
 const UNLIFT_NAME: &str = "unlift";
 
 #[derive(Clone, Debug)]
-pub struct XfeLibrary;
+pub(crate) struct XfeLibrary;
 
 impl Library for XfeLibrary {
     fn get_function_name(&self, _full_name: &str) -> Option<String> {

@@ -10,7 +10,6 @@ use itertools::Itertools;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::fmt::Display;
-use tasm_lib;
 use tasm_lib::library::Library as SnippetState;
 use tasm_lib::traits::basic_snippet::BasicSnippet;
 use triton_vm::instruction::LabelledInstruction;
@@ -42,7 +41,7 @@ use crate::type_checker;
 use crate::type_checker::GetType;
 
 #[derive(Clone, Debug)]
-pub enum ValueLocation {
+pub(crate) enum ValueLocation {
     OpStack(usize),
     StaticMemoryAddress(BFieldElement),
     DynamicMemoryAddress(Vec<LabelledInstruction>),
@@ -116,7 +115,7 @@ impl ValueLocation {
 
 /// State that is preserved across the compilation of functions
 #[derive(Clone, Debug, Default)]
-pub struct GlobalCodeGeneratorState {
+pub(crate) struct GlobalCodeGeneratorState {
     counter: usize,
     snippet_state: SnippetState,
     static_allocations: HashMap<ValueIdentifier, (BFieldElement, ast_types::DataType)>,
@@ -140,7 +139,7 @@ impl GlobalCodeGeneratorState {
 }
 
 #[derive(Debug)]
-pub struct CompilerState<'a> {
+pub(crate) struct CompilerState<'a> {
     /// The part of the compiler state that applies across function calls to locally defined
     global_compiler_state: GlobalCodeGeneratorState,
 
@@ -583,11 +582,11 @@ impl<'a> CompilerState<'a> {
     }
 }
 
-pub const SIZE_OF_ACCESSIBLE_STACK: usize = triton_vm::op_stack::NUM_OP_STACK_REGISTERS;
+pub(crate) const SIZE_OF_ACCESSIBLE_STACK: usize = triton_vm::op_stack::NUM_OP_STACK_REGISTERS;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct ValueIdentifier {
-    pub name: String,
+pub(crate) struct ValueIdentifier {
+    pub(crate) name: String,
 }
 
 impl From<String> for ValueIdentifier {
@@ -656,7 +655,7 @@ impl<'a> CompilerState<'a> {
     /// Do *not* use this to declare new vstack elements. Instead use
     /// `new_value_identifier` for that, as that function checks if the
     /// newly bound value needs to be spilled.
-    pub fn unique_label(
+    pub(crate) fn unique_label(
         &mut self,
         prefix: &str,
         data_type: Option<&ast_types::DataType>,
@@ -678,7 +677,7 @@ impl<'a> CompilerState<'a> {
     /// Get a new, guaranteed unique, identifier for a value. Returns an address to
     /// spill the value to, iff spilling of this value is required. A previous run
     /// of the compiler will have determined whether spilling is required.
-    pub fn new_value_identifier(
+    pub(crate) fn new_value_identifier(
         &mut self,
         prefix: &str,
         data_type: &ast_types::DataType,
@@ -705,11 +704,11 @@ impl<'a> CompilerState<'a> {
         (address, spilled)
     }
 
-    pub fn import_snippet(&mut self, snippet: Box<dyn BasicSnippet>) -> String {
+    pub(crate) fn import_snippet(&mut self, snippet: Box<dyn BasicSnippet>) -> String {
         self.global_compiler_state.snippet_state.import(snippet)
     }
 
-    pub fn mark_as_spilled(&mut self, value_identifier: &ValueIdentifier) {
+    pub(crate) fn mark_as_spilled(&mut self, value_identifier: &ValueIdentifier) {
         eprintln!(
             "Warning: Marking {value_identifier} as spilled. Binding: {}",
             self.get_binding_name(value_identifier)
@@ -2642,7 +2641,7 @@ fn compile_returning_block_expr(
 /// value. If no static memory pointer is provided, pointer is assumed to be on top of the stack,
 /// above the value that is moved to memory, in which case this address is also popped from the
 /// stack.
-pub fn move_top_stack_value_to_memory(
+pub(crate) fn move_top_stack_value_to_memory(
     static_memory_location: Option<BFieldElement>,
     top_value_size: usize,
 ) -> Vec<LabelledInstruction> {

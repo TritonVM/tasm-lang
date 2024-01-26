@@ -8,15 +8,15 @@ use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
 #[derive(TasmObject, BFieldCodec)]
 struct TestStructWithVecs {
-    pub a: BFieldElement,
-    pub b: BFieldElement,
-    pub c: Vec<Digest>,
-    pub d: XFieldElement,
-    pub e: Vec<Digest>,
-    pub f: BFieldElement,
-    pub g: Vec<XFieldElement>,
-    pub h: Vec<Vec<XFieldElement>>,
-    pub i: Vec<Vec<Vec<XFieldElement>>>,
+    pub(crate) a: BFieldElement,
+    pub(crate) b: BFieldElement,
+    pub(crate) c: Vec<Digest>,
+    pub(crate) d: XFieldElement,
+    pub(crate) e: Vec<Digest>,
+    pub(crate) f: BFieldElement,
+    pub(crate) g: Vec<XFieldElement>,
+    pub(crate) h: Vec<Vec<XFieldElement>>,
+    pub(crate) i: Vec<Vec<Vec<XFieldElement>>>,
 }
 
 fn main() {

@@ -11,7 +11,7 @@ use crate::subroutine::SubRoutine;
 use super::Library;
 
 #[derive(Debug)]
-pub struct Boxed;
+pub(crate) struct Boxed;
 
 const FUNCTION_NAME_NEW_BOX: &str = "Box::new";
 const AS_REF_METHOD_NAME: &str = "as_ref";

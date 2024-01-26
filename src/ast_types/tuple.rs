@@ -10,8 +10,8 @@ use super::DataType;
 use super::FieldId;
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub struct Tuple {
-    pub fields: Vec<DataType>,
+pub(crate) struct Tuple {
+    pub(crate) fields: Vec<DataType>,
 }
 
 impl From<Tuple> for DataType {

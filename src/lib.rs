@@ -1,7 +1,10 @@
-use std::collections::HashMap;
-use std::fs;
-
 use itertools::Itertools;
+use std::collections::HashMap;
+use std::env;
+use std::fs;
+use std::fs::File;
+use std::io::Read;
+use std::process;
 use syn::ImplItemMethod;
 use syn::Item;
 use syn::ItemEnum;
@@ -23,21 +26,46 @@ use crate::graft::Graft;
 use crate::tasm_code_generator::compile_function;
 use crate::type_checker::annotate_fn_outer;
 
-pub mod ast;
-pub mod ast_types;
-pub mod cfg;
+pub(crate) mod ast;
+pub(crate) mod ast_types;
+pub(crate) mod cfg;
 mod compiled_tasm;
 #[macro_use]
-pub mod graft;
+pub(crate) mod graft;
 mod composite_types;
-pub mod custom_type_resolver;
-pub mod libraries;
-pub mod ssa;
+pub(crate) mod custom_type_resolver;
+pub(crate) mod libraries;
+pub(crate) mod ssa;
 mod subroutine;
-pub mod tasm_code_generator;
+pub(crate) mod tasm_code_generator;
 #[cfg(test)]
-pub mod tests_and_benchmarks;
-pub mod type_checker;
+pub(crate) mod tests_and_benchmarks;
+pub(crate) mod type_checker;
+
+pub fn main() {
+    let mut args = env::args();
+    let _ = args.next(); // executable name
+
+    let filename = match (args.next(), args.next()) {
+        (Some(filename), None) => filename,
+        _ => {
+            eprintln!("Usage: dump-syntax path/to/filename.rs");
+            process::exit(1);
+        }
+    };
+
+    let mut file = File::open(&filename).expect("Unable to open file");
+
+    let mut src = String::new();
+    file.read_to_string(&mut src).expect("Unable to read file");
+
+    // TODO: Allow this to be set by CLI args
+    let list_type = ListType::Unsafe;
+
+    let output = compile_to_string(&filename, list_type);
+
+    println!("{output}");
+}
 
 /// Mapping from name of a custom type to its type declaration and associated function and methods.
 pub(crate) type StructsAndMethodsRustAst = HashMap<String, (CustomTypeRust, Vec<ImplItemMethod>)>;
@@ -194,7 +222,7 @@ pub(crate) fn compile_to_instructions(
     tasm.compose()
 }
 
-pub fn compile_to_string(file_path: &str, list_type: ListType) -> String {
+pub(crate) fn compile_to_string(file_path: &str, list_type: ListType) -> String {
     compile_to_instructions(file_path, list_type)
         .into_iter()
         .join("\n")

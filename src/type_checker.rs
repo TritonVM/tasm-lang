@@ -15,7 +15,7 @@ use crate::libraries;
 use crate::tasm_code_generator::SIZE_OF_ACCESSIBLE_STACK;
 
 #[derive(Debug, Default, Clone, Hash, PartialEq, Eq)]
-pub enum Typing {
+pub(crate) enum Typing {
     /// An `UnknownType` has not been determined; this is produced by the parser/grafter.
     #[default]
     UnknownType,
@@ -35,7 +35,7 @@ impl GetType for Typing {
     }
 }
 
-pub trait GetType {
+pub(crate) trait GetType {
     fn get_type(&self) -> ast_types::DataType;
 }
 
@@ -140,7 +140,7 @@ impl<T: GetType> GetType for ast::MethodCall<T> {
 }
 
 #[derive(Debug, Clone)]
-pub struct CheckState<'a> {
+pub(crate) struct CheckState<'a> {
     pub(crate) libraries: &'a [Box<dyn libraries::Library>],
 
     /// The `vtable` maps variable names to their type.
@@ -158,9 +158,9 @@ pub struct CheckState<'a> {
 }
 
 #[derive(Clone, Debug)]
-pub struct DataTypeAndMutability {
-    pub data_type: ast_types::DataType,
-    pub mutable: bool,
+pub(crate) struct DataTypeAndMutability {
+    pub(crate) data_type: ast_types::DataType,
+    pub(crate) mutable: bool,
 }
 
 impl From<ast_types::AbstractValueArg> for DataTypeAndMutability {
@@ -173,7 +173,7 @@ impl From<ast_types::AbstractValueArg> for DataTypeAndMutability {
 }
 
 impl DataTypeAndMutability {
-    pub fn new(data_type: &ast_types::DataType, mutable: bool) -> Self {
+    pub(crate) fn new(data_type: &ast_types::DataType, mutable: bool) -> Self {
         Self {
             data_type: data_type.to_owned(),
             mutable,
@@ -656,7 +656,7 @@ fn annotate_block_stmt(
     state.vtable = vtable_before;
 }
 
-pub fn assert_type_equals(
+pub(crate) fn assert_type_equals(
     derived_type: &ast_types::DataType,
     data_type: &ast_types::DataType,
     context: impl Display,

@@ -21,8 +21,8 @@ pub(crate) enum RoutineBody<T> {
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub(crate) struct Method<T> {
-    pub signature: FnSignature,
-    pub body: RoutineBody<T>,
+    pub(crate) signature: FnSignature,
+    pub(crate) body: RoutineBody<T>,
 }
 
 impl<T> Display for Method<T> {
@@ -35,7 +35,7 @@ impl<T: Clone> Method<T> {
     /// Convert a method to a function data type with a specified name. Consumes the
     /// method.
     #[allow(clippy::wrong_self_convention)]
-    pub fn as_ast_function(self, new_name: &str) -> Fn<T> {
+    pub(crate) fn as_ast_function(self, new_name: &str) -> Fn<T> {
         let mut fn_signature = self.signature;
         fn_signature.name = new_name.to_owned();
         Fn {
@@ -46,7 +46,7 @@ impl<T: Clone> Method<T> {
 }
 
 impl<T> Method<T> {
-    pub fn receiver_type(&self) -> crate::ast_types::DataType {
+    pub(crate) fn receiver_type(&self) -> crate::ast_types::DataType {
         match &self.signature.args[0] {
             AbstractArgument::FunctionArgument(_) => {
                 panic!("Method cannot take function as 1st argument")
@@ -60,7 +60,7 @@ impl<T> Method<T> {
     }
 
     /// Return a label uniquely identifying a method
-    pub fn get_tasm_label(&self) -> String {
+    pub(crate) fn get_tasm_label(&self) -> String {
         let receiver_type = self.receiver_type().label_friendly_name();
         let method_name = self.signature.name.to_owned();
         format!("method_{receiver_type}_{method_name}")
@@ -69,22 +69,22 @@ impl<T> Method<T> {
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub(crate) struct Fn<T> {
-    pub signature: FnSignature,
-    pub body: RoutineBody<T>,
+    pub(crate) signature: FnSignature,
+    pub(crate) body: RoutineBody<T>,
 }
 
 impl<T> Fn<T> {
-    pub fn get_tasm_label(&self) -> String {
+    pub(crate) fn get_tasm_label(&self) -> String {
         self.signature.name.replace("::", "_assoc_function___of___")
     }
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub(crate) struct FnSignature {
-    pub name: String,
-    pub args: Vec<AbstractArgument>,
-    pub output: DataType,
-    pub arg_evaluation_order: ArgEvaluationOrder,
+    pub(crate) name: String,
+    pub(crate) args: Vec<AbstractArgument>,
+    pub(crate) output: DataType,
+    pub(crate) arg_evaluation_order: ArgEvaluationOrder,
 }
 
 impl FnSignature {
@@ -129,7 +129,7 @@ impl FnSignature {
     }
 
     /// Returns a boolean indicating if the function signature matches a list of input types
-    pub fn matches(&self, types: &[DataType]) -> bool {
+    pub(crate) fn matches(&self, types: &[DataType]) -> bool {
         if self.args.len() != types.len() {
             return false;
         }
@@ -181,14 +181,14 @@ pub(crate) enum Stmt<T> {
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub(crate) struct MatchStmt<T> {
-    pub match_expression: Expr<T>,
-    pub arms: Vec<MatchStmtArm<T>>,
+    pub(crate) match_expression: Expr<T>,
+    pub(crate) arms: Vec<MatchStmtArm<T>>,
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub(crate) struct MatchStmtArm<T> {
-    pub match_condition: MatchCondition,
-    pub body: BlockStmt<T>,
+    pub(crate) match_condition: MatchCondition,
+    pub(crate) body: BlockStmt<T>,
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
@@ -213,13 +213,13 @@ impl Display for MatchCondition {
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub(crate) struct EnumVariantSelector {
     // `Bar` in `Bar::Foo(baz)`
-    pub type_name: Option<String>,
+    pub(crate) type_name: Option<String>,
 
     // `Foo`
-    pub variant_name: String,
+    pub(crate) variant_name: String,
 
     // `baz`
-    pub data_bindings: Vec<PatternMatchedBinding>,
+    pub(crate) data_bindings: Vec<PatternMatchedBinding>,
 }
 
 impl Display for EnumVariantSelector {
@@ -300,8 +300,8 @@ impl EnumVariantSelector {
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub(crate) struct PatternMatchedBinding {
-    pub name: String,
-    pub mutable: bool,
+    pub(crate) name: String,
+    pub(crate) mutable: bool,
     // Add `ref` here also?
 }
 
@@ -317,8 +317,8 @@ impl Display for PatternMatchedBinding {
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub(crate) struct AssertStmt<T> {
-    pub expression: Expr<T>,
-    // pub decription: Option<String>,
+    pub(crate) expression: Expr<T>,
+    // pub(crate) decription: Option<String>,
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
@@ -326,20 +326,20 @@ pub(crate) struct PanicMacro;
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub(crate) struct WhileStmt<T> {
-    pub condition: Expr<T>,
-    pub block: BlockStmt<T>,
+    pub(crate) condition: Expr<T>,
+    pub(crate) block: BlockStmt<T>,
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub(crate) struct IfStmt<T> {
-    pub condition: Expr<T>,
-    pub then_branch: BlockStmt<T>,
-    pub else_branch: BlockStmt<T>,
+    pub(crate) condition: Expr<T>,
+    pub(crate) then_branch: BlockStmt<T>,
+    pub(crate) else_branch: BlockStmt<T>,
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub(crate) struct BlockStmt<T> {
-    pub stmts: Vec<Stmt<T>>,
+    pub(crate) stmts: Vec<Stmt<T>>,
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
@@ -356,7 +356,7 @@ pub(crate) enum ExprLit<T> {
 }
 
 impl<T> ExprLit<T> {
-    pub fn label_friendly_name(&self) -> String {
+    pub(crate) fn label_friendly_name(&self) -> String {
         match self {
             ExprLit::Bool(b) => b.to_string(),
             ExprLit::U32(u32) => u32.to_string(),
@@ -391,13 +391,13 @@ impl<T> Display for ExprLit<T> {
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub(crate) struct MemPointerLiteral<T> {
     /// Where in memory does the struct start?
-    pub mem_pointer_address: BFieldElement,
+    pub(crate) mem_pointer_address: BFieldElement,
 
     /// What type was used in the declaration of the memory pointer?
-    pub mem_pointer_declared_type: DataType,
+    pub(crate) mem_pointer_declared_type: DataType,
 
     // Resolved type for binding
-    pub resolved_type: T,
+    pub(crate) resolved_type: T,
 }
 
 impl<T> Display for MemPointerLiteral<T> {
@@ -433,7 +433,7 @@ impl<T> BFieldCodec for ExprLit<T> {
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub enum BinOp {
+pub(crate) enum BinOp {
     Add,
     And,
     BitAnd,
@@ -453,7 +453,7 @@ pub enum BinOp {
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub enum UnaryOp {
+pub(crate) enum UnaryOp {
     Neg,
     Not,
     Deref,
@@ -461,7 +461,7 @@ pub enum UnaryOp {
 }
 
 impl UnaryOp {
-    pub fn label_friendly_name(&self) -> String {
+    pub(crate) fn label_friendly_name(&self) -> String {
         match self {
             UnaryOp::Neg => "negative".to_owned(),
             UnaryOp::Not => "not".to_owned(),
@@ -493,14 +493,14 @@ pub(crate) enum Expr<T> {
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub(crate) struct MatchExpr<T> {
-    pub match_expression: Box<Expr<T>>,
-    pub arms: Vec<MatchExprArm<T>>,
+    pub(crate) match_expression: Box<Expr<T>>,
+    pub(crate) arms: Vec<MatchExprArm<T>>,
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub(crate) struct MatchExprArm<T> {
-    pub match_condition: MatchCondition,
-    pub body: ReturningBlock<T>,
+    pub(crate) match_condition: MatchCondition,
+    pub(crate) body: ReturningBlock<T>,
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
@@ -525,7 +525,7 @@ impl<T> Display for ArrayExpression<T> {
 }
 
 impl<T> ArrayExpression<T> {
-    pub fn len(&self) -> usize {
+    pub(crate) fn len(&self) -> usize {
         match &self {
             ArrayExpression::ElementsSpecified(elements) => elements.len(),
             ArrayExpression::Repeat { length, .. } => *length,
@@ -534,7 +534,7 @@ impl<T> ArrayExpression<T> {
 }
 
 impl<T> Expr<T> {
-    pub fn label_friendly_name(&self) -> String {
+    pub(crate) fn label_friendly_name(&self) -> String {
         match self {
             Expr::Lit(lit) => lit.label_friendly_name(),
             Expr::Var(var) => var.label_friendly_name(),
@@ -610,12 +610,12 @@ impl<T> Display for Expr<T> {
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub(crate) struct EnumDeclaration {
     // Needs to be `DataType` since we populate it with `Unresolved` in grafter
-    pub enum_type: ast_types::DataType,
-    pub variant_name: String,
+    pub(crate) enum_type: ast_types::DataType,
+    pub(crate) variant_name: String,
 }
 
 impl EnumDeclaration {
-    pub fn label_friendly_name(&self) -> String {
+    pub(crate) fn label_friendly_name(&self) -> String {
         format!(
             "enum_{}__{}",
             self.enum_type.label_friendly_name(),
@@ -626,12 +626,12 @@ impl EnumDeclaration {
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub(crate) struct StructExpr<T> {
-    pub struct_type: DataType,
-    pub field_names_and_values: Vec<(String, Expr<T>)>,
+    pub(crate) struct_type: DataType,
+    pub(crate) field_names_and_values: Vec<(String, Expr<T>)>,
 }
 
 impl<T> StructExpr<T> {
-    pub fn label_friendly_name(&self) -> String {
+    pub(crate) fn label_friendly_name(&self) -> String {
         format!(
             "struct_{}__{}",
             self.struct_type.label_friendly_name(),
@@ -645,15 +645,15 @@ impl<T> StructExpr<T> {
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub(crate) struct ExprIf<T> {
-    pub condition: Box<Expr<T>>,
-    pub then_branch: Box<ReturningBlock<T>>,
-    pub else_branch: Box<ReturningBlock<T>>,
+    pub(crate) condition: Box<Expr<T>>,
+    pub(crate) then_branch: Box<ReturningBlock<T>>,
+    pub(crate) else_branch: Box<ReturningBlock<T>>,
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub(crate) struct ReturningBlock<T> {
-    pub stmts: Vec<Stmt<T>>,
-    pub return_expr: Expr<T>,
+    pub(crate) stmts: Vec<Stmt<T>>,
+    pub(crate) return_expr: Expr<T>,
 }
 
 impl<T> Display for ReturningBlock<T> {
@@ -697,7 +697,7 @@ impl<T> Display for Identifier<T> {
 }
 
 impl Identifier<Typing> {
-    pub fn force_type(&mut self, forced_type: &DataType) {
+    pub(crate) fn force_type(&mut self, forced_type: &DataType) {
         let forced_type = forced_type.to_owned();
         eprintln!("Forcing {self} to {forced_type}");
         match self {
@@ -707,7 +707,7 @@ impl Identifier<Typing> {
         }
     }
 
-    pub fn resolved(&self) -> Option<DataType> {
+    pub(crate) fn resolved(&self) -> Option<DataType> {
         let t = match self {
             Identifier::String(_, t) => t,
             Identifier::Index(_, _, t) => t,
@@ -721,7 +721,7 @@ impl Identifier<Typing> {
 }
 
 impl<T> Identifier<T> {
-    pub fn binding_name(&self) -> String {
+    pub(crate) fn binding_name(&self) -> String {
         match self {
             Identifier::String(name, _) => name.to_owned(),
             Identifier::Index(inner_id, _, _) => inner_id.binding_name(),
@@ -729,7 +729,7 @@ impl<T> Identifier<T> {
         }
     }
 
-    pub fn label_friendly_name(&self) -> String {
+    pub(crate) fn label_friendly_name(&self) -> String {
         match self {
             Identifier::String(name, _) => name.to_string(),
             Identifier::Index(inner_id, l_index_expr, _) => {
@@ -744,35 +744,35 @@ impl<T> Identifier<T> {
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub(crate) struct AssignStmt<T> {
-    pub identifier: Identifier<T>,
-    pub expr: Expr<T>,
+    pub(crate) identifier: Identifier<T>,
+    pub(crate) expr: Expr<T>,
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub(crate) struct LetStmt<T> {
-    pub var_name: String,
-    pub mutable: bool,
-    pub data_type: DataType,
-    pub expr: Expr<T>,
+    pub(crate) var_name: String,
+    pub(crate) mutable: bool,
+    pub(crate) data_type: DataType,
+    pub(crate) expr: Expr<T>,
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub(crate) struct FnCall<T> {
-    pub name: String,
-    pub args: Vec<Expr<T>>,
-    pub type_parameter: Option<DataType>,
-    pub arg_evaluation_order: ArgEvaluationOrder,
-    pub annot: T,
+    pub(crate) name: String,
+    pub(crate) args: Vec<Expr<T>>,
+    pub(crate) type_parameter: Option<DataType>,
+    pub(crate) arg_evaluation_order: ArgEvaluationOrder,
+    pub(crate) annot: T,
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub(crate) struct MethodCall<T> {
-    pub method_name: String,
-    pub args: Vec<Expr<T>>,
-    pub annot: T,
+    pub(crate) method_name: String,
+    pub(crate) args: Vec<Expr<T>>,
+    pub(crate) annot: T,
 
     /// To type does this method belong? Not the same
     /// same as receiver type, since receiver type can be
     /// `&self` or `Box<Self>`.
-    pub associated_type: Option<DataType>,
+    pub(crate) associated_type: Option<DataType>,
 }

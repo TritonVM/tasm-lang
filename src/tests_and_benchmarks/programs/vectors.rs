@@ -1,2 +1,2 @@
-pub mod basic;
-pub mod map;
+pub(crate) mod basic;
+pub(crate) mod map;

@@ -4,13 +4,17 @@ use tasm_lib::traits::basic_snippet::BasicSnippet;
 use super::DataType;
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
-pub enum ListType {
+pub(crate) enum ListType {
+    // The `Safe` list type is currently only used in tests. So we
+    // must allow dead code here, as the compiler will otherwise
+    // warn about that variant never being constructed.
+    #[allow(dead_code)]
     Safe,
     Unsafe,
 }
 
 impl ListType {
-    pub fn with_capacity_snippet(&self, type_parameter: DataType) -> Box<dyn BasicSnippet> {
+    pub(crate) fn with_capacity_snippet(&self, type_parameter: DataType) -> Box<dyn BasicSnippet> {
         let tasm_type: tasm_lib::data_type::DataType = type_parameter.try_into().unwrap();
         match self {
             Self::Safe => Box::new(tasm_lib::list::safeimplu32::new::SafeNew {
@@ -22,19 +26,7 @@ impl ListType {
         }
     }
 
-    pub fn len_snippet(&self, type_parameter: DataType) -> Box<dyn BasicSnippet> {
-        let tasm_type: tasm_lib::data_type::DataType = type_parameter.try_into().unwrap();
-        match self {
-            Self::Safe => Box::new(tasm_lib::list::safeimplu32::length::Length {
-                data_type: tasm_type,
-            }),
-            Self::Unsafe => Box::new(tasm_lib::list::unsafeimplu32::length::Length {
-                data_type: tasm_type,
-            }),
-        }
-    }
-
-    pub fn push_snippet(&self, type_parameter: DataType) -> Box<dyn BasicSnippet> {
+    pub(crate) fn push_snippet(&self, type_parameter: DataType) -> Box<dyn BasicSnippet> {
         let tasm_type: tasm_lib::data_type::DataType = type_parameter.try_into().unwrap();
         match self {
             Self::Safe => Box::new(tasm_lib::list::safeimplu32::push::SafePush {
@@ -46,7 +38,7 @@ impl ListType {
         }
     }
 
-    pub fn pop_snippet(&self, type_parameter: DataType) -> Box<dyn BasicSnippet> {
+    pub(crate) fn pop_snippet(&self, type_parameter: DataType) -> Box<dyn BasicSnippet> {
         let tasm_type: tasm_lib::data_type::DataType = type_parameter.try_into().unwrap();
         match self {
             Self::Safe => Box::new(tasm_lib::list::safeimplu32::pop::SafePop {
@@ -69,7 +61,7 @@ impl From<ListType> for tasm_lib::list::ListType {
 }
 
 impl ListType {
-    pub fn metadata_size(&self) -> usize {
+    pub(crate) fn metadata_size(&self) -> usize {
         match self {
             ListType::Safe => 2,
             ListType::Unsafe => 1,

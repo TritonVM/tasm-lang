@@ -9,7 +9,6 @@ mod run_tests {
     use triton_vm::BFieldElement;
     use triton_vm::Digest;
 
-    use crate::graft::item_fn;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 
     #[test]

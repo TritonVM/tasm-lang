@@ -9,7 +9,7 @@ use super::ValueIdentifier;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct Stack<T: Eq> {
-    pub inner: Vec<T>,
+    pub(crate) inner: Vec<T>,
 }
 
 impl<T: Eq> Default for Stack<T> {

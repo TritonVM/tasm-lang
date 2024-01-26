@@ -1,9 +1,9 @@
 use super::DataType;
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub struct ArrayType {
-    pub element_type: Box<DataType>,
-    pub length: usize,
+pub(crate) struct ArrayType {
+    pub(crate) element_type: Box<DataType>,
+    pub(crate) length: usize,
 }
 
 impl ArrayType {

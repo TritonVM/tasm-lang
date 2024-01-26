@@ -8,7 +8,7 @@ mod match_stmt_boxed;
 mod option_types;
 mod other;
 mod project_euler;
-pub mod recufier;
+pub(crate) mod recufier;
 mod result_types;
 mod structs;
 mod vectors;

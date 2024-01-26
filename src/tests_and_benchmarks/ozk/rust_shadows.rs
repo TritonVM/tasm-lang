@@ -239,7 +239,7 @@ impl VmProofStream {
         Self {
             word_index: 1,
             data: items.to_vec().encode(),
-            sponge_state: _VmHasherState::new(
+            _sponge_state: _VmHasherState::new(
                 twenty_first::util_types::algebraic_hasher::Domain::VariableLength,
             ),
         }
@@ -264,7 +264,7 @@ impl VmProofStream {
 
     fn _fiat_shamir_internal<T: BFieldCodec>(&mut self, item: &T) {
         VmHasher::absorb_repeatedly(
-            &mut self.sponge_state,
+            &mut self._sponge_state,
             Self::_encode_and_pad_item_internal(item).iter(),
         );
     }
@@ -285,11 +285,11 @@ impl VmProofStream {
     }
 
     fn _sample_scalars_internal(&mut self, number: usize) -> Vec<XFieldElement> {
-        VmHasher::sample_scalars(&mut self.sponge_state, number)
+        VmHasher::sample_scalars(&mut self._sponge_state, number)
     }
 
     fn _sample_indices_internal(&mut self, upper_bound: u32, number: u32) -> Vec<u32> {
-        VmHasher::sample_indices(&mut self.sponge_state, upper_bound, number as usize)
+        VmHasher::sample_indices(&mut self._sponge_state, upper_bound, number as usize)
     }
 
     fn _pseudorandom_items_list_internal(seed: [u8; 32]) -> Vec<ProofItem> {

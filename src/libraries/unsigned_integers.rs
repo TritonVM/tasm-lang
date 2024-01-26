@@ -11,8 +11,8 @@ use super::Library;
 use super::LibraryFunction;
 
 #[derive(Clone, Debug)]
-pub struct UnsignedIntegersLib {
-    pub list_type: ast_types::ListType,
+pub(crate) struct UnsignedIntegersLib {
+    pub(crate) list_type: ast_types::ListType,
 }
 
 const LEADING_ZEROS_METHOD: &str = "leading_zeros";

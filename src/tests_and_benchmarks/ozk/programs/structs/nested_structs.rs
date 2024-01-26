@@ -12,49 +12,49 @@ use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
 #[derive(TasmObject, BFieldCodec, Clone)]
 struct InnerInnerInnerInnerStruct {
-    pub a: u128,
-    pub b: BFieldElement,
-    pub c: bool,
-    pub d: Vec<Vec<Vec<Vec<Vec<Digest>>>>>,
-    pub e: Digest,
+    pub(crate) a: u128,
+    pub(crate) b: BFieldElement,
+    pub(crate) c: bool,
+    pub(crate) d: Vec<Vec<Vec<Vec<Vec<Digest>>>>>,
+    pub(crate) e: Digest,
 }
 
 #[derive(TasmObject, BFieldCodec, Clone)]
 struct InnerInnerInnerStruct {
-    pub a: Digest,
-    pub b: Vec<u128>,
-    pub c: BFieldElement,
-    pub d: u128,
-    pub e: Vec<XFieldElement>,
-    pub f: InnerInnerInnerInnerStruct,
+    pub(crate) a: Digest,
+    pub(crate) b: Vec<u128>,
+    pub(crate) c: BFieldElement,
+    pub(crate) d: u128,
+    pub(crate) e: Vec<XFieldElement>,
+    pub(crate) f: InnerInnerInnerInnerStruct,
 }
 
 #[derive(TasmObject, BFieldCodec, Clone)]
 struct InnerInnerStruct {
-    pub a: Digest,
-    pub b: Vec<BFieldElement>,
-    pub c: u64,
-    pub d: u128,
-    pub e: InnerInnerInnerStruct,
-    pub f: Vec<InnerInnerInnerStruct>,
+    pub(crate) a: Digest,
+    pub(crate) b: Vec<BFieldElement>,
+    pub(crate) c: u64,
+    pub(crate) d: u128,
+    pub(crate) e: InnerInnerInnerStruct,
+    pub(crate) f: Vec<InnerInnerInnerStruct>,
 }
 
 #[derive(TasmObject, BFieldCodec)]
 struct InnerStruct {
-    pub a: Digest,
-    pub b: InnerInnerStruct,
-    pub c: Vec<InnerInnerStruct>,
+    pub(crate) a: Digest,
+    pub(crate) b: InnerInnerStruct,
+    pub(crate) c: Vec<InnerInnerStruct>,
 }
 
 #[derive(TasmObject, BFieldCodec)]
 struct TestStuctNested {
-    pub a: InnerStruct,
-    pub b: Vec<InnerStruct>,
-    pub c: InnerInnerStruct,
-    pub d: Vec<InnerInnerStruct>,
-    pub e: u64,
-    pub f: Vec<Vec<Vec<InnerInnerStruct>>>,
-    pub g: Vec<Vec<Vec<Vec<u128>>>>,
+    pub(crate) a: InnerStruct,
+    pub(crate) b: Vec<InnerStruct>,
+    pub(crate) c: InnerInnerStruct,
+    pub(crate) d: Vec<InnerInnerStruct>,
+    pub(crate) e: u64,
+    pub(crate) f: Vec<Vec<Vec<InnerInnerStruct>>>,
+    pub(crate) g: Vec<Vec<Vec<Vec<u128>>>>,
 }
 
 fn main() {

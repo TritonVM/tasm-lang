@@ -11,7 +11,7 @@ enum EnumWithArrayData {
 }
 
 impl EnumWithArrayData {
-    pub fn panic_on_a(&self) -> [XFieldElement; 4] {
+    pub(crate) fn panic_on_a(&self) -> [XFieldElement; 4] {
         #[allow(unused_assignments)]
         let mut ood_quotient_segments: [XFieldElement; 4] = [XFieldElement::zero(); 4];
         match self {

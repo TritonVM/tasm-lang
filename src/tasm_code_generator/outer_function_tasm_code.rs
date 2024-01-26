@@ -21,17 +21,17 @@ use super::ValueIdentifier;
 pub(crate) struct OuterFunctionTasmCode {
     // TODO: Remove these attributes once we have a sane `main` function that uses these fields
     #[allow(dead_code)]
-    pub function_data: InnerFunctionTasmCode,
+    pub(crate) function_data: InnerFunctionTasmCode,
     #[allow(dead_code)]
-    pub snippet_state: SnippetState,
+    pub(crate) snippet_state: SnippetState,
     #[allow(dead_code)]
-    pub compiled_method_calls: Vec<InnerFunctionTasmCode>,
+    pub(crate) compiled_method_calls: Vec<InnerFunctionTasmCode>,
     #[allow(dead_code)]
-    pub outer_function_signature: ast::FnSignature,
+    pub(crate) outer_function_signature: ast::FnSignature,
     #[allow(dead_code)]
-    pub library_snippets: HashMap<String, SubRoutine>,
+    pub(crate) library_snippets: HashMap<String, SubRoutine>,
     #[allow(dead_code)]
-    pub static_allocations: HashMap<ValueIdentifier, (BFieldElement, ast_types::DataType)>,
+    pub(crate) static_allocations: HashMap<ValueIdentifier, (BFieldElement, ast_types::DataType)>,
 }
 
 fn replace_hardcoded_snippet_names_and_spill_addresses(
@@ -316,7 +316,7 @@ impl OuterFunctionTasmCode {
              use triton_vm::triton_asm;
 
 
-             pub struct {snippet_struct_name};
+             pub(crate) struct {snippet_struct_name};
 
              // This BasicSnippet implementation was autogenerate by the `tasm-lang` compiler
              // on {date}

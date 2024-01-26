@@ -12,7 +12,7 @@ pub(crate) enum AbstractArgument {
 }
 
 impl AbstractArgument {
-    pub fn stack_size(&self) -> usize {
+    pub(crate) fn stack_size(&self) -> usize {
         match self {
             Self::FunctionArgument(_) => 0,
             Self::ValueArgument(arg) => arg.data_type.stack_size(),
@@ -30,9 +30,9 @@ impl Display for AbstractArgument {
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub struct AbstractFunctionArg {
-    pub abstract_name: String,
-    pub function_type: FunctionType,
+pub(crate) struct AbstractFunctionArg {
+    pub(crate) abstract_name: String,
+    pub(crate) function_type: FunctionType,
 }
 
 impl Display for AbstractFunctionArg {
@@ -42,10 +42,10 @@ impl Display for AbstractFunctionArg {
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub struct AbstractValueArg {
-    pub name: String,
-    pub data_type: DataType,
-    pub mutable: bool,
+pub(crate) struct AbstractValueArg {
+    pub(crate) name: String,
+    pub(crate) data_type: DataType,
+    pub(crate) mutable: bool,
 }
 
 impl Display for AbstractValueArg {

@@ -26,8 +26,8 @@ const METHOD_NAME_VALUE: &str = "value";
 const UNWRAP_METHOD_NAME: &str = "unwrap";
 
 #[derive(Clone, Debug)]
-pub struct BfeLibrary {
-    pub list_type: ast_types::ListType,
+pub(crate) struct BfeLibrary {
+    pub(crate) list_type: ast_types::ListType,
 }
 
 impl Library for BfeLibrary {

@@ -7,7 +7,7 @@ use super::StructType;
 /// Helper-type used during parsing to handle all
 /// custom-types.
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub enum CustomTypeOil {
+pub(crate) enum CustomTypeOil {
     Struct(StructType),
     Enum(EnumType),
 }
@@ -88,7 +88,7 @@ impl CustomTypeOil {
         }
     }
 
-    pub fn field_or_variant_types_mut<'a>(
+    pub(crate) fn field_or_variant_types_mut<'a>(
         &'a mut self,
     ) -> Box<dyn Iterator<Item = &'a mut DataType> + 'a> {
         match self {
@@ -97,7 +97,9 @@ impl CustomTypeOil {
         }
     }
 
-    pub fn field_or_variant_types<'a>(&'a self) -> Box<dyn Iterator<Item = &'a DataType> + 'a> {
+    pub(crate) fn field_or_variant_types<'a>(
+        &'a self,
+    ) -> Box<dyn Iterator<Item = &'a DataType> + 'a> {
         match self {
             CustomTypeOil::Struct(struct_type) => struct_type.field_types(),
             CustomTypeOil::Enum(enum_type) => enum_type.variant_types(),

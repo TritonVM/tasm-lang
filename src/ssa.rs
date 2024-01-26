@@ -1,305 +1,421 @@
-use std::collections::HashMap;
-use std::collections::HashSet;
-
-use crate::cfg;
-use crate::cfg::Assignment;
-use crate::cfg::BasicBlock;
-use crate::cfg::ControlFlowGraph;
-use crate::cfg::Expr;
-use crate::cfg::Statement;
-use crate::cfg::Variable;
-
-pub fn convert(cfg: &mut ControlFlowGraph) {
-    add_annotations(cfg);
-    rename_variables(cfg);
-}
-
-/// Modifies a ControlFlowGraph such that:
-///  - basic blocks get an explicit parameter list `params` which
-///    corresponds to the free variables used in that basic block,
-///    or expected by subsequent ones
-///  - edges get an annotation listing the free variables that their
-///    originating basic blocks must supply, either by defining them
-///    in let statements or by expecting them as parameters
-fn add_annotations(cfg: &mut ControlFlowGraph) {
-    let mut visited: HashSet<usize> = HashSet::new();
-    let mut active_set: Vec<usize> = vec![cfg.exitpoint];
-
-    // visit all nodes in opposite direction of edges
-    while !active_set.is_empty() {
-        let mut predecessors = vec![];
-
-        // visit members of active set
-        for member_index in active_set {
-            let member = &mut cfg.nodes[member_index];
-            let free_variables = member.free_variables();
-            let defined_variables = member.defined_variables();
-
-            // find outgoing edges
-            // iterate over all of them
-            // collect variables used downstream
-            let mut downstream_variables = vec![];
-            for outgoing_edge in cfg.edges.iter_mut().filter(|e| e.source == member_index) {
-                for variable in outgoing_edge.annotations.iter() {
-                    if !downstream_variables.contains(variable)
-                        && !defined_variables.contains(variable)
-                    {
-                        downstream_variables.push(variable.clone());
-                    }
-                }
-            }
-
-            // find incoming edges for `member`
-            // iterate over all of them
-            // and add annotations
-            for incoming_edge in cfg
-                .edges
-                .iter_mut()
-                .filter(|e| e.destination == member_index)
-            {
-                incoming_edge.annotations = vec![];
-                for dv in downstream_variables.iter() {
-                    incoming_edge.annotations.push(dv.clone());
-                }
-                for fv in free_variables.iter() {
-                    incoming_edge.annotations.push(fv.clone());
-                }
-            }
-
-            // make implicit parameter explicit
-            member.params = free_variables.clone();
-
-            // mark visited
-            visited.insert(member_index);
-
-            // collect successors
-            for predecessor in cfg
-                .edges
-                .iter()
-                .filter(|e| e.destination == member_index)
-                .map(|e| e.source)
-            {
-                predecessors.push(predecessor);
-            }
-        }
-
-        // prepare for next iteration:
-        // prune successor set and assign to active set
-        active_set = predecessors
-            .into_iter()
-            .filter(|s| !visited.contains(s))
-            .collect();
-    }
-}
-
-/// Modifies a control flow graph by renaming the variables such that
-/// they are all unique
-fn rename_variables(cfg: &mut ControlFlowGraph) {
-    let mut visited: HashSet<usize> = HashSet::new();
-    let mut active_set: Vec<usize> = vec![cfg.entrypoint];
-    let mut names_already_used: Vec<String> = vec![];
-    let mut name_map = HashMap::<String, String>::new();
-
-    let mut counter: usize = 0;
-    let mut name_gen = |s: &str| {
-        let tmp = format!("{s}_{counter}");
-        counter += 1;
-        tmp
-    };
-
-    // visit all nodes in the graph, in direction of edges
-    while !active_set.is_empty() {
-        let mut successors = vec![];
-
-        // visit members of active set and rename each occurrence of
-        // variables
-        for member_index in active_set {
-            let member = &mut cfg.nodes[member_index];
-
-            // apply existing rename substitutions
-            substitute_names_in_basic_block(member, &name_map);
-
-            // if the basic block has parameters, iterate over them
-            for param in member.params.iter_mut() {
-                let data_type = param.data_type.to_owned();
-
-                // this name was already used; we need to get a new one
-                if names_already_used.contains(&param.name) {
-                    let new_name = name_gen(&param.name);
-                    let old_name = param.name.clone();
-                    name_map.insert(param.name.clone(), new_name.clone());
-                    // apply name change to parameter
-                    *param = cfg::Variable {
-                        name: new_name.clone(),
-                        data_type,
-                    };
-                    // percolate name change to statements
-                    for statement in member.statements.iter_mut() {
-                        let expression = match statement {
-                            cfg::Statement::Let(assignment) => &mut assignment.expr,
-                            cfg::Statement::Re(assignment) => &mut assignment.expr,
-                            cfg::Statement::Cond(expr) => expr,
-                        };
-                        rename_expression(expression, old_name.clone(), new_name.clone());
-                    }
-                    // keep track of this new name
-                    names_already_used.push(new_name);
-                }
-                // first occurence
-                else {
-                    names_already_used.push(param.name.clone());
-                }
-            }
-
-            // iterate over all statements
-            for statement_index in 0..member.statements.len() {
-                let statement = &mut member.statements[statement_index];
-                if let Statement::Cond(_) = statement {
-                    break;
-                }
-                let variable = match &statement {
-                    Statement::Let(assignment) => &assignment.var,
-                    Statement::Re(assignment) => &assignment.var,
-                    Statement::Cond(_) => panic!("Cannot get here."),
-                };
-                let expression = match &statement {
-                    Statement::Let(assignment) => &assignment.expr,
-                    Statement::Re(assignment) => &assignment.expr,
-                    Statement::Cond(_) => panic!("Cannot get here."),
-                };
-                let var_name = variable.name.clone();
-
-                // this name was already used, get a new one
-                if names_already_used.contains(&var_name) {
-                    let new_name = name_gen(&var_name);
-                    name_map.insert(var_name.clone(), new_name.clone());
-
-                    // map let-statement -> let-statement with new variable name
-                    // and reassignment -> let-statement with new variable name
-                    *statement = Statement::Let(Assignment {
-                        var: Variable {
-                            name: new_name.clone(),
-                            data_type: variable.data_type.clone(),
-                        },
-                        expr: expression.clone(),
-                    });
-
-                    // apply and percolate name change
-                    for let_statement_mut in member.statements.iter_mut().skip(statement_index + 1)
-                    {
-                        match let_statement_mut {
-                            Statement::Let(assignment) | Statement::Re(assignment) => {
-                                if assignment.var.name == *var_name {
-                                    // expressions following the outer
-                                    // let-statement that shadow the
-                                    // variable use the new value
-                                    break;
-                                }
-                                rename_expression(
-                                    &mut assignment.expr,
-                                    var_name.clone(),
-                                    new_name.clone(),
-                                );
-                            }
-                            Statement::Cond(expression) => {
-                                rename_expression(expression, var_name.clone(), new_name.clone())
-                            }
-                        };
-                    }
-
-                    // keep track of new name
-                    names_already_used.push(new_name.clone());
-                }
-                // first occurence
-                else {
-                    names_already_used.push(var_name.clone());
-                }
-            }
-
-            // mark visited
-            visited.insert(member_index);
-
-            // collect successors
-            for successor in cfg
-                .edges
-                .iter()
-                .filter(|e| e.source == member_index)
-                .map(|e| e.destination)
-            {
-                successors.push(successor);
-            }
-        }
-
-        // prepare for next iteration:
-        // prune successor set and assign to active set
-        active_set = successors
-            .into_iter()
-            .filter(|successor| !visited.contains(successor))
-            .collect();
-    }
-}
-
-/// Applies the substitution old_name -> new_name to every occurrence
-/// of old_name in the expression.
-fn rename_expression(expression: &mut Expr, old_name: String, new_name: String) {
-    match expression {
-        Expr::Var(var) => {
-            if var.name == *old_name {
-                var.name = new_name;
-            }
-        }
-        Expr::Lit(_) => {}
-    };
-}
-
-/// Applies all the old_name -> new_name substitutions listed in the
-/// dictionary whereever possible.
-fn substitute_names_in_expression(expression: &mut Expr, name_map: &HashMap<String, String>) {
-    match expression {
-        Expr::Var(variable) => {
-            if name_map.contains_key(&variable.name) {
-                variable.name = name_map.get(&variable.name).unwrap().clone();
-            }
-        }
-        Expr::Lit(_) => {}
-    };
-}
-
-/// Applies all the old_name -> new_name substitutions listed in the
-/// dictionary whereever possible.
-fn substitute_names_in_basic_block(member: &mut BasicBlock, name_map: &HashMap<String, String>) {
-    for param in member.params.iter_mut() {
-        if name_map.contains_key(&param.name) {
-            param.name = name_map.get(&param.name).unwrap().clone();
-        }
-    }
-
-    for statement in member.statements.iter_mut() {
-        match statement {
-            Statement::Let(assignment) | Statement::Re(assignment) => {
-                if name_map.contains_key(&assignment.var.name) {
-                    assignment.var.name = name_map.get(&assignment.var.name).unwrap().clone();
-                }
-                substitute_names_in_expression(&mut assignment.expr, name_map);
-            }
-            Statement::Cond(expression) => {
-                substitute_names_in_expression(expression, name_map);
-            }
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use crate::ast_types::DataType;
-    use crate::cfg::BasicBlock;
-    use crate::cfg::Edge;
-    use crate::cfg::Expr;
-    use crate::cfg::ExprLit;
+    use std::collections::HashMap;
+    use std::collections::HashSet;
 
-    use super::*;
+    #[derive(Debug, Default)]
+    pub(crate) struct ControlFlowGraph {
+        pub(crate) entrypoint: usize,
+        pub(crate) edges: Vec<Edge>,
+        pub(crate) nodes: Vec<BasicBlock>,
+        pub(crate) exitpoint: usize,
+    }
 
-    fn gen_cfg() -> cfg::ControlFlowGraph {
+    #[derive(Debug, Clone, Hash, PartialEq, Eq)]
+    pub(crate) struct Edge {
+        pub(crate) source: usize,
+        pub(crate) destination: usize,
+        pub(crate) annotations: Vec<Variable>,
+    }
+
+    #[derive(Debug, Hash, PartialEq, Eq, Clone)]
+    pub(crate) struct BasicBlock {
+        pub(crate) index: usize,
+        pub(crate) params: Vec<Variable>,
+        pub(crate) statements: Vec<Statement>,
+    }
+
+    impl BasicBlock {
+        /// Free variables are variables that are used in this basic
+        /// block but not defined here, or used prior to being defined.
+        pub(crate) fn free_variables(&self) -> Vec<Variable> {
+            let mut free_variables = vec![];
+            let mut free_variable_names = vec![];
+            let mut defined_variable_names = vec![];
+            for statement in self.statements.iter() {
+                let expression = match &statement {
+                    Statement::Let(assignment) => &assignment.expr,
+                    Statement::Re(assignment) => &assignment.expr,
+                    Statement::Cond(expr) => expr,
+                };
+                match expression {
+                    Expr::Var(var) => {
+                        if !free_variable_names.contains(&var.name)
+                            && !defined_variable_names.contains(&var.name)
+                        {
+                            free_variables.push(var.clone());
+                            free_variable_names.push(var.name.clone());
+                        }
+                    }
+                    Expr::Lit(_) => {}
+                }
+
+                if let Statement::Let(assignment) = statement {
+                    defined_variable_names.push(assignment.var.name.clone());
+                }
+            }
+            free_variables
+        }
+
+        /// Used variables are variables referenced in expressions in
+        /// this basic block.
+        #[allow(dead_code)]
+        pub(crate) fn used_variables(&self) -> Vec<Variable> {
+            let mut used_variables = vec![];
+            let mut used_variable_names = vec![];
+            for statement in self.statements.iter() {
+                let expression = match statement {
+                    Statement::Let(assignment) => &assignment.expr,
+                    Statement::Re(assignment) => &assignment.expr,
+                    Statement::Cond(expr) => expr,
+                };
+                match expression {
+                    Expr::Var(var) => {
+                        if !used_variable_names.contains(&var.name) {
+                            used_variables.push(var.clone());
+                            used_variable_names.push(var.name.clone());
+                        }
+                    }
+                    Expr::Lit(_) => {}
+                }
+            }
+            used_variables
+        }
+
+        /// Defined variables are variables that are cast into existence
+        /// by a let-statement in this basic block.
+        pub(crate) fn defined_variables(&self) -> Vec<Variable> {
+            let mut defined_variables = vec![];
+            let mut defined_variable_names = vec![];
+            for statement in self.statements.iter() {
+                if let Statement::Let(assignment) = statement {
+                    if !defined_variable_names.contains(&assignment.var.name) {
+                        defined_variables.push(assignment.var.clone());
+                        defined_variable_names.push(assignment.var.name.clone());
+                    }
+                }
+            }
+            defined_variables
+        }
+    }
+
+    #[derive(Debug, Hash, PartialEq, Eq, Clone)]
+    pub(crate) struct Variable {
+        pub(crate) name: String,
+        pub(crate) data_type: crate::ast_types::DataType,
+    }
+
+    #[allow(dead_code)]
+    #[derive(Debug, Hash, PartialEq, Eq, Clone)]
+    pub(crate) enum Statement {
+        Let(Assignment),
+        Re(Assignment),
+        Cond(Expr),
+    }
+
+    #[derive(Debug, Hash, PartialEq, Eq, Clone)]
+    pub(crate) struct Assignment {
+        pub(crate) var: Variable,
+        pub(crate) expr: Expr,
+    }
+
+    #[derive(Debug, Hash, PartialEq, Eq, Clone)]
+    pub(crate) enum Expr {
+        Var(Variable),
+        Lit(ExprLit),
+    }
+
+    #[allow(dead_code)]
+    #[derive(Debug, Hash, PartialEq, Eq, Clone)]
+    pub(crate) enum ExprLit {
+        Bool(bool),
+        U32(u32),
+        U64(u64),
+    }
+
+    /// Modifies a ControlFlowGraph such that:
+    ///  - basic blocks get an explicit parameter list `params` which
+    ///    corresponds to the free variables used in that basic block,
+    ///    or expected by subsequent ones
+    ///  - edges get an annotation listing the free variables that their
+    ///    originating basic blocks must supply, either by defining them
+    ///    in let statements or by expecting them as parameters
+    fn add_annotations(cfg: &mut ControlFlowGraph) {
+        let mut visited: HashSet<usize> = HashSet::new();
+        let mut active_set: Vec<usize> = vec![cfg.exitpoint];
+
+        // visit all nodes in opposite direction of edges
+        while !active_set.is_empty() {
+            let mut predecessors = vec![];
+
+            // visit members of active set
+            for member_index in active_set {
+                let member = &mut cfg.nodes[member_index];
+                let free_variables = member.free_variables();
+                let defined_variables = member.defined_variables();
+
+                // find outgoing edges
+                // iterate over all of them
+                // collect variables used downstream
+                let mut downstream_variables = vec![];
+                for outgoing_edge in cfg.edges.iter_mut().filter(|e| e.source == member_index) {
+                    for variable in outgoing_edge.annotations.iter() {
+                        if !downstream_variables.contains(variable)
+                            && !defined_variables.contains(variable)
+                        {
+                            downstream_variables.push(variable.clone());
+                        }
+                    }
+                }
+
+                // find incoming edges for `member`
+                // iterate over all of them
+                // and add annotations
+                for incoming_edge in cfg
+                    .edges
+                    .iter_mut()
+                    .filter(|e| e.destination == member_index)
+                {
+                    incoming_edge.annotations = vec![];
+                    for dv in downstream_variables.iter() {
+                        incoming_edge.annotations.push(dv.clone());
+                    }
+                    for fv in free_variables.iter() {
+                        incoming_edge.annotations.push(fv.clone());
+                    }
+                }
+
+                // make implicit parameter explicit
+                member.params = free_variables.clone();
+
+                // mark visited
+                visited.insert(member_index);
+
+                // collect successors
+                for predecessor in cfg
+                    .edges
+                    .iter()
+                    .filter(|e| e.destination == member_index)
+                    .map(|e| e.source)
+                {
+                    predecessors.push(predecessor);
+                }
+            }
+
+            // prepare for next iteration:
+            // prune successor set and assign to active set
+            active_set = predecessors
+                .into_iter()
+                .filter(|s| !visited.contains(s))
+                .collect();
+        }
+    }
+
+    /// Modifies a control flow graph by renaming the variables such that
+    /// they are all unique
+    fn rename_variables(cfg: &mut ControlFlowGraph) {
+        let mut visited: HashSet<usize> = HashSet::new();
+        let mut active_set: Vec<usize> = vec![cfg.entrypoint];
+        let mut names_already_used: Vec<String> = vec![];
+        let mut name_map = HashMap::<String, String>::new();
+
+        let mut counter: usize = 0;
+        let mut name_gen = |s: &str| {
+            let tmp = format!("{s}_{counter}");
+            counter += 1;
+            tmp
+        };
+
+        // visit all nodes in the graph, in direction of edges
+        while !active_set.is_empty() {
+            let mut successors = vec![];
+
+            // visit members of active set and rename each occurrence of
+            // variables
+            for member_index in active_set {
+                let member = &mut cfg.nodes[member_index];
+
+                // apply existing rename substitutions
+                substitute_names_in_basic_block(member, &name_map);
+
+                // if the basic block has parameters, iterate over them
+                for param in member.params.iter_mut() {
+                    let data_type = param.data_type.to_owned();
+
+                    // this name was already used; we need to get a new one
+                    if names_already_used.contains(&param.name) {
+                        let new_name = name_gen(&param.name);
+                        let old_name = param.name.clone();
+                        name_map.insert(param.name.clone(), new_name.clone());
+                        // apply name change to parameter
+                        *param = Variable {
+                            name: new_name.clone(),
+                            data_type,
+                        };
+                        // percolate name change to statements
+                        for statement in member.statements.iter_mut() {
+                            let expression = match statement {
+                                Statement::Let(assignment) => &mut assignment.expr,
+                                Statement::Re(assignment) => &mut assignment.expr,
+                                Statement::Cond(expr) => expr,
+                            };
+                            rename_expression(expression, old_name.clone(), new_name.clone());
+                        }
+                        // keep track of this new name
+                        names_already_used.push(new_name);
+                    }
+                    // first occurence
+                    else {
+                        names_already_used.push(param.name.clone());
+                    }
+                }
+
+                // iterate over all statements
+                for statement_index in 0..member.statements.len() {
+                    let statement = &mut member.statements[statement_index];
+                    if let Statement::Cond(_) = statement {
+                        break;
+                    }
+                    let variable = match &statement {
+                        Statement::Let(assignment) => &assignment.var,
+                        Statement::Re(assignment) => &assignment.var,
+                        Statement::Cond(_) => panic!("Cannot get here."),
+                    };
+                    let expression = match &statement {
+                        Statement::Let(assignment) => &assignment.expr,
+                        Statement::Re(assignment) => &assignment.expr,
+                        Statement::Cond(_) => panic!("Cannot get here."),
+                    };
+                    let var_name = variable.name.clone();
+
+                    // this name was already used, get a new one
+                    if names_already_used.contains(&var_name) {
+                        let new_name = name_gen(&var_name);
+                        name_map.insert(var_name.clone(), new_name.clone());
+
+                        // map let-statement -> let-statement with new variable name
+                        // and reassignment -> let-statement with new variable name
+                        *statement = Statement::Let(Assignment {
+                            var: Variable {
+                                name: new_name.clone(),
+                                data_type: variable.data_type.clone(),
+                            },
+                            expr: expression.clone(),
+                        });
+
+                        // apply and percolate name change
+                        for let_statement_mut in
+                            member.statements.iter_mut().skip(statement_index + 1)
+                        {
+                            match let_statement_mut {
+                                Statement::Let(assignment) | Statement::Re(assignment) => {
+                                    if assignment.var.name == *var_name {
+                                        // expressions following the outer
+                                        // let-statement that shadow the
+                                        // variable use the new value
+                                        break;
+                                    }
+                                    rename_expression(
+                                        &mut assignment.expr,
+                                        var_name.clone(),
+                                        new_name.clone(),
+                                    );
+                                }
+                                Statement::Cond(expression) => rename_expression(
+                                    expression,
+                                    var_name.clone(),
+                                    new_name.clone(),
+                                ),
+                            };
+                        }
+
+                        // keep track of new name
+                        names_already_used.push(new_name.clone());
+                    }
+                    // first occurence
+                    else {
+                        names_already_used.push(var_name.clone());
+                    }
+                }
+
+                // mark visited
+                visited.insert(member_index);
+
+                // collect successors
+                for successor in cfg
+                    .edges
+                    .iter()
+                    .filter(|e| e.source == member_index)
+                    .map(|e| e.destination)
+                {
+                    successors.push(successor);
+                }
+            }
+
+            // prepare for next iteration:
+            // prune successor set and assign to active set
+            active_set = successors
+                .into_iter()
+                .filter(|successor| !visited.contains(successor))
+                .collect();
+        }
+    }
+
+    /// Applies the substitution old_name -> new_name to every occurrence
+    /// of old_name in the expression.
+    fn rename_expression(expression: &mut Expr, old_name: String, new_name: String) {
+        match expression {
+            Expr::Var(var) => {
+                if var.name == *old_name {
+                    var.name = new_name;
+                }
+            }
+            Expr::Lit(_) => {}
+        };
+    }
+
+    /// Applies all the old_name -> new_name substitutions listed in the
+    /// dictionary whereever possible.
+    fn substitute_names_in_expression(expression: &mut Expr, name_map: &HashMap<String, String>) {
+        match expression {
+            Expr::Var(variable) => {
+                if name_map.contains_key(&variable.name) {
+                    variable.name = name_map.get(&variable.name).unwrap().clone();
+                }
+            }
+            Expr::Lit(_) => {}
+        };
+    }
+
+    /// Applies all the old_name -> new_name substitutions listed in the
+    /// dictionary whereever possible.
+    fn substitute_names_in_basic_block(
+        member: &mut BasicBlock,
+        name_map: &HashMap<String, String>,
+    ) {
+        for param in member.params.iter_mut() {
+            if name_map.contains_key(&param.name) {
+                param.name = name_map.get(&param.name).unwrap().clone();
+            }
+        }
+
+        for statement in member.statements.iter_mut() {
+            match statement {
+                Statement::Let(assignment) | Statement::Re(assignment) => {
+                    if name_map.contains_key(&assignment.var.name) {
+                        assignment.var.name = name_map.get(&assignment.var.name).unwrap().clone();
+                    }
+                    substitute_names_in_expression(&mut assignment.expr, name_map);
+                }
+                Statement::Cond(expression) => {
+                    substitute_names_in_expression(expression, name_map);
+                }
+            }
+        }
+    }
+
+    fn gen_cfg() -> ControlFlowGraph {
         // ```
         // block_0:
         //   foo = bar

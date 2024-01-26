@@ -25,8 +25,8 @@ const MAP_METHOD_NAME: &str = "map";
 const CLEAR_METHOD_NAME: &str = "clear";
 
 #[derive(Clone, Debug)]
-pub struct VectorLib {
-    pub list_type: ListType,
+pub(crate) struct VectorLib {
+    pub(crate) list_type: ListType,
 }
 
 impl Library for VectorLib {

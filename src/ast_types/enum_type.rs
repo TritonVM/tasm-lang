@@ -5,15 +5,15 @@ use itertools::Itertools;
 use super::DataType;
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub struct EnumType {
-    pub name: String,
-    pub is_copy: bool,
-    pub variants: Vec<(String, DataType)>,
-    pub is_prelude: bool,
+pub(crate) struct EnumType {
+    pub(crate) name: String,
+    pub(crate) is_copy: bool,
+    pub(crate) variants: Vec<(String, DataType)>,
+    pub(crate) is_prelude: bool,
 
     // Use `type_parameter` to create differentiate between function labels
     // for e.g. `Result<T>` and `Result<S>` types.
-    pub type_parameter: Option<DataType>,
+    pub(crate) type_parameter: Option<DataType>,
 }
 
 impl From<&EnumType> for DataType {
@@ -127,7 +127,7 @@ impl EnumType {
     /// data, padding, discriminant. Must match layout defined by constructor
     /// which is:
     /// stack: _ [data] [padding] discriminator
-    pub fn decompose_variant(&self, variant_name: &str) -> Vec<DataType> {
+    pub(crate) fn decompose_variant(&self, variant_name: &str) -> Vec<DataType> {
         [
             self.variant_data_type(variant_name).as_tuple_type().fields,
             vec![DataType::Tuple(

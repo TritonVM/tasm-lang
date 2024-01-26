@@ -3,7 +3,7 @@ use std::fmt::Display;
 use anyhow::bail;
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub enum FieldId {
+pub(crate) enum FieldId {
     NamedField(String),
     UnnamedField(usize),
 }

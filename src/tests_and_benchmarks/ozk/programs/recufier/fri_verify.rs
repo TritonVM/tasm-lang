@@ -6,10 +6,10 @@ use super::arithmetic_domain::*;
 
 #[derive(Debug, Clone, PartialEq, Eq, BFieldCodec, TasmObject)]
 struct FriVerify {
-    pub expansion_factor: u32,
-    pub num_colinearity_checks: u32,
-    pub domain_length: u32,
-    pub domain_offset: BFieldElement,
+    pub(crate) expansion_factor: u32,
+    pub(crate) num_colinearity_checks: u32,
+    pub(crate) domain_length: u32,
+    pub(crate) domain_offset: BFieldElement,
     domain_generator: BFieldElement,
 }
 

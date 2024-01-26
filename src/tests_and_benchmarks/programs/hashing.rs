@@ -16,7 +16,6 @@ mod run_tests {
     use triton_vm::Digest;
     use triton_vm::NonDeterminism;
 
-    use crate::graft::item_fn;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 
     type H = Tip5;

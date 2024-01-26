@@ -18,17 +18,17 @@ use crate::composite_types::CompositeTypes;
 use crate::libraries::Library;
 use crate::type_checker;
 
-pub type Annotation = type_checker::Typing;
+pub(crate) type Annotation = type_checker::Typing;
 
 #[derive(Debug)]
 pub(crate) struct Graft<'a> {
-    pub list_type: ast_types::ListType,
-    pub libraries: &'a [Box<dyn Library + 'a>],
+    pub(crate) list_type: ast_types::ListType,
+    pub(crate) libraries: &'a [Box<dyn Library + 'a>],
     pub(crate) imported_custom_types: CompositeTypes,
 }
 
 #[derive(Debug, Clone)]
-pub enum CustomTypeRust {
+pub(crate) enum CustomTypeRust {
     Struct(syn::ItemStruct),
     Enum(syn::ItemEnum),
 }
@@ -1096,7 +1096,7 @@ impl<'a> Graft<'a> {
         })
     }
 
-    pub fn graft_stmt(&mut self, rust_stmt: &syn::Stmt) -> Stmt<Annotation> {
+    pub(crate) fn graft_stmt(&mut self, rust_stmt: &syn::Stmt) -> Stmt<Annotation> {
         match rust_stmt {
             syn::Stmt::Local(local) => self.graft_local_stmt(local),
             syn::Stmt::Expr(expr) => self.graft_expr_stmt(expr),
@@ -1432,13 +1432,6 @@ fn graft_match_condition(pat: &syn::Pat) -> ast::MatchCondition {
             underscore_token: _,
         }) => ast::MatchCondition::CatchAll,
         _ => todo!(),
-    }
-}
-
-pub fn item_fn(item: syn::Item) -> syn::ItemFn {
-    match item {
-        syn::Item::Fn(item_fn) => item_fn,
-        other => panic!("item_fn: expected fn, found: {other:#?}"),
     }
 }
 

@@ -33,13 +33,13 @@ use crate::type_checker::GetType;
 use crate::type_checker::Typing;
 
 #[derive(Debug, Clone)]
-pub struct InputOutputTestCase {
-    pub input_args: Vec<ast::ExprLit<Typing>>,
-    pub expected_outputs: Vec<ast::ExprLit<Typing>>,
+pub(crate) struct InputOutputTestCase {
+    pub(crate) input_args: Vec<ast::ExprLit<Typing>>,
+    pub(crate) expected_outputs: Vec<ast::ExprLit<Typing>>,
 }
 
 impl InputOutputTestCase {
-    pub fn new(
+    pub(crate) fn new(
         input_args: Vec<ast::ExprLit<Typing>>,
         expected_outputs: Vec<ast::ExprLit<Typing>>,
     ) -> Self {
@@ -47,6 +47,13 @@ impl InputOutputTestCase {
             input_args,
             expected_outputs,
         }
+    }
+}
+
+pub(crate) fn item_fn(item: syn::Item) -> syn::ItemFn {
+    match item {
+        syn::Item::Fn(item_fn) => item_fn,
+        other => panic!("item_fn: expected fn, found: {other:#?}"),
     }
 }
 
@@ -64,7 +71,7 @@ pub(crate) fn init_memory_from<T: BFieldCodec>(
 }
 
 /// Get the execution code and the name of the compiled function
-pub fn compile_for_run_test(
+pub(crate) fn compile_for_run_test(
     item_fn: &syn::ItemFn,
     list_type: ast_types::ListType,
 ) -> (Vec<LabelledInstruction>, String) {
@@ -74,7 +81,7 @@ pub fn compile_for_run_test(
     (code, function_name)
 }
 
-pub fn graft_check_compile_prop(
+pub(crate) fn graft_check_compile_prop(
     item_fn: &syn::ItemFn,
     list_type: ast_types::ListType,
 ) -> Vec<LabelledInstruction> {
@@ -94,7 +101,7 @@ pub fn graft_check_compile_prop(
     tasm.compose()
 }
 
-pub fn execute_compiled_with_stack_and_ins_for_bench(
+pub(crate) fn execute_compiled_with_stack_and_ins_for_bench(
     code: &[LabelledInstruction],
     input_args: Vec<ast::ExprLit<Typing>>,
     std_in: Vec<BFieldElement>,
@@ -119,7 +126,7 @@ pub fn execute_compiled_with_stack_and_ins_for_bench(
 }
 
 #[derive(Debug, Clone)]
-pub struct TritonVMTestCase {
+pub(crate) struct TritonVMTestCase {
     entrypoint: EntrypointLocation,
     list_type: ast_types::ListType,
     input_args: Vec<ast::ExprLit<Typing>>,
@@ -129,7 +136,7 @@ pub struct TritonVMTestCase {
 }
 
 impl TritonVMTestCase {
-    pub fn new(entrypoint: EntrypointLocation) -> Self {
+    pub(crate) fn new(entrypoint: EntrypointLocation) -> Self {
         Self {
             entrypoint,
             list_type: ast_types::ListType::Unsafe,
@@ -140,27 +147,30 @@ impl TritonVMTestCase {
         }
     }
 
-    pub fn with_safe_lists(mut self) -> Self {
+    pub(crate) fn with_safe_lists(mut self) -> Self {
         self.list_type = ast_types::ListType::Safe;
         self
     }
 
-    pub fn with_std_in(mut self, std_in: Vec<BFieldElement>) -> Self {
+    pub(crate) fn with_std_in(mut self, std_in: Vec<BFieldElement>) -> Self {
         self.std_in = std_in;
         self
     }
 
-    pub fn with_non_determinism(mut self, non_determinism: NonDeterminism<BFieldElement>) -> Self {
+    pub(crate) fn with_non_determinism(
+        mut self,
+        non_determinism: NonDeterminism<BFieldElement>,
+    ) -> Self {
         self.non_determinism = non_determinism;
         self
     }
 
-    pub fn expect_stack_difference(mut self, expected_stack_difference: isize) -> Self {
+    pub(crate) fn expect_stack_difference(mut self, expected_stack_difference: isize) -> Self {
         self.expected_stack_difference = Some(expected_stack_difference);
         self
     }
 
-    pub fn execute(self) -> Result<VmOutputState> {
+    pub(crate) fn execute(self) -> Result<VmOutputState> {
         let initial_stack = self.initial_stack();
         let expected_terminal_stack_len = self
             .expected_stack_difference
@@ -198,7 +208,7 @@ impl TritonVMTestCase {
         vm_state
     }
 
-    pub fn compile(&self) -> Vec<LabelledInstruction> {
+    pub(crate) fn compile(&self) -> Vec<LabelledInstruction> {
         compile_for_test(&self.entrypoint, self.list_type)
     }
 
@@ -232,7 +242,7 @@ impl TritonVMTestCase {
     }
 }
 
-pub fn execute_compiled_with_stack_and_ins_for_test(
+pub(crate) fn execute_compiled_with_stack_and_ins_for_test(
     code: &[LabelledInstruction],
     input_args: Vec<ast::ExprLit<Typing>>,
     std_in: Vec<BFieldElement>,
@@ -270,7 +280,7 @@ pub fn execute_compiled_with_stack_and_ins_for_test(
     Ok(output_state)
 }
 
-pub fn execute_with_stack_safe_lists(
+pub(crate) fn execute_with_stack_safe_lists(
     rust_ast: &syn::ItemFn,
     stack_start: Vec<ast::ExprLit<Typing>>,
     expected_stack_diff: isize,
@@ -286,7 +296,7 @@ pub fn execute_with_stack_safe_lists(
 }
 
 /// Execute a function with provided input and initial memory
-pub fn execute_with_stack_and_ins_safe_lists(
+pub(crate) fn execute_with_stack_and_ins_safe_lists(
     rust_ast: &syn::ItemFn,
     input_args: Vec<ast::ExprLit<Typing>>,
     std_in: Vec<BFieldElement>,
@@ -304,7 +314,7 @@ pub fn execute_with_stack_and_ins_safe_lists(
     )
 }
 
-pub fn compare_compiled_prop_with_stack_and_ins(
+pub(crate) fn compare_compiled_prop_with_stack_and_ins(
     code: &[LabelledInstruction],
     input_args: Vec<ast::ExprLit<Typing>>,
     expected_outputs: Vec<ast::ExprLit<Typing>>,
@@ -385,7 +395,7 @@ fn maybe_assert_ram_equivalence(
     );
 }
 
-pub fn compare_prop_with_stack_and_ins_unsafe_lists(
+pub(crate) fn compare_prop_with_stack_and_ins_unsafe_lists(
     item_fn: &syn::ItemFn,
     input_args: Vec<ast::ExprLit<Typing>>,
     expected_outputs: Vec<ast::ExprLit<Typing>>,
@@ -404,7 +414,7 @@ pub fn compare_prop_with_stack_and_ins_unsafe_lists(
     )
 }
 
-pub fn compare_prop_with_stack_and_ins_safe_lists(
+pub(crate) fn compare_prop_with_stack_and_ins_safe_lists(
     item_fn: &syn::ItemFn,
     input_args: Vec<ast::ExprLit<Typing>>,
     expected_outputs: Vec<ast::ExprLit<Typing>>,
@@ -423,7 +433,7 @@ pub fn compare_prop_with_stack_and_ins_safe_lists(
     )
 }
 
-pub fn compare_prop_with_stack_safe_lists(
+pub(crate) fn compare_prop_with_stack_safe_lists(
     item_fn: &syn::ItemFn,
     input_args: Vec<ast::ExprLit<Typing>>,
     expected_outputs: Vec<ast::ExprLit<Typing>>,
@@ -438,7 +448,7 @@ pub fn compare_prop_with_stack_safe_lists(
     )
 }
 
-pub fn compare_prop_with_stack_unsafe_lists(
+pub(crate) fn compare_prop_with_stack_unsafe_lists(
     item_fn: &syn::ItemFn,
     input_args: Vec<ast::ExprLit<Typing>>,
     expected_outputs: Vec<ast::ExprLit<Typing>>,
@@ -454,7 +464,7 @@ pub fn compare_prop_with_stack_unsafe_lists(
     )
 }
 
-pub fn multiple_compare_prop_with_stack_safe_lists(
+pub(crate) fn multiple_compare_prop_with_stack_safe_lists(
     item_fn: &syn::ItemFn,
     test_cases: Vec<InputOutputTestCase>,
 ) {
@@ -472,7 +482,7 @@ pub fn multiple_compare_prop_with_stack_safe_lists(
 }
 
 #[allow(dead_code)]
-pub fn show_memory(memory: &HashMap<BFieldElement, BFieldElement>) {
+pub(crate) fn show_memory(memory: &HashMap<BFieldElement, BFieldElement>) {
     let mut memory = memory.iter().collect_vec();
     memory.sort_unstable_by(|&a, &b| a.0.value().partial_cmp(&b.0.value()).unwrap());
 
@@ -483,7 +493,7 @@ pub fn show_memory(memory: &HashMap<BFieldElement, BFieldElement>) {
 
 /// Panic if expected list does not match list on specific memory address
 /// Assumes that the "safe list" implementation is used.
-pub fn assert_list_equal(
+pub(crate) fn assert_list_equal(
     expected_list: Vec<ast::ExprLit<type_checker::Typing>>,
     list_pointer: BFieldElement,
     memory: &HashMap<BFieldElement, BFieldElement>,
@@ -554,35 +564,35 @@ pub fn assert_list_equal(
     }
 }
 
-pub fn bool_lit(value: bool) -> ast::ExprLit<type_checker::Typing> {
+pub(crate) fn bool_lit(value: bool) -> ast::ExprLit<type_checker::Typing> {
     ast::ExprLit::Bool(value)
 }
 
-pub fn u32_lit(value: u32) -> ast::ExprLit<type_checker::Typing> {
+pub(crate) fn u32_lit(value: u32) -> ast::ExprLit<type_checker::Typing> {
     ast::ExprLit::U32(value)
 }
 
-pub fn u64_lit(value: u64) -> ast::ExprLit<type_checker::Typing> {
+pub(crate) fn u64_lit(value: u64) -> ast::ExprLit<type_checker::Typing> {
     ast::ExprLit::U64(value)
 }
 
-pub fn u128_lit(value: u128) -> ast::ExprLit<type_checker::Typing> {
+pub(crate) fn u128_lit(value: u128) -> ast::ExprLit<type_checker::Typing> {
     ast::ExprLit::U128(value)
 }
 
-pub fn bfe_lit(value: BFieldElement) -> ast::ExprLit<type_checker::Typing> {
+pub(crate) fn bfe_lit(value: BFieldElement) -> ast::ExprLit<type_checker::Typing> {
     ast::ExprLit::Bfe(value)
 }
 
-pub fn xfe_lit(value: XFieldElement) -> ast::ExprLit<type_checker::Typing> {
+pub(crate) fn xfe_lit(value: XFieldElement) -> ast::ExprLit<type_checker::Typing> {
     ast::ExprLit::Xfe(value)
 }
 
-pub fn digest_lit(value: Digest) -> ast::ExprLit<type_checker::Typing> {
+pub(crate) fn digest_lit(value: Digest) -> ast::ExprLit<type_checker::Typing> {
     ast::ExprLit::Digest(value)
 }
 
-pub fn bool_to_bfe(b: bool) -> BFieldElement {
+pub(crate) fn bool_to_bfe(b: bool) -> BFieldElement {
     if b {
         BFIELD_ONE
     } else {
@@ -590,6 +600,6 @@ pub fn bool_to_bfe(b: bool) -> BFieldElement {
     }
 }
 
-pub fn split(value: u64) -> Vec<BFieldElement> {
+pub(crate) fn split(value: u64) -> Vec<BFieldElement> {
     vec![((value >> 32) as u32).into(), (value as u32).into()]
 }

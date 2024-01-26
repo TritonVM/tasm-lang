@@ -3,9 +3,9 @@ use std::fmt::Display;
 use super::DataType;
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub struct FunctionType {
-    pub input_argument: DataType,
-    pub output: DataType,
+pub(crate) struct FunctionType {
+    pub(crate) input_argument: DataType,
+    pub(crate) output: DataType,
 }
 
 impl Display for FunctionType {

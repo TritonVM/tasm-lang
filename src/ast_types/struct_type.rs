@@ -9,8 +9,8 @@ use super::FieldId;
 use super::Tuple;
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub struct NamedFieldsStruct {
-    pub fields: Vec<(String, DataType)>,
+pub(crate) struct NamedFieldsStruct {
+    pub(crate) fields: Vec<(String, DataType)>,
 }
 
 impl Display for NamedFieldsStruct {
@@ -27,7 +27,7 @@ impl Display for NamedFieldsStruct {
 }
 
 impl NamedFieldsStruct {
-    pub fn stack_size(&self) -> usize {
+    pub(crate) fn stack_size(&self) -> usize {
         self.fields
             .iter()
             .map(|(_, field_type)| field_type.stack_size())
@@ -36,16 +36,16 @@ impl NamedFieldsStruct {
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub enum StructVariant {
+pub(crate) enum StructVariant {
     TupleStruct(Tuple),
     NamedFields(NamedFieldsStruct),
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub struct StructType {
-    pub name: String,
-    pub is_copy: bool,
-    pub variant: StructVariant,
+pub(crate) struct StructType {
+    pub(crate) name: String,
+    pub(crate) is_copy: bool,
+    pub(crate) variant: StructVariant,
 }
 
 impl From<StructType> for DataType {

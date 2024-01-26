@@ -1,4 +1,3 @@
-use tasm_lib;
 use tasm_lib::memory::memcpy::MemCpy;
 use triton_vm::instruction::LabelledInstruction;
 use triton_vm::op_stack::OpStackElement;
@@ -12,10 +11,10 @@ use crate::tasm_code_generator::CompilerState;
 use super::move_top_stack_value_to_memory;
 use super::write_n_words_to_memory_leaving_address;
 
-pub mod array_type;
-pub mod enum_type;
-pub mod struct_type;
-pub mod tuple_type;
+pub(crate) mod array_type;
+pub(crate) mod enum_type;
+pub(crate) mod struct_type;
+pub(crate) mod tuple_type;
 
 impl ast_types::DataType {
     /// BEFORE: _ (*first_word | ∅)
@@ -70,7 +69,6 @@ impl ast_types::DataType {
             ast_types::DataType::VoidPointer => todo!(),
             ast_types::DataType::Function(_) => todo!(),
             ast_types::DataType::Unresolved(_) => todo!(),
-            ast_types::DataType::Never => todo!(),
         }
     }
 
@@ -178,7 +176,6 @@ impl ast_types::DataType {
             ast_types::DataType::VoidPointer => todo!(),
             ast_types::DataType::Function(_) => todo!(),
             ast_types::DataType::Unresolved(_) => todo!(),
-            ast_types::DataType::Never => todo!(),
         }
     }
 
@@ -210,7 +207,6 @@ impl ast_types::DataType {
             ast_types::DataType::VoidPointer => todo!(),
             ast_types::DataType::Function(_) => todo!(),
             ast_types::DataType::Unresolved(_) => todo!(),
-            ast_types::DataType::Never => todo!(),
         }
     }
 
@@ -287,7 +283,6 @@ impl ast_types::DataType {
             Boxed(_) => todo!("Comparison of MemPointer not supported yet"),
             Unresolved(name) => panic!("Cannot compare unresolved type {name}"),
             Enum(_) => todo!("Equality for enums not yet implemented"),
-            Never => todo!(),
         }
     }
 }

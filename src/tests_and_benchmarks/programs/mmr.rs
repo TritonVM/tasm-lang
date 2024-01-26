@@ -1,9 +1,8 @@
+use crate::tests_and_benchmarks::test_helpers::shared_test::item_fn;
 use syn::parse_quote;
 use syn::ItemFn;
 
-use crate::graft::item_fn;
-
-pub fn verify_authentication_path_with_local_function() -> ItemFn {
+pub(crate) fn verify_authentication_path_with_local_function() -> ItemFn {
     item_fn(parse_quote! {
         fn verify_authentication_path(
             peaks: Vec<Digest>,

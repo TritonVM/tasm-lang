@@ -3,7 +3,7 @@ use triton_vm::twenty_first::shared_math::x_field_element::XFieldElement;
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
 #[derive(Debug)]
-pub enum SimpleEnum {
+pub(crate) enum SimpleEnum {
     A(XFieldElement),
     B,
 }

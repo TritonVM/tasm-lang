@@ -15,17 +15,17 @@ use triton_vm::Digest;
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
 #[derive(Clone, Debug, PartialEq, Eq, BFieldCodec, TasmObject)]
-pub struct TransactionKernel {
-    pub mutator_set_hash: Digest,
+pub(crate) struct TransactionKernel {
+    pub(crate) mutator_set_hash: Digest,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, BFieldCodec, TasmObject)]
-pub struct RemovalRecordsIntegrityWitness {
-    pub kernel: TransactionKernel,
+pub(crate) struct RemovalRecordsIntegrityWitness {
+    pub(crate) kernel: TransactionKernel,
 }
 
 impl TransactionKernel {
-    pub fn mast_sequences(&self) -> Vec<Vec<BFieldElement>> {
+    pub(crate) fn mast_sequences(&self) -> Vec<Vec<BFieldElement>> {
         let mutator_set_hash_sequence: Vec<BFieldElement> = self.mutator_set_hash.encode();
 
         // TODO: Adjust this capacity when more sequences are added!
@@ -36,7 +36,7 @@ impl TransactionKernel {
         // return vec![mutator_set_hash_sequence];
     }
 
-    pub fn mast_hash(&self) -> Digest {
+    pub(crate) fn mast_hash(&self) -> Digest {
         // get a sequence of BFieldElements for each field
         // Note that this is a super stupid way to calculate the MAST hash, as the relevant
         // vectors are already present in memory and we could just hash them directly.
@@ -189,7 +189,7 @@ mod test {
 
     use super::*;
 
-    pub const NATIVE_COIN_TYPESCRIPT_DIGEST: Digest = Digest::new([
+    pub(crate) const NATIVE_COIN_TYPESCRIPT_DIGEST: Digest = Digest::new([
         BFieldElement::new(4843866011885844809),
         BFieldElement::new(16618866032559590857),
         BFieldElement::new(18247689143239181392),
@@ -239,18 +239,18 @@ mod test {
     }
 
     #[derive(Clone, Debug, PartialEq, Eq, BFieldCodec)]
-    pub struct Chunk {
-        pub relative_indices: Vec<u32>,
+    pub(crate) struct Chunk {
+        pub(crate) relative_indices: Vec<u32>,
     }
 
     #[derive(Clone, Debug, PartialEq, Eq)]
-    pub struct ChunkDictionary {
+    pub(crate) struct ChunkDictionary {
         // {chunk index => (MMR membership proof for the whole chunk to which index belongs, chunk value)}
-        pub dictionary: HashMap<u64, (MmrMembershipProof<VmHasher>, Chunk)>,
+        pub(crate) dictionary: HashMap<u64, (MmrMembershipProof<VmHasher>, Chunk)>,
     }
 
     impl ChunkDictionary {
-        pub fn new(dictionary: HashMap<u64, (MmrMembershipProof<VmHasher>, Chunk)>) -> Self {
+        pub(crate) fn new(dictionary: HashMap<u64, (MmrMembershipProof<VmHasher>, Chunk)>) -> Self {
             Self { dictionary }
         }
     }
@@ -321,7 +321,7 @@ mod test {
         }
     }
 
-    pub fn pseudorandom_merkle_root_with_authentication_paths(
+    pub(crate) fn pseudorandom_merkle_root_with_authentication_paths(
         seed: [u8; 32],
         tree_height: usize,
         leafs_and_indices: &[(Digest, u64)],
@@ -395,7 +395,7 @@ mod test {
         acc == root
     }
 
-    pub fn pseudorandom_mmra_with_mps(
+    pub(crate) fn pseudorandom_mmra_with_mps(
         seed: [u8; 32],
         leafs: &[Digest],
     ) -> (MmrAccumulator<VmHasher>, Vec<MmrMembershipProof<VmHasher>>) {
@@ -523,65 +523,65 @@ mod test {
 
     #[derive(Clone, Debug, PartialEq, Eq, BFieldCodec)]
 
-    pub struct Coin {
-        pub type_script_hash: Digest,
-        pub state: Vec<BFieldElement>,
+    pub(crate) struct Coin {
+        pub(crate) type_script_hash: Digest,
+        pub(crate) state: Vec<BFieldElement>,
     }
 
     #[derive(Clone, Debug, PartialEq, Eq, BFieldCodec)]
-    pub struct Utxo {
-        pub lock_script_hash: Digest,
-        pub coins: Vec<Coin>,
+    pub(crate) struct Utxo {
+        pub(crate) lock_script_hash: Digest,
+        pub(crate) coins: Vec<Coin>,
     }
 
     #[derive(Debug, Clone, PartialEq, Eq, BFieldCodec, TasmObject)]
-    pub struct MsMembershipProof {
-        pub sender_randomness: Digest,
-        pub receiver_preimage: Digest,
-        pub auth_path_aocl: MmrMembershipProof<VmHasher>,
-        pub target_chunks: ChunkDictionary,
+    pub(crate) struct MsMembershipProof {
+        pub(crate) sender_randomness: Digest,
+        pub(crate) receiver_preimage: Digest,
+        pub(crate) auth_path_aocl: MmrMembershipProof<VmHasher>,
+        pub(crate) target_chunks: ChunkDictionary,
     }
 
-    pub const NUM_TRIALS: u32 = 45;
+    pub(crate) const NUM_TRIALS: u32 = 45;
 
     #[derive(Debug, Clone, PartialEq, Eq, BFieldCodec)]
-    pub struct AbsoluteIndexSet([u128; NUM_TRIALS as usize]);
+    pub(crate) struct AbsoluteIndexSet([u128; NUM_TRIALS as usize]);
 
     impl AbsoluteIndexSet {
-        pub fn new(indices: &[u128; NUM_TRIALS as usize]) -> Self {
+        pub(crate) fn new(indices: &[u128; NUM_TRIALS as usize]) -> Self {
             Self(*indices)
         }
 
-        pub fn sort_unstable(&mut self) {
+        pub(crate) fn sort_unstable(&mut self) {
             self.0.sort_unstable();
         }
 
-        pub fn to_vec(&self) -> Vec<u128> {
+        pub(crate) fn to_vec(&self) -> Vec<u128> {
             self.0.to_vec()
         }
 
-        pub fn to_array(&self) -> [u128; NUM_TRIALS as usize] {
+        pub(crate) fn to_array(&self) -> [u128; NUM_TRIALS as usize] {
             self.0
         }
 
-        pub fn to_array_mut(&mut self) -> &mut [u128; NUM_TRIALS as usize] {
+        pub(crate) fn to_array_mut(&mut self) -> &mut [u128; NUM_TRIALS as usize] {
             &mut self.0
         }
     }
 
     #[derive(Clone, Debug, PartialEq, Eq, BFieldCodec, TasmObject)]
-    pub struct RemovalRecord {
-        pub absolute_indices: AbsoluteIndexSet,
-        pub target_chunks: ChunkDictionary,
+    pub(crate) struct RemovalRecord {
+        pub(crate) absolute_indices: AbsoluteIndexSet,
+        pub(crate) target_chunks: ChunkDictionary,
     }
 
     #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, BFieldCodec)]
-    pub struct AdditionRecord {
-        pub canonical_commitment: Digest,
+    pub(crate) struct AdditionRecord {
+        pub(crate) canonical_commitment: Digest,
     }
 
     impl AdditionRecord {
-        pub fn new(canonical_commitment: Digest) -> Self {
+        pub(crate) fn new(canonical_commitment: Digest) -> Self {
             Self {
                 canonical_commitment,
             }
@@ -589,14 +589,14 @@ mod test {
     }
 
     #[derive(Clone, Debug, PartialEq, Eq, BFieldCodec)]
-    pub struct PubScriptHashAndInput {
-        pub pubscript_hash: Digest,
-        pub pubscript_input: Vec<BFieldElement>,
+    pub(crate) struct PubScriptHashAndInput {
+        pub(crate) pubscript_hash: Digest,
+        pub(crate) pubscript_input: Vec<BFieldElement>,
     }
-    pub const AMOUNT_SIZE_FOR_U32: usize = 4;
+    pub(crate) const AMOUNT_SIZE_FOR_U32: usize = 4;
 
     #[derive(Clone, Copy, Debug, PartialEq, Eq, BFieldCodec)]
-    pub struct Amount(pub U32s<AMOUNT_SIZE_FOR_U32>);
+    pub(crate) struct Amount(pub(crate) U32s<AMOUNT_SIZE_FOR_U32>);
 
     impl From<u32> for Amount {
         fn from(value: u32) -> Self {
@@ -608,17 +608,17 @@ mod test {
 
     impl Amount {
         /// Return the element that corresponds to 1. Use in tests only.
-        pub fn one() -> Amount {
+        pub(crate) fn one() -> Amount {
             let mut values = [0u32; AMOUNT_SIZE_FOR_U32];
             values[0] = 1;
             Amount(U32s::new(values))
         }
 
-        pub fn div_two(&mut self) {
+        pub(crate) fn div_two(&mut self) {
             self.0.div_two();
         }
 
-        pub fn to_native_coins(self) -> Vec<Coin> {
+        pub(crate) fn to_native_coins(self) -> Vec<Coin> {
             let dictionary = vec![Coin {
                 type_script_hash: NATIVE_COIN_TYPESCRIPT_DIGEST,
                 state: self.encode(),
@@ -627,7 +627,7 @@ mod test {
         }
     }
 
-    pub fn pseudorandom_utxo(seed: [u8; 32]) -> Utxo {
+    pub(crate) fn pseudorandom_utxo(seed: [u8; 32]) -> Utxo {
         let mut rng: StdRng = SeedableRng::from_seed(seed);
         Utxo {
             lock_script_hash: rng.gen(),
@@ -635,7 +635,7 @@ mod test {
         }
     }
 
-    pub fn commit(
+    pub(crate) fn commit(
         item: Digest,
         sender_randomness: Digest,
         receiver_digest: Digest,
@@ -648,7 +648,9 @@ mod test {
         AdditionRecord::new(canonical_commitment)
     }
 
-    pub fn pseudorandom_mmr_membership_proof(seed: [u8; 32]) -> MmrMembershipProof<VmHasher> {
+    pub(crate) fn pseudorandom_mmr_membership_proof(
+        seed: [u8; 32],
+    ) -> MmrMembershipProof<VmHasher> {
         let mut rng: StdRng = SeedableRng::from_seed(seed);
         let leaf_index: u64 = rng.gen();
         let authentication_path: Vec<Digest> =
@@ -660,7 +662,7 @@ mod test {
         }
     }
 
-    pub fn pseudorandom_chunk_dictionary(seed: [u8; 32]) -> ChunkDictionary {
+    pub(crate) fn pseudorandom_chunk_dictionary(seed: [u8; 32]) -> ChunkDictionary {
         let mut rng: StdRng = SeedableRng::from_seed(seed);
 
         let mut dictionary = HashMap::new();
@@ -682,7 +684,7 @@ mod test {
         ChunkDictionary::new(dictionary)
     }
 
-    pub fn pseudorandom_mutator_set_membership_proof(seed: [u8; 32]) -> MsMembershipProof {
+    pub(crate) fn pseudorandom_mutator_set_membership_proof(seed: [u8; 32]) -> MsMembershipProof {
         let mut rng: StdRng = SeedableRng::from_seed(seed);
         let sender_randomness: Digest = rng.gen();
         let receiver_preimage: Digest = rng.gen();
@@ -697,7 +699,7 @@ mod test {
         }
     }
 
-    pub fn pseudorandom_mmra(seed: [u8; 32]) -> MmrAccumulator<VmHasher> {
+    pub(crate) fn pseudorandom_mmra(seed: [u8; 32]) -> MmrAccumulator<VmHasher> {
         let mut rng: StdRng = SeedableRng::from_seed(seed);
         let leaf_count = rng.next_u32() as u64;
         let num_peaks = rng.next_u32() % 10;
@@ -705,7 +707,7 @@ mod test {
         MmrAccumulator::init(peaks, leaf_count)
     }
 
-    pub fn pseudorandom_removal_record(seed: [u8; 32]) -> RemovalRecord {
+    pub(crate) fn pseudorandom_removal_record(seed: [u8; 32]) -> RemovalRecord {
         let mut rng: StdRng = SeedableRng::from_seed(seed);
         let absolute_indices = AbsoluteIndexSet::new(
             &(0..NUM_TRIALS as usize)
@@ -722,7 +724,7 @@ mod test {
         }
     }
 
-    pub fn pseudorandom_addition_record(seed: [u8; 32]) -> AdditionRecord {
+    pub(crate) fn pseudorandom_addition_record(seed: [u8; 32]) -> AdditionRecord {
         let mut rng: StdRng = SeedableRng::from_seed(seed);
         let ar: Digest = rng.gen();
         AdditionRecord {
@@ -730,7 +732,7 @@ mod test {
         }
     }
 
-    pub fn pseudorandom_pubscript_struct(seed: [u8; 32]) -> PubScriptHashAndInput {
+    pub(crate) fn pseudorandom_pubscript_struct(seed: [u8; 32]) -> PubScriptHashAndInput {
         let mut rng: StdRng = SeedableRng::from_seed(seed);
         let digest: Digest = rng.gen();
         let len = 10 + (rng.next_u32() % 50) as usize;
@@ -741,13 +743,13 @@ mod test {
         }
     }
 
-    pub fn pseudorandom_amount(seed: [u8; 32]) -> Amount {
+    pub(crate) fn pseudorandom_amount(seed: [u8; 32]) -> Amount {
         let mut rng: StdRng = SeedableRng::from_seed(seed);
         let number: [u32; 4] = rng.gen();
         Amount(U32s::new(number))
     }
 
-    pub fn pseudorandom_option<T>(seed: [u8; 32], thing: T) -> Option<T> {
+    pub(crate) fn pseudorandom_option<T>(seed: [u8; 32], thing: T) -> Option<T> {
         let mut rng: StdRng = SeedableRng::from_seed(seed);
         if rng.next_u32() % 2 == 0 {
             None
@@ -756,7 +758,7 @@ mod test {
         }
     }
 
-    pub fn pseudorandom_transaction_kernel(
+    pub(crate) fn pseudorandom_transaction_kernel(
         seed: [u8; 32],
         num_inputs: usize,
         num_outputs: usize,
@@ -788,11 +790,11 @@ mod test {
         }
     }
 
-    pub const BATCH_SIZE: u32 = 8;
-    pub const CHUNK_SIZE: u32 = 4096;
-    pub const WINDOW_SIZE: u32 = 1048576;
+    pub(crate) const BATCH_SIZE: u32 = 8;
+    pub(crate) const CHUNK_SIZE: u32 = 4096;
+    pub(crate) const WINDOW_SIZE: u32 = 1048576;
 
-    pub fn get_swbf_indices(
+    pub(crate) fn get_swbf_indices(
         item: Digest,
         sender_randomness: Digest,
         receiver_preimage: Digest,
@@ -830,7 +832,7 @@ mod test {
             .unwrap()
     }
 
-    pub fn pseudorandom_removal_record_integrity_witness(
+    pub(crate) fn pseudorandom_removal_record_integrity_witness(
         seed: [u8; 32],
     ) -> RemovalRecordsIntegrityWitness {
         let mut rng: StdRng = SeedableRng::from_seed(seed);

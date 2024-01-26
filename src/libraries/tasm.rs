@@ -11,8 +11,8 @@ use super::Library;
 const TASM_LIB_INDICATOR: &str = "tasm::";
 
 #[derive(Clone, Debug)]
-pub struct TasmLibrary {
-    pub list_type: ast_types::ListType,
+pub(crate) struct TasmLibrary {
+    pub(crate) list_type: ast_types::ListType,
 }
 
 impl Library for TasmLibrary {

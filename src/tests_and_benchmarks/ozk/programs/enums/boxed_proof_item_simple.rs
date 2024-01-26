@@ -7,15 +7,15 @@ use triton_vm::Digest;
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
 #[derive(BFieldCodec)]
-pub struct FriResponse {
+pub(crate) struct FriResponse {
     /// The authentication structure of the Merkle tree.
-    pub auth_structure: Vec<Digest>,
+    pub(crate) auth_structure: Vec<Digest>,
     /// The values of the opened leaves of the Merkle tree.
-    pub revealed_leaves: Vec<XFieldElement>,
+    pub(crate) revealed_leaves: Vec<XFieldElement>,
 }
 
 #[derive(BFieldCodec)]
-pub enum ProofItem {
+pub(crate) enum ProofItem {
     AuthenticationStructure(Vec<Digest>),
     MasterBaseTableRows(Vec<Vec<BFieldElement>>),
     MasterExtTableRows(Vec<Vec<XFieldElement>>),

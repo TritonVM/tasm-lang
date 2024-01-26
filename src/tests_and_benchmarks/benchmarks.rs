@@ -18,14 +18,14 @@ use crate::type_checker::Typing;
 
 use super::test_helpers::shared_test::execute_compiled_with_stack_and_ins_for_bench;
 
-pub mod mmr;
+pub(crate) mod mmr;
 
 #[derive(Debug, Default, Clone)]
-pub struct BenchmarkInput {
-    pub input_args: Vec<ast::ExprLit<Typing>>,
-    pub memory: HashMap<BFieldElement, BFieldElement>,
-    pub std_in: Vec<BFieldElement>,
-    pub non_determinism: NonDeterminism<BFieldElement>,
+pub(crate) struct BenchmarkInput {
+    pub(crate) input_args: Vec<ast::ExprLit<Typing>>,
+    pub(crate) memory: HashMap<BFieldElement, BFieldElement>,
+    pub(crate) std_in: Vec<BFieldElement>,
+    pub(crate) non_determinism: NonDeterminism<BFieldElement>,
 }
 
 fn benchmark_code(
@@ -53,7 +53,7 @@ fn benchmark_code(
     }
 }
 
-pub fn profile(function_name: String, code: Vec<LabelledInstruction>, case: BenchmarkInput) {
+pub(crate) fn profile(function_name: String, code: Vec<LabelledInstruction>, case: BenchmarkInput) {
     // Write profile for common-case input
     let nondeterminism = case.non_determinism;
     let public_input = PublicInput::from(case.std_in);
@@ -78,7 +78,7 @@ pub fn profile(function_name: String, code: Vec<LabelledInstruction>, case: Benc
     write!(file, "{profile}").unwrap();
 }
 
-pub fn execute_and_write_benchmark(
+pub(crate) fn execute_and_write_benchmark(
     function_name: String,
     code: Vec<LabelledInstruction>,
     common_case: BenchmarkInput,

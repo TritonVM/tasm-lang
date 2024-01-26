@@ -1,7 +1,5 @@
 use syn::parse_quote;
 
-use crate::graft::item_fn;
-
 #[cfg(test)]
 mod run_tests {
     use super::*;

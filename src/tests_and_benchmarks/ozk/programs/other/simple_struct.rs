@@ -6,9 +6,9 @@ use triton_vm::Digest;
 
 #[derive(TasmObject, BFieldCodec, Clone, Arbitrary)]
 pub(super) struct SimpleStruct {
-    pub a: u128,
-    pub b: BFieldElement,
-    pub c: bool,
-    pub d: Vec<Digest>,
-    pub e: Digest,
+    pub(crate) a: u128,
+    pub(crate) b: BFieldElement,
+    pub(crate) c: bool,
+    pub(crate) d: Vec<Digest>,
+    pub(crate) e: Digest,
 }

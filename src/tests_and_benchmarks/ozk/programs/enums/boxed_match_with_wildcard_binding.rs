@@ -5,7 +5,7 @@ use triton_vm::Digest;
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
 #[derive(BFieldCodec)]
-pub enum EnumType {
+pub(crate) enum EnumType {
     A(Vec<Digest>),
     B(Vec<Vec<BFieldElement>>),
 }

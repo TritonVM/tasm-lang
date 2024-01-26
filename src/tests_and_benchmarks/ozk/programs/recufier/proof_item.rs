@@ -7,15 +7,15 @@ use triton_vm::Digest;
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, BFieldCodec, Arbitrary)]
-pub struct FriResponse {
+pub(crate) struct FriResponse {
     /// The authentication structure of the Merkle tree.
-    pub auth_structure: Vec<Digest>,
+    pub(crate) auth_structure: Vec<Digest>,
     /// The values of the opened leaves of the Merkle tree.
-    pub revealed_leaves: Vec<XFieldElement>,
+    pub(crate) revealed_leaves: Vec<XFieldElement>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Arbitrary, BFieldCodec)]
-pub enum ProofItem {
+pub(crate) enum ProofItem {
     AuthenticationStructure(Vec<Digest>),
     MasterBaseTableRows(Vec<Vec<BFieldElement>>),
     MasterExtTableRows(Vec<Vec<XFieldElement>>),
@@ -56,7 +56,7 @@ impl ProofItem {
         };
     }
 
-    pub fn as_authentication_structure(&self) -> Vec<Digest> {
+    pub(crate) fn as_authentication_structure(&self) -> Vec<Digest> {
         return match self {
             ProofItem::AuthenticationStructure(caps) => {
                 //
@@ -69,7 +69,7 @@ impl ProofItem {
         };
     }
 
-    pub fn as_master_base_table_rows(&self) -> Vec<Vec<BFieldElement>> {
+    pub(crate) fn as_master_base_table_rows(&self) -> Vec<Vec<BFieldElement>> {
         return match self {
             ProofItem::MasterBaseTableRows(bss) => {
                 //
@@ -82,7 +82,7 @@ impl ProofItem {
         };
     }
 
-    pub fn as_master_ext_table_rows(&self) -> Vec<Vec<XFieldElement>> {
+    pub(crate) fn as_master_ext_table_rows(&self) -> Vec<Vec<XFieldElement>> {
         return match self {
             ProofItem::MasterExtTableRows(xss) => {
                 //
@@ -95,7 +95,7 @@ impl ProofItem {
         };
     }
 
-    pub fn as_out_of_domain_base_row(&self) -> Vec<XFieldElement> {
+    pub(crate) fn as_out_of_domain_base_row(&self) -> Vec<XFieldElement> {
         return match self {
             ProofItem::OutOfDomainBaseRow(xs) => {
                 //
@@ -108,7 +108,7 @@ impl ProofItem {
         };
     }
 
-    pub fn as_out_of_domain_ext_row(&self) -> Vec<XFieldElement> {
+    pub(crate) fn as_out_of_domain_ext_row(&self) -> Vec<XFieldElement> {
         return match self {
             ProofItem::OutOfDomainExtRow(xs) => {
                 //
@@ -121,7 +121,7 @@ impl ProofItem {
         };
     }
 
-    pub fn as_out_of_domain_quotient_segments(&self) -> [XFieldElement; 4] {
+    pub(crate) fn as_out_of_domain_quotient_segments(&self) -> [XFieldElement; 4] {
         return match self {
             ProofItem::OutOfDomainQuotientSegments(xs) => {
                 //
@@ -145,7 +145,7 @@ impl ProofItem {
         };
     }
 
-    pub fn as_log2_padded_height(&self) -> u32 {
+    pub(crate) fn as_log2_padded_height(&self) -> u32 {
         return match self {
             ProofItem::Log2PaddedHeight(height) => {
                 //
@@ -158,7 +158,7 @@ impl ProofItem {
         };
     }
 
-    pub fn as_quotient_segments_elements(&self) -> Vec<[XFieldElement; 4]> {
+    pub(crate) fn as_quotient_segments_elements(&self) -> Vec<[XFieldElement; 4]> {
         return match self {
             ProofItem::QuotientSegmentsElements(xss) => {
                 //
@@ -171,7 +171,7 @@ impl ProofItem {
         };
     }
 
-    pub fn as_fri_codeword(&self) -> Vec<XFieldElement> {
+    pub(crate) fn as_fri_codeword(&self) -> Vec<XFieldElement> {
         return match self {
             ProofItem::FriCodeword(xs) => {
                 //
@@ -183,7 +183,7 @@ impl ProofItem {
         };
     }
 
-    pub fn as_fri_response(&self) -> &FriResponse {
+    pub(crate) fn as_fri_response(&self) -> &FriResponse {
         return match self {
             ProofItem::FriResponse(response) => {
                 //

@@ -6,28 +6,28 @@ use itertools::Itertools;
 
 use crate::ast::FnSignature;
 
-pub use self::abstract_argument::*;
-pub use self::array_type::ArrayType;
-pub use self::custom_type_oil::CustomTypeOil;
-pub use self::enum_type::EnumType;
-pub use self::field_id::FieldId;
-pub use self::function_type::FunctionType;
-pub use self::list_type::ListType;
-pub use self::struct_type::*;
-pub use self::tuple::Tuple;
+pub(crate) use self::abstract_argument::*;
+pub(crate) use self::array_type::ArrayType;
+pub(crate) use self::custom_type_oil::CustomTypeOil;
+pub(crate) use self::enum_type::EnumType;
+pub(crate) use self::field_id::FieldId;
+pub(crate) use self::function_type::FunctionType;
+pub(crate) use self::list_type::ListType;
+pub(crate) use self::struct_type::*;
+pub(crate) use self::tuple::Tuple;
 
-pub mod abstract_argument;
-pub mod array_type;
-pub mod custom_type_oil;
-pub mod enum_type;
-pub mod field_id;
-pub mod function_type;
-pub mod list_type;
-pub mod struct_type;
-pub mod tuple;
+pub(crate) mod abstract_argument;
+pub(crate) mod array_type;
+pub(crate) mod custom_type_oil;
+pub(crate) mod enum_type;
+pub(crate) mod field_id;
+pub(crate) mod function_type;
+pub(crate) mod list_type;
+pub(crate) mod struct_type;
+pub(crate) mod tuple;
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub enum DataType {
+pub(crate) enum DataType {
     Bool,
     U32,
     U64,
@@ -44,31 +44,12 @@ pub enum DataType {
     Function(Box<FunctionType>),
     Boxed(Box<DataType>),
     Unresolved(String),
-    Never,
 }
 
 impl DataType {
-    pub fn get_tuple_elements(&self) -> Tuple {
-        match self {
-            DataType::Tuple(tuple) => tuple.to_owned(),
-            DataType::Struct(StructType {
-                name: _,
-                is_copy: _,
-                variant,
-            }) => match variant {
-                StructVariant::TupleStruct(ts) => ts.to_owned(),
-                StructVariant::NamedFields(_) => {
-                    panic!("Type is not unnamed or named tuple. Type was: {self}")
-                }
-            },
-            DataType::Boxed(inner) => inner.get_tuple_elements(),
-            _ => panic!("Type is not unnamed or named tuple. Type was: {self}"),
-        }
-    }
-
     /// Return true if it's OK to copy this type including its underlying
     /// data, false if it's expensive to copy.
-    pub fn is_copy(&self) -> bool {
+    pub(crate) fn is_copy(&self) -> bool {
         match self {
             DataType::Bool => true,
             DataType::U32 => true,
@@ -86,12 +67,11 @@ impl DataType {
             DataType::Enum(enum_type) => enum_type.is_copy,
             DataType::Unresolved(_) => false,
             DataType::Boxed(_) => false,
-            DataType::Never => todo!(),
         }
     }
 
     /// Use this if the type is used to make labels in the TASM code
-    pub fn label_friendly_name(&self) -> String {
+    pub(crate) fn label_friendly_name(&self) -> String {
         use DataType::*;
         match self {
             Bool => "bool".to_string(),
@@ -118,11 +98,10 @@ impl DataType {
             Enum(enum_type) => enum_type.label_friendly_name(),
             Unresolved(name) => name.to_string(),
             Boxed(ty) => format!("boxed_L{}R", ty.label_friendly_name()),
-            Never => "never_type".to_string(),
         }
     }
 
-    pub fn from_tasm_lib_datatype(
+    pub(crate) fn from_tasm_lib_datatype(
         tasm_lib_type: tasm_lib::data_type::DataType,
         list_type: ListType,
     ) -> Self {
@@ -151,7 +130,7 @@ impl DataType {
     }
 
     /// What type is returned when type is accessed with a field of name `field_name`?
-    pub fn field_access_returned_type(&self, field_id: &FieldId) -> Self {
+    pub(crate) fn field_access_returned_type(&self, field_id: &FieldId) -> Self {
         match &self {
             DataType::Boxed(inner_type) => match &**inner_type {
                 DataType::Struct(struct_type) => {
@@ -186,7 +165,7 @@ impl DataType {
 
     // TODO: Consider getting rid of this method
     /// Return the element type for lists
-    pub fn type_parameter(&self) -> Option<DataType> {
+    pub(crate) fn type_parameter(&self) -> Option<DataType> {
         match self {
             DataType::List(element_type, _) => Some(*element_type.to_owned()),
             // TODO: Is this the right solution, or do we perhaps need to resolve
@@ -203,7 +182,7 @@ impl DataType {
     }
 
     // Notice that this implementation must match that derived by `BFieldCodec`
-    pub fn bfield_codec_static_length(&self) -> Option<usize> {
+    pub(crate) fn bfield_codec_static_length(&self) -> Option<usize> {
         match self {
             DataType::Bool => Some(1),
             DataType::U32 => Some(1),
@@ -230,19 +209,18 @@ impl DataType {
             DataType::VoidPointer => panic!(),
             DataType::Function(_) => panic!(),
             DataType::Unresolved(_) => panic!(),
-            DataType::Never => todo!(),
         }
     }
 
-    pub fn unit() -> Self {
+    pub(crate) fn unit() -> Self {
         Self::Tuple(vec![].into())
     }
 
-    pub fn is_unit(&self) -> bool {
+    pub(crate) fn is_unit(&self) -> bool {
         *self == Self::unit()
     }
 
-    pub fn stack_size(&self) -> usize {
+    pub(crate) fn stack_size(&self) -> usize {
         match self {
             Self::Bool => 1,
             Self::U32 => 1,
@@ -260,29 +238,28 @@ impl DataType {
             Self::Struct(inner_type) => inner_type.stack_size(),
             Self::Enum(enum_type) => enum_type.stack_size(),
             Self::Boxed(_inner) => 1,
-            Self::Never => todo!(),
         }
     }
 
-    pub fn unbox(&self) -> DataType {
+    pub(crate) fn unbox(&self) -> DataType {
         match self {
             DataType::Boxed(inner) => inner.unbox(),
             dtype => dtype.to_owned(),
         }
     }
 
-    pub fn is_boxed(&self) -> bool {
+    pub(crate) fn is_boxed(&self) -> bool {
         matches!(self, DataType::Boxed(_))
     }
 
-    pub fn as_enum_type(&self) -> EnumType {
+    pub(crate) fn as_enum_type(&self) -> EnumType {
         match self {
             DataType::Enum(enum_type) => *enum_type.to_owned(),
             _ => panic!("Expected enum type. Got: {self}"),
         }
     }
 
-    pub fn as_tuple_type(&self) -> Tuple {
+    pub(crate) fn as_tuple_type(&self) -> Tuple {
         match self {
             DataType::Tuple(tuple_type) => tuple_type.to_owned(),
             other => Tuple {
@@ -338,7 +315,6 @@ impl TryFrom<DataType> for tasm_lib::data_type::DataType {
                 DataType::Unresolved(_) => todo!(),
                 _ => Ok(tasm_lib::data_type::DataType::VoidPointer),
             },
-            DataType::Never => todo!(),
         }
     }
 }
@@ -390,7 +366,6 @@ impl Display for DataType {
             },
             Unresolved(name) => name.to_string(),
             Boxed(ty) => format!("Boxed<{ty}>"),
-            Never => todo!(),
         };
         write!(f, "{str}",)
     }

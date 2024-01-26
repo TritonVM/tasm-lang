@@ -4,7 +4,6 @@ use crate::ast_types::AbstractArgument;
 use crate::ast_types::AbstractValueArg;
 use crate::ast_types::CustomTypeOil;
 use crate::ast_types::DataType;
-use crate::ast_types::Tuple;
 use crate::composite_types::CompositeTypes;
 use crate::type_checker::Typing;
 
@@ -264,7 +263,7 @@ impl CustomTypeResolution for Method<Typing> {
 
 impl DataType {
     /// Returns true iff any of the contained types have to be resolved through types associated with the program
-    pub fn is_unresolved(&self) -> bool {
+    pub(crate) fn is_unresolved(&self) -> bool {
         match self {
             DataType::Unresolved(_) => true,
             DataType::Boxed(inner) => inner.is_unresolved(),
@@ -289,19 +288,12 @@ impl DataType {
             DataType::Xfe => false,
             DataType::Digest => false,
             DataType::VoidPointer => false,
-            DataType::Never => false,
         }
     }
 }
 
-impl Tuple {
-    pub fn is_unresolved(&self) -> bool {
-        self.fields.iter().any(|x| x.is_unresolved())
-    }
-}
-
 impl CustomTypeOil {
-    pub fn is_unresolved(&self) -> bool {
+    pub(crate) fn is_unresolved(&self) -> bool {
         self.field_or_variant_types().any(|x| x.is_unresolved())
     }
 }
@@ -366,7 +358,6 @@ impl CustomTypeResolution for DataType {
             Xfe => (),
             Digest => (),
             VoidPointer => (),
-            Never => (),
         }
     }
 }

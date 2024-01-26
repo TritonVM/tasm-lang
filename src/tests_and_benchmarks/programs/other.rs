@@ -1,7 +1,5 @@
 use syn::parse_quote;
 
-use crate::graft::item_fn;
-
 #[cfg(test)]
 mod compile_and_typecheck_tests {
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;

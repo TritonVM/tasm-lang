@@ -11,12 +11,12 @@ use super::proof_item::*;
 type VmHasherState = Tip5State;
 
 #[derive(Debug, Clone, BFieldCodec, TasmObject)]
-pub struct VmProofStream {
-    pub word_index: u32,
+pub(crate) struct VmProofStream {
+    pub(crate) word_index: u32,
     pub(crate) data: Vec<BFieldElement>,
     #[bfield_codec(ignore)]
     #[tasm_object(ignore)]
-    pub sponge_state: VmHasherState,
+    pub(crate) _sponge_state: VmHasherState,
 }
 
 fn main() {
@@ -49,11 +49,11 @@ mod test {
 
     impl VmProofStream {
         // Is only used for test, does not need to be handled by TVM
-        pub fn new(items: &[ProofItem]) -> Self {
+        pub(crate) fn new(items: &[ProofItem]) -> Self {
             Self {
                 word_index: 1,
                 data: items.to_vec().encode(),
-                sponge_state: VmHasherState::new(
+                _sponge_state: VmHasherState::new(
                     twenty_first::util_types::algebraic_hasher::Domain::VariableLength,
                 ),
             }

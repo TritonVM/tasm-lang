@@ -1,2 +1,2 @@
-pub mod from_neptune_core;
-pub mod shared_test;
+pub(crate) mod from_neptune_core;
+pub(crate) mod shared_test;

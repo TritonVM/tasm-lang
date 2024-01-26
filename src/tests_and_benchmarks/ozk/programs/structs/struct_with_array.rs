@@ -8,10 +8,10 @@ use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
 #[derive(TasmObject, BFieldCodec, Arbitrary)]
 struct TestStructWithArrays {
-    pub a: BFieldElement,
-    pub b: [BFieldElement; 4],
-    pub c: [Digest; 2],
-    pub d: u64,
+    pub(crate) a: BFieldElement,
+    pub(crate) b: [BFieldElement; 4],
+    pub(crate) c: [Digest; 2],
+    pub(crate) d: u64,
 }
 
 fn main() {
