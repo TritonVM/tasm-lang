@@ -10,7 +10,6 @@ use super::Tuple;
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct NamedFieldsStruct {
-    pub name: String,
     pub fields: Vec<(String, DataType)>,
 }
 
@@ -18,8 +17,7 @@ impl Display for NamedFieldsStruct {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "{}: {}",
-            self.name,
+            "{}",
             self.fields
                 .iter()
                 .map(|(k, v)| format!("{k} => {v}"))

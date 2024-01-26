@@ -119,7 +119,7 @@ impl<'a> Graft<'a> {
                     // the struct has at least *one* field.
                     let struct_type = match fields.iter().next().unwrap().ident {
                         Some(_) => ast_types::StructVariant::NamedFields(
-                            self.graft_struct_with_named_fields(&name, fields),
+                            self.graft_struct_with_named_fields(fields),
                         ),
                         None => {
                             ast_types::StructVariant::TupleStruct(self.graft_tuple_struct(fields))
@@ -182,7 +182,6 @@ impl<'a> Graft<'a> {
 
     fn graft_struct_with_named_fields(
         &mut self,
-        struct_name: &str,
         fields: syn::Fields,
     ) -> ast_types::NamedFieldsStruct {
         let mut ast_fields: Vec<(String, DataType)> = vec![];
@@ -202,10 +201,7 @@ impl<'a> Graft<'a> {
             ast_fields.push((field_name, datatype));
         }
 
-        ast_types::NamedFieldsStruct {
-            fields: ast_fields,
-            name: struct_name.to_owned(),
-        }
+        ast_types::NamedFieldsStruct { fields: ast_fields }
     }
 
     fn graft_method(

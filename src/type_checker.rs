@@ -1167,7 +1167,7 @@ fn derive_annotate_expr_type(
             assert!(
                 remaining_fields.is_empty(),
                 "Missing declarations of fields {remaining_fields:?} for struct {}",
-                struct_type.name
+                struct_expr.struct_type
             );
 
             // Sort expression such that it matches type declaration, and ends up with the
@@ -1186,7 +1186,7 @@ fn derive_annotate_expr_type(
             assert_eq!(
                 original_order, struct_expr.field_names_and_values,
                 "{}: Fields in declaration must match that in type definition in order to allow left-to-right evaluation",
-                struct_type.name
+                struct_expr.struct_type
             );
 
             Ok(struct_expr.struct_type.clone())
