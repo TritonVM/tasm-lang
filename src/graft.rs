@@ -60,6 +60,7 @@ impl<'a> Graft<'a> {
         }
     }
 
+    /// Graft user-defined data types
     pub(crate) fn graft_custom_types_methods_and_associated_functions(
         &mut self,
         structs_and_methods: HashMap<String, (CustomTypeRust, Vec<syn::ImplItemMethod>)>,
@@ -570,47 +571,12 @@ impl<'a> Graft<'a> {
         }
     }
 
+    /// Graft the return-type of a function
     fn graft_return_type(&mut self, rust_return_type: &syn::ReturnType) -> ast_types::DataType {
         match rust_return_type {
             syn::ReturnType::Default => ast_types::DataType::Tuple(vec![].into()),
-            syn::ReturnType::Type(_, path) => self.graft_non_default_return_type(path.as_ref()),
+            syn::ReturnType::Type(_, path) => self.syn_type_to_ast_type(path.as_ref()),
         }
-    }
-
-    fn graft_non_default_return_type(&mut self, rust_return_path: &syn::Type) -> DataType {
-        match rust_return_path {
-            syn::Type::Path(type_path) => self.rust_type_path_to_data_type(type_path),
-            syn::Type::Tuple(tuple_type) => self.graft_tuple_return_type(tuple_type),
-            syn::Type::Array(array_type) => self.graft_array_return_type(array_type),
-            _ => panic!("unsupported: {}", quote!(#rust_return_path)),
-        }
-    }
-
-    fn graft_tuple_return_type(&mut self, tuple_type: &syn::TypeTuple) -> DataType {
-        let output_elements = tuple_type
-            .elems
-            .iter()
-            .map(|x| self.syn_type_to_ast_type(x))
-            .collect_vec();
-
-        ast_types::DataType::Tuple(output_elements.into())
-    }
-
-    fn graft_array_return_type(&mut self, array_type: &syn::TypeArray) -> DataType {
-        let syn::TypeArray { elem, len, .. } = array_type;
-        let syn::Expr::Lit(len) = len else {
-            let wrong_len = quote!(#len);
-            panic!("return type array length must be a literal, not {wrong_len}")
-        };
-        let length = self.parse_literal_as_usize(len);
-
-        let element_type = Box::new(self.syn_type_to_ast_type(elem));
-        let array_type = ast_types::ArrayType {
-            element_type,
-            length,
-        };
-
-        ast_types::DataType::Array(array_type)
     }
 
     fn parse_literal_as_usize(&self, len: &syn::ExprLit) -> usize {

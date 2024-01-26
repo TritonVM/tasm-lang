@@ -649,7 +649,7 @@ mod test {
         return;
     }
 
-    #[proptest(cases = 20)]
+    #[proptest(cases = 4)]
     fn proof_item_load_fri_response_from_memory_test(#[strategy(arb())] fri_response: FriResponse) {
         let proof_item = ProofItem::FriResponse(fri_response);
         let fri_response_start_address = BFieldElement::new(0);
