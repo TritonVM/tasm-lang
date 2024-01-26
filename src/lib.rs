@@ -28,8 +28,6 @@ use crate::type_checker::annotate_fn_outer;
 
 pub(crate) mod ast;
 pub(crate) mod ast_types;
-pub(crate) mod cfg;
-mod compiled_tasm;
 #[macro_use]
 pub(crate) mod graft;
 mod composite_types;
