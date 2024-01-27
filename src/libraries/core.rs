@@ -1,7 +1,7 @@
-use crate::LabelledInstruction;
 use syn::punctuated::Punctuated;
 use syn::token::Comma;
 use syn::ExprMethodCall;
+use tasm_lib::triton_vm::prelude::LabelledInstruction;
 
 use crate::ast::Expr;
 use crate::ast::FnSignature;

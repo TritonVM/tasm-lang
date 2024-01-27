@@ -1,7 +1,9 @@
+use tasm_lib::triton_vm::prelude::LabelledInstruction;
+use tasm_lib::triton_vm::triton_asm;
+
 use crate::ast_types::Tuple;
-use crate::tasm_code_generator::{move_top_stack_value_to_memory, CompilerState};
-use crate::triton_vm::triton_asm;
-use crate::LabelledInstruction;
+use crate::tasm_code_generator::move_top_stack_value_to_memory;
+use crate::tasm_code_generator::CompilerState;
 
 impl Tuple {
     /// ```text

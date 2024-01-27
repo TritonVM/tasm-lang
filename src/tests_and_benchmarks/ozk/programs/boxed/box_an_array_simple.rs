@@ -4,7 +4,7 @@ mod test {
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
-    use crate::triton_vm::prelude::*;
+    use tasm_lib::triton_vm::prelude::*;
 
     fn main() {
         let array: [BFieldElement; 2] = [BFieldElement::new(101), BFieldElement::new(102)];

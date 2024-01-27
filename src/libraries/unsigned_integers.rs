@@ -1,5 +1,5 @@
-use crate::triton_vm::prelude::*;
 use tasm_lib::traits::basic_snippet::BasicSnippet;
+use tasm_lib::triton_vm::prelude::*;
 
 use crate::ast;
 use crate::ast_types;

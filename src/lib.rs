@@ -1,10 +1,11 @@
-use itertools::Itertools;
 use std::collections::HashMap;
 use std::env;
 use std::fs;
 use std::fs::File;
 use std::io::Read;
 use std::process;
+
+use itertools::Itertools;
 use syn::ImplItemMethod;
 use syn::Item;
 use syn::ItemEnum;
@@ -12,13 +13,12 @@ use syn::ItemImpl;
 use syn::ItemStruct;
 use syn::UseTree;
 pub use tasm_lib;
-use tasm_lib::prelude::*;
-use tasm_lib::triton_vm::prelude::*;
-
-// TODO: The following import is necessary until `tasm-lib` branch `prelude` is incorporated there.
-#[allow(clippy::single_component_path_imports)]
+pub use tasm_lib::triton_vm;
+use tasm_lib::triton_vm::prelude::LabelledInstruction;
+pub use tasm_lib::twenty_first;
+// todo: this is temporarily required for derive macro `TasmObject` until its code generation is cleaned up
 #[allow(unused_imports)]
-use twenty_first;
+use tasm_lib::twenty_first::prelude::BFieldElement;
 
 use ast_types::ListType;
 use graft::CustomTypeRust;

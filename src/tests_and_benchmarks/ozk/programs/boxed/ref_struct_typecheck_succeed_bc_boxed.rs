@@ -24,16 +24,16 @@ fn main() {
 
 #[cfg(test)]
 mod test {
-    use super::*;
+    use itertools::Itertools;
+    use rand::random;
+    use tasm_lib::triton_vm::prelude::*;
+
     use crate::tests_and_benchmarks::ozk::ozk_parsing;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::TritonVMTestCase;
-    use crate::triton_vm::prelude::*;
-    use crate::triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
 
-    use itertools::Itertools;
-    use rand::random;
+    use super::*;
 
     #[test]
     fn ref_struct_typecheck_succeed_bc_boxed_test() {

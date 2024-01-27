@@ -1,14 +1,12 @@
 use std::collections::HashMap;
 use std::str::FromStr;
 
-use crate::triton_vm::instruction;
-use crate::triton_vm::op_stack::NumberOfWords;
-use crate::triton_vm::prelude::*;
-use crate::triton_vm::triton_asm;
-use crate::LabelledInstruction;
 use chrono::Local;
 use itertools::Itertools;
 use tasm_lib::library::Library as SnippetState;
+use tasm_lib::triton_vm::instruction;
+use tasm_lib::triton_vm::op_stack::NumberOfWords;
+use tasm_lib::triton_vm::prelude::*;
 
 use crate::ast;
 use crate::ast_types;

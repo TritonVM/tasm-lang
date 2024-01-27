@@ -1,6 +1,4 @@
-use crate::triton_vm::prelude::*;
-use crate::twenty_first::shared_math::x_field_element::XFieldElement;
-use tasm_lib::Digest;
+use tasm_lib::triton_vm::prelude::*;
 
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
@@ -125,7 +123,7 @@ mod test {
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::test_helpers::shared_test::TritonVMTestCase;
 
-    use crate::twenty_first::shared_math::other::random_elements;
+    use tasm_lib::twenty_first::shared_math::other::random_elements;
 
     #[test]
     fn a_box_enum_two_dyn_sized_variant_fields_test() {

@@ -1,8 +1,9 @@
+use tasm_lib::triton_vm::prelude::*;
+
 use crate::ast;
 use crate::ast_types;
 use crate::graft::Graft;
 use crate::tasm_code_generator::CompilerState;
-use crate::triton_vm::prelude::*;
 
 use super::tasm_lib_snippet_to_fn_signature;
 use super::Library;

@@ -3,6 +3,7 @@ use std::fs::create_dir_all;
 use std::io::Write;
 use std::path::Path;
 use std::path::PathBuf;
+
 use tasm_lib::snippet_bencher::write_benchmarks;
 use tasm_lib::snippet_bencher::BenchmarkCase;
 use tasm_lib::snippet_bencher::BenchmarkResult;

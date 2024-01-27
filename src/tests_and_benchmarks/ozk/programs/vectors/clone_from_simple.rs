@@ -3,7 +3,7 @@ mod test {
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
-    use crate::triton_vm::prelude::*;
+    use tasm_lib::triton_vm::prelude::*;
 
     fn main() {
         let mut a: Vec<BFieldElement> = Vec::<BFieldElement>::with_capacity(32);

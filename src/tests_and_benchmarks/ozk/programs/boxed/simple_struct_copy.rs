@@ -1,4 +1,4 @@
-use crate::twenty_first::shared_math::x_field_element::XFieldElement;
+use tasm_lib::twenty_first::prelude::XFieldElement;
 use tasm_lib::Digest;
 
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
@@ -26,12 +26,14 @@ fn main() {
 
 #[cfg(test)]
 mod test {
-    use super::*;
+    use tasm_lib::triton_vm::prelude::*;
+    use tasm_lib::twenty_first::shared_math::other::random_elements;
+
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::TritonVMTestCase;
-    use crate::triton_vm::prelude::*;
-    use crate::twenty_first::shared_math::other::random_elements;
+
+    use super::*;
 
     #[test]
     fn boxed_simple_copy_struct() {

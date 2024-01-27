@@ -23,7 +23,7 @@ fn main() {
 #[cfg(test)]
 mod test {
 
-    use crate::triton_vm::prelude::*;
+    use tasm_lib::triton_vm::prelude::*;
 
     use itertools::Itertools;
 

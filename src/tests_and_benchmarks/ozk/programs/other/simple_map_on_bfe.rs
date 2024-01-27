@@ -1,5 +1,5 @@
-use crate::triton_vm::prelude::*;
 use itertools::Itertools;
+use tasm_lib::triton_vm::prelude::*;
 
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
@@ -30,7 +30,7 @@ fn main() {
 #[cfg(test)]
 mod test {
 
-    use crate::triton_vm::prelude::*;
+    use tasm_lib::triton_vm::prelude::*;
 
     use itertools::Itertools;
 
@@ -74,8 +74,8 @@ mod test {
 mod benches {
     use std::collections::HashMap;
 
-    use crate::triton_vm::prelude::*;
-    use crate::triton_vm::twenty_first::shared_math::other::random_elements;
+    use tasm_lib::triton_vm::prelude::*;
+    use tasm_lib::twenty_first::shared_math::other::random_elements;
 
     use crate::tests_and_benchmarks::benchmarks::execute_and_write_benchmark;
     use crate::tests_and_benchmarks::benchmarks::BenchmarkInput;

@@ -1,9 +1,8 @@
-use crate::triton_vm::prelude::*;
-use crate::triton_vm::triton_asm;
-use crate::triton_vm::twenty_first::shared_math::traits::PrimitiveRootOfUnity;
 use itertools::Itertools;
 use num::One;
 use num::Zero;
+use tasm_lib::triton_vm::prelude::*;
+use tasm_lib::twenty_first::shared_math::traits::PrimitiveRootOfUnity;
 
 use crate::ast;
 use crate::ast_types;

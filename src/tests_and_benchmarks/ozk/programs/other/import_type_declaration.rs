@@ -1,7 +1,6 @@
 use super::simple_struct::*;
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
-use crate::triton_vm::prelude::*;
-use crate::triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
+use tasm_lib::triton_vm::prelude::*;
 
 fn main() {
     let ts: Box<SimpleStruct> =

@@ -36,13 +36,15 @@ fn main() {
 
 #[cfg(test)]
 mod test {
-    use self::tasm::wrap_main_with_io;
-    use super::*;
+    use rand::random;
+    use tasm_lib::triton_vm::prelude::*;
+
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::test_helpers::shared_test::TritonVMTestCase;
-    use crate::triton_vm::prelude::*;
-    use crate::twenty_first::shared_math::bfield_codec::BFieldCodec;
-    use rand::random;
+
+    use super::*;
+
+    use self::tasm::wrap_main_with_io;
 
     #[test]
     fn box_enum_simple_test() {

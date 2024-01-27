@@ -1,8 +1,7 @@
 #![allow(clippy::explicit_auto_deref)]
 
-use crate::triton_vm::prelude::*;
-use crate::triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
-use crate::triton_vm::twenty_first::util_types::algebraic_hasher::AlgebraicHasher;
+use tasm_lib::triton_vm::prelude::*;
+use tasm_lib::twenty_first::prelude::AlgebraicHasher;
 
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
@@ -35,10 +34,10 @@ fn main() {
 #[cfg(test)]
 mod test {
 
-    use crate::triton_vm::twenty_first::shared_math::other::random_elements;
-    use crate::triton_vm::twenty_first::util_types::merkle_tree::CpuParallel;
-    use crate::triton_vm::twenty_first::util_types::merkle_tree::MerkleTree;
-    use crate::triton_vm::twenty_first::util_types::merkle_tree_maker::MerkleTreeMaker;
+    use tasm_lib::twenty_first::shared_math::other::random_elements;
+    use tasm_lib::twenty_first::util_types::merkle_tree::CpuParallel;
+    use tasm_lib::twenty_first::util_types::merkle_tree::MerkleTree;
+    use tasm_lib::twenty_first::util_types::merkle_tree_maker::MerkleTreeMaker;
 
     use crate::ast_types;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
@@ -81,7 +80,7 @@ mod test {
 }
 
 mod benches {
-    use crate::triton_vm::twenty_first::shared_math::other::random_elements;
+    use tasm_lib::twenty_first::shared_math::other::random_elements;
 
     use crate::tests_and_benchmarks::benchmarks::execute_and_write_benchmark;
     use crate::tests_and_benchmarks::benchmarks::profile;

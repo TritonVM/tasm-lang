@@ -1,7 +1,7 @@
-use crate::triton_vm::triton_asm;
-use crate::LabelledInstruction;
 use num::One;
 use tasm_lib::memory::dyn_malloc::DynMalloc;
+use tasm_lib::triton_vm::prelude::triton_asm;
+use tasm_lib::triton_vm::prelude::LabelledInstruction;
 
 use crate::ast;
 use crate::ast_types;

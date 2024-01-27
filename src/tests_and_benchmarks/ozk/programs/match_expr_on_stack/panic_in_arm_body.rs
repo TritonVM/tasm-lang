@@ -1,7 +1,7 @@
 use std::panic::catch_unwind;
 
-use crate::triton_vm::error::InstructionError;
-use crate::triton_vm::prelude::*;
+use tasm_lib::triton_vm::error::InstructionError;
+use tasm_lib::triton_vm::prelude::*;
 
 use proptest::collection::vec;
 use proptest::prelude::*;

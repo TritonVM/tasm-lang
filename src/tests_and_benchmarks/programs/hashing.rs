@@ -3,9 +3,6 @@ mod run_tests {
     use std::collections::HashMap;
     use std::vec;
 
-    use crate::triton_vm::twenty_first::shared_math::other::random_elements;
-    use crate::triton_vm::twenty_first::shared_math::tip5::Tip5;
-    use crate::triton_vm::twenty_first::util_types::algebraic_hasher::AlgebraicHasher;
     use itertools::Itertools;
     use num::One;
     use num::Zero;
@@ -13,6 +10,8 @@ mod run_tests {
     use syn::parse_quote;
     use tasm_lib::rust_shadowing_helper_functions;
     use tasm_lib::triton_vm::prelude::*;
+    use tasm_lib::twenty_first::prelude::AlgebraicHasher;
+    use tasm_lib::twenty_first::shared_math::other::random_elements;
 
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 

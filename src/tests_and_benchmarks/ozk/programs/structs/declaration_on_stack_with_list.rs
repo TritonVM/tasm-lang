@@ -1,7 +1,5 @@
-use crate::triton_vm::prelude::*;
-use crate::triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
-use crate::triton_vm::twenty_first::shared_math::x_field_element::XFieldElement;
-use tasm_lib::structure::tasm_object::TasmObject;
+use tasm_lib::prelude::TasmObject;
+use tasm_lib::triton_vm::prelude::*;
 
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
@@ -58,7 +56,7 @@ fn main() {
 #[cfg(test)]
 mod test {
 
-    use crate::triton_vm::prelude::*;
+    use tasm_lib::triton_vm::prelude::*;
 
     use crate::tests_and_benchmarks::ozk::ozk_parsing;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;

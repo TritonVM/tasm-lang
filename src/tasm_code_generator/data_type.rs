@@ -1,8 +1,6 @@
-use crate::triton_vm::op_stack::OpStackElement;
-use crate::triton_vm::prelude::*;
-use crate::triton_vm::triton_asm;
-use crate::LabelledInstruction;
 use tasm_lib::memory::memcpy::MemCpy;
+use tasm_lib::triton_vm::op_stack::OpStackElement;
+use tasm_lib::triton_vm::prelude::*;
 
 use crate::ast_types;
 use crate::tasm_code_generator::read_n_words_from_memory;

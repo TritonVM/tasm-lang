@@ -1,6 +1,6 @@
+use tasm_lib::triton_vm::prelude::*;
+
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
-use crate::triton_vm::prelude::*;
-use crate::twenty_first::shared_math::bfield_codec::BFieldCodec;
 
 use super::simple_enum_type::*;
 
@@ -27,11 +27,12 @@ fn catch_all_on_b() {
 mod test {
     use itertools::Itertools;
 
-    use super::*;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::init_memory_from;
     use crate::tests_and_benchmarks::test_helpers::shared_test::TritonVMTestCase;
+
+    use super::*;
 
     #[test]
     fn catch_all_on_b_test() {

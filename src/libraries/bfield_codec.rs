@@ -1,6 +1,5 @@
-use crate::triton_vm::triton_asm;
-use crate::LabelledInstruction;
 use tasm_lib::memory::dyn_malloc;
+use tasm_lib::triton_vm::prelude::*;
 
 use crate::ast;
 use crate::ast_types;

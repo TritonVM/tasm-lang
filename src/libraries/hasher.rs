@@ -1,7 +1,5 @@
-use crate::triton_vm::prelude::*;
-use crate::triton_vm::twenty_first::shared_math::tip5::DIGEST_LENGTH;
-use crate::LabelledInstruction;
-use tasm_lib::Digest;
+use tasm_lib::triton_vm::prelude::*;
+use tasm_lib::twenty_first::prelude::tip5::DIGEST_LENGTH;
 
 use crate::ast;
 use crate::ast_types;

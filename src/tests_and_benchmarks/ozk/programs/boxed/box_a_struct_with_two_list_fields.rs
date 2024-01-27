@@ -1,6 +1,6 @@
+use tasm_lib::triton_vm::prelude::*;
+
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
-use crate::triton_vm::prelude::*;
-use crate::twenty_first::shared_math::{bfield_codec::BFieldCodec, x_field_element::XFieldElement};
 
 #[derive(BFieldCodec)]
 struct WithListFields {
@@ -31,12 +31,13 @@ fn main() {
 
 #[cfg(test)]
 mod test {
-    use super::*;
+    use tasm_lib::twenty_first::shared_math::other::random_elements;
+
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 
-    use crate::twenty_first::shared_math::other::random_elements;
+    use super::*;
 
     #[test]
     fn box_a_struct_with_two_list_fields() {

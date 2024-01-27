@@ -2,14 +2,13 @@
 mod benchmark {
     use std::collections::HashMap;
 
-    use crate::triton_vm::prelude::*;
-    use crate::triton_vm::twenty_first::shared_math::other::random_elements;
-    use crate::triton_vm::twenty_first::shared_math::tip5::Tip5;
-    use crate::triton_vm::twenty_first::util_types::mmr::mmr_accumulator::MmrAccumulator;
-    use crate::triton_vm::twenty_first::util_types::mmr::mmr_trait::Mmr;
-
     use rand::random;
     use tasm_lib::rust_shadowing_helper_functions;
+    use tasm_lib::triton_vm::prelude::*;
+    use tasm_lib::twenty_first::shared_math::other::random_elements;
+    use tasm_lib::twenty_first::shared_math::tip5::Tip5;
+    use tasm_lib::twenty_first::util_types::mmr::mmr_accumulator::MmrAccumulator;
+    use tasm_lib::twenty_first::util_types::mmr::mmr_trait::Mmr;
     use tasm_lib::Digest;
 
     use crate::tests_and_benchmarks::benchmarks::execute_and_write_benchmark;

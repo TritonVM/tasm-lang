@@ -1,6 +1,5 @@
-use crate::triton_vm::prelude::*;
-use crate::LabelledInstruction;
 use itertools::Itertools;
+use tasm_lib::triton_vm::prelude::*;
 
 use crate::ast_types;
 

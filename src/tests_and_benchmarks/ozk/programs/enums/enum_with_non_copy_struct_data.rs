@@ -1,5 +1,4 @@
-use crate::triton_vm::prelude::*;
-use crate::triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
+use tasm_lib::triton_vm::prelude::*;
 
 use arbitrary::Arbitrary;
 

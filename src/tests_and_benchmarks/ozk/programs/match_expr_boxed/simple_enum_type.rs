@@ -1,5 +1,4 @@
-use crate::triton_vm::prelude::*;
-use crate::twenty_first::shared_math::bfield_codec::BFieldCodec;
+use tasm_lib::triton_vm::prelude::*;
 
 #[derive(BFieldCodec, Clone, Debug)]
 pub(super) enum SimpleEnum {

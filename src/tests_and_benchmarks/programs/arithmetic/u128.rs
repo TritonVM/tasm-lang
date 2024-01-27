@@ -1,10 +1,10 @@
 #[cfg(test)]
 mod run_tests {
-    use crate::triton_vm::twenty_first::shared_math::other::random_elements;
     use itertools::Itertools;
     use rand::thread_rng;
     use rand::Rng;
     use syn::parse_quote;
+    use tasm_lib::twenty_first::shared_math::other::random_elements;
 
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 

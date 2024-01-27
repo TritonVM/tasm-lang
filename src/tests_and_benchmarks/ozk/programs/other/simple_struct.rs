@@ -1,8 +1,7 @@
-use crate::triton_vm::prelude::*;
-use crate::triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
+use tasm_lib::triton_vm::prelude::*;
 
 use arbitrary::Arbitrary;
-use tasm_lib::structure::tasm_object::TasmObject;
+use tasm_lib::prelude::TasmObject;
 
 #[derive(TasmObject, BFieldCodec, Clone, Arbitrary)]
 pub(super) struct SimpleStruct {

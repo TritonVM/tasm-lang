@@ -1,4 +1,4 @@
-use crate::triton_vm::prelude::*;
+use tasm_lib::triton_vm::prelude::*;
 
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
@@ -17,7 +17,7 @@ fn main() {
 
 #[cfg(test)]
 mod test {
-    use crate::triton_vm::prelude::*;
+    use tasm_lib::triton_vm::prelude::*;
 
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;

@@ -1,14 +1,10 @@
-use crate::triton_vm::triton_asm;
-use crate::LabelledInstruction;
-use itertools::Itertools;
-use num::One;
 use std::collections::HashSet;
 
-use super::compile_block_stmt;
-use super::compile_returning_block_expr;
-use super::pop_n;
-use super::CompilerState;
-use super::ValueIdentifier;
+use itertools::Itertools;
+use num::One;
+use tasm_lib::triton_vm::prelude::LabelledInstruction;
+use tasm_lib::triton_vm::triton_asm;
+
 use crate::ast;
 use crate::ast::MatchCondition;
 use crate::ast::MatchExpr;
@@ -17,6 +13,12 @@ use crate::ast_types;
 use crate::type_checker;
 use crate::type_checker::GetType;
 use crate::type_checker::Typing;
+
+use super::compile_block_stmt;
+use super::compile_returning_block_expr;
+use super::pop_n;
+use super::CompilerState;
+use super::ValueIdentifier;
 
 impl MatchExpr<Typing> {
     /// Return the code that evaluates to true iff the catch-all branch in a match statement

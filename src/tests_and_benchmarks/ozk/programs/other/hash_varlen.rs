@@ -1,13 +1,11 @@
 #![allow(clippy::explicit_auto_deref)]
 #![allow(clippy::needless_borrow)]
-
-use crate::triton_vm::prelude::*;
-use crate::triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
-use crate::triton_vm::twenty_first::util_types::algebraic_hasher::AlgebraicHasher;
+use tasm_lib::triton_vm::prelude::*;
+use tasm_lib::twenty_first::prelude::AlgebraicHasher;
 
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
-type H = twenty_first::shared_math::tip5::Tip5;
+type H = Tip5;
 
 fn main() {
     let elements: Box<Vec<BFieldElement>> =
@@ -22,8 +20,7 @@ fn main() {
 
 #[cfg(test)]
 mod test {
-
-    use crate::triton_vm::twenty_first::shared_math::other::random_elements;
+    use tasm_lib::twenty_first::shared_math::other::random_elements;
 
     use crate::ast_types;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;

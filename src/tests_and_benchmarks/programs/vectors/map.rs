@@ -20,10 +20,10 @@ mod tests {
     mod run_tests {
         use std::collections::HashMap;
 
-        use crate::triton_vm::twenty_first::shared_math::other::random_elements;
         use itertools::Itertools;
         use tasm_lib::rust_shadowing_helper_functions::safe_list::safe_list_insert;
         use tasm_lib::triton_vm::prelude::*;
+        use tasm_lib::twenty_first::shared_math::other::random_elements;
 
         use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 

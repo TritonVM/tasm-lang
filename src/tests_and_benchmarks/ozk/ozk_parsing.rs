@@ -4,9 +4,9 @@ use crate::ast_types;
 use crate::custom_type_resolver::resolve_custom_types;
 use crate::extract_types_and_function;
 use crate::tasm_code_generator::compile_function;
-use crate::triton_vm::prelude::*;
 use crate::type_checker::annotate_fn_outer;
 use crate::StructsAndMethodsRustAst;
+use tasm_lib::triton_vm::prelude::*;
 
 const MANIFEST_DIR: &str = env!("CARGO_MANIFEST_DIR");
 const PROGRAMS_DIR: &str = "src/tests_and_benchmarks/ozk/programs";

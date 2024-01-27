@@ -1,4 +1,4 @@
-use crate::triton_vm::prelude::*;
+use tasm_lib::triton_vm::prelude::*;
 
 #[allow(clippy::unnecessary_literal_unwrap)]
 fn _crash_on_unwrap() {
@@ -23,8 +23,8 @@ mod test {
     use crate::tests_and_benchmarks::ozk::ozk_parsing::compile_for_test;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
-    use crate::triton_vm::prelude::*;
     use std::default::Default;
+    use tasm_lib::triton_vm::prelude::*;
 
     #[test]
     fn unwrap_crash_test() {

@@ -13,7 +13,7 @@ use std::fmt::Display;
 use tasm_lib::library::Library as SnippetState;
 use tasm_lib::prelude::*;
 use tasm_lib::triton_vm::prelude::*;
-use tasm_lib::triton_vm::twenty_first::prelude::*;
+use tasm_lib::twenty_first::prelude::*;
 
 use self::function_state::FunctionState;
 use self::function_state::VarAddr;

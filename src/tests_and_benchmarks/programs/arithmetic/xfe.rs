@@ -2,13 +2,13 @@ use syn::parse_quote;
 
 #[cfg(test)]
 mod run_tests {
-    use crate::triton_vm::twenty_first::shared_math::other::random_elements;
-    use crate::triton_vm::twenty_first::shared_math::x_field_element::EXTENSION_DEGREE;
     use itertools::Itertools;
     use num::One;
     use num::Zero;
     use rand::random;
     use tasm_lib::triton_vm::prelude::*;
+    use tasm_lib::twenty_first::shared_math::other::random_elements;
+    use tasm_lib::twenty_first::shared_math::x_field_element::EXTENSION_DEGREE;
 
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 

@@ -1,5 +1,4 @@
-use crate::triton_vm::prelude::*;
-use crate::triton_vm::twenty_first::shared_math::x_field_element::XFieldElement;
+use tasm_lib::triton_vm::prelude::*;
 
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 

@@ -1,10 +1,8 @@
 #![allow(clippy::manual_swap)]
 
-use crate::triton_vm::prelude::*;
-use crate::triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
-use crate::triton_vm::twenty_first::shared_math::traits::ModPowU32;
-use crate::triton_vm::twenty_first::shared_math::x_field_element::XFieldElement;
 use num::One;
+use tasm_lib::triton_vm::prelude::*;
+use tasm_lib::twenty_first::prelude::ModPowU32;
 
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
@@ -141,11 +139,11 @@ mod test {
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
-    use crate::triton_vm::twenty_first::shared_math::ntt;
-    use crate::triton_vm::twenty_first::shared_math::other::log_2_floor;
-    use crate::triton_vm::twenty_first::shared_math::other::random_elements;
-    use crate::triton_vm::twenty_first::shared_math::traits::PrimitiveRootOfUnity;
     use itertools::Itertools;
+    use tasm_lib::twenty_first::shared_math::ntt;
+    use tasm_lib::twenty_first::shared_math::other::log_2_floor;
+    use tasm_lib::twenty_first::shared_math::other::random_elements;
+    use tasm_lib::twenty_first::shared_math::traits::PrimitiveRootOfUnity;
 
     #[test]
     fn fast_xfe_ntt_test() {
@@ -202,9 +200,9 @@ mod benches {
     use crate::tests_and_benchmarks::ozk::ozk_parsing;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
-    use crate::triton_vm::prelude::*;
-    use crate::triton_vm::twenty_first::shared_math::other::random_elements;
-    use crate::triton_vm::twenty_first::shared_math::traits::PrimitiveRootOfUnity;
+    use tasm_lib::triton_vm::prelude::*;
+    use tasm_lib::twenty_first::shared_math::other::random_elements;
+    use tasm_lib::twenty_first::shared_math::traits::PrimitiveRootOfUnity;
 
     #[test]
     fn fast_ntt_bench() {

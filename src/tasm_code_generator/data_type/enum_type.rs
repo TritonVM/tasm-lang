@@ -1,7 +1,4 @@
-use crate::triton_vm::prelude::*;
-use crate::triton_vm::triton_asm;
-use crate::triton_vm::triton_instr;
-use crate::LabelledInstruction;
+use tasm_lib::triton_vm::prelude::*;
 
 use crate::ast;
 use crate::ast_types;

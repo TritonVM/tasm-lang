@@ -1,10 +1,8 @@
-use crate::triton_vm::prelude::*;
-use crate::triton_vm::triton_asm;
-use crate::triton_vm::twenty_first::shared_math::x_field_element::XFieldElement;
-use crate::triton_vm::twenty_first::shared_math::x_field_element::EXTENSION_DEGREE;
 use itertools::Itertools;
 use num::One;
 use num::Zero;
+use tasm_lib::triton_vm::prelude::*;
+use tasm_lib::twenty_first::prelude::x_field_element::EXTENSION_DEGREE;
 
 use crate::ast;
 use crate::ast_types;
