@@ -1,21 +1,22 @@
+use super::Library;
+use crate::ast;
+use crate::ast_types;
+use crate::graft::Graft;
+use crate::libraries::bfe::BfeLibrary;
+use crate::libraries::hasher::algebraic_hasher::hash_pair_function;
+use crate::libraries::hasher::algebraic_hasher::HASH_PAIR_FUNCTION_NAME;
+use crate::libraries::hasher::algebraic_hasher::HASH_VARLEN_FUNCTION_NAME;
+use crate::subroutine::SubRoutine;
+use crate::tasm_code_generator::CompilerState;
 use crate::triton_vm::prelude::*;
 use crate::triton_vm::twenty_first::shared_math::tip5::DIGEST_LENGTH;
 use crate::LabelledInstruction;
 use tasm_lib::Digest;
 
-use crate::ast;
-use crate::ast_types;
-use crate::graft::Graft;
-use crate::libraries::bfe::BfeLibrary;
-use crate::subroutine::SubRoutine;
-use crate::tasm_code_generator::CompilerState;
-
-use super::Library;
-use super::LibraryFunction;
+pub(crate) mod algebraic_hasher;
+pub(crate) mod sponge_hasher;
 
 const HASHER_LIB_INDICATOR: &str = "H::";
-const HASH_PAIR_FUNCTION_NAME: &str = "H::hash_pair";
-const HASH_VARLEN_FUNCTION_NAME: &str = "H::hash_varlen";
 const DEFAULT_DIGEST_FUNCTION: &str = "Digest::default";
 const NEW_DIGEST_FUNCTION: &str = "Digest::new";
 
@@ -59,7 +60,7 @@ impl Library for HasherLib {
         _args: &[ast::Expr<super::Annotation>],
     ) -> ast::FnSignature {
         if fn_name == HASH_PAIR_FUNCTION_NAME {
-            return get_hash_pair_function().signature;
+            return hash_pair_function().signature;
         }
 
         if fn_name == HASH_VARLEN_FUNCTION_NAME {
@@ -87,7 +88,7 @@ impl Library for HasherLib {
         state: &mut CompilerState,
     ) -> Vec<LabelledInstruction> {
         if fn_name == HASH_PAIR_FUNCTION_NAME {
-            let hash_pair: SubRoutine = get_hash_pair_function().try_into().unwrap();
+            let hash_pair: SubRoutine = hash_pair_function().try_into().unwrap();
             let hash_pair_label = hash_pair.get_label();
             state.add_library_function(hash_pair);
 
@@ -212,85 +213,5 @@ impl Library for HasherLib {
         _rust_method_call: &syn::ExprMethodCall,
     ) -> Option<ast::Expr<super::Annotation>> {
         None
-    }
-}
-
-impl HasherLib {
-    fn hash_varlen_signature(&self) -> ast::FnSignature {
-        ast::FnSignature {
-            name: "hash_varlen".to_owned(),
-            args: vec![ast_types::AbstractArgument::ValueArgument(
-                ast_types::AbstractValueArg {
-                    name: "list".to_owned(),
-                    data_type: ast_types::DataType::Boxed(Box::new(ast_types::DataType::List(
-                        Box::new(ast_types::DataType::Bfe),
-                        self.list_type,
-                    ))),
-                    mutable: false,
-                },
-            )],
-            output: ast_types::DataType::Digest,
-            arg_evaluation_order: Default::default(),
-        }
-    }
-
-    fn hash_varlen_code(&self, state: &mut CompilerState) -> Vec<LabelledInstruction> {
-        // This is just a thin wrapper around `tasm-lib`'s `hash_varlen`, such that
-        // you can call `H::hash_varlen(&bfes)`, where `bfes` has to be a list of
-        // `BFieldElement`s, no other element type works.
-        let tasm_libs_hash_varlen_label =
-            state.import_snippet(Box::new(tasm_lib::hashing::hash_varlen::HashVarlen));
-        let tasm_langs_hash_varlen_label = "tasm_langs_hash_varlen".to_owned();
-
-        let tasm_langs_hash_varlen = triton_asm!(
-            {tasm_langs_hash_varlen_label}:
-            // _ *list
-
-            read_mem 1
-            // _ len (*list - 1)
-
-            push {self.list_type.metadata_size() + 1}
-            add
-            swap 1
-            // _ *elem_0 len
-
-
-            call { tasm_libs_hash_varlen_label }
-            // _ digest
-
-            return
-        );
-        state.add_library_function(tasm_langs_hash_varlen.try_into().unwrap());
-
-        triton_asm!(call {
-            tasm_langs_hash_varlen_label
-        })
-    }
-}
-
-fn get_hash_pair_function() -> LibraryFunction {
-    let fn_signature = ast::FnSignature {
-        name: "hash_pair".to_owned(),
-        args: vec![
-            ast_types::AbstractArgument::ValueArgument(ast_types::AbstractValueArg {
-                name: "left".to_owned(),
-                data_type: ast_types::DataType::Digest,
-                mutable: false,
-            }),
-            ast_types::AbstractArgument::ValueArgument(ast_types::AbstractValueArg {
-                name: "right".to_owned(),
-                data_type: ast_types::DataType::Digest,
-                mutable: false,
-            }),
-        ],
-        output: ast_types::DataType::Digest,
-        // If the definition of Tip5's `hash_pair` was changed, this could
-        // be left-to-right instead
-        arg_evaluation_order: ast::ArgEvaluationOrder::RightToLeft,
-    };
-
-    LibraryFunction {
-        signature: fn_signature,
-        body: triton_asm!(hash),
     }
 }
