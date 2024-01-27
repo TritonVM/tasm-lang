@@ -1,5 +1,5 @@
+use crate::triton_vm::prelude::*;
 use tasm_lib::traits::basic_snippet::BasicSnippet;
-use triton_vm::triton_asm;
 
 use crate::ast;
 use crate::ast_types;
@@ -116,7 +116,7 @@ impl Library for UnsignedIntegersLib {
         receiver_type: &ast_types::DataType,
         _args: &[ast::Expr<super::Annotation>],
         state: &mut CompilerState,
-    ) -> Vec<triton_vm::instruction::LabelledInstruction> {
+    ) -> Vec<LabelledInstruction> {
         if method_name == COUNT_ONES_METHOD && ast_types::DataType::U32 == *receiver_type {
             return get_count_ones_u32_method().body;
         }
@@ -135,7 +135,7 @@ impl Library for UnsignedIntegersLib {
         _type_parameter: Option<ast_types::DataType>,
         _args: &[ast::Expr<super::Annotation>],
         _state: &mut CompilerState,
-    ) -> Vec<triton_vm::instruction::LabelledInstruction> {
+    ) -> Vec<LabelledInstruction> {
         panic!("unsigned_integers lib does not contain any functions");
     }
 

@@ -1,5 +1,6 @@
 use crate::tests_and_benchmarks::test_helpers::shared_test::item_fn;
 use syn::parse_quote;
+use tasm_lib::triton_vm::prelude::*;
 
 fn spill_u64_values_to_memory_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
@@ -470,12 +471,7 @@ fn ensure_dyn_malloc_and_static_malloc_do_not_interfere_5_rast() -> syn::ItemFn 
 mod run_tests {
 
     use itertools::Itertools;
-    use triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
-    use triton_vm::twenty_first::shared_math::other::random_elements;
-    use triton_vm::twenty_first::shared_math::tip5::Digest;
-    use triton_vm::twenty_first::shared_math::x_field_element::XFieldElement;
-    use triton_vm::BFieldElement;
-    use triton_vm::NonDeterminism;
+    use tasm_lib::twenty_first::shared_math::other::random_elements;
 
     use crate::ast_types::DataType;
     use crate::ast_types::ListType;

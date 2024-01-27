@@ -3,13 +3,13 @@ use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 use crate::tests_and_benchmarks::ozk::rust_shadows;
 use crate::tests_and_benchmarks::test_helpers::shared_test::*;
+use crate::triton_vm::prelude::*;
+
 use proptest::collection::vec;
 use proptest::prop_assert_eq;
 use proptest_arbitrary_interop::arb;
 use tasm_lib::DIGEST_LENGTH;
 use test_strategy::proptest;
-use triton_vm::BFieldElement;
-use triton_vm::NonDeterminism;
 
 fn catch_all_covers_a() {
     let val: ThreeVariants = ThreeVariants::random_from_std_in();

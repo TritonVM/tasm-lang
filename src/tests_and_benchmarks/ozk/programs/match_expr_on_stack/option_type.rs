@@ -4,9 +4,9 @@ mod test {
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
+    use crate::triton_vm::prelude::*;
+    use crate::twenty_first::shared_math::x_field_element::XFieldElement;
     use num::{One, Zero};
-    use triton_vm::{BFieldElement, NonDeterminism};
-    use twenty_first::shared_math::x_field_element::XFieldElement;
 
     fn most_basic() {
         let some_val: Option<u64> = Some(100);

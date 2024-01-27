@@ -20,8 +20,7 @@ fn main() {
 #[cfg(test)]
 mod test {
 
-    use triton_vm::BFieldElement;
-    use triton_vm::NonDeterminism;
+    use crate::triton_vm::prelude::*;
 
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;

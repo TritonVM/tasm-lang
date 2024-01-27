@@ -40,9 +40,9 @@ mod test {
     use super::*;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::test_helpers::shared_test::TritonVMTestCase;
+    use crate::triton_vm::prelude::*;
+    use crate::twenty_first::shared_math::bfield_codec::BFieldCodec;
     use rand::random;
-    use triton_vm::NonDeterminism;
-    use twenty_first::shared_math::bfield_codec::BFieldCodec;
 
     #[test]
     fn box_enum_simple_test() {

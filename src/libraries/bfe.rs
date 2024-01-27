@@ -1,9 +1,9 @@
+use crate::triton_vm::prelude::*;
+use crate::triton_vm::triton_asm;
+use crate::triton_vm::twenty_first::shared_math::traits::PrimitiveRootOfUnity;
 use itertools::Itertools;
 use num::One;
 use num::Zero;
-use triton_vm::triton_asm;
-use triton_vm::twenty_first::shared_math::traits::PrimitiveRootOfUnity;
-use triton_vm::BFieldElement;
 
 use crate::ast;
 use crate::ast_types;
@@ -106,7 +106,7 @@ impl Library for BfeLibrary {
         receiver_type: &ast_types::DataType,
         _args: &[ast::Expr<super::Annotation>],
         _state: &mut crate::tasm_code_generator::CompilerState,
-    ) -> Vec<triton_vm::instruction::LabelledInstruction> {
+    ) -> Vec<LabelledInstruction> {
         if matches!(receiver_type, ast_types::DataType::Bfe) {
             // TODO: Instead of inlining this, we could add the subroutine to the
             // compiler state and the call that subroutine. And then let the inline
@@ -133,7 +133,7 @@ impl Library for BfeLibrary {
         _type_parameter: Option<ast_types::DataType>,
         _args: &[ast::Expr<super::Annotation>],
         state: &mut crate::tasm_code_generator::CompilerState,
-    ) -> Vec<triton_vm::instruction::LabelledInstruction> {
+    ) -> Vec<LabelledInstruction> {
         if fn_name == FUNCTION_NAME_NEW_BFE {
             // Import the function and return the code to call it
             let new_bfe_function = bfe_new_function();

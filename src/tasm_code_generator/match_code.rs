@@ -1,8 +1,8 @@
+use crate::triton_vm::triton_asm;
+use crate::LabelledInstruction;
 use itertools::Itertools;
 use num::One;
 use std::collections::HashSet;
-use triton_vm::instruction::LabelledInstruction;
-use triton_vm::triton_asm;
 
 use super::compile_block_stmt;
 use super::compile_returning_block_expr;

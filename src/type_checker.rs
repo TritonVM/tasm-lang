@@ -4,8 +4,7 @@ use num::One;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::fmt::Display;
-use triton_vm::twenty_first::shared_math::x_field_element::XFieldElement;
-use triton_vm::BFieldElement;
+use tasm_lib::triton_vm::prelude::*;
 
 use crate::ast;
 use crate::ast::MethodCall;

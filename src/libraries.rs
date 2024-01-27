@@ -7,6 +7,7 @@ use crate::ast_types::ListType;
 use crate::graft::Graft;
 use crate::tasm_code_generator::CompilerState;
 use crate::type_checker;
+use tasm_lib::triton_vm::prelude::*;
 
 pub(crate) mod bfe;
 pub(crate) mod bfield_codec;
@@ -23,7 +24,7 @@ type Annotation = type_checker::Typing;
 #[derive(Debug)]
 pub(crate) struct LibraryFunction {
     pub(crate) signature: FnSignature,
-    pub(crate) body: Vec<triton_vm::instruction::LabelledInstruction>,
+    pub(crate) body: Vec<LabelledInstruction>,
 }
 
 pub(crate) struct LibraryConfig {
@@ -126,7 +127,7 @@ pub(crate) trait Library: Debug {
         receiver_type: &ast_types::DataType,
         args: &[ast::Expr<Annotation>],
         state: &mut crate::tasm_code_generator::CompilerState,
-    ) -> Vec<triton_vm::instruction::LabelledInstruction>;
+    ) -> Vec<LabelledInstruction>;
 
     /// Return the instructions to call the function, and imports snippets into `state` if needed.
     fn call_function(
@@ -135,7 +136,7 @@ pub(crate) trait Library: Debug {
         type_parameter: Option<ast_types::DataType>,
         args: &[ast::Expr<Annotation>],
         state: &mut CompilerState,
-    ) -> Vec<triton_vm::instruction::LabelledInstruction>;
+    ) -> Vec<LabelledInstruction>;
 
     /// Return full function name iff grafting should be handled by
     /// library and not the generic grafter.

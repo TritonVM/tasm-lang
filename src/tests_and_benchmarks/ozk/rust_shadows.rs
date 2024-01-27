@@ -3,26 +3,25 @@ use std::collections::HashMap;
 use std::thread_local;
 use std::vec::Vec;
 
+use crate::triton_vm::proof_item::FriResponse;
+use crate::triton_vm::proof_item::ProofItem;
+use crate::triton_vm::table::master_table::NUM_BASE_COLUMNS;
+use crate::triton_vm::table::master_table::NUM_EXT_COLUMNS;
+use crate::triton_vm::twenty_first::shared_math::b_field_element::BFIELD_ONE;
+use crate::triton_vm::twenty_first::shared_math::b_field_element::BFIELD_ZERO;
+use crate::triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
+use crate::triton_vm::twenty_first::shared_math::x_field_element::XFieldElement;
+use crate::triton_vm::twenty_first::util_types::algebraic_hasher::AlgebraicHasher;
+use crate::triton_vm::twenty_first::util_types::algebraic_hasher::SpongeHasher;
 use anyhow::bail;
 use num::Zero;
 use rand::rngs::StdRng;
 use rand::Rng;
 use rand::RngCore;
 use rand::SeedableRng;
+use tasm_lib::triton_vm::prelude::*;
 use tasm_lib::Digest;
 use tasm_lib::VmHasher;
-use triton_vm::proof_item::FriResponse;
-use triton_vm::proof_item::ProofItem;
-use triton_vm::table::master_table::NUM_BASE_COLUMNS;
-use triton_vm::table::master_table::NUM_EXT_COLUMNS;
-use triton_vm::twenty_first::shared_math::b_field_element::BFIELD_ONE;
-use triton_vm::twenty_first::shared_math::b_field_element::BFIELD_ZERO;
-use triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
-use triton_vm::twenty_first::shared_math::x_field_element::XFieldElement;
-use triton_vm::twenty_first::util_types::algebraic_hasher::AlgebraicHasher;
-use triton_vm::twenty_first::util_types::algebraic_hasher::SpongeHasher;
-use triton_vm::BFieldElement;
-use triton_vm::NonDeterminism;
 
 use crate::tests_and_benchmarks::ozk::programs::recufier::vm_proof_stream::VmProofStream;
 
@@ -235,7 +234,7 @@ pub(super) fn _tasm_recufier_proof_stream_dequeue(
 type _VmHasherState = twenty_first::shared_math::tip5::Tip5State;
 
 impl VmProofStream {
-    fn _new_internal(items: &[triton_vm::proof_item::ProofItem]) -> Self {
+    fn _new_internal(items: &[ProofItem]) -> Self {
         Self {
             word_index: 1,
             data: items.to_vec().encode(),
@@ -244,7 +243,7 @@ impl VmProofStream {
             ),
         }
     }
-    fn _dequeue_internal(&mut self) -> anyhow::Result<Box<triton_vm::proof_item::ProofItem>> {
+    fn _dequeue_internal(&mut self) -> anyhow::Result<Box<ProofItem>> {
         if self.word_index as usize >= self.data.len() {
             bail!("No more words left in stream.")
         }
@@ -253,7 +252,7 @@ impl VmProofStream {
         let sequence =
             &self.data[(self.word_index as usize + 1)..(self.word_index as usize + 1 + size)];
         self.word_index += size as u32 + 1;
-        let item = *triton_vm::proof_item::ProofItem::decode(sequence)?;
+        let item = *ProofItem::decode(sequence)?;
 
         if item.include_in_fiat_shamir_heuristic() {
             self._fiat_shamir_internal(&item);

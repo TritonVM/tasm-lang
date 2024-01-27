@@ -1,6 +1,6 @@
+use crate::triton_vm::prelude::*;
+use crate::triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
 use tasm_lib::structure::tasm_object::TasmObject;
-use triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
-use triton_vm::BFieldElement;
 
 use super::arithmetic_domain::*;
 
@@ -43,7 +43,6 @@ fn main() {
 mod test {
 
     use rand::random;
-    use triton_vm::NonDeterminism;
 
     use crate::tests_and_benchmarks::ozk::ozk_parsing;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;

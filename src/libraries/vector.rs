@@ -1,9 +1,9 @@
+use crate::triton_vm::triton_asm;
+use crate::LabelledInstruction;
 use itertools::Itertools;
 use num::One;
 use tasm_lib::memory::memcpy::MemCpy;
 use tasm_lib::traits::basic_snippet::BasicSnippet;
-use triton_vm::instruction::LabelledInstruction;
-use triton_vm::triton_asm;
 
 use crate::ast;
 use crate::ast::FnSignature;
@@ -118,7 +118,7 @@ impl Library for VectorLib {
         receiver_type: &ast_types::DataType,
         args: &[ast::Expr<super::Annotation>],
         state: &mut CompilerState,
-    ) -> Vec<triton_vm::instruction::LabelledInstruction> {
+    ) -> Vec<LabelledInstruction> {
         let element_type: ast_types::DataType =
             if let ast_types::DataType::List(type_param, _list_type) = receiver_type {
                 *type_param.to_owned()
@@ -160,7 +160,7 @@ impl Library for VectorLib {
         type_parameter: Option<ast_types::DataType>,
         args: &[ast::Expr<super::Annotation>],
         state: &mut CompilerState,
-    ) -> Vec<triton_vm::instruction::LabelledInstruction> {
+    ) -> Vec<LabelledInstruction> {
         let snippet = self
             .name_to_tasm_lib_snippet(fn_name, &type_parameter, args)
             .unwrap_or_else(|| panic!("Unknown function name {fn_name}"));

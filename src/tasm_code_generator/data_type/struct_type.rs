@@ -1,8 +1,8 @@
+use crate::triton_vm::prelude::*;
+use crate::triton_vm::triton_asm;
+use crate::triton_vm::triton_instr;
+use crate::LabelledInstruction;
 use num::Zero;
-use triton_vm::instruction::LabelledInstruction;
-use triton_vm::triton_asm;
-use triton_vm::triton_instr;
-use triton_vm::BFieldElement;
 
 use crate::ast_types;
 use crate::ast_types::StructVariant;

@@ -67,11 +67,11 @@ fn main() {
 #[cfg(test)]
 mod test {
 
+    use crate::triton_vm::prelude::*;
+    use crate::triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
+
     use itertools::Itertools;
     use num::Zero;
-    use triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
-    use triton_vm::BFieldElement;
-    use triton_vm::NonDeterminism;
 
     use crate::tests_and_benchmarks::ozk::ozk_parsing;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;

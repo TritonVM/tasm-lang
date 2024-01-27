@@ -2,11 +2,11 @@ use crate::ast::{self, ArrayExpression};
 use crate::tasm_code_generator::{
     compile_expr, pop_n, write_n_words_to_memory_leaving_address, CompilerState,
 };
+use crate::triton_vm::triton_asm;
 use crate::type_checker::GetType;
+use crate::LabelledInstruction;
 use crate::{ast_types, type_checker};
 use itertools::Itertools;
-use triton_vm::instruction::LabelledInstruction;
-use triton_vm::triton_asm;
 
 pub(crate) fn compile_array_expr(
     state: &mut CompilerState,

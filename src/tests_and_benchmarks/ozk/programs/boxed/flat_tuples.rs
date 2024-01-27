@@ -1,6 +1,5 @@
-use triton_vm::Digest;
-
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
+use crate::triton_vm::prelude::*;
 
 #[derive(Clone, Copy)]
 struct TupleStructA(u128, u64, Digest);
@@ -186,10 +185,10 @@ fn main() {
 #[cfg(test)]
 mod tests {
 
+    use crate::triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
+
     use itertools::Itertools;
     use rand::random;
-    use triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
-    use triton_vm::NonDeterminism;
 
     use crate::tests_and_benchmarks::ozk::ozk_parsing;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;

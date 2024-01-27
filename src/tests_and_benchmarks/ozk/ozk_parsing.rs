@@ -1,11 +1,10 @@
 use std::fs;
 
-use triton_vm::instruction::LabelledInstruction;
-
 use crate::ast_types;
 use crate::custom_type_resolver::resolve_custom_types;
 use crate::extract_types_and_function;
 use crate::tasm_code_generator::compile_function;
+use crate::triton_vm::prelude::*;
 use crate::type_checker::annotate_fn_outer;
 use crate::StructsAndMethodsRustAst;
 

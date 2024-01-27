@@ -23,9 +23,9 @@ fn main() {
 #[cfg(test)]
 mod test {
 
+    use crate::triton_vm::prelude::*;
+
     use itertools::Itertools;
-    use triton_vm::BFieldElement;
-    use triton_vm::NonDeterminism;
 
     use crate::tests_and_benchmarks::ozk::ozk_parsing;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;

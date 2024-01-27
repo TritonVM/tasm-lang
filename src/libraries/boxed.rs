@@ -1,7 +1,7 @@
+use crate::triton_vm::triton_asm;
+use crate::LabelledInstruction;
 use num::One;
 use tasm_lib::memory::dyn_malloc::DynMalloc;
-use triton_vm::instruction::LabelledInstruction;
-use triton_vm::triton_asm;
 
 use crate::ast;
 use crate::ast_types;
@@ -99,7 +99,7 @@ impl Library for Boxed {
         type_parameter: Option<crate::ast_types::DataType>,
         _args: &[crate::ast::Expr<super::Annotation>],
         state: &mut crate::tasm_code_generator::CompilerState,
-    ) -> Vec<triton_vm::instruction::LabelledInstruction> {
+    ) -> Vec<LabelledInstruction> {
         if full_name == FUNCTION_NAME_NEW_BOX {
             let call_box_new = call_new_box(&type_parameter.unwrap(), state);
             return call_box_new;

@@ -1,9 +1,9 @@
 #![allow(clippy::manual_swap)]
 
+use crate::triton_vm::twenty_first::util_types::algebraic_hasher::AlgebraicHasher;
 use tasm_lib::Digest;
-use triton_vm::twenty_first::util_types::algebraic_hasher::AlgebraicHasher;
 
-type H = twenty_first::shared_math::tip5::Tip5;
+type H = crate::twenty_first::shared_math::tip5::Tip5;
 
 #[allow(clippy::ptr_arg)]
 #[allow(clippy::vec_init_then_push)]

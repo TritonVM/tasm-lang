@@ -1,5 +1,5 @@
+use crate::triton_vm::twenty_first::shared_math::x_field_element::XFieldElement;
 use num::One;
-use triton_vm::twenty_first::shared_math::x_field_element::XFieldElement;
 
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
@@ -49,18 +49,14 @@ fn main() {
 }
 
 mod test {
-
-    use std::default::Default;
-
-    use rand::random;
-    use triton_vm::NonDeterminism;
-
+    use super::*;
     use crate::tests_and_benchmarks::ozk::ozk_parsing;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
-
-    use super::*;
+    use crate::triton_vm::prelude::*;
+    use rand::random;
+    use std::default::Default;
 
     #[test]
     fn prelude_match_test() {

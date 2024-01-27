@@ -1,6 +1,6 @@
+use crate::triton_vm::prelude::*;
+use crate::LabelledInstruction;
 use itertools::Itertools;
-use triton_vm::instruction::LabelledInstruction;
-use triton_vm::BFieldElement;
 
 use crate::ast_types;
 

@@ -1,8 +1,8 @@
+use crate::triton_vm::prelude::*;
+use crate::triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
+use crate::triton_vm::twenty_first::shared_math::x_field_element::XFieldElement;
+
 use tasm_lib::structure::tasm_object::TasmObject;
-use triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
-use triton_vm::twenty_first::shared_math::x_field_element::XFieldElement;
-use triton_vm::BFieldElement;
-use triton_vm::Digest;
 
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
@@ -75,10 +75,10 @@ fn main() {
 #[cfg(test)]
 mod test {
 
+    use crate::triton_vm::prelude::*;
+    use crate::triton_vm::twenty_first::shared_math::other::random_elements;
     use itertools::Itertools;
     use rand::random;
-    use triton_vm::twenty_first::shared_math::other::random_elements;
-    use triton_vm::BFieldElement;
 
     use crate::tests_and_benchmarks::ozk::ozk_parsing;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;

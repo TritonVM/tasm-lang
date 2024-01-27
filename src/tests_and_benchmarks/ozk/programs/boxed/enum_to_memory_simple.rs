@@ -1,8 +1,8 @@
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
+use crate::triton_vm::prelude::*;
+use crate::twenty_first::shared_math::bfield_codec::BFieldCodec;
 use arbitrary::Arbitrary;
 use num::Zero;
-use triton_vm::BFieldElement;
-use twenty_first::shared_math::bfield_codec::BFieldCodec;
 
 #[derive(Debug, Clone, PartialEq, Eq, BFieldCodec, Arbitrary)]
 enum SimpleEnum {
@@ -113,8 +113,8 @@ mod test {
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
+
     use itertools::Itertools;
-    use triton_vm::NonDeterminism;
 
     #[test]
     fn enum_to_memory_simple_test() {

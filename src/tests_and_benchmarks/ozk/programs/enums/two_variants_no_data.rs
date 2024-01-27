@@ -38,16 +38,13 @@ fn main() {
 
 #[cfg(test)]
 mod test {
-
-    use itertools::Itertools;
-    use triton_vm::NonDeterminism;
-
+    use super::*;
     use crate::tests_and_benchmarks::ozk::ozk_parsing;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::execute_compiled_with_stack_and_ins_for_test;
-
-    use super::*;
+    use crate::triton_vm::prelude::*;
+    use itertools::Itertools;
 
     #[test]
     fn two_variants_no_data_test() {

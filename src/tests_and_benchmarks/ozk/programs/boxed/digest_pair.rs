@@ -1,6 +1,5 @@
-use triton_vm::Digest;
-
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
+use crate::triton_vm::prelude::*;
 
 fn main() {
     let a: Digest = tasm::tasm_io_read_stdin___digest();
@@ -39,10 +38,10 @@ fn main() {
 #[cfg(test)]
 mod test {
 
+    use crate::triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
+    use crate::triton_vm::twenty_first::shared_math::other::random_elements;
+
     use itertools::Itertools;
-    use triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
-    use triton_vm::twenty_first::shared_math::other::random_elements;
-    use triton_vm::NonDeterminism;
 
     use crate::tests_and_benchmarks::ozk::ozk_parsing;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;

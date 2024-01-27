@@ -13,20 +13,18 @@ use rand::SeedableRng;
 use std::collections::HashMap;
 use std::marker::PhantomData;
 use tasm_lib::structure::tasm_object::TasmObject;
-use triton_vm::twenty_first::amount::u32s::U32s;
-use triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
-use triton_vm::twenty_first::shared_math::other::log_2_floor;
-use triton_vm::twenty_first::shared_math::tip5::Digest;
-use triton_vm::twenty_first::shared_math::tip5::DIGEST_LENGTH;
-use triton_vm::twenty_first::util_types::algebraic_hasher::AlgebraicHasher;
-use triton_vm::twenty_first::util_types::algebraic_hasher::SpongeHasher;
-use triton_vm::twenty_first::util_types::merkle_tree::CpuParallel;
-use triton_vm::twenty_first::util_types::merkle_tree_maker::MerkleTreeMaker;
-use triton_vm::twenty_first::util_types::mmr::mmr_accumulator::MmrAccumulator;
-use triton_vm::twenty_first::util_types::mmr::mmr_membership_proof::MmrMembershipProof;
-use triton_vm::twenty_first::util_types::mmr::mmr_trait::Mmr;
-use triton_vm::twenty_first::util_types::mmr::shared_basic::leaf_index_to_mt_index_and_peak_index;
-use triton_vm::BFieldElement;
+use tasm_lib::triton_vm::prelude::*;
+use tasm_lib::twenty_first::amount::u32s::U32s;
+use tasm_lib::twenty_first::shared_math::other::log_2_floor;
+use tasm_lib::twenty_first::shared_math::tip5::DIGEST_LENGTH;
+use tasm_lib::twenty_first::util_types::algebraic_hasher::AlgebraicHasher;
+use tasm_lib::twenty_first::util_types::algebraic_hasher::SpongeHasher;
+use tasm_lib::twenty_first::util_types::merkle_tree::CpuParallel;
+use tasm_lib::twenty_first::util_types::merkle_tree_maker::MerkleTreeMaker;
+use tasm_lib::twenty_first::util_types::mmr::mmr_accumulator::MmrAccumulator;
+use tasm_lib::twenty_first::util_types::mmr::mmr_membership_proof::MmrMembershipProof;
+use tasm_lib::twenty_first::util_types::mmr::mmr_trait::Mmr;
+use tasm_lib::twenty_first::util_types::mmr::shared_basic::leaf_index_to_mt_index_and_peak_index;
 
 use tasm_lib::VmHasher;
 
@@ -444,7 +442,9 @@ impl TransactionKernel {
         }
 
         // compute Merkle tree and return hash
-        <CpuParallel as MerkleTreeMaker<VmHasher>>::from_digests(&mt_leafs).get_root()
+        <CpuParallel as MerkleTreeMaker<VmHasher>>::from_digests(&mt_leafs)
+            .unwrap()
+            .root()
     }
 }
 

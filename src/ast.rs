@@ -1,11 +1,7 @@
 use itertools::Itertools;
 use std::fmt::Display;
 use tasm_lib::traits::basic_snippet::BasicSnippet;
-use triton_vm::instruction::LabelledInstruction;
-use triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
-use triton_vm::twenty_first::shared_math::x_field_element::XFieldElement;
-use triton_vm::BFieldElement;
-use triton_vm::Digest;
+use tasm_lib::triton_vm::prelude::*;
 
 use crate::ast_types;
 use crate::ast_types::AbstractArgument;

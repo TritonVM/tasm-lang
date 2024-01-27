@@ -6,9 +6,7 @@ pub(crate) mod run_tests {
     use rand::random;
     use syn::parse_quote;
     use tasm_lib::memory::dyn_malloc;
-    use triton_vm::BFieldElement;
-    use triton_vm::Digest;
-    use triton_vm::NonDeterminism;
+    use tasm_lib::triton_vm::prelude::*;
 
     use crate::ast_types;
     use crate::ast_types::DataType;

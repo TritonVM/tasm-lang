@@ -3,18 +3,18 @@
 #![allow(unused_variables)]
 #![allow(clippy::vec_init_then_push)]
 
+use crate::triton_vm::prelude::*;
+use crate::triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
+use crate::triton_vm::twenty_first::util_types::algebraic_hasher::AlgebraicHasher;
+use crate::triton_vm::twenty_first::util_types::merkle_tree::CpuParallel;
+use crate::triton_vm::twenty_first::util_types::merkle_tree_maker::MerkleTreeMaker;
+
 use tasm_lib::structure::tasm_object::TasmObject;
 use tasm_lib::VmHasher as H;
-use triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
-use triton_vm::twenty_first::util_types::algebraic_hasher::AlgebraicHasher;
-use triton_vm::twenty_first::util_types::merkle_tree::CpuParallel;
-use triton_vm::twenty_first::util_types::merkle_tree_maker::MerkleTreeMaker;
-use triton_vm::BFieldElement;
-use triton_vm::Digest;
 
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
-#[derive(Clone, Debug, PartialEq, Eq, BFieldCodec, TasmObject)]
+#[derive(TasmObject, Clone, Debug, PartialEq, Eq, BFieldCodec)]
 pub(crate) struct TransactionKernel {
     pub(crate) mutator_set_hash: Digest,
 }
@@ -57,7 +57,9 @@ impl TransactionKernel {
         }
 
         // compute Merkle tree and return hash
-        return <CpuParallel as MerkleTreeMaker<H>>::from_digests(&mt_leafs).get_root();
+        return <CpuParallel as MerkleTreeMaker<H>>::from_digests(&mt_leafs)
+            .unwrap()
+            .root();
     }
 }
 
@@ -158,6 +160,18 @@ mod test {
     use std::collections::HashMap;
     use std::marker::PhantomData;
 
+    use crate::triton_vm::prelude::*;
+    use crate::triton_vm::twenty_first::amount::u32s::U32s;
+    use crate::triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
+    use crate::triton_vm::twenty_first::shared_math::other::log_2_floor;
+    use crate::triton_vm::twenty_first::shared_math::tip5::Digest;
+    use crate::triton_vm::twenty_first::shared_math::tip5::DIGEST_LENGTH;
+    use crate::triton_vm::twenty_first::util_types::algebraic_hasher::AlgebraicHasher;
+    use crate::triton_vm::twenty_first::util_types::algebraic_hasher::SpongeHasher;
+    use crate::triton_vm::twenty_first::util_types::mmr::mmr_accumulator::MmrAccumulator;
+    use crate::triton_vm::twenty_first::util_types::mmr::mmr_membership_proof::MmrMembershipProof;
+    use crate::triton_vm::twenty_first::util_types::mmr::mmr_trait::Mmr;
+    use crate::triton_vm::twenty_first::util_types::mmr::shared_basic::leaf_index_to_mt_index_and_peak_index;
     use anyhow::bail;
     use itertools::Itertools;
     use num::One;
@@ -168,18 +182,6 @@ mod test {
     use rand::SeedableRng;
     use tasm_lib::structure::tasm_object::TasmObject;
     use tasm_lib::VmHasher;
-    use triton_vm::twenty_first::amount::u32s::U32s;
-    use triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
-    use triton_vm::twenty_first::shared_math::other::log_2_floor;
-    use triton_vm::twenty_first::shared_math::tip5::Digest;
-    use triton_vm::twenty_first::shared_math::tip5::DIGEST_LENGTH;
-    use triton_vm::twenty_first::util_types::algebraic_hasher::AlgebraicHasher;
-    use triton_vm::twenty_first::util_types::algebraic_hasher::SpongeHasher;
-    use triton_vm::twenty_first::util_types::mmr::mmr_accumulator::MmrAccumulator;
-    use triton_vm::twenty_first::util_types::mmr::mmr_membership_proof::MmrMembershipProof;
-    use triton_vm::twenty_first::util_types::mmr::mmr_trait::Mmr;
-    use triton_vm::twenty_first::util_types::mmr::shared_basic::leaf_index_to_mt_index_and_peak_index;
-    use triton_vm::BFieldElement;
 
     use crate::tests_and_benchmarks::ozk::ozk_parsing;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;

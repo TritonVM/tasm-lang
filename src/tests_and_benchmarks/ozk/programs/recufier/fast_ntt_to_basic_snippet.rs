@@ -1,9 +1,9 @@
 #![allow(clippy::manual_swap)]
 
+use crate::triton_vm::prelude::*;
+use crate::triton_vm::twenty_first::shared_math::traits::ModPowU32;
+use crate::triton_vm::twenty_first::shared_math::x_field_element::XFieldElement;
 use num::One;
-use triton_vm::twenty_first::shared_math::traits::ModPowU32;
-use triton_vm::twenty_first::shared_math::x_field_element::XFieldElement;
-use triton_vm::BFieldElement;
 
 #[allow(clippy::ptr_arg)]
 #[allow(clippy::vec_init_then_push)]
@@ -78,9 +78,9 @@ fn xfe_ntt(x: &mut Vec<XFieldElement>, omega: BFieldElement) {
 mod test {
     use std::collections::HashMap;
 
-    use triton_vm::BFieldElement;
-    use triton_vm::NonDeterminism;
-    use twenty_first::shared_math::x_field_element::XFieldElement;
+    use crate::triton_vm::prelude::*;
+
+    use crate::twenty_first::shared_math::x_field_element::XFieldElement;
 
     use crate::ast_types::ListType;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::*;

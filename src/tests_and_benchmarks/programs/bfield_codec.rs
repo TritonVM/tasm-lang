@@ -2,12 +2,11 @@
 mod run_tests {
     use std::vec;
 
+    use crate::triton_vm::twenty_first::shared_math::other::random_elements;
     use itertools::Itertools;
     use rand::random;
     use syn::parse_quote;
-    use triton_vm::twenty_first::shared_math::other::random_elements;
-    use triton_vm::BFieldElement;
-    use triton_vm::Digest;
+    use tasm_lib::triton_vm::prelude::*;
 
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 

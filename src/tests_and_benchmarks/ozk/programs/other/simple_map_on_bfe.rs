@@ -1,5 +1,5 @@
+use crate::triton_vm::prelude::*;
 use itertools::Itertools;
-use triton_vm::BFieldElement;
 
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
@@ -30,9 +30,9 @@ fn main() {
 #[cfg(test)]
 mod test {
 
+    use crate::triton_vm::prelude::*;
+
     use itertools::Itertools;
-    use triton_vm::BFieldElement;
-    use triton_vm::NonDeterminism;
 
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
@@ -74,9 +74,8 @@ mod test {
 mod benches {
     use std::collections::HashMap;
 
-    use triton_vm::twenty_first::shared_math::other::random_elements;
-    use triton_vm::BFieldElement;
-    use triton_vm::NonDeterminism;
+    use crate::triton_vm::prelude::*;
+    use crate::triton_vm::twenty_first::shared_math::other::random_elements;
 
     use crate::tests_and_benchmarks::benchmarks::execute_and_write_benchmark;
     use crate::tests_and_benchmarks::benchmarks::BenchmarkInput;

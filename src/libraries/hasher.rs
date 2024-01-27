@@ -1,8 +1,7 @@
+use crate::triton_vm::prelude::*;
+use crate::triton_vm::twenty_first::shared_math::tip5::DIGEST_LENGTH;
+use crate::LabelledInstruction;
 use tasm_lib::Digest;
-use triton_vm::instruction::LabelledInstruction;
-use triton_vm::triton_asm;
-use triton_vm::twenty_first::shared_math::tip5::DIGEST_LENGTH;
-use triton_vm::BFieldElement;
 
 use crate::ast;
 use crate::ast_types;
@@ -76,7 +75,7 @@ impl Library for HasherLib {
         _receiver_type: &ast_types::DataType,
         _args: &[ast::Expr<super::Annotation>],
         _state: &mut CompilerState,
-    ) -> Vec<triton_vm::instruction::LabelledInstruction> {
+    ) -> Vec<LabelledInstruction> {
         panic!("HasherLib does not contain any methods")
     }
 
@@ -86,7 +85,7 @@ impl Library for HasherLib {
         _type_parameter: Option<ast_types::DataType>,
         _args: &[ast::Expr<super::Annotation>],
         state: &mut CompilerState,
-    ) -> Vec<triton_vm::instruction::LabelledInstruction> {
+    ) -> Vec<LabelledInstruction> {
         if fn_name == HASH_PAIR_FUNCTION_NAME {
             let hash_pair: SubRoutine = get_hash_pair_function().try_into().unwrap();
             let hash_pair_label = hash_pair.get_label();

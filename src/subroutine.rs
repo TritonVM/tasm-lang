@@ -2,9 +2,7 @@ use std::fmt::Display;
 
 use anyhow::bail;
 use itertools::Itertools;
-use triton_vm::instruction::LabelledInstruction;
-use triton_vm::triton_asm;
-use triton_vm::triton_instr;
+use tasm_lib::triton_vm::prelude::*;
 
 use crate::libraries::LibraryFunction;
 

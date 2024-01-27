@@ -1,14 +1,14 @@
 use std::panic::catch_unwind;
 
+use crate::triton_vm::error::InstructionError;
+use crate::triton_vm::prelude::*;
+
 use proptest::collection::vec;
 use proptest::prelude::*;
 use proptest_arbitrary_interop::arb;
 use tasm_lib::Digest;
 use tasm_lib::DIGEST_LENGTH;
 use test_strategy::proptest;
-use triton_vm::error::InstructionError;
-use triton_vm::BFieldElement;
-use triton_vm::NonDeterminism;
 
 use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;

@@ -1,9 +1,8 @@
 #![allow(clippy::explicit_auto_deref)]
 
-use triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
-use triton_vm::twenty_first::util_types::algebraic_hasher::AlgebraicHasher;
-use triton_vm::BFieldElement;
-use triton_vm::Digest;
+use crate::triton_vm::prelude::*;
+use crate::triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
+use crate::triton_vm::twenty_first::util_types::algebraic_hasher::AlgebraicHasher;
 
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
@@ -36,10 +35,10 @@ fn main() {
 #[cfg(test)]
 mod test {
 
-    use triton_vm::twenty_first::shared_math::other::random_elements;
-    use triton_vm::twenty_first::util_types::merkle_tree::CpuParallel;
-    use triton_vm::twenty_first::util_types::merkle_tree::MerkleTree;
-    use triton_vm::twenty_first::util_types::merkle_tree_maker::MerkleTreeMaker;
+    use crate::triton_vm::twenty_first::shared_math::other::random_elements;
+    use crate::triton_vm::twenty_first::util_types::merkle_tree::CpuParallel;
+    use crate::triton_vm::twenty_first::util_types::merkle_tree::MerkleTree;
+    use crate::triton_vm::twenty_first::util_types::merkle_tree_maker::MerkleTreeMaker;
 
     use crate::ast_types;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
@@ -57,8 +56,8 @@ mod test {
             let stdin = vec![];
             let digest_list = random_elements(input_length);
             let non_determinism = init_memory_from(&digest_list, 2000u64.into());
-            let merkle_tree: MerkleTree<H> = CpuParallel::from_digests(&digest_list);
-            let expected_output = merkle_tree.get_root().values().to_vec();
+            let merkle_tree: MerkleTree<H> = CpuParallel::from_digests(&digest_list).unwrap();
+            let expected_output = merkle_tree.root().values().to_vec();
             let native_output =
                 rust_shadows::wrap_main_with_io(&main)(stdin.clone(), non_determinism.clone());
             assert_eq!(native_output, expected_output);
@@ -82,7 +81,7 @@ mod test {
 }
 
 mod benches {
-    use triton_vm::twenty_first::shared_math::other::random_elements;
+    use crate::triton_vm::twenty_first::shared_math::other::random_elements;
 
     use crate::tests_and_benchmarks::benchmarks::execute_and_write_benchmark;
     use crate::tests_and_benchmarks::benchmarks::profile;

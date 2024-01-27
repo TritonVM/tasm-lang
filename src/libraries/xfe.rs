@@ -1,10 +1,10 @@
+use crate::triton_vm::prelude::*;
+use crate::triton_vm::triton_asm;
+use crate::triton_vm::twenty_first::shared_math::x_field_element::XFieldElement;
+use crate::triton_vm::twenty_first::shared_math::x_field_element::EXTENSION_DEGREE;
 use itertools::Itertools;
 use num::One;
 use num::Zero;
-use triton_vm::triton_asm;
-use triton_vm::twenty_first::shared_math::x_field_element::XFieldElement;
-use triton_vm::twenty_first::shared_math::x_field_element::EXTENSION_DEGREE;
-use triton_vm::BFieldElement;
 
 use crate::ast;
 use crate::ast_types;
@@ -69,7 +69,7 @@ impl Library for XfeLibrary {
         receiver_type: &ast_types::DataType,
         _args: &[ast::Expr<super::Annotation>],
         _state: &mut crate::tasm_code_generator::CompilerState,
-    ) -> Vec<triton_vm::instruction::LabelledInstruction> {
+    ) -> Vec<LabelledInstruction> {
         if *receiver_type == ast_types::DataType::Xfe && method_name == UNLIFT_NAME {
             get_xfe_unlift_method().body
         } else {
@@ -83,7 +83,7 @@ impl Library for XfeLibrary {
         _type_parameter: Option<ast_types::DataType>,
         _args: &[ast::Expr<super::Annotation>],
         _state: &mut crate::tasm_code_generator::CompilerState,
-    ) -> Vec<triton_vm::instruction::LabelledInstruction> {
+    ) -> Vec<LabelledInstruction> {
         panic!("No functions implemented for XFE library");
     }
 

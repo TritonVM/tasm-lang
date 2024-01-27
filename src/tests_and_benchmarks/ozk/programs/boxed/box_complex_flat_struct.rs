@@ -1,7 +1,7 @@
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
+use crate::triton_vm::prelude::*;
+use crate::twenty_first::shared_math::{bfield_codec::BFieldCodec, x_field_element::XFieldElement};
 use tasm_lib::Digest;
-use triton_vm::BFieldElement;
-use twenty_first::shared_math::{bfield_codec::BFieldCodec, x_field_element::XFieldElement};
 
 #[derive(Debug, Clone, PartialEq, Eq, BFieldCodec)]
 struct WithListFields {
@@ -71,8 +71,8 @@ mod test {
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::TritonVMTestCase;
-    use triton_vm::NonDeterminism;
-    use twenty_first::shared_math::other::random_elements;
+
+    use crate::twenty_first::shared_math::other::random_elements;
 
     #[test]
     fn box_complex_flat_struct_test() {

@@ -1,15 +1,14 @@
 use std::collections::HashMap;
 use std::str::FromStr;
 
+use crate::triton_vm::instruction;
+use crate::triton_vm::op_stack::NumberOfWords;
+use crate::triton_vm::prelude::*;
+use crate::triton_vm::triton_asm;
+use crate::LabelledInstruction;
 use chrono::Local;
 use itertools::Itertools;
 use tasm_lib::library::Library as SnippetState;
-use triton_vm::instruction;
-use triton_vm::instruction::LabelledInstruction;
-use triton_vm::op_stack::NumberOfWords;
-use triton_vm::triton_asm;
-use triton_vm::BFieldElement;
-use triton_vm::Program;
 
 use crate::ast;
 use crate::ast_types;
@@ -274,7 +273,7 @@ impl OuterFunctionTasmCode {
 
         format!(
             "
-            fn code(&self, library: &mut Library) -> Vec<triton_vm::instruction::LabelledInstruction> {{
+            fn code(&self, library: &mut Library) -> Vec<LabelledInstruction> {{
                 let entrypoint = self.entrypoint();
                 {import_snippet_statements}
                 {memory_spill_address_declarations}
@@ -313,7 +312,7 @@ impl OuterFunctionTasmCode {
             "use crate::snippet::BasicSnippet;
              use crate::snippet::DataType;
              use crate::Library;
-             use triton_vm::triton_asm;
+             use crate::triton_vm::triton_asm;
 
 
              pub(crate) struct {snippet_struct_name};

@@ -1,10 +1,10 @@
 #![allow(clippy::manual_swap)]
 
+use crate::triton_vm::prelude::*;
+use crate::triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
+use crate::triton_vm::twenty_first::shared_math::traits::ModPowU32;
+use crate::triton_vm::twenty_first::shared_math::x_field_element::XFieldElement;
 use num::One;
-use triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
-use triton_vm::twenty_first::shared_math::traits::ModPowU32;
-use triton_vm::twenty_first::shared_math::x_field_element::XFieldElement;
-use triton_vm::BFieldElement;
 
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
@@ -136,20 +136,16 @@ fn main() {
 
 #[cfg(test)]
 mod test {
-
-    use itertools::Itertools;
-    use triton_vm::twenty_first::shared_math::ntt;
-    use triton_vm::twenty_first::shared_math::other::log_2_floor;
-    use triton_vm::twenty_first::shared_math::other::random_elements;
-    use triton_vm::twenty_first::shared_math::traits::PrimitiveRootOfUnity;
-    use triton_vm::BFieldElement;
-
+    use super::*;
     use crate::ast_types;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
-
-    use super::*;
+    use crate::triton_vm::twenty_first::shared_math::ntt;
+    use crate::triton_vm::twenty_first::shared_math::other::log_2_floor;
+    use crate::triton_vm::twenty_first::shared_math::other::random_elements;
+    use crate::triton_vm::twenty_first::shared_math::traits::PrimitiveRootOfUnity;
+    use itertools::Itertools;
 
     #[test]
     fn fast_xfe_ntt_test() {
@@ -200,18 +196,15 @@ mod test {
 }
 
 mod benches {
-    use triton_vm::twenty_first::shared_math::other::random_elements;
-    use triton_vm::twenty_first::shared_math::traits::PrimitiveRootOfUnity;
-    use triton_vm::BFieldElement;
-
     use crate::tests_and_benchmarks::benchmarks::execute_and_write_benchmark;
     use crate::tests_and_benchmarks::benchmarks::profile;
     use crate::tests_and_benchmarks::benchmarks::BenchmarkInput;
     use crate::tests_and_benchmarks::ozk::ozk_parsing;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
-
-    use super::*;
+    use crate::triton_vm::prelude::*;
+    use crate::triton_vm::twenty_first::shared_math::other::random_elements;
+    use crate::triton_vm::twenty_first::shared_math::traits::PrimitiveRootOfUnity;
 
     #[test]
     fn fast_ntt_bench() {

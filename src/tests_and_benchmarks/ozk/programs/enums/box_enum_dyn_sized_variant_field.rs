@@ -1,4 +1,4 @@
-use triton_vm::BFieldElement;
+use crate::triton_vm::prelude::*;
 
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
@@ -33,8 +33,8 @@ mod test {
     use super::*;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::test_helpers::shared_test::TritonVMTestCase;
+
     use rand::random;
-    use triton_vm::NonDeterminism;
 
     #[test]
     fn box_enum_dyn_sized_variant_field_test() {

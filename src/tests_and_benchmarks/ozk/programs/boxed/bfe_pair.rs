@@ -1,4 +1,4 @@
-use triton_vm::BFieldElement;
+use crate::triton_vm::prelude::*;
 
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
@@ -25,8 +25,8 @@ mod test {
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
+
     use rand::random;
-    use triton_vm::NonDeterminism;
 
     #[test]
     fn boxed_bfe_pair_test() {

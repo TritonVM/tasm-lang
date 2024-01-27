@@ -1,7 +1,6 @@
-use triton_vm::twenty_first::shared_math::x_field_element::XFieldElement;
-use triton_vm::Digest;
-
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
+use crate::triton_vm::prelude::*;
+use crate::triton_vm::twenty_first::shared_math::x_field_element::XFieldElement;
 
 #[allow(clippy::unnecessary_literal_unwrap)]
 #[allow(clippy::single_match)]
@@ -89,7 +88,6 @@ mod test {
     use std::default::Default;
 
     use rand::random;
-    use triton_vm::NonDeterminism;
 
     use crate::tests_and_benchmarks::ozk::ozk_parsing;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;

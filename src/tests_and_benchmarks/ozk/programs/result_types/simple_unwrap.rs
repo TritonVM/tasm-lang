@@ -1,6 +1,6 @@
+use crate::triton_vm::prelude::*;
+use crate::triton_vm::twenty_first::shared_math::x_field_element::XFieldElement;
 use tasm_lib::Digest;
-use triton_vm::twenty_first::shared_math::x_field_element::XFieldElement;
-use triton_vm::BFieldElement;
 
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
@@ -28,9 +28,9 @@ mod test {
 
     use std::default::Default;
 
+    use crate::triton_vm::twenty_first::shared_math::other::random_elements;
+
     use itertools::Itertools;
-    use triton_vm::twenty_first::shared_math::other::random_elements;
-    use triton_vm::NonDeterminism;
 
     use crate::tests_and_benchmarks::ozk::ozk_parsing;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;

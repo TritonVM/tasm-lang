@@ -2,9 +2,9 @@ use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 use crate::tests_and_benchmarks::ozk::rust_shadows;
 use crate::tests_and_benchmarks::test_helpers::shared_test::TritonVMTestCase;
-use triton_vm::NonDeterminism;
-use twenty_first::shared_math::other::random_elements;
-use twenty_first::shared_math::x_field_element::XFieldElement;
+use crate::triton_vm::prelude::*;
+use crate::twenty_first::shared_math::other::random_elements;
+use crate::twenty_first::shared_math::x_field_element::XFieldElement;
 
 fn call_constructor_once() {
     fn construct_xfe_4_array(xfe: XFieldElement) -> [XFieldElement; 4] {

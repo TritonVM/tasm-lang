@@ -1,6 +1,6 @@
+use crate::triton_vm::triton_asm;
+use crate::LabelledInstruction;
 use tasm_lib::memory::dyn_malloc;
-use triton_vm::instruction::LabelledInstruction;
-use triton_vm::triton_asm;
 
 use crate::ast;
 use crate::ast_types;
@@ -144,7 +144,7 @@ impl Library for BFieldCodecLib {
         receiver_type: &crate::ast_types::DataType,
         _args: &[crate::ast::Expr<super::Annotation>],
         state: &mut crate::tasm_code_generator::CompilerState,
-    ) -> Vec<triton_vm::instruction::LabelledInstruction> {
+    ) -> Vec<LabelledInstruction> {
         if !(method_name == ENCODE_METHOD_NAME
             && receiver_type.bfield_codec_static_length().is_some())
         {
@@ -167,7 +167,7 @@ impl Library for BFieldCodecLib {
         _type_parameter: Option<crate::ast_types::DataType>,
         _args: &[crate::ast::Expr<super::Annotation>],
         _state: &mut crate::tasm_code_generator::CompilerState,
-    ) -> Vec<triton_vm::instruction::LabelledInstruction> {
+    ) -> Vec<LabelledInstruction> {
         todo!()
     }
 

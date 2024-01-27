@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use itertools::Itertools;
 use num::One;
-use triton_vm::instruction::LabelledInstruction;
+use tasm_lib::triton_vm::prelude::*;
 
 use crate::ast;
 use crate::ast_types;

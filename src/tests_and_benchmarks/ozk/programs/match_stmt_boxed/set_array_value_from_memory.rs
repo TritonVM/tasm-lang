@@ -1,8 +1,8 @@
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
+use crate::triton_vm::prelude::*;
+use crate::twenty_first::shared_math::bfield_codec::BFieldCodec;
+use crate::twenty_first::shared_math::x_field_element::XFieldElement;
 use num::Zero;
-use triton_vm::BFieldElement;
-use twenty_first::shared_math::bfield_codec::BFieldCodec;
-use twenty_first::shared_math::x_field_element::XFieldElement;
 
 #[derive(BFieldCodec, Clone, Debug)]
 enum EnumWithArrayData {

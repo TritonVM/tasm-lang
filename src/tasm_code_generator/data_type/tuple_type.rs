@@ -1,7 +1,7 @@
 use crate::ast_types::Tuple;
 use crate::tasm_code_generator::{move_top_stack_value_to_memory, CompilerState};
-use triton_vm::instruction::LabelledInstruction;
-use triton_vm::triton_asm;
+use crate::triton_vm::triton_asm;
+use crate::LabelledInstruction;
 
 impl Tuple {
     /// ```text

@@ -11,7 +11,9 @@ use syn::ItemEnum;
 use syn::ItemImpl;
 use syn::ItemStruct;
 use syn::UseTree;
-use triton_vm::instruction::LabelledInstruction;
+pub use tasm_lib;
+use tasm_lib::prelude::*;
+use tasm_lib::triton_vm::prelude::*;
 
 // TODO: The following import is necessary until `tasm-lib` branch `prelude` is incorporated there.
 #[allow(clippy::single_component_path_imports)]

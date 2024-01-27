@@ -24,7 +24,7 @@ mod test {
     use crate::tests_and_benchmarks::ozk::ozk_parsing;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
-    use triton_vm::NonDeterminism;
+    use crate::triton_vm::prelude::*;
 
     #[test]
     fn methods_on_nested_structs_simple_test() {

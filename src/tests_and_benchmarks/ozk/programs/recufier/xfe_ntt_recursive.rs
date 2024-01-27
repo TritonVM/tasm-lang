@@ -1,8 +1,8 @@
+use crate::triton_vm::prelude::*;
+use crate::triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
+use crate::triton_vm::twenty_first::shared_math::traits::ModPowU32;
+use crate::triton_vm::twenty_first::shared_math::x_field_element::XFieldElement;
 use num::One;
-use triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
-use triton_vm::twenty_first::shared_math::traits::ModPowU32;
-use triton_vm::twenty_first::shared_math::x_field_element::XFieldElement;
-use triton_vm::BFieldElement;
 
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
@@ -137,12 +137,12 @@ fn main() {
 #[cfg(test)]
 mod test {
 
+    use crate::triton_vm::prelude::*;
+    use crate::triton_vm::twenty_first::shared_math::ntt;
+    use crate::triton_vm::twenty_first::shared_math::other::log_2_floor;
+    use crate::triton_vm::twenty_first::shared_math::other::random_elements;
+    use crate::triton_vm::twenty_first::shared_math::traits::PrimitiveRootOfUnity;
     use itertools::Itertools;
-    use triton_vm::twenty_first::shared_math::ntt;
-    use triton_vm::twenty_first::shared_math::other::log_2_floor;
-    use triton_vm::twenty_first::shared_math::other::random_elements;
-    use triton_vm::twenty_first::shared_math::traits::PrimitiveRootOfUnity;
-    use triton_vm::BFieldElement;
 
     use crate::ast_types;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;

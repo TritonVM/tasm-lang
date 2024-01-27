@@ -11,13 +11,9 @@ use std::collections::HashMap;
 use std::collections::HashSet;
 use std::fmt::Display;
 use tasm_lib::library::Library as SnippetState;
-use tasm_lib::traits::basic_snippet::BasicSnippet;
-use triton_vm::instruction::LabelledInstruction;
-use triton_vm::triton_asm;
-use triton_vm::triton_instr;
-use triton_vm::twenty_first::amount::u32s::U32s;
-use triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
-use triton_vm::BFieldElement;
+use tasm_lib::prelude::*;
+use tasm_lib::triton_vm::prelude::*;
+use tasm_lib::triton_vm::twenty_first::prelude::*;
 
 use self::function_state::FunctionState;
 use self::function_state::VarAddr;

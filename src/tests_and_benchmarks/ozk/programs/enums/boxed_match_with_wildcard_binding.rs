@@ -1,6 +1,5 @@
-use triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
-use triton_vm::BFieldElement;
-use triton_vm::Digest;
+use crate::triton_vm::prelude::*;
+use crate::triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
 
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 

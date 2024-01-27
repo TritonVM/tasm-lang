@@ -1,5 +1,5 @@
 use crate::subroutine::SubRoutine;
-use triton_vm::triton_asm;
+use crate::triton_vm::triton_asm;
 
 #[derive(Clone, Debug)]
 pub(crate) struct InnerFunctionTasmCode {
