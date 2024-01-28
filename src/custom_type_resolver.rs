@@ -288,6 +288,7 @@ impl DataType {
             DataType::Xfe => false,
             DataType::Digest => false,
             DataType::VoidPointer => false,
+            DataType::SpongeState => false,
         }
     }
 }
@@ -358,6 +359,7 @@ impl CustomTypeResolution for DataType {
             Xfe => (),
             Digest => (),
             VoidPointer => (),
+            SpongeState => (),
         }
     }
 }

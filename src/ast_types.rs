@@ -44,6 +44,7 @@ pub(crate) enum DataType {
     Function(Box<FunctionType>),
     Boxed(Box<DataType>),
     Unresolved(String),
+    SpongeState,
 }
 
 impl DataType {
@@ -67,6 +68,7 @@ impl DataType {
             DataType::Enum(enum_type) => enum_type.is_copy,
             DataType::Unresolved(_) => false,
             DataType::Boxed(_) => false,
+            DataType::SpongeState => todo!(),
         }
     }
 
@@ -98,6 +100,7 @@ impl DataType {
             Enum(enum_type) => enum_type.label_friendly_name(),
             Unresolved(name) => name.to_string(),
             Boxed(ty) => format!("boxed_L{}R", ty.label_friendly_name()),
+            SpongeState => "vm_sponge_state".to_owned(),
         }
     }
 
@@ -209,6 +212,7 @@ impl DataType {
             DataType::VoidPointer => panic!(),
             DataType::Function(_) => panic!(),
             DataType::Unresolved(_) => panic!(),
+            DataType::SpongeState => panic!(),
         }
     }
 
@@ -233,11 +237,12 @@ impl DataType {
             Self::Array(_) => 1,
             Self::Tuple(tuple_type) => tuple_type.stack_size(),
             Self::VoidPointer => 1,
-            Self::Function(_) => panic!(),
             Self::Unresolved(name) => panic!("cannot get size of unresolved type {name}"),
             Self::Struct(inner_type) => inner_type.stack_size(),
             Self::Enum(enum_type) => enum_type.stack_size(),
             Self::Boxed(_inner) => 1,
+            Self::Function(_) => 0, // Exists as instructions only
+            Self::SpongeState => 0, // Contained in VM state
         }
     }
 
@@ -315,6 +320,7 @@ impl TryFrom<DataType> for tasm_lib::data_type::DataType {
                 DataType::Unresolved(_) => todo!(),
                 _ => Ok(tasm_lib::data_type::DataType::VoidPointer),
             },
+            DataType::SpongeState => panic!(),
         }
     }
 }
@@ -334,6 +340,7 @@ impl FromStr for DataType {
             "BFieldElement" => Ok(DataType::Bfe),
             "XFieldElement" => Ok(DataType::Xfe),
             "Digest" => Ok(DataType::Digest),
+            "Tip5State" => Ok(DataType::SpongeState),
             ty => bail!("Unsupported type {}", ty),
         }
     }
@@ -366,6 +373,7 @@ impl Display for DataType {
             },
             Unresolved(name) => name.to_string(),
             Boxed(ty) => format!("Boxed<{ty}>"),
+            SpongeState => "vm_sponge_state".to_owned(),
         };
         write!(f, "{str}",)
     }

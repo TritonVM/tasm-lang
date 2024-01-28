@@ -1,3 +1,5 @@
+use self::sponge_hasher::SPONGE_HASHER_INDICATOR;
+
 use super::Library;
 use crate::ast;
 use crate::ast_types;
@@ -27,8 +29,9 @@ pub(crate) struct HasherLib {
 
 impl Library for HasherLib {
     fn get_function_name(&self, full_name: &str) -> Option<String> {
-        // Any function call that starts with `H::` is assumed to exist in this library
-        if full_name.starts_with(HASHER_LIB_INDICATOR) {
+        if full_name.starts_with(HASHER_LIB_INDICATOR)
+            || full_name.starts_with(SPONGE_HASHER_INDICATOR)
+        {
             return Some(full_name.to_owned());
         }
 
@@ -67,6 +70,10 @@ impl Library for HasherLib {
             return self.hash_varlen_signature();
         }
 
+        if sponge_hasher::function_names().contains(&fn_name) {
+            return sponge_hasher::function_signature(fn_name);
+        }
+
         panic!("Unknown function {fn_name}");
     }
 
@@ -97,6 +104,10 @@ impl Library for HasherLib {
 
         if fn_name == HASH_VARLEN_FUNCTION_NAME {
             return self.hash_varlen_code(state);
+        }
+
+        if sponge_hasher::function_names().contains(&fn_name) {
+            return sponge_hasher::call_function(fn_name);
         }
 
         panic!("Unknown function {fn_name}");

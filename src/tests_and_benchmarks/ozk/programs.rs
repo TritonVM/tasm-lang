@@ -10,5 +10,6 @@ mod other;
 mod project_euler;
 pub(crate) mod recufier;
 mod result_types;
+mod sponge_hasher;
 mod structs;
 mod vectors;

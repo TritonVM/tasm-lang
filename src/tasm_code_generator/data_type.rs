@@ -69,6 +69,7 @@ impl ast_types::DataType {
             ast_types::DataType::VoidPointer => todo!(),
             ast_types::DataType::Function(_) => todo!(),
             ast_types::DataType::Unresolved(_) => todo!(),
+            ast_types::DataType::SpongeState => panic!(),
         }
     }
 
@@ -176,6 +177,7 @@ impl ast_types::DataType {
             ast_types::DataType::VoidPointer => todo!(),
             ast_types::DataType::Function(_) => todo!(),
             ast_types::DataType::Unresolved(_) => todo!(),
+            ast_types::DataType::SpongeState => todo!(),
         }
     }
 
@@ -207,6 +209,7 @@ impl ast_types::DataType {
             ast_types::DataType::VoidPointer => todo!(),
             ast_types::DataType::Function(_) => todo!(),
             ast_types::DataType::Unresolved(_) => todo!(),
+            ast_types::DataType::SpongeState => panic!(),
         }
     }
 
@@ -283,6 +286,7 @@ impl ast_types::DataType {
             Boxed(_) => todo!("Comparison of MemPointer not supported yet"),
             Unresolved(name) => panic!("Cannot compare unresolved type {name}"),
             Enum(_) => todo!("Equality for enums not yet implemented"),
+            SpongeState => panic!("Cannot compare two sponge states, as the VM only handles one"),
         }
     }
 }
