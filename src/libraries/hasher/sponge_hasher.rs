@@ -8,8 +8,8 @@ use crate::tasm_code_generator::CompilerState;
 
 pub(super) const SPONGE_HASHER_INDICATOR: &str = "Tip5::";
 const INIT_NAME: &str = "Tip5::init";
-const ABSORB_NAME: &str = "Tip5::absorb";
-const SQUEEZE_NAME: &str = "Tip5::squeeze";
+const ABSORB_NAME: &str = "Tip5::absorb_once";
+const SQUEEZE_NAME: &str = "Tip5::squeeze_once";
 const PAD_AND_ABSORB_REPEATEDLY_NAME: &str = "Tip5::pad_and_absorb_all";
 
 pub(super) fn function_names() -> Vec<&'static str> {

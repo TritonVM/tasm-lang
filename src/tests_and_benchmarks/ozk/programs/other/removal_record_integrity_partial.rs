@@ -160,12 +160,16 @@ mod test {
     use std::collections::HashMap;
     use std::marker::PhantomData;
 
-    use crate::triton_vm::prelude::*;
+    use super::*;
+    use crate::tests_and_benchmarks::ozk::ozk_parsing;
+    use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
+    use crate::tests_and_benchmarks::ozk::rust_shadows;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::execute_compiled_with_stack_and_ins_for_test;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::init_memory_from;
     use crate::triton_vm::twenty_first::amount::u32s::U32s;
     use crate::triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
     use crate::triton_vm::twenty_first::shared_math::other::log_2_floor;
     use crate::triton_vm::twenty_first::shared_math::tip5::Digest;
-    use crate::triton_vm::twenty_first::shared_math::tip5::DIGEST_LENGTH;
     use crate::triton_vm::twenty_first::util_types::algebraic_hasher::AlgebraicHasher;
     use crate::triton_vm::twenty_first::util_types::algebraic_hasher::SpongeHasher;
     use crate::triton_vm::twenty_first::util_types::mmr::mmr_accumulator::MmrAccumulator;
@@ -174,22 +178,12 @@ mod test {
     use crate::triton_vm::twenty_first::util_types::mmr::shared_basic::leaf_index_to_mt_index_and_peak_index;
     use anyhow::bail;
     use itertools::Itertools;
-    use num::One;
-    use num::Zero;
     use rand::rngs::StdRng;
     use rand::Rng;
     use rand::RngCore;
     use rand::SeedableRng;
     use tasm_lib::structure::tasm_object::TasmObject;
     use tasm_lib::VmHasher;
-
-    use crate::tests_and_benchmarks::ozk::ozk_parsing;
-    use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
-    use crate::tests_and_benchmarks::ozk::rust_shadows;
-    use crate::tests_and_benchmarks::test_helpers::shared_test::execute_compiled_with_stack_and_ins_for_test;
-    use crate::tests_and_benchmarks::test_helpers::shared_test::init_memory_from;
-
-    use super::*;
 
     pub(crate) const NATIVE_COIN_TYPESCRIPT_DIGEST: Digest = Digest::new([
         BFieldElement::new(4843866011885844809),
@@ -810,22 +804,11 @@ mod test {
             sender_randomness.encode(),
             receiver_preimage.encode(),
             leaf_index_bfes,
-            // Pad according to spec
-            vec![
-                BFieldElement::one(),
-                BFieldElement::zero(),
-                BFieldElement::zero(),
-            ],
         ]
         .concat();
-        assert_eq!(
-            input.len() % DIGEST_LENGTH,
-            0,
-            "Input to sponge must be a multiple digest length"
-        );
 
         let mut sponge = <VmHasher as SpongeHasher>::init();
-        VmHasher::absorb_repeatedly(&mut sponge, input.iter());
+        VmHasher::pad_and_absorb_all(&mut sponge, &input);
         VmHasher::sample_indices(&mut sponge, WINDOW_SIZE, NUM_TRIALS as usize)
             .into_iter()
             .map(|sample_index| sample_index as u128 + batch_offset)

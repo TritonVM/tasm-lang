@@ -68,7 +68,7 @@ fn initialized_sponge_behaves_correctly_deep_in_stack() {
     let _j: u128 = 1000;
     tasm::tasm_io_write_to_stdout___u128(b);
     tasm::tasm_io_write_to_stdout___u128(a);
-    Tip5::absorb(&mut sponge, &preimage);
+    Tip5::absorb_once(&mut sponge, &preimage);
 
     return;
 }

@@ -16,8 +16,8 @@ fn absorb_and_squeeze() {
         }
     }
 
-    Tip5::absorb(&mut sponge, &preimage);
-    let squeezed: [BFieldElement; 10] = Tip5::squeeze(&mut sponge);
+    Tip5::absorb_once(&mut sponge, &preimage);
+    let squeezed: [BFieldElement; 10] = Tip5::squeeze_once(&mut sponge);
     {
         let mut i: usize = 0;
         while i < 10 {

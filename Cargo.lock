@@ -506,7 +506,7 @@ dependencies = [
 [[package]]
 name = "derive_tasm_object"
 version = "0.1.0"
-source = "git+https://github.com/TritonVM/tasm-lib.git?rev=05a2a984#05a2a98455e8e84c624d301f3bdec45cda7eb738"
+source = "git+https://github.com/TritonVM/tasm-lib.git?branch=sponge-hasher-trait#ce89dfb40ae14b09864d368ee2baead03949f79e"
 dependencies = [
  "quote",
  "syn 2.0.48",
@@ -2080,12 +2080,12 @@ dependencies = [
 [[package]]
 name = "tasm-lib"
 version = "0.2.1"
-source = "git+https://github.com/TritonVM/tasm-lib.git?rev=05a2a984#05a2a98455e8e84c624d301f3bdec45cda7eb738"
+source = "git+https://github.com/TritonVM/tasm-lib.git?branch=sponge-hasher-trait#ce89dfb40ae14b09864d368ee2baead03949f79e"
 dependencies = [
  "anyhow",
  "derive_tasm_object",
  "hex",
- "itertools 0.12.0",
+ "itertools 0.10.5",
  "num",
  "num-traits",
  "rand",
@@ -2243,7 +2243,7 @@ dependencies = [
 [[package]]
 name = "triton-vm"
 version = "0.36.1"
-source = "git+https://github.com/TritonVM/triton-vm?rev=75da9a17#75da9a17c4e438c71a8bf761dba90869302e94df"
+source = "git+https://github.com/TritonVM/triton-vm?branch=sponge-hasher-trait#04e74456fc8488b537c3ba88cae0f86e7a799320"
 dependencies = [
  "arbitrary",
  "bincode",
@@ -2277,7 +2277,7 @@ checksum = "e421abadd41a4225275504ea4d6566923418b7f05506fbc9c0fe86ba7396114b"
 [[package]]
 name = "twenty-first"
 version = "0.36.0"
-source = "git+https://github.com/Neptune-Crypto/twenty-first?rev=95d52acc#95d52accb8c795fe34136511a4277e44b0bc1795"
+source = "git+https://github.com/Neptune-Crypto/twenty-first?branch=sponge-hasher-trait#4fb16e51f4ba7ce4eb085752dd1ae7691c34ace5"
 dependencies = [
  "arbitrary",
  "bfieldcodec_derive",

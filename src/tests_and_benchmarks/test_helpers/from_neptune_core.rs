@@ -4,8 +4,6 @@
 use anyhow::bail;
 use field_count::FieldCount;
 use itertools::Itertools;
-use num::One;
-use num::Zero;
 use rand::rngs::StdRng;
 use rand::Rng;
 use rand::RngCore;
@@ -25,7 +23,6 @@ use tasm_lib::twenty_first::util_types::mmr::mmr_accumulator::MmrAccumulator;
 use tasm_lib::twenty_first::util_types::mmr::mmr_membership_proof::MmrMembershipProof;
 use tasm_lib::twenty_first::util_types::mmr::mmr_trait::Mmr;
 use tasm_lib::twenty_first::util_types::mmr::shared_basic::leaf_index_to_mt_index_and_peak_index;
-
 use tasm_lib::VmHasher;
 
 pub(crate) const NATIVE_COIN_TYPESCRIPT_DIGEST: Digest = Digest::new([
@@ -665,12 +662,6 @@ pub(crate) fn get_swbf_indices(
         sender_randomness.encode(),
         receiver_preimage.encode(),
         leaf_index_bfes,
-        // Pad according to spec
-        vec![
-            BFieldElement::one(),
-            BFieldElement::zero(),
-            BFieldElement::zero(),
-        ],
     ]
     .concat();
     assert_eq!(
@@ -680,7 +671,7 @@ pub(crate) fn get_swbf_indices(
     );
 
     let mut sponge = <VmHasher as SpongeHasher>::init();
-    VmHasher::absorb_repeatedly(&mut sponge, input.iter());
+    VmHasher::pad_and_absorb_all(&mut sponge, &input);
     VmHasher::sample_indices(&mut sponge, WINDOW_SIZE, NUM_TRIALS as usize)
         .into_iter()
         .map(|sample_index| sample_index as u128 + batch_offset)
