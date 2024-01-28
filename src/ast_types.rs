@@ -44,7 +44,6 @@ pub(crate) enum DataType {
     Function(Box<FunctionType>),
     Boxed(Box<DataType>),
     Unresolved(String),
-    SpongeState,
 }
 
 impl DataType {
@@ -68,7 +67,6 @@ impl DataType {
             DataType::Enum(enum_type) => enum_type.is_copy,
             DataType::Unresolved(_) => false,
             DataType::Boxed(_) => false,
-            DataType::SpongeState => todo!(),
         }
     }
 
@@ -100,7 +98,6 @@ impl DataType {
             Enum(enum_type) => enum_type.label_friendly_name(),
             Unresolved(name) => name.to_string(),
             Boxed(ty) => format!("boxed_L{}R", ty.label_friendly_name()),
-            SpongeState => "vm_sponge_state".to_owned(),
         }
     }
 
@@ -120,6 +117,13 @@ impl DataType {
             tasm_lib::data_type::DataType::List(elem_type) => {
                 let element_type = Self::from_tasm_lib_datatype(*elem_type, list_type);
                 List(Box::new(element_type), list_type)
+            }
+            tasm_lib::data_type::DataType::Array(array_type) => {
+                let element_type = Self::from_tasm_lib_datatype(array_type.element_type, list_type);
+                Array(ArrayType {
+                    element_type: Box::new(element_type),
+                    length: array_type.length,
+                })
             }
             tasm_lib::data_type::DataType::Tuple(tasm_types) => {
                 let element_types: Vec<DataType> = tasm_types
@@ -212,7 +216,6 @@ impl DataType {
             DataType::VoidPointer => panic!(),
             DataType::Function(_) => panic!(),
             DataType::Unresolved(_) => panic!(),
-            DataType::SpongeState => panic!(),
         }
     }
 
@@ -240,15 +243,8 @@ impl DataType {
             Self::Unresolved(name) => panic!("cannot get size of unresolved type {name}"),
             Self::Struct(inner_type) => inner_type.stack_size(),
             Self::Enum(enum_type) => enum_type.stack_size(),
-            Self::Boxed(inner) => match inner.as_ref() {
-                DataType::SpongeState => 0,
-                _ => 1,
-            },
+            Self::Boxed(_) => 1,
             Self::Function(_) => 0, // Exists as instructions only
-
-            // TODO: Get rid of `SpongeState`! Handle it already in grafting, such that we're not
-            // carrying around that value
-            Self::SpongeState => 0, // Contained in VM state
         }
     }
 
@@ -322,7 +318,6 @@ impl TryFrom<DataType> for tasm_lib::data_type::DataType {
                 DataType::Unresolved(_) => todo!(),
                 _ => Ok(tasm_lib::data_type::DataType::VoidPointer),
             },
-            DataType::SpongeState => panic!(),
         }
     }
 }
@@ -342,7 +337,10 @@ impl FromStr for DataType {
             "BFieldElement" => Ok(DataType::Bfe),
             "XFieldElement" => Ok(DataType::Xfe),
             "Digest" => Ok(DataType::Digest),
-            "Tip5State" => Ok(DataType::SpongeState),
+
+            // The VM has a built-in sponge state, so from the perspective of this
+            // compiler, it's a unit data type.
+            "Tip5State" => Ok(DataType::unit()),
             ty => bail!("Unsupported type {}", ty),
         }
     }
@@ -375,7 +373,6 @@ impl Display for DataType {
             },
             Unresolved(name) => name.to_string(),
             Boxed(ty) => format!("Boxed<{ty}>"),
-            SpongeState => "vm_sponge_state".to_owned(),
         };
         write!(f, "{str}",)
     }

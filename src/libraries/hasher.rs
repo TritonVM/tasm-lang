@@ -8,6 +8,7 @@ use crate::libraries::bfe::BfeLibrary;
 use crate::libraries::hasher::algebraic_hasher::hash_pair_function;
 use crate::libraries::hasher::algebraic_hasher::HASH_PAIR_FUNCTION_NAME;
 use crate::libraries::hasher::algebraic_hasher::HASH_VARLEN_FUNCTION_NAME;
+use crate::libraries::hasher::sponge_hasher::*;
 use crate::subroutine::SubRoutine;
 use crate::tasm_code_generator::CompilerState;
 use crate::triton_vm::prelude::*;
@@ -70,10 +71,6 @@ impl Library for HasherLib {
             return self.hash_varlen_signature();
         }
 
-        if sponge_hasher::function_names().contains(&fn_name) {
-            return sponge_hasher::function_signature(fn_name);
-        }
-
         panic!("Unknown function {fn_name}");
     }
 
@@ -106,15 +103,15 @@ impl Library for HasherLib {
             return self.hash_varlen_code(state);
         }
 
-        if sponge_hasher::function_names().contains(&fn_name) {
-            return sponge_hasher::call_function(fn_name, state);
-        }
-
         panic!("Unknown function {fn_name}");
     }
 
     fn get_graft_function_name(&self, full_name: &str) -> Option<String> {
         if full_name == DEFAULT_DIGEST_FUNCTION || full_name == NEW_DIGEST_FUNCTION {
+            return Some(full_name.to_owned());
+        }
+
+        if full_name.starts_with(SPONGE_HASHER_INDICATOR) {
             return Some(full_name.to_owned());
         }
 
@@ -128,80 +125,6 @@ impl Library for HasherLib {
         args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
         _function_type_parameter: Option<ast_types::DataType>,
     ) -> Option<ast::Expr<super::Annotation>> {
-        fn graft_digest_new(
-            arg_0: &syn::Expr,
-            graft_config: &mut Graft,
-        ) -> ast::Expr<super::Annotation> {
-            match arg_0 {
-                syn::Expr::Array(syn::ExprArray {
-                    attrs: _,
-                    bracket_token: _,
-                    elems,
-                }) => {
-                    let mut initializer_exprs = vec![];
-                    for elem in elems {
-                        match elem {
-                            syn::Expr::Call(syn::ExprCall {
-                                attrs: _,
-                                func,
-                                paren_token: _,
-                                args,
-                            }) => {
-                                let (name, _type_parameter) = match func.as_ref() {
-                                    syn::Expr::Path(path) => (
-                                        Graft::path_to_ident(&path.path),
-                                        graft_config.path_to_type_parameter(&path.path),
-                                    ),
-                                    other => panic!("unsupported: {other:?}"),
-                                };
-
-                                let bfe_library = BfeLibrary {
-                                    list_type: graft_config.list_type,
-                                };
-                                if let Some(bfe_fn_name) =
-                                    bfe_library.get_graft_function_name(&name)
-                                {
-                                    initializer_exprs.push(
-                                        bfe_library
-                                            .graft_function(graft_config, &bfe_fn_name, args, None)
-                                            .unwrap(),
-                                    );
-                                } else {
-                                    panic!();
-                                }
-                            }
-                            _ => panic!("unsupported: {elem:?}"),
-                        }
-                    }
-
-                    let mut bfe_literals = vec![];
-                    for expr in initializer_exprs {
-                        match expr {
-                            ast::Expr::Lit(ast::ExprLit::Bfe(bfe)) => {
-                                bfe_literals.push(bfe);
-                            }
-                            _ => {
-                                unreachable!(
-                                    "BFE grafting must return BFE literals. Got: {:#?}",
-                                    expr
-                                )
-                            }
-                        }
-                    }
-
-                    let bfe_literals: [BFieldElement; DIGEST_LENGTH] =
-                        bfe_literals.clone().try_into().unwrap_or_else(|_| {
-                            panic!(
-                            "Digest initialization must happen with {DIGEST_LENGTH} BFEs. Got {}",
-                            bfe_literals.len(),)
-                        });
-
-                    ast::Expr::Lit(ast::ExprLit::Digest(Digest::new(bfe_literals)))
-                }
-                _ => panic!("Digest instantiation must happen with an array"),
-            }
-        }
-
         if full_name == DEFAULT_DIGEST_FUNCTION {
             assert!(
                 args.is_empty(),
@@ -215,6 +138,10 @@ impl Library for HasherLib {
             return Some(graft_digest_new(&args[0], graft_config));
         }
 
+        if full_name.starts_with(SPONGE_HASHER_INDICATOR) {
+            return Some(graft_sponge_hasher_functions(graft_config, full_name, args));
+        }
+
         panic!("HasherLib cannot graft function {full_name}")
     }
 
@@ -224,5 +151,73 @@ impl Library for HasherLib {
         _rust_method_call: &syn::ExprMethodCall,
     ) -> Option<ast::Expr<super::Annotation>> {
         None
+    }
+}
+
+/// Handle initialization of digests through `Digest::new([BFieldElement::new(4), ...])`
+fn graft_digest_new(arg_0: &syn::Expr, graft_config: &mut Graft) -> ast::Expr<super::Annotation> {
+    match arg_0 {
+        syn::Expr::Array(syn::ExprArray {
+            attrs: _,
+            bracket_token: _,
+            elems,
+        }) => {
+            let mut initializer_exprs = vec![];
+            for elem in elems {
+                match elem {
+                    syn::Expr::Call(syn::ExprCall {
+                        attrs: _,
+                        func,
+                        paren_token: _,
+                        args,
+                    }) => {
+                        let (name, _type_parameter) = match func.as_ref() {
+                            syn::Expr::Path(path) => (
+                                Graft::path_to_ident(&path.path),
+                                graft_config.path_to_type_parameter(&path.path),
+                            ),
+                            other => panic!("unsupported: {other:?}"),
+                        };
+
+                        let bfe_library = BfeLibrary {
+                            list_type: graft_config.list_type,
+                        };
+                        if let Some(bfe_fn_name) = bfe_library.get_graft_function_name(&name) {
+                            initializer_exprs.push(
+                                bfe_library
+                                    .graft_function(graft_config, &bfe_fn_name, args, None)
+                                    .unwrap(),
+                            );
+                        } else {
+                            panic!();
+                        }
+                    }
+                    _ => panic!("unsupported: {elem:?}"),
+                }
+            }
+
+            let mut bfe_literals = vec![];
+            for expr in initializer_exprs {
+                match expr {
+                    ast::Expr::Lit(ast::ExprLit::Bfe(bfe)) => {
+                        bfe_literals.push(bfe);
+                    }
+                    _ => {
+                        unreachable!("BFE grafting must return BFE literals. Got: {:#?}", expr)
+                    }
+                }
+            }
+
+            let bfe_literals: [BFieldElement; DIGEST_LENGTH] =
+                bfe_literals.clone().try_into().unwrap_or_else(|_| {
+                    panic!(
+                        "Digest initialization must happen with {DIGEST_LENGTH} BFEs. Got {}",
+                        bfe_literals.len(),
+                    )
+                });
+
+            ast::Expr::Lit(ast::ExprLit::Digest(Digest::new(bfe_literals)))
+        }
+        _ => panic!("Digest instantiation must happen with an array"),
     }
 }

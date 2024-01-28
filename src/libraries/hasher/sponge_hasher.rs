@@ -1,197 +1,127 @@
-use tasm_lib::triton_vm::prelude::*;
-use tasm_lib::twenty_first::util_types::algebraic_hasher::SpongeHasher;
-
 use crate::ast;
-use crate::ast_types::{AbstractArgument, AbstractValueArg, ArrayType, DataType, ListType};
-use crate::subroutine::SubRoutine;
-use crate::tasm_code_generator::CompilerState;
+use crate::ast::FnCall;
+use crate::ast::UnaryOp;
+use crate::ast_types::ArrayType;
+use crate::ast_types::DataType;
+use crate::graft::Graft;
+use crate::libraries::Annotation;
+use itertools::Itertools;
+use num::One;
+use tasm_lib::traits::basic_snippet::BasicSnippet;
+use tasm_lib::twenty_first::shared_math::tip5::RATE;
 
 pub(super) const SPONGE_HASHER_INDICATOR: &str = "Tip5::";
-const INIT_NAME: &str = "Tip5::init";
-const ABSORB_NAME: &str = "Tip5::absorb_once";
-const SQUEEZE_NAME: &str = "Tip5::squeeze_once";
-const PAD_AND_ABSORB_REPEATEDLY_NAME: &str = "Tip5::pad_and_absorb_all";
+const SPONGE_HASHER_INIT_NAME: &str = "Tip5::init";
+const SPONGE_HASHER_ABSORB_NAME: &str = "Tip5::absorb_once";
+const SPONGE_HASHER_SQUEEZE_NAME: &str = "Tip5::squeeze_once";
+const SPONGE_HASHER_PAD_AND_ABSORB_ALL_NAME: &str = "Tip5::pad_and_absorb_all";
 
-pub(super) fn function_names() -> Vec<&'static str> {
-    vec![
-        INIT_NAME,
-        ABSORB_NAME,
-        SQUEEZE_NAME,
-        PAD_AND_ABSORB_REPEATEDLY_NAME,
-    ]
-}
-
-pub(super) fn function_signature(function_name: &str) -> ast::FnSignature {
-    match function_name {
-        INIT_NAME => init_function_signature(),
-        ABSORB_NAME => absorb_function_signature(),
-        SQUEEZE_NAME => squeeze_function_signature(),
-        PAD_AND_ABSORB_REPEATEDLY_NAME => todo!(),
-        _ => panic!(),
+pub(super) fn graft_sponge_hasher_functions(
+    grafter: &mut Graft,
+    full_name: &str,
+    args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
+) -> ast::Expr<Annotation> {
+    match full_name {
+        SPONGE_HASHER_INIT_NAME => graft_init_function_call(args),
+        SPONGE_HASHER_ABSORB_NAME => graft_absorb_once_function_call(grafter, args),
+        SPONGE_HASHER_SQUEEZE_NAME => graft_squeeze_once_function_call(args),
+        SPONGE_HASHER_PAD_AND_ABSORB_ALL_NAME => {
+            graft_pad_and_absorb_all_function_call(grafter, args)
+        }
+        _ => panic!("Cannot graft function with name {full_name}"),
     }
 }
 
-pub(super) fn call_function(
-    function_name: &str,
-    state: &mut CompilerState,
-) -> Vec<LabelledInstruction> {
-    match function_name {
-        INIT_NAME => init_function_body(),
-        ABSORB_NAME => absorb_function_body(),
-        SQUEEZE_NAME => squeeze_function_body(state),
-        PAD_AND_ABSORB_REPEATEDLY_NAME => todo!(),
-        _ => panic!(),
-    }
-}
+fn graft_init_function_call(
+    args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
+) -> ast::Expr<Annotation> {
+    assert!(
+        args.is_empty(),
+        "{SPONGE_HASHER_INIT_NAME} does not take any arguments. Got: args:\n{:?}",
+        args
+    );
 
-fn init_function_signature() -> ast::FnSignature {
-    ast::FnSignature {
-        name: INIT_NAME.to_owned(),
+    let tasm_lib_snippet = tasm_lib::hashing::sponge_hasher::init::Init;
+    ast::Expr::FnCall(FnCall {
+        name: format!("tasm::{}", tasm_lib_snippet.entrypoint()),
         args: vec![],
-        output: DataType::SpongeState,
+        type_parameter: None,
         arg_evaluation_order: Default::default(),
-    }
+        annot: crate::type_checker::Typing::KnownType(DataType::unit()),
+    })
 }
 
-fn init_function_body() -> Vec<LabelledInstruction> {
-    triton_asm!(sponge_init)
+fn graft_absorb_once_function_call(
+    grafter: &mut Graft,
+    args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
+) -> ast::Expr<Annotation> {
+    // Ignore 1st argument, as it's the `SpongeState` in the source code, but from
+    // the perspective of the VM, this value is handled through its own co-processor.
+    // The 2nd argument has its reference stripped, as it's supposed to be an array,
+    // not a boxed array.
+    let args = args.iter().map(|x| grafter.graft_expr(x)).collect_vec();
+    let ast::Expr::Unary(UnaryOp::Ref(_mutable), arg, _) = &args[1] else {
+        panic!("Incorrect argument to {SPONGE_HASHER_ABSORB_NAME}. Got:\n{args:?}")
+    };
+
+    let tasm_lib_snippet = tasm_lib::hashing::sponge_hasher::absorb_once::AbsorbOnce;
+    ast::Expr::FnCall(FnCall {
+        name: format!("tasm::{}", tasm_lib_snippet.entrypoint()),
+        args: vec![*arg.to_owned()],
+        type_parameter: None,
+        arg_evaluation_order: Default::default(),
+        annot: crate::type_checker::Typing::KnownType(DataType::unit()),
+    })
 }
 
-fn absorb_function_signature() -> ast::FnSignature {
-    let sponge_argument = AbstractArgument::ValueArgument(AbstractValueArg {
-        name: "sponge".to_owned(),
-        data_type: DataType::Boxed(Box::new(DataType::SpongeState)),
-        mutable: true,
-    });
-    let input_argument = AbstractArgument::ValueArgument(AbstractValueArg {
-        name: "input".to_owned(),
-        data_type: DataType::Boxed(Box::new(DataType::Array(ArrayType {
+fn graft_squeeze_once_function_call(
+    args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
+) -> ast::Expr<Annotation> {
+    // Ignore 1st argument, as it's the `SpongeState` in the source code, but from
+    // the perspective of the VM, this value is handled through its own co-processor.
+    assert![
+        args.len().is_one(),
+        "{SPONGE_HASHER_SQUEEZE_NAME} expects exactly one argument"
+    ];
+
+    let tasm_lib_snippet = tasm_lib::hashing::sponge_hasher::squeeze_once::SqueezeOnce;
+    ast::Expr::FnCall(FnCall {
+        name: format!("tasm::{}", tasm_lib_snippet.entrypoint()),
+        args: vec![],
+        type_parameter: None,
+        arg_evaluation_order: Default::default(),
+        annot: crate::type_checker::Typing::KnownType(DataType::Array(ArrayType {
             element_type: Box::new(DataType::Bfe),
-            length: 10,
-        }))),
-        mutable: false,
-    });
-    ast::FnSignature {
-        name: ABSORB_NAME.to_owned(),
-        args: vec![sponge_argument, input_argument],
-        output: DataType::unit(),
-        arg_evaluation_order: Default::default(),
-    }
+            length: RATE,
+        })),
+    })
 }
 
-fn absorb_function_body() -> Vec<LabelledInstruction> {
-    triton_asm!(
-        // _ *array_bfe_10
-        push 9 add
-
-        // _ *last_bfe
-        read_mem 5
-        read_mem 5
-        // _ [word_9..word_0] (*first_elem - 1)
-
-        pop 1
-        // _ [word_9..word_0]
-
-        sponge_absorb
-        // _
-    )
-}
-
-fn squeeze_function_signature() -> ast::FnSignature {
-    let sponge_argument = AbstractArgument::ValueArgument(AbstractValueArg {
-        name: "sponge".to_owned(),
-        data_type: DataType::Boxed(Box::new(DataType::SpongeState)),
-        mutable: true,
-    });
-    ast::FnSignature {
-        name: ABSORB_NAME.to_owned(),
-        args: vec![sponge_argument],
-        output: DataType::Array(ArrayType {
-            element_type: Box::new(DataType::Bfe),
-            length: Tip5::RATE,
-        }),
-        arg_evaluation_order: Default::default(),
-    }
-}
-
-fn squeeze_function_body(state: &mut CompilerState) -> Vec<LabelledInstruction> {
-    let dyn_malloc_label = state.import_snippet(Box::new(tasm_lib::memory::dyn_malloc::DynMalloc));
+fn graft_pad_and_absorb_all_function_call(
+    grafter: &mut Graft,
+    args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
+) -> ast::Expr<Annotation> {
     assert_eq!(
-        10,
-        Tip5::RATE,
-        "Implementation assumes hash function's RATE is 10"
+        2,
+        args.len(),
+        "{SPONGE_HASHER_PAD_AND_ABSORB_ALL_NAME} expects exactly two arguments"
     );
-    let subroutine = triton_asm!(
-        __squeeze_once:
-            // _
-            sponge_squeeze
-            // _ [word_9..word_0]
+    let tasm_lib_snippet = tasm_lib::hashing::sponge_hasher::pad_and_absorb_all::PadAndAbsorbAll {
+        list_type: grafter.list_type.into(),
+    };
 
+    // Ignore 1st argument, as it's the `SpongeState` in the source code, but from
+    // the perspective of the VM, this value is handled through its own co-processor.
+    let args = args.iter().map(|x| grafter.graft_expr(x)).collect_vec();
+    let ast::Expr::Unary(UnaryOp::Ref(_mutable), arg, _) = &args[1] else {
+        panic!("Incorrect argument to {SPONGE_HASHER_ABSORB_NAME}. Got:\n{args:?}")
+    };
 
-            // Allocate memory for the returned array
-            push {Tip5::RATE}
-            call {dyn_malloc_label}
-            // _ [word_9..word_0] *array
-
-            // Write words to array
-            write_mem 5
-            write_mem 5
-            // _ (*array + 10)
-
-            push -10
-            add
-            // _ *array
-
-            return
-    );
-    let subroutine: SubRoutine = subroutine.try_into().unwrap();
-    let subroutine_label = subroutine.get_label();
-    state.add_library_function(subroutine);
-
-    triton_asm!(call { subroutine_label })
-}
-
-fn pad_and_absorb_all_signature(list_type: ListType) -> ast::FnSignature {
-    let sponge_argument = AbstractArgument::ValueArgument(AbstractValueArg {
-        name: "sponge".to_owned(),
-        data_type: DataType::Boxed(Box::new(DataType::SpongeState)),
-        mutable: true,
-    });
-    let input_argument = AbstractArgument::ValueArgument(AbstractValueArg {
-        name: "input".to_owned(),
-        data_type: DataType::Boxed(Box::new(DataType::List(Box::new(DataType::Bfe), list_type))),
-        mutable: true,
-    });
-    ast::FnSignature {
-        name: PAD_AND_ABSORB_REPEATEDLY_NAME.to_owned(),
-        args: vec![sponge_argument, input_argument],
-        output: DataType::SpongeState,
+    ast::Expr::FnCall(FnCall {
+        name: format!("tasm::{}", tasm_lib_snippet.entrypoint()),
+        args: vec![*arg.to_owned()],
+        type_parameter: None,
         arg_evaluation_order: Default::default(),
-    }
-}
-
-fn pad_and_absorb_all_body(
-    list_type: ListType,
-    state: &mut CompilerState,
-) -> Vec<LabelledInstruction> {
-    let absorb_and_pad_snippet_label =
-        state.import_snippet(Box::new(tasm_lib::hashing::absorb::Absorb));
-    let list_metadata_size_plus_one = list_type.metadata_size() + 1;
-
-    triton_asm!(
-        // _ *bfes
-        read_mem 1
-
-        // _ length (*bfes - 1)
-
-        push {list_metadata_size_plus_one}
-        add
-        // _ length *first_bfe
-
-        swap 1
-        // _ *first_bfe length
-
-        call {absorb_and_pad_snippet_label}
-        // _
-    )
+        annot: Default::default(),
+    })
 }

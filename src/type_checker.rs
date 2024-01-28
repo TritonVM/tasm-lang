@@ -1222,10 +1222,6 @@ fn derive_annotate_expr_type(
                 env_fn_signature,
                 hint,
             );
-            assert!(
-                !callees_fn_signature.output.is_unit(),
-                "Function calls in expressions cannot return the unit type"
-            );
 
             derive_annotate_fn_call_args(&callees_fn_signature, &mut fn_call.args, state);
             fn_call.annot = Typing::KnownType(callees_fn_signature.output.clone());

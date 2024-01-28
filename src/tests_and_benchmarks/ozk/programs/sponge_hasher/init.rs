@@ -12,12 +12,6 @@ fn _main() {
     return;
 }
 
-#[test]
-fn can_compile_call_to_init() {
-    let entrypoint = EntrypointLocation::disk("sponge_hasher", "init", "_main");
-    TritonVMTestCase::new(entrypoint.clone()).compile();
-}
-
 fn initialized_sponge_behaves_correctly_on_small_stack() {
     let b: u64 = 100;
     let _sponge: Tip5State = Tip5::init();
@@ -25,24 +19,6 @@ fn initialized_sponge_behaves_correctly_on_small_stack() {
     tasm::tasm_io_write_to_stdout___u64(b);
     tasm::tasm_io_write_to_stdout___u64(a);
     return;
-}
-
-#[test]
-fn initialized_sponge_behaves_correctly_on_small_stack_test() {
-    let native_output = wrap_main_with_io(&initialized_sponge_behaves_correctly_on_small_stack)(
-        Vec::default(),
-        NonDeterminism::default(),
-    );
-    let entrypoint = EntrypointLocation::disk(
-        "sponge_hasher",
-        "init",
-        "initialized_sponge_behaves_correctly_on_small_stack",
-    );
-    let vm_output = TritonVMTestCase::new(entrypoint)
-        .expect_stack_difference(0)
-        .execute()
-        .unwrap();
-    assert_eq!(native_output, vm_output.output);
 }
 
 fn initialized_sponge_behaves_correctly_deep_in_stack() {
@@ -73,22 +49,50 @@ fn initialized_sponge_behaves_correctly_deep_in_stack() {
     return;
 }
 
-#[test]
-fn initialized_sponge_behaves_correctly_deep_in_stack_test() {
-    let std_in = random_elements(10);
-    let native_output = wrap_main_with_io(&initialized_sponge_behaves_correctly_deep_in_stack)(
-        std_in.clone(),
-        NonDeterminism::default(),
-    );
-    let entrypoint = EntrypointLocation::disk(
-        "sponge_hasher",
-        "init",
-        "initialized_sponge_behaves_correctly_deep_in_stack",
-    );
-    let vm_output = TritonVMTestCase::new(entrypoint)
-        .with_std_in(std_in)
-        .expect_stack_difference(0)
-        .execute()
-        .unwrap();
-    assert_eq!(native_output, vm_output.output);
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn can_compile_call_to_init() {
+        let entrypoint = EntrypointLocation::disk("sponge_hasher", "init", "_main");
+        TritonVMTestCase::new(entrypoint.clone()).compile();
+    }
+
+    #[test]
+    fn initialized_sponge_behaves_correctly_on_small_stack_test() {
+        let native_output = wrap_main_with_io(&initialized_sponge_behaves_correctly_on_small_stack)(
+            Vec::default(),
+            NonDeterminism::default(),
+        );
+        let entrypoint = EntrypointLocation::disk(
+            "sponge_hasher",
+            "init",
+            "initialized_sponge_behaves_correctly_on_small_stack",
+        );
+        let vm_output = TritonVMTestCase::new(entrypoint)
+            .expect_stack_difference(0)
+            .execute()
+            .unwrap();
+        assert_eq!(native_output, vm_output.output);
+    }
+
+    #[test]
+    fn initialized_sponge_behaves_correctly_deep_in_stack_test() {
+        let std_in = random_elements(10);
+        let native_output = wrap_main_with_io(&initialized_sponge_behaves_correctly_deep_in_stack)(
+            std_in.clone(),
+            NonDeterminism::default(),
+        );
+        let entrypoint = EntrypointLocation::disk(
+            "sponge_hasher",
+            "init",
+            "initialized_sponge_behaves_correctly_deep_in_stack",
+        );
+        let vm_output = TritonVMTestCase::new(entrypoint)
+            .with_std_in(std_in)
+            .expect_stack_difference(0)
+            .execute()
+            .unwrap();
+        assert_eq!(native_output, vm_output.output);
+    }
 }
