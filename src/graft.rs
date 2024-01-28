@@ -1,10 +1,9 @@
-use std::collections::HashMap;
-use std::str::FromStr;
-
 use itertools::Itertools;
 use num::One;
 use num::Zero;
 use quote::quote;
+use std::collections::HashMap;
+use std::str::FromStr;
 use syn::parse_quote;
 use syn::ExprMacro;
 use syn::PathArguments;

@@ -8,8 +8,6 @@ use std::marker::PhantomData;
 use anyhow::bail;
 use field_count::FieldCount;
 use itertools::Itertools;
-use num::One;
-use num::Zero;
 use rand::rngs::StdRng;
 use rand::Rng;
 use rand::RngCore;
@@ -666,12 +664,6 @@ pub(crate) fn get_swbf_indices(
         sender_randomness.encode(),
         receiver_preimage.encode(),
         leaf_index_bfes,
-        // Pad according to spec
-        vec![
-            BFieldElement::one(),
-            BFieldElement::zero(),
-            BFieldElement::zero(),
-        ],
     ]
     .concat();
     assert_eq!(
@@ -681,7 +673,7 @@ pub(crate) fn get_swbf_indices(
     );
 
     let mut sponge = <VmHasher as SpongeHasher>::init();
-    VmHasher::absorb_repeatedly(&mut sponge, input.iter());
+    VmHasher::pad_and_absorb_all(&mut sponge, &input);
     VmHasher::sample_indices(&mut sponge, WINDOW_SIZE, NUM_TRIALS as usize)
         .into_iter()
         .map(|sample_index| sample_index as u128 + batch_offset)

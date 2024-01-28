@@ -750,13 +750,9 @@ pub(crate) fn annotate_identifier_type(
                 if let ast_types::DataType::List(elem_ty, _) = &forced_sequence_type {
                     break elem_ty;
                 } else if let ast_types::DataType::Array(array_type) = &forced_sequence_type {
-                    // If iterator type is array and *not* boxed, then index *must* be statically
-                    // known. Also ensure that this value is not out-of-bounds.
+                    //Ensure that this value is not out-of-bounds, *if* this can be checked.
                     let statically_known_index = match index_expr.as_ref() {
-                        ast::IndexExpr::Dynamic(index_expr) => {
-                            assert!(maybe_list_type.is_boxed(), "Array must be boxed for dynamically indices to work. Index expr was: {index_expr}");
-                            None
-                        }
+                        ast::IndexExpr::Dynamic(_index_expr) => None,
                         ast::IndexExpr::Static(index) => Some(index),
                     };
                     if let Some(x) = statically_known_index {
@@ -1225,10 +1221,6 @@ fn derive_annotate_expr_type(
                 &fn_call.args,
                 env_fn_signature,
                 hint,
-            );
-            assert!(
-                !callees_fn_signature.output.is_unit(),
-                "Function calls in expressions cannot return the unit type"
             );
 
             derive_annotate_fn_call_args(&callees_fn_signature, &mut fn_call.args, state);

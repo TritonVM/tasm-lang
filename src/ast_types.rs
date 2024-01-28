@@ -118,6 +118,13 @@ impl DataType {
                 let element_type = Self::from_tasm_lib_datatype(*elem_type, list_type);
                 List(Box::new(element_type), list_type)
             }
+            tasm_lib::data_type::DataType::Array(array_type) => {
+                let element_type = Self::from_tasm_lib_datatype(array_type.element_type, list_type);
+                Array(ArrayType {
+                    element_type: Box::new(element_type),
+                    length: array_type.length,
+                })
+            }
             tasm_lib::data_type::DataType::Tuple(tasm_types) => {
                 let element_types: Vec<DataType> = tasm_types
                     .into_iter()
@@ -233,11 +240,11 @@ impl DataType {
             Self::Array(_) => 1,
             Self::Tuple(tuple_type) => tuple_type.stack_size(),
             Self::VoidPointer => 1,
-            Self::Function(_) => panic!(),
             Self::Unresolved(name) => panic!("cannot get size of unresolved type {name}"),
             Self::Struct(inner_type) => inner_type.stack_size(),
             Self::Enum(enum_type) => enum_type.stack_size(),
-            Self::Boxed(_inner) => 1,
+            Self::Boxed(_) => 1,
+            Self::Function(_) => 0, // Exists as instructions only
         }
     }
 
@@ -246,10 +253,6 @@ impl DataType {
             DataType::Boxed(inner) => inner.unbox(),
             dtype => dtype.to_owned(),
         }
-    }
-
-    pub(crate) fn is_boxed(&self) -> bool {
-        matches!(self, DataType::Boxed(_))
     }
 
     pub(crate) fn as_enum_type(&self) -> EnumType {
@@ -334,6 +337,10 @@ impl FromStr for DataType {
             "BFieldElement" => Ok(DataType::Bfe),
             "XFieldElement" => Ok(DataType::Xfe),
             "Digest" => Ok(DataType::Digest),
+
+            // The VM has a built-in sponge state, so from the perspective of this
+            // compiler, it's a unit data type.
+            "Tip5State" => Ok(DataType::unit()),
             ty => bail!("Unsupported type {}", ty),
         }
     }

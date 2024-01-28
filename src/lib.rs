@@ -16,7 +16,6 @@ pub use tasm_lib;
 pub use tasm_lib::triton_vm;
 use tasm_lib::triton_vm::prelude::LabelledInstruction;
 pub use tasm_lib::twenty_first;
-// todo: this is temporarily required for derive macro `TasmObject` until its code generation is cleaned up
 #[allow(unused_imports)]
 use tasm_lib::twenty_first::prelude::BFieldElement;
 

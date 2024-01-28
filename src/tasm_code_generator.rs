@@ -7,6 +7,7 @@ mod stack;
 
 use itertools::Either;
 use itertools::Itertools;
+use num::Zero;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::fmt::Display;
@@ -1089,15 +1090,17 @@ fn compile_stmt(
         }) => {
             let (expr_addr, expr_code) = compile_expr(expr, var_name, state);
 
-            let last_stack_for_value_plus_one = data_type.stack_size();
-            let asm_annotation_str =
-                format!("hint {var_name} = stack[0..{last_stack_for_value_plus_one}]");
-            let asm_annotation = triton_asm!({ asm_annotation_str });
+            let type_hint = match data_type.stack_size() {
+                0 => String::default(),
+                n => format!("hint {var_name} = stack[0..{n}]"),
+            };
+
+            let type_hint = triton_asm!({ type_hint });
             state
                 .function_state
                 .var_addr
                 .insert(var_name.clone(), expr_addr);
-            [expr_code, asm_annotation].concat()
+            [expr_code, type_hint].concat()
         }
 
         ast::Stmt::Assign(ast::AssignStmt { identifier, expr }) => {
@@ -1628,8 +1631,9 @@ fn compile_expr(
         ast::Expr::Var(identifier) => {
             // TODO: We probably need to use `known_type` here!
             let var_type = identifier.get_type();
-            if matches!(var_type, ast_types::DataType::Function(_)) {
-                // Identifier is a function and must be in scope since typechecker was passed
+            if var_type.stack_size().is_zero() {
+                // Identifier is a function or a sponge state, and does not represent stack or
+                // memory data.
                 triton_asm!()
             } else {
                 let location = state.locate_identifier(identifier);
