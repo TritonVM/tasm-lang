@@ -240,8 +240,14 @@ impl DataType {
             Self::Unresolved(name) => panic!("cannot get size of unresolved type {name}"),
             Self::Struct(inner_type) => inner_type.stack_size(),
             Self::Enum(enum_type) => enum_type.stack_size(),
-            Self::Boxed(_inner) => 1,
+            Self::Boxed(inner) => match inner.as_ref() {
+                DataType::SpongeState => 0,
+                _ => 1,
+            },
             Self::Function(_) => 0, // Exists as instructions only
+
+            // TODO: Get rid of `SpongeState`! Handle it already in grafting, such that we're not
+            // carrying around that value
             Self::SpongeState => 0, // Contained in VM state
         }
     }
@@ -251,10 +257,6 @@ impl DataType {
             DataType::Boxed(inner) => inner.unbox(),
             dtype => dtype.to_owned(),
         }
-    }
-
-    pub(crate) fn is_boxed(&self) -> bool {
-        matches!(self, DataType::Boxed(_))
     }
 
     pub(crate) fn as_enum_type(&self) -> EnumType {

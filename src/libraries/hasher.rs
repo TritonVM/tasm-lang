@@ -107,7 +107,7 @@ impl Library for HasherLib {
         }
 
         if sponge_hasher::function_names().contains(&fn_name) {
-            return sponge_hasher::call_function(fn_name);
+            return sponge_hasher::call_function(fn_name, state);
         }
 
         panic!("Unknown function {fn_name}");
