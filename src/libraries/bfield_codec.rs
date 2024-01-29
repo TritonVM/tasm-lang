@@ -240,6 +240,7 @@ impl Library for BFieldCodecLib {
             assert_eq!(1, load_function_args.len(), "{error_msg}");
             let ast::Expr::Lit(ast::ExprLit::Bfe(pointer_to_struct)) = load_function_args[0] else {
                 // TODO: Maybe `address` can be an expression and doesn't have to be a literal? Do we need or want that?
+                //  Yes we do.
                 panic!(
                     "Argument to {LOAD_FROM_MEMORY_FN_NAME} must be known at compile time and must be a BFieldElement"
                 );
