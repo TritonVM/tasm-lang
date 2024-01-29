@@ -40,7 +40,6 @@ mod test {
         let vm_output = TritonVMTestCase::new(entrypoint)
             .with_safe_lists()
             .with_non_determinism(non_determinism)
-            .expect_stack_difference(0)
             .execute()
             .unwrap();
 

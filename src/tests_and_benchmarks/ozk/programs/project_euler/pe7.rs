@@ -64,10 +64,7 @@ mod test {
         println!("native_output for prime number {prime_number_count} (took {time_passed:?}): {computed_element}");
 
         let entrypoint = EntrypointLocation::disk("project_euler", "pe7", "main");
-        let vm_output = TritonVMTestCase::new(entrypoint)
-            .expect_stack_difference(0)
-            .execute()
-            .unwrap();
+        let vm_output = TritonVMTestCase::new(entrypoint).execute().unwrap();
 
         assert_eq!(native_output, vm_output.output);
 

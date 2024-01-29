@@ -69,10 +69,7 @@ mod tests {
             "init",
             "initialized_sponge_behaves_correctly_on_small_stack",
         );
-        let vm_output = TritonVMTestCase::new(entrypoint)
-            .expect_stack_difference(0)
-            .execute()
-            .unwrap();
+        let vm_output = TritonVMTestCase::new(entrypoint).execute().unwrap();
         assert_eq!(native_output, vm_output.output);
     }
 
@@ -90,7 +87,6 @@ mod tests {
         );
         let vm_output = TritonVMTestCase::new(entrypoint)
             .with_std_in(std_in)
-            .expect_stack_difference(0)
             .execute()
             .unwrap();
         assert_eq!(native_output, vm_output.output);

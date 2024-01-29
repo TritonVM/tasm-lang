@@ -41,7 +41,6 @@ mod test {
             rust_shadows::wrap_main_with_io(&main)(Vec::default(), non_determinism_a.clone());
         let entrypoint = EntrypointLocation::disk("match_expr_boxed", "very_simple", "main");
         let vm_output_a = TritonVMTestCase::new(entrypoint.clone())
-            .expect_stack_difference(0)
             .with_non_determinism(non_determinism_a)
             .execute()
             .unwrap();
@@ -56,7 +55,6 @@ mod test {
             rust_shadows::wrap_main_with_io(&main)(Vec::default(), non_determinism_b.clone());
         let entrypoint = EntrypointLocation::disk("match_expr_boxed", "very_simple", "main");
         let vm_output_b = TritonVMTestCase::new(entrypoint)
-            .expect_stack_difference(0)
             .with_non_determinism(non_determinism_b)
             .execute()
             .unwrap();

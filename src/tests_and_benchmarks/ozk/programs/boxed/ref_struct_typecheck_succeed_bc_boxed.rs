@@ -50,7 +50,6 @@ mod test {
         let stdin = encoded;
         let expected_output = (rand + 0xabcde123u64).encode();
         let vm_output = TritonVMTestCase::new(entrypoint)
-            .expect_stack_difference(0)
             .with_std_in(stdin.clone())
             .execute()
             .unwrap();

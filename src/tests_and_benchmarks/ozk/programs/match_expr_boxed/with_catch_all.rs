@@ -48,7 +48,6 @@ mod test {
         let code = TritonVMTestCase::new(entrypoint.clone()).compile();
         println!("code:\n{}", code.iter().join("\n"));
         let vm_output_a = TritonVMTestCase::new(entrypoint.clone())
-            .expect_stack_difference(0)
             .with_non_determinism(non_determinism_a)
             .execute()
             .unwrap();
@@ -62,7 +61,6 @@ mod test {
             non_determinism_b.clone(),
         );
         let vm_output_b = TritonVMTestCase::new(entrypoint)
-            .expect_stack_difference(0)
             .with_non_determinism(non_determinism_b)
             .execute()
             .unwrap();

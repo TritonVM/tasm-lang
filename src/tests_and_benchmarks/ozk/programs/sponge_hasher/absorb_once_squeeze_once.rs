@@ -52,7 +52,6 @@ mod tests {
         println!("code:\n{}", code.iter().join("\n"));
         let vm_output = TritonVMTestCase::new(entrypoint)
             .with_std_in(std_in)
-            .expect_stack_difference(0)
             .execute()
             .unwrap();
         assert_eq!(native_output, vm_output.output);

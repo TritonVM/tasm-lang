@@ -32,10 +32,7 @@ mod test {
         rust_shadows::wrap_main_with_io(&most_basic)(vec![], NonDeterminism::default());
         let entrypoint =
             EntrypointLocation::disk("match_expr_on_stack", "option_type", "test::most_basic");
-        TritonVMTestCase::new(entrypoint)
-            .expect_stack_difference(0)
-            .execute()
-            .unwrap();
+        TritonVMTestCase::new(entrypoint).execute().unwrap();
     }
 
     fn with_bindings_in_arm_body_0() {
@@ -68,10 +65,7 @@ mod test {
             "option_type",
             "test::with_bindings_in_arm_body_0",
         );
-        TritonVMTestCase::new(entrypoint)
-            .expect_stack_difference(0)
-            .execute()
-            .unwrap();
+        TritonVMTestCase::new(entrypoint).execute().unwrap();
     }
 
     fn with_bindings_in_arm_body_1() {
@@ -104,9 +98,6 @@ mod test {
             "option_type",
             "test::with_bindings_in_arm_body_1",
         );
-        TritonVMTestCase::new(entrypoint)
-            .expect_stack_difference(0)
-            .execute()
-            .unwrap();
+        TritonVMTestCase::new(entrypoint).execute().unwrap();
     }
 }

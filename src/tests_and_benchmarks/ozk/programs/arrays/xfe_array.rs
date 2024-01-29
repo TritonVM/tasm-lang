@@ -96,7 +96,6 @@ mod test {
         let entrypoint_location = EntrypointLocation::disk("arrays", "xfe_array", "main");
         let vm_output = TritonVMTestCase::new(entrypoint_location)
             .with_std_in(std_in)
-            .expect_stack_difference(0)
             .execute()
             .unwrap();
 

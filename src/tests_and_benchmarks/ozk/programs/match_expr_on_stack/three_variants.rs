@@ -78,7 +78,6 @@ mod test {
         let entrypoint = EntrypointLocation::disk("match_expr_on_stack", "three_variants", "main");
         let vm_output = TritonVMTestCase::new(entrypoint)
             .with_std_in(input)
-            .expect_stack_difference(0)
             .execute()
             .unwrap();
         assert_eq!(native_output, vm_output.output);

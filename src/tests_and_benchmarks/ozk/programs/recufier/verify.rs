@@ -26,11 +26,7 @@ mod tests {
         let native_output =
             rust_shadows::wrap_main_with_io(&recufy)(std_in.clone(), NonDeterminism::default());
 
-        let vm_output = test_case
-            .with_std_in(std_in)
-            .expect_stack_difference(0)
-            .execute()
-            .unwrap();
+        let vm_output = test_case.with_std_in(std_in).execute().unwrap();
 
         assert_eq!(native_output, vm_output.output);
     }

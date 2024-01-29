@@ -82,7 +82,6 @@ mod test {
             ozk_parsing::EntrypointLocation::disk("arithmetic", "dazefield_element_mul", "main");
         let vm_output = TritonVMTestCase::new(entrypoint_location)
             .with_std_in(std_in)
-            .expect_stack_difference(0)
             .execute()
             .unwrap();
 
