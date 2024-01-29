@@ -81,7 +81,6 @@ pub(super) fn tasm_io_read_stdin___bfe() -> BFieldElement {
 
 #[allow(non_snake_case)]
 pub(super) fn tasm_io_read_stdin___xfe() -> XFieldElement {
-    #[allow(clippy::unwrap_used)]
     let x2 = PUB_INPUT.with(|v| v.borrow_mut().pop().unwrap());
     let x1 = PUB_INPUT.with(|v| v.borrow_mut().pop().unwrap());
     let x0 = PUB_INPUT.with(|v| v.borrow_mut().pop().unwrap());
@@ -202,4 +201,9 @@ pub(super) fn wrap_main_with_io(
             get_pub_output()
         },
     )
+}
+
+pub(super) fn tasm_recufier_assert_stdin_starts_with_own_program_digest() {
+    // the rust shadowing does not actually assert digest equivalence :)
+    tasm_io_read_stdin___digest();
 }

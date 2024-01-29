@@ -332,16 +332,15 @@ impl OuterFunctionTasmCode {
 
     /// Function for generating a list of instructions from a compile state
     pub(crate) fn compose(&self) -> Vec<LabelledInstruction> {
-        let inner_body = match self
+        let Some(inner_body) = self
             .function_data
             .call_depth_zero_code
             .get_function_body_for_inlining()
-        {
-            Some(inner) => inner,
-            None => panic!(
+        else {
+            panic!(
                 "Inner function must conform to: <label>: <body> return.\nGot:\n{}",
                 self.function_data.call_depth_zero_code
-            ),
+            );
         };
 
         // `methods` list must be sorted to produce deterministic programs
@@ -386,7 +385,7 @@ impl OuterFunctionTasmCode {
             .concat();
 
         // Wrap entire execution in a call such that `recurse` can be used on the outermost layer, i.e. in `inner_body`.
-        let ret = triton_asm!(
+        let code = triton_asm!(
             call {name}
             halt
             {name}:
@@ -401,9 +400,9 @@ impl OuterFunctionTasmCode {
 
         // Verify that code parses by wrapping it in a program, panics
         // if assembly is invalid.
-        let _program = Program::new(&ret);
+        let _program = Program::new(&code);
 
-        ret
+        code
     }
 
     fn get_methods_entrypoint_code(&self) -> String {

@@ -15,8 +15,7 @@ use crate::type_checker::CheckState;
 pub(crate) mod option_type;
 pub(crate) mod result_type;
 
-/// Everything that lives in the Rust `core` module
-/// belongs in here.
+/// Everything that lives in the Rust `core` module belongs in here.
 #[derive(Debug)]
 pub(crate) struct Core {}
 
