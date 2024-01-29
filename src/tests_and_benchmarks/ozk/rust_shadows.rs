@@ -1,12 +1,10 @@
-use crate::triton_vm::twenty_first::shared_math::bfield_codec::BFieldCodec;
-use crate::triton_vm::twenty_first::shared_math::x_field_element::XFieldElement;
-use num::Zero;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::thread_local;
 use std::vec::Vec;
+
+use num::Zero;
 use tasm_lib::triton_vm::prelude::*;
-use tasm_lib::twenty_first::prelude::*;
 
 // This module contains functions for interacting with the input/output monad
 // implicit in a VM execution. It contains functions for mutating and verifying

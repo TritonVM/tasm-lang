@@ -18,7 +18,7 @@ fn pad_and_absorb_all() {
     }
 
     Tip5::pad_and_absorb_all(&mut sponge, &preimage);
-    let produce: [BFieldElement; 10] = Tip5::squeeze_once(&mut sponge);
+    let produce: [BFieldElement; 10] = Tip5::squeeze(&mut sponge);
     {
         let mut i: usize = 0;
         while i < 10 {

@@ -768,7 +768,7 @@ pub(crate) struct MethodCall<T> {
     pub(crate) annot: T,
 
     /// To type does this method belong? Not the same
-    /// same as receiver type, since receiver type can be
+    /// as receiver type, since receiver type can be
     /// `&self` or `Box<Self>`.
     pub(crate) associated_type: Option<DataType>,
 }

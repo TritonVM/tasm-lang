@@ -1,3 +1,6 @@
+use tasm_lib::triton_vm::prelude::*;
+use tasm_lib::twenty_first::prelude::tip5::DIGEST_LENGTH;
+
 use crate::ast;
 use crate::ast::FnSignature;
 use crate::ast_types::DataType;
@@ -12,8 +15,6 @@ use crate::libraries::Library;
 use crate::subroutine::SubRoutine;
 use crate::tasm_code_generator::CompilerState;
 use crate::type_checker::CheckState;
-use tasm_lib::triton_vm::prelude::*;
-use tasm_lib::twenty_first::prelude::tip5::DIGEST_LENGTH;
 
 use super::bfe::BfeLibrary;
 
