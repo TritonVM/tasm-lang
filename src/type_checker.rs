@@ -26,9 +26,7 @@ pub(crate) enum Typing {
 impl GetType for Typing {
     fn get_type(&self) -> ast_types::DataType {
         match self {
-            Typing::UnknownType => {
-                panic!("Cannot unpack type before complete type annotation.")
-            }
+            Typing::UnknownType => panic!("Cannot unpack type before complete type annotation."),
             Typing::KnownType(data_type) => data_type.clone(),
         }
     }
@@ -49,11 +47,6 @@ impl<T: GetType> GetType for ast::ExprLit<T> {
             ast::ExprLit::Xfe(_) => ast_types::DataType::Xfe,
             ast::ExprLit::Digest(_) => ast_types::DataType::Digest,
             ast::ExprLit::GenericNum(_, t) => t.get_type(),
-            ast::ExprLit::MemPointer(ast::MemPointerLiteral {
-                mem_pointer_address: _,
-                mem_pointer_declared_type: _,
-                resolved_type,
-            }) => resolved_type.get_type(),
         }
     }
 }
@@ -82,6 +75,9 @@ impl<T: GetType + std::fmt::Debug> GetType for ast::Expr<T> {
             ast::Expr::ReturningBlock(ret_block) => ret_block.get_type(),
             ast::Expr::Match(match_expr) => match_expr.arms.first().unwrap().body.get_type(),
             ast::Expr::Panic(_, t) => t.get_type(),
+            ast::Expr::MemoryLocation(ast::MemPointerExpression { resolved_type, .. }) => {
+                resolved_type.get_type()
+            }
         }
     }
 }
@@ -519,9 +515,15 @@ fn annotate_stmt(
                 ast_types::DataType::Enum(enum_type) => (enum_type, false),
                 ast_types::DataType::Boxed(inner) => match *inner.to_owned() {
                     ast_types::DataType::Enum(enum_type) => (enum_type, true),
-                    other => panic!("`match` statements are only supported on enum types. For now. Got {other}")
+                    other => panic!(
+                        "`match` statements are only supported on enum types. For now.\
+                        Got {other}"
+                    ),
                 },
-                _ => panic!("`match` statements are only supported on enum types. For now. Got {match_expression_type}")
+                _ => panic!(
+                    "`match` statements are only supported on enum types. For now.\
+                    Got {match_expression_type}"
+                ),
             };
 
             let mut variants_encountered: HashSet<String> = HashSet::default();
@@ -533,8 +535,8 @@ fn annotate_stmt(
                         assert_eq!(
                             i,
                             arm_count - 1,
-                            "When using catch_all in match statement, catch_all must be used in last match arm. \
-                            Match expression was for type {}",
+                            "When using catch_all in match statement, catch_all must be used \
+                            in last match arm. Match expression was for type {}",
                             enum_type.name
                         );
                         contains_catch_all_arm = true;
@@ -556,12 +558,18 @@ fn annotate_stmt(
                         match type_name {
                             Some(enum_type_name) => {
                                 assert_eq!(
-                                    &enum_type.name,
-                                    enum_type_name,
-                                    "Match conditions on type {} must all be of same type. Got bad type: {enum_type_name}", enum_type.name);
+                                    &enum_type.name, enum_type_name,
+                                    "Match conditions on type {} must all be of same type. \
+                                    Got bad type: {enum_type_name}",
+                                    enum_type.name
+                                );
                             }
                             None => {
-                                assert!(enum_type.is_prelude, "Only enums specified in prelude may use only the variant name in a match arm");
+                                assert!(
+                                    enum_type.is_prelude,
+                                    "Only enums specified in prelude may \
+                                    use only the variant name in a match arm"
+                                );
                             }
                         };
 
@@ -975,8 +983,8 @@ fn derive_annotate_fn_call_args(
     {
         match fn_arg {
             ast_types::AbstractArgument::FunctionArgument(ast_types::AbstractFunctionArg {
-                abstract_name: _,
                 function_type,
+                ..
             }) => assert_type_equals(
                 &ast_types::DataType::Function(Box::new(function_type.to_owned())),
                 expr_type,
@@ -985,13 +993,15 @@ fn derive_annotate_fn_call_args(
             ast_types::AbstractArgument::ValueArgument(ast_types::AbstractValueArg {
                 name: arg_name,
                 data_type: arg_type,
-                mutable: _mutable,
+                ..
             }) => {
                 let arg_pos = arg_pos + 1;
                 assert_eq!(
-                arg_type, expr_type,
-                "Wrong type of function argument {arg_pos} function call '{arg_name}' in '{fn_name}'\n \nexpected type \"{arg_type}\", but got type  \"{expr_type}\"\n\n",
-            );
+                    arg_type, expr_type,
+                    "Wrong type of function argument {arg_pos} function call '{arg_name}' in \
+                    '{fn_name}'\n \n\
+                    expected type \"{arg_type}\", but got type  \"{expr_type}\"\n\n",
+                );
             }
         }
     }
@@ -1022,15 +1032,6 @@ fn derive_annotate_expr_type(
         ast::Expr::Lit(ast::ExprLit::Bfe(_)) => Ok(ast_types::DataType::Bfe),
         ast::Expr::Lit(ast::ExprLit::Xfe(_)) => Ok(ast_types::DataType::Xfe),
         ast::Expr::Lit(ast::ExprLit::Digest(_)) => Ok(ast_types::DataType::Digest),
-        ast::Expr::Lit(ast::ExprLit::MemPointer(ast::MemPointerLiteral {
-            mem_pointer_address: _,
-            mem_pointer_declared_type,
-            resolved_type,
-        })) => {
-            let ret = ast_types::DataType::Boxed(Box::new(mem_pointer_declared_type.to_owned()));
-            *resolved_type = Typing::KnownType(ret.clone());
-            Ok(ret)
-        }
         ast::Expr::Lit(ast::ExprLit::GenericNum(n, _t)) => {
             use ast_types::DataType::*;
 
@@ -1065,7 +1066,10 @@ fn derive_annotate_expr_type(
                     Ok(Xfe)
                 }
                 Some(hint) => panic!("GenericNum does not infer as type hint {hint}"),
-                None => bail!("GenericNum does not infer in context with no type hint. Missing type hint for: {}", expr),
+                None => bail!(
+                    "GenericNum does not infer in context with no type hint. \
+                    Missing type hint for: {expr}"
+                ),
             }
         }
 
@@ -1639,6 +1643,24 @@ fn derive_annotate_expr_type(
         ast::Expr::Match(match_expr) => {
             derive_annotate_match_expression(match_expr, state, env_fn_signature, hint)
         }
+        ast::Expr::MemoryLocation(ast::MemPointerExpression {
+            ref mut mem_pointer_address,
+            mem_pointer_declared_type,
+            resolved_type,
+        }) => {
+            let expected_address_type = ast_types::DataType::Bfe;
+            let address_type = derive_annotate_expr_type(
+                mem_pointer_address,
+                Some(expected_address_type.clone()),
+                state,
+                env_fn_signature,
+            )?;
+            assert_eq!(expected_address_type, address_type);
+            let read_item_type =
+                ast_types::DataType::Boxed(Box::new(mem_pointer_declared_type.to_owned()));
+            *resolved_type = Typing::KnownType(read_item_type.clone());
+            Ok(read_item_type)
+        }
     };
 
     res
@@ -1717,9 +1739,15 @@ fn derive_annotate_match_expression(
         ast_types::DataType::Enum(enum_type) => (enum_type, false),
         ast_types::DataType::Boxed(inner) => match *inner.to_owned() {
             ast_types::DataType::Enum(enum_type) => (enum_type, true),
-            other => panic!("`match` statements are only supported on enum types. For now. Got {other}")
+            other => panic!(
+                "`match` statements are only supported on enum types. \
+                For now. Got {other}"
+            ),
         },
-        _ => panic!("`match` statements are only supported on enum types. For now. Got {match_expression_type}")
+        _ => panic!(
+            "`match` statements are only supported on enum types. \
+            For now. Got {match_expression_type}"
+        ),
     };
 
     // Loop over all arms until *one* of them has a known return type

@@ -347,7 +347,6 @@ pub(crate) enum ExprLit<T> {
     Bfe(BFieldElement),
     Xfe(XFieldElement),
     Digest(Digest),
-    MemPointer(MemPointerLiteral<T>),
     GenericNum(u128, T),
 }
 
@@ -361,7 +360,6 @@ impl<T> ExprLit<T> {
             ExprLit::Bfe(val) => val.to_string(),
             ExprLit::Xfe(val) => val.to_string(),
             ExprLit::Digest(val) => val.to_string(),
-            ExprLit::MemPointer(val) => format!("MP_L{}R", val.mem_pointer_address),
             ExprLit::GenericNum(val, _) => val.to_string(),
         }
     }
@@ -377,7 +375,6 @@ impl<T> Display for ExprLit<T> {
             ExprLit::Bfe(val) => val.to_string(),
             ExprLit::Xfe(val) => val.to_string(),
             ExprLit::Digest(val) => val.to_string(),
-            ExprLit::MemPointer(val) => format!("*{}", val),
             ExprLit::GenericNum(val, _) => val.to_string(),
         };
         write!(f, "{output}")
@@ -385,18 +382,18 @@ impl<T> Display for ExprLit<T> {
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub(crate) struct MemPointerLiteral<T> {
+pub(crate) struct MemPointerExpression<T> {
     /// Where in memory does the struct start?
-    pub(crate) mem_pointer_address: BFieldElement,
+    pub(crate) mem_pointer_address: Box<Expr<T>>,
 
     /// What type was used in the declaration of the memory pointer?
     pub(crate) mem_pointer_declared_type: DataType,
 
-    // Resolved type for binding
+    /// Resolved type for binding
     pub(crate) resolved_type: T,
 }
 
-impl<T> Display for MemPointerLiteral<T> {
+impl<T> Display for MemPointerExpression<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.mem_pointer_address)
     }
@@ -419,7 +416,6 @@ impl<T> BFieldCodec for ExprLit<T> {
             ExprLit::Xfe(value) => value.encode(),
             ExprLit::Digest(value) => value.encode(),
             ExprLit::GenericNum(_, _) => todo!(),
-            ExprLit::MemPointer(_) => todo!(),
         }
     }
 
@@ -483,8 +479,8 @@ pub(crate) enum Expr<T> {
     Cast(Box<Expr<T>>, DataType),
     ReturningBlock(Box<ReturningBlock<T>>),
     Struct(StructExpr<T>),
-    Panic(PanicMacro, T), // Index(Box<Expr<T>>, Box<Expr<T>>), // a_expr[i_expr]    (a + 5)[3]
-                          // TODO: VM-specific intrinsics (hash, absorb, squeeze, etc.)
+    Panic(PanicMacro, T),
+    MemoryLocation(MemPointerExpression<T>),
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
@@ -557,6 +553,9 @@ impl<T> Expr<T> {
                 match_expr.match_expression.label_friendly_name()
             ),
             Expr::Panic(_, _) => "panic_macro".to_owned(),
+            Expr::MemoryLocation(val) => {
+                format!("MP_L{}R", val.mem_pointer_address.label_friendly_name())
+            }
         }
     }
 }
@@ -596,6 +595,7 @@ impl<T> Display for Expr<T> {
             }
             Expr::Match(match_expr) => format!("match expression: {}", match_expr.match_expression),
             Expr::Panic(_, _) => "panic".to_owned(),
+            Expr::MemoryLocation(val) => format!("*{}", val),
         };
 
         write!(f, "{str}")

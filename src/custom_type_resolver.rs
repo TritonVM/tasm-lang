@@ -24,24 +24,10 @@ impl CustomTypeResolution for ReturningBlock<Typing> {
 impl CustomTypeResolution for Expr<Typing> {
     fn resolve_custom_types(&mut self, composite_types: &CompositeTypes) {
         match self {
-            Expr::MethodCall(MethodCall {
-                method_name: _,
-                args,
-                annot: _,
-                associated_type: _,
-            }) => args
+            Expr::MethodCall(MethodCall { args, .. }) => args
                 .iter_mut()
                 .for_each(|arg_expr| arg_expr.resolve_custom_types(composite_types)),
-            Expr::Lit(lit) => {
-                if let ExprLit::MemPointer(MemPointerLiteral {
-                    mem_pointer_address: _,
-                    mem_pointer_declared_type,
-                    resolved_type: _,
-                }) = lit
-                {
-                    mem_pointer_declared_type.resolve_custom_types(composite_types)
-                }
-            }
+            Expr::Lit(_) => (),
             Expr::Tuple(exprs) => exprs
                 .iter_mut()
                 .for_each(|x| x.resolve_custom_types(composite_types)),
@@ -54,11 +40,9 @@ impl CustomTypeResolution for Expr<Typing> {
                 }
             },
             Expr::FnCall(FnCall {
-                name: _,
                 args,
                 type_parameter,
-                arg_evaluation_order: _,
-                annot: _,
+                ..
             }) => {
                 args.iter_mut()
                     .for_each(|x| x.resolve_custom_types(composite_types));
@@ -106,6 +90,10 @@ impl CustomTypeResolution for Expr<Typing> {
                 }
             }
             Expr::Panic(_, _) => (),
+            Expr::MemoryLocation(MemPointerExpression {
+                mem_pointer_declared_type,
+                ..
+            }) => mem_pointer_declared_type.resolve_custom_types(composite_types),
         }
     }
 }

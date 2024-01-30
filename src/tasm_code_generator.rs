@@ -1619,13 +1619,6 @@ fn compile_expr(
             ast::ExprLit::GenericNum(n, _) => {
                 panic!("Type of number literal {n} not resolved")
             }
-            ast::ExprLit::MemPointer(ast::MemPointerLiteral {
-                mem_pointer_address,
-                mem_pointer_declared_type: _,
-                resolved_type: _,
-            }) => triton_asm!(push {
-                mem_pointer_address
-            }),
         },
 
         ast::Expr::Var(identifier) => {
@@ -2548,6 +2541,15 @@ fn compile_expr(
         }
         ast::Expr::Match(match_expr) => compile_match_expr(match_expr, state),
         ast::Expr::Panic(_, _) => triton_asm!(push 0 hint panic = stack[0] assert),
+        ast::Expr::MemoryLocation(ast::MemPointerExpression {
+            mem_pointer_address,
+            ..
+        }) => {
+            let context = format!("{context}_mem_pointer_addr");
+            let (_, code) = compile_expr(mem_pointer_address, &context, state);
+            state.function_state.vstack.pop().unwrap();
+            code
+        }
     };
 
     // Update compiler's view of the stack with the new value. Check if value needs to

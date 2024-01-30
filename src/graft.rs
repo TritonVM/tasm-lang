@@ -52,11 +52,19 @@ impl<'a> Graft<'a> {
     }
 
     fn is_copy(attrs: &[syn::Attribute]) -> bool {
-        match attrs.len() {
-            0 => false,
-            1 => attrs[0].tokens.to_string().contains("Copy"),
-            _ => panic!("Can only handle one line of attributes for now."),
+        for attr in attrs {
+            let Some(path_segment) = attr.path.segments.first() else {
+                continue;
+            };
+            if path_segment.ident != syn::parse_str::<syn::Ident>("derive").unwrap() {
+                continue;
+            };
+            if attr.tokens.to_string().contains("Copy") {
+                return true;
+            }
         }
+
+        false
     }
 
     /// Graft user-defined data types

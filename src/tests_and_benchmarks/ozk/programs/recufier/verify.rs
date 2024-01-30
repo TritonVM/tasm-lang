@@ -4,7 +4,8 @@ use super::vm_proof_stream::*;
 
 pub fn recufy() {
     tasm::tasm_recufier_assert_stdin_starts_with_own_program_digest();
-    let proof_iter: VmProofIter = VmProofIter::new();
+    let inner_proof_iter: VmProofIter = VmProofIter::new();
+    let proof_iter: Box<VmProofIter> = Box::<VmProofIter>::new(inner_proof_iter);
     let log_2_padded_height: u32 = proof_iter.next_as_log_2_padded_height();
     tasm::tasm_io_write_to_stdout___u32(log_2_padded_height);
     return;

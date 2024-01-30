@@ -46,8 +46,6 @@ impl BFieldCodecLib {
         let encoding_length = receiver_type.bfield_codec_static_length().unwrap();
         let list_size_in_memory = (encoding_length + self.list_type.metadata_size()) as i32;
 
-        // 1. Create a new list with the appropriate capacity
-        // 2. Maybe // huh?
         let dyn_malloc_label = state.import_snippet(Box::new(dyn_malloc::DynMalloc));
 
         let write_capacity = match self.list_type {
@@ -89,6 +87,66 @@ impl BFieldCodecLib {
         );
         (encode_subroutine_label, encode_subroutine_code)
     }
+
+    /// Handle the entire T::decode(...) grafting. Does not handle any appended `unwrap`.
+    /// Expects the `decode` expression to be
+    /// `T::decode(&tasm::load_from_memory(BFieldElement::new(x)))`.
+    /// Extracts the `x` from the above expression and returns it as a literal.
+    fn handle_decode(
+        graft_config: &mut Graft,
+        fn_name: &str,
+        args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
+        function_type_parameter: Option<ast_types::DataType>,
+        list_type: ast_types::ListType,
+    ) -> crate::ast::Expr<super::Annotation> {
+        // Fetch the returned type
+        let split_fn_name: Vec<_> = fn_name.split("::").collect();
+        let [return_type, _] = split_fn_name[..] else {
+            panic!("Can only handle pattern T::decode. Got: {fn_name}");
+        };
+
+        // TODO: This is not very elegant! Can only handle `Vec<T>` and declared structs.
+        let mem_pointer_declared_type = if return_type == "Vec" {
+            let Some(vec_element_type) = function_type_parameter else {
+                panic!("Expected type parameter for Vec<T> in `decode` function");
+            };
+            ast_types::DataType::List(Box::new(vec_element_type), list_type)
+        } else {
+            ast_types::DataType::Unresolved(return_type.to_owned())
+        };
+
+        let [decode_arg] = args.iter().collect_vec()[..] else {
+            panic!("`decode` requires exactly one argument. Got args:\n{args:#?}");
+        };
+
+        let error_msg = format!(
+            "Expected T::decode(&tasm::load_from_memory(BFieldElement::new(<n>)))). \
+            Got: {decode_arg:#?}"
+        );
+        let decode_arg = graft_config.graft_expr(decode_arg);
+        const LOAD_FROM_MEMORY_FN_NAME: &str = "tasm::load_from_memory";
+        let ast::Expr::Unary(ast::UnaryOp::Ref(false), inner_expr, _) = decode_arg else {
+            panic!("{error_msg}");
+        };
+        let ast::Expr::FnCall(ast::FnCall {
+            name,
+            args: load_function_args,
+            ..
+        }) = *inner_expr
+        else {
+            panic!("{error_msg}");
+        };
+
+        assert_eq!(LOAD_FROM_MEMORY_FN_NAME, name, "{error_msg}");
+        assert_eq!(1, load_function_args.len(), "{error_msg}");
+
+        ast::Expr::MemoryLocation(ast::MemPointerExpression {
+            mem_pointer_address: Box::new(load_function_args[0].to_owned()),
+            mem_pointer_declared_type,
+            // `resolved_type` is to be filled out by the type checker
+            resolved_type: Default::default(),
+        })
+    }
 }
 
 impl Library for BFieldCodecLib {
@@ -101,19 +159,18 @@ impl Library for BFieldCodecLib {
         method_name: &str,
         receiver_type: &crate::ast_types::DataType,
     ) -> Option<String> {
-        if method_name == ENCODE_METHOD_NAME {
-            // For now, we only allow `encode` to be called on values
-            // with a statically known length.
-            if receiver_type.bfield_codec_static_length().is_some() {
-                return Some(method_name.to_owned());
-            } else {
-                panic!(
-                    ".encode() can only be called on values with a statically known length. Got:  {receiver_type:#?}"
-                );
-            }
+        if method_name != ENCODE_METHOD_NAME {
+            return None;
         }
 
-        None
+        if receiver_type.bfield_codec_static_length().is_none() {
+            panic!(
+                ".encode() can only be called on values with a statically known length. \
+                    Got:  {receiver_type:#?}"
+            );
+        }
+
+        Some(method_name.to_owned())
     }
 
     fn method_name_to_signature(
@@ -125,7 +182,10 @@ impl Library for BFieldCodecLib {
     ) -> crate::ast::FnSignature {
         if method_name != ENCODE_METHOD_NAME || receiver_type.bfield_codec_static_length().is_none()
         {
-            panic!("Unknown method in BFieldCodecLib. Got: {method_name} on receiver_type: {receiver_type}");
+            panic!(
+                "Unknown method in BFieldCodecLib. \
+                Got: {method_name} on receiver_type: {receiver_type}"
+            );
         }
 
         self.encode_method_signature(receiver_type)
@@ -149,7 +209,10 @@ impl Library for BFieldCodecLib {
     ) -> Vec<LabelledInstruction> {
         if method_name != ENCODE_METHOD_NAME || receiver_type.bfield_codec_static_length().is_none()
         {
-            panic!("Unknown method in BFieldCodecLib. Got: {method_name} on receiver_type: {receiver_type}");
+            panic!(
+                "Unknown method in BFieldCodecLib. \
+                Got: {method_name} on receiver_type: {receiver_type}"
+            );
         }
 
         let (encode_subroutine_label, encode_subroutine_code) =
@@ -187,75 +250,8 @@ impl Library for BFieldCodecLib {
         args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
         function_type_parameter: Option<ast_types::DataType>,
     ) -> Option<crate::ast::Expr<super::Annotation>> {
-        /// Handle the entire T::decode(...) grafting. Does not handle any appended `unwrap`.
-        /// Expects the `decode` expression to be
-        /// `T::decode(&tasm::load_from_memory(BFieldElement::new(x)))`.
-        /// Extracts the `x` from the above expression and returns it as a literal.
-        fn handle_decode(
-            graft_config: &mut Graft,
-            fn_name: &str,
-            args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
-            function_type_parameter: Option<ast_types::DataType>,
-            list_type: ast_types::ListType,
-        ) -> crate::ast::Expr<super::Annotation> {
-            // Fetch the returned type
-            let split_fn_name: Vec<_> = fn_name.split("::").collect();
-            let [return_type, _] = split_fn_name[..] else {
-                panic!("Can only handle pattern T::decode. Got: {fn_name}");
-            };
-
-            // TODO: This is not very elegant! Can only handle `Vec<T>` and declared structs.
-            let mem_pointer_declared_type = if return_type == "Vec" {
-                let Some(t) = function_type_parameter else {
-                    panic!("Expected type parameter for Vec<T> in `decode` function");
-                };
-                ast_types::DataType::List(Box::new(t), list_type)
-            } else {
-                ast_types::DataType::Unresolved(return_type.to_owned())
-            };
-
-            let [decode_arg] = args.iter().collect_vec()[..] else {
-                panic!("`decode` requires exactly one argument. Got args:\n{args:#?}");
-            };
-
-            let error_msg = format!(
-                "Expected T::decode(&tasm::load_from_memory(BFieldElement::new(<n>)))). \
-                Got: {decode_arg:#?}"
-            );
-            let decode_arg = graft_config.graft_expr(decode_arg);
-            const LOAD_FROM_MEMORY_FN_NAME: &str = "tasm::load_from_memory";
-            let ast::Expr::Unary(ast::UnaryOp::Ref(false), inner_expr, _) = decode_arg else {
-                panic!("{error_msg}");
-            };
-            let ast::Expr::FnCall(ast::FnCall {
-                name,
-                args: load_function_args,
-                ..
-            }) = *inner_expr
-            else {
-                panic!("{error_msg}");
-            };
-
-            assert_eq!(LOAD_FROM_MEMORY_FN_NAME, name, "{error_msg}");
-            assert_eq!(1, load_function_args.len(), "{error_msg}");
-            let ast::Expr::Lit(ast::ExprLit::Bfe(pointer_to_struct)) = load_function_args[0] else {
-                // TODO: Maybe `address` can be an expression and doesn't have to be a literal? Do we need or want that?
-                //  Yes we do.
-                panic!(
-                    "Argument to {LOAD_FROM_MEMORY_FN_NAME} must be known at compile time and must be a BFieldElement"
-                );
-            };
-
-            ast::Expr::Lit(ast::ExprLit::MemPointer(ast::MemPointerLiteral {
-                mem_pointer_address: pointer_to_struct,
-                mem_pointer_declared_type,
-                // `resolved_type` is to be filled out by the type checker
-                resolved_type: Default::default(),
-            }))
-        }
-
         if fn_name.contains("::decode") {
-            let decode_expr = handle_decode(
+            let decode_expr = Self::handle_decode(
                 graft_config,
                 fn_name,
                 args,
@@ -277,20 +273,16 @@ impl Library for BFieldCodecLib {
             graft_config: &mut Graft,
             rust_method_call: &syn::ExprMethodCall,
         ) -> Option<ast::Expr<super::Annotation>> {
-            match rust_method_call.receiver.as_ref() {
-                syn::Expr::Call(ca) => {
-                    let preceding_function_call = graft_config.graft_call_exp(ca);
-                    if matches!(
-                        preceding_function_call,
-                        ast::Expr::Lit(ast::ExprLit::MemPointer(_))
-                    ) {
-                        Some(preceding_function_call)
-                    } else {
-                        None
-                    }
-                }
-                _ => None,
-            }
+            let syn::Expr::Call(ca) = rust_method_call.receiver.as_ref() else {
+                return None;
+            };
+
+            let preceding_function_call = graft_config.graft_call_exp(ca);
+            let ast::Expr::MemoryLocation(_) = preceding_function_call else {
+                return None;
+            };
+
+            Some(preceding_function_call)
         }
 
         // Remove `unwrap` if method call is `T::decode(...).unwrap()`

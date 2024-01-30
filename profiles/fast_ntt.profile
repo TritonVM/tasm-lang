@@ -1451,7 +1451,7 @@ fast_ntt:
          tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
        tasm_arithmetic_u32_safeadd: 8
-   _binop_Lt__LboolR_bool_186_while_loop: 1128
+   _binop_Lt__LboolR_bool_187_while_loop: 1128
      tasm_io_write_to_stdout___xfe: 2
      tasm_arithmetic_u32_safeadd: 8
      tasm_io_write_to_stdout___xfe: 2
@@ -2995,7 +2995,7 @@ fast_ntt:
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safeadd: 8
-   _binop_Lt__LboolR_bool_201_while_loop: 1672
+   _binop_Lt__LboolR_bool_203_while_loop: 1672
      tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
@@ -3053,7 +3053,7 @@ fast_ntt:
          _binop_Neq__LboolR_bool_74_while_loop: 13941 (0.2271446)
          tasm_arithmetic_u32_safemul: 328 (0.0053441953)
          tasm_arithmetic_u32_safeadd: 544 (0.008863544)
-   _binop_Lt__LboolR_bool_186_while_loop: 1128 (0.018378818)
+   _binop_Lt__LboolR_bool_187_while_loop: 1128 (0.018378818)
      tasm_io_write_to_stdout___xfe: 64 (0.0010427699)
      tasm_arithmetic_u32_safeadd: 512 (0.008342159)
    xfe_intt: 29959 (0.48813036)
@@ -3073,5 +3073,5 @@ fast_ntt:
            tasm_arithmetic_u32_safemul: 248 (0.004040733)
      bfe_new_from_u64: 5 (0.000081466394)
      _binop_Lt__LboolR_bool_149_while_loop: 1384 (0.022549897)
-   _binop_Lt__LboolR_bool_201_while_loop: 1672 (0.027242362)
+   _binop_Lt__LboolR_bool_203_while_loop: 1672 (0.027242362)
  total: 61377 (1.0000325)
