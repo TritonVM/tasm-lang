@@ -1,11 +1,13 @@
-use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
-use crate::tests_and_benchmarks::ozk::rust_shadows::{self as tasm, wrap_main_with_io};
-use crate::tests_and_benchmarks::test_helpers::shared_test::TritonVMTestCase;
-use crate::triton_vm::prelude::*;
 use num::Zero;
 use tasm_lib::twenty_first::shared_math::other::random_elements;
 use tasm_lib::twenty_first::shared_math::tip5::Tip5State;
 use tasm_lib::twenty_first::util_types::algebraic_hasher::SpongeHasher;
+
+use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
+use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
+use crate::tests_and_benchmarks::ozk::rust_shadows::wrap_main_with_io;
+use crate::tests_and_benchmarks::test_helpers::shared_test::TritonVMTestCase;
+use crate::triton_vm::prelude::*;
 
 fn _main() {
     let _sponge: Tip5State = Tip5::init();
@@ -52,6 +54,7 @@ fn initialized_sponge_behaves_correctly_deep_in_stack() {
 #[cfg(test)]
 mod tests {
     use super::*;
+
     #[test]
     fn can_compile_call_to_init() {
         let entrypoint = EntrypointLocation::disk("sponge_hasher", "init", "_main");

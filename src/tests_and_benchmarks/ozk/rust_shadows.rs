@@ -19,7 +19,8 @@ thread_local! {
 
     static ND_INDIVIDUAL_TOKEN: RefCell<Vec<BFieldElement>> = RefCell::new(vec![]);
     static ND_DIGESTS: RefCell<Vec<Digest>> = RefCell::new(vec![]);
-    static ND_MEMORY: RefCell<HashMap<BFieldElement, BFieldElement>> = RefCell::new(HashMap::default());
+    pub(super) static ND_MEMORY: RefCell<HashMap<BFieldElement, BFieldElement>> =
+        RefCell::new(HashMap::default());
 }
 
 pub(super) fn load_from_memory(start_address: BFieldElement) -> Vec<BFieldElement> {

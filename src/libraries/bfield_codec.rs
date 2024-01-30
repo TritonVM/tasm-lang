@@ -12,6 +12,8 @@ use crate::tasm_code_generator::CompilerState;
 use super::Library;
 
 const ENCODE_METHOD_NAME: &str = "encode";
+const LOAD_FROM_MEMORY_FN_NAME: &str = "tasm::load_from_memory";
+const DECODE_FROM_MEMORY_FN_NAME: &str = "bfield_codec::decode_from_memory";
 
 #[derive(Clone, Debug)]
 pub(crate) struct BFieldCodecLib {
@@ -97,7 +99,6 @@ impl BFieldCodecLib {
         fn_name: &str,
         args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
         function_type_parameter: Option<ast_types::DataType>,
-        list_type: ast_types::ListType,
     ) -> crate::ast::Expr<super::Annotation> {
         // Fetch the returned type
         let split_fn_name: Vec<_> = fn_name.split("::").collect();
@@ -110,7 +111,7 @@ impl BFieldCodecLib {
             let Some(vec_element_type) = function_type_parameter else {
                 panic!("Expected type parameter for Vec<T> in `decode` function");
             };
-            ast_types::DataType::List(Box::new(vec_element_type), list_type)
+            ast_types::DataType::List(Box::new(vec_element_type), graft_config.list_type)
         } else {
             ast_types::DataType::Unresolved(return_type.to_owned())
         };
@@ -124,7 +125,6 @@ impl BFieldCodecLib {
             Got: {decode_arg:#?}"
         );
         let decode_arg = graft_config.graft_expr(decode_arg);
-        const LOAD_FROM_MEMORY_FN_NAME: &str = "tasm::load_from_memory";
         let ast::Expr::Unary(ast::UnaryOp::Ref(false), inner_expr, _) = decode_arg else {
             panic!("{error_msg}");
         };
@@ -146,6 +146,31 @@ impl BFieldCodecLib {
             // `resolved_type` is to be filled out by the type checker
             resolved_type: Default::default(),
         })
+    }
+
+    fn handle_decode_from_mem(
+        graft_config: &mut Graft,
+        fn_name: &str,
+        args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
+        function_type_parameter: Option<ast_types::DataType>,
+    ) -> crate::ast::Expr<super::Annotation> {
+        assert_eq!(DECODE_FROM_MEMORY_FN_NAME, fn_name);
+        let [memory_address] = args.iter().collect_vec()[..] else {
+            panic!("expect exactly one argument to `decode_from_memory`");
+        };
+        let memory_address = graft_config.graft_expr(memory_address);
+
+        let Some(mem_pointer_declared_type) = function_type_parameter else {
+            panic!("function `decode_from_memory` needs explicit generic type");
+        };
+
+        let memory_expression = ast::MemPointerExpression {
+            mem_pointer_address: Box::new(memory_address),
+            mem_pointer_declared_type,
+            resolved_type: Default::default(),
+        };
+
+        ast::Expr::MemoryLocation(memory_expression)
     }
 }
 
@@ -236,10 +261,10 @@ impl Library for BFieldCodecLib {
     }
 
     fn get_graft_function_name(&self, full_name: &str) -> Option<String> {
-        if full_name.contains("::decode") {
-            Some(full_name.to_owned())
-        } else {
-            None
+        match full_name {
+            name if name.starts_with("bfield_codec::") => Some(name.to_owned()),
+            name if name.contains("::decode") => Some(name.to_owned()),
+            _ => None,
         }
     }
 
@@ -250,14 +275,14 @@ impl Library for BFieldCodecLib {
         args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
         function_type_parameter: Option<ast_types::DataType>,
     ) -> Option<crate::ast::Expr<super::Annotation>> {
+        if fn_name.starts_with("bfield_codec::") {
+            let decode_expr =
+                Self::handle_decode_from_mem(graft_config, fn_name, args, function_type_parameter);
+            return Some(decode_expr);
+        }
         if fn_name.contains("::decode") {
-            let decode_expr = Self::handle_decode(
-                graft_config,
-                fn_name,
-                args,
-                function_type_parameter,
-                self.list_type,
-            );
+            let decode_expr =
+                Self::handle_decode(graft_config, fn_name, args, function_type_parameter);
             return Some(decode_expr);
         }
 
