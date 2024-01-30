@@ -1,4 +1,5 @@
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
+use crate::triton_vm::prelude::XFieldElement;
 
 use super::vm_proof_stream::*;
 
@@ -8,6 +9,10 @@ pub fn recufy() {
     let mut proof_iter: Box<VmProofIter> = Box::<VmProofIter>::new(inner_proof_iter);
     let log_2_padded_height: u32 = proof_iter.next_as_log_2_padded_height();
     tasm::tasm_io_write_to_stdout___u32(log_2_padded_height);
+
+    let out_of_domain_base_row: Vec<XFieldElement> = proof_iter.next_as_out_of_domain_base_row();
+    let first_element: XFieldElement = out_of_domain_base_row[0];
+    tasm::tasm_io_write_to_stdout___xfe(first_element);
     return;
 }
 
@@ -31,8 +36,13 @@ mod tests {
     }
 
     fn proof() -> Proof {
+        let dummy_ood_base_row = [[1337, 1338, 1339], [1001, 1002, 1004], [7001, 7002, 7004]]
+            .map(XFieldElement::new_u64)
+            .to_vec();
+
         let mut proof_stream = ProofStream::<Tip5>::new();
         proof_stream.enqueue(ProofItem::Log2PaddedHeight(42));
+        proof_stream.enqueue(ProofItem::OutOfDomainBaseRow(dummy_ood_base_row));
         proof_stream.into()
     }
 

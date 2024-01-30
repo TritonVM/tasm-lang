@@ -41,4 +41,28 @@ impl VmProofIter {
             }
         };
     }
+
+    pub fn next_as_out_of_domain_base_row(&mut self) -> Vec<XFieldElement> {
+        let item_size_pointer: BFieldElement = BFieldElement::new(self.current_item_pointer as u64);
+        let item_pointer: BFieldElement = item_size_pointer + BFieldElement::one();
+
+        let item_size_boxed: Box<BFieldElement> =
+            bfield_codec::decode_from_memory_using_size::<BFieldElement>(item_size_pointer, 1);
+        let item_size_bfe: BFieldElement = *item_size_boxed;
+        let item_size: usize = item_size_bfe.value() as usize;
+        self.current_item_pointer += item_size + 1;
+
+        let out_of_domain_base_row_item: Box<ProofItem> =
+            bfield_codec::decode_from_memory_using_size::<ProofItem>(item_pointer, item_size);
+
+        return match out_of_domain_base_row_item.as_ref() {
+            ProofItem::OutOfDomainBaseRow(row) => {
+                //
+                row.to_owned()
+            }
+            _ => {
+                panic!()
+            }
+        };
+    }
 }

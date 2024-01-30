@@ -14,13 +14,14 @@ pub(crate) struct FriResponse {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Arbitrary, BFieldCodec)]
 pub(crate) enum ProofItem {
-    AuthenticationStructure(Vec<Digest>),
-    MasterBaseTableRows(Vec<Vec<BFieldElement>>),
-    MasterExtTableRows(Vec<Vec<XFieldElement>>),
+    MerkleRoot(Digest),
     OutOfDomainBaseRow(Vec<XFieldElement>),
     OutOfDomainExtRow(Vec<XFieldElement>),
     OutOfDomainQuotientSegments([XFieldElement; 4]),
-    MerkleRoot(Digest),
+
+    AuthenticationStructure(Vec<Digest>),
+    MasterBaseTableRows(Vec<Vec<BFieldElement>>),
+    MasterExtTableRows(Vec<Vec<XFieldElement>>),
     Log2PaddedHeight(u32),
     QuotientSegmentsElements(Vec<[XFieldElement; 4]>),
     FriCodeword(Vec<XFieldElement>),
