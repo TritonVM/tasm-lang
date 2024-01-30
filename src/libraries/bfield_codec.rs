@@ -14,6 +14,7 @@ use super::Library;
 const ENCODE_METHOD_NAME: &str = "encode";
 const LOAD_FROM_MEMORY_FN_NAME: &str = "tasm::load_from_memory";
 const DECODE_FROM_MEMORY_FN_NAME: &str = "bfield_codec::decode_from_memory";
+const DECODE_FROM_MEMORY_USING_SIZE_FN_NAME: &str = "bfield_codec::decode_from_memory_using_size";
 
 #[derive(Clone, Debug)]
 pub(crate) struct BFieldCodecLib {
@@ -154,14 +155,19 @@ impl BFieldCodecLib {
         args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
         function_type_parameter: Option<ast_types::DataType>,
     ) -> crate::ast::Expr<super::Annotation> {
-        assert_eq!(DECODE_FROM_MEMORY_FN_NAME, fn_name);
-        let [memory_address] = args.iter().collect_vec()[..] else {
-            panic!("expect exactly one argument to `decode_from_memory`");
+        assert!(matches!(
+            fn_name,
+            DECODE_FROM_MEMORY_FN_NAME | DECODE_FROM_MEMORY_USING_SIZE_FN_NAME
+        ));
+        let memory_address = match args.iter().collect_vec()[..] {
+            [address] => address,
+            [address, _] => address,
+            _ => panic!("wrong number of arguments to `{fn_name}`"),
         };
         let memory_address = graft_config.graft_expr(memory_address);
 
         let Some(mem_pointer_declared_type) = function_type_parameter else {
-            panic!("function `decode_from_memory` needs explicit generic type");
+            panic!("function `{fn_name}` needs explicit generic type");
         };
 
         let memory_expression = ast::MemPointerExpression {

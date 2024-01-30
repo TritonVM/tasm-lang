@@ -21,15 +21,15 @@ impl VmProofIter {
     /// # Panics
     /// Panics if there is no next item.
     pub fn next_as_log_2_padded_height(&mut self) -> u32 {
-        let current_item_size_pointer: BFieldElement =
-            BFieldElement::new(self.current_item_pointer as u64);
-        let current_item_pointer: BFieldElement = current_item_size_pointer + BFieldElement::one();
+        let item_size_pointer: BFieldElement = BFieldElement::new(self.current_item_pointer as u64);
+        let item_pointer: BFieldElement = item_size_pointer + BFieldElement::one();
 
-        // Super specific knowledge about the encoding of `ProofItem::Log2PaddedHeight`.
-        self.current_item_pointer += 3;
+        // super specific knowledge about the encoding of `ProofItem::Log2PaddedHeight`
+        let item_size: usize = 2;
+        self.current_item_pointer += item_size + 1;
 
         let log_2_padded_height_item: Box<ProofItem> =
-            bfield_codec::decode_from_memory::<ProofItem>(current_item_pointer);
+            bfield_codec::decode_from_memory_using_size::<ProofItem>(item_pointer, item_size);
 
         return match log_2_padded_height_item.as_ref() {
             ProofItem::Log2PaddedHeight(height) => {
