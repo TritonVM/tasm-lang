@@ -1,6 +1,5 @@
-use tasm_lib::triton_vm::prelude::*;
-
 use arbitrary::Arbitrary;
+use tasm_lib::triton_vm::prelude::*;
 
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
@@ -209,6 +208,85 @@ mod test {
     use crate::tests_and_benchmarks::test_helpers::shared_test::TritonVMTestCase;
 
     use super::*;
+
+    type OriginalFriResponse = tasm_lib::triton_vm::proof_item::FriResponse;
+    type OriginalProofItem = tasm_lib::triton_vm::proof_item::ProofItem;
+
+    impl From<FriResponse> for OriginalFriResponse {
+        fn from(response: FriResponse) -> Self {
+            Self {
+                auth_structure: response.auth_structure,
+                revealed_leaves: response.revealed_leaves,
+            }
+        }
+    }
+
+    impl From<OriginalFriResponse> for FriResponse {
+        fn from(response: OriginalFriResponse) -> Self {
+            Self {
+                auth_structure: response.auth_structure,
+                revealed_leaves: response.revealed_leaves,
+            }
+        }
+    }
+
+    impl From<ProofItem> for OriginalProofItem {
+        fn from(value: ProofItem) -> OriginalProofItem {
+            match value {
+                ProofItem::MerkleRoot(x) => OriginalProofItem::MerkleRoot(x),
+                ProofItem::OutOfDomainBaseRow(x) => OriginalProofItem::OutOfDomainBaseRow(x),
+                ProofItem::OutOfDomainExtRow(x) => OriginalProofItem::OutOfDomainExtRow(x),
+                ProofItem::OutOfDomainQuotientSegments(x) => {
+                    OriginalProofItem::OutOfDomainQuotientSegments(x)
+                }
+                ProofItem::AuthenticationStructure(x) => {
+                    OriginalProofItem::AuthenticationStructure(x)
+                }
+                ProofItem::MasterBaseTableRows(x) => OriginalProofItem::MasterBaseTableRows(x),
+                ProofItem::MasterExtTableRows(x) => OriginalProofItem::MasterExtTableRows(x),
+                ProofItem::Log2PaddedHeight(x) => OriginalProofItem::Log2PaddedHeight(x),
+                ProofItem::QuotientSegmentsElements(x) => {
+                    OriginalProofItem::QuotientSegmentsElements(x)
+                }
+                ProofItem::FriCodeword(x) => OriginalProofItem::FriCodeword(x),
+                ProofItem::FriResponse(x) => OriginalProofItem::FriResponse(x.into()),
+            }
+        }
+    }
+
+    impl From<OriginalProofItem> for ProofItem {
+        fn from(value: OriginalProofItem) -> ProofItem {
+            match value {
+                OriginalProofItem::MerkleRoot(x) => ProofItem::MerkleRoot(x),
+                OriginalProofItem::OutOfDomainBaseRow(x) => ProofItem::OutOfDomainBaseRow(x),
+                OriginalProofItem::OutOfDomainExtRow(x) => ProofItem::OutOfDomainExtRow(x),
+                OriginalProofItem::OutOfDomainQuotientSegments(x) => {
+                    ProofItem::OutOfDomainQuotientSegments(x)
+                }
+                OriginalProofItem::AuthenticationStructure(x) => {
+                    ProofItem::AuthenticationStructure(x)
+                }
+                OriginalProofItem::MasterBaseTableRows(x) => ProofItem::MasterBaseTableRows(x),
+                OriginalProofItem::MasterExtTableRows(x) => ProofItem::MasterExtTableRows(x),
+                OriginalProofItem::Log2PaddedHeight(x) => ProofItem::Log2PaddedHeight(x),
+                OriginalProofItem::QuotientSegmentsElements(x) => {
+                    ProofItem::QuotientSegmentsElements(x)
+                }
+                OriginalProofItem::FriCodeword(x) => ProofItem::FriCodeword(x),
+                OriginalProofItem::FriResponse(x) => ProofItem::FriResponse(x.into()),
+            }
+        }
+    }
+
+    #[proptest]
+    fn proof_item_discriminant_agrees_with_original_proof_item_discriminant(
+        #[strategy(arb())] original_proof_item: OriginalProofItem,
+    ) {
+        let original_discriminant = original_proof_item.bfield_codec_discriminant();
+        let proof_item = ProofItem::from(original_proof_item);
+        let discriminant = proof_item.bfield_codec_discriminant();
+        prop_assert_eq!(original_discriminant, discriminant);
+    }
 
     fn proof_item_load_auth_structure_from_memory() {
         let auth_struct: Box<ProofItem> =
