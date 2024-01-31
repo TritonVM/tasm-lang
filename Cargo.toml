@@ -11,7 +11,7 @@ itertools = "0.12"
 num = "0.4"
 rand = "0"
 syn = { version = "1.0", features = ["full", "extra-traits"] }
-tasm-lib = { git = "https://github.com/TritonVM/tasm-lib.git", rev = "99ef7bf0" }
+tasm-lib = { git = "https://github.com/TritonVM/tasm-lib.git", rev = "7a6345f2" }
 quote = "1.0"
 
 [dev-dependencies]

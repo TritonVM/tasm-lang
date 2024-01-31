@@ -155,20 +155,11 @@ impl Library for HasherLib {
 /// Handle initialization of digests through `Digest::new([BFieldElement::new(4), ...])`
 fn graft_digest_new(arg_0: &syn::Expr, graft_config: &mut Graft) -> ast::Expr<super::Annotation> {
     match arg_0 {
-        syn::Expr::Array(syn::ExprArray {
-            attrs: _,
-            bracket_token: _,
-            elems,
-        }) => {
+        syn::Expr::Array(syn::ExprArray { elems, .. }) => {
             let mut initializer_exprs = vec![];
             for elem in elems {
                 match elem {
-                    syn::Expr::Call(syn::ExprCall {
-                        attrs: _,
-                        func,
-                        paren_token: _,
-                        args,
-                    }) => {
+                    syn::Expr::Call(syn::ExprCall { func, args, .. }) => {
                         let (name, _type_parameter) = match func.as_ref() {
                             syn::Expr::Path(path) => (
                                 Graft::path_to_ident(&path.path),

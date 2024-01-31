@@ -1,10 +1,40 @@
+use num::One;
+use num::Zero;
+
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
-use crate::triton_vm::prelude::XFieldElement;
+use crate::triton_vm::prelude::tip5::Tip5State;
+use crate::twenty_first::prelude::*;
 
 use super::vm_proof_stream::*;
 
+struct Recufier;
+
+impl Recufier {
+    /// Manual encoding of a claim containing only a program digest.
+    pub fn encode_claim(digest: Digest) -> Vec<BFieldElement> {
+        let mut encoding: Vec<BFieldElement> = Vec::<BFieldElement>::with_capacity(9);
+        encoding.push(BFieldElement::one());
+        encoding.push(BFieldElement::zero());
+        encoding.push(BFieldElement::one());
+        encoding.push(BFieldElement::zero());
+
+        encoding.push(digest.0[0]);
+        encoding.push(digest.0[1]);
+        encoding.push(digest.0[2]);
+        encoding.push(digest.0[3]);
+        encoding.push(digest.0[4]);
+
+        return encoding;
+    }
+}
+
 pub fn recufy() {
-    tasm::tasm_recufier_assert_stdin_starts_with_own_program_digest();
+    let own_digest: Digest = tasm::tasm_recufier_read_and_verify_own_program_digest_from_std_in();
+
+    let mut sponge_state: Tip5State = Tip5::init();
+    let encoded_claim: Vec<BFieldElement> = Recufier::encode_claim(own_digest);
+    Tip5::pad_and_absorb_all(&mut sponge_state, &encoded_claim);
+
     let inner_proof_iter: VmProofIter = VmProofIter::new();
     let mut proof_iter: Box<VmProofIter> = Box::<VmProofIter>::new(inner_proof_iter);
     let log_2_padded_height: u32 = proof_iter.next_as_log_2_padded_height();

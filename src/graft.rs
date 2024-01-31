@@ -82,64 +82,16 @@ impl<'a> Graft<'a> {
             .collect_vec();
         for struct_ in structs {
             match struct_ {
-                CustomTypeRust::Enum(enum_item) => {
-                    let syn::ItemEnum {
-                        attrs,
-                        vis: _,
-                        enum_token: _,
-                        ident,
-                        generics: _,
-                        brace_token: _,
-                        variants,
-                    } = enum_item;
-                    let name = ident.to_string();
-
-                    let is_copy = Self::is_copy(&attrs);
-
-                    let variants = self.graft_enum_variants(variants.into_iter().collect_vec());
-                    let enum_type = ast_types::EnumType {
-                        name: name.clone(),
-                        is_copy,
-                        variants,
-                        is_prelude: false,
-                        type_parameter: None,
-                    };
-
-                    composite_types.add_custom_type(ast_types::CustomTypeOil::Enum(enum_type));
-                }
-                CustomTypeRust::Struct(struct_item) => {
-                    let syn::ItemStruct {
-                        attrs,
-                        vis: _,
-                        struct_token: _,
-                        ident,
-                        generics: _,
-                        fields,
-                        semi_token: _,
-                    } = struct_item;
-                    let name = ident.to_string();
-
-                    let is_copy = Self::is_copy(&attrs);
-
-                    // Rust structs come in three forms: with named fields, tuple structs, and
-                    // unit structs. We don't yet support unit structs, so we can assume that
-                    // the struct has at least *one* field.
-                    let struct_type = match fields.iter().next().unwrap().ident {
-                        Some(_) => ast_types::StructVariant::NamedFields(
-                            self.graft_struct_with_named_fields(fields),
-                        ),
-                        None => {
-                            ast_types::StructVariant::TupleStruct(self.graft_tuple_struct(fields))
-                        }
-                    };
-                    let struct_type = ast_types::StructType {
-                        is_copy,
-                        variant: struct_type,
-                        name: name.clone(),
-                    };
-
-                    composite_types.add_custom_type(ast_types::CustomTypeOil::Struct(struct_type));
-                }
+                CustomTypeRust::Enum(enum_item) => self
+                    .graft_custom_types_methods_and_associated_functions_for_enum(
+                        &mut composite_types,
+                        enum_item,
+                    ),
+                CustomTypeRust::Struct(struct_item) => self
+                    .graft_custom_types_methods_and_associated_functions_for_struct(
+                        &mut composite_types,
+                        struct_item,
+                    ),
             }
         }
 
@@ -165,6 +117,70 @@ impl<'a> Graft<'a> {
         }
 
         composite_types
+    }
+
+    fn graft_custom_types_methods_and_associated_functions_for_enum(
+        &mut self,
+        composite_types: &mut CompositeTypes,
+        enum_item: syn::ItemEnum,
+    ) {
+        let syn::ItemEnum {
+            attrs,
+            ident,
+            variants,
+            ..
+        } = enum_item;
+        let name = ident.to_string();
+
+        let is_copy = Self::is_copy(&attrs);
+
+        let variants = self.graft_enum_variants(variants.into_iter().collect_vec());
+        let enum_type = ast_types::EnumType {
+            name: name.clone(),
+            is_copy,
+            variants,
+            is_prelude: false,
+            type_parameter: None,
+        };
+
+        composite_types.add_custom_type(ast_types::CustomTypeOil::Enum(enum_type));
+    }
+
+    fn graft_custom_types_methods_and_associated_functions_for_struct(
+        &mut self,
+        composite_types: &mut CompositeTypes,
+        struct_item: syn::ItemStruct,
+    ) {
+        let struct_type = self.determine_struct_type(&struct_item);
+        Self::add_struct_type_to_composite_types(composite_types, struct_item, struct_type);
+    }
+
+    fn determine_struct_type(&mut self, struct_item: &syn::ItemStruct) -> ast_types::StructVariant {
+        let Some(field) = struct_item.fields.iter().next() else {
+            return ast_types::StructVariant::TupleStruct(ast_types::Tuple::unit());
+        };
+
+        let fields = struct_item.fields.clone();
+        let Some(_) = field.ident else {
+            return ast_types::StructVariant::TupleStruct(self.graft_tuple_struct(fields));
+        };
+
+        ast_types::StructVariant::NamedFields(self.graft_struct_with_named_fields(fields))
+    }
+
+    fn add_struct_type_to_composite_types(
+        composite_types: &mut CompositeTypes,
+        struct_item: syn::ItemStruct,
+        struct_type: ast_types::StructVariant,
+    ) {
+        let syn::ItemStruct { attrs, ident, .. } = struct_item;
+        let struct_type = ast_types::StructType {
+            is_copy: Self::is_copy(&attrs),
+            variant: struct_type,
+            name: ident.to_string(),
+        };
+
+        composite_types.add_custom_type(ast_types::CustomTypeOil::Struct(struct_type));
     }
 
     fn graft_enum_variants(&mut self, variants: Vec<syn::Variant>) -> Vec<(String, DataType)> {
@@ -1114,7 +1130,7 @@ impl<'a> Graft<'a> {
 
     /// Handle declarations, i.e. `let a: u32 = 200;`
     fn graft_local_stmt(&mut self, local: &syn::Local) -> Stmt<Annotation> {
-        let (ident, data_type, mutable): (String, DataType, bool) = match &local.pat {
+        let (var_name, data_type, mutable): (String, DataType, bool) = match &local.pat {
             syn::Pat::Type(pat_type) => {
                 let (dt, mutable): (DataType, bool) =
                     self.pat_type_to_data_type_and_mutability(pat_type);
@@ -1123,7 +1139,6 @@ impl<'a> Graft<'a> {
                 (ident, dt, mutable)
             }
             syn::Pat::Ident(d) => {
-                // This would indicate that the explicit type is missing
                 let ident = d.ident.to_string();
                 panic!("Missing explicit type in declaration of '{ident}'");
             }
@@ -1133,11 +1148,11 @@ impl<'a> Graft<'a> {
         let init = local
             .init
             .as_ref()
-            .unwrap_or_else(|| panic!("must initialize \"{ident}\""));
-        let init_expr = init.1.as_ref();
+            .unwrap_or_else(|| panic!("must initialize \"{var_name}\""));
+        let (_, init_expr) = init;
         let ast_expt = self.graft_expr(init_expr);
         let let_stmt = ast::LetStmt {
-            var_name: ident,
+            var_name,
             data_type,
             expr: ast_expt,
             mutable,

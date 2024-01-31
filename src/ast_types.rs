@@ -149,25 +149,33 @@ impl DataType {
                     }
                 }
                 DataType::Tuple(tuple) => {
-                    let tuple_index: usize = field_id.try_into().expect("Tuple must be accessed with a tuple index");
+                    let tuple_index: usize = field_id
+                        .try_into()
+                        .expect("Tuple must be accessed with a tuple index");
                     let field_type = tuple.fields[tuple_index].clone();
                     if field_type.is_copy() {
                         field_type
                     } else {
                         DataType::Boxed(Box::new(field_type))
                     }
-                },
-                _ => panic!("Field getter can only operate on type of struct or pointer to struct. Attempted to access field `{field_id}` on type `{self}`")
+                }
+                _ => panic!(
+                    "Field getter can only operate on type of struct or pointer to struct. \
+                    Attempted to access field `{field_id}` on type `{self}`"
+                ),
             },
-            DataType::Struct(struct_type) => {
-                struct_type.get_field_type(field_id)
-            },
+            DataType::Struct(struct_type) => struct_type.get_field_type(field_id),
             DataType::Tuple(tuple) => {
-                let tuple_index: usize = field_id.try_into().expect("Tuple must be accessed with a tuple index");
+                let tuple_index: usize = field_id
+                    .try_into()
+                    .expect("Tuple must be accessed with a tuple index");
                 tuple.fields[tuple_index].clone()
-            },
-            _ => panic!("Field getter can only operate on type of struct or pointer to struct. Attempted to access field `{field_id}` on type `{self}`")
             }
+            _ => panic!(
+                "Field getter can only operate on type of struct or pointer to struct. \
+                Attempted to access field `{field_id}` on type `{self}`"
+            ),
+        }
     }
 
     // TODO: Consider getting rid of this method

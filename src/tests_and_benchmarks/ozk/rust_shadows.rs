@@ -204,7 +204,7 @@ pub(super) fn wrap_main_with_io(
     )
 }
 
-pub(super) fn tasm_recufier_assert_stdin_starts_with_own_program_digest() {
+pub(super) fn tasm_recufier_read_and_verify_own_program_digest_from_std_in() -> Digest {
     // the rust shadowing does not actually assert digest equivalence :)
-    tasm_io_read_stdin___digest();
+    tasm_io_read_stdin___digest()
 }
