@@ -201,6 +201,9 @@ impl CustomTypeResolution for Stmt<Typing> {
                 arms.iter_mut()
                     .for_each(|x| x.resolve_custom_types(composite_types));
             }
+            Stmt::TupleDestructuring(TupleDestructStmt { ident, .. }) => {
+                ident.resolve_custom_types(composite_types);
+            }
         }
     }
 }

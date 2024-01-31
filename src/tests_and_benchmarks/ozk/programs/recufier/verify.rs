@@ -18,11 +18,13 @@ impl Recufier {
         encoding.push(BFieldElement::one());
         encoding.push(BFieldElement::zero());
 
-        encoding.push(digest.0[0]);
-        encoding.push(digest.0[1]);
-        encoding.push(digest.0[2]);
-        encoding.push(digest.0[3]);
-        encoding.push(digest.0[4]);
+        let Digest([elt_0, elt_1, elt_2, elt_3, elt_4]) = digest;
+
+        encoding.push(elt_0);
+        encoding.push(elt_1);
+        encoding.push(elt_2);
+        encoding.push(elt_3);
+        encoding.push(elt_4);
 
         return encoding;
     }
@@ -43,6 +45,15 @@ pub fn recufy() {
     let out_of_domain_base_row: Vec<XFieldElement> = proof_iter.next_as_out_of_domain_base_row();
     let first_element: XFieldElement = out_of_domain_base_row[0];
     tasm::tasm_io_write_to_stdout___xfe(first_element);
+
+    let produce: [BFieldElement; 10] = Tip5::squeeze(&mut sponge_state);
+    {
+        let mut i: usize = 0;
+        while i < 10 {
+            tasm::tasm_io_write_to_stdout___bfe(produce[i]);
+            i += 1;
+        }
+    }
     return;
 }
 

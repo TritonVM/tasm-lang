@@ -8,6 +8,7 @@ pub(crate) struct SimpleStruct {
 }
 
 impl SimpleStruct {
+    #[allow(clippy::vec_init_then_push)]
     pub fn test_struct() -> SimpleStruct {
         let mut list: Vec<u32> = Vec::<u32>::with_capacity(1);
         list.push(42);

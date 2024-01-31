@@ -1102,6 +1102,26 @@ fn compile_stmt(
                 .insert(var_name.clone(), expr_addr);
             [expr_code, type_hint].concat()
         }
+        ast::Stmt::TupleDestructuring(ast::TupleDestructStmt { bindings, ident }) => {
+            let binding_name = ident.binding_name();
+            let seek_addr = state
+                .function_state
+                .var_addr
+                .get(&binding_name)
+                .unwrap()
+                .to_owned();
+            let new_ids =
+                state.split_value(&seek_addr, vec![ast_types::DataType::Bfe; bindings.len()]);
+            state.function_state.var_addr.remove(&binding_name);
+            for (new_binding, new_value_id) in bindings.iter().rev().zip_eq(new_ids) {
+                state
+                    .function_state
+                    .var_addr
+                    .insert(new_binding.name.clone(), new_value_id);
+            }
+
+            triton_asm!()
+        }
 
         ast::Stmt::Assign(ast::AssignStmt { identifier, expr }) => {
             // When overwriting a value, we ignore the value identifier of the new expression as

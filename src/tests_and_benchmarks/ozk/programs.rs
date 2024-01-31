@@ -1,6 +1,7 @@
 mod arithmetic;
 mod arrays;
 mod boxed;
+mod destructuring;
 mod enums;
 mod match_expr_boxed;
 mod match_expr_on_stack;

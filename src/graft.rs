@@ -7,6 +7,7 @@ use std::str::FromStr;
 use syn::parse_quote;
 use syn::ExprMacro;
 use syn::PathArguments;
+use tasm_lib::DIGEST_LENGTH;
 
 use crate::ast;
 use crate::ast::ReturningBlock;
@@ -488,12 +489,7 @@ impl<'a> Graft<'a> {
 
                 ast_types::DataType::Tuple(element_types.into())
             }
-            syn::Type::Reference(syn::TypeReference {
-                and_token: _,
-                lifetime: _,
-                mutability: _,
-                elem,
-            }) => match *elem.to_owned() {
+            syn::Type::Reference(syn::TypeReference { elem, .. }) => match *elem.to_owned() {
                 syn::Type::Path(type_path) => {
                     let inner_type = self.rust_type_path_to_data_type(&type_path);
                     // Structs that are not copy must be Boxed for reference arguments to work
@@ -501,12 +497,7 @@ impl<'a> Graft<'a> {
                 }
                 _ => todo!(),
             },
-            syn::Type::Array(syn::TypeArray {
-                bracket_token: _,
-                elem,
-                semi_token: _,
-                len,
-            }) => {
+            syn::Type::Array(syn::TypeArray { elem, len, .. }) => {
                 let element_type = self.syn_type_to_ast_type(elem);
                 let length = if let syn::Expr::Lit(expr_lit) = len {
                     let grafted_lit = self.graft_lit(&expr_lit.lit);
@@ -534,13 +525,7 @@ impl<'a> Graft<'a> {
         rust_type_path: &syn::PatType,
     ) -> (ast_types::DataType, bool) {
         let mutable = match *rust_type_path.pat.to_owned() {
-            syn::Pat::Ident(syn::PatIdent {
-                attrs: _,
-                by_ref: _,
-                mutability,
-                ident: _,
-                subpat: _,
-            }) => mutability.is_some(),
+            syn::Pat::Ident(syn::PatIdent { mutability, .. }) => mutability.is_some(),
             other_type => panic!("Unsupported {other_type:#?}"),
         };
         let ast_type = self.syn_type_to_ast_type(rust_type_path.ty.as_ref());
@@ -1130,34 +1115,95 @@ impl<'a> Graft<'a> {
 
     /// Handle declarations, i.e. `let a: u32 = 200;`
     fn graft_local_stmt(&mut self, local: &syn::Local) -> Stmt<Annotation> {
-        let (var_name, data_type, mutable): (String, DataType, bool) = match &local.pat {
-            syn::Pat::Type(pat_type) => {
-                let (dt, mutable): (DataType, bool) =
-                    self.pat_type_to_data_type_and_mutability(pat_type);
-                let ident: String = Graft::pat_to_name(&pat_type.pat);
+        if let syn::Pat::Ident(d) = &local.pat {
+            let ident = d.ident.to_string();
+            panic!("Missing explicit type in declaration of '{ident}'");
+        }
 
-                (ident, dt, mutable)
-            }
-            syn::Pat::Ident(d) => {
-                let ident = d.ident.to_string();
-                panic!("Missing explicit type in declaration of '{ident}'");
-            }
+        match &local.pat {
+            syn::Pat::Type(pat_type) => self.graft_type_associated_pat(local, pat_type),
+            syn::Pat::TupleStruct(struct_pat) => self.graft_struct_pat(local, struct_pat),
             other => panic!("unsupported: {other:?}"),
-        };
+        }
+    }
+
+    fn graft_type_associated_pat(
+        &mut self,
+        local: &syn::Local,
+        pat_type: &syn::PatType,
+    ) -> Stmt<Annotation> {
+        let (data_type, mutable) = self.pat_type_to_data_type_and_mutability(pat_type);
+        let var_name: String = Graft::pat_to_name(&pat_type.pat);
 
         let init = local
             .init
             .as_ref()
             .unwrap_or_else(|| panic!("must initialize \"{var_name}\""));
         let (_, init_expr) = init;
-        let ast_expt = self.graft_expr(init_expr);
         let let_stmt = ast::LetStmt {
             var_name,
             data_type,
-            expr: ast_expt,
+            expr: self.graft_expr(init_expr),
             mutable,
         };
+
         Stmt::Let(let_stmt)
+    }
+
+    /// Handle destructuring of identifiers, e.g. `let Digest([d0, d1, d2, d3, d4]) = digest;`
+    fn graft_struct_pat(
+        &mut self,
+        local: &syn::Local,
+        struct_pat: &syn::PatTupleStruct,
+    ) -> Stmt<Annotation> {
+        let init = local.init.as_ref().unwrap_or_else(|| panic!());
+        let syn::Expr::Path(expr_path) = init.1.as_ref() else {
+            panic!("Destructuring needs a RHS");
+        };
+        assert!(
+            expr_path.path.segments.len().is_one(),
+            "Can only handle one path segment"
+        );
+        let var_name = expr_path.path.segments[0].ident.to_string();
+        let syn::PatTupleStruct { path, pat, .. } = struct_pat;
+        assert!(
+            path.segments.len().is_one(),
+            "Only one path segment supported for now"
+        );
+        let struct_name = path.segments[0].ident.to_string();
+        assert_eq!(
+            "Digest", struct_name,
+            "Only destructuring of digest is allowed for now"
+        );
+        assert_eq!(1, pat.elems.len());
+
+        let syn::Pat::Slice(pat_slice) = &pat.elems[0] else {
+            panic!("pat.elems[0]: {:#?}", pat.elems[0]);
+        };
+
+        assert_eq!(
+            DIGEST_LENGTH,
+            pat_slice.elems.len(),
+            "Expected exactly {DIGEST_LENGTH} in destructuring pattern"
+        );
+
+        let mut bindings = vec![];
+        for pat_elem in pat_slice.elems.iter() {
+            let syn::Pat::Ident(ident) = pat_elem else {
+                panic!("unsupported binding pattern match: {pat_elem:?}")
+            };
+
+            let binding = ast::PatternMatchedBinding {
+                name: ident.ident.to_string(),
+                mutable: ident.mutability.is_some(),
+            };
+            bindings.push(binding);
+        }
+
+        Stmt::TupleDestructuring(ast::TupleDestructStmt {
+            ident: ast::Identifier::String(var_name, Default::default()),
+            bindings,
+        })
     }
 
     /// Handle expressions

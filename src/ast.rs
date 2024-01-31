@@ -162,6 +162,7 @@ pub(crate) enum ArgEvaluationOrder {
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub(crate) enum Stmt<T> {
     Let(LetStmt<T>),
+    TupleDestructuring(TupleDestructStmt<T>),
     Assign(AssignStmt<T>),
     Return(Option<Expr<T>>),
     FnCall(FnCall<T>),
@@ -204,6 +205,12 @@ impl Display for MatchCondition {
             }
         )
     }
+}
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub(crate) struct TupleDestructStmt<T> {
+    pub bindings: Vec<PatternMatchedBinding>,
+    pub ident: Identifier<T>,
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]

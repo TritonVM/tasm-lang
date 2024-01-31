@@ -7,6 +7,7 @@ use std::fmt::Display;
 use tasm_lib::triton_vm::prelude::*;
 
 use crate::ast;
+use crate::ast::TupleDestructStmt;
 use crate::ast::{MethodCall, UnaryOp};
 use crate::ast_types;
 use crate::composite_types::CompositeTypes;
@@ -376,6 +377,31 @@ fn annotate_stmt(
                 var_name.clone(),
                 DataTypeAndMutability::new(data_type, *mutable),
             );
+        }
+
+        // `let Digest([d0, d1, d2, d3, d4]) = digest;`
+        ast::Stmt::TupleDestructuring(TupleDestructStmt { ident, bindings }) => {
+            annotate_identifier_type(
+                ident,
+                Some(ast_types::DataType::Digest),
+                state,
+                env_fn_signature,
+            );
+            let ast::Identifier::String(binding_name, _) = &ident else {
+                panic!("Can only destructure bindings for now");
+            };
+            assert_type_equals(
+                &ident.get_type(),
+                &ast_types::DataType::Digest,
+                "bindings destructuring",
+            );
+            state.vtable.remove(binding_name);
+            for binding in bindings.iter() {
+                state.vtable.insert(
+                    binding.name.to_string(),
+                    DataTypeAndMutability::new(&ast_types::DataType::Bfe, binding.mutable),
+                );
+            }
         }
 
         // `a = 4;`, where `a` is declared as `mut`
