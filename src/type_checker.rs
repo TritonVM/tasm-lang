@@ -7,11 +7,12 @@ use std::fmt::Display;
 use tasm_lib::triton_vm::prelude::*;
 
 use crate::ast;
-use crate::ast::MethodCall;
+use crate::ast::{MethodCall, UnaryOp};
 use crate::ast_types;
 use crate::composite_types::CompositeTypes;
 use crate::libraries;
 use crate::tasm_code_generator::SIZE_OF_ACCESSIBLE_STACK;
+use crate::type_checker::Typing::KnownType;
 
 #[derive(Debug, Default, Clone, Hash, PartialEq, Eq)]
 pub(crate) enum Typing {
@@ -872,35 +873,24 @@ fn get_method_signature(
     // Implemented following the description from: https://stackoverflow.com/a/28552082/2574407
     // TODO: Handle automatic dereferencing and referencing of MemPointer types
     let original_receiver_type = method_call.args[0].get_type();
+    let receiver = &mut method_call.args[0];
     let mut forced_type = original_receiver_type.clone();
     let mut try_again = true;
     while try_again {
-        // 1. if there's a method `bar` where the receiver type (the type of self
+        // if there's a method `bar` where the receiver type (the type of self
         // in the method) matches `forced_type` exactly , use it (a "by value method")
-        match state.composite_types.get_by_type(&forced_type) {
-            None => (),
-            Some(comp_type) => {
-                if let Some(method) = comp_type.get_method(&method_call.method_name) {
-                    method_call.associated_type = Some(forced_type.clone());
-                    if method.receiver_type() == forced_type {
-                        // TODO: Is this neccessary?
-                        if let ast::Expr::Var(ref mut var) = &mut method_call.args[0] {
-                            var.force_type(&forced_type);
-                        }
+        let dereferenced_type = forced_type.unbox();
+        if let Some(comp_type) = state.composite_types.get_by_type(&dereferenced_type) {
+            if let Some(method) = comp_type.get_method(&method_call.method_name) {
+                method_call.associated_type = Some(dereferenced_type);
+                if method.receiver_type() == forced_type {
+                    return method.signature.to_owned();
+                }
 
-                        return method.signature.to_owned();
-                    }
-
-                    let auto_boxed_forced_type =
-                        ast_types::DataType::Boxed(Box::new(forced_type.clone()));
-                    if method.receiver_type() == auto_boxed_forced_type {
-                        // // TODO: I think this is wrong!
-                        // if let ast::Expr::Var(var) = &mut method_call.args[0] {
-                        //     var.force_type(&auto_boxed_forced_type);
-                        // }
-
-                        return method.signature.to_owned();
-                    }
+                let auto_boxed_forced_type =
+                    ast_types::DataType::Boxed(Box::new(forced_type.clone()));
+                if method.receiver_type() == auto_boxed_forced_type {
+                    return method.signature.to_owned();
                 }
             }
         };
@@ -908,12 +898,6 @@ fn get_method_signature(
         for lib in state.libraries.iter() {
             if let Some(method_name) = lib.get_method_name(&method_call.method_name, &forced_type) {
                 method_call.associated_type = Some(forced_type.clone());
-
-                // TODO: Is this neccessary?
-                if let ast::Expr::Var(var) = &mut method_call.args[0] {
-                    var.force_type(&forced_type);
-                }
-
                 return lib.method_name_to_signature(
                     &method_name,
                     &forced_type,
@@ -926,6 +910,11 @@ fn get_method_signature(
         // Keep stripping `Box` until we find a match
         if let ast_types::DataType::Boxed(inner_type) = &forced_type {
             forced_type = *inner_type.to_owned();
+            *receiver = ast::Expr::Unary(
+                UnaryOp::Deref,
+                Box::new(receiver.to_owned()),
+                KnownType(forced_type.clone()),
+            );
         } else {
             try_again = false;
         }
@@ -936,7 +925,8 @@ fn get_method_signature(
     panic!(
         "Method call in '{}' Don't know what type of value '{}' returns!
          Receiver type was: {original_receiver_type:?}
-         \n\nDeclared methods are:\n{declared_method_names}\n\n Declared types are:\n{declared_types}\n\n",
+         \n\nDeclared methods are:\n{declared_method_names}\n\n \
+         Declared types are:\n{declared_types}\n\n",
         env_fn_signature.name, method_call.method_name,
     );
 }

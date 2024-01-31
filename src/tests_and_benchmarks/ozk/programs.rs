@@ -12,4 +12,5 @@ pub(crate) mod recufier;
 mod result_types;
 mod sponge_hasher;
 mod structs;
+mod type_forcing;
 mod vectors;

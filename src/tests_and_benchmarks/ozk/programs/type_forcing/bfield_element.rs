@@ -2,7 +2,7 @@ use tasm_lib::triton_vm::prelude::*;
 
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
-fn main() {
+fn acess_boxed_bfe_value() {
     let a: BFieldElement = tasm::tasm_io_read_stdin___bfe();
     let a_value: u64 = a.value();
     let boxed: Box<BFieldElement> = Box::<BFieldElement>::new(a);
@@ -24,9 +24,12 @@ mod test {
     #[test]
     fn method_on_boxed_bfe_gets_right_value() {
         let std_in = vec![BFieldElement::new(100)];
-        let native_output =
-            rust_shadows::wrap_main_with_io(&main)(std_in.clone(), NonDeterminism::default());
-        let entrypoint = EntrypointLocation::disk("boxed", "bfe_value", "main");
+        let native_output = rust_shadows::wrap_main_with_io(&acess_boxed_bfe_value)(
+            std_in.clone(),
+            NonDeterminism::default(),
+        );
+        let entrypoint =
+            EntrypointLocation::disk("type_forcing", "bfield_element", "acess_boxed_bfe_value");
         let vm_output = TritonVMTestCase::new(entrypoint)
             .with_std_in(std_in)
             .execute()

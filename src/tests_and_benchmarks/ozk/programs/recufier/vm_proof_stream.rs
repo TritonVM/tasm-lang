@@ -46,9 +46,8 @@ impl VmProofIter {
         let item_size_pointer: BFieldElement = BFieldElement::new(self.current_item_pointer as u64);
         let item_pointer: BFieldElement = item_size_pointer + BFieldElement::one();
 
-        let item_size_boxed: Box<BFieldElement> =
+        let item_size_bfe: Box<BFieldElement> =
             bfield_codec::decode_from_memory_using_size::<BFieldElement>(item_size_pointer, 1);
-        let item_size_bfe: BFieldElement = *item_size_boxed;
         let item_size: usize = item_size_bfe.value() as usize;
         self.current_item_pointer += item_size + 1;
 

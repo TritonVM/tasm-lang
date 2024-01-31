@@ -1,6 +1,5 @@
 mod bfe;
 mod bfe_pair;
-mod bfe_value;
 mod box_a_list_simple;
 mod box_a_struct_with_list_field_simple;
 mod box_a_struct_with_two_list_fields;

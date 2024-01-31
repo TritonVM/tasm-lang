@@ -34,7 +34,6 @@ fn main() {
 
 #[cfg(test)]
 mod test {
-
     use rand::random;
     use tasm_lib::triton_vm::prelude::*;
 
