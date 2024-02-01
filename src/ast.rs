@@ -84,6 +84,50 @@ pub(crate) struct FnSignature {
 }
 
 impl FnSignature {
+    /// Return a signature for a function whose arguments and outputs are all values, with
+    /// default argument evaluation order and with immutable arguments.
+    pub(crate) fn value_function_immutable_args(
+        name: &str,
+        value_args: Vec<(&str, ast_types::DataType)>,
+        return_type: ast_types::DataType,
+    ) -> Self {
+        Self::value_function_inner(name, value_args, return_type, false)
+    }
+
+    /// Return a signature for a function whose arguments and outputs are all values, with
+    /// default argument evaluation order and with *mutable* arguments.
+    pub(crate) fn value_function_with_mutable_args(
+        name: &str,
+        value_args: Vec<(&str, ast_types::DataType)>,
+        return_type: ast_types::DataType,
+    ) -> Self {
+        Self::value_function_inner(name, value_args, return_type, true)
+    }
+
+    fn value_function_inner(
+        name: &str,
+        value_args: Vec<(&str, ast_types::DataType)>,
+        return_type: ast_types::DataType,
+        mutable_args: bool,
+    ) -> Self {
+        let args = value_args
+            .iter()
+            .map(|(arg_name, arg_type)| {
+                ast_types::AbstractArgument::ValueArgument(ast_types::AbstractValueArg {
+                    name: arg_name.to_string(),
+                    data_type: arg_type.to_owned(),
+                    mutable: mutable_args,
+                })
+            })
+            .collect_vec();
+        Self {
+            name: name.to_owned(),
+            args,
+            output: return_type,
+            arg_evaluation_order: Default::default(),
+        }
+    }
+
     /// Return the number of words that the function's input arguments take up on the stack
     pub(crate) fn input_arguments_stack_size(&self) -> usize {
         self.args.iter().map(|arg| arg.stack_size()).sum()

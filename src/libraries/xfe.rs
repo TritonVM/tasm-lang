@@ -241,21 +241,14 @@ impl Library for XfeLibrary {
 }
 
 fn get_xfe_unlift_method() -> LibraryFunction {
-    let fn_signature = ast::FnSignature {
-        name: "unlift".to_owned(),
-        args: vec![ast_types::AbstractArgument::ValueArgument(
-            ast_types::AbstractValueArg {
-                name: "value".to_owned(),
-                data_type: ast_types::DataType::Xfe,
-                mutable: false,
-            },
-        )],
-        output: ast_types::DataType::Bfe,
-        arg_evaluation_order: Default::default(),
-    };
+    let signature = ast::FnSignature::value_function_immutable_args(
+        "unlift",
+        vec![("value", ast_types::DataType::Xfe)],
+        ast_types::DataType::Bfe,
+    );
 
     LibraryFunction {
-        signature: fn_signature,
+        signature,
         body: triton_asm!(swap 2 push 0 eq assert push 0 eq assert),
     }
 }

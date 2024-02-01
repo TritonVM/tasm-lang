@@ -142,36 +142,22 @@ impl Library for UnsignedIntegersLib {
 }
 
 fn ilog2_method_signature() -> ast::FnSignature {
-    ast::FnSignature {
-        name: ILOG2_METHOD.to_owned(),
-        args: vec![ast_types::AbstractArgument::ValueArgument(
-            ast_types::AbstractValueArg {
-                name: "value".to_owned(),
-                data_type: ast_types::DataType::U32,
-                mutable: false,
-            },
-        )],
-        output: ast_types::DataType::U32,
-        arg_evaluation_order: Default::default(),
-    }
+    ast::FnSignature::value_function_immutable_args(
+        ILOG2_METHOD,
+        vec![("value", ast_types::DataType::U32)],
+        ast_types::DataType::U32,
+    )
 }
 
 fn get_count_ones_u32_method() -> LibraryFunction {
-    let fn_signature = ast::FnSignature {
-        name: COUNT_ONES_METHOD.to_owned(),
-        args: vec![ast_types::AbstractArgument::ValueArgument(
-            ast_types::AbstractValueArg {
-                name: "value".to_owned(),
-                data_type: ast_types::DataType::U32,
-                mutable: false,
-            },
-        )],
-        output: ast_types::DataType::U32,
-        arg_evaluation_order: Default::default(),
-    };
+    let signature = ast::FnSignature::value_function_immutable_args(
+        COUNT_ONES_METHOD,
+        vec![("value", ast_types::DataType::U32)],
+        ast_types::DataType::U32,
+    );
 
     LibraryFunction {
-        signature: fn_signature,
+        signature,
         body: triton_asm!(pop_count),
     }
 }
