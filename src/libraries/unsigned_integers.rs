@@ -21,6 +21,7 @@ const POW_METHOD: &str = "pow";
 const OVERFLOWING_ADD_METHOD: &str = "overflowing_add";
 const OVERFLOWING_SUB_METHOD: &str = "overflowing_sub";
 const WRAPPING_SUB_METHOD: &str = "wrapping_sub";
+const ILOG2_METHOD: &str = "ilog2";
 
 impl Library for UnsignedIntegersLib {
     fn get_function_name(&self, _full_name: &str) -> Option<String> {
@@ -41,6 +42,7 @@ impl Library for UnsignedIntegersLib {
                     | OVERFLOWING_ADD_METHOD
                     | OVERFLOWING_SUB_METHOD
                     | WRAPPING_SUB_METHOD
+                    | ILOG2_METHOD
             )
         {
             return Some(method_name.to_owned());
@@ -62,6 +64,10 @@ impl Library for UnsignedIntegersLib {
 
         if method_name == COUNT_ONES_METHOD && ast_types::DataType::U32 == *receiver_type {
             return get_count_ones_u32_method().signature;
+        }
+
+        if method_name == ILOG2_METHOD && ast_types::DataType::U32 == *receiver_type {
+            return ilog2_method_signature();
         }
 
         let snippet = name_to_tasm_lib_snippet(method_name, receiver_type)
@@ -88,6 +94,10 @@ impl Library for UnsignedIntegersLib {
     ) -> Vec<LabelledInstruction> {
         if method_name == COUNT_ONES_METHOD && ast_types::DataType::U32 == *receiver_type {
             return get_count_ones_u32_method().body;
+        }
+
+        if method_name == ILOG2_METHOD && ast_types::DataType::U32 == *receiver_type {
+            return triton_asm!(log_2_floor);
         }
 
         let snippet = name_to_tasm_lib_snippet(method_name, receiver_type)
@@ -128,6 +138,21 @@ impl Library for UnsignedIntegersLib {
         _rust_method_call: &syn::ExprMethodCall,
     ) -> Option<ast::Expr<super::Annotation>> {
         None
+    }
+}
+
+fn ilog2_method_signature() -> ast::FnSignature {
+    ast::FnSignature {
+        name: ILOG2_METHOD.to_owned(),
+        args: vec![ast_types::AbstractArgument::ValueArgument(
+            ast_types::AbstractValueArg {
+                name: "value".to_owned(),
+                data_type: ast_types::DataType::U32,
+                mutable: false,
+            },
+        )],
+        output: ast_types::DataType::U32,
+        arg_evaluation_order: Default::default(),
     }
 }
 
