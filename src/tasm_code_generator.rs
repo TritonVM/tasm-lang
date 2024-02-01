@@ -1797,43 +1797,44 @@ fn compile_expr(
 
             match binop {
                 ast::BinOp::Add => {
+                    let rhs_type = rhs_expr.get_type();
                     let (_lhs_expr_addr, lhs_expr_code) =
                         compile_expr(lhs_expr, "_binop_lhs", state);
 
                     let (_rhs_expr_addr, rhs_expr_code) =
                         compile_expr(rhs_expr, "_binop_rhs", state);
 
-                    let add_code = match result_type {
-                        ast_types::DataType::U32 => {
-                            // We use the safe, overflow-checking, add code as default
+                    use ast_types::DataType::*;
+
+                    state.function_state.vstack.pop();
+                    state.function_state.vstack.pop();
+
+                    let add_code = match (&lhs_type, &rhs_type) {
+                        (U32, U32) => {
                             let safe_add_u32 = state.import_snippet(Box::new(
                                 tasm_lib::arithmetic::u32::safeadd::Safeadd,
                             ));
                             triton_asm!(call { safe_add_u32 })
                         }
-                        ast_types::DataType::U64 => {
-                            // We use the safe, overflow-checking, add code as default
+                        (U64, U64) => {
                             let add_u64 = state.import_snippet(Box::new(
                                 tasm_lib::arithmetic::u64::add_u64::AddU64,
                             ));
 
                             triton_asm!(call { add_u64 })
                         }
-                        ast_types::DataType::U128 => {
-                            // We use the safe, overflow-checking, add code as default
+                        (U128, U128) => {
                             let add_u128 = state.import_snippet(Box::new(
                                 tasm_lib::arithmetic::u128::add_u128::AddU128,
                             ));
 
                             triton_asm!(call { add_u128 })
                         }
-                        ast_types::DataType::Bfe => triton_asm!(add),
-                        ast_types::DataType::Xfe => triton_asm!(xxadd),
-                        _ => panic!("Operator add is not supported for type {result_type}"),
+                        (Bfe, Bfe) => triton_asm!(add),
+                        (Xfe, Xfe) => triton_asm!(xxadd),
+                        (Xfe, Bfe) => triton_asm!(add),
+                        _ => panic!("Unsupported ADD for types LHS: {lhs_type}, RHS: {rhs_type}"),
                     };
-
-                    state.function_state.vstack.pop();
-                    state.function_state.vstack.pop();
 
                     [lhs_expr_code, rhs_expr_code, add_code].concat()
                 }

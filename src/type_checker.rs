@@ -1339,13 +1339,21 @@ fn derive_annotate_expr_type(
                         )?,
                     };
 
-                    assert_type_equals(&lhs_type, &rhs_type, "add-expr");
-                    assert!(
-                        is_arithmetic_type(&lhs_type),
-                        "Cannot add non-arithmetic type '{lhs_type}'",
-                    );
-                    *binop_type = Typing::KnownType(lhs_type.clone());
-                    Ok(lhs_type)
+                    // We are allowed to add an XFieldElement with a BFieldElement, but we
+                    // don't support the mirrored expression.
+                    if lhs_type == ast_types::DataType::Xfe && rhs_type == ast_types::DataType::Bfe
+                    {
+                        *binop_type = Typing::KnownType(ast_types::DataType::Xfe);
+                        Ok(ast_types::DataType::Xfe)
+                    } else {
+                        assert_type_equals(&lhs_type, &rhs_type, "mul-expr");
+                        assert!(
+                            is_arithmetic_type(&lhs_type),
+                            "Cannot multiply non-arithmetic type '{lhs_type}'"
+                        );
+                        *binop_type = Typing::KnownType(lhs_type.clone());
+                        Ok(lhs_type)
+                    }
                 }
 
                 // Restricted to bool only.

@@ -1,4 +1,5 @@
 mod arithmetic_domain;
+mod eval_arg;
 mod fast_ntt;
 mod fast_ntt_to_basic_snippet;
 mod fri_verify;
