@@ -6,6 +6,7 @@ use crate::ast::FnSignature;
 use crate::ast_types::DataType;
 use crate::ast_types::ListType;
 use crate::graft::Graft;
+use crate::libraries::hasher::algebraic_hasher::graft_sample_scalars_function_call;
 use crate::libraries::hasher::algebraic_hasher::hash_pair_function;
 use crate::libraries::hasher::algebraic_hasher::HASH_PAIR_FUNCTION_NAME;
 use crate::libraries::hasher::algebraic_hasher::HASH_VARLEN_FUNCTION_NAME;
@@ -15,6 +16,7 @@ use crate::subroutine::SubRoutine;
 use crate::tasm_code_generator::CompilerState;
 use crate::type_checker::CheckState;
 
+use self::algebraic_hasher::SAMPLE_SCALARS_FUNCTION_NAME;
 use self::sponge_hasher::is_sponge_trait_function;
 
 use super::bfe::BfeLibrary;
@@ -108,6 +110,10 @@ impl Library for HasherLib {
             return Some(full_name.to_owned());
         }
 
+        if full_name == SAMPLE_SCALARS_FUNCTION_NAME {
+            return Some(full_name.to_owned());
+        }
+
         if is_sponge_trait_function(full_name) {
             return Some(full_name.to_owned());
         }
@@ -133,6 +139,10 @@ impl Library for HasherLib {
 
         if full_name == NEW_DIGEST_FUNCTION {
             return Some(graft_digest_new(&args[0], graft_config));
+        }
+
+        if full_name == SAMPLE_SCALARS_FUNCTION_NAME {
+            return Some(graft_sample_scalars_function_call(graft_config, args));
         }
 
         if is_sponge_trait_function(full_name) {

@@ -1,3 +1,4 @@
+mod algebraic_hasher;
 mod arithmetic;
 mod arrays;
 mod boxed;

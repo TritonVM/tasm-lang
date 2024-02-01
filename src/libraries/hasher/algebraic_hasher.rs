@@ -1,6 +1,12 @@
+use itertools::Itertools;
+use tasm_lib::traits::basic_snippet::BasicSnippet;
+
 use super::HasherLib;
 use crate::ast;
+use crate::ast::FnCall;
 use crate::ast_types;
+use crate::graft::Annotation;
+use crate::graft::Graft;
 use crate::libraries::LibraryFunction;
 use crate::tasm_code_generator::CompilerState;
 use crate::triton_vm::prelude::*;
@@ -8,6 +14,7 @@ use crate::LabelledInstruction;
 
 pub(super) const HASH_PAIR_FUNCTION_NAME: &str = "Tip5::hash_pair";
 pub(super) const HASH_VARLEN_FUNCTION_NAME: &str = "Tip5::hash_varlen";
+pub(super) const SAMPLE_SCALARS_FUNCTION_NAME: &str = "Tip5::sample_scalars";
 
 pub(super) fn hash_pair_function() -> LibraryFunction {
     let fn_signature = ast::FnSignature {
@@ -36,6 +43,28 @@ pub(super) fn hash_pair_function() -> LibraryFunction {
     }
 }
 
+pub(super) fn graft_sample_scalars_function_call(
+    grafter: &mut Graft,
+    args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
+) -> ast::Expr<Annotation> {
+    // From the perspective of the VM, the Sponge state is handled through its own co-processor,
+    // so it lives neither in memory, nor on the stack.
+    let [_state, arg] = args.iter().collect_vec()[..] else {
+        panic!("{SAMPLE_SCALARS_FUNCTION_NAME} expects exactly two arguments");
+    };
+    let arg = grafter.graft_expr(arg);
+
+    let tasm_lib_snippet = tasm_lib::hashing::algebraic_hasher::sample_scalars::SampleScalars;
+    let entrypoint = tasm_lib_snippet.entrypoint();
+    ast::Expr::FnCall(FnCall {
+        name: format!("tasm::{entrypoint}"),
+        args: vec![arg],
+        type_parameter: None,
+        arg_evaluation_order: Default::default(),
+        annot: Default::default(),
+    })
+}
+
 impl HasherLib {
     pub(super) fn hash_varlen_signature(&self) -> ast::FnSignature {
         ast::FnSignature::value_function_immutable_args(
@@ -55,8 +84,9 @@ impl HasherLib {
         // This is just a thin wrapper around `tasm-lib`'s `hash_varlen`, such that
         // you can call `Tip5::hash_varlen(&bfes)`, where `bfes` has to be a list of
         // `BFieldElement`s, no other element type works.
-        let tasm_libs_hash_varlen_label =
-            state.import_snippet(Box::new(tasm_lib::hashing::hash_varlen::HashVarlen));
+        let tasm_libs_hash_varlen_label = state.import_snippet(Box::new(
+            tasm_lib::hashing::algebraic_hasher::hash_varlen::HashVarlen,
+        ));
         let tasm_langs_hash_varlen_label = "tasm_langs_hash_varlen".to_owned();
 
         let tasm_langs_hash_varlen = triton_asm!(
