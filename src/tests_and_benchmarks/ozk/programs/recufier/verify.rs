@@ -10,15 +10,17 @@ use super::vm_proof_stream::*;
 struct Recufier;
 
 impl Recufier {
-    /// Manual encoding of a claim containing only a program digest.
-    pub fn encode_claim(digest: Digest) -> Vec<BFieldElement> {
+    /// Manual encoding of a [`Claim`][claim] containing only a program digest.
+    ///
+    /// [claim]: crate::triton_vm::prelude::Claim
+    pub fn encode_claim(program_digest: Digest) -> Vec<BFieldElement> {
         let mut encoding: Vec<BFieldElement> = Vec::<BFieldElement>::with_capacity(9);
         encoding.push(BFieldElement::one());
         encoding.push(BFieldElement::zero());
         encoding.push(BFieldElement::one());
         encoding.push(BFieldElement::zero());
 
-        let Digest([elt_0, elt_1, elt_2, elt_3, elt_4]) = digest;
+        let Digest([elt_0, elt_1, elt_2, elt_3, elt_4]) = program_digest;
 
         encoding.push(elt_0);
         encoding.push(elt_1);
@@ -59,6 +61,10 @@ pub fn recufy() {
 
 #[cfg(test)]
 mod tests {
+    use proptest::prelude::*;
+    use proptest_arbitrary_interop::arb;
+    use test_strategy::proptest;
+
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::TritonVMTestCase;
@@ -115,5 +121,18 @@ mod tests {
             .unwrap();
 
         assert_eq!(native_output, vm_output.output);
+    }
+
+    #[proptest]
+    fn manual_claim_encoding_corresponds_to_actual_encoded_claim_without_input_and_output(
+        #[strategy(arb())] program_digest: Digest,
+    ) {
+        let actual_claim = Claim {
+            program_digest,
+            input: vec![],
+            output: vec![],
+        };
+        let manual_encoding = Recufier::encode_claim(program_digest);
+        prop_assert_eq!(actual_claim.encode(), manual_encoding);
     }
 }
