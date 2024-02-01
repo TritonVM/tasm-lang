@@ -143,7 +143,6 @@ pub(super) fn tasm_io_read_stdin___u128() -> u128 {
 
 #[allow(non_snake_case)]
 pub(super) fn tasm_io_read_stdin___digest() -> Digest {
-    #[allow(clippy::unwrap_used)]
     let e4 = PUB_INPUT.with(|v| v.borrow_mut().pop().unwrap());
     let e3 = PUB_INPUT.with(|v| v.borrow_mut().pop().unwrap());
     let e2 = PUB_INPUT.with(|v| v.borrow_mut().pop().unwrap());
@@ -159,12 +158,12 @@ pub(super) fn tasm_io_write_to_stdout___bfe(x: BFieldElement) {
 
 #[allow(non_snake_case)]
 pub(super) fn tasm_io_write_to_stdout___xfe(x: XFieldElement) {
-    PUB_OUTPUT.with(|v| v.borrow_mut().append(&mut x.coefficients.to_vec()));
+    PUB_OUTPUT.with(|v| v.borrow_mut().extend(x.coefficients.to_vec()));
 }
 
 #[allow(non_snake_case)]
 pub(super) fn tasm_io_write_to_stdout___digest(x: Digest) {
-    PUB_OUTPUT.with(|v| v.borrow_mut().append(&mut x.values().to_vec()));
+    PUB_OUTPUT.with(|v| v.borrow_mut().extend(x.values().to_vec()));
 }
 
 #[allow(non_snake_case)]
@@ -179,12 +178,12 @@ pub(super) fn tasm_io_write_to_stdout___u32(x: u32) {
 
 #[allow(non_snake_case)]
 pub(super) fn tasm_io_write_to_stdout___u64(x: u64) {
-    PUB_OUTPUT.with(|v| v.borrow_mut().append(&mut x.encode()));
+    PUB_OUTPUT.with(|v| v.borrow_mut().extend(x.encode()));
 }
 
 #[allow(non_snake_case)]
 pub(super) fn tasm_io_write_to_stdout___u128(x: u128) {
-    PUB_OUTPUT.with(|v| v.borrow_mut().append(&mut x.encode()));
+    PUB_OUTPUT.with(|v| v.borrow_mut().extend(x.encode()));
 }
 
 pub(super) fn tasm_arithmetic_u64_mul_two_u64s_to_u128_u64(lhs: u64, rhs: u64) -> u128 {
@@ -204,7 +203,8 @@ pub(super) fn wrap_main_with_io(
     )
 }
 
+/// Note: the rust shadowing does not actually assert digest equivalence – it has no way of knowing
+/// the digest of the own program. That property is inherent to Triton VM.
 pub(super) fn tasm_recufier_read_and_verify_own_program_digest_from_std_in() -> Digest {
-    // the rust shadowing does not actually assert digest equivalence :)
     tasm_io_read_stdin___digest()
 }
