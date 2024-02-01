@@ -67,38 +67,7 @@ impl Library for UnsignedIntegersLib {
         let snippet = name_to_tasm_lib_snippet(method_name, receiver_type)
             .unwrap_or_else(|| panic!("Unknown function name {method_name}"));
 
-        let name = snippet.entrypoint();
-
-        let mut args: Vec<ast_types::AbstractArgument> = vec![];
-        for (ty, name) in snippet.inputs().into_iter() {
-            let fn_arg = ast_types::AbstractValueArg {
-                name,
-                data_type: ast_types::DataType::from_tasm_lib_datatype(ty, self.list_type),
-                mutable: true,
-            };
-            args.push(ast_types::AbstractArgument::ValueArgument(fn_arg));
-        }
-
-        let mut output_types: Vec<ast_types::DataType> = vec![];
-        for (ty, _name) in snippet.outputs() {
-            output_types.push(ast_types::DataType::from_tasm_lib_datatype(
-                ty,
-                self.list_type,
-            ));
-        }
-
-        let output = match output_types.len() {
-            1 => output_types[0].clone(),
-            0 => ast_types::DataType::Tuple(vec![].into()),
-            _ => ast_types::DataType::Tuple(output_types.into()),
-        };
-
-        ast::FnSignature {
-            name,
-            args,
-            output,
-            arg_evaluation_order: Default::default(),
-        }
+        ast::FnSignature::from_basic_snippet(snippet, self.list_type)
     }
 
     fn function_name_to_signature(

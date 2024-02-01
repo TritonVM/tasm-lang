@@ -5,7 +5,6 @@ use crate::ast_types;
 use crate::graft::Graft;
 use crate::tasm_code_generator::CompilerState;
 
-use super::tasm_lib_snippet_to_fn_signature;
 use super::Library;
 
 const TASM_LIB_INDICATOR: &str = "tasm::";
@@ -54,7 +53,7 @@ impl Library for TasmLibrary {
         // Maybe that behavior should be changed though?
         let snippet = tasm_lib::exported_snippets::name_to_snippet(stripped_name);
 
-        tasm_lib_snippet_to_fn_signature(self.list_type, snippet)
+        ast::FnSignature::from_basic_snippet(snippet, self.list_type)
     }
 
     fn call_method(

@@ -57,41 +57,6 @@ pub(crate) fn all_libraries<'a>(config: LibraryConfig) -> Vec<Box<dyn Library + 
     ]
 }
 
-pub(crate) fn tasm_lib_snippet_to_fn_signature(
-    list_type: ListType,
-    snippet: Box<dyn tasm_lib::traits::basic_snippet::BasicSnippet>,
-) -> ast::FnSignature {
-    let name = snippet.entrypoint();
-    let mut args: Vec<ast_types::AbstractArgument> = vec![];
-    for (ty, name) in snippet.inputs().into_iter() {
-        let fn_arg = ast_types::AbstractValueArg {
-            name,
-            data_type: ast_types::DataType::from_tasm_lib_datatype(ty, list_type),
-            // The tasm snippet input arguments are all considered mutable
-            mutable: true,
-        };
-        args.push(ast_types::AbstractArgument::ValueArgument(fn_arg));
-    }
-
-    let mut output_types: Vec<ast_types::DataType> = vec![];
-    for (ty, _name) in snippet.outputs() {
-        output_types.push(ast_types::DataType::from_tasm_lib_datatype(ty, list_type));
-    }
-
-    let output = match output_types.len() {
-        1 => output_types[0].clone(),
-        0 => ast_types::DataType::Tuple(vec![].into()),
-        _ => ast_types::DataType::Tuple(output_types.into()),
-    };
-
-    FnSignature {
-        name,
-        args,
-        output,
-        arg_evaluation_order: Default::default(),
-    }
-}
-
 pub(crate) trait Library: Debug {
     /// Return full function name iff library knows this function
     fn get_function_name(&self, full_name: &str) -> Option<String>;

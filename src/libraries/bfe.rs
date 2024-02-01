@@ -9,7 +9,6 @@ use crate::ast_types;
 use crate::graft::Graft;
 use crate::subroutine::SubRoutine;
 
-use super::tasm_lib_snippet_to_fn_signature;
 use super::Library;
 use super::LibraryFunction;
 
@@ -394,7 +393,7 @@ fn bfe_value_method() -> LibraryFunction {
 
 fn bfe_root_function_signature(list_type: crate::libraries::ListType) -> ast::FnSignature {
     let snippet = tasm_lib::arithmetic::bfe::primitive_root_of_unity::PrimitiveRootOfUnity;
-    tasm_lib_snippet_to_fn_signature(list_type, Box::new(snippet))
+    ast::FnSignature::from_basic_snippet(Box::new(snippet), list_type)
 }
 
 fn bfe_new_function() -> LibraryFunction {
