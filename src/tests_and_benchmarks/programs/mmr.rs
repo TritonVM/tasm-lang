@@ -39,10 +39,10 @@ pub(crate) fn verify_authentication_path_with_local_function() -> ItemFn {
                 let ap_element: Digest = auth_path[i];
                 if mt_index_and_peak_index.0 % 2u64 == 1u64 {
                     // Node with `acc_hash` is a right child
-                    acc_hash = H::hash_pair(ap_element, acc_hash);
+                    acc_hash = Tip5::hash_pair(ap_element, acc_hash);
                 } else {
                     // Node with `acc_hash` is a left child
-                    acc_hash = H::hash_pair(acc_hash, ap_element);
+                    acc_hash = Tip5::hash_pair(acc_hash, ap_element);
                 }
 
                 mt_index_and_peak_index.0 /= 2;
@@ -568,7 +568,7 @@ mod run_tests {
                     let new_hash: Digest = peaks.pop().unwrap();
                     let previous_peak: Digest = peaks.pop().unwrap();
                     auth_path.push(previous_peak);
-                    peaks.push(H::hash_pair(previous_peak, new_hash));
+                    peaks.push(Tip5::hash_pair(previous_peak, new_hash));
                     right_lineage_count -= 1;
                 }
 
@@ -595,7 +595,7 @@ mod run_tests {
                     let new_hash: Digest = peaks.pop().unwrap();
                     let previous_peak: Digest = peaks.pop().unwrap();
                     auth_path.push(previous_peak);
-                    peaks.push(H::hash_pair(previous_peak, new_hash));
+                    peaks.push(Tip5::hash_pair(previous_peak, new_hash));
                     right_lineage_count -= 1;
                 }
 
@@ -689,10 +689,10 @@ mod run_tests {
                 let ap_element: Digest = authentication_path[i];
                 if mt_index % 2u64 == 1u64 {
                     // Node with `acc_hash` is a right child
-                    acc_hash = H::hash_pair(ap_element, acc_hash);
+                    acc_hash = Tip5::hash_pair(ap_element, acc_hash);
                 } else {
                     // Node with `acc_hash` is a left child
-                    acc_hash = H::hash_pair(acc_hash, ap_element);
+                    acc_hash = Tip5::hash_pair(acc_hash, ap_element);
                 }
 
                 mt_index /= 2;
@@ -742,10 +742,10 @@ mod run_tests {
                     let ap_element: Digest = authentication_path[i];
                     if mt_index_and_peak_index.0 % 2u64 == 1u64 {
                         // Node with `acc_hash` is a right child
-                        acc_hash = H::hash_pair(ap_element, acc_hash);
+                        acc_hash = Tip5::hash_pair(ap_element, acc_hash);
                     } else {
                         // Node with `acc_hash` is a left child
-                        acc_hash = H::hash_pair(acc_hash, ap_element);
+                        acc_hash = Tip5::hash_pair(acc_hash, ap_element);
                     }
 
                     mt_index_and_peak_index.0 /= 2;
@@ -856,8 +856,6 @@ mod run_tests {
 
     #[test]
     fn verify_authentication_path_test() {
-        type H = Tip5;
-
         let (code_inlined_function, _fn_name) =
             compile_for_run_test(&verify_authentication_path_inlined(), ListType::Safe);
         let (code_local_function, _fn_name) = compile_for_run_test(
@@ -876,7 +874,7 @@ mod run_tests {
                 let capacity = 2000;
                 safe_list_insert(peaks_pointer, capacity, peaks.clone(), &mut init_memory);
                 let ap_pointer: BFieldElement = 20_000u64.into();
-                let mp: MmrMembershipProof<H> = ammr.prove_membership(leaf_index).0;
+                let mp: MmrMembershipProof<Tip5> = ammr.prove_membership(leaf_index).0;
                 safe_list_insert(
                     ap_pointer,
                     capacity,
@@ -975,10 +973,10 @@ mod run_tests {
                         let ap_element: Digest = auth_path[i];
                         if mt_index % 2u64 == 1u64 {
                             // Node with `acc_hash` is a right child
-                            acc_hash = H::hash_pair(ap_element, acc_hash);
+                            acc_hash = Tip5::hash_pair(ap_element, acc_hash);
                         } else {
                             // Node with `acc_hash` is a left child
-                            acc_hash = H::hash_pair(acc_hash, ap_element);
+                            acc_hash = Tip5::hash_pair(acc_hash, ap_element);
                         }
 
                         mt_index /= 2;

@@ -15,8 +15,6 @@ mod run_tests {
 
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 
-    type H = Tip5;
-
     #[test]
     fn default_digest_test() {
         fn default_digest_rast() -> syn::ItemFn {
@@ -42,7 +40,7 @@ mod run_tests {
             item_fn(parse_quote! {
                 // Calling this `hash_pair` would result in a label collision
                 fn hash_pair_test(left: Digest, right: Digest) -> Digest {
-                    let ret: Digest = H::hash_pair(left, right);
+                    let ret: Digest = Tip5::hash_pair(left, right);
                     return ret;
                 }
             })
@@ -57,7 +55,7 @@ mod run_tests {
             .map(|(left, right)| {
                 InputOutputTestCase::new(
                     vec![digest_lit(left), digest_lit(right)],
-                    vec![digest_lit(H::hash_pair(left, right))],
+                    vec![digest_lit(Tip5::hash_pair(left, right))],
                 )
             })
             .collect_vec();
@@ -70,7 +68,7 @@ mod run_tests {
             item_fn(parse_quote! {
                 // Calling this `hash_pair` would result in a label collission
                 fn hash_pair_test(left: Digest, right: Digest) -> Digest {
-                    let ret: Digest = H::hash_pair(left, right);
+                    let ret: Digest = Tip5::hash_pair(left, right);
                     return ret;
                 }
             })
@@ -80,7 +78,7 @@ mod run_tests {
         let right: Digest = random();
         let test_case = InputOutputTestCase::new(
             vec![digest_lit(left), digest_lit(right)],
-            vec![digest_lit(H::hash_pair(left, right))],
+            vec![digest_lit(Tip5::hash_pair(left, right))],
         );
         multiple_compare_prop_with_stack_safe_lists(
             &hash_pair_with_references_rast(),
@@ -91,7 +89,7 @@ mod run_tests {
     fn hash_varlen_rast() -> syn::ItemFn {
         item_fn(parse_quote! {
             fn hash_varlen_test_function(input: Vec<BFieldElement>) -> Digest {
-                let ret: Digest = H::hash_varlen(&input);
+                let ret: Digest = Tip5::hash_varlen(&input);
                 return ret;
             }
         })
@@ -115,7 +113,7 @@ mod run_tests {
         compare_prop_with_stack_and_ins_safe_lists(
             &hash_varlen_rast(),
             vec![bfe_lit(BFieldElement::one())],
-            vec![digest_lit(H::hash_varlen(&random_bfes))],
+            vec![digest_lit(Tip5::hash_varlen(&random_bfes))],
             None,
             vec![],
             non_determinism,
@@ -127,7 +125,7 @@ mod run_tests {
         fn hash_varlen_rast() -> syn::ItemFn {
             item_fn(parse_quote! {
                 fn hash_varlen_test_function(input: Vec<BFieldElement>) -> Digest {
-                    let ret: Digest = H::hash_varlen(&input);
+                    let ret: Digest = Tip5::hash_varlen(&input);
                     return ret;
                 }
             })
@@ -148,7 +146,7 @@ mod run_tests {
         compare_prop_with_stack_and_ins_unsafe_lists(
             &hash_varlen_rast(),
             vec![bfe_lit(BFieldElement::one())],
-            vec![digest_lit(H::hash_varlen(&random_bfes))],
+            vec![digest_lit(Tip5::hash_varlen(&random_bfes))],
             None,
             vec![],
             non_determinism,

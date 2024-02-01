@@ -1528,10 +1528,10 @@ mod tests {
                     let ap_element: Digest = auth_path[i];
                     if acc_mt_index_and_peak_index.0 % 2u64 == 1u64 {
                         // Node with `acc_hash` is a right child
-                        acc_hash = H::hash_pair(ap_element, acc_hash);
+                        acc_hash = Tip5::hash_pair(ap_element, acc_hash);
                     } else {
                         // Node with `acc_hash` is a left child
-                        acc_hash = H::hash_pair(acc_hash, ap_element);
+                        acc_hash = Tip5::hash_pair(acc_hash, ap_element);
                     }
 
                     acc_mt_index_and_peak_index.0 = acc_mt_index_and_peak_index.0 / 2u64;

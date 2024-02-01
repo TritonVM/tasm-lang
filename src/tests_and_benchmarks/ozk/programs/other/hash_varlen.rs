@@ -5,13 +5,11 @@ use tasm_lib::twenty_first::prelude::AlgebraicHasher;
 
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
-type H = Tip5;
-
 fn main() {
     let elements: Box<Vec<BFieldElement>> =
         Vec::<BFieldElement>::decode(&tasm::load_from_memory(BFieldElement::new(2000))).unwrap();
 
-    let digest: Digest = H::hash_varlen(&(*elements));
+    let digest: Digest = Tip5::hash_varlen(&(*elements));
 
     tasm::tasm_io_write_to_stdout___digest(digest);
 
@@ -35,7 +33,7 @@ mod test {
         let stdin = vec![];
         let bfe_list = random_elements(111);
         let non_determinism = init_memory_from(&bfe_list, 2000u64.into());
-        let expected_output = H::hash_varlen(&bfe_list);
+        let expected_output = Tip5::hash_varlen(&bfe_list);
         let expected_output = expected_output.values().to_vec();
         let native_output =
             rust_shadows::wrap_main_with_io(&main)(stdin.clone(), non_determinism.clone());

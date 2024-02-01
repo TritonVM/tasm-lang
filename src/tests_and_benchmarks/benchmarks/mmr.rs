@@ -18,11 +18,10 @@ mod benchmark {
 
     #[test]
     fn verify_mmr_ap_benchmark() {
-        type H = Tip5;
         fn prepare_benchmark_case(log2_size: u32) -> BenchmarkInput {
             let leaf_count_after_add = 1u64 << log2_size;
             let peaks: Vec<Digest> = random_elements(log2_size as usize);
-            let mut mmra = MmrAccumulator::<H>::init(peaks, leaf_count_after_add - 1);
+            let mut mmra = MmrAccumulator::<Tip5>::init(peaks, leaf_count_after_add - 1);
 
             let own_leaf: Digest = random();
             let mp = mmra.append(own_leaf);
