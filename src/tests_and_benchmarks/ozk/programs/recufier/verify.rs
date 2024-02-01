@@ -32,6 +32,30 @@ impl Recufier {
     }
 }
 
+/// Gives statements only intended for debugging its own scope.
+struct RecufyDebug;
+
+impl RecufyDebug {
+    pub fn dump_u32(thing: u32) {
+        tasm::tasm_io_write_to_stdout___u32(thing);
+        return;
+    }
+
+    pub fn dump_xfe(thing: XFieldElement) {
+        tasm::tasm_io_write_to_stdout___xfe(thing);
+        return;
+    }
+
+    pub fn sponge_state(rate: [BFieldElement; 10]) {
+        let mut i: usize = 0;
+        while i < 10 {
+            tasm::tasm_io_write_to_stdout___bfe(rate[i]);
+            i += 1;
+        }
+        return;
+    }
+}
+
 pub fn recufy() {
     let own_digest: Digest = tasm::tasm_recufier_read_and_verify_own_program_digest_from_std_in();
 
@@ -42,20 +66,13 @@ pub fn recufy() {
     let inner_proof_iter: VmProofIter = VmProofIter::new();
     let mut proof_iter: Box<VmProofIter> = Box::<VmProofIter>::new(inner_proof_iter);
     let log_2_padded_height: u32 = proof_iter.next_as_log_2_padded_height();
-    tasm::tasm_io_write_to_stdout___u32(log_2_padded_height);
+    let padded_height: u32 = 1 << log_2_padded_height;
+    RecufyDebug::dump_u32(padded_height);
 
     let out_of_domain_base_row: Vec<XFieldElement> = proof_iter.next_as_out_of_domain_base_row();
-    let first_element: XFieldElement = out_of_domain_base_row[0];
-    tasm::tasm_io_write_to_stdout___xfe(first_element);
+    RecufyDebug::dump_xfe(out_of_domain_base_row[0]);
 
-    let produce: [BFieldElement; 10] = Tip5::squeeze(&mut sponge_state);
-    {
-        let mut i: usize = 0;
-        while i < 10 {
-            tasm::tasm_io_write_to_stdout___bfe(produce[i]);
-            i += 1;
-        }
-    }
+    RecufyDebug::sponge_state(Tip5::squeeze(&mut sponge_state));
     return;
 }
 
@@ -88,14 +105,14 @@ mod tests {
             .to_vec();
 
         let mut proof_stream = ProofStream::<Tip5>::new();
-        proof_stream.enqueue(ProofItem::Log2PaddedHeight(42));
+        proof_stream.enqueue(ProofItem::Log2PaddedHeight(22));
         proof_stream.enqueue(ProofItem::OutOfDomainBaseRow(dummy_ood_base_row));
         proof_stream.into()
     }
 
     fn recufier_non_determinism() -> NonDeterminism<BFieldElement> {
-        let ram = proof()
-            .0
+        let Proof(raw_proof) = proof();
+        let ram = raw_proof
             .into_iter()
             .enumerate()
             .map(|(k, v)| (BFieldElement::new(k as u64), v))
