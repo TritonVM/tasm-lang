@@ -6,8 +6,10 @@ use tasm_lib::twenty_first::prelude::x_field_element::EXTENSION_DEGREE;
 
 use crate::ast;
 use crate::ast_types;
+use crate::ast_types::DataType;
 use crate::graft::Graft;
 use crate::libraries::Library;
+use crate::tasm_code_generator::CompilerState;
 
 use super::bfe::BfeLibrary;
 use super::LibraryFunction;
@@ -23,26 +25,41 @@ const METHOD_NAME_MOD_POW_U32: &str = "mod_pow_u32";
 pub(crate) struct XfeLibrary;
 
 fn xfe_lib_has_method(method_name: &str) -> bool {
-    method_name == UNLIFT_NAME || UNLIFT_NAME == METHOD_NAME_MOD_POW_U32
+    method_name == UNLIFT_NAME || method_name == METHOD_NAME_MOD_POW_U32
 }
 
 fn method_name_to_signature_inner(method_name: &str) -> ast::FnSignature {
     match method_name {
         UNLIFT_NAME => xfe_unlift_method().signature,
-        METHOD_NAME_MOD_POW_U32 => {
-            //
-            todo!()
-        }
+        METHOD_NAME_MOD_POW_U32 => ast::FnSignature::value_function_immutable_args(
+            METHOD_NAME_MOD_POW_U32,
+            vec![("base", DataType::Xfe), ("exponent", DataType::U32)],
+            DataType::Xfe,
+        ),
         _ => panic!("XFE library does not know method {method_name}"),
     }
 }
 
-fn call_method_inner(method_name: &str) -> Vec<LabelledInstruction> {
+fn call_method_inner(method_name: &str, state: &mut CompilerState) -> Vec<LabelledInstruction> {
     match method_name {
         UNLIFT_NAME => xfe_unlift_method().body,
         METHOD_NAME_MOD_POW_U32 => {
-            //
-            todo!()
+            let xfe_mod_pow_u32_generic_label = state.import_snippet(Box::new(
+                tasm_lib::arithmetic::xfe::mod_pow_u32_generic::XfeModPowU32Generic,
+            ));
+
+            triton_asm!(
+                // _ [base] exponent
+
+                swap 3
+                swap 2
+                swap 1
+                // _ exponent [base]
+
+                call {xfe_mod_pow_u32_generic_label}
+
+                // _ [result]
+            )
         }
         _ => panic!("XFE library does not know method {method_name}"),
     }
@@ -89,9 +106,9 @@ impl Library for XfeLibrary {
         method_name: &str,
         _receiver_type: &ast_types::DataType,
         _args: &[ast::Expr<super::Annotation>],
-        _state: &mut crate::tasm_code_generator::CompilerState,
+        state: &mut crate::tasm_code_generator::CompilerState,
     ) -> Vec<LabelledInstruction> {
-        call_method_inner(method_name)
+        call_method_inner(method_name, state)
     }
 
     fn call_function(
