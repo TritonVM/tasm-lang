@@ -2,10 +2,12 @@ use itertools::Itertools;
 use num::One;
 use num::Zero;
 use tasm_lib::triton_vm::prelude::*;
+use tasm_lib::twenty_first::shared_math::traits::Inverse;
 use tasm_lib::twenty_first::shared_math::traits::PrimitiveRootOfUnity;
 
 use crate::ast;
 use crate::ast_types;
+use crate::ast_types::DataType;
 use crate::graft::Graft;
 use crate::subroutine::SubRoutine;
 
@@ -22,10 +24,20 @@ const METHOD_NAME_MOD_POW_U32: &str = "mod_pow_u32";
 const METHOD_NAME_LIFT: &str = "lift";
 const METHOD_NAME_VALUE: &str = "value";
 const UNWRAP_METHOD_NAME: &str = "unwrap";
+const INVERSE_METHOD_NAME: &str = "inverse";
 
 #[derive(Clone, Debug)]
 pub(crate) struct BfeLibrary {
     pub(crate) list_type: ast_types::ListType,
+}
+
+impl BfeLibrary {
+    fn has_method(method_name: &str) -> bool {
+        method_name == METHOD_NAME_LIFT
+            || method_name == METHOD_NAME_VALUE
+            || method_name == METHOD_NAME_MOD_POW_U32
+            || method_name == INVERSE_METHOD_NAME
+    }
 }
 
 impl Library for BfeLibrary {
@@ -42,18 +54,11 @@ impl Library for BfeLibrary {
         method_name: &str,
         receiver_type: &ast_types::DataType,
     ) -> Option<String> {
-        match receiver_type {
-            ast_types::DataType::Bfe => {
-                if method_name == METHOD_NAME_LIFT
-                    || method_name == METHOD_NAME_VALUE
-                    || method_name == METHOD_NAME_MOD_POW_U32
-                {
-                    Some(method_name.to_owned())
-                } else {
-                    None
-                }
-            }
-            _ => None,
+        if matches!(receiver_type, ast_types::DataType::Bfe) && BfeLibrary::has_method(method_name)
+        {
+            Some(method_name.to_owned())
+        } else {
+            None
         }
     }
 
@@ -75,6 +80,10 @@ impl Library for BfeLibrary {
 
             if method_name == METHOD_NAME_MOD_POW_U32 {
                 return bfe_mod_pow_method().signature;
+            }
+
+            if method_name == INVERSE_METHOD_NAME {
+                return bfe_inverse_method_signature();
             }
         }
 
@@ -119,6 +128,10 @@ impl Library for BfeLibrary {
 
             if method_name == METHOD_NAME_MOD_POW_U32 {
                 return bfe_mod_pow_method().body;
+            }
+
+            if method_name == INVERSE_METHOD_NAME {
+                return triton_asm!(invert);
             }
         }
 
@@ -222,6 +235,16 @@ impl Library for BfeLibrary {
             _ => None,
         }
     }
+}
+
+fn bfe_inverse_method_signature() -> ast::FnSignature {
+    let bf: BFieldElement = BFieldElement::one();
+    bf.inverse();
+    ast::FnSignature::value_function_immutable_args(
+        "bfe_inverse",
+        vec![("x", DataType::Bfe)],
+        DataType::Bfe,
+    )
 }
 
 /// Graft `BFieldElement::primitive_root_of_unity` to allow for compile-time resolution,
