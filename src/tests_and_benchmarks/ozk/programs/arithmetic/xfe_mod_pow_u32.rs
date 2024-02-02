@@ -28,6 +28,16 @@ fn _to_the_power_of_one() {
     return;
 }
 
+fn verify_no_name_clash_xfe_bfe_mod_pow_u32() {
+    let bfe: BFieldElement = BFieldElement::new(42);
+    let xfe: XFieldElement = bfe.lift() + XFieldElement::one();
+
+    tasm::tasm_io_write_to_stdout___bfe(bfe.mod_pow_u32(121));
+    tasm::tasm_io_write_to_stdout___xfe(xfe.mod_pow_u32(121));
+
+    return;
+}
+
 #[cfg(test)]
 mod test {
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
@@ -75,6 +85,21 @@ mod test {
             .with_std_in(std_in)
             .execute()
             .unwrap();
+        assert_eq!(native_output, vm_output.output);
+    }
+
+    #[test]
+    fn verify_no_name_clash_xfe_bfe_mod_pow_u32_test() {
+        let native_output = wrap_main_with_io(&verify_no_name_clash_xfe_bfe_mod_pow_u32)(
+            vec![],
+            NonDeterminism::default(),
+        );
+        let entrypoint = EntrypointLocation::disk(
+            "arithmetic",
+            "xfe_mod_pow_u32",
+            "verify_no_name_clash_xfe_bfe_mod_pow_u32",
+        );
+        let vm_output = TritonVMTestCase::new(entrypoint).execute().unwrap();
         assert_eq!(native_output, vm_output.output);
     }
 }
