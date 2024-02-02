@@ -6,14 +6,6 @@ use crate::tests_and_benchmarks::ozk::rust_shadows::ND_MEMORY;
 use crate::triton_vm::prelude::*;
 
 /// # Panics
-/// - if memory does not contain the item size
-/// - if memory does not contain the item
-/// - if decoding fails
-pub fn decode_from_memory<T: BFieldCodec>(address: BFieldElement) -> Box<T> {
-    ND_MEMORY.with(|mem| _decode_from_memory::<T>(&mem.borrow(), address))
-}
-
-/// # Panics
 /// - if memory does not contain the item
 /// - if decoding fails
 pub fn decode_from_memory_using_size<T: BFieldCodec>(
