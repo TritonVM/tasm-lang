@@ -20,12 +20,15 @@ const ONE_CONST_NAME: &str = "XFieldElement::one";
 const FUNCTION_NAME_NEW: &str = "XFieldElement::new";
 const UNLIFT_NAME: &str = "unlift";
 const METHOD_NAME_MOD_POW_U32: &str = "mod_pow_u32";
+const INVERSE_METHOD_NAME: &str = "inverse";
 
 #[derive(Clone, Debug)]
 pub(crate) struct XfeLibrary;
 
 fn xfe_lib_has_method(method_name: &str) -> bool {
-    method_name == UNLIFT_NAME || method_name == METHOD_NAME_MOD_POW_U32
+    method_name == UNLIFT_NAME
+        || method_name == METHOD_NAME_MOD_POW_U32
+        || method_name == INVERSE_METHOD_NAME
 }
 
 fn method_name_to_signature_inner(method_name: &str) -> ast::FnSignature {
@@ -35,6 +38,11 @@ fn method_name_to_signature_inner(method_name: &str) -> ast::FnSignature {
             METHOD_NAME_MOD_POW_U32,
             vec![("base", DataType::Xfe), ("exponent", DataType::U32)],
             DataType::Xfe,
+        ),
+        INVERSE_METHOD_NAME => ast::FnSignature::value_function_immutable_args(
+            "xfe_inverse",
+            vec![("self", ast_types::DataType::Xfe)],
+            ast_types::DataType::Xfe,
         ),
         _ => panic!("XFE library does not know method {method_name}"),
     }
@@ -60,6 +68,9 @@ fn call_method_inner(method_name: &str, state: &mut CompilerState) -> Vec<Labell
 
                 // _ [result]
             )
+        }
+        INVERSE_METHOD_NAME => {
+            triton_asm!(xinvert)
         }
         _ => panic!("XFE library does not know method {method_name}"),
     }
