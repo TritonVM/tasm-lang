@@ -17,9 +17,36 @@ const ZERO_CONST_NAME: &str = "XFieldElement::zero";
 const ONE_CONST_NAME: &str = "XFieldElement::one";
 const FUNCTION_NAME_NEW: &str = "XFieldElement::new";
 const UNLIFT_NAME: &str = "unlift";
+const METHOD_NAME_MOD_POW_U32: &str = "mod_pow_u32";
 
 #[derive(Clone, Debug)]
 pub(crate) struct XfeLibrary;
+
+fn xfe_lib_has_method(method_name: &str) -> bool {
+    method_name == UNLIFT_NAME || UNLIFT_NAME == METHOD_NAME_MOD_POW_U32
+}
+
+fn method_name_to_signature_inner(method_name: &str) -> ast::FnSignature {
+    match method_name {
+        UNLIFT_NAME => xfe_unlift_method().signature,
+        METHOD_NAME_MOD_POW_U32 => {
+            //
+            todo!()
+        }
+        _ => panic!("XFE library does not know method {method_name}"),
+    }
+}
+
+fn call_method_inner(method_name: &str) -> Vec<LabelledInstruction> {
+    match method_name {
+        UNLIFT_NAME => xfe_unlift_method().body,
+        METHOD_NAME_MOD_POW_U32 => {
+            //
+            todo!()
+        }
+        _ => panic!("XFE library does not know method {method_name}"),
+    }
+}
 
 impl Library for XfeLibrary {
     fn get_function_name(&self, _full_name: &str) -> Option<String> {
@@ -31,7 +58,7 @@ impl Library for XfeLibrary {
         method_name: &str,
         receiver_type: &ast_types::DataType,
     ) -> Option<String> {
-        if *receiver_type == ast_types::DataType::Xfe && method_name == UNLIFT_NAME {
+        if *receiver_type == ast_types::DataType::Xfe && xfe_lib_has_method(method_name) {
             return Some(method_name.to_owned());
         }
 
@@ -41,15 +68,11 @@ impl Library for XfeLibrary {
     fn method_name_to_signature(
         &self,
         method_name: &str,
-        receiver_type: &ast_types::DataType,
+        _receiver_type: &ast_types::DataType,
         _args: &[ast::Expr<super::Annotation>],
         _type_checker_state: &crate::type_checker::CheckState,
     ) -> ast::FnSignature {
-        if *receiver_type == ast_types::DataType::Xfe && method_name == UNLIFT_NAME {
-            get_xfe_unlift_method().signature
-        } else {
-            panic!("Unknown method in XFE library. Got: {method_name}");
-        }
+        method_name_to_signature_inner(method_name)
     }
 
     fn function_name_to_signature(
@@ -64,15 +87,11 @@ impl Library for XfeLibrary {
     fn call_method(
         &self,
         method_name: &str,
-        receiver_type: &ast_types::DataType,
+        _receiver_type: &ast_types::DataType,
         _args: &[ast::Expr<super::Annotation>],
         _state: &mut crate::tasm_code_generator::CompilerState,
     ) -> Vec<LabelledInstruction> {
-        if *receiver_type == ast_types::DataType::Xfe && method_name == UNLIFT_NAME {
-            get_xfe_unlift_method().body
-        } else {
-            panic!("Unknown method in XFE library. Got: {method_name}");
-        }
+        call_method_inner(method_name)
     }
 
     fn call_function(
@@ -121,70 +140,7 @@ impl Library for XfeLibrary {
             return None;
         }
 
-        if args.len() != 1 {
-            panic!("XFE instantiation only takes one argument which must be an array");
-        }
-
-        match &args[0] {
-            syn::Expr::Array(syn::ExprArray {
-                attrs: _,
-                bracket_token: _,
-                elems,
-            }) => {
-                let mut initializer_exprs = vec![];
-                for elem in elems {
-                    match elem {
-                        syn::Expr::Call(syn::ExprCall {
-                            attrs: _,
-                            func,
-                            paren_token: _,
-                            args,
-                        }) => {
-                            let (name, _type_parameter) = match func.as_ref() {
-                                syn::Expr::Path(path) => (
-                                    Graft::path_to_ident(&path.path),
-                                    graft_config.path_to_type_parameter(&path.path),
-                                ),
-                                other => panic!("unsupported: {other:?}"),
-                            };
-
-                            let bfe_library = BfeLibrary {
-                                list_type: graft_config.list_type,
-                            };
-                            if let Some(bfe_fn_name) = bfe_library.get_graft_function_name(&name) {
-                                initializer_exprs.push(
-                                    bfe_library
-                                        .graft_function(graft_config, &bfe_fn_name, args, None)
-                                        .unwrap(),
-                                );
-                            } else {
-                                panic!();
-                            }
-                        }
-                        _ => panic!("unsupported: {elem:?}"),
-                    }
-                }
-
-                let mut bfe_literals = vec![];
-                for expr in initializer_exprs {
-                    match expr {
-                        ast::Expr::Lit(ast::ExprLit::Bfe(bfe)) => {
-                            bfe_literals.push(bfe);
-                        }
-                        _ => {
-                            unreachable!("BFE grafting must return BFE literals. Got: {:#?}", expr)
-                        }
-                    }
-                }
-
-                let bfe_literals: [BFieldElement; EXTENSION_DEGREE] =
-                    bfe_literals.try_into().unwrap();
-                Some(ast::Expr::Lit(ast::ExprLit::Xfe(XFieldElement::new(
-                    bfe_literals,
-                ))))
-            }
-            _ => panic!("XFE instantiation must happen with an array"),
-        }
+        graft_xfe_new_function_call(args, graft_config)
     }
 
     fn graft_method(
@@ -240,7 +196,76 @@ impl Library for XfeLibrary {
     }
 }
 
-fn get_xfe_unlift_method() -> LibraryFunction {
+fn graft_xfe_new_function_call(
+    args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
+    graft_config: &mut Graft<'_>,
+) -> Option<ast::Expr<crate::type_checker::Typing>> {
+    if args.len() != 1 {
+        panic!("XFE instantiation only takes one argument which must be an array");
+    }
+
+    match &args[0] {
+        syn::Expr::Array(syn::ExprArray {
+            attrs: _,
+            bracket_token: _,
+            elems,
+        }) => {
+            let mut initializer_exprs = vec![];
+            for elem in elems {
+                match elem {
+                    syn::Expr::Call(syn::ExprCall {
+                        attrs: _,
+                        func,
+                        paren_token: _,
+                        args,
+                    }) => {
+                        let (name, _type_parameter) = match func.as_ref() {
+                            syn::Expr::Path(path) => (
+                                Graft::path_to_ident(&path.path),
+                                graft_config.path_to_type_parameter(&path.path),
+                            ),
+                            other => panic!("unsupported: {other:?}"),
+                        };
+
+                        let bfe_library = BfeLibrary {
+                            list_type: graft_config.list_type,
+                        };
+                        if let Some(bfe_fn_name) = bfe_library.get_graft_function_name(&name) {
+                            initializer_exprs.push(
+                                bfe_library
+                                    .graft_function(graft_config, &bfe_fn_name, args, None)
+                                    .unwrap(),
+                            );
+                        } else {
+                            panic!();
+                        }
+                    }
+                    _ => panic!("unsupported: {elem:?}"),
+                }
+            }
+
+            let mut bfe_literals = vec![];
+            for expr in initializer_exprs {
+                match expr {
+                    ast::Expr::Lit(ast::ExprLit::Bfe(bfe)) => {
+                        bfe_literals.push(bfe);
+                    }
+                    _ => {
+                        unreachable!("BFE grafting must return BFE literals. Got: {:#?}", expr)
+                    }
+                }
+            }
+
+            let bfe_literals: [BFieldElement; EXTENSION_DEGREE] = bfe_literals.try_into().unwrap();
+            Some(ast::Expr::Lit(ast::ExprLit::Xfe(XFieldElement::new(
+                bfe_literals,
+            ))))
+        }
+        _ => panic!("XFE instantiation must happen with an array"),
+    }
+}
+
+fn xfe_unlift_method() -> LibraryFunction {
     let signature = ast::FnSignature::value_function_immutable_args(
         "unlift",
         vec![("value", ast_types::DataType::Xfe)],
