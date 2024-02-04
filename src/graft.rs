@@ -152,11 +152,11 @@ impl<'a> Graft<'a> {
         composite_types: &mut CompositeTypes,
         struct_item: syn::ItemStruct,
     ) {
-        let struct_type = self.determine_struct_type(&struct_item);
-        Self::add_struct_type_to_composite_types(composite_types, struct_item, struct_type);
+        let struct_type = self.graft_struct_type(&struct_item);
+        composite_types.add_custom_type(ast_types::CustomTypeOil::Struct(struct_type));
     }
 
-    fn determine_struct_type(&mut self, struct_item: &syn::ItemStruct) -> ast_types::StructVariant {
+    fn graft_struct_variant(&mut self, struct_item: &syn::ItemStruct) -> ast_types::StructVariant {
         let Some(field) = struct_item.fields.iter().next() else {
             return ast_types::StructVariant::TupleStruct(ast_types::Tuple::unit());
         };
@@ -169,19 +169,17 @@ impl<'a> Graft<'a> {
         ast_types::StructVariant::NamedFields(self.graft_struct_with_named_fields(fields))
     }
 
-    fn add_struct_type_to_composite_types(
-        composite_types: &mut CompositeTypes,
-        struct_item: syn::ItemStruct,
-        struct_type: ast_types::StructVariant,
-    ) {
+    pub(crate) fn graft_struct_type(
+        &mut self,
+        struct_item: &syn::ItemStruct,
+    ) -> ast_types::StructType {
+        let variant = self.graft_struct_variant(struct_item);
         let syn::ItemStruct { attrs, ident, .. } = struct_item;
-        let struct_type = ast_types::StructType {
+        ast_types::StructType {
             is_copy: Self::is_copy(&attrs),
-            variant: struct_type,
+            variant,
             name: ident.to_string(),
-        };
-
-        composite_types.add_custom_type(ast_types::CustomTypeOil::Struct(struct_type));
+        }
     }
 
     fn graft_enum_variants(&mut self, variants: Vec<syn::Variant>) -> Vec<(String, DataType)> {
