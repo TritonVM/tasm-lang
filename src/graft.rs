@@ -15,6 +15,7 @@ use crate::ast::Stmt;
 use crate::ast_types;
 use crate::ast_types::DataType;
 use crate::composite_types::CompositeTypes;
+use crate::libraries;
 use crate::libraries::Library;
 use crate::type_checker;
 
@@ -386,6 +387,13 @@ impl<'a> Graft<'a> {
 
         if rust_type_as_string == "Option" {
             return self.rust_option_type_to_data_type(&rust_type_path.path.segments[0].arguments);
+        }
+
+        if rust_type_as_string == "VmProofIter" {
+            let resolved_type = libraries::vm_proof_iter::VmProofIterLib::vm_proof_iter_type(self);
+            self.imported_custom_types
+                .add_type_context_if_new(resolved_type.clone());
+            return resolved_type.into();
         }
 
         // We only allow the user to use types that are capitalized

@@ -4,9 +4,9 @@ use tasm_lib::traits::basic_snippet::BasicSnippet;
 use tasm_lib::triton_vm::proof_item::ProofItemVariant;
 use tasm_lib::triton_vm::triton_asm;
 
-use crate::ast;
 use crate::ast::RoutineBody;
-use crate::ast_types::StructType;
+use crate::ast::{self, FnSignature};
+use crate::ast_types::{AbstractArgument, AbstractValueArg, DataType, StructType};
 use crate::composite_types::TypeContext;
 use crate::graft::Graft;
 use crate::type_checker::Typing;
@@ -95,15 +95,17 @@ impl Library for VmProofIterLib {
     }
 }
 
-pub(crate) fn vm_proof_iter_type(graft_config: &mut Graft) -> TypeContext {
-    let struct_type = vm_proof_iter_as_struct_type(graft_config);
+impl VmProofIterLib {
+    pub(crate) fn vm_proof_iter_type(graft_config: &mut Graft) -> TypeContext {
+        let struct_type = vm_proof_iter_as_struct_type(graft_config);
 
-    // List all methods
-    let all_dequeue_methods = all_next_as_methods(graft_config);
-    TypeContext {
-        composite_type: struct_type.into(),
-        methods: all_dequeue_methods,
-        associated_functions: vec![],
+        // List all methods
+        let all_dequeue_methods = all_next_as_methods(graft_config);
+        TypeContext {
+            composite_type: struct_type.into(),
+            methods: all_dequeue_methods,
+            associated_functions: vec![],
+        }
     }
 }
 
@@ -122,6 +124,8 @@ fn vm_proof_iter_as_struct_type(graft_config: &mut Graft) -> StructType {
 
 fn all_next_as_methods(graft_config: &mut Graft) -> Vec<ast::Method<Typing>> {
     let mut methods = vec![];
+    let receiver_type: DataType = VmProofIterLib::vm_proof_iter_type(graft_config).into();
+    let receiver_type = DataType::Boxed(Box::new(receiver_type));
 
     for variant in ProofItemVariant::iter() {
         let snippet = tasm_lib::recufier::proof_stream::dequeue_next_as::DequeueNextAs {
@@ -129,11 +133,19 @@ fn all_next_as_methods(graft_config: &mut Graft) -> Vec<ast::Method<Typing>> {
         };
         let snippet_label = snippet.entrypoint();
         let code = triton_asm!(call { snippet_label });
+
+        let method_signature = FnSignature {
+            name: format!("next_as_{variant}"),
+            args: vec![AbstractArgument::ValueArgument(AbstractValueArg {
+                name: "self".to_owned(),
+                data_type: receiver_type.clone(),
+                mutable: true,
+            })],
+            output: DataType::VoidPointer,
+            arg_evaluation_order: Default::default(),
+        };
         let method = ast::Method {
-            signature: ast::FnSignature::from_basic_snippet(
-                Box::new(snippet),
-                graft_config.list_type,
-            ),
+            signature: method_signature,
             body: RoutineBody::Instructions(code),
         };
 

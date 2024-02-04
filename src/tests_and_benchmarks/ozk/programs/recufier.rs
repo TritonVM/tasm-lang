@@ -7,5 +7,6 @@ mod merkle_root;
 mod merkle_root_autogen;
 mod proof_item;
 mod verify;
+mod vm_proof_iter;
 pub(crate) mod vm_proof_stream;
 mod xfe_ntt_recursive;
