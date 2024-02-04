@@ -112,7 +112,7 @@ impl VmProofIterLib {
 fn vm_proof_iter_as_struct_type(graft_config: &mut Graft) -> StructType {
     let tokens: syn::Item = parse_quote! {
         struct VmProofIter {
-            proof_iter_pointer: BFieldElement,
+            current_item_pointer: BFieldElement,
         }
     };
     let syn::Item::Struct(item_struct) = tokens else {
@@ -124,7 +124,7 @@ fn vm_proof_iter_as_struct_type(graft_config: &mut Graft) -> StructType {
 
 fn all_next_as_methods(graft_config: &mut Graft) -> Vec<ast::Method<Typing>> {
     let mut methods = vec![];
-    let receiver_type: DataType = VmProofIterLib::vm_proof_iter_type(graft_config).into();
+    let receiver_type: DataType = vm_proof_iter_as_struct_type(graft_config).into();
     let receiver_type = DataType::Boxed(Box::new(receiver_type));
 
     for variant in ProofItemVariant::iter() {
@@ -135,7 +135,7 @@ fn all_next_as_methods(graft_config: &mut Graft) -> Vec<ast::Method<Typing>> {
         let code = triton_asm!(call { snippet_label });
 
         let method_signature = FnSignature {
-            name: format!("next_as_{variant}"),
+            name: format!("next_as_{}", variant.to_string().to_lowercase()),
             args: vec![AbstractArgument::ValueArgument(AbstractValueArg {
                 name: "self".to_owned(),
                 data_type: receiver_type.clone(),
