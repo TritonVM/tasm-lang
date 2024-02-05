@@ -14,6 +14,14 @@ pub(super) struct VmProofIter {
     pub current_item_pointer: BFieldElement,
 }
 
+impl VmProofIter {
+    pub(super) fn new() -> Self {
+        Self {
+            current_item_pointer: BFieldElement::new(2),
+        }
+    }
+}
+
 macro_rules! vm_proof_iter_impl {
     ($($variant:ident($payload:ty) defines $next_as_fn:ident uses $try_into_fn:ident,)+) => {
         impl VmProofIter {

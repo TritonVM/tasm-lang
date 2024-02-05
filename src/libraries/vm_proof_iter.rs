@@ -128,10 +128,27 @@ impl VmProofIterLib {
 
         // List all methods
         let all_dequeue_methods = all_next_as_methods(graft_config);
+        let new_function_constructor = Self::new_constructor(graft_config);
         TypeContext {
             composite_type: struct_type.into(),
             methods: all_dequeue_methods,
-            associated_functions: vec![],
+            associated_functions: vec![new_function_constructor],
+        }
+    }
+
+    /// Return the `new` function that acts as constructor for this type
+    fn new_constructor(graft_config: &mut Graft) -> ast::Fn<Typing> {
+        let constructor_return_type: DataType = vm_proof_iter_as_struct_type(graft_config).into();
+        ast::Fn {
+            signature: ast::FnSignature::value_function_immutable_args(
+                "new",
+                vec![],
+                constructor_return_type,
+            ),
+            body: RoutineBody::Instructions(ast::AsmDefinedBody {
+                dependencies: vec![],
+                instructions: triton_asm!(push 2),
+            }),
         }
     }
 
