@@ -6,7 +6,7 @@ use tasm_lib::triton_vm::prelude::*;
 pub struct EvalArg;
 
 impl EvalArg {
-    fn default_initial() -> XFieldElement {
+    fn _default_initial() -> XFieldElement {
         return XFieldElement::one();
     }
 

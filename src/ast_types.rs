@@ -1,12 +1,10 @@
 use std::collections::HashMap;
-use std::f64::consts::E;
 use std::fmt::Display;
 use std::str::FromStr;
 
 use anyhow::bail;
 use itertools::Itertools;
 use regex::Regex;
-use tasm_lib::triton_vm::stark;
 
 use crate::ast::FnSignature;
 

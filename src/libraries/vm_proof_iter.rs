@@ -1,15 +1,13 @@
-use std::str::FromStr;
-
 use itertools::Itertools;
 use strum::IntoEnumIterator;
-use syn::{parse_quote, Data};
+use syn::parse_quote;
 use tasm_lib::traits::basic_snippet::BasicSnippet;
 use tasm_lib::triton_vm::proof_item::ProofItemVariant;
 use tasm_lib::triton_vm::triton_asm;
 
+use crate::ast;
 use crate::ast::RoutineBody;
-use crate::ast::{self, FnSignature};
-use crate::ast_types::{AbstractArgument, AbstractValueArg, DataType, StructType};
+use crate::ast_types::{DataType, StructType};
 use crate::composite_types::TypeContext;
 use crate::graft::Graft;
 use crate::type_checker::Typing;
@@ -22,67 +20,67 @@ const NEXT_AS_METHOD_NAMES_PREFIX: &str = "next_as_";
 pub(crate) struct VmProofIterLib;
 
 impl Library for VmProofIterLib {
-    fn get_function_name(&self, full_name: &str) -> Option<String> {
+    fn get_function_name(&self, _full_name: &str) -> Option<String> {
         None
     }
 
     fn get_method_name(
         &self,
-        method_name: &str,
-        receiver_type: &crate::ast_types::DataType,
+        _method_name: &str,
+        _receiver_type: &crate::ast_types::DataType,
     ) -> Option<String> {
         None
     }
 
     fn method_name_to_signature(
         &self,
-        fn_name: &str,
-        receiver_type: &crate::ast_types::DataType,
-        args: &[ast::Expr<super::Annotation>],
-        type_checker_state: &crate::type_checker::CheckState,
+        _fn_name: &str,
+        _receiver_type: &crate::ast_types::DataType,
+        _args: &[ast::Expr<super::Annotation>],
+        _type_checker_state: &crate::type_checker::CheckState,
     ) -> ast::FnSignature {
         todo!()
     }
 
     fn function_name_to_signature(
         &self,
-        fn_name: &str,
-        type_parameter: Option<crate::ast_types::DataType>,
-        args: &[ast::Expr<super::Annotation>],
+        _fn_name: &str,
+        _type_parameter: Option<crate::ast_types::DataType>,
+        _args: &[ast::Expr<super::Annotation>],
     ) -> ast::FnSignature {
         todo!()
     }
 
     fn call_method(
         &self,
-        method_name: &str,
-        receiver_type: &crate::ast_types::DataType,
-        args: &[ast::Expr<super::Annotation>],
-        state: &mut crate::tasm_code_generator::CompilerState,
+        _method_name: &str,
+        _receiver_type: &crate::ast_types::DataType,
+        _args: &[ast::Expr<super::Annotation>],
+        _state: &mut crate::tasm_code_generator::CompilerState,
     ) -> Vec<tasm_lib::prelude::triton_vm::prelude::LabelledInstruction> {
         todo!()
     }
 
     fn call_function(
         &self,
-        fn_name: &str,
-        type_parameter: Option<crate::ast_types::DataType>,
-        args: &[ast::Expr<super::Annotation>],
-        state: &mut crate::tasm_code_generator::CompilerState,
+        _fn_name: &str,
+        _type_parameter: Option<crate::ast_types::DataType>,
+        _args: &[ast::Expr<super::Annotation>],
+        _state: &mut crate::tasm_code_generator::CompilerState,
     ) -> Vec<tasm_lib::prelude::triton_vm::prelude::LabelledInstruction> {
         todo!()
     }
 
-    fn get_graft_function_name(&self, full_name: &str) -> Option<String> {
+    fn get_graft_function_name(&self, _full_name: &str) -> Option<String> {
         None
     }
 
     fn graft_function(
         &self,
-        graft_config: &mut Graft,
-        fn_name: &str,
-        args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
-        type_parameter: Option<crate::ast_types::DataType>,
+        _graft_config: &mut Graft,
+        _fn_name: &str,
+        _args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
+        _type_parameter: Option<crate::ast_types::DataType>,
     ) -> Option<ast::Expr<super::Annotation>> {
         todo!()
     }

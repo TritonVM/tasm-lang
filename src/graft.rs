@@ -177,7 +177,7 @@ impl<'a> Graft<'a> {
         let variant = self.graft_struct_variant(struct_item);
         let syn::ItemStruct { attrs, ident, .. } = struct_item;
         ast_types::StructType {
-            is_copy: Self::is_copy(&attrs),
+            is_copy: Self::is_copy(attrs),
             variant,
             name: ident.to_string(),
         }
@@ -446,7 +446,6 @@ impl<'a> Graft<'a> {
     }
 
     fn rust_option_type_to_data_type(&mut self, path_args: &PathArguments) -> DataType {
-        use crate::libraries;
         let PathArguments::AngleBracketed(generics) = path_args else {
             panic!("Unsupported path argument {path_args:#?}");
         };
@@ -468,7 +467,6 @@ impl<'a> Graft<'a> {
     }
 
     fn rust_result_type_to_data_type(&mut self, path_args: &PathArguments) -> DataType {
-        use crate::libraries;
         let PathArguments::AngleBracketed(generics) = path_args else {
             panic!("Unsupported path argument {path_args:#?}");
         };
