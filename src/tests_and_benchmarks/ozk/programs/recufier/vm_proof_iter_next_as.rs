@@ -1,57 +1,48 @@
-use crate::tests_and_benchmarks::ozk::programs::recufier::host_machine_vm_proof_iter::VmProofIter;
-use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 use tasm_lib::triton_vm::prelude::*;
 use tasm_lib::triton_vm::proof_item::ProofItem;
 use tasm_lib::triton_vm::proof_stream::ProofStream;
 use tasm_lib::twenty_first::shared_math::tip5::Tip5State;
 use tasm_lib::twenty_first::util_types::algebraic_hasher::SpongeHasher;
 
-fn call_next_as_merkle_root_method() {
-    let mut sponge_state: Tip5State = Tip5::init();
-    let vm_proof_iter_stack: VmProofIter = VmProofIter {
-        current_item_pointer: BFieldElement::new(2),
-    };
-    let vm_proof_iter: Box<VmProofIter> = Box::<VmProofIter>::new(vm_proof_iter_stack);
-    let a_merkle_root: Box<Digest> = vm_proof_iter.next_as_merkleroot(&mut sponge_state);
-    tasm::tasm_io_write_to_stdout___digest(*a_merkle_root);
-
-    return;
-}
+use crate::tests_and_benchmarks::ozk::programs::recufier::host_machine_vm_proof_iter::VmProofIter;
+use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
 fn call_all_next_methods() {
     let mut sponge_state: Tip5State = Tip5::init();
     let vm_proof_iter_stack: VmProofIter = VmProofIter {
         current_item_pointer: BFieldElement::new(2),
     };
-    let vm_proof_iter: Box<VmProofIter> = Box::<VmProofIter>::new(vm_proof_iter_stack);
+    let mut vm_proof_iter: Box<VmProofIter> = Box::<VmProofIter>::new(vm_proof_iter_stack);
     let a_merkle_root: Box<Digest> = vm_proof_iter.next_as_merkleroot(&mut sponge_state);
     tasm::tasm_io_write_to_stdout___digest(*a_merkle_root);
 
-    // let out_of_domain_base_row: Vec<XFieldElement> = vm_proof_iter.next_as_outofdomainbaserow();
-    // tasm::tasm_io_write_to_stdout___xfe(out_of_domain_base_row[0]);
-    // tasm::tasm_io_write_to_stdout___xfe(out_of_domain_base_row[1]);
+    let out_of_domain_base_row: Box<Vec<XFieldElement>> =
+        vm_proof_iter.next_as_outofdomainbaserow(&mut sponge_state);
+    tasm::tasm_io_write_to_stdout___xfe(out_of_domain_base_row[0]);
+    tasm::tasm_io_write_to_stdout___xfe(out_of_domain_base_row[1]);
+
+    return;
 }
 
 #[cfg(test)]
 mod test {
-    use super::*;
-    use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
-    use crate::tests_and_benchmarks::ozk::rust_shadows;
-    use crate::tests_and_benchmarks::test_helpers::shared_test::*;
     use itertools::Itertools;
     use tasm_lib::triton_vm::proof_item::FriResponse;
     use tasm_lib::twenty_first::shared_math::b_field_element::BFieldElement;
 
+    use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
+    use crate::tests_and_benchmarks::ozk::rust_shadows;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::*;
+
+    use super::*;
+
     #[test]
     fn test_all_next_as_methods() {
-        let entrypoint_location = EntrypointLocation::disk(
-            "recufier",
-            "vm_proof_iter_next_as",
-            "call_next_as_merkle_root_method",
-        );
+        let entrypoint_location =
+            EntrypointLocation::disk("recufier", "vm_proof_iter_next_as", "call_all_next_methods");
         let test_case = TritonVMTestCase::new(entrypoint_location);
         let non_determinism = non_determinism();
-        let native_output = rust_shadows::wrap_main_with_io(&call_next_as_merkle_root_method)(
+        let native_output = rust_shadows::wrap_main_with_io(&call_all_next_methods)(
             Vec::default(),
             non_determinism.clone(),
         );
