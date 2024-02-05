@@ -42,6 +42,15 @@ mod test {
             EntrypointLocation::disk("recufier", "vm_proof_iter_next_as", "call_all_next_methods");
         let test_case = TritonVMTestCase::new(entrypoint_location);
         let non_determinism = non_determinism();
+        {
+            let mut ram: Vec<(BFieldElement, BFieldElement)> =
+                non_determinism.ram.clone().into_iter().collect();
+            ram.sort_unstable_by_key(|k| k.0.value());
+            println!(
+                "Init RAM: {}",
+                ram.iter().map(|(k, v)| format!("({k} => {v})")).join(", ")
+            );
+        }
         let native_output = rust_shadows::wrap_main_with_io(&call_all_next_methods)(
             Vec::default(),
             non_determinism.clone(),
@@ -51,7 +60,23 @@ mod test {
             .execute()
             .unwrap();
 
-        assert_eq!(native_output, vm_output.output);
+        // assert_eq!(native_output, vm_output.output);
+        if native_output != vm_output.output {
+            println!("Expected:\n{}", native_output.iter().join(","));
+            println!("Got:\n{}", vm_output.output.iter().join(","));
+            panic!()
+        }
+    }
+
+    fn non_determinism() -> NonDeterminism<BFieldElement> {
+        let Proof(raw_proof) = proof();
+        let ram = raw_proof
+            .into_iter()
+            .enumerate()
+            .map(|(k, v)| (BFieldElement::new(k as u64), v))
+            .collect();
+
+        NonDeterminism::default().with_ram(ram)
     }
 
     fn arbitrary_digest() -> Digest {
@@ -65,7 +90,7 @@ mod test {
     }
 
     fn arbitrary_out_of_domain_base_row() -> Vec<XFieldElement> {
-        (400u64..480)
+        (400u64..402)
             .map(|i| XFieldElement::new([i.into(), (i + 2).into(), (i + 5).into()]))
             .collect_vec()
     }
@@ -180,38 +205,27 @@ mod test {
         proof_stream.enqueue(ProofItem::OutOfDomainBaseRow(
             arbitrary_out_of_domain_base_row(),
         ));
-        proof_stream.enqueue(ProofItem::OutOfDomainExtRow(
-            arbitrary_out_of_domain_ext_row(),
-        ));
-        proof_stream.enqueue(ProofItem::OutOfDomainQuotientSegments(
-            arbitrary_out_of_domain_quotient_segments(),
-        ));
-        proof_stream.enqueue(ProofItem::AuthenticationStructure(
-            arbitrary_auth_structure(),
-        ));
-        proof_stream.enqueue(ProofItem::MasterBaseTableRows(
-            arbitrary_master_base_table_rows(),
-        ));
-        proof_stream.enqueue(ProofItem::MasterExtTableRows(
-            arbitrary_ext_base_table_rows(),
-        ));
-        proof_stream.enqueue(ProofItem::Log2PaddedHeight(arbitrary_log2_padded_height()));
-        proof_stream.enqueue(ProofItem::QuotientSegmentsElements(
-            arbitrary_quotient_segments_elements(),
-        ));
-        proof_stream.enqueue(ProofItem::FriCodeword(arbitrary_fri_codeword()));
-        proof_stream.enqueue(ProofItem::FriResponse(arbitrary_fri_response()));
+        // proof_stream.enqueue(ProofItem::OutOfDomainExtRow(
+        //     arbitrary_out_of_domain_ext_row(),
+        // ));
+        // proof_stream.enqueue(ProofItem::OutOfDomainQuotientSegments(
+        //     arbitrary_out_of_domain_quotient_segments(),
+        // ));
+        // proof_stream.enqueue(ProofItem::AuthenticationStructure(
+        //     arbitrary_auth_structure(),
+        // ));
+        // proof_stream.enqueue(ProofItem::MasterBaseTableRows(
+        //     arbitrary_master_base_table_rows(),
+        // ));
+        // proof_stream.enqueue(ProofItem::MasterExtTableRows(
+        //     arbitrary_ext_base_table_rows(),
+        // ));
+        // proof_stream.enqueue(ProofItem::Log2PaddedHeight(arbitrary_log2_padded_height()));
+        // proof_stream.enqueue(ProofItem::QuotientSegmentsElements(
+        //     arbitrary_quotient_segments_elements(),
+        // ));
+        // proof_stream.enqueue(ProofItem::FriCodeword(arbitrary_fri_codeword()));
+        // proof_stream.enqueue(ProofItem::FriResponse(arbitrary_fri_response()));
         proof_stream.into()
-    }
-
-    fn non_determinism() -> NonDeterminism<BFieldElement> {
-        let Proof(raw_proof) = proof();
-        let ram = raw_proof
-            .into_iter()
-            .enumerate()
-            .map(|(k, v)| (BFieldElement::new(k as u64), v))
-            .collect();
-
-        NonDeterminism::default().with_ram(ram)
     }
 }

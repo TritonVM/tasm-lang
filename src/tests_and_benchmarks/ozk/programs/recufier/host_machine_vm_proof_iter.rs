@@ -29,14 +29,19 @@ macro_rules! vm_proof_iter_impl {
                 };
                 let item_size = ProofItemVariant::$variant
                     .payload_static_length()
+                    .map(|x| x + 1)
                     .unwrap_or_else(read_size_from_ram);
+                println!("item_size: {item_size}");
 
                 dbg!("before discriminant", self.current_item_pointer.value());
                 let discriminant_pointer = self.current_item_pointer + BFieldElement::one();
+                println!("PI pointer: {}", discriminant_pointer);
                 let proof_item =
                     decode_from_memory_using_size::<ProofItem>(discriminant_pointer, item_size);
 
+                println!("old self.current_item_pointer = {}", self.current_item_pointer);
                 self.current_item_pointer += BFieldElement::new(item_size as u64 + 1);
+                println!("new self.current_item_pointer = {}", self.current_item_pointer);
 
                 // todo debug block VVVVVV
                 dbg!("entering debug block");
