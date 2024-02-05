@@ -390,10 +390,13 @@ impl<'a> Graft<'a> {
         }
 
         if rust_type_as_string == "VmProofIter" {
-            let resolved_type = libraries::vm_proof_iter::VmProofIterLib::vm_proof_iter_type(self);
+            let vm_proof_iter = libraries::vm_proof_iter::VmProofIterLib::vm_proof_iter_type(self);
             self.imported_custom_types
-                .add_type_context_if_new(resolved_type.clone());
-            return resolved_type.into();
+                .add_type_context_if_new(vm_proof_iter.clone());
+            let fri_response = libraries::vm_proof_iter::VmProofIterLib::fri_response_type(self);
+            self.imported_custom_types
+                .add_type_context_if_new(fri_response);
+            return vm_proof_iter.into();
         }
 
         // We only allow the user to use types that are capitalized
@@ -701,7 +704,7 @@ impl<'a> Graft<'a> {
         rust_method_call: &syn::ExprMethodCall,
     ) -> ast::Expr<Annotation> {
         for lib in self.libraries.iter() {
-            if let Some(method_call) = lib.graft_method(self, rust_method_call) {
+            if let Some(method_call) = lib.graft_method_call(self, rust_method_call) {
                 return method_call;
             }
         }

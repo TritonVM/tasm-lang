@@ -1,5 +1,8 @@
+use std::str::FromStr;
+
+use itertools::Itertools;
 use strum::IntoEnumIterator;
-use syn::parse_quote;
+use syn::{parse_quote, Data};
 use tasm_lib::traits::basic_snippet::BasicSnippet;
 use tasm_lib::triton_vm::proof_item::ProofItemVariant;
 use tasm_lib::triton_vm::triton_asm;
@@ -12,6 +15,8 @@ use crate::graft::Graft;
 use crate::type_checker::Typing;
 
 use super::Library;
+
+const NEXT_AS_METHOD_NAMES_PREFIX: &str = "next_as_";
 
 #[derive(Debug)]
 pub(crate) struct VmProofIterLib;
@@ -82,16 +87,40 @@ impl Library for VmProofIterLib {
         todo!()
     }
 
-    fn graft_method(
+    fn graft_method_call(
         &self,
         graft_config: &mut Graft,
         rust_method_call: &syn::ExprMethodCall,
     ) -> Option<ast::Expr<super::Annotation>> {
-        // TODO: Add all `next_as_...` method calls here
-        // to remove the `Tip5State` argument from the method call.
-        // It might be enough to simply remove *that* argument. Alternatively
-        // one could handle that removal in the hasher library.
-        None
+        let method_name = rust_method_call.method.to_string();
+        if !method_name.starts_with(NEXT_AS_METHOD_NAMES_PREFIX) {
+            return None;
+        }
+
+        let all_method_names = all_next_as_method_names();
+        if !all_method_names.contains(&method_name) {
+            return None;
+        }
+
+        // If argument has already been stripped, do nothing. The below code strips the
+        // argument which is assumed to be `&mut sponge_hasher`.
+        if rust_method_call.args.is_empty() {
+            return None;
+        }
+
+        // Verify that `args` looks as expected
+        let [_arg] = rust_method_call.args.iter().collect_vec()[..] else {
+            panic!(
+                "{method_name} expects exactly one argument in addition to its receiver. Got: {:?}\nmethod call was:\n{:#?}",
+                rust_method_call.args,
+                rust_method_call
+            );
+        };
+
+        let mut method_call_without_spongehasher_arg = rust_method_call.clone();
+        method_call_without_spongehasher_arg.args.clear();
+
+        Some(graft_config.graft_method_call(&method_call_without_spongehasher_arg))
     }
 }
 
@@ -104,6 +133,16 @@ impl VmProofIterLib {
         TypeContext {
             composite_type: struct_type.into(),
             methods: all_dequeue_methods,
+            associated_functions: vec![],
+        }
+    }
+
+    pub(crate) fn fri_response_type(graft_config: &mut Graft) -> TypeContext {
+        let struct_type = fri_response_as_struct_type(graft_config);
+
+        TypeContext {
+            composite_type: struct_type.into(),
+            methods: vec![],
             associated_functions: vec![],
         }
     }
@@ -122,6 +161,35 @@ fn vm_proof_iter_as_struct_type(graft_config: &mut Graft) -> StructType {
     graft_config.graft_struct_type(&item_struct)
 }
 
+fn fri_response_as_struct_type(graft_config: &mut Graft) -> StructType {
+    let tokens: syn::Item = parse_quote! {
+        struct FriResponse {
+            /// The authentication structure of the Merkle tree.
+            pub auth_structure: Vec<Digest>,
+            /// The values of the opened leaves of the Merkle tree.
+            pub revealed_leaves: Vec<XFieldElement>,
+        }
+    };
+    let syn::Item::Struct(item_struct) = tokens else {
+        panic!()
+    };
+
+    graft_config.graft_struct_type(&item_struct)
+}
+
+fn all_next_as_method_names() -> Vec<String> {
+    ProofItemVariant::iter()
+        .map(|x| method_name_for_next_as(&x))
+        .collect()
+}
+
+fn method_name_for_next_as(variant: &ProofItemVariant) -> String {
+    format!(
+        "{NEXT_AS_METHOD_NAMES_PREFIX}{}",
+        variant.to_string().to_lowercase()
+    )
+}
+
 fn all_next_as_methods(graft_config: &mut Graft) -> Vec<ast::Method<Typing>> {
     let mut methods = vec![];
     let receiver_type: DataType = vm_proof_iter_as_struct_type(graft_config).into();
@@ -131,22 +199,24 @@ fn all_next_as_methods(graft_config: &mut Graft) -> Vec<ast::Method<Typing>> {
         let snippet = tasm_lib::recufier::proof_stream::dequeue_next_as::DequeueNextAs {
             proof_item: variant,
         };
+        let method_output = variant.payload_type();
+        let method_output =
+            DataType::try_from_string(method_output, graft_config.list_type).unwrap();
+        let method_output = DataType::Boxed(Box::new(method_output));
         let snippet_label = snippet.entrypoint();
         let code = triton_asm!(call { snippet_label });
 
-        let method_signature = FnSignature {
-            name: format!("next_as_{}", variant.to_string().to_lowercase()),
-            args: vec![AbstractArgument::ValueArgument(AbstractValueArg {
-                name: "self".to_owned(),
-                data_type: receiver_type.clone(),
-                mutable: true,
-            })],
-            output: DataType::VoidPointer,
-            arg_evaluation_order: Default::default(),
-        };
+        let method_signature = ast::FnSignature::value_function_with_mutable_args(
+            &method_name_for_next_as(&variant),
+            vec![("self", receiver_type.clone())],
+            method_output,
+        );
         let method = ast::Method {
             signature: method_signature,
-            body: RoutineBody::Instructions(code),
+            body: RoutineBody::Instructions(ast::AsmDefinedBody {
+                dependencies: vec![snippet_label],
+                instructions: code,
+            }),
         };
 
         methods.push(method);

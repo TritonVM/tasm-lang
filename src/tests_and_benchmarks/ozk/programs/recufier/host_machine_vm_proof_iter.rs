@@ -8,6 +8,7 @@ use tasm_lib::triton_vm::proof_item::ProofItemVariant;
 use tasm_lib::triton_vm::proof_stream::ProofStream;
 use tasm_lib::twenty_first::shared_math::tip5::Tip5State;
 use tasm_lib::twenty_first::util_types::algebraic_hasher::SpongeHasher;
+use tasm_lib::DIGEST_LENGTH;
 
 // This struct should only be seen be `rustc`, not
 // by `tasm-lang`
@@ -21,13 +22,12 @@ impl VmProofIter {
             BFieldElement::new(ProofItemVariant::MerkleRoot.bfield_codec_discriminant() as u64);
         let discriminant_pointer = self.current_item_pointer + BFieldElement::one();
         let actual_discriminant =
-                // BFieldElement::decode(&tasm::load_from_memory(discriminant_pointer)).unwrap();
-                bfield_codec::decode_from_memory_using_size::<BFieldElement>(discriminant_pointer, 1);
+            bfield_codec::decode_from_memory_using_size::<BFieldElement>(discriminant_pointer, 1);
         assert_eq!(expected_discriminant, *actual_discriminant);
-        let merkle_root = Digest::decode(&tasm::load_from_memory(
+        let merkle_root = bfield_codec::decode_from_memory_using_size::<Digest>(
             discriminant_pointer + BFieldElement::one(),
-        ))
-        .unwrap();
+            DIGEST_LENGTH,
+        );
 
         merkle_root
     }

@@ -122,7 +122,7 @@ impl Library for Boxed {
         panic!("AllocBoxed cannot graft functions")
     }
 
-    fn graft_method(
+    fn graft_method_call(
         &self,
         _graft_config: &mut Graft,
         _rust_method_call: &syn::ExprMethodCall,

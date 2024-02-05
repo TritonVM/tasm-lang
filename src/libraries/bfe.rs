@@ -190,7 +190,7 @@ impl Library for BfeLibrary {
         None
     }
 
-    fn graft_method(
+    fn graft_method_call(
         &self,
         graft_config: &mut Graft,
         rust_method_call: &syn::ExprMethodCall,

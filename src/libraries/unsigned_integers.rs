@@ -132,7 +132,7 @@ impl Library for UnsignedIntegersLib {
         panic!("unsigned_integers lib cannot graft");
     }
 
-    fn graft_method(
+    fn graft_method_call(
         &self,
         _graft_config: &mut Graft,
         _rust_method_call: &syn::ExprMethodCall,

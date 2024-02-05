@@ -11,6 +11,7 @@ use num::Zero;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::fmt::Display;
+use tasm_lib::exported_snippets;
 use tasm_lib::library::Library as SnippetState;
 use tasm_lib::prelude::*;
 use tasm_lib::triton_vm::prelude::*;
@@ -22,6 +23,7 @@ use self::inner_function_tasm_code::InnerFunctionTasmCode;
 use self::outer_function_tasm_code::OuterFunctionTasmCode;
 use self::stack::VStack;
 use crate::ast;
+use crate::ast::AsmDefinedBody;
 use crate::ast::Identifier;
 use crate::ast::RoutineBody;
 use crate::ast_types;
@@ -968,10 +970,18 @@ fn compile_function_inner(
 
     let function_body = match &function.body {
         RoutineBody::Ast(ast) => ast,
-        RoutineBody::Instructions(instrs) => {
+        RoutineBody::Instructions(AsmDefinedBody {
+            dependencies,
+            instructions,
+        }) => {
+            for dependency in dependencies {
+                global_compiler_state
+                    .snippet_state
+                    .import(exported_snippets::name_to_snippet(dependency));
+            }
             let body_with_label_and_return = triton_asm!(
                 {fn_name}:
-                    {&instrs}
+                    {&instructions}
                     return
             );
             return InnerFunctionTasmCode {
@@ -1517,7 +1527,6 @@ fn compile_method_call(
     let receiver_type = method_call.args[0].get_type();
     if let Some(method) = state.composite_types.get_method(method_call) {
         let method_label = method.get_tasm_label();
-        println!("method_label: {method_label}");
         if !state
             .global_compiler_state
             .compiled_methods_and_afs
