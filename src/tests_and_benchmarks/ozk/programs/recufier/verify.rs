@@ -2,11 +2,11 @@ use num::One;
 use num::Zero;
 
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
+use crate::tests_and_benchmarks::ozk::rust_shadows::VmProofIter;
 use crate::triton_vm::prelude::tip5::Tip5State;
 use crate::twenty_first::prelude::*;
 
-use super::host_machine_vm_proof_iter::VmProofIter;
-
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
 struct Recufier;
 
 impl Recufier {
@@ -30,9 +30,13 @@ impl Recufier {
 
         return encoding;
     }
+
+    // todo: derive fri here
+    // pub fn derive_fri(self) {}
 }
 
 /// Gives statements only intended for debugging its own scope.
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
 struct RecufyDebug;
 
 impl RecufyDebug {
@@ -56,6 +60,15 @@ impl RecufyDebug {
     }
 }
 
+pub(crate) struct FriVerify {
+    // expansion factor = 1 / rate
+    pub expansion_factor: u32,
+    pub num_colinearity_checks: u32,
+    pub domain_length: u32,
+    pub domain_offset: BFieldElement,
+    domain_generator: BFieldElement,
+}
+
 pub fn recufy() {
     let own_digest: Digest = tasm::tasm_recufier_read_and_verify_own_program_digest_from_std_in();
 
@@ -69,6 +82,21 @@ pub fn recufy() {
     let padded_height: u32 = 1 << *log_2_padded_height;
     RecufyDebug::dump_u32(padded_height);
 
+    // derive fri
+    let fri_parameters_stack: FriVerify = FriVerify {
+        expansion_factor: 4,
+        num_colinearity_checks: 4,
+        domain_length: 16,
+        domain_offset: BFieldElement::new(1),
+        domain_generator: BFieldElement::new(17293822564807737345),
+    };
+    let fri_parameters: Box<FriVerify> = Box::<FriVerify>::new(fri_parameters_stack);
+
+    let revealed_indexed_leaves: Vec<(u32, XFieldElement)> =
+        tasm::tasm_recufier_fri_verify(&mut proof_iter, fri_parameters);
+    // let fri = Fri::new().unwrap();
+    // let stuff = fri.verify(&mut None, &mut None).unwrap();
+
     let out_of_domain_base_row: Box<Vec<XFieldElement>> =
         proof_iter.next_as_outofdomainbaserow(&mut sponge_state);
     RecufyDebug::dump_xfe(out_of_domain_base_row[0]);
@@ -79,6 +107,7 @@ pub fn recufy() {
 
 #[cfg(test)]
 mod tests {
+    use itertools::Itertools;
     use proptest::prelude::*;
     use proptest_arbitrary_interop::arb;
     use test_strategy::proptest;
@@ -101,9 +130,8 @@ mod tests {
     }
 
     fn proof() -> Proof {
-        let dummy_ood_base_row = [[1337, 1338, 1339], [1001, 1002, 1004], [7001, 7002, 7004]]
-            .map(XFieldElement::new_u64)
-            .to_vec();
+        let to_xfe = |n| XFieldElement::new_u64([n; 3]);
+        let dummy_ood_base_row = (1001..1005).map(to_xfe).collect_vec();
 
         let mut proof_stream = ProofStream::<Tip5>::new();
         proof_stream.enqueue(ProofItem::Log2PaddedHeight(22));

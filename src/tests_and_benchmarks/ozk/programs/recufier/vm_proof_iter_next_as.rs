@@ -4,8 +4,8 @@ use tasm_lib::triton_vm::proof_stream::ProofStream;
 use tasm_lib::twenty_first::shared_math::tip5::Tip5State;
 use tasm_lib::twenty_first::util_types::algebraic_hasher::SpongeHasher;
 
-use crate::tests_and_benchmarks::ozk::programs::recufier::host_machine_vm_proof_iter::VmProofIter;
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
+use crate::tests_and_benchmarks::ozk::rust_shadows::VmProofIter;
 
 fn call_all_next_methods() {
     let mut sponge_state: Tip5State = Tip5::init();
