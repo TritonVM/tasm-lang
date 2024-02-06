@@ -9,11 +9,17 @@ use crate::ast_types::DataType;
 use crate::graft::Graft;
 use crate::libraries::Annotation;
 
-pub(super) const SPONGE_HASHER_INDICATOR: &str = "Tip5::";
 const SPONGE_HASHER_INIT_NAME: &str = "Tip5::init";
 const SPONGE_HASHER_ABSORB_NAME: &str = "Tip5::absorb";
 const SPONGE_HASHER_SQUEEZE_NAME: &str = "Tip5::squeeze";
 const SPONGE_HASHER_PAD_AND_ABSORB_ALL_NAME: &str = "Tip5::pad_and_absorb_all";
+
+pub(super) fn is_sponge_trait_function(fn_name: &str) -> bool {
+    fn_name == SPONGE_HASHER_INIT_NAME
+        || fn_name == SPONGE_HASHER_ABSORB_NAME
+        || fn_name == SPONGE_HASHER_SQUEEZE_NAME
+        || fn_name == SPONGE_HASHER_PAD_AND_ABSORB_ALL_NAME
+}
 
 pub(super) fn graft_sponge_hasher_functions(
     grafter: &mut Graft,

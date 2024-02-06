@@ -53,7 +53,6 @@ fn assert_no_panic_in_arm_body_a(input_element: u32) {
     );
     TritonVMTestCase::new(entrypoint)
         .with_std_in(std_in)
-        .expect_stack_difference(0)
         .execute()
         .unwrap();
 }
@@ -90,10 +89,7 @@ fn assert_no_panic_in_arm_body_b() {
         "panic_in_arm_body",
         "choose_variant_b_and_panic_on_variants_a_and_c",
     );
-    let vm_output = TritonVMTestCase::new(entrypoint)
-        .expect_stack_difference(0)
-        .execute()
-        .unwrap();
+    let vm_output = TritonVMTestCase::new(entrypoint).execute().unwrap();
     assert_eq!(native_output, vm_output.output);
 }
 
@@ -134,7 +130,6 @@ fn assert_no_panic_in_arm_body_c(
     );
     let vm_output = TritonVMTestCase::new(entrypoint)
         .with_std_in(std_in)
-        .expect_stack_difference(0)
         .execute()
         .unwrap();
     prop_assert_eq!(native_output, vm_output.output);
@@ -173,10 +168,7 @@ fn assert_panic_in_arm_body_a() {
         "panic_in_arm_body",
         "choose_variant_a_and_panic_on_variant_a",
     );
-    let err = TritonVMTestCase::new(entrypoint)
-        .expect_stack_difference(0)
-        .execute()
-        .unwrap_err();
+    let err = TritonVMTestCase::new(entrypoint).execute().unwrap_err();
     let err = err.downcast::<InstructionError>().unwrap();
     assert_eq!(InstructionError::AssertionFailed, err);
 }
@@ -214,10 +206,7 @@ fn assert_panic_in_arm_body_b() {
         "panic_in_arm_body",
         "choose_variant_b_and_panic_on_variant_b",
     );
-    let err = TritonVMTestCase::new(entrypoint)
-        .expect_stack_difference(0)
-        .execute()
-        .unwrap_err();
+    let err = TritonVMTestCase::new(entrypoint).execute().unwrap_err();
     let err = err.downcast::<InstructionError>().unwrap();
     assert_eq!(InstructionError::AssertionFailed, err);
 }

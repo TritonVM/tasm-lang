@@ -20,9 +20,6 @@ mod test {
         rust_shadows::wrap_main_with_io(&main)(vec![], NonDeterminism::default());
         let entrypoint =
             EntrypointLocation::disk("vectors", "clone_from_very_simple", "test::main");
-        TritonVMTestCase::new(entrypoint)
-            .expect_stack_difference(0)
-            .execute()
-            .unwrap();
+        TritonVMTestCase::new(entrypoint).execute().unwrap();
     }
 }

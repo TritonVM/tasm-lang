@@ -21,6 +21,7 @@ const POW_METHOD: &str = "pow";
 const OVERFLOWING_ADD_METHOD: &str = "overflowing_add";
 const OVERFLOWING_SUB_METHOD: &str = "overflowing_sub";
 const WRAPPING_SUB_METHOD: &str = "wrapping_sub";
+const ILOG2_METHOD: &str = "ilog2";
 
 impl Library for UnsignedIntegersLib {
     fn get_function_name(&self, _full_name: &str) -> Option<String> {
@@ -41,6 +42,7 @@ impl Library for UnsignedIntegersLib {
                     | OVERFLOWING_ADD_METHOD
                     | OVERFLOWING_SUB_METHOD
                     | WRAPPING_SUB_METHOD
+                    | ILOG2_METHOD
             )
         {
             return Some(method_name.to_owned());
@@ -64,41 +66,14 @@ impl Library for UnsignedIntegersLib {
             return get_count_ones_u32_method().signature;
         }
 
+        if method_name == ILOG2_METHOD && ast_types::DataType::U32 == *receiver_type {
+            return ilog2_method_signature();
+        }
+
         let snippet = name_to_tasm_lib_snippet(method_name, receiver_type)
             .unwrap_or_else(|| panic!("Unknown function name {method_name}"));
 
-        let name = snippet.entrypoint();
-
-        let mut args: Vec<ast_types::AbstractArgument> = vec![];
-        for (ty, name) in snippet.inputs().into_iter() {
-            let fn_arg = ast_types::AbstractValueArg {
-                name,
-                data_type: ast_types::DataType::from_tasm_lib_datatype(ty, self.list_type),
-                mutable: true,
-            };
-            args.push(ast_types::AbstractArgument::ValueArgument(fn_arg));
-        }
-
-        let mut output_types: Vec<ast_types::DataType> = vec![];
-        for (ty, _name) in snippet.outputs() {
-            output_types.push(ast_types::DataType::from_tasm_lib_datatype(
-                ty,
-                self.list_type,
-            ));
-        }
-
-        let output = match output_types.len() {
-            1 => output_types[0].clone(),
-            0 => ast_types::DataType::Tuple(vec![].into()),
-            _ => ast_types::DataType::Tuple(output_types.into()),
-        };
-
-        ast::FnSignature {
-            name,
-            args,
-            output,
-            arg_evaluation_order: Default::default(),
-        }
+        ast::FnSignature::from_basic_snippet(snippet, self.list_type)
     }
 
     fn function_name_to_signature(
@@ -119,6 +94,10 @@ impl Library for UnsignedIntegersLib {
     ) -> Vec<LabelledInstruction> {
         if method_name == COUNT_ONES_METHOD && ast_types::DataType::U32 == *receiver_type {
             return get_count_ones_u32_method().body;
+        }
+
+        if method_name == ILOG2_METHOD && ast_types::DataType::U32 == *receiver_type {
+            return triton_asm!(log_2_floor);
         }
 
         let snippet = name_to_tasm_lib_snippet(method_name, receiver_type)
@@ -153,7 +132,7 @@ impl Library for UnsignedIntegersLib {
         panic!("unsigned_integers lib cannot graft");
     }
 
-    fn graft_method(
+    fn graft_method_call(
         &self,
         _graft_config: &mut Graft,
         _rust_method_call: &syn::ExprMethodCall,
@@ -162,22 +141,23 @@ impl Library for UnsignedIntegersLib {
     }
 }
 
+fn ilog2_method_signature() -> ast::FnSignature {
+    ast::FnSignature::value_function_immutable_args(
+        ILOG2_METHOD,
+        vec![("value", ast_types::DataType::U32)],
+        ast_types::DataType::U32,
+    )
+}
+
 fn get_count_ones_u32_method() -> LibraryFunction {
-    let fn_signature = ast::FnSignature {
-        name: COUNT_ONES_METHOD.to_owned(),
-        args: vec![ast_types::AbstractArgument::ValueArgument(
-            ast_types::AbstractValueArg {
-                name: "value".to_owned(),
-                data_type: ast_types::DataType::U32,
-                mutable: false,
-            },
-        )],
-        output: ast_types::DataType::U32,
-        arg_evaluation_order: Default::default(),
-    };
+    let signature = ast::FnSignature::value_function_immutable_args(
+        COUNT_ONES_METHOD,
+        vec![("value", ast_types::DataType::U32)],
+        ast_types::DataType::U32,
+    );
 
     LibraryFunction {
-        signature: fn_signature,
+        signature,
         body: triton_asm!(pop_count),
     }
 }

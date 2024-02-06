@@ -38,7 +38,6 @@ mod test {
         let entrypoint = EntrypointLocation::disk("other", "value", "main");
         let vm_output = TritonVMTestCase::new(entrypoint)
             .with_safe_lists()
-            .expect_stack_difference(0)
             .execute()
             .unwrap();
 

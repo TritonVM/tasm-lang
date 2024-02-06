@@ -34,7 +34,6 @@ fn main() {
 
 #[cfg(test)]
 mod test {
-
     use rand::random;
     use tasm_lib::triton_vm::prelude::*;
 
@@ -67,7 +66,6 @@ mod test {
         let entrypoint = EntrypointLocation::disk("structs", "struct_with_simple_methods", "main");
         let vm_output = TritonVMTestCase::new(entrypoint)
             .with_non_determinism(non_determinism)
-            .expect_stack_difference(0)
             .execute()
             .unwrap();
 

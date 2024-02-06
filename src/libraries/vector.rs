@@ -184,7 +184,7 @@ impl Library for VectorLib {
         todo!()
     }
 
-    fn graft_method(
+    fn graft_method_call(
         &self,
         graft_config: &mut Graft,
         rust_method_call: &syn::ExprMethodCall,
@@ -301,24 +301,17 @@ impl VectorLib {
     /// on a vector, resulting in an empty vector. Compatible with
     /// Rust's `clear` method on `Vec<T>`.
     fn clear_method(&self, element_type: &ast_types::DataType) -> LibraryFunction {
-        let fn_signature = ast::FnSignature {
-            name: CLEAR_METHOD_NAME.to_owned(),
-            args: vec![ast_types::AbstractArgument::ValueArgument(
-                ast_types::AbstractValueArg {
-                    name: "list".to_owned(),
-                    data_type: ast_types::DataType::List(
-                        Box::new(element_type.to_owned()),
-                        self.list_type,
-                    ),
-                    mutable: true,
-                },
+        let signature = ast::FnSignature::value_function_with_mutable_args(
+            CLEAR_METHOD_NAME,
+            vec![(
+                "list",
+                ast_types::DataType::List(Box::new(element_type.to_owned()), self.list_type),
             )],
-            output: ast_types::DataType::Tuple(vec![].into()),
-            arg_evaluation_order: Default::default(),
-        };
+            ast_types::DataType::unit(),
+        );
 
         LibraryFunction {
-            signature: fn_signature,
+            signature,
             // Notice that we don't have to check capacity for safe lists, since
             // length 0 can never exceed capacity.
             // Stack at function start:

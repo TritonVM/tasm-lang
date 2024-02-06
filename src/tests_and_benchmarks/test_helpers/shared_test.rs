@@ -7,6 +7,7 @@ use itertools::Itertools;
 use tasm_lib::empty_stack;
 use tasm_lib::memory::dyn_malloc::DYN_MALLOC_ADDRESS;
 use tasm_lib::rust_shadowing_helper_functions;
+use tasm_lib::triton_vm::op_stack::NUM_OP_STACK_REGISTERS;
 use tasm_lib::triton_vm::prelude::*;
 use tasm_lib::twenty_first::shared_math::b_field_element::BFIELD_ONE;
 use tasm_lib::twenty_first::shared_math::b_field_element::BFIELD_ZERO;
@@ -121,10 +122,8 @@ pub(crate) fn execute_compiled_with_stack_and_ins_for_bench(
 pub(crate) struct TritonVMTestCase {
     entrypoint: EntrypointLocation,
     list_type: ast_types::ListType,
-    input_args: Vec<ast::ExprLit<Typing>>,
     std_in: Vec<BFieldElement>,
     non_determinism: NonDeterminism<BFieldElement>,
-    expected_stack_difference: Option<isize>,
 }
 
 impl TritonVMTestCase {
@@ -132,10 +131,8 @@ impl TritonVMTestCase {
         Self {
             entrypoint,
             list_type: ast_types::ListType::Unsafe,
-            input_args: vec![],
             std_in: vec![],
             non_determinism: NonDeterminism::default(),
-            expected_stack_difference: None,
         }
     }
 
@@ -157,43 +154,19 @@ impl TritonVMTestCase {
         self
     }
 
-    pub(crate) fn expect_stack_difference(mut self, expected_stack_difference: isize) -> Self {
-        self.expected_stack_difference = Some(expected_stack_difference);
-        self
-    }
-
     pub(crate) fn execute(self) -> Result<VmOutputState> {
-        let initial_stack = self.initial_stack();
-        let expected_terminal_stack_len = self
-            .expected_stack_difference
-            .map(|diff| initial_stack.len() as isize + diff);
+        let mut vm_state = self.initial_vm_state();
+        vm_state.run()?;
 
-        let vm_state = self.run_triton_vm(initial_stack)?;
-        Self::check_expected_stack_difference(&vm_state, expected_terminal_stack_len)?;
+        Self::verify_stack_len_unchanged(&vm_state)?;
 
         Ok(Self::convert_vm_state_to_output_state(vm_state))
     }
 
-    fn initial_stack(&self) -> Vec<BFieldElement> {
-        let mut initial_stack = empty_stack();
-        for input_arg in &self.input_args {
-            initial_stack.extend(input_arg.encode().into_iter().rev());
-        }
-        initial_stack
-    }
-
-    fn run_triton_vm(self, initial_stack: Vec<BFieldElement>) -> Result<VMState> {
-        let mut vm_state = self.initial_vm_state(initial_stack);
-        vm_state.run()?;
-
-        Ok(vm_state)
-    }
-
-    fn initial_vm_state(self, initial_stack: Vec<BFieldElement>) -> VMState {
+    fn initial_vm_state(self) -> VMState {
         let program = Program::new(&self.compile());
         let public_input = PublicInput::new(self.std_in);
-        let mut vm_state = VMState::new(&program, public_input, self.non_determinism);
-        vm_state.op_stack.stack = initial_stack;
+        let vm_state = VMState::new(&program, public_input, self.non_determinism);
 
         tasm_lib::maybe_write_debuggable_program_to_disk(&program, &vm_state);
 
@@ -204,19 +177,13 @@ impl TritonVMTestCase {
         compile_for_test(&self.entrypoint, self.list_type)
     }
 
-    fn check_expected_stack_difference(
-        vm_state: &VMState,
-        expected_terminal_stack_len: Option<isize>,
-    ) -> Result<()> {
-        let terminal_stack_len = vm_state.op_stack.len() as isize;
-        let Some(expected_terminal_stack_len) = expected_terminal_stack_len else {
-            return Ok(());
-        };
-
-        if terminal_stack_len == expected_terminal_stack_len {
-            Ok(())
-        } else {
-            bail!("Expected stack length to be {expected_terminal_stack_len} but was {terminal_stack_len}")
+    fn verify_stack_len_unchanged(vm_state: &VMState) -> Result<()> {
+        let terminal_stack_len = vm_state.op_stack.len();
+        match terminal_stack_len {
+            NUM_OP_STACK_REGISTERS => Ok(()),
+            _ => bail!(
+                "Expected stack length to be {NUM_OP_STACK_REGISTERS} but was {terminal_stack_len}"
+            ),
         }
     }
 

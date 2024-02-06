@@ -17,6 +17,7 @@ pub(crate) mod hasher;
 pub(crate) mod tasm;
 pub(crate) mod unsigned_integers;
 pub(crate) mod vector;
+pub(crate) mod vm_proof_iter;
 pub(crate) mod xfe;
 
 type Annotation = type_checker::Typing;
@@ -37,6 +38,7 @@ pub(crate) fn all_libraries<'a>(config: LibraryConfig) -> Vec<Box<dyn Library + 
         Box::new(bfe::BfeLibrary {
             list_type: config.list_type,
         }),
+        Box::new(core::Core {}),
         Box::new(bfield_codec::BFieldCodecLib {
             list_type: config.list_type,
         }),
@@ -52,44 +54,9 @@ pub(crate) fn all_libraries<'a>(config: LibraryConfig) -> Vec<Box<dyn Library + 
         Box::new(vector::VectorLib {
             list_type: config.list_type,
         }),
+        Box::new(vm_proof_iter::VmProofIterLib),
         Box::new(xfe::XfeLibrary),
-        Box::new(core::Core {}),
     ]
-}
-
-pub(crate) fn tasm_lib_snippet_to_fn_signature(
-    list_type: ListType,
-    snippet: Box<dyn tasm_lib::traits::basic_snippet::BasicSnippet>,
-) -> ast::FnSignature {
-    let name = snippet.entrypoint();
-    let mut args: Vec<ast_types::AbstractArgument> = vec![];
-    for (ty, name) in snippet.inputs().into_iter() {
-        let fn_arg = ast_types::AbstractValueArg {
-            name,
-            data_type: ast_types::DataType::from_tasm_lib_datatype(ty, list_type),
-            // The tasm snippet input arguments are all considered mutable
-            mutable: true,
-        };
-        args.push(ast_types::AbstractArgument::ValueArgument(fn_arg));
-    }
-
-    let mut output_types: Vec<ast_types::DataType> = vec![];
-    for (ty, _name) in snippet.outputs() {
-        output_types.push(ast_types::DataType::from_tasm_lib_datatype(ty, list_type));
-    }
-
-    let output = match output_types.len() {
-        1 => output_types[0].clone(),
-        0 => ast_types::DataType::Tuple(vec![].into()),
-        _ => ast_types::DataType::Tuple(output_types.into()),
-    };
-
-    FnSignature {
-        name,
-        args,
-        output,
-        arg_evaluation_order: Default::default(),
-    }
 }
 
 pub(crate) trait Library: Debug {
@@ -150,7 +117,7 @@ pub(crate) trait Library: Debug {
         type_parameter: Option<ast_types::DataType>,
     ) -> Option<ast::Expr<Annotation>>;
 
-    fn graft_method(
+    fn graft_method_call(
         &self,
         graft_config: &mut Graft,
         rust_method_call: &syn::ExprMethodCall,

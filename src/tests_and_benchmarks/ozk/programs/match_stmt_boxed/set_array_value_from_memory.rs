@@ -70,7 +70,6 @@ mod test {
             "call_panic_on_a",
         );
         let vm_output_b = TritonVMTestCase::new(entrypoint.clone())
-            .expect_stack_difference(0)
             .with_non_determinism(non_determinism_a)
             .execute()
             .unwrap();

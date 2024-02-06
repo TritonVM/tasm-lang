@@ -7,6 +7,7 @@ use std::str::FromStr;
 use syn::parse_quote;
 use syn::ExprMacro;
 use syn::PathArguments;
+use tasm_lib::DIGEST_LENGTH;
 
 use crate::ast;
 use crate::ast::ReturningBlock;
@@ -14,6 +15,7 @@ use crate::ast::Stmt;
 use crate::ast_types;
 use crate::ast_types::DataType;
 use crate::composite_types::CompositeTypes;
+use crate::libraries;
 use crate::libraries::Library;
 use crate::type_checker;
 
@@ -52,11 +54,19 @@ impl<'a> Graft<'a> {
     }
 
     fn is_copy(attrs: &[syn::Attribute]) -> bool {
-        match attrs.len() {
-            0 => false,
-            1 => attrs[0].tokens.to_string().contains("Copy"),
-            _ => panic!("Can only handle one line of attributes for now."),
+        for attr in attrs {
+            let Some(path_segment) = attr.path.segments.first() else {
+                continue;
+            };
+            if path_segment.ident != syn::parse_str::<syn::Ident>("derive").unwrap() {
+                continue;
+            };
+            if attr.tokens.to_string().contains("Copy") {
+                return true;
+            }
         }
+
+        false
     }
 
     /// Graft user-defined data types
@@ -74,64 +84,16 @@ impl<'a> Graft<'a> {
             .collect_vec();
         for struct_ in structs {
             match struct_ {
-                CustomTypeRust::Enum(enum_item) => {
-                    let syn::ItemEnum {
-                        attrs,
-                        vis: _,
-                        enum_token: _,
-                        ident,
-                        generics: _,
-                        brace_token: _,
-                        variants,
-                    } = enum_item;
-                    let name = ident.to_string();
-
-                    let is_copy = Self::is_copy(&attrs);
-
-                    let variants = self.graft_enum_variants(variants.into_iter().collect_vec());
-                    let enum_type = ast_types::EnumType {
-                        name: name.clone(),
-                        is_copy,
-                        variants,
-                        is_prelude: false,
-                        type_parameter: None,
-                    };
-
-                    composite_types.add_custom_type(ast_types::CustomTypeOil::Enum(enum_type));
-                }
-                CustomTypeRust::Struct(struct_item) => {
-                    let syn::ItemStruct {
-                        attrs,
-                        vis: _,
-                        struct_token: _,
-                        ident,
-                        generics: _,
-                        fields,
-                        semi_token: _,
-                    } = struct_item;
-                    let name = ident.to_string();
-
-                    let is_copy = Self::is_copy(&attrs);
-
-                    // Rust structs come in three forms: with named fields, tuple structs, and
-                    // unit structs. We don't yet support unit structs, so we can assume that
-                    // the struct has at least *one* field.
-                    let struct_type = match fields.iter().next().unwrap().ident {
-                        Some(_) => ast_types::StructVariant::NamedFields(
-                            self.graft_struct_with_named_fields(fields),
-                        ),
-                        None => {
-                            ast_types::StructVariant::TupleStruct(self.graft_tuple_struct(fields))
-                        }
-                    };
-                    let struct_type = ast_types::StructType {
-                        is_copy,
-                        variant: struct_type,
-                        name: name.clone(),
-                    };
-
-                    composite_types.add_custom_type(ast_types::CustomTypeOil::Struct(struct_type));
-                }
+                CustomTypeRust::Enum(enum_item) => self
+                    .graft_custom_types_methods_and_associated_functions_for_enum(
+                        &mut composite_types,
+                        enum_item,
+                    ),
+                CustomTypeRust::Struct(struct_item) => self
+                    .graft_custom_types_methods_and_associated_functions_for_struct(
+                        &mut composite_types,
+                        struct_item,
+                    ),
             }
         }
 
@@ -157,6 +119,68 @@ impl<'a> Graft<'a> {
         }
 
         composite_types
+    }
+
+    fn graft_custom_types_methods_and_associated_functions_for_enum(
+        &mut self,
+        composite_types: &mut CompositeTypes,
+        enum_item: syn::ItemEnum,
+    ) {
+        let syn::ItemEnum {
+            attrs,
+            ident,
+            variants,
+            ..
+        } = enum_item;
+        let name = ident.to_string();
+
+        let is_copy = Self::is_copy(&attrs);
+
+        let variants = self.graft_enum_variants(variants.into_iter().collect_vec());
+        let enum_type = ast_types::EnumType {
+            name: name.clone(),
+            is_copy,
+            variants,
+            is_prelude: false,
+            type_parameter: None,
+        };
+
+        composite_types.add_custom_type(ast_types::CustomTypeOil::Enum(enum_type));
+    }
+
+    fn graft_custom_types_methods_and_associated_functions_for_struct(
+        &mut self,
+        composite_types: &mut CompositeTypes,
+        struct_item: syn::ItemStruct,
+    ) {
+        let struct_type = self.graft_struct_type(&struct_item);
+        composite_types.add_custom_type(ast_types::CustomTypeOil::Struct(struct_type));
+    }
+
+    fn graft_struct_variant(&mut self, struct_item: &syn::ItemStruct) -> ast_types::StructVariant {
+        let Some(field) = struct_item.fields.iter().next() else {
+            return ast_types::StructVariant::TupleStruct(ast_types::Tuple::unit());
+        };
+
+        let fields = struct_item.fields.clone();
+        let Some(_) = field.ident else {
+            return ast_types::StructVariant::TupleStruct(self.graft_tuple_struct(fields));
+        };
+
+        ast_types::StructVariant::NamedFields(self.graft_struct_with_named_fields(fields))
+    }
+
+    pub(crate) fn graft_struct_type(
+        &mut self,
+        struct_item: &syn::ItemStruct,
+    ) -> ast_types::StructType {
+        let variant = self.graft_struct_variant(struct_item);
+        let syn::ItemStruct { attrs, ident, .. } = struct_item;
+        ast_types::StructType {
+            is_copy: Self::is_copy(attrs),
+            variant,
+            name: ident.to_string(),
+        }
     }
 
     fn graft_enum_variants(&mut self, variants: Vec<syn::Variant>) -> Vec<(String, DataType)> {
@@ -365,6 +389,16 @@ impl<'a> Graft<'a> {
             return self.rust_option_type_to_data_type(&rust_type_path.path.segments[0].arguments);
         }
 
+        if rust_type_as_string == "VmProofIter" {
+            let vm_proof_iter = libraries::vm_proof_iter::VmProofIterLib::vm_proof_iter_type(self);
+            self.imported_custom_types
+                .add_type_context_if_new(vm_proof_iter.clone());
+            let fri_response = libraries::vm_proof_iter::VmProofIterLib::fri_response_type(self);
+            self.imported_custom_types
+                .add_type_context_if_new(fri_response);
+            return vm_proof_iter.into();
+        }
+
         // We only allow the user to use types that are capitalized
         if rust_type_as_string
             .chars()
@@ -412,7 +446,6 @@ impl<'a> Graft<'a> {
     }
 
     fn rust_option_type_to_data_type(&mut self, path_args: &PathArguments) -> DataType {
-        use crate::libraries;
         let PathArguments::AngleBracketed(generics) = path_args else {
             panic!("Unsupported path argument {path_args:#?}");
         };
@@ -434,7 +467,6 @@ impl<'a> Graft<'a> {
     }
 
     fn rust_result_type_to_data_type(&mut self, path_args: &PathArguments) -> DataType {
-        use crate::libraries;
         let PathArguments::AngleBracketed(generics) = path_args else {
             panic!("Unsupported path argument {path_args:#?}");
         };
@@ -464,25 +496,15 @@ impl<'a> Graft<'a> {
 
                 ast_types::DataType::Tuple(element_types.into())
             }
-            syn::Type::Reference(syn::TypeReference {
-                and_token: _,
-                lifetime: _,
-                mutability: _,
-                elem,
-            }) => match *elem.to_owned() {
+            syn::Type::Reference(syn::TypeReference { elem, .. }) => match *elem.to_owned() {
                 syn::Type::Path(type_path) => {
                     let inner_type = self.rust_type_path_to_data_type(&type_path);
                     // Structs that are not copy must be Boxed for reference arguments to work
                     ast_types::DataType::Boxed(Box::new(inner_type))
                 }
-                _ => todo!(),
+                _ => todo!("elem:\n{elem:#?}"),
             },
-            syn::Type::Array(syn::TypeArray {
-                bracket_token: _,
-                elem,
-                semi_token: _,
-                len,
-            }) => {
+            syn::Type::Array(syn::TypeArray { elem, len, .. }) => {
                 let element_type = self.syn_type_to_ast_type(elem);
                 let length = if let syn::Expr::Lit(expr_lit) = len {
                     let grafted_lit = self.graft_lit(&expr_lit.lit);
@@ -510,13 +532,7 @@ impl<'a> Graft<'a> {
         rust_type_path: &syn::PatType,
     ) -> (ast_types::DataType, bool) {
         let mutable = match *rust_type_path.pat.to_owned() {
-            syn::Pat::Ident(syn::PatIdent {
-                attrs: _,
-                by_ref: _,
-                mutability,
-                ident: _,
-                subpat: _,
-            }) => mutability.is_some(),
+            syn::Pat::Ident(syn::PatIdent { mutability, .. }) => mutability.is_some(),
             other_type => panic!("Unsupported {other_type:#?}"),
         };
         let ast_type = self.syn_type_to_ast_type(rust_type_path.ty.as_ref());
@@ -686,7 +702,7 @@ impl<'a> Graft<'a> {
         rust_method_call: &syn::ExprMethodCall,
     ) -> ast::Expr<Annotation> {
         for lib in self.libraries.iter() {
-            if let Some(method_call) = lib.graft_method(self, rust_method_call) {
+            if let Some(method_call) = lib.graft_method_call(self, rust_method_call) {
                 return method_call;
             }
         }
@@ -1106,35 +1122,95 @@ impl<'a> Graft<'a> {
 
     /// Handle declarations, i.e. `let a: u32 = 200;`
     fn graft_local_stmt(&mut self, local: &syn::Local) -> Stmt<Annotation> {
-        let (ident, data_type, mutable): (String, DataType, bool) = match &local.pat {
-            syn::Pat::Type(pat_type) => {
-                let (dt, mutable): (DataType, bool) =
-                    self.pat_type_to_data_type_and_mutability(pat_type);
-                let ident: String = Graft::pat_to_name(&pat_type.pat);
+        if let syn::Pat::Ident(d) = &local.pat {
+            let ident = d.ident.to_string();
+            panic!("Missing explicit type in declaration of '{ident}'");
+        }
 
-                (ident, dt, mutable)
-            }
-            syn::Pat::Ident(d) => {
-                // This would indicate that the explicit type is missing
-                let ident = d.ident.to_string();
-                panic!("Missing explicit type in declaration of '{ident}'");
-            }
+        match &local.pat {
+            syn::Pat::Type(pat_type) => self.graft_type_associated_pat(local, pat_type),
+            syn::Pat::TupleStruct(struct_pat) => self.graft_struct_pat(local, struct_pat),
             other => panic!("unsupported: {other:?}"),
-        };
+        }
+    }
+
+    fn graft_type_associated_pat(
+        &mut self,
+        local: &syn::Local,
+        pat_type: &syn::PatType,
+    ) -> Stmt<Annotation> {
+        let (data_type, mutable) = self.pat_type_to_data_type_and_mutability(pat_type);
+        let var_name: String = Graft::pat_to_name(&pat_type.pat);
 
         let init = local
             .init
             .as_ref()
-            .unwrap_or_else(|| panic!("must initialize \"{ident}\""));
-        let init_expr = init.1.as_ref();
-        let ast_expt = self.graft_expr(init_expr);
+            .unwrap_or_else(|| panic!("must initialize \"{var_name}\""));
+        let (_, init_expr) = init;
         let let_stmt = ast::LetStmt {
-            var_name: ident,
+            var_name,
             data_type,
-            expr: ast_expt,
+            expr: self.graft_expr(init_expr),
             mutable,
         };
+
         Stmt::Let(let_stmt)
+    }
+
+    /// Handle destructuring of identifiers, e.g. `let Digest([d0, d1, d2, d3, d4]) = digest;`
+    fn graft_struct_pat(
+        &mut self,
+        local: &syn::Local,
+        struct_pat: &syn::PatTupleStruct,
+    ) -> Stmt<Annotation> {
+        let init = local.init.as_ref().unwrap_or_else(|| panic!());
+        let syn::Expr::Path(expr_path) = init.1.as_ref() else {
+            panic!("Destructuring needs a RHS");
+        };
+        assert!(
+            expr_path.path.segments.len().is_one(),
+            "Can only handle one path segment"
+        );
+        let var_name = expr_path.path.segments[0].ident.to_string();
+        let syn::PatTupleStruct { path, pat, .. } = struct_pat;
+        assert!(
+            path.segments.len().is_one(),
+            "Only one path segment supported for now"
+        );
+        let struct_name = path.segments[0].ident.to_string();
+        assert_eq!(
+            "Digest", struct_name,
+            "Only destructuring of digest is allowed for now"
+        );
+        assert_eq!(1, pat.elems.len());
+
+        let syn::Pat::Slice(pat_slice) = &pat.elems[0] else {
+            panic!("pat.elems[0]: {:#?}", pat.elems[0]);
+        };
+
+        assert_eq!(
+            DIGEST_LENGTH,
+            pat_slice.elems.len(),
+            "Expected exactly {DIGEST_LENGTH} in destructuring pattern"
+        );
+
+        let mut bindings = vec![];
+        for pat_elem in pat_slice.elems.iter() {
+            let syn::Pat::Ident(ident) = pat_elem else {
+                panic!("unsupported binding pattern match: {pat_elem:?}")
+            };
+
+            let binding = ast::PatternMatchedBinding {
+                name: ident.ident.to_string(),
+                mutable: ident.mutability.is_some(),
+            };
+            bindings.push(binding);
+        }
+
+        Stmt::TupleDestructuring(ast::TupleDestructStmt {
+            ident: ast::Identifier::String(var_name, Default::default()),
+            bindings,
+        })
     }
 
     /// Handle expressions
@@ -1459,10 +1535,10 @@ mod tests {
                     let ap_element: Digest = auth_path[i];
                     if acc_mt_index_and_peak_index.0 % 2u64 == 1u64 {
                         // Node with `acc_hash` is a right child
-                        acc_hash = H::hash_pair(ap_element, acc_hash);
+                        acc_hash = Tip5::hash_pair(ap_element, acc_hash);
                     } else {
                         // Node with `acc_hash` is a left child
-                        acc_hash = H::hash_pair(acc_hash, ap_element);
+                        acc_hash = Tip5::hash_pair(acc_hash, ap_element);
                     }
 
                     acc_mt_index_and_peak_index.0 = acc_mt_index_and_peak_index.0 / 2u64;

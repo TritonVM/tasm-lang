@@ -133,7 +133,6 @@ mod test {
             EntrypointLocation::disk("enums", "box_enum_two_dyn_sized_variant_fields", "main_a");
         let vm_output = TritonVMTestCase::new(entrypoint)
             .with_std_in(std_in)
-            .expect_stack_difference(0)
             .execute()
             .unwrap();
         assert_eq!(native_output, vm_output.output);
@@ -147,7 +146,6 @@ mod test {
             EntrypointLocation::disk("enums", "box_enum_two_dyn_sized_variant_fields", "main_b");
         let vm_output = TritonVMTestCase::new(entrypoint)
             .with_std_in(std_in)
-            .expect_stack_difference(0)
             .execute()
             .unwrap();
         assert_eq!(native_output, vm_output.output);
@@ -161,7 +159,6 @@ mod test {
             EntrypointLocation::disk("enums", "box_enum_two_dyn_sized_variant_fields", "main_c");
         let vm_output = TritonVMTestCase::new(entrypoint)
             .with_std_in(std_in)
-            .expect_stack_difference(0)
             .execute()
             .unwrap();
         assert_eq!(native_output, vm_output.output);

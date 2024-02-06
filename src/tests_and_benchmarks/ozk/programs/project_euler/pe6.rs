@@ -40,7 +40,6 @@ mod test {
         let entrypoint_location = EntrypointLocation::disk("project_euler", "pe6", "main");
         let vm_output = TritonVMTestCase::new(entrypoint_location)
             .with_safe_lists()
-            .expect_stack_difference(0)
             .execute()
             .unwrap();
 

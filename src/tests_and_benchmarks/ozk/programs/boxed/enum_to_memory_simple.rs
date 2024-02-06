@@ -159,7 +159,6 @@ mod test {
             let entrypoint = EntrypointLocation::disk("boxed", "enum_to_memory_simple", func_name);
             let vm_output = TritonVMTestCase::new(entrypoint)
                 .with_non_determinism(non_determinism.to_owned())
-                .expect_stack_difference(0)
                 .execute()
                 .unwrap();
             if native_output != vm_output.output {

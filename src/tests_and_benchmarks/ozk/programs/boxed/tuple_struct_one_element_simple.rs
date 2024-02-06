@@ -24,9 +24,6 @@ mod test {
     fn tuple_struct_one_element_simple_test() {
         let entrypoint =
             EntrypointLocation::disk("boxed", "tuple_struct_one_element_simple", "_main");
-        TritonVMTestCase::new(entrypoint)
-            .expect_stack_difference(0)
-            .execute()
-            .unwrap();
+        TritonVMTestCase::new(entrypoint).execute().unwrap();
     }
 }

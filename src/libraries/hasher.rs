@@ -6,22 +6,25 @@ use crate::ast::FnSignature;
 use crate::ast_types::DataType;
 use crate::ast_types::ListType;
 use crate::graft::Graft;
+use crate::libraries::hasher::algebraic_hasher::graft_sample_scalars_function_call;
 use crate::libraries::hasher::algebraic_hasher::hash_pair_function;
 use crate::libraries::hasher::algebraic_hasher::HASH_PAIR_FUNCTION_NAME;
 use crate::libraries::hasher::algebraic_hasher::HASH_VARLEN_FUNCTION_NAME;
 use crate::libraries::hasher::sponge_hasher::graft_sponge_hasher_functions;
-use crate::libraries::hasher::sponge_hasher::SPONGE_HASHER_INDICATOR;
 use crate::libraries::Library;
 use crate::subroutine::SubRoutine;
 use crate::tasm_code_generator::CompilerState;
 use crate::type_checker::CheckState;
+
+use self::algebraic_hasher::SAMPLE_SCALARS_FUNCTION_NAME;
+use self::sponge_hasher::is_sponge_trait_function;
 
 use super::bfe::BfeLibrary;
 
 pub(crate) mod algebraic_hasher;
 pub(crate) mod sponge_hasher;
 
-const HASHER_LIB_INDICATOR: &str = "H::";
+const HASHER_LIB_INDICATOR: &str = "Tip5::";
 const DEFAULT_DIGEST_FUNCTION: &str = "Digest::default";
 const NEW_DIGEST_FUNCTION: &str = "Digest::new";
 
@@ -32,9 +35,7 @@ pub(crate) struct HasherLib {
 
 impl Library for HasherLib {
     fn get_function_name(&self, full_name: &str) -> Option<String> {
-        if full_name.starts_with(HASHER_LIB_INDICATOR)
-            || full_name.starts_with(SPONGE_HASHER_INDICATOR)
-        {
+        if full_name.starts_with(HASHER_LIB_INDICATOR) {
             return Some(full_name.to_owned());
         }
 
@@ -109,7 +110,11 @@ impl Library for HasherLib {
             return Some(full_name.to_owned());
         }
 
-        if full_name.starts_with(SPONGE_HASHER_INDICATOR) {
+        if full_name == SAMPLE_SCALARS_FUNCTION_NAME {
+            return Some(full_name.to_owned());
+        }
+
+        if is_sponge_trait_function(full_name) {
             return Some(full_name.to_owned());
         }
 
@@ -136,14 +141,18 @@ impl Library for HasherLib {
             return Some(graft_digest_new(&args[0], graft_config));
         }
 
-        if full_name.starts_with(SPONGE_HASHER_INDICATOR) {
+        if full_name == SAMPLE_SCALARS_FUNCTION_NAME {
+            return Some(graft_sample_scalars_function_call(graft_config, args));
+        }
+
+        if is_sponge_trait_function(full_name) {
             return Some(graft_sponge_hasher_functions(graft_config, full_name, args));
         }
 
         panic!("HasherLib cannot graft function {full_name}")
     }
 
-    fn graft_method(
+    fn graft_method_call(
         &self,
         _graft_config: &mut Graft,
         _rust_method_call: &syn::ExprMethodCall,
@@ -155,20 +164,11 @@ impl Library for HasherLib {
 /// Handle initialization of digests through `Digest::new([BFieldElement::new(4), ...])`
 fn graft_digest_new(arg_0: &syn::Expr, graft_config: &mut Graft) -> ast::Expr<super::Annotation> {
     match arg_0 {
-        syn::Expr::Array(syn::ExprArray {
-            attrs: _,
-            bracket_token: _,
-            elems,
-        }) => {
+        syn::Expr::Array(syn::ExprArray { elems, .. }) => {
             let mut initializer_exprs = vec![];
             for elem in elems {
                 match elem {
-                    syn::Expr::Call(syn::ExprCall {
-                        attrs: _,
-                        func,
-                        paren_token: _,
-                        args,
-                    }) => {
+                    syn::Expr::Call(syn::ExprCall { func, args, .. }) => {
                         let (name, _type_parameter) = match func.as_ref() {
                             syn::Expr::Path(path) => (
                                 Graft::path_to_ident(&path.path),

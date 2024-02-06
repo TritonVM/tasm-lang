@@ -1,8 +1,10 @@
+use std::collections::HashMap;
 use std::fmt::Display;
 use std::str::FromStr;
 
 use anyhow::bail;
 use itertools::Itertools;
+use regex::Regex;
 
 use crate::ast::FnSignature;
 
@@ -46,7 +48,78 @@ pub(crate) enum DataType {
     Unresolved(String),
 }
 
+impl FromStr for DataType {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "bool" => Ok(DataType::Bool),
+            "u32" => Ok(DataType::U32),
+
+            // `usize` is just an alias for `u32` in this compiler
+            "usize" => Ok(DataType::U32),
+            "u64" => Ok(DataType::U64),
+            "u128" => Ok(DataType::U128),
+            "BFieldElement" => Ok(DataType::Bfe),
+            "XFieldElement" => Ok(DataType::Xfe),
+            "Digest" => Ok(DataType::Digest),
+
+            // The VM has a built-in sponge state, so from the perspective of this
+            // compiler, it's a unit data type.
+            "Tip5State" => Ok(DataType::unit()),
+            ty => bail!("Unsupported type {}", ty),
+        }
+    }
+}
+
 impl DataType {
+    pub(crate) fn try_from_string(type_str: &str, list_type: ListType) -> Result<Self, ()> {
+        let vec_regex = Regex::new(r"Vec<(?<inner>.+)>").unwrap();
+        if let Some(caps) = vec_regex.captures(type_str) {
+            let inner_parsed = Self::try_from_string(&caps["inner"], list_type)?;
+            return Ok(DataType::List(Box::new(inner_parsed), list_type));
+        }
+
+        let array_regex = Regex::new(r"\[(?<inner>.+); (?<array_size>.+)\]").unwrap();
+        if let Some(caps) = array_regex.captures(type_str) {
+            let known_constants: HashMap<&str, usize> =
+                [("NUM_QUOTIENT_SEGMENTS", 4)].into_iter().collect();
+            let inner_parsed = Self::try_from_string(&caps["inner"], list_type)?;
+            let array_size_indication = &caps["array_size"];
+            let parsed_size = if known_constants.contains_key(&array_size_indication) {
+                known_constants[&array_size_indication]
+            } else {
+                usize::from_str(array_size_indication).unwrap_or_else(|_| {
+                    panic!("Could not parse {array_size_indication} as array size")
+                })
+            };
+            return Ok(DataType::Array(ArrayType {
+                element_type: Box::new(inner_parsed),
+                length: parsed_size,
+            }));
+        }
+
+        match type_str {
+            "bool" => Ok(DataType::Bool),
+            "u32" => Ok(DataType::U32),
+
+            // `usize` is just an alias for `u32` in this compiler
+            "usize" => Ok(DataType::U32),
+            "u64" => Ok(DataType::U64),
+            "u128" => Ok(DataType::U128),
+            "BFieldElement" => Ok(DataType::Bfe),
+            "XFieldElement" => Ok(DataType::Xfe),
+            "Digest" => Ok(DataType::Digest),
+
+            // The VM has a built-in sponge state, so from the perspective of this
+            // compiler, it's a unit data type.
+            "Tip5State" => Ok(DataType::unit()),
+            "AuthenticationStructure" => Ok(DataType::List(Box::new(DataType::Digest), list_type)),
+            "FriResponse" => Ok(DataType::Unresolved(type_str.to_owned())),
+            _ => todo!("{type_str}"),
+        }
+    }
+
     /// Return true if it's OK to copy this type including its underlying
     /// data, false if it's expensive to copy.
     pub(crate) fn is_copy(&self) -> bool {
@@ -149,25 +222,33 @@ impl DataType {
                     }
                 }
                 DataType::Tuple(tuple) => {
-                    let tuple_index: usize = field_id.try_into().expect("Tuple must be accessed with a tuple index");
+                    let tuple_index: usize = field_id
+                        .try_into()
+                        .expect("Tuple must be accessed with a tuple index");
                     let field_type = tuple.fields[tuple_index].clone();
                     if field_type.is_copy() {
                         field_type
                     } else {
                         DataType::Boxed(Box::new(field_type))
                     }
-                },
-                _ => panic!("Field getter can only operate on type of struct or pointer to struct. Attempted to access field `{field_id}` on type `{self}`")
+                }
+                _ => panic!(
+                    "Field getter can only operate on type of struct or pointer to struct. \
+                    Attempted to access field `{field_id}` on type `{self}`"
+                ),
             },
-            DataType::Struct(struct_type) => {
-                struct_type.get_field_type(field_id)
-            },
+            DataType::Struct(struct_type) => struct_type.get_field_type(field_id),
             DataType::Tuple(tuple) => {
-                let tuple_index: usize = field_id.try_into().expect("Tuple must be accessed with a tuple index");
+                let tuple_index: usize = field_id
+                    .try_into()
+                    .expect("Tuple must be accessed with a tuple index");
                 tuple.fields[tuple_index].clone()
-            },
-            _ => panic!("Field getter can only operate on type of struct or pointer to struct. Attempted to access field `{field_id}` on type `{self}`")
             }
+            _ => panic!(
+                "Field getter can only operate on type of struct or pointer to struct. \
+                Attempted to access field `{field_id}` on type `{self}`"
+            ),
+        }
     }
 
     // TODO: Consider getting rid of this method
@@ -318,30 +399,6 @@ impl TryFrom<DataType> for tasm_lib::data_type::DataType {
                 DataType::Unresolved(_) => todo!(),
                 _ => Ok(tasm_lib::data_type::DataType::VoidPointer),
             },
-        }
-    }
-}
-
-impl FromStr for DataType {
-    type Err = anyhow::Error;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "bool" => Ok(DataType::Bool),
-            "u32" => Ok(DataType::U32),
-
-            // `usize` is just an alias for `u32` in this compiler
-            "usize" => Ok(DataType::U32),
-            "u64" => Ok(DataType::U64),
-            "u128" => Ok(DataType::U128),
-            "BFieldElement" => Ok(DataType::Bfe),
-            "XFieldElement" => Ok(DataType::Xfe),
-            "Digest" => Ok(DataType::Digest),
-
-            // The VM has a built-in sponge state, so from the perspective of this
-            // compiler, it's a unit data type.
-            "Tip5State" => Ok(DataType::unit()),
-            ty => bail!("Unsupported type {}", ty),
         }
     }
 }

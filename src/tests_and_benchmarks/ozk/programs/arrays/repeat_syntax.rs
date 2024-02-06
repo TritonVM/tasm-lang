@@ -33,7 +33,6 @@ fn call_array_constructor_once() {
     );
     let entrypoint = EntrypointLocation::disk("arrays", "repeat_syntax", "call_constructor_once");
     let vm_output = TritonVMTestCase::new(entrypoint.clone())
-        .expect_stack_difference(0)
         .with_std_in(input)
         .execute()
         .unwrap();
@@ -76,7 +75,6 @@ fn call_array_constructor_twice() {
     );
     let entrypoint = EntrypointLocation::disk("arrays", "repeat_syntax", "call_constructor_twice");
     let vm_output = TritonVMTestCase::new(entrypoint.clone())
-        .expect_stack_difference(0)
         .with_std_in(input)
         .execute()
         .unwrap();

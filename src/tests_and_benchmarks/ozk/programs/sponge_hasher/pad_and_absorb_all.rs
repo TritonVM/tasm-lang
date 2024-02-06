@@ -1,8 +1,9 @@
+use tasm_lib::twenty_first::shared_math::tip5::Tip5State;
+use tasm_lib::twenty_first::util_types::algebraic_hasher::SpongeHasher;
+
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 use crate::tests_and_benchmarks::test_helpers::shared_test::TritonVMTestCase;
 use crate::triton_vm::prelude::*;
-use tasm_lib::twenty_first::shared_math::tip5::Tip5State;
-use tasm_lib::twenty_first::util_types::algebraic_hasher::SpongeHasher;
 
 fn pad_and_absorb_all() {
     let mut sponge: Tip5State = Tip5::init();
@@ -32,12 +33,15 @@ fn pad_and_absorb_all() {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
-    use crate::tests_and_benchmarks::ozk::rust_shadows::wrap_main_with_io;
-    use rand::{thread_rng, Rng};
+    use rand::thread_rng;
+    use rand::Rng;
     use tasm_lib::triton_vm::program::NonDeterminism;
     use tasm_lib::twenty_first::shared_math::other::random_elements;
+
+    use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
+    use crate::tests_and_benchmarks::ozk::rust_shadows::wrap_main_with_io;
+
+    use super::*;
 
     #[test]
     fn pad_and_absorb_all_test() {
@@ -53,7 +57,6 @@ mod tests {
             EntrypointLocation::disk("sponge_hasher", "pad_and_absorb_all", "pad_and_absorb_all");
         let vm_output = TritonVMTestCase::new(entrypoint)
             .with_std_in(std_in)
-            .expect_stack_difference(0)
             .execute()
             .unwrap();
         assert_eq!(native_output, vm_output.output);

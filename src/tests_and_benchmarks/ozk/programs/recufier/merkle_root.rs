@@ -5,8 +5,6 @@ use tasm_lib::twenty_first::prelude::AlgebraicHasher;
 
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
-type H = twenty_first::shared_math::tip5::Tip5;
-
 fn main() {
     fn merkle_root(leafs: &Vec<Digest>, start: usize, stop: usize) -> Digest {
         let result: Digest = if stop == start + 1usize {
@@ -15,7 +13,7 @@ fn main() {
             let half: usize = (stop - start) / 2;
             let left: Digest = merkle_root(leafs, start, stop - half);
             let right: Digest = merkle_root(leafs, start + half, stop);
-            H::hash_pair(left, right)
+            Tip5::hash_pair(left, right)
         };
 
         return result;
@@ -55,7 +53,7 @@ mod test {
             let stdin = vec![];
             let digest_list = random_elements(input_length);
             let non_determinism = init_memory_from(&digest_list, 2000u64.into());
-            let merkle_tree: MerkleTree<H> = CpuParallel::from_digests(&digest_list).unwrap();
+            let merkle_tree: MerkleTree<Tip5> = CpuParallel::from_digests(&digest_list).unwrap();
             let expected_output = merkle_tree.root().values().to_vec();
             let native_output =
                 rust_shadows::wrap_main_with_io(&main)(stdin.clone(), non_determinism.clone());

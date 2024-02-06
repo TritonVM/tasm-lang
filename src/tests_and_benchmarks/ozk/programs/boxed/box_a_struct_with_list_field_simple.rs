@@ -35,10 +35,7 @@ mod test {
             rust_shadows::wrap_main_with_io(&main)(vec![], NonDeterminism::default());
         let entrypoint =
             EntrypointLocation::disk("boxed", "box_a_struct_with_list_field_simple", "main");
-        let vm_output = TritonVMTestCase::new(entrypoint)
-            .expect_stack_difference(0)
-            .execute()
-            .unwrap();
+        let vm_output = TritonVMTestCase::new(entrypoint).execute().unwrap();
         assert_eq!(native_output, vm_output.output);
     }
 }

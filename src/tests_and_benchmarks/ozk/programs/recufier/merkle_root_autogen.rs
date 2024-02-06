@@ -3,7 +3,7 @@
 use tasm_lib::twenty_first::prelude::AlgebraicHasher;
 use tasm_lib::Digest;
 
-type H = crate::twenty_first::shared_math::tip5::Tip5;
+use crate::twenty_first::prelude::*;
 
 #[allow(clippy::ptr_arg)]
 #[allow(clippy::vec_init_then_push)]
@@ -17,7 +17,7 @@ fn merkle_root(leafs: &Vec<Digest>, start: usize, stop: usize) -> Digest {
         let half: usize = (stop - start) / 2;
         let left: Digest = merkle_root(leafs, start, stop - half);
         let right: Digest = merkle_root(leafs, start + half, stop);
-        H::hash_pair(left, right)
+        Tip5::hash_pair(left, right)
     };
 
     return result;

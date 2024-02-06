@@ -11,6 +11,7 @@ use num::Zero;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::fmt::Display;
+use tasm_lib::exported_snippets;
 use tasm_lib::library::Library as SnippetState;
 use tasm_lib::prelude::*;
 use tasm_lib::triton_vm::prelude::*;
@@ -22,6 +23,7 @@ use self::inner_function_tasm_code::InnerFunctionTasmCode;
 use self::outer_function_tasm_code::OuterFunctionTasmCode;
 use self::stack::VStack;
 use crate::ast;
+use crate::ast::AsmDefinedBody;
 use crate::ast::Identifier;
 use crate::ast::RoutineBody;
 use crate::ast_types;
@@ -968,10 +970,18 @@ fn compile_function_inner(
 
     let function_body = match &function.body {
         RoutineBody::Ast(ast) => ast,
-        RoutineBody::Instructions(instrs) => {
+        RoutineBody::Instructions(AsmDefinedBody {
+            dependencies,
+            instructions,
+        }) => {
+            for dependency in dependencies {
+                global_compiler_state
+                    .snippet_state
+                    .import(exported_snippets::name_to_snippet(dependency));
+            }
             let body_with_label_and_return = triton_asm!(
                 {fn_name}:
-                    {&instrs}
+                    {&instructions}
                     return
             );
             return InnerFunctionTasmCode {
@@ -1101,6 +1111,26 @@ fn compile_stmt(
                 .var_addr
                 .insert(var_name.clone(), expr_addr);
             [expr_code, type_hint].concat()
+        }
+        ast::Stmt::TupleDestructuring(ast::TupleDestructStmt { bindings, ident }) => {
+            let binding_name = ident.binding_name();
+            let seek_addr = state
+                .function_state
+                .var_addr
+                .get(&binding_name)
+                .unwrap()
+                .to_owned();
+            let new_ids =
+                state.split_value(&seek_addr, vec![ast_types::DataType::Bfe; bindings.len()]);
+            state.function_state.var_addr.remove(&binding_name);
+            for (new_binding, new_value_id) in bindings.iter().rev().zip_eq(new_ids) {
+                state
+                    .function_state
+                    .var_addr
+                    .insert(new_binding.name.clone(), new_value_id);
+            }
+
+            triton_asm!()
         }
 
         ast::Stmt::Assign(ast::AssignStmt { identifier, expr }) => {
@@ -1497,7 +1527,6 @@ fn compile_method_call(
     let receiver_type = method_call.args[0].get_type();
     if let Some(method) = state.composite_types.get_method(method_call) {
         let method_label = method.get_tasm_label();
-        println!("method_label: {method_label}");
         if !state
             .global_compiler_state
             .compiled_methods_and_afs
@@ -1619,13 +1648,6 @@ fn compile_expr(
             ast::ExprLit::GenericNum(n, _) => {
                 panic!("Type of number literal {n} not resolved")
             }
-            ast::ExprLit::MemPointer(ast::MemPointerLiteral {
-                mem_pointer_address,
-                mem_pointer_declared_type: _,
-                resolved_type: _,
-            }) => triton_asm!(push {
-                mem_pointer_address
-            }),
         },
 
         ast::Expr::Var(identifier) => {
@@ -1784,43 +1806,44 @@ fn compile_expr(
 
             match binop {
                 ast::BinOp::Add => {
+                    let rhs_type = rhs_expr.get_type();
                     let (_lhs_expr_addr, lhs_expr_code) =
                         compile_expr(lhs_expr, "_binop_lhs", state);
 
                     let (_rhs_expr_addr, rhs_expr_code) =
                         compile_expr(rhs_expr, "_binop_rhs", state);
 
-                    let add_code = match result_type {
-                        ast_types::DataType::U32 => {
-                            // We use the safe, overflow-checking, add code as default
+                    use ast_types::DataType::*;
+
+                    state.function_state.vstack.pop();
+                    state.function_state.vstack.pop();
+
+                    let add_code = match (&lhs_type, &rhs_type) {
+                        (U32, U32) => {
                             let safe_add_u32 = state.import_snippet(Box::new(
                                 tasm_lib::arithmetic::u32::safeadd::Safeadd,
                             ));
                             triton_asm!(call { safe_add_u32 })
                         }
-                        ast_types::DataType::U64 => {
-                            // We use the safe, overflow-checking, add code as default
+                        (U64, U64) => {
                             let add_u64 = state.import_snippet(Box::new(
                                 tasm_lib::arithmetic::u64::add_u64::AddU64,
                             ));
 
                             triton_asm!(call { add_u64 })
                         }
-                        ast_types::DataType::U128 => {
-                            // We use the safe, overflow-checking, add code as default
+                        (U128, U128) => {
                             let add_u128 = state.import_snippet(Box::new(
                                 tasm_lib::arithmetic::u128::add_u128::AddU128,
                             ));
 
                             triton_asm!(call { add_u128 })
                         }
-                        ast_types::DataType::Bfe => triton_asm!(add),
-                        ast_types::DataType::Xfe => triton_asm!(xxadd),
-                        _ => panic!("Operator add is not supported for type {result_type}"),
+                        (Bfe, Bfe) => triton_asm!(add),
+                        (Xfe, Xfe) => triton_asm!(xxadd),
+                        (Xfe, Bfe) => triton_asm!(add),
+                        _ => panic!("Unsupported ADD for types LHS: {lhs_type}, RHS: {rhs_type}"),
                     };
-
-                    state.function_state.vstack.pop();
-                    state.function_state.vstack.pop();
 
                     [lhs_expr_code, rhs_expr_code, add_code].concat()
                 }
@@ -2548,6 +2571,15 @@ fn compile_expr(
         }
         ast::Expr::Match(match_expr) => compile_match_expr(match_expr, state),
         ast::Expr::Panic(_, _) => triton_asm!(push 0 hint panic = stack[0] assert),
+        ast::Expr::MemoryLocation(ast::MemPointerExpression {
+            mem_pointer_address,
+            ..
+        }) => {
+            let context = format!("{context}_mem_pointer_addr");
+            let (_, code) = compile_expr(mem_pointer_address, &context, state);
+            state.function_state.vstack.pop().unwrap();
+            code
+        }
     };
 
     // Update compiler's view of the stack with the new value. Check if value needs to

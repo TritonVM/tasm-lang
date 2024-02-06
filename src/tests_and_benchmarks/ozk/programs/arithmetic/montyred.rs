@@ -85,7 +85,6 @@ mod test {
         let entrypoint_location =
             ozk_parsing::EntrypointLocation::disk("arithmetic", "montyred", "main");
         let vm_output = TritonVMTestCase::new(entrypoint_location)
-            .expect_stack_difference(0)
             .execute()
             .unwrap();
 

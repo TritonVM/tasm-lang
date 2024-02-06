@@ -506,7 +506,7 @@ dependencies = [
 [[package]]
 name = "derive_tasm_object"
 version = "0.1.0"
-source = "git+https://github.com/TritonVM/tasm-lib.git?rev=8d146b44#8d146b445488052ec512e1fccf1760b98b2269d0"
+source = "git+https://github.com/TritonVM/tasm-lib.git?rev=edb67983#edb6798392df5b3b08a909a30792fee0c0eb9096"
 dependencies = [
  "quote",
  "syn 2.0.48",
@@ -1988,18 +1988,18 @@ dependencies = [
 
 [[package]]
 name = "strum"
-version = "0.25.0"
+version = "0.26.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "290d54ea6f91c969195bdbcd7442c8c2a2ba87da8bf60a7ee86a235d4bc1e125"
+checksum = "723b93e8addf9aa965ebe2d11da6d7540fa2283fcea14b3371ff055f7ba13f5f"
 dependencies = [
  "strum_macros",
 ]
 
 [[package]]
 name = "strum_macros"
-version = "0.25.3"
+version = "0.26.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "23dc1fa9ac9c169a78ba62f0b841814b7abae11bdd047b9c58f893439e309ea0"
+checksum = "7a3417fc93d76740d974a01654a09777cb500428cc874ca9f45edfe0c4d4cd18"
 dependencies = [
  "heck",
  "proc-macro2",
@@ -2068,10 +2068,12 @@ dependencies = [
  "proptest-arbitrary-interop",
  "quote",
  "rand",
+ "regex",
  "reqwest",
  "serde",
  "serde_derive",
  "serde_json",
+ "strum",
  "syn 1.0.109",
  "tasm-lib",
  "test-strategy",
@@ -2080,7 +2082,7 @@ dependencies = [
 [[package]]
 name = "tasm-lib"
 version = "0.2.1"
-source = "git+https://github.com/TritonVM/tasm-lib.git?rev=8d146b44#8d146b445488052ec512e1fccf1760b98b2269d0"
+source = "git+https://github.com/TritonVM/tasm-lib.git?rev=edb67983#edb6798392df5b3b08a909a30792fee0c0eb9096"
 dependencies = [
  "anyhow",
  "derive_tasm_object",
@@ -2243,7 +2245,7 @@ dependencies = [
 [[package]]
 name = "triton-vm"
 version = "0.36.1"
-source = "git+https://github.com/TritonVM/triton-vm?rev=ce8a6d3e#ce8a6d3e63ace28f213c858cf18cc1b1f4ddfc82"
+source = "git+https://github.com/TritonVM/triton-vm?rev=5baeeaeb#5baeeaeb5ac379ea5ba871a97d48fb9a880322c5"
 dependencies = [
  "arbitrary",
  "bincode",
@@ -2277,7 +2279,7 @@ checksum = "e421abadd41a4225275504ea4d6566923418b7f05506fbc9c0fe86ba7396114b"
 [[package]]
 name = "twenty-first"
 version = "0.36.0"
-source = "git+https://github.com/Neptune-Crypto/twenty-first?rev=59944288#59944288a6f5094cde994d9a1929744cbc70d6fd"
+source = "git+https://github.com/Neptune-Crypto/twenty-first?rev=e708b305#e708b305c9e009c0ce73f978c8f85651cd449701"
 dependencies = [
  "arbitrary",
  "bfieldcodec_derive",

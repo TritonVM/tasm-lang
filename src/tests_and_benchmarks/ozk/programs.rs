@@ -1,6 +1,8 @@
+mod algebraic_hasher;
 mod arithmetic;
 mod arrays;
 mod boxed;
+mod destructuring;
 mod enums;
 mod match_expr_boxed;
 mod match_expr_on_stack;
@@ -12,4 +14,6 @@ pub(crate) mod recufier;
 mod result_types;
 mod sponge_hasher;
 mod structs;
+mod type_forcing;
 mod vectors;
+mod vm_proof_iter;

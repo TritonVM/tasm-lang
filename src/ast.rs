@@ -1,4 +1,5 @@
 use itertools::Itertools;
+use std::fmt::Debug;
 use std::fmt::Display;
 use tasm_lib::traits::basic_snippet::BasicSnippet;
 use tasm_lib::triton_vm::prelude::*;
@@ -12,7 +13,13 @@ use crate::type_checker::Typing;
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub(crate) enum RoutineBody<T> {
     Ast(Vec<Stmt<T>>),
-    Instructions(Vec<LabelledInstruction>),
+    Instructions(AsmDefinedBody),
+}
+
+#[derive(Clone, Debug, Hash, PartialEq, Eq)]
+pub(crate) struct AsmDefinedBody {
+    pub(crate) dependencies: Vec<String>,
+    pub(crate) instructions: Vec<LabelledInstruction>,
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
@@ -84,6 +91,50 @@ pub(crate) struct FnSignature {
 }
 
 impl FnSignature {
+    /// Return a signature for a function whose arguments and outputs are all values, with
+    /// default argument evaluation order and with immutable arguments.
+    pub(crate) fn value_function_immutable_args(
+        name: &str,
+        value_args: Vec<(&str, ast_types::DataType)>,
+        return_type: ast_types::DataType,
+    ) -> Self {
+        Self::value_function_inner(name, value_args, return_type, false)
+    }
+
+    /// Return a signature for a function whose arguments and outputs are all values, with
+    /// default argument evaluation order and with *mutable* arguments.
+    pub(crate) fn value_function_with_mutable_args(
+        name: &str,
+        value_args: Vec<(&str, ast_types::DataType)>,
+        return_type: ast_types::DataType,
+    ) -> Self {
+        Self::value_function_inner(name, value_args, return_type, true)
+    }
+
+    fn value_function_inner(
+        name: &str,
+        value_args: Vec<(&str, ast_types::DataType)>,
+        return_type: ast_types::DataType,
+        mutable_args: bool,
+    ) -> Self {
+        let args = value_args
+            .iter()
+            .map(|(arg_name, arg_type)| {
+                ast_types::AbstractArgument::ValueArgument(ast_types::AbstractValueArg {
+                    name: arg_name.to_string(),
+                    data_type: arg_type.to_owned(),
+                    mutable: mutable_args,
+                })
+            })
+            .collect_vec();
+        Self {
+            name: name.to_owned(),
+            args,
+            output: return_type,
+            arg_evaluation_order: Default::default(),
+        }
+    }
+
     /// Return the number of words that the function's input arguments take up on the stack
     pub(crate) fn input_arguments_stack_size(&self) -> usize {
         self.args.iter().map(|arg| arg.stack_size()).sum()
@@ -162,6 +213,7 @@ pub(crate) enum ArgEvaluationOrder {
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub(crate) enum Stmt<T> {
     Let(LetStmt<T>),
+    TupleDestructuring(TupleDestructStmt<T>),
     Assign(AssignStmt<T>),
     Return(Option<Expr<T>>),
     FnCall(FnCall<T>),
@@ -204,6 +256,12 @@ impl Display for MatchCondition {
             }
         )
     }
+}
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub(crate) struct TupleDestructStmt<T> {
+    pub bindings: Vec<PatternMatchedBinding>,
+    pub ident: Identifier<T>,
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
@@ -347,7 +405,6 @@ pub(crate) enum ExprLit<T> {
     Bfe(BFieldElement),
     Xfe(XFieldElement),
     Digest(Digest),
-    MemPointer(MemPointerLiteral<T>),
     GenericNum(u128, T),
 }
 
@@ -361,7 +418,6 @@ impl<T> ExprLit<T> {
             ExprLit::Bfe(val) => val.to_string(),
             ExprLit::Xfe(val) => val.to_string(),
             ExprLit::Digest(val) => val.to_string(),
-            ExprLit::MemPointer(val) => format!("MP_L{}R", val.mem_pointer_address),
             ExprLit::GenericNum(val, _) => val.to_string(),
         }
     }
@@ -377,7 +433,6 @@ impl<T> Display for ExprLit<T> {
             ExprLit::Bfe(val) => val.to_string(),
             ExprLit::Xfe(val) => val.to_string(),
             ExprLit::Digest(val) => val.to_string(),
-            ExprLit::MemPointer(val) => format!("*{}", val),
             ExprLit::GenericNum(val, _) => val.to_string(),
         };
         write!(f, "{output}")
@@ -385,18 +440,18 @@ impl<T> Display for ExprLit<T> {
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub(crate) struct MemPointerLiteral<T> {
+pub(crate) struct MemPointerExpression<T> {
     /// Where in memory does the struct start?
-    pub(crate) mem_pointer_address: BFieldElement,
+    pub(crate) mem_pointer_address: Box<Expr<T>>,
 
     /// What type was used in the declaration of the memory pointer?
     pub(crate) mem_pointer_declared_type: DataType,
 
-    // Resolved type for binding
+    /// Resolved type for binding
     pub(crate) resolved_type: T,
 }
 
-impl<T> Display for MemPointerLiteral<T> {
+impl<T> Display for MemPointerExpression<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.mem_pointer_address)
     }
@@ -419,7 +474,6 @@ impl<T> BFieldCodec for ExprLit<T> {
             ExprLit::Xfe(value) => value.encode(),
             ExprLit::Digest(value) => value.encode(),
             ExprLit::GenericNum(_, _) => todo!(),
-            ExprLit::MemPointer(_) => todo!(),
         }
     }
 
@@ -483,8 +537,8 @@ pub(crate) enum Expr<T> {
     Cast(Box<Expr<T>>, DataType),
     ReturningBlock(Box<ReturningBlock<T>>),
     Struct(StructExpr<T>),
-    Panic(PanicMacro, T), // Index(Box<Expr<T>>, Box<Expr<T>>), // a_expr[i_expr]    (a + 5)[3]
-                          // TODO: VM-specific intrinsics (hash, absorb, squeeze, etc.)
+    Panic(PanicMacro, T),
+    MemoryLocation(MemPointerExpression<T>),
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
@@ -557,6 +611,9 @@ impl<T> Expr<T> {
                 match_expr.match_expression.label_friendly_name()
             ),
             Expr::Panic(_, _) => "panic_macro".to_owned(),
+            Expr::MemoryLocation(val) => {
+                format!("MP_L{}R", val.mem_pointer_address.label_friendly_name())
+            }
         }
     }
 }
@@ -596,6 +653,7 @@ impl<T> Display for Expr<T> {
             }
             Expr::Match(match_expr) => format!("match expression: {}", match_expr.match_expression),
             Expr::Panic(_, _) => "panic".to_owned(),
+            Expr::MemoryLocation(val) => format!("*{}", val),
         };
 
         write!(f, "{str}")

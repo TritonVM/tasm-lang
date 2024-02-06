@@ -42,7 +42,6 @@ mod test {
         let entrypoint = EntrypointLocation::disk("boxed", "bfe_pair", "main");
         let vm_output = TritonVMTestCase::new(entrypoint)
             .with_std_in(stdin)
-            .expect_stack_difference(0)
             .execute()
             .unwrap();
         assert_eq!(expected_output, vm_output.output);

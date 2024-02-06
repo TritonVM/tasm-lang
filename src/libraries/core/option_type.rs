@@ -42,11 +42,15 @@ fn option_unwrap_method(enum_type: &ast_types::EnumType) -> ast::Method<Typing> 
         arg_evaluation_order: Default::default(),
     };
 
+    let code = triton_asm!(
+        // _ [some_type] discriminant
+        assert // _ [some_type]
+    );
     ast::Method {
-        body: ast::RoutineBody::<Typing>::Instructions(triton_asm!(
-            // _ [some_type] discriminant
-            assert // _ [some_type]
-        )),
+        body: ast::RoutineBody::<Typing>::Instructions(ast::AsmDefinedBody {
+            dependencies: vec![],
+            instructions: code,
+        }),
         signature: method_signature,
     }
 }
@@ -64,20 +68,25 @@ fn option_is_none_method(enum_type: &ast_types::EnumType) -> ast::Method<Typing>
         arg_evaluation_order: Default::default(),
     };
 
+    let code = triton_asm!(
+            // _ *discriminant
+
+            read_mem 1
+            // _ discriminant (*discriminant - 1)
+
+            pop 1
+            // _ discriminant
+
+            push 0
+            eq
+            // _ (discriminant == 0 :== variant is 'None')
+    );
+
     ast::Method {
-        body: ast::RoutineBody::<Typing>::Instructions(triton_asm!(
-                // _ *discriminant
-
-                read_mem 1
-                // _ discriminant (*discriminant - 1)
-
-                pop 1
-                // _ discriminant
-
-                push 0
-                eq
-                // _ (discriminant == 0 :== variant is 'None')
-        )),
+        body: ast::RoutineBody::<Typing>::Instructions(ast::AsmDefinedBody {
+            dependencies: vec![],
+            instructions: code,
+        }),
         signature: method_signature,
     }
 }
@@ -95,20 +104,24 @@ fn option_is_some_method(enum_type: &ast_types::EnumType) -> ast::Method<Typing>
         arg_evaluation_order: Default::default(),
     };
 
+    let code = triton_asm!(
+            // _ *discriminant
+
+            read_mem 1
+            // _ discriminant (*discriminant - 1)
+
+            pop 1
+            // _ discriminant
+
+            push 1
+            eq
+            // _ (discriminant == 1 :== variant is 'Some')
+    );
     ast::Method {
-        body: ast::RoutineBody::<Typing>::Instructions(triton_asm!(
-                // _ *discriminant
-
-                read_mem 1
-                // _ discriminant (*discriminant - 1)
-
-                pop 1
-                // _ discriminant
-
-                push 1
-                eq
-                // _ (discriminant == 1 :== variant is 'Some')
-        )),
+        body: ast::RoutineBody::<Typing>::Instructions(ast::AsmDefinedBody {
+            dependencies: vec![],
+            instructions: code,
+        }),
         signature: method_signature,
     }
 }

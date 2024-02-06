@@ -62,7 +62,6 @@ fn catch_all_covers_a_test(
     );
     let vm_output = TritonVMTestCase::new(entrypoint)
         .with_std_in(std_in)
-        .expect_stack_difference(0)
         .execute()
         .unwrap();
     prop_assert_eq!(native_output, vm_output.output);
@@ -117,7 +116,6 @@ fn catch_all_covers_b_test(
     );
     let vm_output = TritonVMTestCase::new(entrypoint)
         .with_std_in(std_in)
-        .expect_stack_difference(0)
         .execute()
         .unwrap();
     prop_assert_eq!(native_output, vm_output.output);
@@ -172,7 +170,6 @@ fn catch_all_covers_c_test(
     );
     let vm_output = TritonVMTestCase::new(entrypoint)
         .with_std_in(std_in)
-        .expect_stack_difference(0)
         .execute()
         .unwrap();
     prop_assert_eq!(native_output, vm_output.output);
@@ -223,7 +220,6 @@ fn catch_all_covers_a_and_b_test(
     );
     let vm_output = TritonVMTestCase::new(entrypoint)
         .with_std_in(std_in)
-        .expect_stack_difference(0)
         .execute()
         .unwrap();
     prop_assert_eq!(native_output, vm_output.output);
@@ -276,7 +272,6 @@ fn catch_all_covers_a_and_c_test(
     );
     let vm_output = TritonVMTestCase::new(entrypoint)
         .with_std_in(std_in)
-        .expect_stack_difference(0)
         .execute()
         .unwrap();
     prop_assert_eq!(native_output, vm_output.output);
@@ -324,7 +319,6 @@ fn catch_all_covers_b_and_c_test(
     );
     let vm_output = TritonVMTestCase::new(entrypoint)
         .with_std_in(std_in)
-        .expect_stack_difference(0)
         .execute()
         .unwrap();
     prop_assert_eq!(native_output, vm_output.output);
@@ -366,7 +360,6 @@ fn catch_all_covers_a_b_c_test(
     );
     let vm_output = TritonVMTestCase::new(entrypoint)
         .with_std_in(std_in)
-        .expect_stack_difference(0)
         .execute()
         .unwrap();
     prop_assert_eq!(native_output, vm_output.output);

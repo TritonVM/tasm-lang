@@ -2,14 +2,15 @@ use itertools::Itertools;
 use num::One;
 use num::Zero;
 use tasm_lib::triton_vm::prelude::*;
+use tasm_lib::twenty_first::shared_math::traits::Inverse;
 use tasm_lib::twenty_first::shared_math::traits::PrimitiveRootOfUnity;
 
 use crate::ast;
 use crate::ast_types;
+use crate::ast_types::DataType;
 use crate::graft::Graft;
 use crate::subroutine::SubRoutine;
 
-use super::tasm_lib_snippet_to_fn_signature;
 use super::Library;
 use super::LibraryFunction;
 
@@ -23,10 +24,20 @@ const METHOD_NAME_MOD_POW_U32: &str = "mod_pow_u32";
 const METHOD_NAME_LIFT: &str = "lift";
 const METHOD_NAME_VALUE: &str = "value";
 const UNWRAP_METHOD_NAME: &str = "unwrap";
+const INVERSE_METHOD_NAME: &str = "inverse";
 
 #[derive(Clone, Debug)]
 pub(crate) struct BfeLibrary {
     pub(crate) list_type: ast_types::ListType,
+}
+
+impl BfeLibrary {
+    fn has_method(method_name: &str) -> bool {
+        method_name == METHOD_NAME_LIFT
+            || method_name == METHOD_NAME_VALUE
+            || method_name == METHOD_NAME_MOD_POW_U32
+            || method_name == INVERSE_METHOD_NAME
+    }
 }
 
 impl Library for BfeLibrary {
@@ -43,18 +54,11 @@ impl Library for BfeLibrary {
         method_name: &str,
         receiver_type: &ast_types::DataType,
     ) -> Option<String> {
-        match receiver_type {
-            ast_types::DataType::Bfe => {
-                if method_name == METHOD_NAME_LIFT
-                    || method_name == METHOD_NAME_VALUE
-                    || method_name == METHOD_NAME_MOD_POW_U32
-                {
-                    Some(method_name.to_owned())
-                } else {
-                    None
-                }
-            }
-            _ => None,
+        if matches!(receiver_type, ast_types::DataType::Bfe) && BfeLibrary::has_method(method_name)
+        {
+            Some(method_name.to_owned())
+        } else {
+            None
         }
     }
 
@@ -76,6 +80,10 @@ impl Library for BfeLibrary {
 
             if method_name == METHOD_NAME_MOD_POW_U32 {
                 return bfe_mod_pow_method().signature;
+            }
+
+            if method_name == INVERSE_METHOD_NAME {
+                return bfe_inverse_method_signature();
             }
         }
 
@@ -120,6 +128,10 @@ impl Library for BfeLibrary {
 
             if method_name == METHOD_NAME_MOD_POW_U32 {
                 return bfe_mod_pow_method().body;
+            }
+
+            if method_name == INVERSE_METHOD_NAME {
+                return triton_asm!(invert);
             }
         }
 
@@ -191,7 +203,7 @@ impl Library for BfeLibrary {
         None
     }
 
-    fn graft_method(
+    fn graft_method_call(
         &self,
         graft_config: &mut Graft,
         rust_method_call: &syn::ExprMethodCall,
@@ -223,6 +235,16 @@ impl Library for BfeLibrary {
             _ => None,
         }
     }
+}
+
+fn bfe_inverse_method_signature() -> ast::FnSignature {
+    let bf: BFieldElement = BFieldElement::one();
+    bf.inverse();
+    ast::FnSignature::value_function_immutable_args(
+        "bfe_inverse",
+        vec![("x", DataType::Bfe)],
+        DataType::Bfe,
+    )
 }
 
 /// Graft `BFieldElement::primitive_root_of_unity` to allow for compile-time resolution,
@@ -328,92 +350,62 @@ fn graft_bfe_new(
 }
 
 fn bfe_mod_pow_method() -> LibraryFunction {
-    let fn_signature = ast::FnSignature {
-        name: METHOD_NAME_MOD_POW_U32.to_owned(),
-        args: vec![
-            ast_types::AbstractArgument::ValueArgument(ast_types::AbstractValueArg {
-                name: "base".to_owned(),
-                data_type: ast_types::DataType::Bfe,
-                mutable: false,
-            }),
-            ast_types::AbstractArgument::ValueArgument(ast_types::AbstractValueArg {
-                name: "exponent".to_owned(),
-                data_type: ast_types::DataType::U32,
-                mutable: false,
-            }),
+    let signature = ast::FnSignature::value_function_immutable_args(
+        METHOD_NAME_MOD_POW_U32,
+        vec![
+            ("base", ast_types::DataType::Bfe),
+            ("exponent", ast_types::DataType::U32),
         ],
-        output: ast_types::DataType::Bfe,
-        arg_evaluation_order: Default::default(),
-    };
+        ast_types::DataType::Bfe,
+    );
 
     LibraryFunction {
-        signature: fn_signature,
+        signature,
         body: triton_asm!(swap 1 pow),
     }
 }
 
 fn bfe_lift_method() -> LibraryFunction {
-    let fn_signature = ast::FnSignature {
-        name: METHOD_NAME_LIFT.to_owned(),
-        args: vec![ast_types::AbstractArgument::ValueArgument(
-            ast_types::AbstractValueArg {
-                name: "value".to_owned(),
-                data_type: ast_types::DataType::Bfe,
-                mutable: false,
-            },
-        )],
-        output: ast_types::DataType::Xfe,
-        arg_evaluation_order: Default::default(),
-    };
+    let signature = ast::FnSignature::value_function_immutable_args(
+        METHOD_NAME_LIFT,
+        vec![("value", ast_types::DataType::Bfe)],
+        ast_types::DataType::Xfe,
+    );
 
     LibraryFunction {
-        signature: fn_signature,
+        signature,
         body: triton_asm!(push 0 push 0 swap 2),
     }
 }
 
 fn bfe_value_method() -> LibraryFunction {
-    let fn_signature = ast::FnSignature {
-        name: METHOD_NAME_VALUE.to_owned(),
-        args: vec![ast_types::AbstractArgument::ValueArgument(
-            ast_types::AbstractValueArg {
-                name: "bfe_value".to_owned(),
-                data_type: ast_types::DataType::Bfe,
-                mutable: false,
-            },
-        )],
-        output: ast_types::DataType::U64,
-        arg_evaluation_order: Default::default(),
-    };
+    let signature = ast::FnSignature::value_function_immutable_args(
+        METHOD_NAME_VALUE,
+        vec![("bfe_value", ast_types::DataType::Bfe)],
+        ast_types::DataType::U64,
+    );
 
     LibraryFunction {
-        signature: fn_signature,
+        signature,
         body: triton_asm!(split),
     }
 }
 
 fn bfe_root_function_signature(list_type: crate::libraries::ListType) -> ast::FnSignature {
     let snippet = tasm_lib::arithmetic::bfe::primitive_root_of_unity::PrimitiveRootOfUnity;
-    tasm_lib_snippet_to_fn_signature(list_type, Box::new(snippet))
+    ast::FnSignature::from_basic_snippet(Box::new(snippet), list_type)
 }
 
 fn bfe_new_function() -> LibraryFunction {
-    let fn_signature = ast::FnSignature {
-        name: "bfe_new_from_u64".to_owned(),
-        args: vec![ast_types::AbstractArgument::ValueArgument(
-            ast_types::AbstractValueArg {
-                name: "u64_value".to_owned(),
-                data_type: ast_types::DataType::U64,
-                mutable: false,
-            },
-        )],
-        output: ast_types::DataType::Bfe,
-        arg_evaluation_order: Default::default(),
-    };
+    let signature = ast::FnSignature::value_function_immutable_args(
+        "bfe_new_from_u64",
+        vec![("u64_value", ast_types::DataType::U64)],
+        ast_types::DataType::Bfe,
+    );
 
     const TWO_POW_32: &str = "4294967296";
     LibraryFunction {
-        signature: fn_signature,
+        signature,
         body: triton_asm!(
             // _ hi lo
             swap 1 // _ lo hi
