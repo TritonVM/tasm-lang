@@ -5,7 +5,7 @@ use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 use crate::triton_vm::prelude::tip5::Tip5State;
 use crate::twenty_first::prelude::*;
 
-use super::vm_proof_stream::*;
+use super::host_machine_vm_proof_iter::VmProofIter;
 
 struct Recufier;
 
@@ -65,11 +65,12 @@ pub fn recufy() {
 
     let inner_proof_iter: VmProofIter = VmProofIter::new();
     let mut proof_iter: Box<VmProofIter> = Box::<VmProofIter>::new(inner_proof_iter);
-    let log_2_padded_height: u32 = proof_iter.next_as_log_2_padded_height();
-    let padded_height: u32 = 1 << log_2_padded_height;
+    let log_2_padded_height: Box<u32> = proof_iter.next_as_log2paddedheight(&mut sponge_state);
+    let padded_height: u32 = 1 << *log_2_padded_height;
     RecufyDebug::dump_u32(padded_height);
 
-    let out_of_domain_base_row: Vec<XFieldElement> = proof_iter.next_as_out_of_domain_base_row();
+    let out_of_domain_base_row: Box<Vec<XFieldElement>> =
+        proof_iter.next_as_outofdomainbaserow(&mut sponge_state);
     RecufyDebug::dump_xfe(out_of_domain_base_row[0]);
 
     RecufyDebug::sponge_state(Tip5::squeeze(&mut sponge_state));

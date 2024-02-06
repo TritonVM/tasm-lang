@@ -97,7 +97,7 @@ impl Library for TasmLibrary {
         panic!("No grafting is handled by TASM lib")
     }
 
-    fn graft_method(
+    fn graft_method_call(
         &self,
         _graft_config: &mut Graft,
         _rust_method_call: &syn::ExprMethodCall,

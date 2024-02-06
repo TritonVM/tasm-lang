@@ -7,6 +7,7 @@ use tasm_lib::triton_vm::prelude::*;
 use crate::ast;
 use crate::ast_types;
 use crate::ast_types::CustomTypeOil;
+use crate::ast_types::DataType;
 use crate::ast_types::EnumType;
 use crate::custom_type_resolver::CustomTypeResolution;
 use crate::type_checker;
@@ -28,6 +29,12 @@ impl From<CustomTypeOil> for TypeContext {
             methods: Default::default(),
             associated_functions: Default::default(),
         }
+    }
+}
+
+impl From<TypeContext> for DataType {
+    fn from(value: TypeContext) -> DataType {
+        value.composite_type.into()
     }
 }
 

@@ -6,12 +6,14 @@ edition = "2021"
 [dependencies]
 anyhow = "1"
 chrono = "^0.4.31"
+regex = "1.10"
 inflections = "1.1"
 itertools = "0.12"
 num = "0.4"
 rand = "0"
+strum = { version = "0.26", features = ["derive"] }
 syn = { version = "1.0", features = ["full", "extra-traits"] }
-tasm-lib = { git = "https://github.com/TritonVM/tasm-lib.git", rev = "634a058d" }
+tasm-lib = { git = "https://github.com/TritonVM/tasm-lib.git", rev = "edb67983" }
 quote = "1.0"
 
 [dev-dependencies]

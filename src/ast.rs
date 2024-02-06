@@ -1,4 +1,5 @@
 use itertools::Itertools;
+use std::fmt::Debug;
 use std::fmt::Display;
 use tasm_lib::traits::basic_snippet::BasicSnippet;
 use tasm_lib::triton_vm::prelude::*;
@@ -12,7 +13,13 @@ use crate::type_checker::Typing;
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub(crate) enum RoutineBody<T> {
     Ast(Vec<Stmt<T>>),
-    Instructions(Vec<LabelledInstruction>),
+    Instructions(AsmDefinedBody),
+}
+
+#[derive(Clone, Debug, Hash, PartialEq, Eq)]
+pub(crate) struct AsmDefinedBody {
+    pub(crate) dependencies: Vec<String>,
+    pub(crate) instructions: Vec<LabelledInstruction>,
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]

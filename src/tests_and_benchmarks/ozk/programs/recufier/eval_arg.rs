@@ -1,10 +1,15 @@
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
+use num::One;
 use tasm_lib::triton_vm::prelude::*;
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub struct EvalArg;
 
 impl EvalArg {
+    fn _default_initial() -> XFieldElement {
+        return XFieldElement::one();
+    }
+
     /// Compute the evaluation for an evaluation argument as specified by `initial`, `challenge`,
     /// and `symbols`. This amounts to evaluating polynomial
     /// `f(x) = initial·x^n + Σ_i symbols[n-i]·x^i`

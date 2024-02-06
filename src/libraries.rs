@@ -17,6 +17,7 @@ pub(crate) mod hasher;
 pub(crate) mod tasm;
 pub(crate) mod unsigned_integers;
 pub(crate) mod vector;
+pub(crate) mod vm_proof_iter;
 pub(crate) mod xfe;
 
 type Annotation = type_checker::Typing;
@@ -37,6 +38,7 @@ pub(crate) fn all_libraries<'a>(config: LibraryConfig) -> Vec<Box<dyn Library + 
         Box::new(bfe::BfeLibrary {
             list_type: config.list_type,
         }),
+        Box::new(core::Core {}),
         Box::new(bfield_codec::BFieldCodecLib {
             list_type: config.list_type,
         }),
@@ -52,8 +54,8 @@ pub(crate) fn all_libraries<'a>(config: LibraryConfig) -> Vec<Box<dyn Library + 
         Box::new(vector::VectorLib {
             list_type: config.list_type,
         }),
+        Box::new(vm_proof_iter::VmProofIterLib),
         Box::new(xfe::XfeLibrary),
-        Box::new(core::Core {}),
     ]
 }
 
@@ -115,7 +117,7 @@ pub(crate) trait Library: Debug {
         type_parameter: Option<ast_types::DataType>,
     ) -> Option<ast::Expr<Annotation>>;
 
-    fn graft_method(
+    fn graft_method_call(
         &self,
         graft_config: &mut Graft,
         rust_method_call: &syn::ExprMethodCall,

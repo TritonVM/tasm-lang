@@ -1,6 +1,5 @@
 use syn::punctuated::Punctuated;
 use syn::token::Comma;
-use syn::ExprMethodCall;
 use tasm_lib::triton_vm::prelude::LabelledInstruction;
 
 use crate::ast::Expr;
@@ -81,11 +80,11 @@ impl Library for Core {
         panic!()
     }
 
-    fn graft_method(
+    fn graft_method_call(
         &self,
         _graft_config: &mut Graft,
-        _rust_method_call: &ExprMethodCall,
-    ) -> Option<Expr<Annotation>> {
+        _rust_method_call: &syn::ExprMethodCall,
+    ) -> Option<Expr<super::Annotation>> {
         None
     }
 }

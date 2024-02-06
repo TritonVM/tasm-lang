@@ -45,11 +45,15 @@ fn result_unwrap_method(enum_type: &ast_types::EnumType) -> ast::Method<Typing> 
         arg_evaluation_order: Default::default(),
     };
 
+    let code = triton_asm!(
+        // _ [ok_type] discriminant
+        assert // _ [ok_type]
+    );
     ast::Method {
-        body: ast::RoutineBody::<Typing>::Instructions(triton_asm!(
-            // _ [ok_type] discriminant
-            assert // _ [ok_type]
-        )),
+        body: ast::RoutineBody::<Typing>::Instructions(ast::AsmDefinedBody {
+            dependencies: vec![],
+            instructions: code,
+        }),
         signature: method_signature,
     }
 }
@@ -66,16 +70,20 @@ fn result_is_err_method(enum_type: &ast_types::EnumType) -> ast::Method<Typing> 
         arg_evaluation_order: Default::default(),
     };
 
-    ast::Method {
-        body: ast::RoutineBody::<Typing>::Instructions(triton_asm!(
-                // _ *discriminant
-                read_mem 1 pop 1
-                // _ discriminant
+    let code = triton_asm!(
+            // _ *discriminant
+            read_mem 1 pop 1
+            // _ discriminant
 
-                push 0
-                eq
-                // _ (discriminant == 0 :== variant is 'Err')
-        )),
+            push 0
+            eq
+            // _ (discriminant == 0 :== variant is 'Err')
+    );
+    ast::Method {
+        body: ast::RoutineBody::<Typing>::Instructions(ast::AsmDefinedBody {
+            dependencies: vec![],
+            instructions: code,
+        }),
         signature: method_signature,
     }
 }
@@ -92,16 +100,20 @@ fn result_is_ok_method(enum_type: &ast_types::EnumType) -> ast::Method<Typing> {
         arg_evaluation_order: Default::default(),
     };
 
-    ast::Method {
-        body: ast::RoutineBody::<Typing>::Instructions(triton_asm!(
-                // *discriminant
-                read_mem 1 pop 1
-                // discriminant
+    let code = triton_asm!(
+            // *discriminant
+            read_mem 1 pop 1
+            // discriminant
 
-                push 1
-                eq
-                // _ (discriminant == 1 :== variant is 'Ok')
-        )),
+            push 1
+            eq
+            // _ (discriminant == 1 :== variant is 'Ok')
+    );
+    ast::Method {
+        body: ast::RoutineBody::<Typing>::Instructions(ast::AsmDefinedBody {
+            dependencies: vec![],
+            instructions: code,
+        }),
         signature: method_signature,
     }
 }

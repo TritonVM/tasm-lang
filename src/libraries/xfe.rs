@@ -171,7 +171,7 @@ impl Library for XfeLibrary {
         graft_xfe_new_function_call(args, graft_config)
     }
 
-    fn graft_method(
+    fn graft_method_call(
         &self,
         graft_config: &mut Graft,
         rust_method_call: &syn::ExprMethodCall,

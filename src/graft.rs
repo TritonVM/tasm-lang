@@ -15,6 +15,7 @@ use crate::ast::Stmt;
 use crate::ast_types;
 use crate::ast_types::DataType;
 use crate::composite_types::CompositeTypes;
+use crate::libraries;
 use crate::libraries::Library;
 use crate::type_checker;
 
@@ -152,11 +153,11 @@ impl<'a> Graft<'a> {
         composite_types: &mut CompositeTypes,
         struct_item: syn::ItemStruct,
     ) {
-        let struct_type = self.determine_struct_type(&struct_item);
-        Self::add_struct_type_to_composite_types(composite_types, struct_item, struct_type);
+        let struct_type = self.graft_struct_type(&struct_item);
+        composite_types.add_custom_type(ast_types::CustomTypeOil::Struct(struct_type));
     }
 
-    fn determine_struct_type(&mut self, struct_item: &syn::ItemStruct) -> ast_types::StructVariant {
+    fn graft_struct_variant(&mut self, struct_item: &syn::ItemStruct) -> ast_types::StructVariant {
         let Some(field) = struct_item.fields.iter().next() else {
             return ast_types::StructVariant::TupleStruct(ast_types::Tuple::unit());
         };
@@ -169,19 +170,17 @@ impl<'a> Graft<'a> {
         ast_types::StructVariant::NamedFields(self.graft_struct_with_named_fields(fields))
     }
 
-    fn add_struct_type_to_composite_types(
-        composite_types: &mut CompositeTypes,
-        struct_item: syn::ItemStruct,
-        struct_type: ast_types::StructVariant,
-    ) {
+    pub(crate) fn graft_struct_type(
+        &mut self,
+        struct_item: &syn::ItemStruct,
+    ) -> ast_types::StructType {
+        let variant = self.graft_struct_variant(struct_item);
         let syn::ItemStruct { attrs, ident, .. } = struct_item;
-        let struct_type = ast_types::StructType {
-            is_copy: Self::is_copy(&attrs),
-            variant: struct_type,
+        ast_types::StructType {
+            is_copy: Self::is_copy(attrs),
+            variant,
             name: ident.to_string(),
-        };
-
-        composite_types.add_custom_type(ast_types::CustomTypeOil::Struct(struct_type));
+        }
     }
 
     fn graft_enum_variants(&mut self, variants: Vec<syn::Variant>) -> Vec<(String, DataType)> {
@@ -390,6 +389,16 @@ impl<'a> Graft<'a> {
             return self.rust_option_type_to_data_type(&rust_type_path.path.segments[0].arguments);
         }
 
+        if rust_type_as_string == "VmProofIter" {
+            let vm_proof_iter = libraries::vm_proof_iter::VmProofIterLib::vm_proof_iter_type(self);
+            self.imported_custom_types
+                .add_type_context_if_new(vm_proof_iter.clone());
+            let fri_response = libraries::vm_proof_iter::VmProofIterLib::fri_response_type(self);
+            self.imported_custom_types
+                .add_type_context_if_new(fri_response);
+            return vm_proof_iter.into();
+        }
+
         // We only allow the user to use types that are capitalized
         if rust_type_as_string
             .chars()
@@ -437,7 +446,6 @@ impl<'a> Graft<'a> {
     }
 
     fn rust_option_type_to_data_type(&mut self, path_args: &PathArguments) -> DataType {
-        use crate::libraries;
         let PathArguments::AngleBracketed(generics) = path_args else {
             panic!("Unsupported path argument {path_args:#?}");
         };
@@ -459,7 +467,6 @@ impl<'a> Graft<'a> {
     }
 
     fn rust_result_type_to_data_type(&mut self, path_args: &PathArguments) -> DataType {
-        use crate::libraries;
         let PathArguments::AngleBracketed(generics) = path_args else {
             panic!("Unsupported path argument {path_args:#?}");
         };
@@ -695,7 +702,7 @@ impl<'a> Graft<'a> {
         rust_method_call: &syn::ExprMethodCall,
     ) -> ast::Expr<Annotation> {
         for lib in self.libraries.iter() {
-            if let Some(method_call) = lib.graft_method(self, rust_method_call) {
+            if let Some(method_call) = lib.graft_method_call(self, rust_method_call) {
                 return method_call;
             }
         }

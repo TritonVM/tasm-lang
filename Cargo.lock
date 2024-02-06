@@ -506,7 +506,7 @@ dependencies = [
 [[package]]
 name = "derive_tasm_object"
 version = "0.1.0"
-source = "git+https://github.com/TritonVM/tasm-lib.git?rev=634a058d#634a058d6f7f2f8f1bea70b1a6e5b8191cd96b38"
+source = "git+https://github.com/TritonVM/tasm-lib.git?rev=edb67983#edb6798392df5b3b08a909a30792fee0c0eb9096"
 dependencies = [
  "quote",
  "syn 2.0.48",
@@ -2068,10 +2068,12 @@ dependencies = [
  "proptest-arbitrary-interop",
  "quote",
  "rand",
+ "regex",
  "reqwest",
  "serde",
  "serde_derive",
  "serde_json",
+ "strum",
  "syn 1.0.109",
  "tasm-lib",
  "test-strategy",
@@ -2080,7 +2082,7 @@ dependencies = [
 [[package]]
 name = "tasm-lib"
 version = "0.2.1"
-source = "git+https://github.com/TritonVM/tasm-lib.git?rev=634a058d#634a058d6f7f2f8f1bea70b1a6e5b8191cd96b38"
+source = "git+https://github.com/TritonVM/tasm-lib.git?rev=edb67983#edb6798392df5b3b08a909a30792fee0c0eb9096"
 dependencies = [
  "anyhow",
  "derive_tasm_object",
@@ -2243,7 +2245,7 @@ dependencies = [
 [[package]]
 name = "triton-vm"
 version = "0.36.1"
-source = "git+https://github.com/TritonVM/triton-vm?rev=9a6dbd91#9a6dbd910ca0e3ded835f5926c2d3f8958ea0052"
+source = "git+https://github.com/TritonVM/triton-vm?rev=5baeeaeb#5baeeaeb5ac379ea5ba871a97d48fb9a880322c5"
 dependencies = [
  "arbitrary",
  "bincode",

@@ -152,7 +152,7 @@ impl Library for HasherLib {
         panic!("HasherLib cannot graft function {full_name}")
     }
 
-    fn graft_method(
+    fn graft_method_call(
         &self,
         _graft_config: &mut Graft,
         _rust_method_call: &syn::ExprMethodCall,
