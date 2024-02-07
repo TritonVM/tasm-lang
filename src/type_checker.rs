@@ -1306,7 +1306,10 @@ fn derive_annotate_expr_type(
                     }
                 }
                 Ref(_mutable) => {
-                    let resulting_type = ast_types::DataType::Boxed(Box::new(rhs_type));
+                    let resulting_type = match rhs_type {
+                        ast_types::DataType::Boxed(_) => rhs_type,
+                        _ => ast_types::DataType::Boxed(Box::new(rhs_type)),
+                    };
                     *unaryop_type = Typing::KnownType(resulting_type.clone());
                     Ok(resulting_type)
                 },
