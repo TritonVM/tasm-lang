@@ -381,6 +381,19 @@ impl TryFrom<DataType> for tasm_lib::data_type::DataType {
     type Error = String;
 
     fn try_from(value: DataType) -> Result<Self, Self::Error> {
+        fn try_from_boxed(value: DataType) -> Result<tasm_lib::data_type::DataType, String> {
+            match value {
+                // A Boxed list is just a list
+                // TODO: Default to `Unsafe` list here??
+                DataType::List(_, ListType::Unsafe) => value.try_into(),
+                DataType::Unresolved(_) => todo!(),
+                DataType::Struct(struct_type) => Ok(tasm_lib::data_type::DataType::StructRef(
+                    struct_type.try_into()?,
+                )),
+                _ => Ok(tasm_lib::data_type::DataType::VoidPointer),
+            }
+        }
+
         match value {
             DataType::Bool => Ok(tasm_lib::data_type::DataType::Bool),
             DataType::U32 => Ok(tasm_lib::data_type::DataType::U32),
@@ -416,14 +429,31 @@ impl TryFrom<DataType> for tasm_lib::data_type::DataType {
             DataType::Unresolved(name) => Err(format!(
                 "Cannot convert unresolved type {name} to tasm-lib type"
             )),
-            DataType::Boxed(value) => match *value {
-                // A Boxed list is just a list
-                // TODO: Default to `Unsafe` list here??
-                DataType::List(_, ListType::Unsafe) => (*value).try_into(),
-                DataType::Unresolved(_) => todo!(),
-                _ => Ok(tasm_lib::data_type::DataType::VoidPointer),
-            },
+            DataType::Boxed(value) => try_from_boxed(*value),
         }
+    }
+}
+
+impl TryFrom<StructType> for tasm_lib::data_type::StructType {
+    type Error = String;
+
+    fn try_from(value: StructType) -> Result<Self, Self::Error> {
+        let StructVariant::NamedFields(NamedFieldsStruct { fields }) = value.variant else {
+            return Err("Structs in `tasm-lib` must have named fields.".to_owned());
+        };
+
+        let fields: Result<Vec<_>, _> = fields
+            .into_iter()
+            .map(|(name, dtype)| (name, dtype.try_into()))
+            .map(|(name, result)| result.map(|dtype| (name, dtype)))
+            .collect();
+        let name = value.name;
+        let tasm_lib_struct = tasm_lib::data_type::StructType {
+            name,
+            fields: fields?,
+        };
+
+        Ok(tasm_lib_struct)
     }
 }
 
