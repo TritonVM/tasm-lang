@@ -6,6 +6,7 @@ use tasm_lib::twenty_first::shared_math::traits::Inverse;
 use tasm_lib::twenty_first::shared_math::traits::PrimitiveRootOfUnity;
 
 use crate::ast;
+use crate::ast::FnSignature;
 use crate::ast_types;
 use crate::ast_types::DataType;
 use crate::graft::Graft;
@@ -20,6 +21,7 @@ const FUNCTION_NAME_ZERO: &str = "BFieldElement::zero";
 const FUNCTION_NAME_ONE: &str = "BFieldElement::one";
 const FUNCTION_ROOT_FULL_NAME: &str = "BFieldElement::primitive_root_of_unity";
 const FUNCTION_ROOT_STRIPPED_NAME: &str = "primitive_root_of_unity";
+const FUNCTION_GENERATOR_NAME: &str = "BFieldElement::generator";
 const METHOD_NAME_MOD_POW_U32: &str = "mod_pow_u32";
 const METHOD_NAME_LIFT: &str = "lift";
 const METHOD_NAME_VALUE: &str = "value";
@@ -42,11 +44,11 @@ impl BfeLibrary {
 
 impl Library for BfeLibrary {
     fn get_function_name(&self, full_name: &str) -> Option<String> {
-        if full_name == FUNCTION_NAME_NEW_BFE || full_name == FUNCTION_ROOT_FULL_NAME {
-            return Some(full_name.to_owned());
-        }
-
-        None
+        matches!(
+            full_name,
+            FUNCTION_NAME_NEW_BFE | FUNCTION_ROOT_FULL_NAME | FUNCTION_GENERATOR_NAME
+        )
+        .then(|| full_name.to_owned())
     }
 
     fn get_method_name(
@@ -96,15 +98,12 @@ impl Library for BfeLibrary {
         _type_parameter: Option<ast_types::DataType>,
         _args: &[ast::Expr<super::Annotation>],
     ) -> ast::FnSignature {
-        if fn_name == FUNCTION_NAME_NEW_BFE {
-            return bfe_new_function().signature;
+        match fn_name {
+            FUNCTION_NAME_NEW_BFE => bfe_new_function().signature,
+            FUNCTION_ROOT_FULL_NAME => bfe_root_function_signature(self.list_type),
+            FUNCTION_GENERATOR_NAME => bfe_generator_function_signature(),
+            _ => panic!("No function name {fn_name} implemented for BFE library."),
         }
-
-        if fn_name == FUNCTION_ROOT_FULL_NAME {
-            return bfe_root_function_signature(self.list_type);
-        }
-
-        panic!("No function name {fn_name} implemented for BFE library.");
     }
 
     fn call_method(
@@ -160,6 +159,11 @@ impl Library for BfeLibrary {
                 tasm_lib::arithmetic::bfe::primitive_root_of_unity::PrimitiveRootOfUnity,
             ));
             return triton_asm!(call { entrypoint });
+        }
+
+        if fn_name == FUNCTION_GENERATOR_NAME {
+            let generator = BFieldElement::generator();
+            return triton_asm!(push { generator } hint field_generator = stack[0]);
         }
 
         panic!("No function name {fn_name} implemented for BFE library.");
@@ -394,6 +398,10 @@ fn bfe_value_method() -> LibraryFunction {
 fn bfe_root_function_signature(list_type: crate::libraries::ListType) -> ast::FnSignature {
     let snippet = tasm_lib::arithmetic::bfe::primitive_root_of_unity::PrimitiveRootOfUnity;
     ast::FnSignature::from_basic_snippet(Box::new(snippet), list_type)
+}
+
+fn bfe_generator_function_signature() -> FnSignature {
+    ast::FnSignature::value_function_immutable_args(FUNCTION_GENERATOR_NAME, vec![], DataType::Bfe)
 }
 
 fn bfe_new_function() -> LibraryFunction {
