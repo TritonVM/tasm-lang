@@ -22,6 +22,7 @@ const OVERFLOWING_ADD_METHOD: &str = "overflowing_add";
 const OVERFLOWING_SUB_METHOD: &str = "overflowing_sub";
 const WRAPPING_SUB_METHOD: &str = "wrapping_sub";
 const ILOG2_METHOD: &str = "ilog2";
+const NEXT_POWER_OF_TWO_METHOD: &str = "next_power_of_two";
 
 impl Library for UnsignedIntegersLib {
     fn get_function_name(&self, _full_name: &str) -> Option<String> {
@@ -43,6 +44,7 @@ impl Library for UnsignedIntegersLib {
                     | OVERFLOWING_SUB_METHOD
                     | WRAPPING_SUB_METHOD
                     | ILOG2_METHOD
+                    | NEXT_POWER_OF_TWO_METHOD
             )
         {
             return Some(method_name.to_owned());
@@ -71,7 +73,7 @@ impl Library for UnsignedIntegersLib {
         }
 
         let snippet = name_to_tasm_lib_snippet(method_name, receiver_type)
-            .unwrap_or_else(|| panic!("Unknown function name {method_name}"));
+            .unwrap_or_else(|| panic!("Unknown function name {method_name} for {receiver_type}"));
 
         ast::FnSignature::from_basic_snippet(snippet, self.list_type)
     }
@@ -101,7 +103,7 @@ impl Library for UnsignedIntegersLib {
         }
 
         let snippet = name_to_tasm_lib_snippet(method_name, receiver_type)
-            .unwrap_or_else(|| panic!("Unknown function name {method_name}"));
+            .unwrap_or_else(|| panic!("Unknown function name {method_name} for {receiver_type}"));
         let entrypoint = snippet.entrypoint();
         state.import_snippet(snippet);
 
@@ -167,44 +169,31 @@ fn name_to_tasm_lib_snippet(
     public_name: &str,
     receiver_type: &ast_types::DataType,
 ) -> Option<Box<dyn BasicSnippet>> {
-    match public_name {
-        LEADING_ZEROS_METHOD => match receiver_type {
-            ast_types::DataType::U32 => Some(Box::new(
-                tasm_lib::arithmetic::u32::leadingzeros::Leadingzeros,
-            )),
-            ast_types::DataType::U64 => Some(Box::new(
-                tasm_lib::arithmetic::u64::leading_zeros_u64::LeadingZerosU64,
-            )),
-            _ => panic!("Dont know `{public_name}` for {receiver_type}"),
-        },
-        COUNT_ONES_METHOD => match receiver_type {
-            ast_types::DataType::U64 => Some(Box::new(
-                tasm_lib::arithmetic::u64::popcount_u64::PopCountU64,
-            )),
-            _ => panic!("Dont know `{public_name}` for {receiver_type}"),
-        },
-        POW_METHOD => match receiver_type {
-            ast_types::DataType::U32 => Some(Box::new(tasm_lib::arithmetic::u32::safepow::Safepow)),
-            _ => panic!("Dont know `{public_name}` for {receiver_type}"),
-        },
-        OVERFLOWING_ADD_METHOD => match receiver_type {
-            ast_types::DataType::U64 => Some(Box::new(
-                tasm_lib::arithmetic::u64::overflowing_add_u64::OverflowingAdd,
-            )),
-            _ => panic!("Dont know `{public_name}` for {receiver_type}"),
-        },
-        OVERFLOWING_SUB_METHOD => match receiver_type {
-            ast_types::DataType::U64 => Some(Box::new(
-                tasm_lib::arithmetic::u64::overflowing_sub_u64::OverflowingSub,
-            )),
-            _ => panic!("Dont know `{public_name}` for {receiver_type}"),
-        },
-        WRAPPING_SUB_METHOD => match receiver_type {
-            ast_types::DataType::U64 => Some(Box::new(
-                tasm_lib::arithmetic::u64::wrapping_sub_u64::WrappingSub,
-            )),
-            _ => panic!("Dont know `{public_name}` for {receiver_type}"),
-        },
+    match (public_name, receiver_type) {
+        (LEADING_ZEROS_METHOD, ast_types::DataType::U32) => Some(Box::new(
+            tasm_lib::arithmetic::u32::leadingzeros::Leadingzeros,
+        )),
+        (LEADING_ZEROS_METHOD, ast_types::DataType::U64) => Some(Box::new(
+            tasm_lib::arithmetic::u64::leading_zeros_u64::LeadingZerosU64,
+        )),
+        (COUNT_ONES_METHOD, ast_types::DataType::U64) => Some(Box::new(
+            tasm_lib::arithmetic::u64::popcount_u64::PopCountU64,
+        )),
+        (POW_METHOD, ast_types::DataType::U32) => {
+            Some(Box::new(tasm_lib::arithmetic::u32::safepow::Safepow))
+        }
+        (OVERFLOWING_ADD_METHOD, ast_types::DataType::U64) => Some(Box::new(
+            tasm_lib::arithmetic::u64::overflowing_add_u64::OverflowingAdd,
+        )),
+        (OVERFLOWING_SUB_METHOD, ast_types::DataType::U64) => Some(Box::new(
+            tasm_lib::arithmetic::u64::overflowing_sub_u64::OverflowingSub,
+        )),
+        (WRAPPING_SUB_METHOD, ast_types::DataType::U64) => Some(Box::new(
+            tasm_lib::arithmetic::u64::wrapping_sub_u64::WrappingSub,
+        )),
+        (NEXT_POWER_OF_TWO_METHOD, ast_types::DataType::U32) => Some(Box::new(
+            tasm_lib::arithmetic::u32::next_power_of_two::NextPowerOfTwo,
+        )),
         _ => None,
     }
 }
