@@ -227,7 +227,7 @@ use crate::tests_and_benchmarks::ozk::bfield_codec::decode_from_memory_using_siz
 use crate::triton_vm::fri::AuthenticationStructure;
 use crate::triton_vm::proof_item::FriResponse;
 
-// This struct should only be seen be `rustc`, not by `tasm-lang`
+/// This struct should only be seen be `rustc`, not by `tasm-lang`
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub(crate) struct VmProofIter {
     pub current_item_pointer: BFieldElement,
@@ -247,10 +247,8 @@ macro_rules! vm_proof_iter_impl {
             $(
             pub(super) fn $next_as_fn(&mut self, sponge_state: &mut Tip5State) -> Box<$payload> {
                 let read_size_from_ram = || {
-                    let bfe = decode_from_memory_using_size::<BFieldElement>(
-                        self.current_item_pointer,
-                        1,
-                    );
+                    let item_pointer = self.current_item_pointer;
+                    let bfe = decode_from_memory_using_size::<BFieldElement>(item_pointer, 1);
                     bfe.value() as usize
                 };
                 let item_size = ProofItemVariant::$variant

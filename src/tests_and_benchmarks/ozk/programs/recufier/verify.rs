@@ -1,10 +1,66 @@
 use num::One;
 use num::Zero;
+use serde_derive::Serialize;
 
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 use crate::tests_and_benchmarks::ozk::rust_shadows::VmProofIter;
 use crate::triton_vm::prelude::tip5::Tip5State;
 use crate::twenty_first::prelude::*;
+use crate::twenty_first::shared_math::traits::PrimitiveRootOfUnity;
+
+/// See [StarkParameters][params].
+///
+/// [params]: crate::triton_vm::stark::StarkParameters
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize)]
+struct StarkParameters {
+    pub security_level: usize,
+    pub fri_expansion_factor: usize,
+    pub num_trace_randomizers: usize,
+    pub num_randomizer_polynomials: usize,
+    pub num_collinearity_checks: usize,
+    pub num_combination_codeword_checks: usize,
+}
+
+impl StarkParameters {
+    pub fn default() -> StarkParameters {
+        return StarkParameters {
+            security_level: 160,
+            fri_expansion_factor: 4,
+            num_trace_randomizers: 166,
+            num_randomizer_polynomials: 1,
+            num_collinearity_checks: 80,
+            num_combination_codeword_checks: 160,
+        };
+    }
+
+    pub fn small() -> StarkParameters {
+        return StarkParameters {
+            security_level: 60,
+            fri_expansion_factor: 4,
+            num_trace_randomizers: 166,
+            num_randomizer_polynomials: 1,
+            num_collinearity_checks: 20,
+            num_combination_codeword_checks: 60,
+        };
+    }
+
+    pub fn derive_fri(&self, padded_height: u32) -> FriVerify {
+        let interpolant_codeword_length: u32 =
+            (padded_height + self.num_trace_randomizers as u32).next_power_of_two();
+        let fri_domain_length: usize =
+            self.fri_expansion_factor * interpolant_codeword_length as usize;
+        let generator: BFieldElement =
+            BFieldElement::primitive_root_of_unity(fri_domain_length as u64).unwrap();
+
+        return FriVerify {
+            expansion_factor: self.fri_expansion_factor as u32,
+            num_colinearity_checks: self.num_collinearity_checks as u32,
+            domain_length: fri_domain_length as u32,
+            domain_offset: BFieldElement::generator(),
+            domain_generator: generator,
+        };
+    }
+}
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 struct Recufier;
@@ -30,9 +86,6 @@ impl Recufier {
 
         return encoding;
     }
-
-    // todo: derive fri here
-    // pub fn derive_fri(self) {}
 }
 
 /// Gives statements only intended for debugging its own scope.
@@ -70,6 +123,7 @@ pub(crate) struct FriVerify {
 }
 
 pub fn recufy() {
+    let parameters: Box<StarkParameters> = Box::<StarkParameters>::new(StarkParameters::small());
     let own_digest: Digest = tasm::tasm_recufier_read_and_verify_own_program_digest_from_std_in();
 
     let mut sponge_state: Tip5State = Tip5::init();
@@ -82,20 +136,9 @@ pub fn recufy() {
     let padded_height: u32 = 1 << *log_2_padded_height;
     RecufyDebug::dump_u32(padded_height);
 
-    // derive fri
-    let fri_parameters_stack: FriVerify = FriVerify {
-        expansion_factor: 4,
-        num_colinearity_checks: 4,
-        domain_length: 16,
-        domain_offset: BFieldElement::new(1),
-        domain_generator: BFieldElement::new(17293822564807737345),
-    };
-    let fri_parameters: Box<FriVerify> = Box::<FriVerify>::new(fri_parameters_stack);
-
+    let fri: Box<FriVerify> = Box::<FriVerify>::new(parameters.derive_fri(padded_height));
     let revealed_indexed_leaves: Vec<(u32, XFieldElement)> =
-        tasm::tasm_recufier_fri_verify(&mut proof_iter, fri_parameters);
-    // let fri = Fri::new().unwrap();
-    // let stuff = fri.verify(&mut None, &mut None).unwrap();
+        tasm::tasm_recufier_fri_verify(&mut proof_iter, fri);
 
     let out_of_domain_base_row: Box<Vec<XFieldElement>> =
         proof_iter.next_as_outofdomainbaserow(&mut sponge_state);
@@ -115,7 +158,12 @@ mod tests {
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::TritonVMTestCase;
-    use crate::triton_vm::prelude::*;
+    use crate::triton_vm;
+    use crate::triton_vm::prelude::Claim;
+    use crate::triton_vm::prelude::NonDeterminism;
+    use crate::triton_vm::prelude::Program;
+    use crate::triton_vm::prelude::Proof;
+    use crate::triton_vm::prelude::Stark;
     use crate::triton_vm::proof_item::ProofItem;
     use crate::triton_vm::proof_stream::ProofStream;
 
@@ -148,6 +196,54 @@ mod tests {
             .collect();
 
         NonDeterminism::default().with_ram(ram)
+    }
+
+    #[test]
+    fn default_stark_parameters_match_triton_vms_defaults() {
+        let vm_sp = triton_vm::stark::StarkParameters::default();
+        let sp = StarkParameters::default();
+
+        assert_eq!(vm_sp.security_level, sp.security_level);
+        assert_eq!(vm_sp.fri_expansion_factor, sp.fri_expansion_factor);
+        assert_eq!(vm_sp.num_trace_randomizers, sp.num_trace_randomizers);
+
+        let vm_num_collin_checks = vm_sp.num_collinearity_checks;
+        let num_collin_checks = sp.num_collinearity_checks;
+        assert_eq!(vm_num_collin_checks, num_collin_checks);
+
+        let vm_num_rand_polys = vm_sp.num_randomizer_polynomials;
+        let num_rand_polys = sp.num_randomizer_polynomials;
+        assert_eq!(vm_num_rand_polys, num_rand_polys);
+
+        let vm_num_combi_checks = vm_sp.num_combination_codeword_checks;
+        let num_combi_checks = sp.num_combination_codeword_checks;
+        assert_eq!(vm_num_combi_checks, num_combi_checks);
+
+        let vm_ps_str = serde_json::to_string(&vm_sp).unwrap();
+        let ps_str = serde_json::to_string(&sp).unwrap();
+        assert_eq!(vm_ps_str, ps_str);
+    }
+
+    #[proptest]
+    fn fri_parameter_derivation_using_default_stark_parameters_corresponds_to_triton_vms_derivation(
+        #[strategy(0_u32..29)] log_2_padded_height: u32,
+    ) {
+        let padded_height = 1 << log_2_padded_height;
+
+        let vm_params = triton_vm::stark::StarkParameters::default();
+        let vm_fri = Stark::derive_fri(vm_params, padded_height).unwrap();
+
+        let params = StarkParameters::default();
+        let fri = params.derive_fri(padded_height as u32);
+
+        prop_assert_eq!(vm_fri.expansion_factor, fri.expansion_factor as usize);
+        prop_assert_eq!(
+            vm_fri.num_collinearity_checks,
+            fri.num_colinearity_checks as usize
+        );
+        prop_assert_eq!(vm_fri.domain.length as u64, fri.domain_length as u64);
+        prop_assert_eq!(vm_fri.domain.offset, fri.domain_offset);
+        prop_assert_eq!(vm_fri.domain.generator, fri.domain_generator);
     }
 
     #[test]
