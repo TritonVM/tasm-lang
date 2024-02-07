@@ -219,15 +219,7 @@ fn all_next_as_methods(graft_config: &mut Graft) -> Vec<ast::Method<Typing>> {
             DataType::try_from_string(method_output, graft_config.list_type).unwrap();
         let method_output = DataType::Boxed(Box::new(method_output));
         let snippet_label = snippet.entrypoint();
-        let payload_size_to_payload_pointer = if variant.payload_static_length().is_some() {
-            triton_asm!()
-        } else {
-            triton_asm!(push 1 add)
-        };
-        let code = triton_asm!(
-            call { snippet_label }
-            {&payload_size_to_payload_pointer}
-        );
+        let code = triton_asm!(call { snippet_label });
 
         let method_signature = ast::FnSignature::value_function_with_mutable_args(
             &method_name_for_next_as(&variant),
