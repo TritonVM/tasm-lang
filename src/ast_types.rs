@@ -206,6 +206,9 @@ impl DataType {
                 Tuple(element_types.into())
             }
             tasm_lib::data_type::DataType::VoidPointer => VoidPointer,
+            tasm_lib::data_type::DataType::StructRef(struct_type) => Boxed(Box::new(
+                Self::tasm_lib_struct_to_lang_struct(struct_type, list_type),
+            )),
         }
     }
 
@@ -350,6 +353,27 @@ impl DataType {
                 fields: vec![other.to_owned()],
             },
         }
+    }
+
+    fn tasm_lib_struct_to_lang_struct(
+        struct_type: tasm_lib::data_type::StructType,
+        list_type: ListType,
+    ) -> Self {
+        let tasm_lib::data_type::StructType { name, fields } = struct_type;
+        let fields = fields
+            .into_iter()
+            .map(|(name, dtype)| (name, Self::from_tasm_lib_datatype(dtype, list_type)))
+            .collect();
+
+        let named_fields_struct = NamedFieldsStruct { fields };
+        let variant = StructVariant::NamedFields(named_fields_struct);
+        let new_struct_type = StructType {
+            name,
+            is_copy: false,
+            variant,
+        };
+
+        Self::Struct(new_struct_type)
     }
 }
 
