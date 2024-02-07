@@ -16,4 +16,3 @@ mod sponge_hasher;
 mod structs;
 mod type_forcing;
 mod vectors;
-mod vm_proof_iter;
