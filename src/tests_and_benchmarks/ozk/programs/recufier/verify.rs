@@ -138,7 +138,7 @@ pub fn recufy() {
 
     let fri: Box<FriVerify> = Box::<FriVerify>::new(parameters.derive_fri(padded_height));
     let revealed_indexed_leaves: Vec<(u32, XFieldElement)> =
-        tasm::tasm_recufier_fri_verify(&mut proof_iter, fri);
+        tasm::tasm_recufier_fri_verify(&mut proof_iter, fri, &mut sponge_state);
 
     let out_of_domain_base_row: Box<Vec<XFieldElement>> =
         proof_iter.next_as_outofdomainbaserow(&mut sponge_state);

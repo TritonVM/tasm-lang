@@ -7,7 +7,8 @@ use tasm_lib::triton_vm::triton_asm;
 
 use crate::ast;
 use crate::ast::RoutineBody;
-use crate::ast_types::{DataType, StructType};
+use crate::ast_types::DataType;
+use crate::ast_types::StructType;
 use crate::composite_types::TypeContext;
 use crate::graft::Graft;
 use crate::type_checker::Typing;

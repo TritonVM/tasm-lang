@@ -1,5 +1,6 @@
 use tasm_lib::triton_vm::prelude::*;
-use tasm_lib::triton_vm::proof_item::{FriResponse, ProofItem};
+use tasm_lib::triton_vm::proof_item::FriResponse;
+use tasm_lib::triton_vm::proof_item::ProofItem;
 use tasm_lib::triton_vm::proof_stream::ProofStream;
 use tasm_lib::twenty_first::shared_math::tip5::Tip5State;
 use tasm_lib::twenty_first::util_types::algebraic_hasher::SpongeHasher;

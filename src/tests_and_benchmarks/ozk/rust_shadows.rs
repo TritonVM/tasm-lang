@@ -1,17 +1,30 @@
+//! This module contains functions for interacting with the input/output monad
+//! implicit in a VM execution. It contains functions for mutating and verifying
+//! the correct content of the input/output while executing a Rust function
+//! on the host machine's native architecture (i.e. your machine).
+//! It has been shamelessly copied from greenhat's omnizk compiler project:
+//! https://github.com/greenhat/omnizk
+
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::thread_local;
 use std::vec::Vec;
 
+use num::One;
 use num::Zero;
 use tasm_lib::triton_vm::prelude::*;
+use tasm_lib::triton_vm::proof_item::ProofItem;
+use tasm_lib::triton_vm::proof_item::ProofItemVariant;
+use tasm_lib::twenty_first::shared_math::tip5::Tip5State;
+use tasm_lib::twenty_first::util_types::algebraic_hasher::SpongeHasher;
 
-// This module contains functions for interacting with the input/output monad
-// implicit in a VM execution. It contains functions for mutating and verifying
-// the correct content of the input/output while executing a Rust function
-// on the host machine's native architecture (i.e. your machine).
-// It has been shamelessly copied from greenhat's omnizk compiler project:
-// https://github.com/greenhat/omnizk
+use crate::tests_and_benchmarks::ozk::bfield_codec::try_decode_from_memory_using_size;
+use crate::tests_and_benchmarks::ozk::programs::recufier::verify::FriVerify;
+use crate::triton_vm::arithmetic_domain::ArithmeticDomain;
+use crate::triton_vm::fri::AuthenticationStructure;
+use crate::triton_vm::fri::Fri;
+use crate::triton_vm::proof_item::FriResponse;
+use crate::triton_vm::proof_stream::ProofStream;
 
 thread_local! {
     static PUB_INPUT: RefCell<Vec<BFieldElement>> = RefCell::new(vec![]);
@@ -209,23 +222,41 @@ pub(super) fn tasm_recufier_read_and_verify_own_program_digest_from_std_in() -> 
     tasm_io_read_stdin___digest()
 }
 
-use crate::tests_and_benchmarks::ozk::programs::recufier::verify::FriVerify;
 pub(super) fn tasm_recufier_fri_verify(
     proof_iter: &mut VmProofIter,
     fri_parameters: Box<FriVerify>,
+    sponge_state: &mut Tip5State,
 ) -> Vec<(u32, XFieldElement)> {
-    vec![]
+    let fri = fri_parameters.to_fri();
+    let proof_stream_before_fri = proof_iter
+        .to_owned()
+        .into_proof_stream(sponge_state.to_owned());
+    let mut proof_stream = proof_stream_before_fri.clone();
+    let indexed_leaves = fri.verify(&mut proof_stream, &mut None).unwrap();
+
+    let num_items_used_by_fri = proof_stream.items_index - proof_stream_before_fri.items_index;
+    proof_iter.advance_by(num_items_used_by_fri).unwrap();
+    *sponge_state = proof_stream.sponge_state;
+
+    indexed_leaves
+        .into_iter()
+        .map(|(idx, leaf)| (idx as u32, leaf))
+        .collect()
 }
 
-use num::One;
-use tasm_lib::triton_vm::proof_item::ProofItem;
-use tasm_lib::triton_vm::proof_item::ProofItemVariant;
-use tasm_lib::twenty_first::shared_math::tip5::Tip5State;
-use tasm_lib::twenty_first::util_types::algebraic_hasher::SpongeHasher;
+impl FriVerify {
+    fn to_fri(self) -> Fri<Tip5> {
+        let fri_domain = ArithmeticDomain::of_length(self.domain_length as usize)
+            .with_offset(self.domain_offset);
+        let maybe_fri = Fri::new(
+            fri_domain,
+            self.expansion_factor as usize,
+            self.num_colinearity_checks as usize,
+        );
 
-use crate::tests_and_benchmarks::ozk::bfield_codec::decode_from_memory_using_size;
-use crate::triton_vm::fri::AuthenticationStructure;
-use crate::triton_vm::proof_item::FriResponse;
+        maybe_fri.unwrap()
+    }
+}
 
 /// This struct should only be seen be `rustc`, not by `tasm-lang`
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
@@ -239,6 +270,42 @@ impl VmProofIter {
             current_item_pointer: BFieldElement::new(2),
         }
     }
+
+    /// Advances by the given number of proof items or until the end of the iterator is reached.
+    /// Returns an `Err` in the latter case.
+    fn advance_by(&mut self, num_items: usize) -> Result<(), ()> {
+        for _ in 0..num_items {
+            self.decode_current_item().ok_or(())?;
+        }
+        Ok(())
+    }
+
+    fn into_proof_stream(mut self, sponge_state: Tip5State) -> ProofStream<Tip5> {
+        let mut items = vec![];
+        while let Some(item) = self.decode_current_item() {
+            items.push(item);
+        }
+
+        ProofStream {
+            items,
+            items_index: 0,
+            sponge_state,
+        }
+    }
+
+    fn decode_current_item(&mut self) -> Option<ProofItem> {
+        let item_size_pointer = self.current_item_pointer;
+        let item_size =
+            try_decode_from_memory_using_size::<BFieldElement>(item_size_pointer, 1).ok()?;
+        let item_size = item_size.value() as usize;
+
+        let discriminant_pointer = self.current_item_pointer + BFieldElement::one();
+        let proof_item =
+            try_decode_from_memory_using_size::<ProofItem>(discriminant_pointer, item_size).ok()?;
+        self.current_item_pointer += BFieldElement::new(item_size as u64 + 1);
+
+        Some(*proof_item)
+    }
 }
 
 macro_rules! vm_proof_iter_impl {
@@ -248,8 +315,8 @@ macro_rules! vm_proof_iter_impl {
             pub(super) fn $next_as_fn(&mut self, sponge_state: &mut Tip5State) -> Box<$payload> {
                 let read_size_from_ram = || {
                     let item_pointer = self.current_item_pointer;
-                    let bfe = decode_from_memory_using_size::<BFieldElement>(item_pointer, 1);
-                    bfe.value() as usize
+                    let bfe = try_decode_from_memory_using_size::<BFieldElement>(item_pointer, 1);
+                    bfe.unwrap().value() as usize
                 };
                 let item_size = ProofItemVariant::$variant
                     .payload_static_length()
@@ -258,7 +325,8 @@ macro_rules! vm_proof_iter_impl {
 
                 let discriminant_pointer = self.current_item_pointer + BFieldElement::one();
                 let proof_item =
-                    decode_from_memory_using_size::<ProofItem>(discriminant_pointer, item_size);
+                    try_decode_from_memory_using_size::<ProofItem>(discriminant_pointer, item_size)
+                        .unwrap();
 
                 self.current_item_pointer += BFieldElement::new(item_size as u64 + 1);
 

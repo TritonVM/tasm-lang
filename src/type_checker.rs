@@ -1,14 +1,16 @@
-use anyhow::bail;
-use itertools::Itertools;
-use num::One;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::fmt::Display;
+
+use anyhow::bail;
+use itertools::Itertools;
+use num::One;
 use tasm_lib::triton_vm::prelude::*;
 
 use crate::ast;
+use crate::ast::MethodCall;
 use crate::ast::TupleDestructStmt;
-use crate::ast::{MethodCall, UnaryOp};
+use crate::ast::UnaryOp;
 use crate::ast_types;
 use crate::composite_types::CompositeTypes;
 use crate::libraries;

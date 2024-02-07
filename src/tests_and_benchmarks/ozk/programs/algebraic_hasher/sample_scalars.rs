@@ -1,5 +1,6 @@
 use tasm_lib::twenty_first::shared_math::tip5::Tip5State;
-use tasm_lib::twenty_first::util_types::algebraic_hasher::{AlgebraicHasher, SpongeHasher};
+use tasm_lib::twenty_first::util_types::algebraic_hasher::AlgebraicHasher;
+use tasm_lib::twenty_first::util_types::algebraic_hasher::SpongeHasher;
 
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 use crate::tests_and_benchmarks::test_helpers::shared_test::TritonVMTestCase;
