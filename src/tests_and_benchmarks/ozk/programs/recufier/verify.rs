@@ -62,6 +62,16 @@ impl StarkParameters {
     }
 }
 
+struct Challenges {
+    pub challenges: [XFieldElement; 63],
+}
+
+impl Challenges {
+    const fn count() -> usize {
+        return 63;
+    }
+}
+
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 struct Recufier;
 
@@ -95,11 +105,29 @@ struct RecufyDebug;
 impl RecufyDebug {
     pub fn dump_u32(thing: u32) {
         tasm::tasm_io_write_to_stdout___u32(thing);
+
         return;
     }
 
     pub fn dump_xfe(thing: XFieldElement) {
         tasm::tasm_io_write_to_stdout___xfe(thing);
+
+        return;
+    }
+
+    pub fn dump_digest(digest: Digest) {
+        tasm::tasm_io_write_to_stdout___digest(digest);
+
+        return;
+    }
+
+    pub fn dump_xfes(xfes: &Vec<XFieldElement>) {
+        let mut i: usize = 0;
+        while i < xfes.len() {
+            tasm::tasm_io_write_to_stdout___xfe(xfes[i]);
+            i += 1;
+        }
+
         return;
     }
 
@@ -109,6 +137,7 @@ impl RecufyDebug {
             tasm::tasm_io_write_to_stdout___bfe(rate[i]);
             i += 1;
         }
+
         return;
     }
 }
@@ -123,8 +152,8 @@ pub(crate) struct FriVerify {
 }
 
 pub fn recufy() {
-    let parameters: Box<StarkParameters> = Box::<StarkParameters>::new(StarkParameters::small());
     let own_digest: Digest = tasm::tasm_recufier_read_and_verify_own_program_digest_from_std_in();
+    let parameters: Box<StarkParameters> = Box::<StarkParameters>::new(StarkParameters::small());
 
     Tip5WithState::init();
     let encoded_claim: Vec<BFieldElement> = Recufier::encode_claim(own_digest);
@@ -137,11 +166,25 @@ pub fn recufy() {
     RecufyDebug::dump_u32(padded_height);
 
     let fri: Box<FriVerify> = Box::<FriVerify>::new(parameters.derive_fri(padded_height));
-    let revealed_indexed_leaves: Vec<(u32, XFieldElement)> =
-        tasm::tasm_recufier_fri_verify(&mut proof_iter, fri);
+    let merkle_tree_height: usize = fri.domain_length.ilog2() as usize;
+
+    let base_merkle_tree_root: Box<Digest> = proof_iter.next_as_merkleroot();
+    RecufyDebug::dump_digest(*base_merkle_tree_root);
+
+    let extension_challenge_weights: Vec<XFieldElement> =
+        Tip5WithState::sample_scalars(Challenges::count());
+    RecufyDebug::dump_xfes(&extension_challenge_weights);
+
+    let extension_tree_merkle_root: Box<Digest> = proof_iter.next_as_merkleroot();
+    RecufyDebug::dump_digest(*extension_tree_merkle_root);
+
+    // let quot_codeword_weights: Vec<XFieldElement> = Tip5WithState::sample_scalars(num_quotients());
+
+    // let revealed_indexed_leaves: Vec<(u32, XFieldElement)> =
+    //     tasm::tasm_recufier_fri_verify(&mut proof_iter, fri);
 
     let out_of_domain_base_row: Box<Vec<XFieldElement>> = proof_iter.next_as_outofdomainbaserow();
-    RecufyDebug::dump_xfe(out_of_domain_base_row[0]);
+    RecufyDebug::dump_xfes(&out_of_domain_base_row);
 
     RecufyDebug::sponge_state(Tip5WithState::squeeze());
     return;
@@ -179,9 +222,14 @@ mod tests {
     fn proof() -> Proof {
         let to_xfe = |n| XFieldElement::new_u64([n; 3]);
         let dummy_ood_base_row = (1001..1005).map(to_xfe).collect_vec();
+        let dummy_digest_base_mt = Digest::new([42u64, 43, 44, 45, 46].map(BFieldElement::new));
+        let dummy_digest_extension_mt =
+            Digest::new([100u64, 101, 102, 103, 104].map(BFieldElement::new));
 
         let mut proof_stream = ProofStream::<Tip5>::new();
         proof_stream.enqueue(ProofItem::Log2PaddedHeight(22));
+        proof_stream.enqueue(ProofItem::MerkleRoot(dummy_digest_base_mt));
+        proof_stream.enqueue(ProofItem::MerkleRoot(dummy_digest_extension_mt));
         proof_stream.enqueue(ProofItem::OutOfDomainBaseRow(dummy_ood_base_row));
         proof_stream.into()
     }
@@ -195,6 +243,14 @@ mod tests {
             .collect();
 
         NonDeterminism::default().with_ram(ram)
+    }
+
+    #[test]
+    fn local_challenges_count_agrees_with_tvm() {
+        assert_eq!(
+            triton_vm::table::challenges::Challenges::count(),
+            Challenges::count()
+        );
     }
 
     #[test]
