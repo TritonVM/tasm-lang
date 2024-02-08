@@ -10,6 +10,7 @@ use std::collections::HashMap;
 use std::thread_local;
 use std::vec::Vec;
 
+use itertools::Itertools;
 use num::One;
 use num::Zero;
 use tasm_lib::triton_vm::prelude::*;
@@ -20,7 +21,6 @@ use tasm_lib::twenty_first::shared_math::tip5::RATE;
 use tasm_lib::twenty_first::util_types::algebraic_hasher::AlgebraicHasher;
 use tasm_lib::twenty_first::util_types::algebraic_hasher::SpongeHasher;
 
-use crate::tests_and_benchmarks::ozk::bfield_codec::try_decode_from_memory_using_size;
 use crate::tests_and_benchmarks::ozk::programs::recufier::verify::FriVerify;
 use crate::triton_vm::arithmetic_domain::ArithmeticDomain;
 use crate::triton_vm::fri::AuthenticationStructure;
@@ -34,9 +34,9 @@ thread_local! {
 
     static ND_INDIVIDUAL_TOKEN: RefCell<Vec<BFieldElement>> = RefCell::new(vec![]);
     static ND_DIGESTS: RefCell<Vec<Digest>> = RefCell::new(vec![]);
-    pub(super) static ND_MEMORY: RefCell<HashMap<BFieldElement, BFieldElement>> =
+    static ND_MEMORY: RefCell<HashMap<BFieldElement, BFieldElement>> =
         RefCell::new(HashMap::default());
-    pub(super) static SPONGE_STATE: RefCell<Option<Tip5State>> = RefCell::new(None);
+    static SPONGE_STATE: RefCell<Option<Tip5State>> = RefCell::new(None);
 }
 
 pub(super) struct Tip5WithState;
@@ -342,6 +342,27 @@ impl VmProofIter {
 
         Some(*proof_item)
     }
+}
+
+pub fn try_decode_from_memory_using_size<T: BFieldCodec>(
+    address: BFieldElement,
+    item_size: usize,
+) -> Result<Box<T>, <T as BFieldCodec>::Error> {
+    ND_MEMORY
+        .with(|mem| inner_try_decode_from_memory_using_size::<T>(&mem.borrow(), address, item_size))
+}
+
+fn inner_try_decode_from_memory_using_size<T: BFieldCodec>(
+    memory: &HashMap<BFieldElement, BFieldElement>,
+    address: BFieldElement,
+    item_size: usize,
+) -> Result<Box<T>, <T as BFieldCodec>::Error> {
+    let sequence = (0..item_size)
+        .map(|i| address + BFieldElement::new(i as u64))
+        .map(|b| memory.get(&b).copied().unwrap_or(BFieldElement::new(0)))
+        .collect_vec();
+
+    T::decode(&sequence)
 }
 
 macro_rules! vm_proof_iter_impl {
