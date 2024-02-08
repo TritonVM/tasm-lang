@@ -54,7 +54,6 @@ pub(crate) fn all_libraries<'a>(config: LibraryConfig) -> Vec<Box<dyn Library + 
         Box::new(vector::VectorLib {
             list_type: config.list_type,
         }),
-        Box::new(vm_proof_iter::VmProofIterLib),
         Box::new(xfe::XfeLibrary),
     ]
 }

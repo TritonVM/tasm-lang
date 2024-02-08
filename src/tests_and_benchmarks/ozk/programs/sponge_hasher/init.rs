@@ -1,22 +1,20 @@
 use num::Zero;
 use tasm_lib::twenty_first::shared_math::other::random_elements;
-use tasm_lib::twenty_first::shared_math::tip5::Tip5State;
-use tasm_lib::twenty_first::util_types::algebraic_hasher::SpongeHasher;
 
 use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
-use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 use crate::tests_and_benchmarks::ozk::rust_shadows::wrap_main_with_io;
+use crate::tests_and_benchmarks::ozk::rust_shadows::{self as tasm, Tip5WithState};
 use crate::tests_and_benchmarks::test_helpers::shared_test::TritonVMTestCase;
 use crate::triton_vm::prelude::*;
 
 fn _main() {
-    let _sponge: Tip5State = Tip5::init();
+    Tip5WithState::init();
     return;
 }
 
 fn initialized_sponge_behaves_correctly_on_small_stack() {
     let b: u64 = 100;
-    let _sponge: Tip5State = Tip5::init();
+    Tip5WithState::init();
     let a: u64 = 400;
     tasm::tasm_io_write_to_stdout___u64(b);
     tasm::tasm_io_write_to_stdout___u64(a);
@@ -26,7 +24,7 @@ fn initialized_sponge_behaves_correctly_on_small_stack() {
 fn initialized_sponge_behaves_correctly_deep_in_stack() {
     let a: u128 = 100;
     let b: u128 = 200;
-    let mut sponge: Tip5State = Tip5::init();
+    Tip5WithState::init();
     let mut preimage: [BFieldElement; 10] = [BFieldElement::zero(); 10];
     {
         let mut i: usize = 0;
@@ -46,7 +44,7 @@ fn initialized_sponge_behaves_correctly_deep_in_stack() {
     let _j: u128 = 1000;
     tasm::tasm_io_write_to_stdout___u128(b);
     tasm::tasm_io_write_to_stdout___u128(a);
-    Tip5::absorb(&mut sponge, preimage);
+    Tip5WithState::absorb(preimage);
 
     return;
 }

@@ -63,10 +63,6 @@ impl FromStr for DataType {
             "BFieldElement" => Ok(DataType::Bfe),
             "XFieldElement" => Ok(DataType::Xfe),
             "Digest" => Ok(DataType::Digest),
-
-            // The VM has a built-in sponge state, so from the perspective of this
-            // compiler, it's a unit data type.
-            "Tip5State" => Ok(DataType::unit()),
             ty => bail!("Unsupported type {}", ty),
         }
     }
@@ -111,9 +107,6 @@ impl DataType {
             "XFieldElement" => Ok(DataType::Xfe),
             "Digest" => Ok(DataType::Digest),
 
-            // The VM has a built-in sponge state, so from the perspective of this
-            // compiler, it's a unit data type.
-            "Tip5State" => Ok(DataType::unit()),
             "AuthenticationStructure" => Ok(DataType::List(Box::new(DataType::Digest), list_type)),
             "FriResponse" => Ok(DataType::Unresolved(type_str.to_owned())),
             _ => todo!("{type_str}"),

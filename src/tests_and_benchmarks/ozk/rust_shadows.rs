@@ -16,6 +16,8 @@ use tasm_lib::triton_vm::prelude::*;
 use tasm_lib::triton_vm::proof_item::ProofItem;
 use tasm_lib::triton_vm::proof_item::ProofItemVariant;
 use tasm_lib::twenty_first::shared_math::tip5::Tip5State;
+use tasm_lib::twenty_first::shared_math::tip5::RATE;
+use tasm_lib::twenty_first::util_types::algebraic_hasher::AlgebraicHasher;
 use tasm_lib::twenty_first::util_types::algebraic_hasher::SpongeHasher;
 
 use crate::tests_and_benchmarks::ozk::bfield_codec::try_decode_from_memory_using_size;
@@ -34,6 +36,37 @@ thread_local! {
     static ND_DIGESTS: RefCell<Vec<Digest>> = RefCell::new(vec![]);
     pub(super) static ND_MEMORY: RefCell<HashMap<BFieldElement, BFieldElement>> =
         RefCell::new(HashMap::default());
+    pub(super) static SPONGE_STATE: RefCell<Option<Tip5State>> = RefCell::new(None);
+}
+
+pub(super) struct Tip5WithState;
+
+impl Tip5WithState {
+    pub(super) fn init() {
+        SPONGE_STATE.with_borrow_mut(|v| {
+            *v = Some(Tip5::init());
+        });
+    }
+
+    pub(super) fn absorb(input: [BFieldElement; RATE]) {
+        SPONGE_STATE.with_borrow_mut(|v| {
+            Tip5::absorb(v.as_mut().unwrap(), input);
+        });
+    }
+
+    pub(super) fn squeeze() -> [BFieldElement; RATE] {
+        SPONGE_STATE.with_borrow_mut(|v| Tip5::squeeze(v.as_mut().unwrap()))
+    }
+
+    pub(super) fn pad_and_absorb_all(input: &[BFieldElement]) {
+        SPONGE_STATE.with_borrow_mut(|v| {
+            Tip5::pad_and_absorb_all(v.as_mut().unwrap(), input);
+        });
+    }
+
+    pub(super) fn sample_scalars(num_elements: usize) -> Vec<XFieldElement> {
+        SPONGE_STATE.with_borrow_mut(|v| Tip5::sample_scalars(v.as_mut().unwrap(), num_elements))
+    }
 }
 
 pub(super) fn load_from_memory(start_address: BFieldElement) -> Vec<BFieldElement> {
@@ -54,7 +87,7 @@ pub(super) fn load_from_memory(start_address: BFieldElement) -> Vec<BFieldElemen
     sorted_values
 }
 
-pub(super) fn init_io(
+pub(super) fn init_vm_state(
     pub_input: Vec<BFieldElement>,
     non_determinism: NonDeterminism<BFieldElement>,
 ) {
@@ -80,6 +113,9 @@ pub(super) fn init_io(
     });
     PUB_OUTPUT.with(|v| {
         *v.borrow_mut() = vec![];
+    });
+    SPONGE_STATE.with_borrow_mut(|v| {
+        *v = None;
     });
 }
 
@@ -209,7 +245,7 @@ pub(super) fn wrap_main_with_io(
 ) -> Box<dyn Fn(Vec<BFieldElement>, NonDeterminism<BFieldElement>) -> Vec<BFieldElement>> {
     Box::new(
         |input: Vec<BFieldElement>, non_determinism: NonDeterminism<BFieldElement>| {
-            init_io(input, non_determinism);
+            init_vm_state(input, non_determinism);
             main_func();
             get_pub_output()
         },
@@ -225,23 +261,23 @@ pub(super) fn tasm_recufier_read_and_verify_own_program_digest_from_std_in() -> 
 pub(super) fn tasm_recufier_fri_verify(
     proof_iter: &mut VmProofIter,
     fri_parameters: Box<FriVerify>,
-    sponge_state: &mut Tip5State,
 ) -> Vec<(u32, XFieldElement)> {
     let fri = fri_parameters.to_fri();
-    let proof_stream_before_fri = proof_iter
-        .to_owned()
-        .into_proof_stream(sponge_state.to_owned());
-    let mut proof_stream = proof_stream_before_fri.clone();
-    let indexed_leaves = fri.verify(&mut proof_stream, &mut None).unwrap();
-
-    let num_items_used_by_fri = proof_stream.items_index - proof_stream_before_fri.items_index;
-    proof_iter.advance_by(num_items_used_by_fri).unwrap();
-    *sponge_state = proof_stream.sponge_state;
-
-    indexed_leaves
-        .into_iter()
-        .map(|(idx, leaf)| (idx as u32, leaf))
-        .collect()
+    SPONGE_STATE.with_borrow_mut(|maybe_sponge_state| {
+        let sponge_state = maybe_sponge_state.as_mut().unwrap();
+        let proof_stream_before_fri = proof_iter
+            .to_owned()
+            .into_proof_stream(sponge_state.to_owned());
+        let mut proof_stream = proof_stream_before_fri.clone();
+        let indexed_leaves = fri.verify(&mut proof_stream, &mut None).unwrap();
+        let num_items_used_by_fri = proof_stream.items_index - proof_stream_before_fri.items_index;
+        proof_iter.advance_by(num_items_used_by_fri).unwrap();
+        *sponge_state = proof_stream.sponge_state;
+        indexed_leaves
+            .into_iter()
+            .map(|(idx, leaf)| (idx as u32, leaf))
+            .collect()
+    })
 }
 
 impl FriVerify {
@@ -312,30 +348,35 @@ macro_rules! vm_proof_iter_impl {
     ($($variant:ident($payload:ty) defines $next_as_fn:ident uses $try_into_fn:ident,)+) => {
         impl VmProofIter {
             $(
-            pub(super) fn $next_as_fn(&mut self, sponge_state: &mut Tip5State) -> Box<$payload> {
+            pub(super) fn $next_as_fn(&mut self) -> Box<$payload> {
+                // let mut sponge_state = SPONGE_STATE.with_borrow_mut(|v| v.as_mut().unwrap());
+                // SPONGE_STATE.
                 let read_size_from_ram = || {
                     let item_pointer = self.current_item_pointer;
                     let bfe = try_decode_from_memory_using_size::<BFieldElement>(item_pointer, 1);
                     bfe.unwrap().value() as usize
                 };
                 let item_size = ProofItemVariant::$variant
-                    .payload_static_length()
-                    .map(|x| x + 1)
-                    .unwrap_or_else(read_size_from_ram);
+                .payload_static_length()
+                .map(|x| x + 1)
+                .unwrap_or_else(read_size_from_ram);
 
-                let discriminant_pointer = self.current_item_pointer + BFieldElement::one();
-                let proof_item =
-                    try_decode_from_memory_using_size::<ProofItem>(discriminant_pointer, item_size)
-                        .unwrap();
+            let discriminant_pointer = self.current_item_pointer + BFieldElement::one();
+            let proof_item =
+            try_decode_from_memory_using_size::<ProofItem>(discriminant_pointer, item_size)
+            .unwrap();
 
-                self.current_item_pointer += BFieldElement::new(item_size as u64 + 1);
+        self.current_item_pointer += BFieldElement::new(item_size as u64 + 1);
 
-                if ProofItemVariant::$variant.include_in_fiat_shamir_heuristic() {
+        if ProofItemVariant::$variant.include_in_fiat_shamir_heuristic() {
+                SPONGE_STATE.with_borrow_mut(|maybe_sponge_state| {
+                    let sponge_state = maybe_sponge_state.as_mut().unwrap();
                     Tip5::pad_and_absorb_all(sponge_state, &proof_item.encode());
-                }
+                })
+            }
 
-                let payload = proof_item.$try_into_fn().unwrap();
-                Box::new(payload)
+            let payload = proof_item.$try_into_fn().unwrap();
+            Box::new(payload)
             }
         )+
         }

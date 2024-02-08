@@ -1,4 +1,3 @@
-use itertools::Itertools;
 use strum::IntoEnumIterator;
 use syn::parse_quote;
 use tasm_lib::traits::basic_snippet::BasicSnippet;
@@ -13,115 +12,10 @@ use crate::composite_types::TypeContext;
 use crate::graft::Graft;
 use crate::type_checker::Typing;
 
-use super::Library;
-
 const NEXT_AS_METHOD_NAMES_PREFIX: &str = "next_as_";
 
 #[derive(Debug)]
 pub(crate) struct VmProofIterLib;
-
-impl Library for VmProofIterLib {
-    fn get_function_name(&self, _full_name: &str) -> Option<String> {
-        None
-    }
-
-    fn get_method_name(
-        &self,
-        _method_name: &str,
-        _receiver_type: &crate::ast_types::DataType,
-    ) -> Option<String> {
-        None
-    }
-
-    fn method_name_to_signature(
-        &self,
-        _fn_name: &str,
-        _receiver_type: &crate::ast_types::DataType,
-        _args: &[ast::Expr<super::Annotation>],
-        _type_checker_state: &crate::type_checker::CheckState,
-    ) -> ast::FnSignature {
-        todo!()
-    }
-
-    fn function_name_to_signature(
-        &self,
-        _fn_name: &str,
-        _type_parameter: Option<crate::ast_types::DataType>,
-        _args: &[ast::Expr<super::Annotation>],
-    ) -> ast::FnSignature {
-        todo!()
-    }
-
-    fn call_method(
-        &self,
-        _method_name: &str,
-        _receiver_type: &crate::ast_types::DataType,
-        _args: &[ast::Expr<super::Annotation>],
-        _state: &mut crate::tasm_code_generator::CompilerState,
-    ) -> Vec<tasm_lib::prelude::triton_vm::prelude::LabelledInstruction> {
-        todo!()
-    }
-
-    fn call_function(
-        &self,
-        _fn_name: &str,
-        _type_parameter: Option<crate::ast_types::DataType>,
-        _args: &[ast::Expr<super::Annotation>],
-        _state: &mut crate::tasm_code_generator::CompilerState,
-    ) -> Vec<tasm_lib::prelude::triton_vm::prelude::LabelledInstruction> {
-        todo!()
-    }
-
-    fn get_graft_function_name(&self, _full_name: &str) -> Option<String> {
-        None
-    }
-
-    fn graft_function(
-        &self,
-        _graft_config: &mut Graft,
-        _fn_name: &str,
-        _args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
-        _type_parameter: Option<crate::ast_types::DataType>,
-    ) -> Option<ast::Expr<super::Annotation>> {
-        todo!()
-    }
-
-    fn graft_method_call(
-        &self,
-        graft_config: &mut Graft,
-        rust_method_call: &syn::ExprMethodCall,
-    ) -> Option<ast::Expr<super::Annotation>> {
-        let method_name = rust_method_call.method.to_string();
-        if !method_name.starts_with(NEXT_AS_METHOD_NAMES_PREFIX) {
-            return None;
-        }
-
-        let all_method_names = all_next_as_method_names();
-        if !all_method_names.contains(&method_name) {
-            return None;
-        }
-
-        // If argument has already been stripped, do nothing. The below code strips the
-        // argument which is assumed to be `&mut sponge_hasher`.
-        if rust_method_call.args.is_empty() {
-            return None;
-        }
-
-        // Verify that `args` looks as expected
-        let [_arg] = rust_method_call.args.iter().collect_vec()[..] else {
-            panic!(
-                "{method_name} expects exactly one argument in addition to its receiver. Got: {:?}\nmethod call was:\n{:#?}",
-                rust_method_call.args,
-                rust_method_call
-            );
-        };
-
-        let mut method_call_without_spongehasher_arg = rust_method_call.clone();
-        method_call_without_spongehasher_arg.args.clear();
-
-        Some(graft_config.graft_method_call(&method_call_without_spongehasher_arg))
-    }
-}
 
 impl VmProofIterLib {
     pub(crate) fn vm_proof_iter_type(graft_config: &mut Graft) -> TypeContext {
@@ -191,12 +85,6 @@ fn fri_response_as_struct_type(graft_config: &mut Graft) -> StructType {
     };
 
     graft_config.graft_struct_type(&item_struct)
-}
-
-fn all_next_as_method_names() -> Vec<String> {
-    ProofItemVariant::iter()
-        .map(|x| method_name_for_next_as(&x))
-        .collect()
 }
 
 fn method_name_for_next_as(variant: &ProofItemVariant) -> String {

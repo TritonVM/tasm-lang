@@ -1,12 +1,10 @@
-use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
+use crate::tests_and_benchmarks::ozk::rust_shadows::{self as tasm, Tip5WithState};
 use crate::tests_and_benchmarks::test_helpers::shared_test::TritonVMTestCase;
 use crate::triton_vm::prelude::*;
 use num::Zero;
-use tasm_lib::twenty_first::shared_math::tip5::Tip5State;
-use tasm_lib::twenty_first::util_types::algebraic_hasher::SpongeHasher;
 
 fn absorb_and_squeeze() {
-    let mut sponge: Tip5State = Tip5::init();
+    Tip5WithState::init();
     let mut preimage: [BFieldElement; 10] = [BFieldElement::zero(); 10];
     {
         let mut i: usize = 0;
@@ -16,8 +14,8 @@ fn absorb_and_squeeze() {
         }
     }
 
-    Tip5::absorb(&mut sponge, preimage);
-    let squeezed: [BFieldElement; 10] = Tip5::squeeze(&mut sponge);
+    Tip5WithState::absorb(preimage);
+    let squeezed: [BFieldElement; 10] = Tip5WithState::squeeze();
     {
         let mut i: usize = 0;
         while i < 10 {

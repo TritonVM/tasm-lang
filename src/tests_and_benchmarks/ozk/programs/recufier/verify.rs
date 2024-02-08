@@ -3,8 +3,8 @@ use num::Zero;
 use serde_derive::Serialize;
 
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
+use crate::tests_and_benchmarks::ozk::rust_shadows::Tip5WithState;
 use crate::tests_and_benchmarks::ozk::rust_shadows::VmProofIter;
-use crate::triton_vm::prelude::tip5::Tip5State;
 use crate::twenty_first::prelude::*;
 use crate::twenty_first::shared_math::traits::PrimitiveRootOfUnity;
 
@@ -126,25 +126,24 @@ pub fn recufy() {
     let parameters: Box<StarkParameters> = Box::<StarkParameters>::new(StarkParameters::small());
     let own_digest: Digest = tasm::tasm_recufier_read_and_verify_own_program_digest_from_std_in();
 
-    let mut sponge_state: Tip5State = Tip5::init();
+    Tip5WithState::init();
     let encoded_claim: Vec<BFieldElement> = Recufier::encode_claim(own_digest);
-    Tip5::pad_and_absorb_all(&mut sponge_state, &encoded_claim);
+    Tip5WithState::pad_and_absorb_all(&encoded_claim);
 
     let inner_proof_iter: VmProofIter = VmProofIter::new();
     let mut proof_iter: Box<VmProofIter> = Box::<VmProofIter>::new(inner_proof_iter);
-    let log_2_padded_height: Box<u32> = proof_iter.next_as_log2paddedheight(&mut sponge_state);
+    let log_2_padded_height: Box<u32> = proof_iter.next_as_log2paddedheight();
     let padded_height: u32 = 1 << *log_2_padded_height;
     RecufyDebug::dump_u32(padded_height);
 
     let fri: Box<FriVerify> = Box::<FriVerify>::new(parameters.derive_fri(padded_height));
     let revealed_indexed_leaves: Vec<(u32, XFieldElement)> =
-        tasm::tasm_recufier_fri_verify(&mut proof_iter, fri, &mut sponge_state);
+        tasm::tasm_recufier_fri_verify(&mut proof_iter, fri);
 
-    let out_of_domain_base_row: Box<Vec<XFieldElement>> =
-        proof_iter.next_as_outofdomainbaserow(&mut sponge_state);
+    let out_of_domain_base_row: Box<Vec<XFieldElement>> = proof_iter.next_as_outofdomainbaserow();
     RecufyDebug::dump_xfe(out_of_domain_base_row[0]);
 
-    RecufyDebug::sponge_state(Tip5::squeeze(&mut sponge_state));
+    RecufyDebug::sponge_state(Tip5WithState::squeeze());
     return;
 }
 

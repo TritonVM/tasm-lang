@@ -1,13 +1,10 @@
-use tasm_lib::twenty_first::shared_math::tip5::Tip5State;
-use tasm_lib::twenty_first::util_types::algebraic_hasher::AlgebraicHasher;
-use tasm_lib::twenty_first::util_types::algebraic_hasher::SpongeHasher;
-
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
+use crate::tests_and_benchmarks::ozk::rust_shadows::Tip5WithState;
 use crate::tests_and_benchmarks::test_helpers::shared_test::TritonVMTestCase;
 use crate::triton_vm::prelude::*;
 
 fn sample_scalars() {
-    let mut sponge: Tip5State = Tip5::init();
+    Tip5WithState::init();
     let input_count: usize = tasm::tasm_io_read_stdin___u32() as usize;
     let mut preimage: Vec<BFieldElement> = Vec::<BFieldElement>::with_capacity(input_count + 20);
     {
@@ -18,10 +15,10 @@ fn sample_scalars() {
         }
     }
     assert!(input_count == preimage.len());
-    Tip5::pad_and_absorb_all(&mut sponge, &preimage);
+    Tip5WithState::pad_and_absorb_all(&preimage);
 
     let scalar_count: usize = tasm::tasm_io_read_stdin___u32() as usize;
-    let scalars: Vec<XFieldElement> = Tip5::sample_scalars(&mut sponge, scalar_count);
+    let scalars: Vec<XFieldElement> = Tip5WithState::sample_scalars(scalar_count);
 
     {
         let mut i: usize = 0;
