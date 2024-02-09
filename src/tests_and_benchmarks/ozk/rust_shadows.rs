@@ -20,6 +20,7 @@ use tasm_lib::twenty_first::shared_math::tip5::Tip5State;
 use tasm_lib::twenty_first::shared_math::tip5::RATE;
 use tasm_lib::twenty_first::util_types::algebraic_hasher::AlgebraicHasher;
 use tasm_lib::twenty_first::util_types::algebraic_hasher::SpongeHasher;
+use tasm_lib::twenty_first::util_types::merkle_tree::MerkleTreeInclusionProof;
 
 use crate::tests_and_benchmarks::ozk::programs::recufier::verify::FriVerify;
 use crate::triton_vm::arithmetic_domain::ArithmeticDomain;
@@ -127,6 +128,12 @@ pub(super) fn get_pub_output() -> Vec<BFieldElement> {
 pub(super) fn tasm_io_read_stdin___bfe() -> BFieldElement {
     #[allow(clippy::unwrap_used)]
     PUB_INPUT.with(|v| v.borrow_mut().pop().unwrap())
+}
+
+#[allow(non_snake_case)]
+pub(super) fn tasm_io_read_secin___bfe() -> BFieldElement {
+    #[allow(clippy::unwrap_used)]
+    ND_INDIVIDUAL_TOKEN.with(|v| v.borrow_mut().pop().unwrap())
 }
 
 #[allow(non_snake_case)]
@@ -250,6 +257,31 @@ pub(super) fn wrap_main_with_io(
             get_pub_output()
         },
     )
+}
+
+// Hashing-related shadows
+pub(super) fn tasm_hashing_merkle_verify(
+    root: Digest,
+    leaf_index: u32,
+    leaf: Digest,
+    tree_height: u32,
+) {
+    let mut path: Vec<Digest> = vec![];
+
+    ND_DIGESTS.with_borrow_mut(|nd_digests| {
+        for _ in 0..tree_height {
+            path.push(nd_digests.pop().unwrap());
+        }
+    });
+
+    let mt_inclusion_proof = MerkleTreeInclusionProof::<Tip5> {
+        tree_height: tree_height as usize,
+        indexed_leaves: vec![(leaf_index as usize, leaf)],
+        authentication_structure: path,
+        _hasher: std::marker::PhantomData,
+    };
+
+    assert!(mt_inclusion_proof.verify(root));
 }
 
 /// Note: the rust shadowing does not actually assert digest equivalence – it has no way of knowing

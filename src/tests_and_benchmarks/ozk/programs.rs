@@ -7,6 +7,7 @@ mod enums;
 mod match_expr_boxed;
 mod match_expr_on_stack;
 mod match_stmt_boxed;
+mod neptune_consensus;
 mod option_types;
 mod other;
 mod project_euler;
