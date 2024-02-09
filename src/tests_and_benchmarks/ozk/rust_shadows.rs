@@ -258,20 +258,20 @@ pub(super) fn tasm_recufier_read_and_verify_own_program_digest_from_std_in() -> 
     tasm_io_read_stdin___digest()
 }
 
-pub(super) fn tasm_recufier_fri_verify(
+pub(super) fn _tasm_recufier_fri_verify(
     proof_iter: &mut VmProofIter,
-    fri_parameters: Box<FriVerify>,
+    fri_parameters: &FriVerify,
 ) -> Vec<(u32, XFieldElement)> {
-    let fri = fri_parameters.to_fri();
+    let fri = fri_parameters._to_fri();
     SPONGE_STATE.with_borrow_mut(|maybe_sponge_state| {
         let sponge_state = maybe_sponge_state.as_mut().unwrap();
         let proof_stream_before_fri = proof_iter
             .to_owned()
-            .into_proof_stream(sponge_state.to_owned());
+            ._into_proof_stream(sponge_state.to_owned());
         let mut proof_stream = proof_stream_before_fri.clone();
         let indexed_leaves = fri.verify(&mut proof_stream, &mut None).unwrap();
         let num_items_used_by_fri = proof_stream.items_index - proof_stream_before_fri.items_index;
-        proof_iter.advance_by(num_items_used_by_fri).unwrap();
+        proof_iter._advance_by(num_items_used_by_fri).unwrap();
         *sponge_state = proof_stream.sponge_state;
         indexed_leaves
             .into_iter()
@@ -281,7 +281,7 @@ pub(super) fn tasm_recufier_fri_verify(
 }
 
 impl FriVerify {
-    fn to_fri(self) -> Fri<Tip5> {
+    fn _to_fri(&self) -> Fri<Tip5> {
         let fri_domain = ArithmeticDomain::of_length(self.domain_length as usize)
             .with_offset(self.domain_offset);
         let maybe_fri = Fri::new(
@@ -309,16 +309,16 @@ impl VmProofIter {
 
     /// Advances by the given number of proof items or until the end of the iterator is reached.
     /// Returns an `Err` in the latter case.
-    fn advance_by(&mut self, num_items: usize) -> Result<(), ()> {
+    fn _advance_by(&mut self, num_items: usize) -> Result<(), ()> {
         for _ in 0..num_items {
-            self.decode_current_item().ok_or(())?;
+            self._decode_current_item().ok_or(())?;
         }
         Ok(())
     }
 
-    fn into_proof_stream(mut self, sponge_state: Tip5State) -> ProofStream<Tip5> {
+    fn _into_proof_stream(mut self, sponge_state: Tip5State) -> ProofStream<Tip5> {
         let mut items = vec![];
-        while let Some(item) = self.decode_current_item() {
+        while let Some(item) = self._decode_current_item() {
             items.push(item);
         }
 
@@ -329,7 +329,7 @@ impl VmProofIter {
         }
     }
 
-    fn decode_current_item(&mut self) -> Option<ProofItem> {
+    fn _decode_current_item(&mut self) -> Option<ProofItem> {
         let item_size_pointer = self.current_item_pointer;
         let item_size =
             try_decode_from_memory_using_size::<BFieldElement>(item_size_pointer, 1).ok()?;
