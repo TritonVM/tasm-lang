@@ -63,7 +63,7 @@ impl StarkParameters {
 }
 
 struct Challenges {
-    pub challenges: [XFieldElement; 63],
+    pub _challenges: [XFieldElement; 63],
 }
 
 impl Challenges {
@@ -109,7 +109,7 @@ impl RecufyDebug {
         return;
     }
 
-    pub fn dump_xfe(thing: XFieldElement) {
+    pub fn _dump_xfe(thing: XFieldElement) {
         tasm::tasm_io_write_to_stdout___xfe(thing);
 
         return;
@@ -166,7 +166,7 @@ pub fn recufy() {
     RecufyDebug::dump_u32(padded_height);
 
     let fri: Box<FriVerify> = Box::<FriVerify>::new(parameters.derive_fri(padded_height));
-    let merkle_tree_height: usize = fri.domain_length.ilog2() as usize;
+    let _merkle_tree_height: usize = fri.domain_length.ilog2() as usize;
 
     let base_merkle_tree_root: Box<Digest> = proof_iter.next_as_merkleroot();
     RecufyDebug::dump_digest(*base_merkle_tree_root);
