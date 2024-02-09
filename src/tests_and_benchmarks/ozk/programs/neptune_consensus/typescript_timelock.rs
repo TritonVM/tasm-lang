@@ -24,6 +24,7 @@ mod test {
     use std::time::SystemTime;
     use std::time::UNIX_EPOCH;
 
+    use itertools::Itertools;
     use tasm_lib::twenty_first::shared_math::other::random_elements;
     use tasm_lib::twenty_first::util_types::merkle_tree::CpuParallel;
     use tasm_lib::twenty_first::util_types::merkle_tree::MerkleTree;
@@ -68,12 +69,15 @@ mod test {
 
         let entrypoint =
             EntrypointLocation::disk("neptune_consensus", "typescript_timelock", "main");
-        let vm_output = TritonVMTestCase::new(entrypoint)
+        let vm_output = TritonVMTestCase::new(entrypoint.clone())
             .with_non_determinism(non_determinism)
             .with_std_in(std_in)
             .execute()
             .unwrap();
 
         assert_eq!(native_output, vm_output.output);
+
+        let code = TritonVMTestCase::new(entrypoint).compile();
+        println!("{}", code.iter().join("\n"));
     }
 }
