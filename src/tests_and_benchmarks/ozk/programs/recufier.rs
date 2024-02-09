@@ -6,7 +6,6 @@ mod fri_verify;
 mod host_machine_vm_proof_iter;
 mod merkle_root;
 mod merkle_root_autogen;
-mod proof_item;
 pub(crate) mod verify;
 mod vm_proof_iter_next_as;
 mod xfe_ntt_recursive;

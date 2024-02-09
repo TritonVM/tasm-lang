@@ -5,6 +5,7 @@ use serde_derive::Serialize;
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 use crate::tests_and_benchmarks::ozk::rust_shadows::Tip5WithState;
 use crate::tests_and_benchmarks::ozk::rust_shadows::VmProofIter;
+use crate::triton_vm::table::BaseRow;
 use crate::twenty_first::prelude::*;
 use crate::twenty_first::shared_math::traits::PrimitiveRootOfUnity;
 
@@ -16,7 +17,6 @@ struct StarkParameters {
     pub security_level: usize,
     pub fri_expansion_factor: usize,
     pub num_trace_randomizers: usize,
-    pub num_randomizer_polynomials: usize,
     pub num_collinearity_checks: usize,
     pub num_combination_codeword_checks: usize,
 }
@@ -27,7 +27,6 @@ impl StarkParameters {
             security_level: 160,
             fri_expansion_factor: 4,
             num_trace_randomizers: 166,
-            num_randomizer_polynomials: 1,
             num_collinearity_checks: 80,
             num_combination_codeword_checks: 160,
         };
@@ -38,7 +37,6 @@ impl StarkParameters {
             security_level: 60,
             fri_expansion_factor: 4,
             num_trace_randomizers: 166,
-            num_randomizer_polynomials: 1,
             num_collinearity_checks: 20,
             num_combination_codeword_checks: 60,
         };
@@ -183,8 +181,9 @@ pub fn recufy() {
     // let revealed_indexed_leaves: Vec<(u32, XFieldElement)> =
     //     tasm::tasm_recufier_fri_verify(&mut proof_iter, fri);
 
-    let out_of_domain_base_row: Box<Vec<XFieldElement>> = proof_iter.next_as_outofdomainbaserow();
-    RecufyDebug::dump_xfes(&out_of_domain_base_row);
+    let out_of_domain_base_row: Box<Box<BaseRow<XFieldElement>>> =
+        proof_iter.next_as_outofdomainbaserow();
+    RecufyDebug::dump_xfes(&out_of_domain_base_row.to_vec());
 
     RecufyDebug::sponge_state(Tip5WithState::squeeze());
     return;
@@ -192,7 +191,6 @@ pub fn recufy() {
 
 #[cfg(test)]
 mod tests {
-    use itertools::Itertools;
     use proptest::prelude::*;
     use proptest_arbitrary_interop::arb;
     use test_strategy::proptest;
@@ -220,8 +218,6 @@ mod tests {
     }
 
     fn proof() -> Proof {
-        let to_xfe = |n| XFieldElement::new_u64([n; 3]);
-        let dummy_ood_base_row = (1001..1005).map(to_xfe).collect_vec();
         let dummy_digest_base_mt = Digest::new([42u64, 43, 44, 45, 46].map(BFieldElement::new));
         let dummy_digest_extension_mt =
             Digest::new([100u64, 101, 102, 103, 104].map(BFieldElement::new));
@@ -230,7 +226,6 @@ mod tests {
         proof_stream.enqueue(ProofItem::Log2PaddedHeight(22));
         proof_stream.enqueue(ProofItem::MerkleRoot(dummy_digest_base_mt));
         proof_stream.enqueue(ProofItem::MerkleRoot(dummy_digest_extension_mt));
-        proof_stream.enqueue(ProofItem::OutOfDomainBaseRow(dummy_ood_base_row));
         proof_stream.into()
     }
 
@@ -255,26 +250,22 @@ mod tests {
 
     #[test]
     fn default_stark_parameters_match_triton_vms_defaults() {
-        let vm_sp = triton_vm::stark::StarkParameters::default();
+        let stark = Stark::default();
         let sp = StarkParameters::default();
 
-        assert_eq!(vm_sp.security_level, sp.security_level);
-        assert_eq!(vm_sp.fri_expansion_factor, sp.fri_expansion_factor);
-        assert_eq!(vm_sp.num_trace_randomizers, sp.num_trace_randomizers);
+        assert_eq!(stark.security_level, sp.security_level);
+        assert_eq!(stark.fri_expansion_factor, sp.fri_expansion_factor);
+        assert_eq!(stark.num_trace_randomizers, sp.num_trace_randomizers);
 
-        let vm_num_collin_checks = vm_sp.num_collinearity_checks;
+        let vm_num_collin_checks = stark.num_collinearity_checks;
         let num_collin_checks = sp.num_collinearity_checks;
         assert_eq!(vm_num_collin_checks, num_collin_checks);
 
-        let vm_num_rand_polys = vm_sp.num_randomizer_polynomials;
-        let num_rand_polys = sp.num_randomizer_polynomials;
-        assert_eq!(vm_num_rand_polys, num_rand_polys);
-
-        let vm_num_combi_checks = vm_sp.num_combination_codeword_checks;
+        let vm_num_combi_checks = stark.num_combination_codeword_checks;
         let num_combi_checks = sp.num_combination_codeword_checks;
         assert_eq!(vm_num_combi_checks, num_combi_checks);
 
-        let vm_ps_str = serde_json::to_string(&vm_sp).unwrap();
+        let vm_ps_str = serde_json::to_string(&stark).unwrap();
         let ps_str = serde_json::to_string(&sp).unwrap();
         assert_eq!(vm_ps_str, ps_str);
     }
@@ -285,8 +276,8 @@ mod tests {
     ) {
         let padded_height = 1 << log_2_padded_height;
 
-        let vm_params = triton_vm::stark::StarkParameters::default();
-        let vm_fri = Stark::derive_fri(vm_params, padded_height).unwrap();
+        let stark = Stark::default();
+        let vm_fri = stark.derive_fri(padded_height).unwrap();
 
         let params = StarkParameters::default();
         let fri = params.derive_fri(padded_height as u32);

@@ -28,6 +28,9 @@ use crate::triton_vm::fri::AuthenticationStructure;
 use crate::triton_vm::fri::Fri;
 use crate::triton_vm::proof_item::FriResponse;
 use crate::triton_vm::proof_stream::ProofStream;
+use crate::triton_vm::table::BaseRow;
+use crate::triton_vm::table::ExtensionRow;
+use crate::triton_vm::table::QuotientSegments;
 
 thread_local! {
     static PUB_INPUT: RefCell<Vec<BFieldElement>> = RefCell::new(vec![]);
@@ -402,8 +405,6 @@ macro_rules! vm_proof_iter_impl {
         impl VmProofIter {
             $(
             pub(super) fn $next_as_fn(&mut self) -> Box<$payload> {
-                // let mut sponge_state = SPONGE_STATE.with_borrow_mut(|v| v.as_mut().unwrap());
-                // SPONGE_STATE.
                 let read_size_from_ram = || {
                     let item_pointer = self.current_item_pointer;
                     let bfe = try_decode_from_memory_using_size::<BFieldElement>(item_pointer, 1);
@@ -439,21 +440,21 @@ macro_rules! vm_proof_iter_impl {
 vm_proof_iter_impl!(
     MerkleRoot(Digest) defines next_as_merkleroot
         uses try_into_merkle_root,
-    OutOfDomainBaseRow(Vec<XFieldElement>) defines next_as_outofdomainbaserow
+    OutOfDomainBaseRow(Box<BaseRow<XFieldElement>>) defines next_as_outofdomainbaserow
         uses try_into_out_of_domain_base_row,
-    OutOfDomainExtRow(Vec<XFieldElement>) defines next_as_outofdomainextrow
+    OutOfDomainExtRow(Box<ExtensionRow>) defines next_as_outofdomainextrow
         uses try_into_out_of_domain_ext_row,
-    OutOfDomainQuotientSegments([XFieldElement; 4]) defines next_as_outofdomainquotientsegments
+    OutOfDomainQuotientSegments(QuotientSegments) defines next_as_outofdomainquotientsegments
         uses try_into_out_of_domain_quot_segments,
     AuthenticationStructure(AuthenticationStructure) defines next_as_authenticationstructure
         uses try_into_authentication_structure,
-    MasterBaseTableRows(Vec<Vec<BFieldElement>>) defines next_as_masterbasetablerows
+    MasterBaseTableRows(Vec<BaseRow<BFieldElement>>) defines next_as_masterbasetablerows
         uses try_into_master_base_table_rows,
-    MasterExtTableRows(Vec<Vec<XFieldElement>>) defines next_as_masterexttablerows
+    MasterExtTableRows(Vec<ExtensionRow>) defines next_as_masterexttablerows
         uses try_into_master_ext_table_rows,
     Log2PaddedHeight(u32) defines next_as_log2paddedheight
         uses try_into_log2_padded_height,
-    QuotientSegmentsElements(Vec<[XFieldElement; 4]>) defines next_as_quotientsegmentselements
+    QuotientSegmentsElements(Vec<QuotientSegments>) defines next_as_quotientsegmentselements
         uses try_into_quot_segments_elements,
     FriCodeword(Vec<XFieldElement>) defines next_as_fricodeword
         uses try_into_fri_codeword,
