@@ -148,10 +148,10 @@ impl DataType {
             Xfe => "XField".to_string(),
             Digest => "Digest".to_string(),
             List(ty, _list_type) => format!("Vec_L{}R", ty.label_friendly_name()),
-            Array(_array_type) => format!(
+            Array(array_type) => format!(
                 "array{}_of_L{}R",
-                _array_type.length,
-                _array_type.element_type.label_friendly_name()
+                array_type.length,
+                array_type.element_type.label_friendly_name()
             ),
             Tuple(tys) => tys.label_friendly_name(),
             VoidPointer => "void_pointer".to_string(),

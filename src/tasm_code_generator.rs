@@ -872,9 +872,9 @@ impl<'a> CompilerState<'a> {
             // In this case, we have to clear more elements from the stack than we can
             // access with dup15/swap15. Our solution is to store the return value in
             // memory, clear the stack, and read it back from memory.
-            let (value_identifier_for_spill_value, _spill) =
+            let (value_identifier_for_spill_value, spill) =
                 self.new_value_identifier("memory_return_spilling", &top_element_type);
-            assert!(_spill.is_none(), "Cannot spill while spilling");
+            assert!(spill.is_none(), "Cannot spill while spilling");
             let memory_location: BFieldElement = self
                 .global_compiler_state
                 .allocate_for_value_id(&value_identifier_for_spill_value, &top_element_type);

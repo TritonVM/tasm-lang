@@ -33,3 +33,6 @@ test-strategy = "0.3"
 version = "1"
 default-features = false
 features = ["precommit-hook", "run-cargo-clippy", "run-cargo-fmt"]
+
+[lints.clippy]
+used_underscore_binding = "warn"
