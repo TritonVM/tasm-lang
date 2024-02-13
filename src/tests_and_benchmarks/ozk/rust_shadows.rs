@@ -208,6 +208,16 @@ pub(super) fn tasm_io_read_stdin___digest() -> Digest {
 }
 
 #[allow(non_snake_case)]
+pub(super) fn tasm_io_read_secin___digest() -> Digest {
+    let e4 = ND_INDIVIDUAL_TOKEN.with(|v| v.borrow_mut().pop().unwrap());
+    let e3 = ND_INDIVIDUAL_TOKEN.with(|v| v.borrow_mut().pop().unwrap());
+    let e2 = ND_INDIVIDUAL_TOKEN.with(|v| v.borrow_mut().pop().unwrap());
+    let e1 = ND_INDIVIDUAL_TOKEN.with(|v| v.borrow_mut().pop().unwrap());
+    let e0 = ND_INDIVIDUAL_TOKEN.with(|v| v.borrow_mut().pop().unwrap());
+    Digest::new([e0, e1, e2, e3, e4])
+}
+
+#[allow(non_snake_case)]
 pub(super) fn tasm_io_write_to_stdout___bfe(x: BFieldElement) {
     PUB_OUTPUT.with(|v| v.borrow_mut().push(x));
 }
@@ -284,11 +294,27 @@ pub(super) fn tasm_hashing_merkle_verify(
     assert!(mt_inclusion_proof.verify(root));
 }
 
+pub(super) fn tasm_list_unsafeimplu32_multiset_equality(left: Vec<Digest>, right: Vec<Digest>) {
+    assert_eq!(left.len(), right.len());
+    let mut left_sorted = left.clone();
+    left_sorted.sort();
+
+    let mut right_sorted = right.clone();
+    right_sorted.sort();
+
+    assert_eq!(left_sorted, right_sorted);
+}
+
 /// Note: the rust shadowing does not actually assert digest equivalence – it has no way of knowing
 /// the digest of the own program. That property is inherent to Triton VM.
 pub(super) fn tasm_recufier_read_and_verify_own_program_digest_from_std_in() -> Digest {
     tasm_io_read_stdin___digest()
 }
+
+/// Assert that the given digest equals the current program's digest. Note that the rust
+/// shadow doesn't actually do anything -- it has no way of knowing the digest of the
+/// program.
+pub(super) fn assert_own_program_digest(_digest: Digest) {}
 
 pub(super) fn _tasm_recufier_fri_verify(
     proof_iter: &mut VmProofIter,
