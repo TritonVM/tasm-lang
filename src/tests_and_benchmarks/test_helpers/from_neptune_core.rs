@@ -40,7 +40,7 @@ pub(crate) struct Chunk {
     pub(crate) relative_indices: Vec<u32>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Default)]
 pub(crate) struct ChunkDictionary {
     // {chunk index => (MMR membership proof for the whole chunk to which index belongs, chunk value)}
     pub(crate) dictionary: HashMap<u64, (MmrMembershipProof<VmHasher>, Chunk)>,
@@ -312,7 +312,7 @@ pub(crate) struct Coin {
     pub(crate) state: Vec<BFieldElement>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, BFieldCodec)]
+#[derive(Clone, Debug, PartialEq, Eq, BFieldCodec, TasmObject)]
 pub(crate) struct Utxo {
     pub(crate) lock_script_hash: Digest,
     pub(crate) coins: Vec<Coin>,

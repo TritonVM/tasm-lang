@@ -502,7 +502,9 @@ impl<'a> Graft<'a> {
                     // Structs that are not copy must be Boxed for reference arguments to work
                     ast_types::DataType::Boxed(Box::new(inner_type))
                 }
-                _ => todo!("elem:\n{elem:#?}"),
+                _ => todo!(
+                    "Converting syn type to ast type. Did not match on path.\nelem:\n{elem:#?}"
+                ),
             },
             syn::Type::Array(syn::TypeArray { elem, len, .. }) => {
                 let element_type = self.syn_type_to_ast_type(elem);
