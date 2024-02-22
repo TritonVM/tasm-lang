@@ -42,7 +42,6 @@ fn main() {
 
 #[cfg(test)]
 mod test {
-
     use itertools::Itertools;
 
     use super::*;
@@ -86,7 +85,7 @@ mod benches {
     fn pe7_bench() {
         let entrypoint_location = EntrypointLocation::disk("project_euler", "pe7", "main");
         let parsed = entrypoint_location.extract_entrypoint();
-        let (code, _) = compile_for_run_test(&parsed, crate::ast_types::ListType::Safe);
+        let (code, _) = compile_for_run_test(&parsed);
 
         let common_case = BenchmarkInput::default();
         let worst_case = BenchmarkInput::default();

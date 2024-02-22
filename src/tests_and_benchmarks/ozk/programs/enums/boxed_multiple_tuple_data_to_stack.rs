@@ -27,7 +27,6 @@ fn main() {
 
 #[cfg(test)]
 mod test {
-
     use arbitrary::Unstructured;
     use itertools::Itertools;
     use rand::random;
@@ -55,10 +54,7 @@ mod test {
             // Run test on Triton-VM
             let entrypoint_location =
                 EntrypointLocation::disk("enums", "boxed_multiple_tuple_data_to_stack", "main");
-            let test_program = ozk_parsing::compile_for_test(
-                &entrypoint_location,
-                crate::ast_types::ListType::Unsafe,
-            );
+            let test_program = ozk_parsing::compile_for_test(&entrypoint_location);
 
             {
                 let mut ram: Vec<(BFieldElement, BFieldElement)> =

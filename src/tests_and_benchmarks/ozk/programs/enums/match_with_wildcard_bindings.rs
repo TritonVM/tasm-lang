@@ -54,7 +54,6 @@ fn main() {
 
 #[cfg(test)]
 mod test {
-
     use arbitrary::Unstructured;
     use itertools::Itertools;
     use rand::random;
@@ -82,10 +81,7 @@ mod test {
             // Run test on Triton-VM
             let entrypoint_location =
                 EntrypointLocation::disk("enums", "match_with_wildcard_bindings", "main");
-            let test_program = ozk_parsing::compile_for_test(
-                &entrypoint_location,
-                crate::ast_types::ListType::Unsafe,
-            );
+            let test_program = ozk_parsing::compile_for_test(&entrypoint_location);
             println!("executing:\n{}", test_program.iter().join("\n"));
             {
                 let mut ram: Vec<(BFieldElement, BFieldElement)> =

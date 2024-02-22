@@ -29,7 +29,6 @@ fn main() {
 
 #[cfg(test)]
 mod test {
-
     use tasm_lib::triton_vm::prelude::*;
 
     use itertools::Itertools;
@@ -101,8 +100,7 @@ mod benches {
         let module_name = "simple_map_on_bfe".to_string();
         let entrypoint_location = EntrypointLocation::disk("other", &module_name, "main");
         let parsed_code = entrypoint_location.extract_entrypoint();
-        let (code, _fn_name) =
-            compile_for_run_test(&parsed_code, crate::ast_types::ListType::Unsafe);
+        let (code, _fn_name) = compile_for_run_test(&parsed_code);
         execute_and_write_benchmark(module_name, code, common_case, worst_case, 0)
     }
 }

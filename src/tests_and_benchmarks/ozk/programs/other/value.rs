@@ -36,10 +36,7 @@ mod test {
         assert_eq!(native_output, expected_output);
 
         let entrypoint = EntrypointLocation::disk("other", "value", "main");
-        let vm_output = TritonVMTestCase::new(entrypoint)
-            .with_safe_lists()
-            .execute()
-            .unwrap();
+        let vm_output = TritonVMTestCase::new(entrypoint).execute().unwrap();
 
         assert_eq!(expected_output, *vm_output.output);
     }

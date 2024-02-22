@@ -1,4 +1,5 @@
 #![allow(clippy::needless_borrow)]
+
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
 // Expect a type check error
@@ -34,7 +35,6 @@ mod test {
     #[test]
     fn ref_struct_typecheck_fail_test() {
         let entrypoint = EntrypointLocation::disk("boxed", "ref_struct_typecheck_fail", "main");
-        let _test_program =
-            ozk_parsing::compile_for_test(&entrypoint, crate::ast_types::ListType::Unsafe);
+        let _test_program = ozk_parsing::compile_for_test(&entrypoint);
     }
 }

@@ -16,7 +16,7 @@ pub(crate) mod result_type;
 
 /// Everything that lives in the Rust `core` module belongs in here.
 #[derive(Debug)]
-pub(crate) struct Core {}
+pub(crate) struct Core;
 
 impl Library for Core {
     fn get_function_name(&self, _full_name: &str) -> Option<String> {

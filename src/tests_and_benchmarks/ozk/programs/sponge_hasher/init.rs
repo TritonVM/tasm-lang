@@ -2,8 +2,9 @@ use num::Zero;
 use tasm_lib::twenty_first::shared_math::other::random_elements;
 
 use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
+use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 use crate::tests_and_benchmarks::ozk::rust_shadows::wrap_main_with_io;
-use crate::tests_and_benchmarks::ozk::rust_shadows::{self as tasm, Tip5WithState};
+use crate::tests_and_benchmarks::ozk::rust_shadows::Tip5WithState;
 use crate::tests_and_benchmarks::test_helpers::shared_test::TritonVMTestCase;
 use crate::triton_vm::prelude::*;
 

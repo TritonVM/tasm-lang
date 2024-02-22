@@ -10,9 +10,7 @@ use super::Library;
 const TASM_LIB_INDICATOR: &str = "tasm::";
 
 #[derive(Clone, Debug)]
-pub(crate) struct TasmLibrary {
-    pub(crate) list_type: ast_types::ListType,
-}
+pub(crate) struct TasmLibrary;
 
 impl Library for TasmLibrary {
     fn get_function_name(&self, full_name: &str) -> Option<String> {
@@ -53,7 +51,7 @@ impl Library for TasmLibrary {
         // Maybe that behavior should be changed though?
         let snippet = tasm_lib::exported_snippets::name_to_snippet(stripped_name);
 
-        ast::FnSignature::from_basic_snippet(snippet, self.list_type)
+        ast::FnSignature::from_basic_snippet(snippet)
     }
 
     fn call_method(

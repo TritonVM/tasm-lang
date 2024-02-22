@@ -156,7 +156,7 @@ impl Boxed {
         let inner_type = *inner_type.to_owned();
         assert!(matches!(
             inner_type,
-            ast_types::DataType::List(_, _) | ast_types::DataType::Array(_)
+            ast_types::DataType::List(_) | ast_types::DataType::Array(_)
         ));
 
         let argument = ast_types::AbstractArgument::ValueArgument(ast_types::AbstractValueArg {

@@ -83,8 +83,7 @@ mod test {
         // Run on Triton-VM
         let entrypoint_location =
             EntrypointLocation::disk("structs", "simple_declaration_on_stack", "main");
-        let test_program =
-            ozk_parsing::compile_for_test(&entrypoint_location, crate::ast_types::ListType::Unsafe);
+        let test_program = ozk_parsing::compile_for_test(&entrypoint_location);
         let vm_output = execute_compiled_with_stack_and_ins_for_test(
             &test_program,
             vec![],

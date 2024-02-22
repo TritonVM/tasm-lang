@@ -40,8 +40,7 @@ mod test {
         // Verify that compilation works
         let entrypoint =
             EntrypointLocation::disk("boxed", "ref_struct_typecheck_succeed_bc_boxed", "main");
-        let _test_program =
-            ozk_parsing::compile_for_test(&entrypoint, crate::ast_types::ListType::Unsafe);
+        let _test_program = ozk_parsing::compile_for_test(&entrypoint);
 
         // Test function in Triton VM
         let rand: u64 = random::<u64>() / 2;

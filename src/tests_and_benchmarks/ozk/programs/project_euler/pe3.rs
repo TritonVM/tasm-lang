@@ -42,10 +42,7 @@ mod test {
         let native_output = rust_shadows::wrap_main_with_io(&main)(stdin, non_determinism);
 
         let entrypoint = EntrypointLocation::disk("project_euler", "pe3", "main");
-        let vm_output = TritonVMTestCase::new(entrypoint)
-            .with_safe_lists()
-            .execute()
-            .unwrap();
+        let vm_output = TritonVMTestCase::new(entrypoint).execute().unwrap();
 
         assert_eq!(native_output, vm_output.output);
         println!("vm_output.output: {}", vm_output.output.iter().join(","));
@@ -63,7 +60,7 @@ mod benches {
     fn pe3_bench() {
         let entrypoint_location = EntrypointLocation::disk("project_euler", "pe3", "main");
         let parsed = entrypoint_location.extract_entrypoint();
-        let (code, _) = compile_for_run_test(&parsed, crate::ast_types::ListType::Safe);
+        let (code, _) = compile_for_run_test(&parsed);
 
         let common_case = BenchmarkInput::default();
         let worst_case = BenchmarkInput::default();

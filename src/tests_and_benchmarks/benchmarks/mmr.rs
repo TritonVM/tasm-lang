@@ -30,22 +30,11 @@ mod benchmark {
             let mut memory = HashMap::default();
             let peaks_pointer: BFieldElement = 10000u64.into();
             let peaks = mmra.get_peaks();
-            let capacity = 2000;
-            rust_shadowing_helper_functions::safe_list::safe_list_insert(
-                peaks_pointer,
-                capacity,
-                peaks,
-                &mut memory,
-            );
+            rust_shadowing_helper_functions::list::list_insert(peaks_pointer, peaks, &mut memory);
 
             let leaf_index = leaf_count_after_add - 1;
             let ap_pointer: BFieldElement = 20000u64.into();
-            rust_shadowing_helper_functions::safe_list::safe_list_insert(
-                ap_pointer,
-                capacity,
-                auth_path,
-                &mut memory,
-            );
+            rust_shadowing_helper_functions::list::list_insert(ap_pointer, auth_path, &mut memory);
 
             let good_inputs = vec![
                 bfe_lit(peaks_pointer),
@@ -64,7 +53,7 @@ mod benchmark {
         }
 
         let rast = programs::mmr::verify_authentication_path_with_local_function();
-        let (code, fn_name) = compile_for_run_test(&rast, crate::ast_types::ListType::Safe);
+        let (code, fn_name) = compile_for_run_test(&rast);
 
         let common_case = prepare_benchmark_case(31);
         let worst_case = prepare_benchmark_case(50);

@@ -22,7 +22,6 @@ fn main() {
 
 #[cfg(test)]
 mod test {
-
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
@@ -39,7 +38,6 @@ mod test {
 
         let entrypoint_location = EntrypointLocation::disk("project_euler", "pe6", "main");
         let vm_output = TritonVMTestCase::new(entrypoint_location)
-            .with_safe_lists()
             .execute()
             .unwrap();
 
@@ -59,7 +57,7 @@ mod benches {
     fn pe6_bench() {
         let entrypoint_location = EntrypointLocation::disk("project_euler", "pe6", "main");
         let parsed = entrypoint_location.extract_entrypoint();
-        let (code, _) = compile_for_run_test(&parsed, crate::ast_types::ListType::Safe);
+        let (code, _) = compile_for_run_test(&parsed);
 
         let common_case = BenchmarkInput::default();
         let worst_case = BenchmarkInput::default();

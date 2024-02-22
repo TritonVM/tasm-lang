@@ -104,8 +104,7 @@ fn all_next_as_methods(graft_config: &mut Graft) -> Vec<ast::Method<Typing>> {
             proof_item: variant,
         };
         let method_output = variant.payload_type();
-        let method_output =
-            DataType::try_from_string(method_output, graft_config.list_type).unwrap();
+        let method_output = DataType::try_from_string(method_output).unwrap();
         let method_output = DataType::Boxed(Box::new(method_output));
         let snippet_label = snippet.entrypoint();
         let code = triton_asm!(call { snippet_label });

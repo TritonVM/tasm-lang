@@ -177,10 +177,7 @@ mod compile_and_typecheck_tests {
             })
         }
 
-        graft_check_compile_prop(
-            &local_function_type_error_in_fn_decl(),
-            crate::ast_types::ListType::Safe,
-        );
+        graft_check_compile_prop(&local_function_type_error_in_fn_decl());
     }
 
     #[should_panic]
@@ -197,10 +194,7 @@ mod compile_and_typecheck_tests {
             })
         }
 
-        graft_check_compile_prop(
-            &local_function_type_error_in_fn_decl(),
-            crate::ast_types::ListType::Safe,
-        );
+        graft_check_compile_prop(&local_function_type_error_in_fn_decl());
     }
 
     #[should_panic]
@@ -218,9 +212,6 @@ mod compile_and_typecheck_tests {
             })
         }
 
-        graft_check_compile_prop(
-            &local_function_type_error_in_fn_call(),
-            crate::ast_types::ListType::Safe,
-        );
+        graft_check_compile_prop(&local_function_type_error_in_fn_call());
     }
 }

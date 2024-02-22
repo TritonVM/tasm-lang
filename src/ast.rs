@@ -141,16 +141,13 @@ impl FnSignature {
     }
 
     /// Convert snippet implementing `BasicSnippet` from `tasm-lib` into a function signature.
-    pub(crate) fn from_basic_snippet(
-        snippet: Box<dyn BasicSnippet>,
-        list_type: ast_types::list_type::ListType,
-    ) -> Self {
+    pub(crate) fn from_basic_snippet(snippet: Box<dyn BasicSnippet>) -> Self {
         let name = snippet.entrypoint();
         let mut args: Vec<ast_types::AbstractArgument> = vec![];
         for (ty, name) in snippet.inputs().into_iter() {
             let fn_arg = ast_types::AbstractValueArg {
                 name,
-                data_type: ast_types::DataType::from_tasm_lib_datatype(ty, list_type),
+                data_type: ast_types::DataType::from_tasm_lib_datatype(ty),
                 mutable: true,
             };
             args.push(ast_types::AbstractArgument::ValueArgument(fn_arg));
@@ -158,7 +155,7 @@ impl FnSignature {
 
         let mut output_types: Vec<ast_types::DataType> = vec![];
         for (ty, _name) in snippet.outputs() {
-            output_types.push(ast_types::DataType::from_tasm_lib_datatype(ty, list_type));
+            output_types.push(ast_types::DataType::from_tasm_lib_datatype(ty));
         }
 
         let output = match output_types.len() {

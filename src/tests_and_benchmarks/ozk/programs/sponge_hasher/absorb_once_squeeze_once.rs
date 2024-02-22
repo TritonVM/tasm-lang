@@ -1,4 +1,5 @@
-use crate::tests_and_benchmarks::ozk::rust_shadows::{self as tasm, Tip5WithState};
+use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
+use crate::tests_and_benchmarks::ozk::rust_shadows::Tip5WithState;
 use crate::tests_and_benchmarks::test_helpers::shared_test::TritonVMTestCase;
 use crate::triton_vm::prelude::*;
 use num::Zero;

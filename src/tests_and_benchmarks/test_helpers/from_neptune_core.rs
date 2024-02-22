@@ -18,7 +18,7 @@ use tasm_lib::twenty_first::prelude::tip5::DIGEST_LENGTH;
 use tasm_lib::twenty_first::prelude::AlgebraicHasher;
 use tasm_lib::twenty_first::prelude::U32s;
 use tasm_lib::twenty_first::shared_math::other::log_2_floor;
-use tasm_lib::twenty_first::util_types::algebraic_hasher::SpongeHasher;
+use tasm_lib::twenty_first::util_types::algebraic_hasher::Sponge;
 use tasm_lib::twenty_first::util_types::merkle_tree::CpuParallel;
 use tasm_lib::twenty_first::util_types::merkle_tree_maker::MerkleTreeMaker;
 use tasm_lib::twenty_first::util_types::mmr::mmr_accumulator::MmrAccumulator;
@@ -251,7 +251,7 @@ pub(crate) fn pseudorandom_mmra_with_mps(
             leafs_and_mt_indices.iter().zip(authentication_paths.iter())
         {
             assert!(merkle_verify_tester_helper(
-                root, *mt_index, auth_path, *leaf
+                root, *mt_index, auth_path, *leaf,
             ));
         }
 
@@ -306,7 +306,6 @@ pub(crate) fn pseudorandom_mmra_with_mps(
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, BFieldCodec)]
-
 pub(crate) struct Coin {
     pub(crate) type_script_hash: Digest,
     pub(crate) state: Vec<BFieldElement>,
@@ -377,6 +376,7 @@ pub(crate) struct PubScriptHashAndInput {
     pub(crate) pubscript_hash: Digest,
     pub(crate) pubscript_input: Vec<BFieldElement>,
 }
+
 pub(crate) const AMOUNT_SIZE_FOR_U32: usize = 4;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, BFieldCodec)]
@@ -672,7 +672,7 @@ pub(crate) fn get_swbf_indices(
         "Input to sponge must be a multiple digest length"
     );
 
-    let mut sponge = <VmHasher as SpongeHasher>::init();
+    let mut sponge = <VmHasher as Sponge>::init();
     VmHasher::pad_and_absorb_all(&mut sponge, &input);
     VmHasher::sample_indices(&mut sponge, WINDOW_SIZE, NUM_TRIALS as usize)
         .into_iter()

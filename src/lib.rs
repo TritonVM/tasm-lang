@@ -19,11 +19,11 @@ pub use tasm_lib::twenty_first;
 #[allow(unused_imports)]
 use tasm_lib::twenty_first::prelude::BFieldElement;
 
-use ast_types::ListType;
 use graft::CustomTypeRust;
 
 use crate::custom_type_resolver::resolve_custom_types;
 use crate::graft::Graft;
+use crate::libraries::all_libraries;
 use crate::tasm_code_generator::compile_function;
 use crate::type_checker::annotate_fn_outer;
 
@@ -58,10 +58,7 @@ pub fn main() {
     let mut src = String::new();
     file.read_to_string(&mut src).expect("Unable to read file");
 
-    // TODO: Allow this to be set by CLI args
-    let list_type = ListType::Unsafe;
-
-    let output = compile_to_string(&filename, list_type);
+    let output = compile_to_string(&filename);
 
     println!("{output}");
 }
@@ -75,7 +72,8 @@ type MaybeStructsAndMethodsRustAst = HashMap<String, (Option<CustomTypeRust>, Ve
 pub(crate) fn extract_types_and_function(
     parsed_file: &syn::File,
 ) -> (StructsAndMethodsRustAst, Vec<String>) {
-    get_standard_setup!(ListType::Unsafe, graft_config, _lib);
+    let libraries = all_libraries();
+    let mut graft_config = Graft::new(&libraries);
     let mut types: MaybeStructsAndMethodsRustAst = HashMap::default();
     let mut dependencies = vec![];
 
@@ -199,11 +197,9 @@ fn parse_function_and_types(file_path: &str) -> (syn::ItemFn, StructsAndMethodsR
     (entrypoint, custom_types)
 }
 
-pub(crate) fn compile_to_instructions(
-    file_path: &str,
-    list_type: ListType,
-) -> Vec<LabelledInstruction> {
-    get_standard_setup!(list_type, graft_config, libraries);
+pub(crate) fn compile_to_instructions(file_path: &str) -> Vec<LabelledInstruction> {
+    let libraries = all_libraries();
+    let mut graft_config = Graft::new(&libraries);
 
     let (rust_main_ast, rust_struct_asts) = parse_function_and_types(file_path);
 
@@ -221,10 +217,8 @@ pub(crate) fn compile_to_instructions(
     tasm.compose()
 }
 
-pub(crate) fn compile_to_string(file_path: &str, list_type: ListType) -> String {
-    compile_to_instructions(file_path, list_type)
-        .into_iter()
-        .join("\n")
+pub(crate) fn compile_to_string(file_path: &str) -> String {
+    compile_to_instructions(file_path).into_iter().join("\n")
 }
 
 fn extract_entrypoint(parsed_file: &syn::File, entrypoint: &str) -> syn::ItemFn {

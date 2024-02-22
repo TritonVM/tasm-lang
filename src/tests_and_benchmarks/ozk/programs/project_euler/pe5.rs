@@ -30,7 +30,6 @@ mod test {
 
         let entrypoint_location = EntrypointLocation::disk("project_euler", "pe5", "main");
         let vm_output = TritonVMTestCase::new(entrypoint_location)
-            .with_safe_lists()
             .execute()
             .unwrap();
 
@@ -50,7 +49,7 @@ mod benches {
     fn pe5_bench() {
         let entrypoint_location = EntrypointLocation::disk("project_euler", "pe5", "main");
         let parsed = entrypoint_location.extract_entrypoint();
-        let (code, _) = compile_for_run_test(&parsed, crate::ast_types::ListType::Safe);
+        let (code, _) = compile_for_run_test(&parsed);
 
         let common_case = BenchmarkInput::default();
         let worst_case = BenchmarkInput::default();

@@ -259,7 +259,7 @@ impl DataType {
             DataType::Unresolved(_) => true,
             DataType::Boxed(inner) => inner.is_unresolved(),
             DataType::Tuple(inners) => inners.into_iter().any(|inner| inner.is_unresolved()),
-            DataType::List(element, _) => element.is_unresolved(),
+            DataType::List(element) => element.is_unresolved(),
             DataType::Struct(struct_type) => struct_type
                 .field_types()
                 .any(|field_type| field_type.is_unresolved()),
@@ -306,7 +306,7 @@ impl CustomTypeResolution for DataType {
                     }
                 }
             }
-            List(inner, _list_type) => {
+            List(inner) => {
                 inner.resolve_custom_types(composite_types);
             }
             Tuple(inners) => {

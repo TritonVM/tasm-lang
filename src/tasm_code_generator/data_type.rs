@@ -1,3 +1,4 @@
+use tasm_lib::list::LIST_METADATA_SIZE;
 use tasm_lib::memory::memcpy::MemCpy;
 use tasm_lib::triton_vm::op_stack::OpStackElement;
 use tasm_lib::triton_vm::prelude::*;
@@ -57,7 +58,7 @@ impl ast_types::DataType {
             | ast_types::DataType::Tuple(_) => {
                 Self::copy_words_from_memory(None, self.stack_size())
             }
-            ast_types::DataType::List(_, _)
+            ast_types::DataType::List(_)
             | ast_types::DataType::Array(_)
             | ast_types::DataType::Boxed(_) => {
                 triton_asm!()
@@ -152,12 +153,8 @@ impl ast_types::DataType {
             | ast_types::DataType::Tuple(_) => {
                 write_n_words_to_memory_leaving_address(self.stack_size())
             }
-            ast_types::DataType::List(element_type, list_type) => {
-                clone_vector_to_allocated_memory_return_next_free_address(
-                    element_type,
-                    list_type,
-                    state,
-                )
+            ast_types::DataType::List(element_type) => {
+                clone_vector_to_allocated_memory_return_next_free_address(element_type, state)
             }
             ast_types::DataType::Array(array_type) => {
                 clone_array_to_allocated_memory_return_next_free_address(array_type, state)
@@ -193,8 +190,8 @@ impl ast_types::DataType {
                 move_top_stack_value_to_memory(None, self.stack_size())
             }
             ast_types::DataType::Tuple(tuple) => tuple.store_to_memory(state),
-            ast_types::DataType::List(element_type, list_type) => {
-                clone_vector_to_allocated_memory(element_type, list_type, state)
+            ast_types::DataType::List(element_type) => {
+                clone_vector_to_allocated_memory(element_type, state)
             }
             ast_types::DataType::Array(array_type) => {
                 clone_array_to_allocated_memory(array_type, state)
@@ -273,7 +270,7 @@ impl ast_types::DataType {
                     state.import_snippet(Box::new(tasm_lib::hashing::eq_digest::EqDigest));
                 triton_asm!(call { eq_digest })
             }
-            List(_, _) => todo!(),
+            List(_) => todo!(),
             Tuple(_) => todo!(),
             Array(_) => todo!("Equality for arrays not yet implemented"),
             Function(_) => todo!(),
@@ -343,14 +340,10 @@ fn clone_array_to_allocated_memory(
 /// ```
 fn clone_vector_to_allocated_memory_return_next_free_address(
     element_type: &ast_types::DataType,
-    list_type: &ast_types::ListType,
     state: &mut CompilerState,
 ) -> Vec<LabelledInstruction> {
     let element_size = element_type.stack_size();
-    let add_metadata_size = match list_type {
-        ast_types::ListType::Safe => triton_asm!(push 2 add),
-        ast_types::ListType::Unsafe => triton_asm!(push 1 add),
-    };
+    let add_metadata_size = triton_asm!(push {LIST_METADATA_SIZE} add);
     let memcpy_label = state.import_snippet(Box::new(MemCpy));
 
     triton_asm!(
@@ -399,14 +392,10 @@ fn clone_vector_to_allocated_memory_return_next_free_address(
 /// ```
 fn clone_vector_to_allocated_memory(
     element_type: &ast_types::DataType,
-    list_type: &ast_types::ListType,
     state: &mut CompilerState,
 ) -> Vec<LabelledInstruction> {
     let element_size = element_type.stack_size();
-    let add_metadata_size = match list_type {
-        ast_types::ListType::Safe => triton_asm!(push 2 add),
-        ast_types::ListType::Unsafe => triton_asm!(push 1 add),
-    };
+    let add_metadata_size = triton_asm!(push {LIST_METADATA_SIZE} add);
     let memcpy_label = state.import_snippet(Box::new(MemCpy));
 
     triton_asm!(

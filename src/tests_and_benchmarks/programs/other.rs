@@ -8,7 +8,7 @@ mod compile_and_typecheck_tests {
 
     #[test]
     fn inferred_literals_test() {
-        graft_check_compile_prop(&inferred_literals(), crate::ast_types::ListType::Safe);
+        graft_check_compile_prop(&inferred_literals());
 
         fn inferred_literals() -> syn::ItemFn {
             item_fn(parse_quote! {
@@ -83,7 +83,7 @@ mod compile_and_typecheck_tests {
 
     #[test]
     fn nop_test() {
-        graft_check_compile_prop(&nop_rast(), crate::ast_types::ListType::Safe);
+        graft_check_compile_prop(&nop_rast());
 
         fn nop_rast() -> syn::ItemFn {
             item_fn(parse_quote! {
@@ -97,7 +97,7 @@ mod compile_and_typecheck_tests {
     #[should_panic]
     #[test]
     fn missing_mut_keyword_test() {
-        graft_check_compile_prop(&missing_mut_keyword(), crate::ast_types::ListType::Safe);
+        graft_check_compile_prop(&missing_mut_keyword());
 
         fn missing_mut_keyword() -> syn::ItemFn {
             item_fn(parse_quote!(

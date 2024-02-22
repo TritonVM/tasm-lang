@@ -13,6 +13,7 @@ use std::collections::HashSet;
 use std::fmt::Display;
 use tasm_lib::exported_snippets;
 use tasm_lib::library::Library as SnippetState;
+use tasm_lib::list::LIST_METADATA_SIZE;
 use tasm_lib::prelude::*;
 use tasm_lib::triton_vm::prelude::*;
 use tasm_lib::twenty_first::prelude::*;
@@ -175,13 +176,13 @@ impl<'a> CompilerState<'a> {
             .insert(subroutine.get_label(), subroutine.clone());
         if let Some(previous_version) = already_there {
             assert_eq!(
-                        previous_version,
-                        subroutine,
-                        "Inconsistent library functions added. Got two different versions of {}\n\n. 1st was:\n{}\n\n 2nd was:\n{}",
-                        subroutine.get_label(),
-                        previous_version,
-                        subroutine
-                    );
+                previous_version,
+                subroutine,
+                "Inconsistent library functions added. Got two different versions of {}\n\n. 1st was:\n{}\n\n 2nd was:\n{}",
+                subroutine.get_label(),
+                previous_version,
+                subroutine
+            );
         }
     }
 
@@ -281,7 +282,7 @@ impl<'a> CompilerState<'a> {
             }
             ast::Identifier::Index(ident, index_expr, element_type) => {
                 match ident.get_type() {
-                    ast_types::DataType::List(_, _) | ast_types::DataType::Array(_) => {
+                    ast_types::DataType::List(_) | ast_types::DataType::Array(_) => {
                         return get_value_location_of_sequence_element(
                             self,
                             ident,
@@ -321,8 +322,7 @@ impl<'a> CompilerState<'a> {
 
                     let list_metadata_size = match ident.get_type() {
                         ast_types::DataType::Array(_) => 0,
-                        ast_types::DataType::List(_, ast_types::ListType::Unsafe) => 1,
-                        ast_types::DataType::List(_, ast_types::ListType::Safe) => 2,
+                        ast_types::DataType::List(_) => LIST_METADATA_SIZE,
                         lhs_type => panic!("Expected type was list. Got {lhs_type}."),
                     };
                     let element_address = match element_type.bfield_codec_static_length() {
@@ -2299,8 +2299,8 @@ fn compile_expr(
                     let shl = match lhs_type {
                         ast_types::DataType::U32 => state.import_snippet(Box::new(tasm_lib::arithmetic::u32::shiftleft::Shiftleft)),
                         ast_types::DataType::U64 => state.import_snippet(Box::new(
-                                    tasm_lib::arithmetic::u64::shift_left_u64::ShiftLeftU64,
-                                )),
+                            tasm_lib::arithmetic::u64::shift_left_u64::ShiftLeftU64,
+                        )),
                         ast_types::DataType::U128 => state.import_snippet(Box::new(
                             tasm_lib::arithmetic::u128::shift_left_u128::ShiftLeftU128,
                         )),
@@ -2330,8 +2330,8 @@ fn compile_expr(
                     let shr = match lhs_type {
                         ast_types::DataType::U32 => state.import_snippet(Box::new(tasm_lib::arithmetic::u32::shiftright::Shiftright)),
                         ast_types::DataType::U64 => state.import_snippet(Box::new(
-                                    tasm_lib::arithmetic::u64::shift_right_u64::ShiftRightU64,
-                                )),
+                            tasm_lib::arithmetic::u64::shift_right_u64::ShiftRightU64,
+                        )),
                         ast_types::DataType::U128 => state.import_snippet(Box::new(
                             tasm_lib::arithmetic::u128::shift_right_u128::ShiftRightU128,
                         )),

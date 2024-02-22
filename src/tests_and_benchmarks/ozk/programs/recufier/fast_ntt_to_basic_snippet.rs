@@ -81,7 +81,6 @@ mod test {
 
     use tasm_lib::twenty_first::prelude::XFieldElement;
 
-    use crate::ast_types::ListType;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::*;
     use crate::tests_and_benchmarks::test_helpers::shared_test::bfe_lit;
     use crate::tests_and_benchmarks::test_helpers::shared_test::compare_compiled_prop_with_stack_and_ins;
@@ -90,7 +89,7 @@ mod test {
     fn fast_xfe_ntt_to_basic_snippet_test() {
         let entrypoint_location =
             EntrypointLocation::disk("recufier", "fast_ntt_to_basic_snippet", "xfe_ntt");
-        let compiled = compile_for_test(&entrypoint_location, ListType::Unsafe);
+        let compiled = compile_for_test(&entrypoint_location);
         let list_pointer = BFieldElement::new(100);
         let list_length = BFieldElement::new(1);
         let item = XFieldElement::new([50, 0, 0].map(BFieldElement::new));
@@ -118,7 +117,7 @@ mod test {
         let entrypoint_location =
             EntrypointLocation::disk("recufier", "fast_ntt_to_basic_snippet", "xfe_ntt");
         let rust_ast = entrypoint_location.extract_entrypoint();
-        let as_bs = compile_to_basic_snippet(rust_ast, HashMap::default(), ListType::Unsafe);
+        let as_bs = compile_to_basic_snippet(rust_ast, HashMap::default());
         println!("{}", as_bs);
     }
 }

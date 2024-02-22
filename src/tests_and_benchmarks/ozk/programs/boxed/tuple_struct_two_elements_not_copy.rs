@@ -52,8 +52,7 @@ mod test {
         // Test function in Triton VM
         let entrypoint_location =
             EntrypointLocation::disk("boxed", "tuple_struct_two_elements_not_copy", "main");
-        let test_program =
-            ozk_parsing::compile_for_test(&entrypoint_location, crate::ast_types::ListType::Unsafe);
+        let test_program = ozk_parsing::compile_for_test(&entrypoint_location);
         let expected_stack_diff = 0;
         let vm_output = execute_compiled_with_stack_and_ins_for_test(
             &test_program,

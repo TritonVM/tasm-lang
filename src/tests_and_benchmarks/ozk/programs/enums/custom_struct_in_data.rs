@@ -22,7 +22,6 @@ fn main() {
 
 #[cfg(test)]
 mod test {
-
     use tasm_lib::triton_vm::prelude::*;
 
     use itertools::Itertools;
@@ -48,8 +47,7 @@ mod test {
         // Run test on Triton-VM
         let entrypoint_location =
             EntrypointLocation::disk("enums", "custom_struct_in_data", "main");
-        let test_program =
-            ozk_parsing::compile_for_test(&entrypoint_location, crate::ast_types::ListType::Unsafe);
+        let test_program = ozk_parsing::compile_for_test(&entrypoint_location);
         let vm_output = execute_compiled_with_stack_and_ins_for_test(
             &test_program,
             vec![],

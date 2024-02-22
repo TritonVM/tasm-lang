@@ -737,9 +737,9 @@ pub(crate) fn annotate_identifier_type(
                         // Identifier is variant type declared in `prelude` without associated data, like `None`.
                         // Here, the identifier must be rewritten to an `EnumDeclaration` by the caller.
                         let type_hint = match hint {
-                        Some(ty) => ty,
-                        None => panic!("type of variable or identifier \"{var_name}\" could not be resolved"),
-                    };
+                            Some(ty) => ty,
+                            None => panic!("type of variable or identifier \"{var_name}\" could not be resolved"),
+                        };
                         let prelude_type = state
                             .composite_types
                             .prelude_variant_match(var_name, &type_hint).expect("type of variable or identifier \"{var_name}\" could not be resolved");
@@ -784,7 +784,7 @@ pub(crate) fn annotate_identifier_type(
             );
             let mut forced_sequence_type = maybe_list_type.clone();
             let element_type = loop {
-                if let ast_types::DataType::List(elem_ty, _) = &forced_sequence_type {
+                if let ast_types::DataType::List(elem_ty) = &forced_sequence_type {
                     break elem_ty;
                 } else if let ast_types::DataType::Array(array_type) = &forced_sequence_type {
                     //Ensure that this value is not out-of-bounds, *if* this can be checked.
@@ -1303,8 +1303,8 @@ fn derive_annotate_expr_type(
                         ast_types::DataType::Boxed(inner_inner_type) => {
                             *unaryop_type = Typing::KnownType(*inner_inner_type.clone());
                             Ok(*inner_inner_type)
-                        },
-                        _ =>  panic!("Cannot dereference type of `{rhs_type}` as this expression has:\n{rhs_expr:#?}")
+                        }
+                        _ => panic!("Cannot dereference type of `{rhs_type}` as this expression has:\n{rhs_expr:#?}")
                     }
                 }
                 Ref(_mutable) => {
@@ -1314,7 +1314,7 @@ fn derive_annotate_expr_type(
                     };
                     *unaryop_type = Typing::KnownType(resulting_type.clone());
                     Ok(resulting_type)
-                },
+                }
             }
         }
 

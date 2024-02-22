@@ -1,12 +1,14 @@
 use std::fs;
 
-use crate::ast_types;
+use tasm_lib::triton_vm::prelude::*;
+
 use crate::custom_type_resolver::resolve_custom_types;
 use crate::extract_types_and_function;
+use crate::graft::Graft;
+use crate::libraries::all_libraries;
 use crate::tasm_code_generator::compile_function;
 use crate::type_checker::annotate_fn_outer;
 use crate::StructsAndMethodsRustAst;
-use tasm_lib::triton_vm::prelude::*;
 
 const MANIFEST_DIR: &str = env!("CARGO_MANIFEST_DIR");
 const PROGRAMS_DIR: &str = "src/tests_and_benchmarks/ozk/programs";
@@ -166,11 +168,9 @@ fn parse_functions_and_types_inner(location: &SourceFileLocation) -> StructsAndM
     custom_types
 }
 
-pub(crate) fn compile_for_test(
-    location: &EntrypointLocation,
-    list_type: ast_types::ListType,
-) -> Vec<LabelledInstruction> {
-    get_standard_setup!(list_type, graft_config, libraries);
+pub(crate) fn compile_for_test(location: &EntrypointLocation) -> Vec<LabelledInstruction> {
+    let libraries = all_libraries();
+    let mut graft_config = Graft::new(&libraries);
 
     let entrypoint_fn = location.extract_entrypoint();
     let rust_struct_asts = parse_functions_and_types_inner(&location.source_file_location);
@@ -195,9 +195,9 @@ pub(crate) fn compile_for_test(
 pub(crate) fn compile_to_basic_snippet(
     rust_ast: syn::ItemFn,
     structs_and_methods: StructsAndMethodsRustAst,
-    list_type: ast_types::ListType,
 ) -> String {
-    get_standard_setup!(list_type, graft_config, libraries);
+    let libraries = all_libraries();
+    let mut graft_config = Graft::new(&libraries);
     let mut oil_ast = graft_config.graft_fn_decl(&rust_ast);
     let mut composite_types =
         graft_config.graft_custom_types_methods_and_associated_functions(structs_and_methods);
@@ -206,7 +206,6 @@ pub(crate) fn compile_to_basic_snippet(
 
     // type-check and annotate
     annotate_fn_outer(&mut oil_ast, &mut composite_types, &libraries);
-
     let tasm = compile_function(&oil_ast, &libraries, &composite_types);
 
     tasm.generate_basic_snippet_implementation()

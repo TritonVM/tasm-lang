@@ -65,7 +65,7 @@ mod run_tests {
     use rand::random;
     use rand::thread_rng;
     use rand::RngCore;
-    use tasm_lib::rust_shadowing_helper_functions::safe_list::safe_list_insert;
+    use tasm_lib::rust_shadowing_helper_functions::list::list_insert;
     use tasm_lib::triton_vm::prelude::*;
     use tasm_lib::twenty_first::shared_math::other::random_elements;
     use tasm_lib::twenty_first::test_shared::mmr::get_rustyleveldb_ammr_from_digests;
@@ -77,7 +77,6 @@ mod run_tests {
     use tasm_lib::twenty_first::util_types::mmr::shared_basic::calculate_new_peaks_from_leaf_mutation;
     use test_strategy::proptest;
 
-    use crate::ast_types::ListType;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 
     use super::*;
@@ -628,7 +627,7 @@ mod run_tests {
         let msa = MmrAccumulator::<Tip5>::new(digests);
         let mut init_memory = HashMap::default();
         let list_pointer = 10_000u64.into();
-        safe_list_insert(list_pointer, 2000, msa.get_peaks(), &mut init_memory);
+        list_insert(list_pointer, msa.get_peaks(), &mut init_memory);
         let new_leaf: Digest = random();
         let inputs = vec![
             u64_lit(msa.count_leaves()),
@@ -763,25 +762,22 @@ mod run_tests {
     #[proptest(cases = 20)]
     fn calculate_new_peaks_from_leaf_mutatation_inlined_test(
         #[strategy(vec(arb(), 1..90))] digests: Vec<Digest>,
-        #[strategy(0..#digests.len() as u64)] leaf_index: u64,
+        #[strategy(0..# digests.len() as u64)] leaf_index: u64,
         #[strategy(arb())] new_leaf: Digest,
     ) {
-        let (code, _) = compile_for_run_test(
-            &calculate_new_peaks_from_leaf_mutation_inlined_rast(),
-            ListType::Safe,
-        );
+        let (code, _) =
+            compile_for_run_test(&calculate_new_peaks_from_leaf_mutation_inlined_rast());
         test_mmr_leaf_mutation_equivalence(&code, digests, leaf_index, new_leaf);
     }
 
     #[proptest(cases = 20)]
     fn calculate_new_peaks_from_leaf_mutatation_with_local_function_test(
         #[strategy(vec(arb(), 1..90))] digests: Vec<Digest>,
-        #[strategy(0..#digests.len() as u64)] leaf_index: u64,
+        #[strategy(0..# digests.len() as u64)] leaf_index: u64,
         #[strategy(arb())] new_leaf: Digest,
     ) {
         let (code, _) = compile_for_run_test(
             &calculate_new_peaks_from_leaf_mutation_with_local_function_rast(),
-            ListType::Safe,
         );
         test_mmr_leaf_mutation_equivalence(&code, digests, leaf_index, new_leaf);
     }
@@ -797,18 +793,11 @@ mod run_tests {
         let mut init_memory = HashMap::default();
         let old_peaks_pointer: BFieldElement = 10000u64.into();
         let old_peaks = ammr.get_peaks();
-        let capacity = 2000;
-        safe_list_insert(
-            old_peaks_pointer,
-            capacity,
-            old_peaks.clone(),
-            &mut init_memory,
-        );
+        list_insert(old_peaks_pointer, old_peaks.clone(), &mut init_memory);
         let ap_pointer: BFieldElement = 20000u64.into();
         let (old_mp, _) = ammr.prove_membership(index_of_leaf_to_change);
-        safe_list_insert(
+        list_insert(
             ap_pointer,
-            capacity,
             old_mp.authentication_path.clone(),
             &mut init_memory,
         );
@@ -857,11 +846,9 @@ mod run_tests {
     #[test]
     fn verify_authentication_path_test() {
         let (code_inlined_function, _fn_name) =
-            compile_for_run_test(&verify_authentication_path_inlined(), ListType::Safe);
-        let (code_local_function, _fn_name) = compile_for_run_test(
-            &verify_authentication_path_with_local_function(),
-            ListType::Safe,
-        );
+            compile_for_run_test(&verify_authentication_path_inlined());
+        let (code_local_function, _fn_name) =
+            compile_for_run_test(&verify_authentication_path_with_local_function());
         for code in [code_inlined_function, code_local_function] {
             for size in 1..35 {
                 let digests: Vec<Digest> = random_elements(size);
@@ -871,16 +858,10 @@ mod run_tests {
                 let mut init_memory = HashMap::default();
                 let peaks_pointer: BFieldElement = 10000u64.into();
                 let peaks = ammr.get_peaks();
-                let capacity = 2000;
-                safe_list_insert(peaks_pointer, capacity, peaks.clone(), &mut init_memory);
+                list_insert(peaks_pointer, peaks.clone(), &mut init_memory);
                 let ap_pointer: BFieldElement = 20_000u64.into();
                 let mp: MmrMembershipProof<Tip5> = ammr.prove_membership(leaf_index).0;
-                safe_list_insert(
-                    ap_pointer,
-                    capacity,
-                    mp.authentication_path.clone(),
-                    &mut init_memory,
-                );
+                list_insert(ap_pointer, mp.authentication_path.clone(), &mut init_memory);
 
                 let own_leaf = digests[leaf_index as usize];
                 let good_inputs = vec![

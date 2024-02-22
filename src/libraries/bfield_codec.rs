@@ -1,4 +1,5 @@
 use itertools::Itertools;
+use tasm_lib::list::LIST_METADATA_SIZE;
 use tasm_lib::memory::dyn_malloc;
 use tasm_lib::triton_vm::prelude::*;
 
@@ -17,9 +18,7 @@ const DECODE_FROM_MEMORY_FN_NAME: &str = "bfield_codec::decode_from_memory";
 const DECODE_FROM_MEMORY_USING_SIZE_FN_NAME: &str = "bfield_codec::decode_from_memory_using_size";
 
 #[derive(Clone, Debug)]
-pub(crate) struct BFieldCodecLib {
-    pub(crate) list_type: ast_types::ListType,
-}
+pub(crate) struct BFieldCodecLib;
 
 impl BFieldCodecLib {
     fn encode_method_signature(
@@ -35,7 +34,7 @@ impl BFieldCodecLib {
                     mutable: false,
                 },
             )],
-            output: ast_types::DataType::List(Box::new(ast_types::DataType::Bfe), self.list_type),
+            output: ast_types::DataType::List(Box::new(ast_types::DataType::Bfe)),
             arg_evaluation_order: Default::default(),
         }
     }
@@ -47,22 +46,9 @@ impl BFieldCodecLib {
         state: &mut CompilerState,
     ) -> (String, Vec<LabelledInstruction>) {
         let encoding_length = receiver_type.bfield_codec_static_length().unwrap();
-        let list_size_in_memory = (encoding_length + self.list_type.metadata_size()) as i32;
+        let list_size_in_memory = (LIST_METADATA_SIZE + encoding_length) as i32;
 
         let dyn_malloc_label = state.import_snippet(Box::new(dyn_malloc::DynMalloc));
-
-        let write_capacity = match self.list_type {
-            ast_types::ListType::Safe => {
-                triton_asm!(
-                                    // _ (*list + 1)
-                    push {encoding_length}
-                                    // _ (*list + 1) value_size
-                    swap 1          // _ value_size (*list + 1)
-                    write_mem 1     // _ (*list + 2)
-                )
-            }
-            ast_types::ListType::Unsafe => triton_asm!(),
-        };
 
         let encode_subroutine_label =
             format!("{method_name}_{}", receiver_type.label_friendly_name());
@@ -77,8 +63,6 @@ impl BFieldCodecLib {
                     push {encoding_length}
                     swap 1
                     write_mem 1     // _ [value] (*list + 1)
-
-                    {&write_capacity}
                                     // _ [value] *word_0
 
                     {&write_n_words_to_memory_leaving_address(encoding_length)}
@@ -112,7 +96,7 @@ impl BFieldCodecLib {
             let Some(vec_element_type) = function_type_parameter else {
                 panic!("Expected type parameter for Vec<T> in `decode` function");
             };
-            ast_types::DataType::List(Box::new(vec_element_type), graft_config.list_type)
+            ast_types::DataType::List(Box::new(vec_element_type))
         } else {
             ast_types::DataType::Unresolved(return_type.to_owned())
         };

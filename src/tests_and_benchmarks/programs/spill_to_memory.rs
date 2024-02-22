@@ -469,12 +469,10 @@ fn ensure_dyn_malloc_and_static_malloc_do_not_interfere_5_rast() -> syn::ItemFn 
 
 #[cfg(test)]
 mod run_tests {
-
     use itertools::Itertools;
     use tasm_lib::twenty_first::shared_math::other::random_elements;
 
     use crate::ast_types::DataType;
-    use crate::ast_types::ListType;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 
     use super::*;
@@ -774,7 +772,7 @@ mod run_tests {
         let exec_result = execute_with_stack_safe_lists(
             &function,
             vec![],
-            DataType::List(Box::new(DataType::U64), ListType::Safe).stack_size() as isize,
+            DataType::List(Box::new(DataType::U64)).stack_size() as isize,
         )
         .unwrap();
 
@@ -794,7 +792,7 @@ mod run_tests {
         let exec_result = execute_with_stack_safe_lists(
             &ensure_dyn_malloc_and_static_malloc_do_not_interfere_2_rast(),
             vec![],
-            DataType::List(Box::new(DataType::U64), ListType::Safe).stack_size() as isize,
+            DataType::List(Box::new(DataType::U64)).stack_size() as isize,
         )
         .unwrap();
 
@@ -808,7 +806,7 @@ mod run_tests {
         let exec_result = execute_with_stack_safe_lists(
             &ensure_dyn_malloc_and_static_malloc_do_not_interfere_3_rast(),
             vec![],
-            DataType::List(Box::new(DataType::U64), ListType::Safe).stack_size() as isize,
+            DataType::List(Box::new(DataType::U64)).stack_size() as isize,
         )
         .unwrap();
 
@@ -824,7 +822,7 @@ mod run_tests {
         let exec_result = execute_with_stack_safe_lists(
             &ensure_dyn_malloc_and_static_malloc_do_not_interfere_4_rast(),
             vec![],
-            DataType::List(Box::new(DataType::U64), ListType::Safe).stack_size() as isize + 2,
+            DataType::List(Box::new(DataType::U64)).stack_size() as isize + 2,
         )
         .unwrap();
 
