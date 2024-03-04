@@ -45,7 +45,7 @@ mod test {
 
     fn call_compute_terminal() {
         let symbols_length: usize = tasm::tasm_io_read_stdin___u32() as usize;
-        let mut symbols: Vec<BFieldElement> = Vec::<BFieldElement>::with_capacity(symbols_length);
+        let mut symbols: Vec<BFieldElement> = Vec::<BFieldElement>::default();
 
         {
             let mut i: usize = 0;

@@ -388,8 +388,8 @@ fn ensure_dyn_malloc_and_static_malloc_do_not_interfere_2_rast() -> syn::ItemFn 
         fn ensure_dyn_malloc_and_static_malloc_do_not_interfere() -> Vec<u32> {
             let val0: (u64, u64, u64, u64, u64) = (10420u64, 10421u64, 10422u64, 10423u64, 10424u64);
             let val1: (u64, u64, u64, u64, u64) = (20420u64, 20421u64, 20422u64, 20423u64, 20424u64);
-            let mut b: Vec<u32> = Vec::<u32>::with_capacity(16);
-            let mut a: Vec<Digest> = Vec::<Digest>::with_capacity(16);
+            let mut b: Vec<u32> = Vec::<u32>::default();
+            let mut a: Vec<Digest> = Vec::<Digest>::default();
 
             let mut i: usize = 0;
             while i < 16usize {
@@ -405,8 +405,8 @@ fn ensure_dyn_malloc_and_static_malloc_do_not_interfere_2_rast() -> syn::ItemFn 
 fn ensure_dyn_malloc_and_static_malloc_do_not_interfere_3_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
         fn ensure_dyn_malloc_and_static_malloc_do_not_interfere() -> Vec<u32> {
-            let mut b: Vec<u32> = Vec::<u32>::with_capacity(16);
-            let mut a: Vec<Digest> = Vec::<Digest>::with_capacity(16);
+            let mut b: Vec<u32> = Vec::<u32>::default();
+            let mut a: Vec<Digest> = Vec::<Digest>::default();
 
             let mut i: usize = 0;
             while i < 16usize {
@@ -427,8 +427,8 @@ fn ensure_dyn_malloc_and_static_malloc_do_not_interfere_4_rast() -> syn::ItemFn 
             // elements does not interfere with statically allocated memory.
             let val0: (u64, u64, u64, u64, u64) = (10420u64, 10421u64, 10422u64, 10423u64, 10424u64);
             let val1: (u64, u64, u64, u64, u64) = (20420u64, 20421u64, 20422u64, 20423u64, 20424u64);
-            let mut b: Vec<u32> = Vec::<u32>::with_capacity(16);
-            let mut a: Vec<Digest> = Vec::<Digest>::with_capacity(16);
+            let mut b: Vec<u32> = Vec::<u32>::default();
+            let mut a: Vec<Digest> = Vec::<Digest>::default();
 
             let mut i: usize = 0;
             while i < 16usize {
@@ -451,8 +451,8 @@ fn ensure_dyn_malloc_and_static_malloc_do_not_interfere_5_rast() -> syn::ItemFn 
             // elements does not interfere with statically allocated memory.
             let val0: (u64, u64, u64, u64, u64) = (10420u64, 10421u64, 10422u64, 10423u64, 10424u64);
             let val1: (u64, u64, u64, u64, u64) = (20420u64, 20421u64, 20422u64, 20423u64, 20424u64);
-            let mut b: Vec<u32> = Vec::<u32>::with_capacity(16);
-            let mut a: Vec<Digest> = Vec::<Digest>::with_capacity(16);
+            let mut b: Vec<u32> = Vec::<u32>::default();
+            let mut a: Vec<Digest> = Vec::<Digest>::default();
 
             let mut i: usize = 0;
             while i < 16usize {
@@ -754,8 +754,8 @@ mod run_tests {
                 // elements does not interfere with statically allocated memory.
                 let val0: (u64, u64, u64, u64, u64) = (10420u64, 10421u64, 10422u64, 10423u64, 10424u64);
                 let val1: (u64, u64, u64, u64, u64) = (20420u64, 20421u64, 20422u64, 20423u64, 20424u64);
-                let mut b: Vec<u32> = Vec::<u32>::with_capacity(16);
-                let mut a: Vec<Digest> = Vec::<Digest>::with_capacity(16);
+                let mut b: Vec<u32> = Vec::<u32>::default();
+                let mut a: Vec<Digest> = Vec::<Digest>::default();
 
                 let mut i: usize = 0;
                 while i < 16usize {

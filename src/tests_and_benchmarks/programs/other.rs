@@ -68,7 +68,7 @@ mod compile_and_typecheck_tests {
 
                     let three: u64 = tasm::tasm_arithmetic_u64_add(1, 2);
 
-                    let mut arr: Vec<u64> = Vec::<u64>::with_capacity(16u32);
+                    let mut arr: Vec<u64> = Vec::<u64>::default();
                     arr[0] = b;
                     arr[a] = b + 1;
                     arr[2 * a + 3] = 1 << (4 / a + 5);

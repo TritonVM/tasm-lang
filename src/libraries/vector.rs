@@ -16,6 +16,8 @@ use super::Library;
 use super::LibraryFunction;
 
 const VECTOR_LIB_INDICATOR: &str = "Vec::";
+const NEW_FUNCTION_NAME: &str = "new";
+const DEFAULT_FUNCTION_NAME: &str = "default";
 const CLONE_FROM_METHOD_NAME: &str = "clone_from";
 const PUSH_METHOD_NAME: &str = "push";
 const POP_METHOD_NAME: &str = "pop";
@@ -306,8 +308,6 @@ impl VectorLib {
 
         LibraryFunction {
             signature,
-            // Notice that we don't have to check capacity for safe lists, since
-            // length 0 can never exceed capacity.
             // Stack at function start:
             // _ *list
             // Stack at function end:
@@ -497,7 +497,7 @@ impl VectorLib {
         args: &[ast::Expr<super::Annotation>],
     ) -> Option<Box<dyn BasicSnippet>> {
         match public_name {
-            "default" | "with_capacity" => {
+            NEW_FUNCTION_NAME | DEFAULT_FUNCTION_NAME => {
                 Some(Self::new_list_snippet(type_parameter.as_ref().unwrap()))
             }
             POP_METHOD_NAME => Some(Self::pop_snippet(type_parameter.as_ref().unwrap())),

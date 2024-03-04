@@ -14,8 +14,8 @@ struct TestStruct {
 fn main() {
     let mut test_struct: TestStruct = TestStruct {
         a: BFieldElement::new(0x0000000100000000u64),
-        b: Vec::<Digest>::with_capacity(100),
-        c: Vec::<BFieldElement>::with_capacity(200),
+        b: Vec::<Digest>::default(),
+        c: Vec::<BFieldElement>::default(),
         d: XFieldElement::new([
             BFieldElement::new(0x0000000200000000u64),
             BFieldElement::new(0x0000000400000000u64),

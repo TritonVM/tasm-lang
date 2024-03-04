@@ -6,7 +6,7 @@ use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 fn main() {
     let bfe_0: BFieldElement = tasm::tasm_io_read_stdin___bfe();
     let bfe_1: BFieldElement = tasm::tasm_io_read_stdin___bfe();
-    let mut bfes: Vec<BFieldElement> = Vec::<BFieldElement>::with_capacity(2);
+    let mut bfes: Vec<BFieldElement> = Vec::<BFieldElement>::default();
     bfes.push(bfe_0);
     bfes.push(bfe_1);
     let result_bfes: Result<Vec<BFieldElement>, ()> = Ok(bfes);

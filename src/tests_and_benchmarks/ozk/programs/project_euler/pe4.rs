@@ -37,7 +37,7 @@ fn main() {
         return result;
     }
 
-    let mut decimal_digits: Vec<u32> = Vec::<u32>::with_capacity(10);
+    let mut decimal_digits: Vec<u32> = Vec::<u32>::default();
     let min_value: u32 = 10;
     let max_value: u32 = 50;
     let mut lhs: u32 = min_value;

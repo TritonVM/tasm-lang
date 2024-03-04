@@ -78,7 +78,7 @@ impl Recufier {
     ///
     /// [claim]: crate::triton_vm::prelude::Claim
     pub fn encode_claim(program_digest: Digest) -> Vec<BFieldElement> {
-        let mut encoding: Vec<BFieldElement> = Vec::<BFieldElement>::with_capacity(9);
+        let mut encoding: Vec<BFieldElement> = Vec::<BFieldElement>::default();
         encoding.push(BFieldElement::one());
         encoding.push(BFieldElement::zero());
         encoding.push(BFieldElement::one());

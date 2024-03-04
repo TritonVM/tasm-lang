@@ -10,8 +10,8 @@ struct WithListFields {
 
 #[allow(clippy::redundant_field_names)]
 fn main() {
-    let mut bfes: Vec<BFieldElement> = Vec::<BFieldElement>::with_capacity(32);
-    let mut xfes: Vec<XFieldElement> = Vec::<XFieldElement>::with_capacity(32);
+    let mut bfes: Vec<BFieldElement> = Vec::<BFieldElement>::default();
+    let mut xfes: Vec<XFieldElement> = Vec::<XFieldElement>::default();
     bfes.push(BFieldElement::new(102));
     bfes.push(BFieldElement::new(2222));
     xfes.push(tasm::tasm_io_read_stdin___xfe());

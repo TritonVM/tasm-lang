@@ -18,7 +18,7 @@ pub(crate) mod run_tests {
         fn very_simple_list_support() -> syn::ItemFn {
             item_fn(parse_quote! {
                 fn make_very_short_list() -> u32 {
-                    let mut a: Vec<u32> = Vec::<u32>::with_capacity(17);
+                    let mut a: Vec<u32> = Vec::<u32>::default();
                     a.push(2000u32);
 
                     return a[0];
@@ -36,7 +36,7 @@ pub(crate) mod run_tests {
         fn clear_list_rast() -> syn::ItemFn {
             item_fn(parse_quote! {
                 fn clear_list() -> usize {
-                    let mut a: Vec<u32> = Vec::<u32>::with_capacity(17);
+                    let mut a: Vec<u32> = Vec::<u32>::default();
                     a.push(2001u32);
                     a.push(2002u32);
                     a.push(2003u32);
@@ -70,7 +70,7 @@ pub(crate) mod run_tests {
         let expected_outputs = vec![digest_lit(random_digest)];
         let rust_ast = item_fn(parse_quote! {
             fn make_short_digest_list(digest: Digest) -> Digest {
-                let mut a: Vec<Digest> = Vec::<Digest>::with_capacity(17);
+                let mut a: Vec<Digest> = Vec::<Digest>::default();
                 a.push(digest);
                 return a[0];
             }
@@ -95,7 +95,7 @@ pub(crate) mod run_tests {
         ];
         let rust_ast = item_fn(parse_quote! {
             fn make_short_digest_list(digest1: Digest, digest0: Digest, digest2: Digest) -> (Digest, Digest, Digest) {
-                let mut a: Vec<Digest> = Vec::<Digest>::with_capacity(17);
+                let mut a: Vec<Digest> = Vec::<Digest>::default();
                 a.push(digest1);
                 a.push(digest0);
                 a.push(digest2);
@@ -122,7 +122,7 @@ pub(crate) mod run_tests {
 
         let rust_ast = item_fn(parse_quote! {
             fn make_short_list() -> (Vec<u64>, u32, u64, u64) {
-                let mut a: Vec<u64> = Vec::<u64>::with_capacity(17);
+                let mut a: Vec<u64> = Vec::<u64>::default();
                 a.push(2000u64);
                 a.push(3000u64);
                 a.push(4000u64);
@@ -265,7 +265,7 @@ pub(crate) mod run_tests {
         fn build_and_read_u32_vector_in_while_loop_rast() -> syn::ItemFn {
             item_fn(parse_quote! {
                 fn manage_vector() -> (Vec<u32>, Vec<u32>, u32) {
-                    let mut list_a: Vec<u32> = Vec::<u32>::with_capacity(16);
+                    let mut list_a: Vec<u32> = Vec::<u32>::default();
 
                     let mut i: usize = 0;
                     while i < 16usize {
@@ -275,7 +275,7 @@ pub(crate) mod run_tests {
 
                     // Declare b vector
                     i = 0;
-                    let mut list_b: Vec<u32> = Vec::<u32>::with_capacity(32);
+                    let mut list_b: Vec<u32> = Vec::<u32>::default();
                     while i < 16 {
                         list_b.push(0u32);
                         i += 1;
@@ -299,7 +299,7 @@ pub(crate) mod run_tests {
         let mut exec_result = execute_with_stack_and_ins_safe_lists(
             &item_fn(parse_quote! {
                 fn build_vector_in_while_loop() -> Vec<u32> {
-                    let mut a: Vec<u32> = Vec::<u32>::with_capacity(16);
+                    let mut a: Vec<u32> = Vec::<u32>::default();
 
                     let mut i: usize = 0;
                     while i < 16usize {
@@ -323,7 +323,7 @@ pub(crate) mod run_tests {
         exec_result = execute_with_stack_and_ins_safe_lists(
             &item_fn(parse_quote! {
                 fn build_vector_in_while_loop() -> Vec<u64> {
-                    let mut a: Vec<u64> = Vec::<u64>::with_capacity(16);
+                    let mut a: Vec<u64> = Vec::<u64>::default();
 
                     let mut i: usize = 0;
                     while i < 16usize {
@@ -352,8 +352,8 @@ pub(crate) mod run_tests {
 
         let rust_ast = item_fn(parse_quote! {
             fn polymorphic_vectors() -> (Vec<u32>, u32, Vec<u64>, u32) {
-                let mut a: Vec<u32> = Vec::<u32>::with_capacity(16);
-                let mut b: Vec<u64> = Vec::<u64>::with_capacity(16);
+                let mut a: Vec<u32> = Vec::<u32>::default();
+                let mut b: Vec<u64> = Vec::<u64>::default();
                 a.push(1000u32);
                 a.push(2000u32);
                 b.push(3000u64);
@@ -366,7 +366,7 @@ pub(crate) mod run_tests {
 
         let inputs = vec![];
         let expected_list_pointer_a = dyn_malloc::DYN_MALLOC_FIRST_ADDRESS;
-        let expected_list_pointer_b = expected_list_pointer_a + BFieldElement::new(16 + 2);
+        let expected_list_pointer_b = dyn_malloc::DYN_MALLOC_FIRST_ADDRESS * BFieldElement::new(2);
         let expected_outputs = vec![
             bfe_lit(expected_list_pointer_a),
             bfe_lit(BFieldElement::new(2)),

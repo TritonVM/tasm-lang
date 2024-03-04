@@ -1,1230 +1,1231 @@
 project_euler_7_i101:
 
 # call graph
- main: 67933
+ main: 64890
    tasm_arithmetic_u32_leadingzeros: 12
      tasm_arithmetic_u32_leadingzeros_non_zero: 4
    tasm_arithmetic_u32_safesub: 11
    tasm_arithmetic_u32_safesub: 11
    tasm_arithmetic_u32_safemul: 8
-   tasm_list_safeimplu32_new___bool: 39
-     tasm_memory_dyn_malloc: 29
-   tasm_list_safeimplu32_push___bool: 23
-   tasm_list_safeimplu32_push___bool: 23
-   _binop_Lt__LboolR_bool_20_while_loop: 28396
-     tasm_list_safeimplu32_push___bool: 23
+   tasm_list_new___bool: 27
+     tasm_memory_dyn_malloc: 20
+       tasm_memory_dyn_malloc_initialize: 3
+   tasm_list_push___bool: 18
+   tasm_list_push___bool: 18
+   _binop_Lt__LboolR_bool_18_while_loop: 25376
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-     tasm_list_safeimplu32_push___bool: 23
+     tasm_list_push___bool: 18
      tasm_arithmetic_u32_safeadd: 8
-   _binop_Lt__LboolR_bool_31_while_loop: 39373
-     _primes_cast_u32__LboolR_bool_35_then: 6240
+   _binop_Lt__LboolR_bool_29_while_loop: 39373
+     _primes_cast_u32__LboolR_bool_33_then: 6240
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 6208
+       _binop_Lt__LboolR_bool_43_while_loop: 6208
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
@@ -1426,10 +1427,10 @@ project_euler_7_i101:
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 3760
+     _primes_cast_u32__LboolR_bool_33_then: 3760
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 3728
+       _binop_Lt__LboolR_bool_43_while_loop: 3728
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
@@ -1551,10 +1552,10 @@ project_euler_7_i101:
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 2675
+     _primes_cast_u32__LboolR_bool_33_then: 2675
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 2643
+       _binop_Lt__LboolR_bool_43_while_loop: 2643
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
@@ -1641,12 +1642,12 @@ project_euler_7_i101:
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 1714
+     _primes_cast_u32__LboolR_bool_33_then: 1714
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 1682
+       _binop_Lt__LboolR_bool_43_while_loop: 1682
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
@@ -1702,10 +1703,10 @@ project_euler_7_i101:
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 1435
+     _primes_cast_u32__LboolR_bool_33_then: 1435
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 1403
+       _binop_Lt__LboolR_bool_43_while_loop: 1403
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
@@ -1752,12 +1753,12 @@ project_euler_7_i101:
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 1094
+     _primes_cast_u32__LboolR_bool_33_then: 1094
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 1062
+       _binop_Lt__LboolR_bool_43_while_loop: 1062
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
@@ -1793,10 +1794,10 @@ project_euler_7_i101:
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 970
+     _primes_cast_u32__LboolR_bool_33_then: 970
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 938
+       _binop_Lt__LboolR_bool_43_while_loop: 938
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
@@ -1828,12 +1829,12 @@ project_euler_7_i101:
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 815
+     _primes_cast_u32__LboolR_bool_33_then: 815
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 783
+       _binop_Lt__LboolR_bool_43_while_loop: 783
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
@@ -1860,14 +1861,14 @@ project_euler_7_i101:
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 629
+     _primes_cast_u32__LboolR_bool_33_then: 629
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 597
+       _binop_Lt__LboolR_bool_43_while_loop: 597
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
@@ -1888,10 +1889,10 @@ project_euler_7_i101:
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 598
+     _primes_cast_u32__LboolR_bool_33_then: 598
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 566
+       _binop_Lt__LboolR_bool_43_while_loop: 566
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
@@ -1911,14 +1912,14 @@ project_euler_7_i101:
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 505
+     _primes_cast_u32__LboolR_bool_33_then: 505
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 473
+       _binop_Lt__LboolR_bool_43_while_loop: 473
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
@@ -1935,12 +1936,12 @@ project_euler_7_i101:
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 443
+     _primes_cast_u32__LboolR_bool_33_then: 443
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 411
+       _binop_Lt__LboolR_bool_43_while_loop: 411
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
@@ -1955,10 +1956,10 @@ project_euler_7_i101:
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 443
+     _primes_cast_u32__LboolR_bool_33_then: 443
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 411
+       _binop_Lt__LboolR_bool_43_while_loop: 411
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
@@ -1973,12 +1974,12 @@ project_euler_7_i101:
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 381
+     _primes_cast_u32__LboolR_bool_33_then: 381
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 349
+       _binop_Lt__LboolR_bool_43_while_loop: 349
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
@@ -1991,14 +1992,14 @@ project_euler_7_i101:
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 350
+     _primes_cast_u32__LboolR_bool_33_then: 350
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 318
+       _binop_Lt__LboolR_bool_43_while_loop: 318
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
@@ -2010,14 +2011,14 @@ project_euler_7_i101:
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 319
+     _primes_cast_u32__LboolR_bool_33_then: 319
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 287
+       _binop_Lt__LboolR_bool_43_while_loop: 287
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
@@ -2028,10 +2029,10 @@ project_euler_7_i101:
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 288
+     _primes_cast_u32__LboolR_bool_33_then: 288
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 256
+       _binop_Lt__LboolR_bool_43_while_loop: 256
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
@@ -2041,14 +2042,14 @@ project_euler_7_i101:
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 288
+     _primes_cast_u32__LboolR_bool_33_then: 288
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 256
+       _binop_Lt__LboolR_bool_43_while_loop: 256
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
@@ -2058,12 +2059,12 @@ project_euler_7_i101:
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 257
+     _primes_cast_u32__LboolR_bool_33_then: 257
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 225
+       _binop_Lt__LboolR_bool_43_while_loop: 225
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
@@ -2072,10 +2073,10 @@ project_euler_7_i101:
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 257
+     _primes_cast_u32__LboolR_bool_33_then: 257
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 225
+       _binop_Lt__LboolR_bool_43_while_loop: 225
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
@@ -2084,14 +2085,14 @@ project_euler_7_i101:
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 226
+     _primes_cast_u32__LboolR_bool_33_then: 226
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 194
+       _binop_Lt__LboolR_bool_43_while_loop: 194
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
@@ -2099,12 +2100,12 @@ project_euler_7_i101:
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 226
+     _primes_cast_u32__LboolR_bool_33_then: 226
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 194
+       _binop_Lt__LboolR_bool_43_while_loop: 194
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
@@ -2112,810 +2113,811 @@ project_euler_7_i101:
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 195
+     _primes_cast_u32__LboolR_bool_33_then: 195
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 163
+       _binop_Lt__LboolR_bool_43_while_loop: 163
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 195
+     _primes_cast_u32__LboolR_bool_33_then: 195
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 163
+       _binop_Lt__LboolR_bool_43_while_loop: 163
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 164
+     _primes_cast_u32__LboolR_bool_33_then: 164
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 132
+       _binop_Lt__LboolR_bool_43_while_loop: 132
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 164
+     _primes_cast_u32__LboolR_bool_33_then: 164
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 132
+       _binop_Lt__LboolR_bool_43_while_loop: 132
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 164
+     _primes_cast_u32__LboolR_bool_33_then: 164
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 132
+       _binop_Lt__LboolR_bool_43_while_loop: 132
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 164
+     _primes_cast_u32__LboolR_bool_33_then: 164
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 132
+       _binop_Lt__LboolR_bool_43_while_loop: 132
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 164
+     _primes_cast_u32__LboolR_bool_33_then: 164
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 132
+       _binop_Lt__LboolR_bool_43_while_loop: 132
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 133
+     _primes_cast_u32__LboolR_bool_33_then: 133
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 101
+       _binop_Lt__LboolR_bool_43_while_loop: 101
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 133
+     _primes_cast_u32__LboolR_bool_33_then: 133
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 101
+       _binop_Lt__LboolR_bool_43_while_loop: 101
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 133
+     _primes_cast_u32__LboolR_bool_33_then: 133
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 101
+       _binop_Lt__LboolR_bool_43_while_loop: 101
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 133
+     _primes_cast_u32__LboolR_bool_33_then: 133
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 101
+       _binop_Lt__LboolR_bool_43_while_loop: 101
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 133
+     _primes_cast_u32__LboolR_bool_33_then: 133
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 101
+       _binop_Lt__LboolR_bool_43_while_loop: 101
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 133
+     _primes_cast_u32__LboolR_bool_33_then: 133
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 101
+       _binop_Lt__LboolR_bool_43_while_loop: 101
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 102
+     _primes_cast_u32__LboolR_bool_33_then: 102
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 70
+       _binop_Lt__LboolR_bool_43_while_loop: 70
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 102
+     _primes_cast_u32__LboolR_bool_33_then: 102
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 70
+       _binop_Lt__LboolR_bool_43_while_loop: 70
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 102
+     _primes_cast_u32__LboolR_bool_33_then: 102
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 70
+       _binop_Lt__LboolR_bool_43_while_loop: 70
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 102
+     _primes_cast_u32__LboolR_bool_33_then: 102
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 70
+       _binop_Lt__LboolR_bool_43_while_loop: 70
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 102
+     _primes_cast_u32__LboolR_bool_33_then: 102
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 70
+       _binop_Lt__LboolR_bool_43_while_loop: 70
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 102
+     _primes_cast_u32__LboolR_bool_33_then: 102
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 70
+       _binop_Lt__LboolR_bool_43_while_loop: 70
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 102
+     _primes_cast_u32__LboolR_bool_33_then: 102
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 70
+       _binop_Lt__LboolR_bool_43_while_loop: 70
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 102
+     _primes_cast_u32__LboolR_bool_33_then: 102
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 70
+       _binop_Lt__LboolR_bool_43_while_loop: 70
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 102
+     _primes_cast_u32__LboolR_bool_33_then: 102
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 70
+       _binop_Lt__LboolR_bool_43_while_loop: 70
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 102
+     _primes_cast_u32__LboolR_bool_33_then: 102
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 70
+       _binop_Lt__LboolR_bool_43_while_loop: 70
          tasm_arithmetic_u32_safeadd: 8
          tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 71
+     _primes_cast_u32__LboolR_bool_33_then: 71
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 39
+       _binop_Lt__LboolR_bool_43_while_loop: 39
          tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 71
+     _primes_cast_u32__LboolR_bool_33_then: 71
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 39
+       _binop_Lt__LboolR_bool_43_while_loop: 39
          tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 71
+     _primes_cast_u32__LboolR_bool_33_then: 71
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 39
+       _binop_Lt__LboolR_bool_43_while_loop: 39
          tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 71
+     _primes_cast_u32__LboolR_bool_33_then: 71
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 39
+       _binop_Lt__LboolR_bool_43_while_loop: 39
          tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 71
+     _primes_cast_u32__LboolR_bool_33_then: 71
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 39
+       _binop_Lt__LboolR_bool_43_while_loop: 39
          tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 71
+     _primes_cast_u32__LboolR_bool_33_then: 71
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 39
+       _binop_Lt__LboolR_bool_43_while_loop: 39
          tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 71
+     _primes_cast_u32__LboolR_bool_33_then: 71
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 39
+       _binop_Lt__LboolR_bool_43_while_loop: 39
          tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 71
+     _primes_cast_u32__LboolR_bool_33_then: 71
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 39
+       _binop_Lt__LboolR_bool_43_while_loop: 39
          tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 71
+     _primes_cast_u32__LboolR_bool_33_then: 71
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 39
+       _binop_Lt__LboolR_bool_43_while_loop: 39
          tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 71
+     _primes_cast_u32__LboolR_bool_33_then: 71
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 39
+       _binop_Lt__LboolR_bool_43_while_loop: 39
          tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 71
+     _primes_cast_u32__LboolR_bool_33_then: 71
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 39
+       _binop_Lt__LboolR_bool_43_while_loop: 39
          tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 71
+     _primes_cast_u32__LboolR_bool_33_then: 71
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 39
+       _binop_Lt__LboolR_bool_43_while_loop: 39
          tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 71
+     _primes_cast_u32__LboolR_bool_33_then: 71
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 39
+       _binop_Lt__LboolR_bool_43_while_loop: 39
          tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 71
+     _primes_cast_u32__LboolR_bool_33_then: 71
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 39
+       _binop_Lt__LboolR_bool_43_while_loop: 39
          tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 71
+     _primes_cast_u32__LboolR_bool_33_then: 71
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 39
+       _binop_Lt__LboolR_bool_43_while_loop: 39
          tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 71
+     _primes_cast_u32__LboolR_bool_33_then: 71
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 39
+       _binop_Lt__LboolR_bool_43_while_loop: 39
          tasm_arithmetic_u32_safeadd: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 40
+     _primes_cast_u32__LboolR_bool_33_then: 40
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 8
+       _binop_Lt__LboolR_bool_43_while_loop: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 40
+     _primes_cast_u32__LboolR_bool_33_then: 40
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 8
+       _binop_Lt__LboolR_bool_43_while_loop: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 40
+     _primes_cast_u32__LboolR_bool_33_then: 40
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 8
+       _binop_Lt__LboolR_bool_43_while_loop: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 40
+     _primes_cast_u32__LboolR_bool_33_then: 40
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 8
+       _binop_Lt__LboolR_bool_43_while_loop: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 40
+     _primes_cast_u32__LboolR_bool_33_then: 40
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 8
+       _binop_Lt__LboolR_bool_43_while_loop: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 40
+     _primes_cast_u32__LboolR_bool_33_then: 40
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 8
+       _binop_Lt__LboolR_bool_43_while_loop: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 40
+     _primes_cast_u32__LboolR_bool_33_then: 40
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 8
+       _binop_Lt__LboolR_bool_43_while_loop: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 40
+     _primes_cast_u32__LboolR_bool_33_then: 40
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 8
+       _binop_Lt__LboolR_bool_43_while_loop: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 40
+     _primes_cast_u32__LboolR_bool_33_then: 40
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 8
+       _binop_Lt__LboolR_bool_43_while_loop: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 40
+     _primes_cast_u32__LboolR_bool_33_then: 40
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 8
+       _binop_Lt__LboolR_bool_43_while_loop: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 40
+     _primes_cast_u32__LboolR_bool_33_then: 40
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 8
+       _binop_Lt__LboolR_bool_43_while_loop: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 40
+     _primes_cast_u32__LboolR_bool_33_then: 40
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 8
+       _binop_Lt__LboolR_bool_43_while_loop: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 40
+     _primes_cast_u32__LboolR_bool_33_then: 40
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 8
+       _binop_Lt__LboolR_bool_43_while_loop: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 40
+     _primes_cast_u32__LboolR_bool_33_then: 40
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 8
+       _binop_Lt__LboolR_bool_43_while_loop: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 40
+     _primes_cast_u32__LboolR_bool_33_then: 40
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 8
+       _binop_Lt__LboolR_bool_43_while_loop: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 40
+     _primes_cast_u32__LboolR_bool_33_then: 40
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 8
+       _binop_Lt__LboolR_bool_43_while_loop: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 40
+     _primes_cast_u32__LboolR_bool_33_then: 40
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 8
+       _binop_Lt__LboolR_bool_43_while_loop: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 40
+     _primes_cast_u32__LboolR_bool_33_then: 40
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 8
+       _binop_Lt__LboolR_bool_43_while_loop: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 40
+     _primes_cast_u32__LboolR_bool_33_then: 40
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 8
+       _binop_Lt__LboolR_bool_43_while_loop: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 40
+     _primes_cast_u32__LboolR_bool_33_then: 40
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 8
+       _binop_Lt__LboolR_bool_43_while_loop: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 40
+     _primes_cast_u32__LboolR_bool_33_then: 40
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 8
+       _binop_Lt__LboolR_bool_43_while_loop: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 40
+     _primes_cast_u32__LboolR_bool_33_then: 40
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 8
+       _binop_Lt__LboolR_bool_43_while_loop: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 40
+     _primes_cast_u32__LboolR_bool_33_then: 40
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 8
+       _binop_Lt__LboolR_bool_43_while_loop: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 40
+     _primes_cast_u32__LboolR_bool_33_then: 40
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 8
+       _binop_Lt__LboolR_bool_43_while_loop: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 40
+     _primes_cast_u32__LboolR_bool_33_then: 40
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 8
+       _binop_Lt__LboolR_bool_43_while_loop: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 40
+     _primes_cast_u32__LboolR_bool_33_then: 40
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 8
+       _binop_Lt__LboolR_bool_43_while_loop: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 40
+     _primes_cast_u32__LboolR_bool_33_then: 40
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 8
+       _binop_Lt__LboolR_bool_43_while_loop: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 40
+     _primes_cast_u32__LboolR_bool_33_then: 40
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 8
+       _binop_Lt__LboolR_bool_43_while_loop: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 40
+     _primes_cast_u32__LboolR_bool_33_then: 40
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 8
+       _binop_Lt__LboolR_bool_43_while_loop: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 40
+     _primes_cast_u32__LboolR_bool_33_then: 40
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 8
+       _binop_Lt__LboolR_bool_43_while_loop: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 40
+     _primes_cast_u32__LboolR_bool_33_then: 40
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 8
+       _binop_Lt__LboolR_bool_43_while_loop: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 40
+     _primes_cast_u32__LboolR_bool_33_then: 40
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 8
+       _binop_Lt__LboolR_bool_43_while_loop: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 40
+     _primes_cast_u32__LboolR_bool_33_then: 40
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 8
+       _binop_Lt__LboolR_bool_43_while_loop: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 40
+     _primes_cast_u32__LboolR_bool_33_then: 40
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 8
+       _binop_Lt__LboolR_bool_43_while_loop: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 40
+     _primes_cast_u32__LboolR_bool_33_then: 40
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 8
+       _binop_Lt__LboolR_bool_43_while_loop: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 40
+     _primes_cast_u32__LboolR_bool_33_then: 40
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 8
+       _binop_Lt__LboolR_bool_43_while_loop: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 40
+     _primes_cast_u32__LboolR_bool_33_then: 40
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 8
+       _binop_Lt__LboolR_bool_43_while_loop: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 40
+     _primes_cast_u32__LboolR_bool_33_then: 40
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 8
+       _binop_Lt__LboolR_bool_43_while_loop: 8
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_else: 1
+     _primes_cast_u32__LboolR_bool_33_else: 1
      tasm_arithmetic_u32_safeadd: 8
-     _primes_cast_u32__LboolR_bool_35_then: 40
+     _primes_cast_u32__LboolR_bool_33_then: 40
        tasm_arithmetic_u32_safeadd: 8
        tasm_arithmetic_u32_safemul: 8
-       _binop_Lt__LboolR_bool_45_while_loop: 8
+       _binop_Lt__LboolR_bool_43_while_loop: 8
      tasm_arithmetic_u32_safeadd: 8
    tasm_io_write_to_stdout___u32: 2
    tasm_io_write_to_stdout___u32: 2
- total: 67935
+ total: 64892
 
 # aggregated
- main: 67933 (1)
-   tasm_arithmetic_u32_leadingzeros: 12 (0.00017664464)
-     tasm_arithmetic_u32_leadingzeros_non_zero: 4 (0.000058881546)
-   tasm_arithmetic_u32_safesub: 22 (0.0003238485)
-   tasm_arithmetic_u32_safemul: 8 (0.00011776309)
-   tasm_list_safeimplu32_new___bool: 39 (0.00057409506)
-     tasm_memory_dyn_malloc: 29 (0.0004268912)
-   tasm_list_safeimplu32_push___bool: 46 (0.00067713775)
-   _binop_Lt__LboolR_bool_20_while_loop: 28396 (0.4180001)
-     tasm_list_safeimplu32_push___bool: 13892 (0.20449561)
-     tasm_arithmetic_u32_safeadd: 7016 (0.10327823)
-   _binop_Lt__LboolR_bool_31_while_loop: 39373 (0.5795858)
-     _primes_cast_u32__LboolR_bool_35_then: 29637 (0.4362681)
-       tasm_arithmetic_u32_safeadd: 800 (0.011776309)
-       tasm_arithmetic_u32_safemul: 800 (0.011776309)
-       _binop_Lt__LboolR_bool_45_while_loop: 26437 (0.38916284)
-         tasm_arithmetic_u32_safeadd: 6616 (0.09739008)
-     _primes_cast_u32__LboolR_bool_35_else: 173 (0.0025466268)
-   tasm_io_write_to_stdout___u32: 4 (0.000058881546)
- total: 67935 (1.0000294)
+ main: 64890 (1)
+   tasm_arithmetic_u32_leadingzeros: 12 (0.00018492834)
+     tasm_arithmetic_u32_leadingzeros_non_zero: 4 (0.00006164278)
+   tasm_arithmetic_u32_safesub: 22 (0.0003390353)
+   tasm_arithmetic_u32_safemul: 8 (0.00012328556)
+   tasm_list_new___bool: 27 (0.00041608876)
+     tasm_memory_dyn_malloc: 20 (0.0003082139)
+       tasm_memory_dyn_malloc_initialize: 3 (0.000046232086)
+   tasm_list_push___bool: 36 (0.000554785)
+   _binop_Lt__LboolR_bool_18_while_loop: 25376 (0.39106178)
+     tasm_list_push___bool: 10872 (0.16754508)
+     tasm_arithmetic_u32_safeadd: 7016 (0.10812144)
+   _binop_Lt__LboolR_bool_29_while_loop: 39373 (0.6067653)
+     _primes_cast_u32__LboolR_bool_33_then: 29637 (0.45672676)
+       tasm_arithmetic_u32_safeadd: 800 (0.012328556)
+       tasm_arithmetic_u32_safemul: 800 (0.012328556)
+       _binop_Lt__LboolR_bool_43_while_loop: 26437 (0.40741256)
+         tasm_arithmetic_u32_safeadd: 6616 (0.10195716)
+     _primes_cast_u32__LboolR_bool_33_else: 173 (0.0026660503)
+   tasm_io_write_to_stdout___u32: 4 (0.00006164278)
+ total: 64892 (1.0000309)

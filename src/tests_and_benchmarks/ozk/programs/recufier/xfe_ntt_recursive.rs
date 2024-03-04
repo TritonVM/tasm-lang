@@ -8,7 +8,7 @@ use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 #[allow(clippy::vec_init_then_push)]
 fn main() {
     fn base_case(x: &Vec<XFieldElement>, omega: BFieldElement) -> Vec<XFieldElement> {
-        let mut ret: Vec<XFieldElement> = Vec::<XFieldElement>::with_capacity(2);
+        let mut ret: Vec<XFieldElement> = Vec::<XFieldElement>::default();
         ret.push(x[0] + x[1]);
         ret.push(x[0] + x[1] * omega);
 
@@ -21,8 +21,8 @@ fn main() {
             base_case(&x, omega)
         } else {
             // Split by parity
-            let mut x_even: Vec<XFieldElement> = Vec::<XFieldElement>::with_capacity(size / 2);
-            let mut x_odd: Vec<XFieldElement> = Vec::<XFieldElement>::with_capacity(size / 2);
+            let mut x_even: Vec<XFieldElement> = Vec::<XFieldElement>::default();
+            let mut x_odd: Vec<XFieldElement> = Vec::<XFieldElement>::default();
             let mut i: usize = 0;
             while i < size {
                 if i % 2 == 0 {
@@ -39,7 +39,7 @@ fn main() {
             let odd: Vec<XFieldElement> = xfe_ntt(x_odd, omega_squared);
 
             // Calculate all values omega^j, for j=0..size
-            let mut factor_values: Vec<BFieldElement> = Vec::<BFieldElement>::with_capacity(size);
+            let mut factor_values: Vec<BFieldElement> = Vec::<BFieldElement>::default();
             i = 0;
             let mut pow: BFieldElement = BFieldElement::one();
             while i < size {
@@ -49,10 +49,8 @@ fn main() {
             }
 
             // Split by middle
-            let mut fst_half_factors: Vec<BFieldElement> =
-                Vec::<BFieldElement>::with_capacity(size / 2);
-            let mut snd_half_factors: Vec<BFieldElement> =
-                Vec::<BFieldElement>::with_capacity(size / 2);
+            let mut fst_half_factors: Vec<BFieldElement> = Vec::<BFieldElement>::default();
+            let mut snd_half_factors: Vec<BFieldElement> = Vec::<BFieldElement>::default();
             i = 0;
             while i != size / 2 {
                 fst_half_factors.push(factor_values[i]);
@@ -64,7 +62,7 @@ fn main() {
             }
 
             // hadamard products
-            let mut res: Vec<XFieldElement> = Vec::<XFieldElement>::with_capacity(size);
+            let mut res: Vec<XFieldElement> = Vec::<XFieldElement>::default();
             i = 0;
             while i != size / 2 {
                 res.push(even[i] + odd[i] * fst_half_factors[i]);

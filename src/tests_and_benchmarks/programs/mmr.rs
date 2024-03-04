@@ -561,7 +561,7 @@ mod run_tests {
                 // 64 = MAX_MMR_HEIGHT
                 let mut peaks: Vec<Digest> = old_peaks;
                 peaks.push(new_leaf);
-                let mut auth_path: Vec<Digest> = Vec::<Digest>::with_capacity(64usize);
+                let mut auth_path: Vec<Digest> = Vec::<Digest>::default();
                 let mut right_lineage_count: u32 = right_lineage_length_from_leaf_index(old_leaf_count);
                 while right_lineage_count != 0u32 {
                     let new_hash: Digest = peaks.pop().unwrap();
@@ -589,7 +589,7 @@ mod run_tests {
                 let mut right_lineage_count: u32 = 64 - pow2.leading_zeros() - 1;
 
                 // 64 = MAX_MMR_HEIGHT
-                let mut auth_path: Vec<Digest> = Vec::<Digest>::with_capacity(64usize);
+                let mut auth_path: Vec<Digest> = Vec::<Digest>::default();
                 while right_lineage_count != 0u32 {
                     let new_hash: Digest = peaks.pop().unwrap();
                     let previous_peak: Digest = peaks.pop().unwrap();

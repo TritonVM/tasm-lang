@@ -6,7 +6,7 @@ use crate::triton_vm::prelude::*;
 fn sample_scalars() {
     Tip5WithState::init();
     let input_count: usize = tasm::tasm_io_read_stdin___u32() as usize;
-    let mut preimage: Vec<BFieldElement> = Vec::<BFieldElement>::with_capacity(input_count + 20);
+    let mut preimage: Vec<BFieldElement> = Vec::<BFieldElement>::default();
     {
         let mut i: usize = 0;
         while i < input_count {

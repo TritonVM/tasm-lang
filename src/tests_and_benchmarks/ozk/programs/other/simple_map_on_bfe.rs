@@ -7,7 +7,7 @@ fn main() {
     fn local_function(input: BFieldElement) -> BFieldElement {
         return input * BFieldElement::new(2);
     }
-    let mut input_values: Vec<BFieldElement> = Vec::<BFieldElement>::with_capacity(200);
+    let mut input_values: Vec<BFieldElement> = Vec::<BFieldElement>::default();
 
     let length_indication: usize = tasm::tasm_io_read_stdin___bfe().value() as usize;
     let mut i: usize = 0;

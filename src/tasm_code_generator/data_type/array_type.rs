@@ -25,13 +25,11 @@ pub(crate) fn compile_array_expr(
         panic!("Type must be array");
     };
 
-    let total_size_in_memory: usize = array_type.size_in_memory();
     let dyn_malloc_snippet_label =
         state.import_snippet(Box::new(tasm_lib::memory::dyn_malloc::DynMalloc));
     let allocate_memory_for_array = triton_asm!(
         // _
 
-        push {total_size_in_memory}
         call {dyn_malloc_snippet_label}
 
         // _ *array

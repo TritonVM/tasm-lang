@@ -55,7 +55,7 @@ impl BFieldCodecLib {
         let encode_subroutine_code = triton_asm!(
                 {encode_subroutine_label}:
                                     // _ [value]
-                    push {list_size_in_memory}
+
                     call {dyn_malloc_label}
                                     // _ [value] *list
 
