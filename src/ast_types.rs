@@ -5,6 +5,7 @@ use std::str::FromStr;
 use anyhow::bail;
 use itertools::Itertools;
 use regex::Regex;
+use tasm_lib::triton_vm::table::{NUM_BASE_COLUMNS, NUM_EXT_COLUMNS, NUM_QUOTIENT_SEGMENTS};
 
 use crate::ast::FnSignature;
 
@@ -68,6 +69,12 @@ impl FromStr for DataType {
 
 impl DataType {
     pub(crate) fn try_from_string(type_str: &str) -> Result<Self, ()> {
+        let box_regex = Regex::new(r"Box<(?<inner>.+)>").unwrap();
+        if let Some(caps) = box_regex.captures(type_str) {
+            let inner_parsed = Self::try_from_string(&caps["inner"])?;
+            return Ok(DataType::Boxed(Box::new(inner_parsed)));
+        }
+
         let vec_regex = Regex::new(r"Vec<(?<inner>.+)>").unwrap();
         if let Some(caps) = vec_regex.captures(type_str) {
             let inner_parsed = Self::try_from_string(&caps["inner"])?;
@@ -107,6 +114,22 @@ impl DataType {
 
             "AuthenticationStructure" => Ok(DataType::List(Box::new(DataType::Digest))),
             "FriResponse" => Ok(DataType::Unresolved(type_str.to_owned())),
+            "BaseRow<XFieldElement>" => Ok(DataType::Array(ArrayType {
+                element_type: Box::new(DataType::Xfe),
+                length: NUM_BASE_COLUMNS,
+            })),
+            "BaseRow<BFieldElement>" => Ok(DataType::Array(ArrayType {
+                element_type: Box::new(DataType::Bfe),
+                length: NUM_BASE_COLUMNS,
+            })),
+            "ExtensionRow" => Ok(DataType::Array(ArrayType {
+                element_type: Box::new(DataType::Xfe),
+                length: NUM_EXT_COLUMNS,
+            })),
+            "QuotientSegments" => Ok(DataType::Array(ArrayType {
+                element_type: Box::new(DataType::Xfe),
+                length: NUM_QUOTIENT_SEGMENTS,
+            })),
             _ => todo!("{type_str}"),
         }
     }

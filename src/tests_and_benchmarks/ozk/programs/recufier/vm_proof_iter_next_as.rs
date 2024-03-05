@@ -6,9 +6,6 @@ use tasm_lib::triton_vm::proof_stream::ProofStream;
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 use crate::tests_and_benchmarks::ozk::rust_shadows::Tip5WithState;
 use crate::tests_and_benchmarks::ozk::rust_shadows::VmProofIter;
-use crate::triton_vm::table::BaseRow;
-use crate::triton_vm::table::ExtensionRow;
-use crate::triton_vm::table::QuotientSegments;
 
 fn call_all_next_methods() {
     Tip5WithState::init();
@@ -19,12 +16,13 @@ fn call_all_next_methods() {
     let a_merkle_root: Box<Digest> = vm_proof_iter.next_as_merkleroot();
     tasm::tasm_io_write_to_stdout___digest(*a_merkle_root);
 
-    let out_of_domain_base_row: Box<Box<BaseRow<XFieldElement>>> =
+    let out_of_domain_base_row: Box<Box<[XFieldElement; 354]>> =
         vm_proof_iter.next_as_outofdomainbaserow();
     tasm::tasm_io_write_to_stdout___xfe(out_of_domain_base_row[0]);
     tasm::tasm_io_write_to_stdout___xfe(out_of_domain_base_row[1]);
 
-    let out_of_domain_ext_row: Box<Box<ExtensionRow>> = vm_proof_iter.next_as_outofdomainextrow();
+    let out_of_domain_ext_row: Box<Box<[XFieldElement; 80]>> =
+        vm_proof_iter.next_as_outofdomainextrow();
     tasm::tasm_io_write_to_stdout___xfe(out_of_domain_ext_row[0]);
     tasm::tasm_io_write_to_stdout___xfe(out_of_domain_ext_row[1]);
 
@@ -41,12 +39,12 @@ fn call_all_next_methods() {
     tasm::tasm_io_write_to_stdout___digest(authentication_structure[1]);
     tasm::tasm_io_write_to_stdout___digest(authentication_structure[2]);
 
-    let mbtw: Box<Vec<BaseRow<BFieldElement>>> = vm_proof_iter.next_as_masterbasetablerows();
+    let mbtw: Box<Vec<[BFieldElement; 354]>> = vm_proof_iter.next_as_masterbasetablerows();
     {
         let mut j: usize = 0;
         while j < mbtw.len() {
             let mut i: usize = 0;
-            while i < mbtw[j].len() {
+            while i < 354 {
                 tasm::tasm_io_write_to_stdout___bfe(mbtw[j][i]);
                 i += 1;
             }
@@ -54,12 +52,12 @@ fn call_all_next_methods() {
         }
     }
 
-    let metr: Box<Vec<ExtensionRow>> = vm_proof_iter.next_as_masterexttablerows();
+    let metr: Box<Vec<[XFieldElement; 80]>> = vm_proof_iter.next_as_masterexttablerows();
     {
         let mut j: usize = 0;
         while j < metr.len() {
             let mut i: usize = 0;
-            while i < metr[j].len() {
+            while i < 80 {
                 tasm::tasm_io_write_to_stdout___xfe(metr[j][i]);
                 i += 1;
             }
@@ -121,6 +119,9 @@ mod test {
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
     use crate::triton_vm::stark::NUM_QUOTIENT_SEGMENTS;
+    use crate::triton_vm::table::BaseRow;
+    use crate::triton_vm::table::ExtensionRow;
+    use crate::triton_vm::table::QuotientSegments;
     use crate::triton_vm::table::NUM_BASE_COLUMNS;
     use crate::triton_vm::table::NUM_EXT_COLUMNS;
 
