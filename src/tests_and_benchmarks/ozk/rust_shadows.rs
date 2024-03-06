@@ -22,12 +22,14 @@ use tasm_lib::twenty_first::util_types::algebraic_hasher::AlgebraicHasher;
 use tasm_lib::twenty_first::util_types::algebraic_hasher::Sponge;
 use tasm_lib::twenty_first::util_types::merkle_tree::MerkleTreeInclusionProof;
 
+use crate::tests_and_benchmarks::ozk::programs::recufier::verify::Challenges as TasmLangChallenges;
 use crate::tests_and_benchmarks::ozk::programs::recufier::verify::FriVerify;
 use crate::triton_vm::arithmetic_domain::ArithmeticDomain;
 use crate::triton_vm::fri::AuthenticationStructure;
 use crate::triton_vm::fri::Fri;
 use crate::triton_vm::proof_item::FriResponse;
 use crate::triton_vm::proof_stream::ProofStream;
+use crate::triton_vm::table::challenges::Challenges;
 use crate::triton_vm::table::BaseRow;
 use crate::triton_vm::table::ExtensionRow;
 use crate::triton_vm::table::QuotientSegments;
@@ -291,6 +293,19 @@ pub(super) fn tasm_hashing_merkle_verify(
 /// the digest of the own program. That property is inherent to Triton VM.
 pub(super) fn tasm_recufier_read_and_verify_own_program_digest_from_std_in() -> Digest {
     tasm_io_read_stdin___digest()
+}
+
+pub(super) fn tasm_recufier_challenges_new_empty_input_and_output_59_4(
+    digest: Digest,
+) -> Box<TasmLangChallenges> {
+    let sampled_challenges = SPONGE_STATE.with_borrow_mut(|maybe_sponge| {
+        let sponge = maybe_sponge.as_mut().unwrap();
+        sponge.sample_scalars(Challenges::num_challenges_to_sample())
+    });
+    let claim = Claim::new(digest);
+    let Challenges { challenges } = Challenges::new(sampled_challenges, &claim);
+    let challenges = TasmLangChallenges { challenges };
+    Box::new(challenges)
 }
 
 pub(super) fn _tasm_recufier_fri_verify(

@@ -60,8 +60,8 @@ impl StarkParameters {
     }
 }
 
-struct Challenges {
-    pub _challenges: [XFieldElement; 63],
+pub(crate) struct Challenges {
+    pub challenges: [XFieldElement; 63],
 }
 
 impl Challenges {
@@ -169,9 +169,9 @@ pub fn recufy() {
     let base_merkle_tree_root: Box<Digest> = proof_iter.next_as_merkleroot();
     RecufyDebug::dump_digest(*base_merkle_tree_root);
 
-    let extension_challenge_weights: Vec<XFieldElement> =
-        Tip5WithState::sample_scalars(Challenges::count());
-    RecufyDebug::dump_xfes(&extension_challenge_weights);
+    let challenges: Box<Challenges> =
+        tasm::tasm_recufier_challenges_new_empty_input_and_output_59_4(own_digest);
+    RecufyDebug::dump_xfes(&challenges.challenges.to_vec());
 
     let extension_tree_merkle_root: Box<Digest> = proof_iter.next_as_merkleroot();
     RecufyDebug::dump_digest(*extension_tree_merkle_root);
