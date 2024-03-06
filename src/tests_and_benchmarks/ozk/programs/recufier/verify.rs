@@ -119,7 +119,7 @@ impl RecufyDebug {
         return;
     }
 
-    pub fn _dump_xfe(thing: XFieldElement) {
+    pub fn dump_xfe(thing: XFieldElement) {
         tasm::tasm_io_write_to_stdout___xfe(thing);
 
         return;
@@ -197,6 +197,13 @@ pub fn recufy() {
     let trace_domain_generator: BFieldElement =
         ArithmeticDomain::generator_for_length(padded_height as u64);
     RecufyDebug::dump_bfe(trace_domain_generator);
+
+    let ___out_of_domain_point_curr_row: Vec<XFieldElement> = Tip5WithState::sample_scalars(1);
+    let out_of_domain_point_curr_row: XFieldElement = ___out_of_domain_point_curr_row[0];
+    RecufyDebug::dump_xfe(out_of_domain_point_curr_row);
+    let out_of_domain_point_next_row: XFieldElement =
+        out_of_domain_point_curr_row * trace_domain_generator;
+    RecufyDebug::dump_xfe(out_of_domain_point_next_row);
 
     // let revealed_indexed_leaves: Vec<(u32, XFieldElement)> =
     //     tasm::tasm_recufier_fri_verify(&mut proof_iter, fri);
