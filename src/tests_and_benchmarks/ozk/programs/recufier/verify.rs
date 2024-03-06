@@ -206,6 +206,7 @@ mod tests {
     use crate::triton_vm::prelude::Stark;
     use crate::triton_vm::proof_item::ProofItem;
     use crate::triton_vm::proof_stream::ProofStream;
+    use crate::triton_vm::table::NUM_BASE_COLUMNS;
 
     use super::*;
 
@@ -221,11 +222,13 @@ mod tests {
         let dummy_digest_base_mt = Digest::new([42u64, 43, 44, 45, 46].map(BFieldElement::new));
         let dummy_digest_extension_mt =
             Digest::new([100u64, 101, 102, 103, 104].map(BFieldElement::new));
+        let dummmy_ood_base_row = [XFieldElement::from(42); NUM_BASE_COLUMNS];
 
         let mut proof_stream = ProofStream::<Tip5>::new();
         proof_stream.enqueue(ProofItem::Log2PaddedHeight(22));
         proof_stream.enqueue(ProofItem::MerkleRoot(dummy_digest_base_mt));
         proof_stream.enqueue(ProofItem::MerkleRoot(dummy_digest_extension_mt));
+        proof_stream.enqueue(ProofItem::OutOfDomainBaseRow(Box::new(dummmy_ood_base_row)));
         proof_stream.into()
     }
 

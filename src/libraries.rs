@@ -24,6 +24,8 @@ type Annotation = type_checker::Typing;
 #[derive(Debug)]
 pub(crate) struct LibraryFunction {
     pub(crate) signature: FnSignature,
+
+    /// Does not include an entrypoint label or the `return` instruction.
     pub(crate) body: Vec<LabelledInstruction>,
 }
 

@@ -239,7 +239,7 @@ fn call_new_box(
 
     let subroutine: SubRoutine = subroutine.try_into().unwrap();
 
-    state.add_library_function(subroutine);
+    state.add_subroutine(subroutine);
 
     call_function
 }

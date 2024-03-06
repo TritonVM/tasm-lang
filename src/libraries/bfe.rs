@@ -147,7 +147,7 @@ impl Library for BfeLibrary {
             let new_bfe_function = bfe_new_function();
             let new_bfe_function: SubRoutine = new_bfe_function.try_into().unwrap();
             let function_label = new_bfe_function.get_label();
-            state.add_library_function(new_bfe_function);
+            state.add_subroutine(new_bfe_function);
 
             return triton_asm!(call { function_label });
         }

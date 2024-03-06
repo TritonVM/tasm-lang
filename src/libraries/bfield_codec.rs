@@ -233,7 +233,7 @@ impl Library for BFieldCodecLib {
         let (encode_subroutine_label, encode_subroutine_code) =
             self.encode_method(method_name, receiver_type, state);
 
-        state.add_library_function(encode_subroutine_code.try_into().unwrap());
+        state.add_subroutine(encode_subroutine_code.try_into().unwrap());
 
         triton_asm!(call {
             encode_subroutine_label

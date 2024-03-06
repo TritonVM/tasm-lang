@@ -120,7 +120,7 @@ impl Library for HasherLib {
                 HASH_PAIR_FUNCTION_NAME => {
                     let hash_pair: SubRoutine = hash_pair_function().try_into().unwrap();
                     let hash_pair_label = hash_pair.get_label();
-                    state.add_library_function(hash_pair);
+                    state.add_subroutine(hash_pair);
 
                     triton_asm!(call { hash_pair_label })
                 }
@@ -210,7 +210,7 @@ impl HasherLib {
 
             return
         );
-        state.add_library_function(tasm_langs_hash_varlen.try_into().unwrap());
+        state.add_subroutine(tasm_langs_hash_varlen.try_into().unwrap());
 
         triton_asm!(call {
             tasm_langs_hash_varlen_label

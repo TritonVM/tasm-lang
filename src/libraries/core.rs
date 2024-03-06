@@ -27,6 +27,7 @@ impl Library for Core {
     fn get_method_name(&self, method_name: &str, receiver_type: &DataType) -> Option<String> {
         match (receiver_type, method_name) {
             (DataType::Array(_), "len") => Some("len".to_owned()),
+            (DataType::Array(_), "to_vec") => Some("to_vec".to_owned()),
             _ => None,
         }
     }
@@ -40,6 +41,9 @@ impl Library for Core {
     ) -> FnSignature {
         match (receiver_type, method_name, args.len()) {
             (DataType::Array(array_type), "len", 1) => array::len_method_signature(array_type),
+            (DataType::Array(array_type), "to_vec", 1) => {
+                array::to_vec_method_signature(array_type)
+            }
             _ => panic!(),
         }
     }
@@ -58,10 +62,13 @@ impl Library for Core {
         method_name: &str,
         receiver_type: &DataType,
         args: &[Expr<Annotation>],
-        _state: &mut CompilerState,
+        state: &mut CompilerState,
     ) -> Vec<LabelledInstruction> {
         match (receiver_type, method_name, args.len()) {
             (DataType::Array(array_type), "len", 1) => array::len_method_body(array_type),
+            (DataType::Array(array_type), "to_vec", 1) => {
+                array::import_and_call_to_vec(state, array_type)
+            }
             _ => panic!(),
         }
     }

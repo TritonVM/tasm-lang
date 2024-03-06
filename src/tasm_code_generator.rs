@@ -167,7 +167,7 @@ impl<'a> CompilerState<'a> {
     }
 
     /// Import a dependency in an idempotent manner, ensuring it's only ever imported once
-    pub(crate) fn add_library_function(&mut self, subroutine: SubRoutine) {
+    pub(crate) fn add_subroutine(&mut self, subroutine: SubRoutine) {
         // TODO: Can't we include this in a nicer way by e.g. unwrapping inner
         // subroutines?
         let already_there = self
@@ -377,7 +377,7 @@ impl<'a> CompilerState<'a> {
                             );
                             let loop_subroutine: SubRoutine = loop_subroutine.try_into().unwrap();
 
-                            state.add_library_function(loop_subroutine);
+                            state.add_subroutine(loop_subroutine);
 
                             triton_asm!(
                                 {&ident_addr_code}
