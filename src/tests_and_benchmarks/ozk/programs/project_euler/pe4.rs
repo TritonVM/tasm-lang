@@ -21,6 +21,7 @@ fn main() {
         return;
     }
 
+    #[allow(clippy::ptr_arg)]
     /// Return true iff list is the same read backwards as forwards
     fn list_is_palindrome(list: &Vec<u32>) -> bool {
         let list_length: usize = list.len();

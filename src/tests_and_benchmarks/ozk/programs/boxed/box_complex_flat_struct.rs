@@ -17,6 +17,7 @@ struct WithListFields {
 }
 
 #[allow(clippy::redundant_field_names)]
+#[allow(clippy::vec_init_then_push)]
 fn main() {
     let mut bfes: Vec<BFieldElement> = Vec::<BFieldElement>::default();
     bfes.push(BFieldElement::new(4000));

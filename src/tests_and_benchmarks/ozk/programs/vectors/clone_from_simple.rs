@@ -5,6 +5,7 @@ mod test {
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
     use tasm_lib::triton_vm::prelude::*;
 
+    #[allow(clippy::vec_init_then_push)]
     fn main() {
         let mut a: Vec<BFieldElement> = Vec::<BFieldElement>::default();
         a.push(BFieldElement::new(102));

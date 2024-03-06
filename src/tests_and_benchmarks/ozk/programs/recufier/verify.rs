@@ -80,6 +80,7 @@ impl Recufier {
     /// Manual encoding of a [`Claim`][claim] containing only a program digest.
     ///
     /// [claim]: crate::triton_vm::prelude::Claim
+    #[allow(clippy::vec_init_then_push)]
     pub fn encode_claim(program_digest: Digest) -> Vec<BFieldElement> {
         let mut encoding: Vec<BFieldElement> = Vec::<BFieldElement>::default();
         encoding.push(BFieldElement::one());
@@ -132,6 +133,7 @@ impl RecufyDebug {
         return;
     }
 
+    #[allow(clippy::ptr_arg)]
     pub fn dump_xfes(xfes: &Vec<XFieldElement>) {
         let mut i: usize = 0;
         while i < xfes.len() {

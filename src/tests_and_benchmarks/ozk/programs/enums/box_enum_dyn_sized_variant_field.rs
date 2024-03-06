@@ -6,6 +6,7 @@ enum EnumDynSizedVariantField {
     A(Vec<BFieldElement>),
 }
 
+#[allow(clippy::vec_init_then_push)]
 fn main() {
     let mut bfes: Vec<BFieldElement> = Vec::<BFieldElement>::default();
     bfes.push(tasm::tasm_io_read_stdin___bfe());

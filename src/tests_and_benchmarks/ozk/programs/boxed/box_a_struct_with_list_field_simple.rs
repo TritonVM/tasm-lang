@@ -7,6 +7,7 @@ struct WithListField {
     bfes: Vec<BFieldElement>,
 }
 
+#[allow(clippy::vec_init_then_push)]
 fn main() {
     let mut list: Vec<BFieldElement> = Vec::<BFieldElement>::default();
     list.push(BFieldElement::new(102));

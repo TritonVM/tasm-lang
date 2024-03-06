@@ -7,7 +7,6 @@ use std::str::FromStr;
 use syn::parse_quote;
 use syn::ExprMacro;
 use syn::PathArguments;
-use tasm_lib::triton_vm::table::NUM_BASE_COLUMNS;
 use tasm_lib::DIGEST_LENGTH;
 
 use crate::ast;
