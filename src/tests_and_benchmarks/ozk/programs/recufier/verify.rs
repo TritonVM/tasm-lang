@@ -9,6 +9,8 @@ use crate::triton_vm::table::BaseRow;
 use crate::twenty_first::prelude::*;
 use crate::twenty_first::shared_math::traits::PrimitiveRootOfUnity;
 
+use super::arithmetic_domain::*;
+
 /// See [StarkParameters][params].
 ///
 /// [params]: crate::triton_vm::stark::StarkParameters
@@ -94,6 +96,10 @@ impl Recufier {
 
         return encoding;
     }
+
+    const fn num_quotients() -> usize {
+        return 591;
+    }
 }
 
 /// Gives statements only intended for debugging its own scope.
@@ -103,6 +109,12 @@ struct RecufyDebug;
 impl RecufyDebug {
     pub fn dump_u32(thing: u32) {
         tasm::tasm_io_write_to_stdout___u32(thing);
+
+        return;
+    }
+
+    pub fn dump_bfe(thing: BFieldElement) {
+        tasm::tasm_io_write_to_stdout___bfe(thing);
 
         return;
     }
@@ -176,7 +188,15 @@ pub fn recufy() {
     let extension_tree_merkle_root: Box<Digest> = proof_iter.next_as_merkleroot();
     RecufyDebug::dump_digest(*extension_tree_merkle_root);
 
-    // let quot_codeword_weights: Vec<XFieldElement> = Tip5WithState::sample_scalars(num_quotients());
+    let quot_codeword_weights: Vec<XFieldElement> =
+        Tip5WithState::sample_scalars(Recufier::num_quotients());
+    RecufyDebug::dump_xfes(&quot_codeword_weights);
+    let quotient_codeword_merkle_root: Box<Digest> = proof_iter.next_as_merkleroot();
+    RecufyDebug::dump_digest(*quotient_codeword_merkle_root);
+
+    let trace_domain_generator: BFieldElement =
+        ArithmeticDomain::generator_for_length(padded_height as u64);
+    RecufyDebug::dump_bfe(trace_domain_generator);
 
     // let revealed_indexed_leaves: Vec<(u32, XFieldElement)> =
     //     tasm::tasm_recufier_fri_verify(&mut proof_iter, fri);
@@ -222,13 +242,16 @@ mod tests {
         let dummy_digest_base_mt = Digest::new([42u64, 43, 44, 45, 46].map(BFieldElement::new));
         let dummy_digest_extension_mt =
             Digest::new([100u64, 101, 102, 103, 104].map(BFieldElement::new));
-        let dummmy_ood_base_row = [XFieldElement::from(42); NUM_BASE_COLUMNS];
+        let dummy_ood_base_row = [XFieldElement::from(42); NUM_BASE_COLUMNS];
+        let dummy_quot_codeword_mt =
+            Digest::new([200u64, 201, 202, 203, 204].map(BFieldElement::new));
 
         let mut proof_stream = ProofStream::<Tip5>::new();
         proof_stream.enqueue(ProofItem::Log2PaddedHeight(22));
         proof_stream.enqueue(ProofItem::MerkleRoot(dummy_digest_base_mt));
         proof_stream.enqueue(ProofItem::MerkleRoot(dummy_digest_extension_mt));
-        proof_stream.enqueue(ProofItem::OutOfDomainBaseRow(Box::new(dummmy_ood_base_row)));
+        proof_stream.enqueue(ProofItem::MerkleRoot(dummy_quot_codeword_mt));
+        proof_stream.enqueue(ProofItem::OutOfDomainBaseRow(Box::new(dummy_ood_base_row)));
         proof_stream.into()
     }
 
@@ -271,6 +294,12 @@ mod tests {
         let vm_ps_str = serde_json::to_string(&stark).unwrap();
         let ps_str = serde_json::to_string(&sp).unwrap();
         assert_eq!(vm_ps_str, ps_str);
+    }
+
+    #[test]
+    fn num_quotients_agree_with_tvm_num_quotients() {
+        let tvm_num_quotients = triton_vm::table::master_table::num_quotients();
+        assert_eq!(tvm_num_quotients, Recufier::num_quotients());
     }
 
     #[proptest]
