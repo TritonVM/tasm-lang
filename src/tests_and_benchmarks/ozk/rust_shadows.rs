@@ -18,6 +18,7 @@ use tasm_lib::triton_vm::proof_item::ProofItem;
 use tasm_lib::triton_vm::proof_item::ProofItemVariant;
 use tasm_lib::twenty_first::shared_math::tip5::Tip5;
 use tasm_lib::twenty_first::shared_math::tip5::RATE;
+use tasm_lib::twenty_first::shared_math::traits::ModPowU32;
 use tasm_lib::twenty_first::util_types::algebraic_hasher::AlgebraicHasher;
 use tasm_lib::twenty_first::util_types::algebraic_hasher::Sponge;
 use tasm_lib::twenty_first::util_types::merkle_tree::MerkleTreeInclusionProof;
@@ -249,6 +250,10 @@ pub(super) fn tasm_io_write_to_stdout___u128(x: u128) {
 
 pub(super) fn tasm_arithmetic_u64_mul_two_u64s_to_u128_u64(lhs: u64, rhs: u64) -> u128 {
     lhs as u128 * rhs as u128
+}
+
+pub(super) fn tasm_arithmetic_xfe_to_the_fourth(base: XFieldElement) -> XFieldElement {
+    base.mod_pow_u32(4)
 }
 
 #[allow(clippy::type_complexity)]

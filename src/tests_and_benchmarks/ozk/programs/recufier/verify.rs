@@ -204,6 +204,9 @@ pub fn recufy() {
     let out_of_domain_point_next_row: XFieldElement =
         out_of_domain_point_curr_row * trace_domain_generator;
     RecufyDebug::dump_xfe(out_of_domain_point_next_row);
+    let out_of_domain_point_curr_row_pow_num_segments: XFieldElement =
+        tasm::tasm_arithmetic_xfe_to_the_fourth(out_of_domain_point_curr_row);
+    RecufyDebug::dump_xfe(out_of_domain_point_curr_row_pow_num_segments);
 
     // let revealed_indexed_leaves: Vec<(u32, XFieldElement)> =
     //     tasm::tasm_recufier_fri_verify(&mut proof_iter, fri);
