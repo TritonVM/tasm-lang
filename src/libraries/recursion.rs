@@ -1,11 +1,14 @@
 use strum::IntoEnumIterator;
 use syn::parse_quote;
+use syn::PathArguments;
 use tasm_lib::traits::basic_snippet::BasicSnippet;
 use tasm_lib::triton_vm::proof_item::ProofItemVariant;
+use tasm_lib::triton_vm::table::NUM_BASE_COLUMNS;
 use tasm_lib::triton_vm::triton_asm;
 
 use crate::ast;
 use crate::ast::RoutineBody;
+use crate::ast_types;
 use crate::ast_types::DataType;
 use crate::ast_types::StructType;
 use crate::composite_types::TypeContext;
@@ -15,15 +18,15 @@ use crate::type_checker::Typing;
 const NEXT_AS_METHOD_NAMES_PREFIX: &str = "next_as_";
 
 #[derive(Debug)]
-pub(crate) struct VmProofIterLib;
+pub(crate) struct RecursionLib;
 
-impl VmProofIterLib {
+impl RecursionLib {
     pub(crate) fn vm_proof_iter_type(graft_config: &mut Graft) -> TypeContext {
         let struct_type = vm_proof_iter_as_struct_type(graft_config);
 
         // List all methods
         let all_dequeue_methods = all_next_as_methods(graft_config);
-        let new_function_constructor = Self::new_constructor(graft_config);
+        let new_function_constructor = Self::vm_proof_iter_new_constructor(graft_config);
         TypeContext {
             composite_type: struct_type.into(),
             methods: all_dequeue_methods,
@@ -32,7 +35,7 @@ impl VmProofIterLib {
     }
 
     /// Return the `new` function that acts as constructor for this type
-    fn new_constructor(graft_config: &mut Graft) -> ast::Fn<Typing> {
+    fn vm_proof_iter_new_constructor(graft_config: &mut Graft) -> ast::Fn<Typing> {
         let constructor_return_type: DataType = vm_proof_iter_as_struct_type(graft_config).into();
         ast::Fn {
             signature: ast::FnSignature::value_function_immutable_args(
@@ -54,6 +57,32 @@ impl VmProofIterLib {
             composite_type: struct_type.into(),
             methods: vec![],
             associated_functions: vec![],
+        }
+    }
+
+    pub(crate) fn graft_base_row(
+        arguments: &PathArguments,
+        graft: &mut Graft,
+    ) -> ast_types::DataType {
+        match arguments {
+            syn::PathArguments::AngleBracketed(ab) => {
+                assert_eq!(1, ab.args.len(), "Must be BaseRow<T> for *one* generic T.");
+                match &ab.args[0] {
+                    syn::GenericArgument::Type(element_type) => {
+                        let inner = graft.syn_type_to_ast_type(element_type);
+                        assert!(
+                            matches!(inner, DataType::Bfe | DataType::Xfe),
+                            "T in BaseRow<T> must be XFE or BFE"
+                        );
+                        ast_types::DataType::Array(ast_types::ArrayType {
+                            element_type: Box::new(inner),
+                            length: NUM_BASE_COLUMNS,
+                        })
+                    }
+                    other => panic!("Unsupported type {other:#?}"),
+                }
+            }
+            other => panic!("Unsupported type {other:#?}"),
         }
     }
 }

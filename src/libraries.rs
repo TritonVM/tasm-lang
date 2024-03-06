@@ -13,10 +13,10 @@ pub(crate) mod bfield_codec;
 pub(crate) mod boxed;
 pub(crate) mod core;
 pub(crate) mod hasher;
+pub(crate) mod recursion;
 pub(crate) mod tasm;
 pub(crate) mod unsigned_integers;
 pub(crate) mod vector;
-pub(crate) mod vm_proof_iter;
 pub(crate) mod xfe;
 
 type Annotation = type_checker::Typing;

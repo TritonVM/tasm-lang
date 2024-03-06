@@ -7,6 +7,7 @@ use std::str::FromStr;
 use syn::parse_quote;
 use syn::ExprMacro;
 use syn::PathArguments;
+use tasm_lib::triton_vm::table::NUM_BASE_COLUMNS;
 use tasm_lib::DIGEST_LENGTH;
 
 use crate::ast;
@@ -378,13 +379,20 @@ impl<'a> Graft<'a> {
         }
 
         if rust_type_as_string == "VmProofIter" {
-            let vm_proof_iter = libraries::vm_proof_iter::VmProofIterLib::vm_proof_iter_type(self);
+            let vm_proof_iter = libraries::recursion::RecursionLib::vm_proof_iter_type(self);
             self.imported_custom_types
                 .add_type_context_if_new(vm_proof_iter.clone());
-            let fri_response = libraries::vm_proof_iter::VmProofIterLib::fri_response_type(self);
+            let fri_response = libraries::recursion::RecursionLib::fri_response_type(self);
             self.imported_custom_types
                 .add_type_context_if_new(fri_response);
             return vm_proof_iter.into();
+        }
+
+        if rust_type_as_string == "BaseRow" {
+            return libraries::recursion::RecursionLib::graft_base_row(
+                &rust_type_path.path.segments[0].arguments,
+                self,
+            );
         }
 
         // We only allow the user to use types that are capitalized
