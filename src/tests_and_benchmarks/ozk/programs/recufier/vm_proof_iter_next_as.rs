@@ -44,7 +44,7 @@ fn call_all_next_methods() {
         let mut j: usize = 0;
         while j < mbtw.len() {
             let mut i: usize = 0;
-            while i < 354 {
+            while i < mbtw[j].len() {
                 tasm::tasm_io_write_to_stdout___bfe(mbtw[j][i]);
                 i += 1;
             }
@@ -57,7 +57,7 @@ fn call_all_next_methods() {
         let mut j: usize = 0;
         while j < metr.len() {
             let mut i: usize = 0;
-            while i < 80 {
+            while i < metr[j].len() {
                 tasm::tasm_io_write_to_stdout___xfe(metr[j][i]);
                 i += 1;
             }
