@@ -29,9 +29,7 @@ const UNWRAP_METHOD_NAME: &str = "unwrap";
 const INVERSE_METHOD_NAME: &str = "inverse";
 
 #[derive(Clone, Debug)]
-pub(crate) struct BfeLibrary {
-    pub(crate) list_type: ast_types::ListType,
-}
+pub(crate) struct BfeLibrary;
 
 impl BfeLibrary {
     fn has_method(method_name: &str) -> bool {
@@ -100,7 +98,7 @@ impl Library for BfeLibrary {
     ) -> ast::FnSignature {
         match fn_name {
             FUNCTION_NAME_NEW_BFE => bfe_new_function().signature,
-            FUNCTION_ROOT_FULL_NAME => bfe_root_function_signature(self.list_type),
+            FUNCTION_ROOT_FULL_NAME => bfe_root_function_signature(),
             FUNCTION_GENERATOR_NAME => bfe_generator_function_signature(),
             _ => panic!("No function name {fn_name} implemented for BFE library."),
         }
@@ -149,7 +147,7 @@ impl Library for BfeLibrary {
             let new_bfe_function = bfe_new_function();
             let new_bfe_function: SubRoutine = new_bfe_function.try_into().unwrap();
             let function_label = new_bfe_function.get_label();
-            state.add_library_function(new_bfe_function);
+            state.add_subroutine(new_bfe_function);
 
             return triton_asm!(call { function_label });
         }
@@ -395,9 +393,9 @@ fn bfe_value_method() -> LibraryFunction {
     }
 }
 
-fn bfe_root_function_signature(list_type: crate::libraries::ListType) -> ast::FnSignature {
+fn bfe_root_function_signature() -> ast::FnSignature {
     let snippet = tasm_lib::arithmetic::bfe::primitive_root_of_unity::PrimitiveRootOfUnity;
-    ast::FnSignature::from_basic_snippet(Box::new(snippet), list_type)
+    ast::FnSignature::from_basic_snippet(Box::new(snippet))
 }
 
 fn bfe_generator_function_signature() -> FnSignature {

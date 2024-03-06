@@ -3,7 +3,6 @@ use std::fmt::Debug;
 use crate::ast;
 use crate::ast::FnSignature;
 use crate::ast_types;
-use crate::ast_types::ListType;
 use crate::graft::Graft;
 use crate::tasm_code_generator::CompilerState;
 use crate::type_checker;
@@ -14,10 +13,10 @@ pub(crate) mod bfield_codec;
 pub(crate) mod boxed;
 pub(crate) mod core;
 pub(crate) mod hasher;
+pub(crate) mod recursion;
 pub(crate) mod tasm;
 pub(crate) mod unsigned_integers;
 pub(crate) mod vector;
-pub(crate) mod vm_proof_iter;
 pub(crate) mod xfe;
 
 type Annotation = type_checker::Typing;
@@ -25,37 +24,23 @@ type Annotation = type_checker::Typing;
 #[derive(Debug)]
 pub(crate) struct LibraryFunction {
     pub(crate) signature: FnSignature,
+
+    /// Does not include an entrypoint label or the `return` instruction.
     pub(crate) body: Vec<LabelledInstruction>,
 }
 
-pub(crate) struct LibraryConfig {
-    pub(crate) list_type: ast_types::ListType,
-}
-
-pub(crate) fn all_libraries<'a>(config: LibraryConfig) -> Vec<Box<dyn Library + 'a>> {
-    vec![
+pub(crate) fn all_libraries() -> Box<[Box<dyn Library>]> {
+    Box::new([
         Box::new(boxed::Boxed),
-        Box::new(bfe::BfeLibrary {
-            list_type: config.list_type,
-        }),
-        Box::new(core::Core {}),
-        Box::new(bfield_codec::BFieldCodecLib {
-            list_type: config.list_type,
-        }),
-        Box::new(hasher::HasherLib {
-            list_type: config.list_type,
-        }),
-        Box::new(tasm::TasmLibrary {
-            list_type: config.list_type,
-        }),
-        Box::new(unsigned_integers::UnsignedIntegersLib {
-            list_type: config.list_type,
-        }),
-        Box::new(vector::VectorLib {
-            list_type: config.list_type,
-        }),
+        Box::new(bfe::BfeLibrary),
+        Box::new(core::Core),
+        Box::new(bfield_codec::BFieldCodecLib),
+        Box::new(hasher::HasherLib),
+        Box::new(tasm::TasmLibrary),
+        Box::new(unsigned_integers::UnsignedIntegersLib),
+        Box::new(vector::VectorLib),
         Box::new(xfe::XfeLibrary),
-    ]
+    ])
 }
 
 pub(crate) trait Library: Debug {

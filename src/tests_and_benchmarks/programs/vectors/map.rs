@@ -21,7 +21,7 @@ mod tests {
         use std::collections::HashMap;
 
         use itertools::Itertools;
-        use tasm_lib::rust_shadowing_helper_functions::safe_list::safe_list_insert;
+        use tasm_lib::rust_shadowing_helper_functions::list::list_insert;
         use tasm_lib::triton_vm::prelude::*;
         use tasm_lib::twenty_first::shared_math::other::random_elements;
 
@@ -36,12 +36,7 @@ mod tests {
             let init_list_u64s: Vec<u64> =
                 init_list_u32s.into_iter().map(|x| x as u64).collect_vec();
             let input_list_pointer = BFieldElement::new(10000);
-            safe_list_insert(
-                input_list_pointer,
-                1,
-                init_list_u64s.clone(),
-                &mut init_memory,
-            );
+            list_insert(input_list_pointer, init_list_u64s.clone(), &mut init_memory);
 
             let std_in = vec![];
             let non_determinism = NonDeterminism::default().with_ram(init_memory);

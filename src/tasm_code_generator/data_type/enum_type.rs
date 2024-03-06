@@ -72,7 +72,7 @@ impl EnumType {
             return
         );
 
-        state.add_library_function(subroutine.try_into().unwrap());
+        state.add_subroutine(subroutine.try_into().unwrap());
 
         call_subroutine
     }
@@ -93,7 +93,7 @@ impl EnumType {
         let pointer_for_discriminant_pointer = state.global_compiler_state.snippet_state.kmalloc(1);
         let get_variant_data_pointers_label = get_variant_data_pointers.get_label();
         for sr in [vec![get_variant_data_pointers], subroutines].concat() {
-            state.add_library_function(sr);
+            state.add_subroutine(sr);
         }
 
         let mut load_subroutine = triton_asm!(
@@ -199,12 +199,12 @@ impl EnumType {
                     // _ [data]
                     return
             );
-            state.add_library_function(code_for_subroutine.try_into().unwrap());
+            state.add_subroutine(code_for_subroutine.try_into().unwrap());
         }
 
         let size_of_data_plus_padding = self.stack_size() - 1;
         let pad_subroutine = pad_subroutine();
-        state.add_library_function(pad_subroutine.clone());
+        state.add_subroutine(pad_subroutine.clone());
 
         load_subroutine.append(&mut triton_asm!(
             // _ [data]
@@ -237,7 +237,7 @@ impl EnumType {
         ));
 
         // load_subroutine
-        state.add_library_function(load_subroutine.try_into().unwrap());
+        state.add_subroutine(load_subroutine.try_into().unwrap());
 
         triton_asm!(call {
             load_subroutine_label
@@ -293,7 +293,7 @@ impl EnumType {
                     return
             );
 
-            state.add_library_function(variant_subroutine.try_into().unwrap());
+            state.add_subroutine(variant_subroutine.try_into().unwrap());
         }
 
         store_data
@@ -351,7 +351,7 @@ impl EnumType {
 
                     return
             );
-            state.add_library_function(subroutine.try_into().unwrap());
+            state.add_subroutine(subroutine.try_into().unwrap());
         }
 
         pop_padding
@@ -701,7 +701,7 @@ impl EnumType {
             return
         );
 
-        state.add_library_function(acc_code.try_into().unwrap());
+        state.add_subroutine(acc_code.try_into().unwrap());
 
         label_for_subroutine
     }

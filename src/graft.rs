@@ -7,6 +7,7 @@ use std::str::FromStr;
 use syn::parse_quote;
 use syn::ExprMacro;
 use syn::PathArguments;
+use tasm_lib::triton_vm::table::NUM_BASE_COLUMNS;
 use tasm_lib::DIGEST_LENGTH;
 
 use crate::ast;
@@ -23,7 +24,6 @@ pub(crate) type Annotation = type_checker::Typing;
 
 #[derive(Debug)]
 pub(crate) struct Graft<'a> {
-    pub(crate) list_type: ast_types::ListType,
     pub(crate) libraries: &'a [Box<dyn Library + 'a>],
     pub(crate) imported_custom_types: CompositeTypes,
 }
@@ -34,20 +34,9 @@ pub(crate) enum CustomTypeRust {
     Enum(syn::ItemEnum),
 }
 
-macro_rules! get_standard_setup {
-    ($list_type:expr, $graft_config:ident, $libraries:ident) => {
-        let library_config = crate::libraries::LibraryConfig {
-            list_type: $list_type,
-        };
-        let $libraries = crate::libraries::all_libraries(library_config);
-        let mut $graft_config = crate::graft::Graft::new($list_type, &$libraries);
-    };
-}
-
 impl<'a> Graft<'a> {
-    pub(crate) fn new(list_type: ast_types::ListType, libraries: &'a [Box<dyn Library>]) -> Self {
+    pub(crate) fn new(libraries: &'a [Box<dyn Library>]) -> Self {
         Self {
-            list_type,
             libraries,
             imported_custom_types: Default::default(),
         }
@@ -390,13 +379,20 @@ impl<'a> Graft<'a> {
         }
 
         if rust_type_as_string == "VmProofIter" {
-            let vm_proof_iter = libraries::vm_proof_iter::VmProofIterLib::vm_proof_iter_type(self);
+            let vm_proof_iter = libraries::recursion::RecursionLib::vm_proof_iter_type(self);
             self.imported_custom_types
                 .add_type_context_if_new(vm_proof_iter.clone());
-            let fri_response = libraries::vm_proof_iter::VmProofIterLib::fri_response_type(self);
+            let fri_response = libraries::recursion::RecursionLib::fri_response_type(self);
             self.imported_custom_types
                 .add_type_context_if_new(fri_response);
             return vm_proof_iter.into();
+        }
+
+        if rust_type_as_string == "BaseRow" {
+            return libraries::recursion::RecursionLib::graft_base_row(
+                &rust_type_path.path.segments[0].arguments,
+                self,
+            );
         }
 
         // We only allow the user to use types that are capitalized
@@ -419,10 +415,9 @@ impl<'a> Graft<'a> {
             syn::PathArguments::AngleBracketed(ab) => {
                 assert_eq!(1, ab.args.len(), "Must be Vec<T> for *one* generic T.");
                 match &ab.args[0] {
-                    syn::GenericArgument::Type(element_type) => ast_types::DataType::List(
-                        Box::new(self.syn_type_to_ast_type(element_type)),
-                        self.list_type,
-                    ),
+                    syn::GenericArgument::Type(element_type) => {
+                        ast_types::DataType::List(Box::new(self.syn_type_to_ast_type(element_type)))
+                    }
                     other => panic!("Unsupported type {other:#?}"),
                 }
             }
@@ -554,31 +549,24 @@ impl<'a> Graft<'a> {
     }
 
     fn graft_fn_arg(&mut self, rust_fn_arg: &syn::FnArg) -> ast_types::AbstractValueArg {
-        match rust_fn_arg {
-            syn::FnArg::Typed(pat_type) => {
-                let name = Self::pat_to_name(&pat_type.pat);
-                let (data_type, mut mutable) = self.pat_type_to_data_type_and_mutability(pat_type);
+        let syn::FnArg::Typed(pat_type) = rust_fn_arg else {
+            panic!("unsupported: {rust_fn_arg:?}");
+        };
 
-                // Sloppy way of handling mutability. But it's what we got for now.
-                // we say an fn arg is mutable if it's either declared as such *or*
-                // if it is of the `&mut` reference.
-                if let syn::Type::Reference(syn::TypeReference {
-                    and_token: _,
-                    lifetime: _,
-                    mutability,
-                    elem: _,
-                }) = pat_type.ty.as_ref()
-                {
-                    mutable = mutable || mutability.is_some();
-                }
+        let name = Self::pat_to_name(&pat_type.pat);
+        let (data_type, mut mutable) = self.pat_type_to_data_type_and_mutability(pat_type);
 
-                ast_types::AbstractValueArg {
-                    name,
-                    data_type,
-                    mutable,
-                }
-            }
-            other => panic!("unsupported: {other:?}"),
+        // Sloppy way of handling mutability. But it's what we got for now.
+        // we say an fn arg is mutable if it's either declared as such *or*
+        // if it is of the `&mut` reference.
+        if let syn::Type::Reference(syn::TypeReference { mutability, .. }) = pat_type.ty.as_ref() {
+            mutable = mutable || mutability.is_some();
+        }
+
+        ast_types::AbstractValueArg {
+            name,
+            data_type,
+            mutable,
         }
     }
 
@@ -635,23 +623,16 @@ impl<'a> Graft<'a> {
 
     pub(crate) fn graft_call_exp(
         &mut self,
-        syn::ExprCall {
-            attrs: _,
-            func,
-            paren_token: _,
-            args,
-        }: &syn::ExprCall,
+        syn::ExprCall { func, args, .. }: &syn::ExprCall,
     ) -> ast::Expr<Annotation> {
-        let (full_name, function_type_parameter) = match func.as_ref() {
-            syn::Expr::Path(path) => (
-                Graft::path_to_ident(&path.path),
-                self.path_to_type_parameter(&path.path),
-            ),
-            other => panic!("unsupported: {other:?}"),
+        let syn::Expr::Path(syn::ExprPath { path, .. }) = func.as_ref() else {
+            panic!("unsupported: {func:?}");
         };
+        let full_name = Graft::path_to_ident(path);
+        let function_type_parameter = self.path_to_type_parameter(path);
 
         // Check if grafting should be handled by a library
-        for lib in self.libraries.iter() {
+        for lib in self.libraries {
             if let Some(fn_name) = lib.get_graft_function_name(&full_name) {
                 return lib
                     .graft_function(self, &fn_name, args, function_type_parameter)
@@ -701,7 +682,7 @@ impl<'a> Graft<'a> {
         &mut self,
         rust_method_call: &syn::ExprMethodCall,
     ) -> ast::Expr<Annotation> {
-        for lib in self.libraries.iter() {
+        for lib in self.libraries {
             if let Some(method_call) = lib.graft_method_call(self, rust_method_call) {
                 return method_call;
             }
@@ -861,14 +842,7 @@ impl<'a> Graft<'a> {
                     .collect_vec();
                 ast::Expr::Tuple(exprs)
             }
-            syn::Expr::Struct(syn::ExprStruct {
-                attrs: _,
-                path,
-                brace_token: _,
-                fields,
-                dot2_token: _,
-                rest: _,
-            }) => {
+            syn::Expr::Struct(syn::ExprStruct { path, fields, .. }) => {
                 let mut oil_fields = vec![];
                 for field in fields.iter() {
                     let oil_expr = self.graft_expr(&field.expr);
@@ -1512,9 +1486,18 @@ fn graft_match_condition(pat: &syn::Pat) -> ast::MatchCondition {
 
 #[cfg(test)]
 mod tests {
+    use crate::libraries::all_libraries;
     use syn::parse_quote;
+    use syn::Item;
 
     use super::*;
+
+    fn assert_grafting_fn_decl_succeeds(tokens: &Item) {
+        let syn::Item::Fn(item_fn) = tokens else {
+            panic!("unsupported");
+        };
+        let _ = Graft::new(&all_libraries()).graft_fn_decl(item_fn);
+    }
 
     #[test]
     fn big_mmr_function() {
@@ -1551,14 +1534,7 @@ mod tests {
                 return calculated_peaks;
         }
         };
-
-        match &tokens {
-            syn::Item::Fn(item_fn) => {
-                get_standard_setup!(ast_types::ListType::Safe, graft_config, libraries);
-                let _ret = graft_config.graft_fn_decl(item_fn);
-            }
-            _ => panic!("unsupported"),
-        }
+        assert_grafting_fn_decl_succeeds(&tokens);
     }
 
     #[test]
@@ -1574,14 +1550,7 @@ mod tests {
                 return a;
             }
         };
-
-        match &tokens {
-            syn::Item::Fn(item_fn) => {
-                get_standard_setup!(ast_types::ListType::Safe, graft_config, libraries);
-                let _ret = graft_config.graft_fn_decl(item_fn);
-            }
-            _ => panic!("unsupported"),
-        }
+        assert_grafting_fn_decl_succeeds(&tokens);
     }
 
     #[test]
@@ -1611,14 +1580,7 @@ mod tests {
                 return non_leaf_nodes_after + non_leaf_nodes_left + leaf_count;
             }
         };
-
-        match &tokens {
-            syn::Item::Fn(item_fn) => {
-                get_standard_setup!(ast_types::ListType::Safe, graft_config, libraries);
-                let _ret = graft_config.graft_fn_decl(item_fn);
-            }
-            _ => panic!("unsupported"),
-        }
+        assert_grafting_fn_decl_succeeds(&tokens);
     }
 
     #[test]
@@ -1639,14 +1601,7 @@ mod tests {
                 return ret;
             }
         };
-
-        match &tokens {
-            syn::Item::Fn(item_fn) => {
-                get_standard_setup!(ast_types::ListType::Safe, graft_config, libraries);
-                let _ret = graft_config.graft_fn_decl(item_fn);
-            }
-            _ => panic!("unsupported"),
-        }
+        assert_grafting_fn_decl_succeeds(&tokens);
     }
 
     #[test]
@@ -1660,14 +1615,7 @@ mod tests {
                 return (ret, h);
             }
         };
-
-        match &tokens {
-            syn::Item::Fn(item_fn) => {
-                get_standard_setup!(ast_types::ListType::Safe, graft_config, libraries);
-                let _ret = graft_config.graft_fn_decl(item_fn);
-            }
-            _ => panic!("unsupported"),
-        }
+        assert_grafting_fn_decl_succeeds(&tokens);
     }
 
     #[test]
@@ -1677,14 +1625,7 @@ mod tests {
                     return node_index - (1u64 << height);
             }
         };
-
-        match &tokens {
-            syn::Item::Fn(item_fn) => {
-                get_standard_setup!(ast_types::ListType::Safe, graft_config, libraries);
-                let _ret = graft_config.graft_fn_decl(item_fn);
-            }
-            _ => panic!("unsupported"),
-        }
+        assert_grafting_fn_decl_succeeds(&tokens);
     }
 
     #[test]
@@ -1695,14 +1636,7 @@ mod tests {
                 push();
             }
         };
-
-        match &tokens {
-            syn::Item::Fn(item_fn) => {
-                get_standard_setup!(ast_types::ListType::Safe, graft_config, libraries);
-                let _ret = graft_config.graft_fn_decl(item_fn);
-            }
-            _ => panic!("unsupported"),
-        }
+        assert_grafting_fn_decl_succeeds(&tokens);
     }
 
     #[test]
@@ -1716,14 +1650,7 @@ mod tests {
                 return (pointer, foo, greek(barbarian(barbarian(greek(199u64)))));
             }
         };
-
-        match &tokens {
-            syn::Item::Fn(item_fn) => {
-                get_standard_setup!(ast_types::ListType::Safe, graft_config, libraries);
-                let _ret = graft_config.graft_fn_decl(item_fn);
-            }
-            _ => panic!("unsupported"),
-        }
+        assert_grafting_fn_decl_succeeds(&tokens);
     }
 
     #[test]
@@ -1741,14 +1668,7 @@ mod tests {
                 return (a, b, c, d, e, f, g);
             }
         };
-
-        match &tokens {
-            syn::Item::Fn(item_fn) => {
-                get_standard_setup!(ast_types::ListType::Safe, graft_config, libraries);
-                let _ret = graft_config.graft_fn_decl(item_fn);
-            }
-            _ => panic!("unsupported"),
-        }
+        assert_grafting_fn_decl_succeeds(&tokens);
     }
 
     #[test]
@@ -1771,14 +1691,7 @@ mod tests {
                 return (d, e, f, g);
             }
         };
-
-        match &tokens {
-            syn::Item::Fn(item_fn) => {
-                get_standard_setup!(ast_types::ListType::Safe, graft_config, libraries);
-                let _ret = graft_config.graft_fn_decl(item_fn);
-            }
-            _ => panic!("unsupported"),
-        }
+        assert_grafting_fn_decl_succeeds(&tokens);
     }
 
     #[test]
@@ -1795,14 +1708,7 @@ mod tests {
                 return (a, b, c, d, e);
             }
         };
-
-        match &tokens {
-            syn::Item::Fn(item_fn) => {
-                get_standard_setup!(ast_types::ListType::Safe, graft_config, libraries);
-                let _ret = graft_config.graft_fn_decl(item_fn);
-            }
-            _ => panic!("unsupported"),
-        }
+        assert_grafting_fn_decl_succeeds(&tokens);
     }
 
     #[test]
@@ -1814,14 +1720,7 @@ mod tests {
                 return (a, b);
             }
         };
-
-        match &tokens {
-            syn::Item::Fn(item_fn) => {
-                get_standard_setup!(ast_types::ListType::Safe, graft_config, libraries);
-                let _ret = graft_config.graft_fn_decl(item_fn);
-            }
-            _ => panic!("unsupported"),
-        }
+        assert_grafting_fn_decl_succeeds(&tokens);
     }
 
     #[test]
@@ -1831,14 +1730,7 @@ mod tests {
                 return lhs + rhs;
             }
         };
-
-        match &tokens {
-            syn::Item::Fn(item_fn) => {
-                get_standard_setup!(ast_types::ListType::Safe, graft_config, libraries);
-                let _ret = graft_config.graft_fn_decl(item_fn);
-            }
-            _ => panic!("unsupported"),
-        }
+        assert_grafting_fn_decl_succeeds(&tokens);
     }
 
     #[test]
@@ -1849,14 +1741,7 @@ mod tests {
                 return sum;
             }
         };
-
-        match &tokens {
-            syn::Item::Fn(item_fn) => {
-                get_standard_setup!(ast_types::ListType::Safe, graft_config, libraries);
-                let _ret = graft_config.graft_fn_decl(item_fn);
-            }
-            _ => panic!("unsupported"),
-        }
+        assert_grafting_fn_decl_succeeds(&tokens);
     }
 
     #[test]
@@ -1866,12 +1751,6 @@ mod tests {
                 return (rhs, lhs);
             }
         };
-        match &tokens {
-            syn::Item::Fn(item_fn) => {
-                get_standard_setup!(ast_types::ListType::Safe, graft_config, libraries);
-                let _ret = graft_config.graft_fn_decl(item_fn);
-            }
-            _ => panic!("unsupported"),
-        }
+        assert_grafting_fn_decl_succeeds(&tokens);
     }
 }

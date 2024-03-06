@@ -7,15 +7,15 @@ mod test {
     use tasm_lib::triton_vm::prelude::*;
 
     fn main() {
-        let mut a: Vec<BFieldElement> = Vec::<BFieldElement>::with_capacity(32);
+        let mut a: Vec<BFieldElement> = Vec::<BFieldElement>::default();
         a.push(BFieldElement::new(100));
         a.push(BFieldElement::new(101));
 
-        let mut b: Vec<BFieldElement> = Vec::<BFieldElement>::with_capacity(32);
+        let mut b: Vec<BFieldElement> = Vec::<BFieldElement>::default();
         b.clone_from(&a);
         b.push(BFieldElement::new(102));
 
-        let mut c: Vec<BFieldElement> = Vec::<BFieldElement>::with_capacity(32);
+        let mut c: Vec<BFieldElement> = Vec::<BFieldElement>::default();
         c.clone_from(&b);
         c.push(BFieldElement::new(103));
 

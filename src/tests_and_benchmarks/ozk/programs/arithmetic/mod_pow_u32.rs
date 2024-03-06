@@ -22,7 +22,6 @@ fn main() {
 
 #[cfg(test)]
 mod test {
-
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
@@ -40,10 +39,7 @@ mod test {
         assert_eq!(native_output, expected_output);
 
         let entrypoint = EntrypointLocation::disk("arithmetic", "mod_pow_u32", "main");
-        let vm_output = TritonVMTestCase::new(entrypoint)
-            .with_safe_lists()
-            .execute()
-            .unwrap();
+        let vm_output = TritonVMTestCase::new(entrypoint).execute().unwrap();
 
         assert_eq!(expected_output, vm_output.output);
     }

@@ -74,7 +74,6 @@ fn main() {
 
 #[cfg(test)]
 mod test {
-
     use arbitrary::Unstructured;
     use itertools::Itertools;
     use rand::random;
@@ -102,10 +101,7 @@ mod test {
             // Run test on Triton-VM
             let entrypoint_location =
                 EntrypointLocation::disk("enums", "enum_with_struct_data", "main");
-            let test_program = ozk_parsing::compile_for_test(
-                &entrypoint_location,
-                crate::ast_types::ListType::Unsafe,
-            );
+            let test_program = ozk_parsing::compile_for_test(&entrypoint_location);
             let vm_output = execute_compiled_with_stack_and_ins_for_test(
                 &test_program,
                 vec![],

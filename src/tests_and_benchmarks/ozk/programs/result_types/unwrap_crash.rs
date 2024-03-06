@@ -31,7 +31,7 @@ mod test {
         let entrypoint_location =
             EntrypointLocation::disk("result_types", "unwrap_crash", "_crash_on_unwrap");
         let execution_result = execute_compiled_with_stack_and_ins_for_test(
-            &compile_for_test(&entrypoint_location, crate::ast_types::ListType::Unsafe),
+            &compile_for_test(&entrypoint_location),
             vec![],
             vec![],
             NonDeterminism::default(),
@@ -42,7 +42,7 @@ mod test {
         let entrypoint_location =
             EntrypointLocation::disk("result_types", "unwrap_crash", "_crash_on_try");
         let execution_result = execute_compiled_with_stack_and_ins_for_test(
-            &compile_for_test(&entrypoint_location, crate::ast_types::ListType::Unsafe),
+            &compile_for_test(&entrypoint_location),
             vec![],
             vec![],
             NonDeterminism::default(),

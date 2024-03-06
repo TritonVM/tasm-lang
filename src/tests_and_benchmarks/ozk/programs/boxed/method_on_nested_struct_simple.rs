@@ -30,8 +30,7 @@ mod test {
     fn methods_on_nested_structs_simple_test() {
         let entrypoint_location =
             EntrypointLocation::disk("boxed", "method_on_nested_struct_simple", "_main");
-        let test_program =
-            ozk_parsing::compile_for_test(&entrypoint_location, crate::ast_types::ListType::Unsafe);
+        let test_program = ozk_parsing::compile_for_test(&entrypoint_location);
 
         let stdin = vec![];
         let non_determinism = NonDeterminism::new(vec![]);

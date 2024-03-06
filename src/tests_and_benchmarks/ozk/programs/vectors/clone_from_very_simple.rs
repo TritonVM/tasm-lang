@@ -6,9 +6,9 @@ mod test {
     use tasm_lib::triton_vm::prelude::*;
 
     fn main() {
-        let mut a: Vec<BFieldElement> = Vec::<BFieldElement>::with_capacity(32);
+        let mut a: Vec<BFieldElement> = Vec::<BFieldElement>::default();
         a.push(BFieldElement::new(102));
-        let mut b: Vec<BFieldElement> = Vec::<BFieldElement>::with_capacity(32);
+        let mut b: Vec<BFieldElement> = Vec::<BFieldElement>::default();
         b.clone_from(&a);
         assert!(1 == b.len());
 

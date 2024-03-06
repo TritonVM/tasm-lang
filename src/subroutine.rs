@@ -23,9 +23,11 @@ impl SubRoutine {
     /// Returns true iff subroutine starts with a label, ends with a return or a
     /// recurse, and contains a return.
     fn instructions_are_subroutine(instructions: &[LabelledInstruction]) -> bool {
-        match instructions.first() {
-            Some(LabelledInstruction::Label(_subroutine_label)) => (),
-            _ => return false,
+        use LabelledInstruction::*;
+
+        let is_instruction_or_label = |i: &&_| matches!(i, Instruction(_) | Label(_));
+        let Some(Label(_)) = instructions.iter().find(is_instruction_or_label) else {
+            return false;
         };
 
         let last_instruction = instructions.last().unwrap();
@@ -107,12 +109,6 @@ impl TryFrom<LibraryFunction> for SubRoutine {
                 return
         );
 
-        if SubRoutine::instructions_are_subroutine(&instructions) {
-            Ok(SubRoutine(instructions))
-        } else {
-            bail!(
-                "Cannot convert list of labelled instructions to subroutine as they do not conform. Instructions were:\n{}", instructions.iter().join("\n")
-            );
-        }
+        instructions.try_into()
     }
 }

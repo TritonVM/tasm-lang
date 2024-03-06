@@ -17,6 +17,8 @@ use tasm_lib::DIGEST_LENGTH;
 use crate::ast;
 use crate::ast_types;
 use crate::composite_types::CompositeTypes;
+use crate::graft::Graft;
+use crate::libraries::all_libraries;
 use crate::tasm_code_generator::compile_function;
 use crate::tests_and_benchmarks::ozk::ozk_parsing::compile_for_test;
 use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
@@ -64,21 +66,16 @@ pub(crate) fn init_memory_from<T: BFieldCodec>(
 }
 
 /// Get the execution code and the name of the compiled function
-pub(crate) fn compile_for_run_test(
-    item_fn: &syn::ItemFn,
-    list_type: ast_types::ListType,
-) -> (Vec<LabelledInstruction>, String) {
+pub(crate) fn compile_for_run_test(item_fn: &syn::ItemFn) -> (Vec<LabelledInstruction>, String) {
     let function_name = item_fn.sig.ident.to_string();
-    let code = graft_check_compile_prop(item_fn, list_type);
+    let code = graft_check_compile_prop(item_fn);
 
     (code, function_name)
 }
 
-pub(crate) fn graft_check_compile_prop(
-    item_fn: &syn::ItemFn,
-    list_type: ast_types::ListType,
-) -> Vec<LabelledInstruction> {
-    get_standard_setup!(list_type, graft_config, libraries);
+pub(crate) fn graft_check_compile_prop(item_fn: &syn::ItemFn) -> Vec<LabelledInstruction> {
+    let libraries = all_libraries();
+    let mut graft_config = Graft::new(&libraries);
     let mut intermediate_language_ast = graft_config.graft_fn_decl(item_fn);
 
     // type-check and annotate. Doesn't handle structs and methods yet.
@@ -121,7 +118,6 @@ pub(crate) fn execute_compiled_with_stack_and_ins_for_bench(
 #[derive(Debug, Clone)]
 pub(crate) struct TritonVMTestCase {
     entrypoint: EntrypointLocation,
-    list_type: ast_types::ListType,
     std_in: Vec<BFieldElement>,
     non_determinism: NonDeterminism<BFieldElement>,
 }
@@ -130,15 +126,9 @@ impl TritonVMTestCase {
     pub(crate) fn new(entrypoint: EntrypointLocation) -> Self {
         Self {
             entrypoint,
-            list_type: ast_types::ListType::Unsafe,
             std_in: vec![],
             non_determinism: NonDeterminism::default(),
         }
-    }
-
-    pub(crate) fn with_safe_lists(mut self) -> Self {
-        self.list_type = ast_types::ListType::Safe;
-        self
     }
 
     pub(crate) fn with_std_in(mut self, std_in: Vec<BFieldElement>) -> Self {
@@ -174,7 +164,7 @@ impl TritonVMTestCase {
     }
 
     pub(crate) fn compile(&self) -> Vec<LabelledInstruction> {
-        compile_for_test(&self.entrypoint, self.list_type)
+        compile_for_test(&self.entrypoint)
     }
 
     fn verify_stack_len_unchanged(vm_state: &VMState) -> Result<()> {
@@ -188,15 +178,11 @@ impl TritonVMTestCase {
     }
 
     fn convert_vm_state_to_output_state(vm_state: VMState) -> VmOutputState {
-        let final_sponge_state = vm_state
-            .sponge_state
-            .map(|state| tasm_lib::VmHasherState { state });
-
         VmOutputState {
             output: vm_state.public_output,
             final_stack: vm_state.op_stack.stack,
             final_ram: vm_state.ram,
-            final_sponge_state,
+            final_sponge: vm_state.sponge,
         }
     }
 }
@@ -226,14 +212,11 @@ pub(crate) fn execute_compiled_with_stack_and_ins_for_test(
         bail!("Expected stack length to be {expected_terminal_stack_len} but was {terminal_stack_len}");
     }
 
-    let final_sponge_state = vm_state
-        .sponge_state
-        .map(|state| tasm_lib::VmHasherState { state });
     let output_state = VmOutputState {
         output: vm_state.public_output,
         final_stack: vm_state.op_stack.stack,
         final_ram: vm_state.ram,
-        final_sponge_state,
+        final_sponge: vm_state.sponge,
     };
 
     Ok(output_state)
@@ -244,7 +227,7 @@ pub(crate) fn execute_with_stack_safe_lists(
     stack_start: Vec<ast::ExprLit<Typing>>,
     expected_stack_diff: isize,
 ) -> Result<VmOutputState> {
-    let (code, _fn_name) = compile_for_run_test(rust_ast, ast_types::ListType::Safe);
+    let (code, _fn_name) = compile_for_run_test(rust_ast);
     execute_compiled_with_stack_and_ins_for_test(
         &code,
         stack_start,
@@ -262,7 +245,7 @@ pub(crate) fn execute_with_stack_and_ins_safe_lists(
     non_determinism: NonDeterminism<BFieldElement>,
     expected_stack_diff: isize,
 ) -> Result<VmOutputState> {
-    let (code, _fn_name) = compile_for_run_test(rust_ast, ast_types::ListType::Safe);
+    let (code, _fn_name) = compile_for_run_test(rust_ast);
 
     execute_compiled_with_stack_and_ins_for_test(
         &code,
@@ -362,7 +345,7 @@ pub(crate) fn compare_prop_with_stack_and_ins_unsafe_lists(
     std_in: Vec<BFieldElement>,
     non_determinism: NonDeterminism<BFieldElement>,
 ) {
-    let (code, _) = compile_for_run_test(item_fn, ast_types::ListType::Unsafe);
+    let (code, _) = compile_for_run_test(item_fn);
     compare_compiled_prop_with_stack_and_ins(
         &code,
         input_args,
@@ -381,7 +364,7 @@ pub(crate) fn compare_prop_with_stack_and_ins_safe_lists(
     std_in: Vec<BFieldElement>,
     non_determinism: NonDeterminism<BFieldElement>,
 ) {
-    let (code, _) = compile_for_run_test(item_fn, ast_types::ListType::Safe);
+    let (code, _) = compile_for_run_test(item_fn);
     compare_compiled_prop_with_stack_and_ins(
         &code,
         input_args,
@@ -412,7 +395,7 @@ pub(crate) fn compare_prop_with_stack_unsafe_lists(
     input_args: Vec<ast::ExprLit<Typing>>,
     expected_outputs: Vec<ast::ExprLit<Typing>>,
 ) {
-    let (code, _) = compile_for_run_test(item_fn, ast_types::ListType::Unsafe);
+    let (code, _) = compile_for_run_test(item_fn);
     compare_compiled_prop_with_stack_and_ins(
         &code,
         input_args,
@@ -427,7 +410,7 @@ pub(crate) fn multiple_compare_prop_with_stack_safe_lists(
     item_fn: &syn::ItemFn,
     test_cases: Vec<InputOutputTestCase>,
 ) {
-    let (code, _) = compile_for_run_test(item_fn, ast_types::ListType::Safe);
+    let (code, _) = compile_for_run_test(item_fn);
     for test_case in test_cases {
         compare_compiled_prop_with_stack_and_ins(
             &code,
@@ -475,7 +458,7 @@ pub(crate) fn assert_list_equal(
     }
 
     let actual_length =
-        rust_shadowing_helper_functions::safe_list::safe_list_get_length(list_pointer, memory);
+        rust_shadowing_helper_functions::list::list_get_length(list_pointer, memory);
     let expected_length = expected_list.len();
     if expected_length != actual_length {
         let mut actual_memory = memory.iter().collect_vec();
@@ -495,7 +478,7 @@ pub(crate) fn assert_list_equal(
     #[allow(clippy::needless_range_loop)]
     for i in 0..expected_list.len() {
         if expected_list[i].encode()
-            != rust_shadowing_helper_functions::safe_list::safe_list_get(
+            != rust_shadowing_helper_functions::list::list_get(
                 list_pointer,
                 i,
                 memory,

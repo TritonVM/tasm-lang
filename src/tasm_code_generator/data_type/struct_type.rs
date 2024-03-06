@@ -118,7 +118,7 @@ impl ast_types::StructType {
         };
         subroutine.extend(triton_asm!(return));
 
-        state.add_library_function(subroutine.try_into().unwrap());
+        state.add_subroutine(subroutine.try_into().unwrap());
 
         call_store_sr
     }

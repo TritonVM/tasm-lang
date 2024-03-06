@@ -16,7 +16,7 @@ fn main() {
     let val_0: u128 = 14;
     let mut test_struct: TestStruct = TestStruct {
         a: BFieldElement::new(14u64 << 40),
-        b: Vec::<XFieldElement>::with_capacity(14),
+        b: Vec::<XFieldElement>::default(),
         d: Digest::new([
             BFieldElement::new(2u64),
             BFieldElement::new(4u64),
@@ -126,8 +126,7 @@ mod test {
         // Run on Triton-VM
         let entrypoint_location =
             EntrypointLocation::disk("structs", "simple_declaration_on_stack_spilled", "main");
-        let test_program =
-            ozk_parsing::compile_for_test(&entrypoint_location, crate::ast_types::ListType::Unsafe);
+        let test_program = ozk_parsing::compile_for_test(&entrypoint_location);
         let vm_output = execute_compiled_with_stack_and_ins_for_test(
             &test_program,
             vec![],

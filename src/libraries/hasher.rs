@@ -1,16 +1,17 @@
+use tasm_lib::list::LIST_METADATA_SIZE;
+use tasm_lib::traits::basic_snippet::BasicSnippet;
+use tasm_lib::triton_vm::prelude::*;
+use tasm_lib::twenty_first::prelude::tip5::DIGEST_LENGTH;
+
 use crate::ast;
 use crate::ast::FnSignature;
 use crate::ast_types;
 use crate::ast_types::DataType;
-use crate::ast_types::ListType;
 use crate::graft::Graft;
 use crate::libraries::Library;
 use crate::subroutine::SubRoutine;
 use crate::tasm_code_generator::CompilerState;
 use crate::type_checker::CheckState;
-use tasm_lib::traits::basic_snippet::BasicSnippet;
-use tasm_lib::triton_vm::prelude::*;
-use tasm_lib::twenty_first::prelude::tip5::DIGEST_LENGTH;
 
 use super::bfe::BfeLibrary;
 use super::LibraryFunction;
@@ -28,9 +29,7 @@ const HASH_PAIR_FUNCTION_NAME: &str = "Tip5::hash_pair";
 const HASH_VARLEN_FUNCTION_NAME: &str = "Tip5::hash_varlen";
 
 #[derive(Clone, Debug)]
-pub(crate) struct HasherLib {
-    pub(crate) list_type: ListType,
-}
+pub(crate) struct HasherLib;
 
 impl Library for HasherLib {
     fn get_function_name(&self, full_name: &str) -> Option<String> {
@@ -66,35 +65,30 @@ impl Library for HasherLib {
         match fn_name {
             HASH_PAIR_FUNCTION_NAME => hash_pair_function().signature,
             HASH_VARLEN_FUNCTION_NAME => self.hash_varlen_signature(),
-            SPONGE_HASHER_INIT_NAME => ast::FnSignature::from_basic_snippet(
-                Box::new(tasm_lib::hashing::sponge_hasher::init::Init),
-                self.list_type,
-            ),
-            SPONGE_HASHER_ABSORB_NAME => ast::FnSignature::from_basic_snippet(
-                Box::new(tasm_lib::hashing::sponge_hasher::absorb::Absorb),
-                self.list_type,
-            ),
-            SPONGE_HASHER_SQUEEZE_NAME => ast::FnSignature::from_basic_snippet(
-                Box::new(tasm_lib::hashing::sponge_hasher::squeeze::Squeeze),
-                self.list_type,
-            ),
+            SPONGE_HASHER_INIT_NAME => ast::FnSignature::from_basic_snippet(Box::new(
+                tasm_lib::hashing::sponge_hasher::init::Init,
+            )),
+            SPONGE_HASHER_ABSORB_NAME => ast::FnSignature::from_basic_snippet(Box::new(
+                tasm_lib::hashing::sponge_hasher::absorb::Absorb,
+            )),
+            SPONGE_HASHER_SQUEEZE_NAME => ast::FnSignature::from_basic_snippet(Box::new(
+                tasm_lib::hashing::sponge_hasher::squeeze::Squeeze,
+            )),
             SPONGE_HASHER_PAD_AND_ABSORB_ALL_NAME => {
                 ast::FnSignature::value_function_immutable_args(
                     SPONGE_HASHER_PAD_AND_ABSORB_ALL_NAME,
                     vec![(
                         "input",
-                        ast_types::DataType::Boxed(Box::new(ast_types::DataType::List(
-                            Box::new(DataType::Bfe),
-                            self.list_type,
-                        ))),
+                        ast_types::DataType::Boxed(Box::new(ast_types::DataType::List(Box::new(
+                            DataType::Bfe,
+                        )))),
                     )],
                     DataType::unit(),
                 )
             }
-            SAMPLE_SCALARS_FUNCTION_NAME => ast::FnSignature::from_basic_snippet(
-                Box::new(tasm_lib::hashing::algebraic_hasher::sample_scalars::SampleScalars),
-                self.list_type,
-            ),
+            SAMPLE_SCALARS_FUNCTION_NAME => ast::FnSignature::from_basic_snippet(Box::new(
+                tasm_lib::hashing::algebraic_hasher::sample_scalars::SampleScalars,
+            )),
             _ => panic!("Unknown function {fn_name}"),
         }
     }
@@ -116,7 +110,7 @@ impl Library for HasherLib {
         _args: &[ast::Expr<super::Annotation>],
         state: &mut CompilerState,
     ) -> Vec<LabelledInstruction> {
-        let snippet = name_to_tasm_lib_snippet(fn_name, self.list_type);
+        let snippet = name_to_tasm_lib_snippet(fn_name);
         match snippet {
             Some(snippet) => {
                 let snippet_label = state.import_snippet(snippet);
@@ -126,7 +120,7 @@ impl Library for HasherLib {
                 HASH_PAIR_FUNCTION_NAME => {
                     let hash_pair: SubRoutine = hash_pair_function().try_into().unwrap();
                     let hash_pair_label = hash_pair.get_label();
-                    state.add_library_function(hash_pair);
+                    state.add_subroutine(hash_pair);
 
                     triton_asm!(call { hash_pair_label })
                 }
@@ -181,10 +175,9 @@ impl HasherLib {
             "hash_varlen",
             vec![(
                 "input",
-                ast_types::DataType::Boxed(Box::new(ast_types::DataType::List(
-                    Box::new(ast_types::DataType::Bfe),
-                    self.list_type,
-                ))),
+                ast_types::DataType::Boxed(Box::new(ast_types::DataType::List(Box::new(
+                    ast_types::DataType::Bfe,
+                )))),
             )],
             ast_types::DataType::Digest,
         )
@@ -206,7 +199,7 @@ impl HasherLib {
             read_mem 1
             // _ len (*list - 1)
 
-            push {self.list_type.metadata_size() + 1}
+            push {LIST_METADATA_SIZE + 1}
             add
             swap 1
             // _ *elem_0 len
@@ -217,7 +210,7 @@ impl HasherLib {
 
             return
         );
-        state.add_library_function(tasm_langs_hash_varlen.try_into().unwrap());
+        state.add_subroutine(tasm_langs_hash_varlen.try_into().unwrap());
 
         triton_asm!(call {
             tasm_langs_hash_varlen_label
@@ -226,10 +219,7 @@ impl HasherLib {
 }
 
 /// Map hasher functions to the TASM lib snippet type
-fn name_to_tasm_lib_snippet(
-    public_name: &str,
-    list_type: ListType,
-) -> Option<Box<dyn BasicSnippet>> {
+fn name_to_tasm_lib_snippet(public_name: &str) -> Option<Box<dyn BasicSnippet>> {
     match public_name {
         SPONGE_HASHER_INIT_NAME => Some(Box::new(tasm_lib::hashing::sponge_hasher::init::Init)),
         SPONGE_HASHER_ABSORB_NAME => {
@@ -239,9 +229,7 @@ fn name_to_tasm_lib_snippet(
             Some(Box::new(tasm_lib::hashing::sponge_hasher::squeeze::Squeeze))
         }
         SPONGE_HASHER_PAD_AND_ABSORB_ALL_NAME => Some(Box::new(
-            tasm_lib::hashing::sponge_hasher::pad_and_absorb_all::PadAndAbsorbAll {
-                list_type: list_type.into(),
-            },
+            tasm_lib::hashing::sponge_hasher::pad_and_absorb_all::PadAndAbsorbAll,
         )),
         SAMPLE_SCALARS_FUNCTION_NAME => Some(Box::new(
             tasm_lib::hashing::algebraic_hasher::sample_scalars::SampleScalars,
@@ -266,9 +254,7 @@ fn graft_digest_new(arg_0: &syn::Expr, graft_config: &mut Graft) -> ast::Expr<su
                             other => panic!("unsupported: {other:?}"),
                         };
 
-                        let bfe_library = BfeLibrary {
-                            list_type: graft_config.list_type,
-                        };
+                        let bfe_library = BfeLibrary;
                         if let Some(bfe_fn_name) = bfe_library.get_graft_function_name(&name) {
                             initializer_exprs.push(
                                 bfe_library

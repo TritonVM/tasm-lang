@@ -105,20 +105,16 @@ mod test {
             // will cause the program to take too long to run
             let g_length_inner = 2;
             let g_length_quartic = 2;
+
+            let inner_most_vec = vec![random_elements(g_length_inner); g_length_quartic];
+            let second_inner_vec = vec![inner_most_vec; g_length_quartic];
+            let third_inner_vec = vec![second_inner_vec; g_length_quartic];
+
             InnerInnerInnerInnerStruct {
                 a: random(),
                 b: random(),
                 c: random(),
-                d: vec![
-                    vec![
-                        vec![
-                            vec![random_elements(g_length_inner); g_length_quartic];
-                            g_length_quartic
-                        ];
-                        g_length_quartic
-                    ];
-                    g_length_quartic
-                ],
+                d: vec![third_inner_vec; g_length_quartic],
                 e: random(),
             }
         }
@@ -171,6 +167,10 @@ mod test {
             let d_length = rng.gen_range(3..=10);
             let f_length_cubed = rng.gen_range(3..=5);
             let g_length_quartic = rng.gen_range(4..=5);
+
+            let inner_most_vec = vec![random_elements(g_length_quartic); g_length_quartic];
+            let second_inner_vec = vec![inner_most_vec; g_length_quartic];
+
             TestStuctNested {
                 a: random(),
                 b: random_elements(b_length),
@@ -178,13 +178,7 @@ mod test {
                 d: random_elements(d_length),
                 e: random(),
                 f: vec![vec![random_elements(f_length_cubed); f_length_cubed]; f_length_cubed],
-                g: vec![
-                    vec![
-                        vec![random_elements(g_length_quartic); g_length_quartic];
-                        g_length_quartic
-                    ];
-                    g_length_quartic
-                ],
+                g: vec![second_inner_vec; g_length_quartic],
             }
         }
     }
@@ -229,8 +223,7 @@ mod test {
 
         // Run test on Triton-VM
         let entrypoint_location = EntrypointLocation::disk("structs", "nested_structs", "main");
-        let test_program =
-            ozk_parsing::compile_for_test(&entrypoint_location, crate::ast_types::ListType::Unsafe);
+        let test_program = ozk_parsing::compile_for_test(&entrypoint_location);
         println!("executing:\n{}", test_program.iter().join("\n"));
         let vm_output = execute_compiled_with_stack_and_ins_for_test(
             &test_program,

@@ -116,8 +116,7 @@ mod benches {
 
         let entrypoint_location =
             ozk_parsing::EntrypointLocation::disk("arithmetic", "dazefield_element_mul", "main");
-        let code =
-            ozk_parsing::compile_for_test(&entrypoint_location, crate::ast_types::ListType::Unsafe);
+        let code = ozk_parsing::compile_for_test(&entrypoint_location);
 
         let name = "dazefield_element_mul".to_owned();
         execute_and_write_benchmark(

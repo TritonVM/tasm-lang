@@ -1,15 +1,15 @@
 [
   {
     "name": "project_euler_4_w_unsafe_lists_i10_to_50",
-    "clock_cycle_count": 295545,
-    "hash_table_height": 270,
+    "clock_cycle_count": 295533,
+    "hash_table_height": 258,
     "u32_table_height": 24451,
     "case": "CommonCase"
   },
   {
     "name": "project_euler_4_w_unsafe_lists_i10_to_50",
-    "clock_cycle_count": 295545,
-    "hash_table_height": 270,
+    "clock_cycle_count": 295533,
+    "hash_table_height": 258,
     "u32_table_height": 24451,
     "case": "WorstCase"
   }

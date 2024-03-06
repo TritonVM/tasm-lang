@@ -14,8 +14,8 @@ struct TestStruct {
 fn main() {
     let mut test_struct: TestStruct = TestStruct {
         a: BFieldElement::new(0x0000000100000000u64),
-        b: Vec::<Digest>::with_capacity(100),
-        c: Vec::<BFieldElement>::with_capacity(200),
+        b: Vec::<Digest>::default(),
+        c: Vec::<BFieldElement>::default(),
         d: XFieldElement::new([
             BFieldElement::new(0x0000000200000000u64),
             BFieldElement::new(0x0000000400000000u64),
@@ -55,7 +55,6 @@ fn main() {
 
 #[cfg(test)]
 mod test {
-
     use tasm_lib::triton_vm::prelude::*;
 
     use crate::tests_and_benchmarks::ozk::ozk_parsing;
@@ -97,8 +96,7 @@ mod test {
         // Run on Triton-VM
         let entrypoint_location =
             EntrypointLocation::disk("structs", "declaration_on_stack_with_list", "main");
-        let test_program =
-            ozk_parsing::compile_for_test(&entrypoint_location, crate::ast_types::ListType::Unsafe);
+        let test_program = ozk_parsing::compile_for_test(&entrypoint_location);
         let vm_output = execute_compiled_with_stack_and_ins_for_test(
             &test_program,
             vec![],

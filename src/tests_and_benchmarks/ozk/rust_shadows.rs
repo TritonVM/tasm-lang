@@ -16,10 +16,10 @@ use num::Zero;
 use tasm_lib::triton_vm::prelude::*;
 use tasm_lib::triton_vm::proof_item::ProofItem;
 use tasm_lib::triton_vm::proof_item::ProofItemVariant;
-use tasm_lib::twenty_first::shared_math::tip5::Tip5State;
+use tasm_lib::twenty_first::shared_math::tip5::Tip5;
 use tasm_lib::twenty_first::shared_math::tip5::RATE;
 use tasm_lib::twenty_first::util_types::algebraic_hasher::AlgebraicHasher;
-use tasm_lib::twenty_first::util_types::algebraic_hasher::SpongeHasher;
+use tasm_lib::twenty_first::util_types::algebraic_hasher::Sponge;
 use tasm_lib::twenty_first::util_types::merkle_tree::MerkleTreeInclusionProof;
 
 use crate::tests_and_benchmarks::ozk::programs::recufier::verify::FriVerify;
@@ -40,7 +40,7 @@ thread_local! {
     static ND_DIGESTS: RefCell<Vec<Digest>> = RefCell::new(vec![]);
     static ND_MEMORY: RefCell<HashMap<BFieldElement, BFieldElement>> =
         RefCell::new(HashMap::default());
-    static SPONGE_STATE: RefCell<Option<Tip5State>> = RefCell::new(None);
+    static SPONGE_STATE: RefCell<Option<Tip5>> = RefCell::new(None);
 }
 
 pub(super) struct Tip5WithState;
@@ -307,7 +307,7 @@ pub(super) fn _tasm_recufier_fri_verify(
         let indexed_leaves = fri.verify(&mut proof_stream, &mut None).unwrap();
         let num_items_used_by_fri = proof_stream.items_index - proof_stream_before_fri.items_index;
         proof_iter._advance_by(num_items_used_by_fri).unwrap();
-        *sponge_state = proof_stream.sponge_state;
+        *sponge_state = proof_stream.sponge;
         indexed_leaves
             .into_iter()
             .map(|(idx, leaf)| (idx as u32, leaf))
@@ -318,6 +318,7 @@ pub(super) fn _tasm_recufier_fri_verify(
 impl FriVerify {
     fn _to_fri(&self) -> Fri<Tip5> {
         let fri_domain = ArithmeticDomain::of_length(self.domain_length as usize)
+            .unwrap()
             .with_offset(self.domain_offset);
         let maybe_fri = Fri::new(
             fri_domain,
@@ -351,7 +352,7 @@ impl VmProofIter {
         Ok(())
     }
 
-    fn _into_proof_stream(mut self, sponge_state: Tip5State) -> ProofStream<Tip5> {
+    fn _into_proof_stream(mut self, sponge: Tip5) -> ProofStream<Tip5> {
         let mut items = vec![];
         while let Some(item) = self._decode_current_item() {
             items.push(item);
@@ -360,7 +361,7 @@ impl VmProofIter {
         ProofStream {
             items,
             items_index: 0,
-            sponge_state,
+            sponge,
         }
     }
 

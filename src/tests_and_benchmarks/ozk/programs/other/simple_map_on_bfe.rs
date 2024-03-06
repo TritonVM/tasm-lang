@@ -7,7 +7,7 @@ fn main() {
     fn local_function(input: BFieldElement) -> BFieldElement {
         return input * BFieldElement::new(2);
     }
-    let mut input_values: Vec<BFieldElement> = Vec::<BFieldElement>::with_capacity(200);
+    let mut input_values: Vec<BFieldElement> = Vec::<BFieldElement>::default();
 
     let length_indication: usize = tasm::tasm_io_read_stdin___bfe().value() as usize;
     let mut i: usize = 0;
@@ -29,7 +29,6 @@ fn main() {
 
 #[cfg(test)]
 mod test {
-
     use tasm_lib::triton_vm::prelude::*;
 
     use itertools::Itertools;
@@ -101,8 +100,7 @@ mod benches {
         let module_name = "simple_map_on_bfe".to_string();
         let entrypoint_location = EntrypointLocation::disk("other", &module_name, "main");
         let parsed_code = entrypoint_location.extract_entrypoint();
-        let (code, _fn_name) =
-            compile_for_run_test(&parsed_code, crate::ast_types::ListType::Unsafe);
+        let (code, _fn_name) = compile_for_run_test(&parsed_code);
         execute_and_write_benchmark(module_name, code, common_case, worst_case, 0)
     }
 }

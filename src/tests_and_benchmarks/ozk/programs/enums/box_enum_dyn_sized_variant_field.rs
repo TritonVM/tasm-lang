@@ -7,7 +7,7 @@ enum EnumDynSizedVariantField {
 }
 
 fn main() {
-    let mut bfes: Vec<BFieldElement> = Vec::<BFieldElement>::with_capacity(64);
+    let mut bfes: Vec<BFieldElement> = Vec::<BFieldElement>::default();
     bfes.push(tasm::tasm_io_read_stdin___bfe());
     bfes.push(tasm::tasm_io_read_stdin___bfe());
     bfes.push(tasm::tasm_io_read_stdin___bfe());

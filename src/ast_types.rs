@@ -5,6 +5,7 @@ use std::str::FromStr;
 use anyhow::bail;
 use itertools::Itertools;
 use regex::Regex;
+use tasm_lib::triton_vm::table::{NUM_BASE_COLUMNS, NUM_EXT_COLUMNS, NUM_QUOTIENT_SEGMENTS};
 
 use crate::ast::FnSignature;
 
@@ -14,7 +15,6 @@ pub(crate) use self::custom_type_oil::CustomTypeOil;
 pub(crate) use self::enum_type::EnumType;
 pub(crate) use self::field_id::FieldId;
 pub(crate) use self::function_type::FunctionType;
-pub(crate) use self::list_type::ListType;
 pub(crate) use self::struct_type::*;
 pub(crate) use self::tuple::Tuple;
 
@@ -24,7 +24,6 @@ pub(crate) mod custom_type_oil;
 pub(crate) mod enum_type;
 pub(crate) mod field_id;
 pub(crate) mod function_type;
-pub(crate) mod list_type;
 pub(crate) mod struct_type;
 pub(crate) mod tuple;
 
@@ -37,7 +36,7 @@ pub(crate) enum DataType {
     Bfe,
     Xfe,
     Digest,
-    List(Box<DataType>, ListType),
+    List(Box<DataType>),
     Tuple(Tuple),
     Array(ArrayType),
     Struct(StructType),
@@ -69,18 +68,24 @@ impl FromStr for DataType {
 }
 
 impl DataType {
-    pub(crate) fn try_from_string(type_str: &str, list_type: ListType) -> Result<Self, ()> {
+    pub(crate) fn try_from_string(type_str: &str) -> Result<Self, ()> {
+        let box_regex = Regex::new(r"Box<(?<inner>.+)>").unwrap();
+        if let Some(caps) = box_regex.captures(type_str) {
+            let inner_parsed = Self::try_from_string(&caps["inner"])?;
+            return Ok(DataType::Boxed(Box::new(inner_parsed)));
+        }
+
         let vec_regex = Regex::new(r"Vec<(?<inner>.+)>").unwrap();
         if let Some(caps) = vec_regex.captures(type_str) {
-            let inner_parsed = Self::try_from_string(&caps["inner"], list_type)?;
-            return Ok(DataType::List(Box::new(inner_parsed), list_type));
+            let inner_parsed = Self::try_from_string(&caps["inner"])?;
+            return Ok(DataType::List(Box::new(inner_parsed)));
         }
 
         let array_regex = Regex::new(r"\[(?<inner>.+); (?<array_size>.+)\]").unwrap();
         if let Some(caps) = array_regex.captures(type_str) {
             let known_constants: HashMap<&str, usize> =
                 [("NUM_QUOTIENT_SEGMENTS", 4)].into_iter().collect();
-            let inner_parsed = Self::try_from_string(&caps["inner"], list_type)?;
+            let inner_parsed = Self::try_from_string(&caps["inner"])?;
             let array_size_indication = &caps["array_size"];
             let parsed_size = if known_constants.contains_key(&array_size_indication) {
                 known_constants[&array_size_indication]
@@ -107,8 +112,24 @@ impl DataType {
             "XFieldElement" => Ok(DataType::Xfe),
             "Digest" => Ok(DataType::Digest),
 
-            "AuthenticationStructure" => Ok(DataType::List(Box::new(DataType::Digest), list_type)),
+            "AuthenticationStructure" => Ok(DataType::List(Box::new(DataType::Digest))),
             "FriResponse" => Ok(DataType::Unresolved(type_str.to_owned())),
+            "BaseRow<XFieldElement>" => Ok(DataType::Array(ArrayType {
+                element_type: Box::new(DataType::Xfe),
+                length: NUM_BASE_COLUMNS,
+            })),
+            "BaseRow<BFieldElement>" => Ok(DataType::Array(ArrayType {
+                element_type: Box::new(DataType::Bfe),
+                length: NUM_BASE_COLUMNS,
+            })),
+            "ExtensionRow" => Ok(DataType::Array(ArrayType {
+                element_type: Box::new(DataType::Xfe),
+                length: NUM_EXT_COLUMNS,
+            })),
+            "QuotientSegments" => Ok(DataType::Array(ArrayType {
+                element_type: Box::new(DataType::Xfe),
+                length: NUM_QUOTIENT_SEGMENTS,
+            })),
             _ => todo!("{type_str}"),
         }
     }
@@ -126,7 +147,7 @@ impl DataType {
             DataType::Digest => true,
             DataType::Tuple(tuple) => tuple.is_copy(),
             DataType::Array(array_type) => array_type.element_type.is_copy(),
-            DataType::List(_, _) => false,
+            DataType::List(_) => false,
             DataType::VoidPointer => false,
             DataType::Function(_) => false,
             DataType::Struct(struct_type) => struct_type.is_copy,
@@ -147,7 +168,7 @@ impl DataType {
             Bfe => "BField".to_string(),
             Xfe => "XField".to_string(),
             Digest => "Digest".to_string(),
-            List(ty, _list_type) => format!("Vec_L{}R", ty.label_friendly_name()),
+            List(ty) => format!("Vec_L{}R", ty.label_friendly_name()),
             Array(array_type) => format!(
                 "array{}_of_L{}R",
                 array_type.length,
@@ -167,10 +188,7 @@ impl DataType {
         }
     }
 
-    pub(crate) fn from_tasm_lib_datatype(
-        tasm_lib_type: tasm_lib::data_type::DataType,
-        list_type: ListType,
-    ) -> Self {
+    pub(crate) fn from_tasm_lib_datatype(tasm_lib_type: tasm_lib::data_type::DataType) -> Self {
         use DataType::*;
         match tasm_lib_type {
             tasm_lib::data_type::DataType::Bool => Bool,
@@ -181,11 +199,11 @@ impl DataType {
             tasm_lib::data_type::DataType::Xfe => Xfe,
             tasm_lib::data_type::DataType::Digest => Digest,
             tasm_lib::data_type::DataType::List(elem_type) => {
-                let element_type = Self::from_tasm_lib_datatype(*elem_type, list_type);
-                List(Box::new(element_type), list_type)
+                let element_type = Self::from_tasm_lib_datatype(*elem_type);
+                List(Box::new(element_type))
             }
             tasm_lib::data_type::DataType::Array(array_type) => {
-                let element_type = Self::from_tasm_lib_datatype(array_type.element_type, list_type);
+                let element_type = Self::from_tasm_lib_datatype(array_type.element_type);
                 Array(ArrayType {
                     element_type: Box::new(element_type),
                     length: array_type.length,
@@ -194,14 +212,14 @@ impl DataType {
             tasm_lib::data_type::DataType::Tuple(tasm_types) => {
                 let element_types: Vec<DataType> = tasm_types
                     .into_iter()
-                    .map(|t| Self::from_tasm_lib_datatype(t, list_type))
+                    .map(Self::from_tasm_lib_datatype)
                     .collect();
                 Tuple(element_types.into())
             }
             tasm_lib::data_type::DataType::VoidPointer => VoidPointer,
-            tasm_lib::data_type::DataType::StructRef(struct_type) => Boxed(Box::new(
-                Self::tasm_lib_struct_to_lang_struct(struct_type, list_type),
-            )),
+            tasm_lib::data_type::DataType::StructRef(struct_type) => {
+                Boxed(Box::new(Self::tasm_lib_struct_to_lang_struct(struct_type)))
+            }
         }
     }
 
@@ -251,7 +269,7 @@ impl DataType {
     /// Return the element type for lists
     pub(crate) fn type_parameter(&self) -> Option<DataType> {
         match self {
-            DataType::List(element_type, _) => Some(*element_type.to_owned()),
+            DataType::List(element_type) => Some(*element_type.to_owned()),
             // TODO: Is this the right solution, or do we perhaps need to resolve
             // other types for our field access operators? I'm leaning towards the
             // latter ... but what if the are more field operators following each
@@ -282,7 +300,7 @@ impl DataType {
                 .into_iter()
                 .map(|x| x.bfield_codec_static_length())
                 .try_fold(0, |acc: usize, x| x.map(|x| x + acc)),
-            DataType::List(_, _) => None,
+            DataType::List(_) => None,
             DataType::Struct(struct_type) => struct_type
                 .field_types()
                 .try_fold(0, |acc: usize, field_type| {
@@ -313,7 +331,7 @@ impl DataType {
             Self::Bfe => 1,
             Self::Xfe => 3,
             Self::Digest => 5,
-            Self::List(_list_type, _) => 1,
+            Self::List(_) => 1,
             Self::Array(_) => 1,
             Self::Tuple(tuple_type) => tuple_type.stack_size(),
             Self::VoidPointer => 1,
@@ -348,14 +366,11 @@ impl DataType {
         }
     }
 
-    fn tasm_lib_struct_to_lang_struct(
-        struct_type: tasm_lib::data_type::StructType,
-        list_type: ListType,
-    ) -> Self {
+    fn tasm_lib_struct_to_lang_struct(struct_type: tasm_lib::data_type::StructType) -> Self {
         let tasm_lib::data_type::StructType { name, fields } = struct_type;
         let fields = fields
             .into_iter()
-            .map(|(name, dtype)| (name, Self::from_tasm_lib_datatype(dtype, list_type)))
+            .map(|(name, dtype)| (name, Self::from_tasm_lib_datatype(dtype)))
             .collect();
 
         let named_fields_struct = NamedFieldsStruct { fields };
@@ -377,8 +392,7 @@ impl TryFrom<DataType> for tasm_lib::data_type::DataType {
         fn try_from_boxed(value: DataType) -> Result<tasm_lib::data_type::DataType, String> {
             match value {
                 // A Boxed list is just a list
-                // TODO: Default to `Unsafe` list here??
-                DataType::List(_, ListType::Unsafe) => value.try_into(),
+                DataType::List(_) => value.try_into(),
                 DataType::Unresolved(_) => todo!(),
                 DataType::Struct(struct_type) => Ok(tasm_lib::data_type::DataType::StructRef(
                     struct_type.try_into()?,
@@ -395,12 +409,12 @@ impl TryFrom<DataType> for tasm_lib::data_type::DataType {
             DataType::Bfe => Ok(tasm_lib::data_type::DataType::Bfe),
             DataType::Xfe => Ok(tasm_lib::data_type::DataType::Xfe),
             DataType::Digest => Ok(tasm_lib::data_type::DataType::Digest),
-            DataType::List(elem_type, _) => {
+            DataType::List(elem_type) => {
                 let element_type = (*elem_type).try_into();
                 let element_type = match element_type {
                     Ok(e) => e,
                     Err(err) => {
-                        return Err(format!("Failed to convert element type of list: {err}"))
+                        return Err(format!("Failed to convert element type of list: {err}"));
                     }
                 };
                 Ok(tasm_lib::data_type::DataType::List(Box::new(element_type)))
@@ -461,7 +475,7 @@ impl Display for DataType {
             Bfe => "BFieldElement".to_string(),
             Xfe => "XFieldElement".to_string(),
             Digest => "Digest".to_string(),
-            List(ty, _list_type) => format!("Vec<{ty}>"),
+            List(ty) => format!("Vec<{ty}>"),
             Array(array_type) => format!("[{}; {}]", array_type.element_type, array_type.length),
             Tuple(tys) => format!("({})", tys.into_iter().join(", ")),
             VoidPointer => "void pointer".to_string(),
@@ -478,7 +492,7 @@ impl Display for DataType {
             Unresolved(name) => name.to_string(),
             Boxed(ty) => format!("Boxed<{ty}>"),
         };
-        write!(f, "{str}",)
+        write!(f, "{str}")
     }
 }
 

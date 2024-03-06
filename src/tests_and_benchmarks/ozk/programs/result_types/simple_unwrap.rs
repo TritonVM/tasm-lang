@@ -23,7 +23,6 @@ fn main() {
 }
 
 mod test {
-
     use std::default::Default;
 
     use tasm_lib::twenty_first::shared_math::other::random_elements;
@@ -44,8 +43,7 @@ mod test {
         let native_output =
             rust_shadows::wrap_main_with_io(&main)(stdin.clone(), non_determinism.clone());
         let entrypoint_location = EntrypointLocation::disk("result_types", "simple_unwrap", "main");
-        let test_program =
-            ozk_parsing::compile_for_test(&entrypoint_location, crate::ast_types::ListType::Unsafe);
+        let test_program = ozk_parsing::compile_for_test(&entrypoint_location);
         let expected_stack_diff = 0;
         println!("test_program:\n{}", test_program.iter().join("\n"));
         let vm_output = execute_compiled_with_stack_and_ins_for_test(

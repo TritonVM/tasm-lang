@@ -7,7 +7,7 @@ mod test {
     use tasm_lib::triton_vm::prelude::*;
 
     fn main() {
-        let mut list: Vec<BFieldElement> = Vec::<BFieldElement>::with_capacity(32);
+        let mut list: Vec<BFieldElement> = Vec::<BFieldElement>::default();
         list.push(BFieldElement::new(102));
         let boxed_list: Box<Vec<BFieldElement>> = Box::<Vec<BFieldElement>>::new(list);
         tasm::tasm_io_write_to_stdout___bfe(boxed_list[0]);

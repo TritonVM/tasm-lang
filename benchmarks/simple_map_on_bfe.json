@@ -1,16 +1,16 @@
 [
   {
     "name": "simple_map_on_bfe",
-    "clock_cycle_count": 680,
-    "hash_table_height": 180,
-    "u32_table_height": 71,
+    "clock_cycle_count": 677,
+    "hash_table_height": 174,
+    "u32_table_height": 40,
     "case": "CommonCase"
   },
   {
     "name": "simple_map_on_bfe",
-    "clock_cycle_count": 11035,
-    "hash_table_height": 180,
-    "u32_table_height": 1524,
+    "clock_cycle_count": 11507,
+    "hash_table_height": 174,
+    "u32_table_height": 1488,
     "case": "WorstCase"
   }
 ]

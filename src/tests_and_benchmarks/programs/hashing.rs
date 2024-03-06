@@ -99,9 +99,8 @@ mod run_tests {
     fn hash_varlen_safe_list_test() {
         let random_bfes: Vec<BFieldElement> = random_elements(20);
         let mut init_memory = HashMap::default();
-        rust_shadowing_helper_functions::safe_list::safe_list_insert(
+        rust_shadowing_helper_functions::list::list_insert(
             BFieldElement::one(),
-            20,
             random_bfes.clone(),
             &mut init_memory,
         );
@@ -133,7 +132,7 @@ mod run_tests {
 
         let random_bfes: Vec<BFieldElement> = random_elements(20);
         let mut init_memory = HashMap::default();
-        rust_shadowing_helper_functions::unsafe_list::unsafe_list_insert(
+        rust_shadowing_helper_functions::list::list_insert(
             BFieldElement::one(),
             random_bfes.clone(),
             &mut init_memory,

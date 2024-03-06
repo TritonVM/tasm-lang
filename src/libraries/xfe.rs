@@ -226,7 +226,7 @@ impl Library for XfeLibrary {
 
 fn graft_xfe_new_function_call(
     args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
-    graft_config: &mut Graft<'_>,
+    graft_config: &mut Graft,
 ) -> Option<ast::Expr<crate::type_checker::Typing>> {
     if args.len() != 1 {
         panic!("XFE instantiation only takes one argument which must be an array");
@@ -255,9 +255,7 @@ fn graft_xfe_new_function_call(
                             other => panic!("unsupported: {other:?}"),
                         };
 
-                        let bfe_library = BfeLibrary {
-                            list_type: graft_config.list_type,
-                        };
+                        let bfe_library = BfeLibrary;
                         if let Some(bfe_fn_name) = bfe_library.get_graft_function_name(&name) {
                             initializer_exprs.push(
                                 bfe_library

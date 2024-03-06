@@ -64,7 +64,6 @@ fn main() {
 
 #[cfg(test)]
 mod test {
-
     use tasm_lib::twenty_first::prelude::BFieldCodec;
 
     use itertools::Itertools;
@@ -94,8 +93,7 @@ mod test {
         // Test function in Triton VM
         let entrypoint_location =
             EntrypointLocation::disk("boxed", "methods_on_nested_structs_not_copy", "main");
-        let test_program =
-            ozk_parsing::compile_for_test(&entrypoint_location, crate::ast_types::ListType::Unsafe);
+        let test_program = ozk_parsing::compile_for_test(&entrypoint_location);
         let expected_stack_diff = 0;
         println!("test_program:\n{}", test_program.iter().join("\n"));
         let vm_output = execute_compiled_with_stack_and_ins_for_test(

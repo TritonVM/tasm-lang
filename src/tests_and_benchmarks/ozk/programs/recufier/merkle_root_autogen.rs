@@ -33,11 +33,7 @@ mod test {
         let entrypoint_location =
             EntrypointLocation::disk("recufier", "merkle_root_autogen", "merkle_root");
         let rust_ast = entrypoint_location.extract_entrypoint();
-        let as_bs = compile_to_basic_snippet(
-            rust_ast,
-            std::collections::HashMap::default(),
-            crate::ast_types::ListType::Unsafe,
-        );
+        let as_bs = compile_to_basic_snippet(rust_ast, std::collections::HashMap::default());
         println!("{}", as_bs);
     }
 }

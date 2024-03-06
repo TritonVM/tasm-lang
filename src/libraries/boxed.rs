@@ -156,7 +156,7 @@ impl Boxed {
         let inner_type = *inner_type.to_owned();
         assert!(matches!(
             inner_type,
-            ast_types::DataType::List(_, _) | ast_types::DataType::Array(_)
+            ast_types::DataType::List(_) | ast_types::DataType::Array(_)
         ));
 
         let argument = ast_types::AbstractArgument::ValueArgument(ast_types::AbstractValueArg {
@@ -206,14 +206,10 @@ fn call_new_box(
     let value_pointer_pointer = state.static_memory_allocation(1);
     let dyn_malloc_label = state.import_snippet(Box::new(DynMalloc));
     let store_value = inner_type.store_to_memory(state);
-    const BIG_ALLOCATION: u32 = u32::MAX;
     let subroutine = triton_asm!(
         {entrypoint}:
 
             // 1. Allocate:
-            // In order to do that, we need to know how many words to allocate, or we just
-            // allocate *enough*
-            push {BIG_ALLOCATION}
             call {dyn_malloc_label}
 
             // _ [value] *value
@@ -243,7 +239,7 @@ fn call_new_box(
 
     let subroutine: SubRoutine = subroutine.try_into().unwrap();
 
-    state.add_library_function(subroutine);
+    state.add_subroutine(subroutine);
 
     call_function
 }

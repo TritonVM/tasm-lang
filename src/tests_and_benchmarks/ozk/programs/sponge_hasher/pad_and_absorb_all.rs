@@ -6,8 +6,7 @@ use crate::triton_vm::prelude::*;
 fn pad_and_absorb_all() {
     Tip5WithState::init();
     let input_length: u32 = tasm::tasm_io_read_stdin___u32();
-    let mut preimage: Vec<BFieldElement> =
-        Vec::<BFieldElement>::with_capacity(input_length as usize);
+    let mut preimage: Vec<BFieldElement> = Vec::<BFieldElement>::default();
     {
         let mut i: usize = 0;
         while i < input_length as usize {

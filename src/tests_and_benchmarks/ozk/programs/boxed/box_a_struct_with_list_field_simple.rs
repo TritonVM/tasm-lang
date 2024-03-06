@@ -8,7 +8,7 @@ struct WithListField {
 }
 
 fn main() {
-    let mut list: Vec<BFieldElement> = Vec::<BFieldElement>::with_capacity(32);
+    let mut list: Vec<BFieldElement> = Vec::<BFieldElement>::default();
     list.push(BFieldElement::new(102));
     list.push(BFieldElement::new(2222));
     list.push(BFieldElement::new(3333333));

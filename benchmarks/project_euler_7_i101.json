@@ -1,16 +1,16 @@
 [
   {
     "name": "project_euler_7_i101",
-    "clock_cycle_count": 67935,
-    "hash_table_height": 228,
-    "u32_table_height": 15253,
+    "clock_cycle_count": 64892,
+    "hash_table_height": 216,
+    "u32_table_height": 15220,
     "case": "CommonCase"
   },
   {
     "name": "project_euler_7_i101",
-    "clock_cycle_count": 67935,
-    "hash_table_height": 228,
-    "u32_table_height": 15253,
+    "clock_cycle_count": 64892,
+    "hash_table_height": 216,
+    "u32_table_height": 15220,
     "case": "WorstCase"
   }
 ]

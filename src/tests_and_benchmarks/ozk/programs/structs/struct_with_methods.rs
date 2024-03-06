@@ -65,7 +65,6 @@ fn main() {
 
 #[cfg(test)]
 mod test {
-
     use itertools::Itertools;
     use rand::distributions::Standard;
     use rand::prelude::Distribution;
@@ -119,8 +118,7 @@ mod test {
         // Run test on Triton-VM
         let entrypoint_location =
             EntrypointLocation::disk("structs", "struct_with_methods", "main");
-        let test_program =
-            ozk_parsing::compile_for_test(&entrypoint_location, crate::ast_types::ListType::Unsafe);
+        let test_program = ozk_parsing::compile_for_test(&entrypoint_location);
         println!("executing:\n{}", test_program.iter().join("\n"));
         let expected_stack_diff = 0;
         let vm_output = execute_compiled_with_stack_and_ins_for_test(

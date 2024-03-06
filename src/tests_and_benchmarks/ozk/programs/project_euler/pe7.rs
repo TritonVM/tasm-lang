@@ -9,7 +9,7 @@ fn main() {
     let index_of_prime_to_find: u32 = 101;
     let log_of_desired_index: u32 = u32::BITS - index_of_prime_to_find.leading_zeros() - 1;
     let sieve_size: u32 = index_of_prime_to_find * log_of_desired_index;
-    let mut primes: Vec<bool> = Vec::<bool>::with_capacity(sieve_size as usize);
+    let mut primes: Vec<bool> = Vec::<bool>::default();
     primes.push(false);
     primes.push(false);
     let mut tmp_vec_initializer: u32 = 2;
@@ -42,7 +42,6 @@ fn main() {
 
 #[cfg(test)]
 mod test {
-
     use itertools::Itertools;
 
     use super::*;
@@ -86,7 +85,7 @@ mod benches {
     fn pe7_bench() {
         let entrypoint_location = EntrypointLocation::disk("project_euler", "pe7", "main");
         let parsed = entrypoint_location.extract_entrypoint();
-        let (code, _) = compile_for_run_test(&parsed, crate::ast_types::ListType::Safe);
+        let (code, _) = compile_for_run_test(&parsed);
 
         let common_case = BenchmarkInput::default();
         let worst_case = BenchmarkInput::default();

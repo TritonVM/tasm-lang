@@ -11,9 +11,7 @@ use super::Library;
 use super::LibraryFunction;
 
 #[derive(Clone, Debug)]
-pub(crate) struct UnsignedIntegersLib {
-    pub(crate) list_type: ast_types::ListType,
-}
+pub(crate) struct UnsignedIntegersLib;
 
 const LEADING_ZEROS_METHOD: &str = "leading_zeros";
 const COUNT_ONES_METHOD: &str = "count_ones";
@@ -75,7 +73,7 @@ impl Library for UnsignedIntegersLib {
         let snippet = name_to_tasm_lib_snippet(method_name, receiver_type)
             .unwrap_or_else(|| panic!("Unknown function name {method_name} for {receiver_type}"));
 
-        ast::FnSignature::from_basic_snippet(snippet, self.list_type)
+        ast::FnSignature::from_basic_snippet(snippet)
     }
 
     fn function_name_to_signature(

@@ -1,5 +1,6 @@
 #![allow(clippy::explicit_auto_deref)]
 #![allow(clippy::needless_borrow)]
+
 use tasm_lib::triton_vm::prelude::*;
 use tasm_lib::twenty_first::prelude::AlgebraicHasher;
 
@@ -20,7 +21,6 @@ fn main() {
 mod test {
     use tasm_lib::twenty_first::shared_math::other::random_elements;
 
-    use crate::ast_types;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
@@ -43,7 +43,7 @@ mod test {
         let entrypoint_location = EntrypointLocation::disk("other", "hash_varlen", "main");
         let rust_ast = entrypoint_location.extract_entrypoint();
         let expected_stack_diff = 0;
-        let (code, _fn_name) = compile_for_run_test(&rust_ast, ast_types::ListType::Unsafe);
+        let (code, _fn_name) = compile_for_run_test(&rust_ast);
         let vm_output = execute_compiled_with_stack_and_ins_for_test(
             &code,
             vec![],
