@@ -395,6 +395,12 @@ impl<'a> Graft<'a> {
             );
         }
 
+        if rust_type_as_string == "ExtensionRow" {
+            return libraries::recursion::RecursionLib::graft_ext_row(
+                &rust_type_path.path.segments[0].arguments,
+            );
+        }
+
         // We only allow the user to use types that are capitalized
         if rust_type_as_string
             .chars()

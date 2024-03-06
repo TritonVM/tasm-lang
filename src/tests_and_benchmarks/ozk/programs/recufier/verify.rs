@@ -1,6 +1,7 @@
 use num::One;
 use num::Zero;
 use serde_derive::Serialize;
+use tasm_lib::triton_vm::table::ExtensionRow;
 
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 use crate::tests_and_benchmarks::ozk::rust_shadows::Tip5WithState;
@@ -208,12 +209,33 @@ pub fn recufy() {
         tasm::tasm_arithmetic_xfe_to_the_fourth(out_of_domain_point_curr_row);
     RecufyDebug::dump_xfe(out_of_domain_point_curr_row_pow_num_segments);
 
-    // let revealed_indexed_leaves: Vec<(u32, XFieldElement)> =
-    //     tasm::tasm_recufier_fri_verify(&mut proof_iter, fri);
-
-    let out_of_domain_base_row: Box<Box<BaseRow<XFieldElement>>> =
+    let out_of_domain_curr_base_row: Box<Box<BaseRow<XFieldElement>>> =
         proof_iter.next_as_outofdomainbaserow();
-    RecufyDebug::dump_xfes(&out_of_domain_base_row.to_vec());
+    RecufyDebug::dump_xfes(&out_of_domain_curr_base_row.to_vec());
+    let out_of_domain_curr_ext_row: Box<Box<ExtensionRow>> = proof_iter.next_as_outofdomainextrow();
+    RecufyDebug::dump_xfes(&out_of_domain_curr_ext_row.to_vec());
+    let out_of_domain_next_base_row: Box<Box<BaseRow<XFieldElement>>> =
+        proof_iter.next_as_outofdomainbaserow();
+    RecufyDebug::dump_xfes(&out_of_domain_next_base_row.to_vec());
+    let out_of_domain_next_ext_row: Box<Box<ExtensionRow>> = proof_iter.next_as_outofdomainextrow();
+    RecufyDebug::dump_xfes(&out_of_domain_next_ext_row.to_vec());
+    let out_of_domain_curr_row_quot_segments: Box<[XFieldElement; 4]> =
+        proof_iter.next_as_outofdomainquotientsegments();
+    RecufyDebug::dump_xfes(&out_of_domain_curr_row_quot_segments.to_vec());
+
+    let initial_zerofier_inv: XFieldElement =
+        (out_of_domain_point_curr_row - XFieldElement::one()).inverse();
+    RecufyDebug::dump_xfe(initial_zerofier_inv);
+    let consistency_zerofier_inv: XFieldElement =
+        (out_of_domain_point_curr_row.mod_pow_u32(padded_height) - XFieldElement::one()).inverse();
+    RecufyDebug::dump_xfe(consistency_zerofier_inv);
+    let except_last_row: XFieldElement =
+        out_of_domain_point_curr_row - trace_domain_generator.lift().inverse();
+    RecufyDebug::dump_xfe(except_last_row);
+    let transition_zerofier_inv: XFieldElement = except_last_row * consistency_zerofier_inv;
+    RecufyDebug::dump_xfe(transition_zerofier_inv);
+    let terminal_zerofier_inv: XFieldElement = except_last_row.inverse(); // i.e., only last row
+    RecufyDebug::dump_xfe(terminal_zerofier_inv);
 
     RecufyDebug::sponge_state(Tip5WithState::squeeze());
     return;
@@ -223,6 +245,7 @@ pub fn recufy() {
 mod tests {
     use proptest::prelude::*;
     use proptest_arbitrary_interop::arb;
+    use tasm_lib::triton_vm::table::NUM_EXT_COLUMNS;
     use test_strategy::proptest;
 
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
@@ -252,7 +275,16 @@ mod tests {
         let dummy_digest_base_mt = Digest::new([42u64, 43, 44, 45, 46].map(BFieldElement::new));
         let dummy_digest_extension_mt =
             Digest::new([100u64, 101, 102, 103, 104].map(BFieldElement::new));
-        let dummy_ood_base_row = [XFieldElement::from(42); NUM_BASE_COLUMNS];
+        let bfe0 = BFieldElement::new(101010);
+        let bfe1 = BFieldElement::new(101011);
+        let bfe2 = BFieldElement::new(101012);
+        let bfe3 = BFieldElement::new(101013);
+        let bfe4 = BFieldElement::new(101014);
+        let bfe5 = BFieldElement::new(101015);
+        let dummy_ood_brow_curr = [XFieldElement::new([bfe2, bfe1, bfe0]); NUM_BASE_COLUMNS];
+        let dummy_ood_erow_curr = [XFieldElement::new([bfe0, bfe1, bfe2]); NUM_EXT_COLUMNS];
+        let dummy_ood_brow_next = [XFieldElement::new([bfe5, bfe4, bfe3]); NUM_BASE_COLUMNS];
+        let dummy_ood_erow_next = [XFieldElement::new([bfe3, bfe4, bfe5]); NUM_EXT_COLUMNS];
         let dummy_quot_codeword_mt =
             Digest::new([200u64, 201, 202, 203, 204].map(BFieldElement::new));
 
@@ -261,7 +293,18 @@ mod tests {
         proof_stream.enqueue(ProofItem::MerkleRoot(dummy_digest_base_mt));
         proof_stream.enqueue(ProofItem::MerkleRoot(dummy_digest_extension_mt));
         proof_stream.enqueue(ProofItem::MerkleRoot(dummy_quot_codeword_mt));
-        proof_stream.enqueue(ProofItem::OutOfDomainBaseRow(Box::new(dummy_ood_base_row)));
+        proof_stream.enqueue(ProofItem::OutOfDomainBaseRow(Box::new(dummy_ood_brow_curr)));
+        proof_stream.enqueue(ProofItem::OutOfDomainExtRow(Box::new(dummy_ood_erow_curr)));
+        proof_stream.enqueue(ProofItem::OutOfDomainBaseRow(Box::new(dummy_ood_brow_next)));
+        proof_stream.enqueue(ProofItem::OutOfDomainExtRow(Box::new(dummy_ood_erow_next)));
+
+        let xfe0 = XFieldElement::new([bfe3, bfe1, bfe4]);
+        let xfe1 = XFieldElement::new([bfe5, bfe3, bfe2]);
+        let xfe2 = XFieldElement::new([bfe1, bfe4, bfe3]);
+        let xfe3 = XFieldElement::new([bfe2, bfe5, bfe4]);
+        proof_stream.enqueue(ProofItem::OutOfDomainQuotientSegments([
+            xfe0, xfe1, xfe2, xfe3,
+        ]));
         proof_stream.into()
     }
 

@@ -4,6 +4,7 @@ use syn::PathArguments;
 use tasm_lib::traits::basic_snippet::BasicSnippet;
 use tasm_lib::triton_vm::proof_item::ProofItemVariant;
 use tasm_lib::triton_vm::table::NUM_BASE_COLUMNS;
+use tasm_lib::triton_vm::table::NUM_EXT_COLUMNS;
 use tasm_lib::triton_vm::triton_asm;
 
 use crate::ast;
@@ -58,6 +59,14 @@ impl RecursionLib {
             methods: vec![],
             associated_functions: vec![],
         }
+    }
+
+    pub(crate) fn graft_ext_row(arguments: &PathArguments) -> ast_types::DataType {
+        assert!(matches!(arguments, PathArguments::None));
+        ast_types::DataType::Array(ast_types::ArrayType {
+            element_type: Box::new(ast_types::DataType::Xfe),
+            length: NUM_EXT_COLUMNS,
+        })
     }
 
     pub(crate) fn graft_base_row(
