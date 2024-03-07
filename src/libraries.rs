@@ -52,15 +52,11 @@ pub(crate) trait Library: Debug {
         path_args: &syn::PathArguments,
     ) -> Option<ast_types::DataType>;
 
-    /// Return full function name iff library knows this function
-    fn get_function_name(&self, full_name: &str) -> Option<String>;
+    /// Return `true` iff library handles this function call
+    fn handle_function_call(&self, full_name: &str) -> bool;
 
-    /// Return method_name iff library knows this method
-    fn get_method_name(
-        &self,
-        method_name: &str,
-        receiver_type: &ast_types::DataType,
-    ) -> Option<String>;
+    /// Return `true` iff library handles this method call
+    fn handle_method_call(&self, method_name: &str, receiver_type: &ast_types::DataType) -> bool;
 
     /// Return function signature of method, if method is known.
     fn method_name_to_signature(

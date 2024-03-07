@@ -174,17 +174,17 @@ impl Library for BFieldCodecLib {
         None
     }
 
-    fn get_function_name(&self, _full_name: &str) -> Option<String> {
-        None
+    fn handle_function_call(&self, _full_name: &str) -> bool {
+        false
     }
 
-    fn get_method_name(
+    fn handle_method_call(
         &self,
         method_name: &str,
         receiver_type: &crate::ast_types::DataType,
-    ) -> Option<String> {
+    ) -> bool {
         if method_name != ENCODE_METHOD_NAME {
-            return None;
+            return false;
         }
 
         if receiver_type.bfield_codec_static_length().is_none() {
@@ -194,7 +194,7 @@ impl Library for BFieldCodecLib {
             );
         }
 
-        Some(method_name.to_owned())
+        true
     }
 
     fn method_name_to_signature(

@@ -43,36 +43,21 @@ impl Library for VectorLib {
         }
     }
 
-    fn get_function_name(&self, full_name: &str) -> Option<String> {
-        if !full_name.starts_with(VECTOR_LIB_INDICATOR) {
-            return None;
-        }
-
-        Some(full_name.to_owned())
+    fn handle_function_call(&self, full_name: &str) -> bool {
+        full_name.starts_with(VECTOR_LIB_INDICATOR)
     }
 
-    fn get_method_name(
-        &self,
-        method_name: &str,
-        receiver_type: &ast_types::DataType,
-    ) -> Option<String> {
-        let ast_types::DataType::List(_) = receiver_type else {
-            return None;
-        };
-
-        if matches!(
-            method_name,
-            PUSH_METHOD_NAME
-                | POP_METHOD_NAME
-                | LEN_METHOD_NAME
-                | MAP_METHOD_NAME
-                | CLEAR_METHOD_NAME
-                | CLONE_FROM_METHOD_NAME
-        ) {
-            return Some(method_name.to_owned());
-        }
-
-        None
+    fn handle_method_call(&self, method_name: &str, receiver_type: &ast_types::DataType) -> bool {
+        matches!(receiver_type, ast_types::DataType::List(_))
+            && matches!(
+                method_name,
+                PUSH_METHOD_NAME
+                    | POP_METHOD_NAME
+                    | LEN_METHOD_NAME
+                    | MAP_METHOD_NAME
+                    | CLEAR_METHOD_NAME
+                    | CLONE_FROM_METHOD_NAME
+            )
     }
 
     fn method_name_to_signature(

@@ -33,16 +33,12 @@ impl Library for UnsignedIntegersLib {
         None
     }
 
-    fn get_function_name(&self, _full_name: &str) -> Option<String> {
-        None
+    fn handle_function_call(&self, _full_name: &str) -> bool {
+        false
     }
 
-    fn get_method_name(
-        &self,
-        method_name: &str,
-        receiver_type: &ast_types::DataType,
-    ) -> Option<String> {
-        if is_u32_based_type(receiver_type)
+    fn handle_method_call(&self, method_name: &str, receiver_type: &ast_types::DataType) -> bool {
+        is_u32_based_type(receiver_type)
             && matches!(
                 method_name,
                 LEADING_ZEROS_METHOD
@@ -54,11 +50,6 @@ impl Library for UnsignedIntegersLib {
                     | ILOG2_METHOD
                     | NEXT_POWER_OF_TWO_METHOD
             )
-        {
-            return Some(method_name.to_owned());
-        }
-
-        None
     }
 
     fn method_name_to_signature(

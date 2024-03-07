@@ -50,25 +50,15 @@ impl Library for BfeLibrary {
         None
     }
 
-    fn get_function_name(&self, full_name: &str) -> Option<String> {
+    fn handle_function_call(&self, full_name: &str) -> bool {
         matches!(
             full_name,
             FUNCTION_NAME_NEW_BFE | FUNCTION_ROOT_FULL_NAME | FUNCTION_GENERATOR_NAME
         )
-        .then(|| full_name.to_owned())
     }
 
-    fn get_method_name(
-        &self,
-        method_name: &str,
-        receiver_type: &ast_types::DataType,
-    ) -> Option<String> {
-        if matches!(receiver_type, ast_types::DataType::Bfe) && BfeLibrary::has_method(method_name)
-        {
-            Some(method_name.to_owned())
-        } else {
-            None
-        }
+    fn handle_method_call(&self, method_name: &str, receiver_type: &ast_types::DataType) -> bool {
+        matches!(receiver_type, ast_types::DataType::Bfe) && BfeLibrary::has_method(method_name)
     }
 
     fn method_name_to_signature(

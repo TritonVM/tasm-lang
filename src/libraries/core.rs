@@ -38,16 +38,15 @@ impl Library for Core {
         }
     }
 
-    fn get_function_name(&self, _full_name: &str) -> Option<String> {
-        None
+    fn handle_function_call(&self, _full_name: &str) -> bool {
+        false
     }
 
-    fn get_method_name(&self, method_name: &str, receiver_type: &DataType) -> Option<String> {
-        match (receiver_type, method_name) {
-            (DataType::Array(_), "len") => Some("len".to_owned()),
-            (DataType::Array(_), "to_vec") => Some("to_vec".to_owned()),
-            _ => None,
-        }
+    fn handle_method_call(&self, method_name: &str, receiver_type: &DataType) -> bool {
+        matches!(
+            (receiver_type, method_name),
+            (DataType::Array(_), "len") | (DataType::Array(_), "to_vec")
+        )
     }
 
     fn method_name_to_signature(

@@ -86,20 +86,12 @@ impl Library for XfeLibrary {
         None
     }
 
-    fn get_function_name(&self, _full_name: &str) -> Option<String> {
-        None
+    fn handle_function_call(&self, _full_name: &str) -> bool {
+        false
     }
 
-    fn get_method_name(
-        &self,
-        method_name: &str,
-        receiver_type: &ast_types::DataType,
-    ) -> Option<String> {
-        if *receiver_type == ast_types::DataType::Xfe && xfe_lib_has_method(method_name) {
-            return Some(method_name.to_owned());
-        }
-
-        None
+    fn handle_method_call(&self, method_name: &str, receiver_type: &ast_types::DataType) -> bool {
+        *receiver_type == ast_types::DataType::Xfe && xfe_lib_has_method(method_name)
     }
 
     fn method_name_to_signature(

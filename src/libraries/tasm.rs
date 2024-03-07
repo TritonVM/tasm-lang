@@ -23,21 +23,13 @@ impl Library for TasmLibrary {
         None
     }
 
-    fn get_function_name(&self, full_name: &str) -> Option<String> {
-        if full_name.starts_with(TASM_LIB_INDICATOR) {
-            Some(full_name.to_owned())
-        } else {
-            None
-        }
+    fn handle_function_call(&self, full_name: &str) -> bool {
+        full_name.starts_with(TASM_LIB_INDICATOR)
     }
 
     /// tasm-lib contains no methods, only functions
-    fn get_method_name(
-        &self,
-        _method_name: &str,
-        _receiver_type: &ast_types::DataType,
-    ) -> Option<String> {
-        None
+    fn handle_method_call(&self, _method_name: &str, _receiver_type: &ast_types::DataType) -> bool {
+        false
     }
 
     fn method_name_to_signature(

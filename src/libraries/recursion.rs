@@ -38,16 +38,12 @@ impl Library for RecursionLib {
         }
     }
 
-    fn get_function_name(&self, _full_name: &str) -> Option<String> {
-        None
+    fn handle_function_call(&self, _full_name: &str) -> bool {
+        false
     }
 
-    fn get_method_name(
-        &self,
-        _method_name: &str,
-        _receiver_type: &ast_types::DataType,
-    ) -> Option<String> {
-        None
+    fn handle_method_call(&self, _method_name: &str, _receiver_type: &ast_types::DataType) -> bool {
+        false
     }
 
     fn method_name_to_signature(

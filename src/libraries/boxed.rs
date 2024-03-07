@@ -31,26 +31,13 @@ impl Library for Boxed {
         }
     }
 
-    fn get_function_name(&self, full_name: &str) -> Option<String> {
-        if full_name == FUNCTION_NAME_NEW_BOX {
-            return Some(full_name.to_owned());
-        }
-
-        None
+    fn handle_function_call(&self, full_name: &str) -> bool {
+        full_name == FUNCTION_NAME_NEW_BOX
     }
 
-    fn get_method_name(
-        &self,
-        method_name: &str,
-        receiver_type: &ast_types::DataType,
-    ) -> Option<String> {
-        if matches!(method_name, AS_REF_METHOD_NAME | TO_OWNED_METHOD_NAME) {
-            if let ast_types::DataType::Boxed(_inner) = receiver_type {
-                return Some(method_name.to_owned());
-            }
-        }
-
-        None
+    fn handle_method_call(&self, method_name: &str, receiver_type: &ast_types::DataType) -> bool {
+        matches!(method_name, AS_REF_METHOD_NAME | TO_OWNED_METHOD_NAME)
+            && matches!(receiver_type, ast_types::DataType::Boxed(_))
     }
 
     fn method_name_to_signature(

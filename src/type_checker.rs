@@ -879,8 +879,8 @@ fn get_fn_signature(
 
     // Function from libraries are in scope
     for lib in state.libraries.iter() {
-        if let Some(fn_name) = lib.get_function_name(name) {
-            return lib.function_name_to_signature(&fn_name, type_parameter.to_owned(), args);
+        if lib.handle_function_call(name) {
+            return lib.function_name_to_signature(name, type_parameter.to_owned(), args);
         }
     }
 
@@ -924,10 +924,10 @@ fn get_method_signature(
         };
 
         for lib in state.libraries.iter() {
-            if let Some(method_name) = lib.get_method_name(&method_call.method_name, &forced_type) {
+            if lib.handle_method_call(&method_call.method_name, &forced_type) {
                 method_call.associated_type = Some(forced_type.clone());
                 return lib.method_name_to_signature(
-                    &method_name,
+                    &method_call.method_name,
                     &forced_type,
                     &method_call.args,
                     state,

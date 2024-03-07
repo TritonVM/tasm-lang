@@ -41,18 +41,13 @@ impl Library for HasherLib {
         None
     }
 
-    fn get_function_name(&self, full_name: &str) -> Option<String> {
-        if full_name.starts_with(HASHER_LIB_INDICATOR)
+    fn handle_function_call(&self, full_name: &str) -> bool {
+        full_name.starts_with(HASHER_LIB_INDICATOR)
             || full_name.starts_with(STATEFUL_HASHER_LIB_INDICATOR)
-        {
-            return Some(full_name.to_owned());
-        }
-
-        None
     }
 
-    fn get_method_name(&self, _method_name: &str, _receiver_type: &DataType) -> Option<String> {
-        None
+    fn handle_method_call(&self, _method_name: &str, _receiver_type: &DataType) -> bool {
+        false
     }
 
     fn method_name_to_signature(
