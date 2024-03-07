@@ -25,11 +25,10 @@ impl Library for TasmLibrary {
 
     fn get_function_name(&self, full_name: &str) -> Option<String> {
         if full_name.starts_with(TASM_LIB_INDICATOR) {
-            let stripped_name = &full_name[TASM_LIB_INDICATOR.len()..full_name.len()];
-            return Some(stripped_name.to_owned());
+            Some(full_name.to_owned())
+        } else {
+            None
         }
-
-        None
     }
 
     /// tasm-lib contains no methods, only functions
@@ -53,12 +52,11 @@ impl Library for TasmLibrary {
 
     fn function_name_to_signature(
         &self,
-        stripped_name: &str,
+        full_name: &str,
         _type_parameter: Option<ast_types::DataType>,
         _args: &[ast::Expr<super::Annotation>],
     ) -> ast::FnSignature {
-        // Note that this function expects `fn_name` to be stripped of `tasm::`
-        // Maybe that behavior should be changed though?
+        let stripped_name = &full_name[TASM_LIB_INDICATOR.len()..full_name.len()];
         let snippet = tasm_lib::exported_snippets::name_to_snippet(stripped_name);
 
         ast::FnSignature::from_basic_snippet(snippet)
@@ -76,14 +74,12 @@ impl Library for TasmLibrary {
 
     fn call_function(
         &self,
-        stripped_name: &str,
+        full_name: &str,
         _type_parameter: Option<ast_types::DataType>,
         _args: &[ast::Expr<super::Annotation>],
         state: &mut CompilerState,
     ) -> Vec<LabelledInstruction> {
-        // TODO:
-        // Note that this function expects `fn_name` to be stripped of `tasm::`
-        // Maybe that behavior should be changed though?
+        let stripped_name = &full_name[TASM_LIB_INDICATOR.len()..full_name.len()];
         let snippet = tasm_lib::exported_snippets::name_to_snippet(stripped_name);
         let entrypoint = snippet.entrypoint();
         state.import_snippet(snippet);

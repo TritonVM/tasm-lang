@@ -48,8 +48,7 @@ impl Library for VectorLib {
             return None;
         }
 
-        let stripped_name = &full_name[VECTOR_LIB_INDICATOR.len()..full_name.len()];
-        Some(stripped_name.to_owned())
+        Some(full_name.to_owned())
     }
 
     fn get_method_name(
@@ -89,38 +88,30 @@ impl Library for VectorLib {
 
         // Special-case on `map` as we need to dig into the type checker state to find the
         // function signature.
-        if method_name == MAP_METHOD_NAME {
-            return self.fn_signature_for_map(args, type_checker_state);
+        match method_name {
+            MAP_METHOD_NAME => self.fn_signature_for_map(args, type_checker_state),
+            CLEAR_METHOD_NAME => self.clear_method(element_type).signature,
+            CLONE_FROM_METHOD_NAME => self.clone_from_method_signature(element_type),
+            PUSH_METHOD_NAME => self.push_method_signature(element_type),
+            LEN_METHOD_NAME => self.len_method_signature(element_type),
+            POP_METHOD_NAME => {
+                let snippet = Self::pop_snippet(receiver_type.type_parameter().as_ref().unwrap());
+                FnSignature::from_basic_snippet(snippet)
+            }
+            _ => panic!(),
         }
-
-        if method_name == CLEAR_METHOD_NAME {
-            return self.clear_method(element_type).signature;
-        }
-
-        if method_name == CLONE_FROM_METHOD_NAME {
-            return self.clone_from_method_signature(element_type);
-        }
-
-        if method_name == PUSH_METHOD_NAME {
-            return self.push_method_signature(element_type);
-        }
-
-        if method_name == LEN_METHOD_NAME {
-            return self.len_method_signature(element_type);
-        }
-
-        self.function_name_to_signature(method_name, receiver_type.type_parameter(), args)
     }
 
     fn function_name_to_signature(
         &self,
-        fn_name: &str,
+        full_name: &str,
         type_parameter: Option<ast_types::DataType>,
         args: &[ast::Expr<super::Annotation>],
     ) -> ast::FnSignature {
+        let stripped_name = &full_name[VECTOR_LIB_INDICATOR.len()..full_name.len()];
         let snippet = self
-            .name_to_tasm_lib_snippet(fn_name, &type_parameter, args)
-            .unwrap_or_else(|| panic!("Unknown function name {fn_name}"));
+            .name_to_tasm_lib_snippet(stripped_name, &type_parameter, args)
+            .unwrap_or_else(|| panic!("Unknown function name {stripped_name}"));
 
         FnSignature::from_basic_snippet(snippet)
     }
@@ -166,14 +157,15 @@ impl Library for VectorLib {
 
     fn call_function(
         &self,
-        fn_name: &str,
+        full_name: &str,
         type_parameter: Option<ast_types::DataType>,
         args: &[ast::Expr<super::Annotation>],
         state: &mut CompilerState,
     ) -> Vec<LabelledInstruction> {
+        let stripped_name = &full_name[VECTOR_LIB_INDICATOR.len()..full_name.len()];
         let snippet = self
-            .name_to_tasm_lib_snippet(fn_name, &type_parameter, args)
-            .unwrap_or_else(|| panic!("Unknown function name {fn_name}"));
+            .name_to_tasm_lib_snippet(stripped_name, &type_parameter, args)
+            .unwrap_or_else(|| panic!("Unknown function name {full_name}"));
         let entrypoint = snippet.entrypoint();
         state.import_snippet(snippet);
 
