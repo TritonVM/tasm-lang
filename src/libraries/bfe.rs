@@ -41,6 +41,15 @@ impl BfeLibrary {
 }
 
 impl Library for BfeLibrary {
+    fn graft_type(
+        &self,
+        _graft: &mut Graft,
+        _rust_type_as_string: &str,
+        _path_args: &syn::PathArguments,
+    ) -> Option<ast_types::DataType> {
+        None
+    }
+
     fn get_function_name(&self, full_name: &str) -> Option<String> {
         matches!(
             full_name,

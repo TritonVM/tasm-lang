@@ -77,6 +77,15 @@ fn call_method_inner(method_name: &str, state: &mut CompilerState) -> Vec<Labell
 }
 
 impl Library for XfeLibrary {
+    fn graft_type(
+        &self,
+        _graft: &mut Graft,
+        _rust_type_as_string: &str,
+        _path_args: &syn::PathArguments,
+    ) -> Option<DataType> {
+        None
+    }
+
     fn get_function_name(&self, _full_name: &str) -> Option<String> {
         None
     }

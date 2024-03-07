@@ -3,6 +3,7 @@ use tasm_lib::triton_vm::prelude::*;
 
 use crate::ast;
 use crate::ast_types;
+use crate::ast_types::DataType;
 use crate::graft::Graft;
 use crate::tasm_code_generator::CompilerState;
 use crate::type_checker::is_u32_based_type;
@@ -23,6 +24,15 @@ const ILOG2_METHOD: &str = "ilog2";
 const NEXT_POWER_OF_TWO_METHOD: &str = "next_power_of_two";
 
 impl Library for UnsignedIntegersLib {
+    fn graft_type(
+        &self,
+        _graft: &mut Graft,
+        _rust_type_as_string: &str,
+        _path_args: &syn::PathArguments,
+    ) -> Option<DataType> {
+        None
+    }
+
     fn get_function_name(&self, _full_name: &str) -> Option<String> {
         None
     }

@@ -15,7 +15,6 @@ use crate::ast::Stmt;
 use crate::ast_types;
 use crate::ast_types::DataType;
 use crate::composite_types::CompositeTypes;
-use crate::libraries;
 use crate::libraries::Library;
 use crate::type_checker;
 
@@ -357,131 +356,29 @@ impl<'a> Graft<'a> {
             return data_type;
         }
 
-        // Type is not primitive. Is it a vector?
-        // TODO: Below handling of `Vec`, `Box`, and `Result`
-        // should be done by the libraries, not here.
-        if rust_type_as_string == "Vec" {
-            return self.rust_vec_to_data_type(&rust_type_path.path.segments[0].arguments);
-        }
-
-        // Handling `Box<T>`
-        if rust_type_as_string == "Box" {
-            return self.rust_box_to_data_type(&rust_type_path.path.segments[0].arguments);
-        }
-
-        if rust_type_as_string == "Result" {
-            return self.rust_result_type_to_data_type(&rust_type_path.path.segments[0].arguments);
-        }
-
-        if rust_type_as_string == "Option" {
-            return self.rust_option_type_to_data_type(&rust_type_path.path.segments[0].arguments);
-        }
-
-        if rust_type_as_string == "VmProofIter" {
-            let vm_proof_iter = libraries::recursion::RecursionLib::vm_proof_iter_type(self);
-            self.imported_custom_types
-                .add_type_context_if_new(vm_proof_iter.clone());
-            let fri_response = libraries::recursion::RecursionLib::fri_response_type(self);
-            self.imported_custom_types
-                .add_type_context_if_new(fri_response);
-            return vm_proof_iter.into();
-        }
-
-        if rust_type_as_string == "BaseRow" {
-            return libraries::recursion::RecursionLib::graft_base_row(
-                &rust_type_path.path.segments[0].arguments,
+        // Type is not primitive. Is it something defined in a library?
+        for lib in self.libraries.iter() {
+            if let Some(data_type) = lib.graft_type(
                 self,
-            );
-        }
-
-        if rust_type_as_string == "ExtensionRow" {
-            return libraries::recursion::RecursionLib::graft_ext_row(
+                &rust_type_as_string,
                 &rust_type_path.path.segments[0].arguments,
-            );
+            ) {
+                return data_type;
+            }
         }
 
-        // We only allow the user to use types that are capitalized
+        // Type is not primitive, and not defined in library, then
+        // it must be a custom, developer-defined type.
+        // We only allow the user to declare types that are capitalized
         if rust_type_as_string
             .chars()
             .next()
             .map_or(false, |c| c.is_uppercase())
         {
-            // Note that `Unresolved` handles `Self` as well.
-            // The `custom_type_resolver` translates `Self` to its
-            // associated type.
             ast_types::DataType::Unresolved(rust_type_as_string)
         } else {
             panic!("Does not know type {rust_type_as_string}");
         }
-    }
-
-    fn rust_vec_to_data_type(&mut self, path_args: &syn::PathArguments) -> ast_types::DataType {
-        match path_args {
-            syn::PathArguments::AngleBracketed(ab) => {
-                assert_eq!(1, ab.args.len(), "Must be Vec<T> for *one* generic T.");
-                match &ab.args[0] {
-                    syn::GenericArgument::Type(element_type) => {
-                        ast_types::DataType::List(Box::new(self.syn_type_to_ast_type(element_type)))
-                    }
-                    other => panic!("Unsupported type {other:#?}"),
-                }
-            }
-            other => panic!("Unsupported type {other:#?}"),
-        }
-    }
-
-    fn rust_box_to_data_type(&mut self, path_args: &syn::PathArguments) -> ast_types::DataType {
-        let inner_type = if let syn::PathArguments::AngleBracketed(ab) = &path_args {
-            assert_eq!(1, ab.args.len(), "Must be Box<T> for *one* generic T.");
-            if let syn::GenericArgument::Type(inner) = &ab.args[0] {
-                self.syn_type_to_ast_type(inner)
-            } else {
-                panic!("Unsupported type parameter for Box<T> {:#?}", ab.args[0])
-            }
-        } else {
-            panic!("Box must be followed by its type parameter `<T>`");
-        };
-
-        ast_types::DataType::Boxed(Box::new(inner_type))
-    }
-
-    fn rust_option_type_to_data_type(&mut self, path_args: &PathArguments) -> DataType {
-        let PathArguments::AngleBracketed(generics) = path_args else {
-            panic!("Unsupported path argument {path_args:#?}");
-        };
-        assert!(
-            generics.args.len().is_one(),
-            "`Option` must have exactly one generic"
-        );
-
-        let some_type_arg = &generics.args[0];
-        let syn::GenericArgument::Type(ok_type) = some_type_arg else {
-            panic!("Unsupported type {some_type_arg:#?}");
-        };
-        let some_type = self.syn_type_to_ast_type(ok_type);
-
-        let resolved_type = libraries::core::option_type::option_type(some_type);
-        self.imported_custom_types
-            .add_type_context_if_new(resolved_type.clone());
-        ast_types::DataType::Enum(Box::new(resolved_type.composite_type.try_into().unwrap()))
-    }
-
-    fn rust_result_type_to_data_type(&mut self, path_args: &PathArguments) -> DataType {
-        let PathArguments::AngleBracketed(generics) = path_args else {
-            panic!("Unsupported path argument {path_args:#?}");
-        };
-        assert_eq!(2, generics.args.len(), "`Result` must have two generics");
-
-        let ok_type_arg = &generics.args[0];
-        let syn::GenericArgument::Type(ok_type) = ok_type_arg else {
-            panic!("Unsupported type {ok_type_arg:#?}");
-        };
-        let ok_type = self.syn_type_to_ast_type(ok_type);
-
-        let resolved_type = libraries::core::result_type::result_type(ok_type);
-        self.imported_custom_types
-            .add_type_context_if_new(resolved_type.clone());
-        ast_types::DataType::Enum(Box::new(resolved_type.composite_type.try_into().unwrap()))
     }
 
     pub(crate) fn syn_type_to_ast_type(&mut self, syn_type: &syn::Type) -> ast_types::DataType {

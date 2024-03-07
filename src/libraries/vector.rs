@@ -8,6 +8,7 @@ use tasm_lib::triton_vm::triton_asm;
 use crate::ast;
 use crate::ast::FnSignature;
 use crate::ast_types;
+use crate::ast_types::DataType;
 use crate::graft::Graft;
 use crate::tasm_code_generator::CompilerState;
 use crate::type_checker::GetType;
@@ -15,6 +16,7 @@ use crate::type_checker::GetType;
 use super::Library;
 use super::LibraryFunction;
 
+const VEC_DATA_TYPE_NAME: &str = "Vec";
 const VECTOR_LIB_INDICATOR: &str = "Vec::";
 const NEW_FUNCTION_NAME: &str = "new";
 const DEFAULT_FUNCTION_NAME: &str = "default";
@@ -29,6 +31,18 @@ const CLEAR_METHOD_NAME: &str = "clear";
 pub(crate) struct VectorLib;
 
 impl Library for VectorLib {
+    fn graft_type(
+        &self,
+        graft: &mut Graft,
+        rust_type_as_string: &str,
+        path_args: &syn::PathArguments,
+    ) -> Option<DataType> {
+        match rust_type_as_string {
+            VEC_DATA_TYPE_NAME => Some(Self::rust_vec_to_data_type(graft, path_args)),
+            _ => None,
+        }
+    }
+
     fn get_function_name(&self, full_name: &str) -> Option<String> {
         if !full_name.starts_with(VECTOR_LIB_INDICATOR) {
             return None;
@@ -293,6 +307,24 @@ impl Library for VectorLib {
 
 /// Map list-function or method name to the TASM lib snippet type
 impl VectorLib {
+    fn rust_vec_to_data_type(
+        graft: &mut Graft,
+        path_args: &syn::PathArguments,
+    ) -> ast_types::DataType {
+        match path_args {
+            syn::PathArguments::AngleBracketed(ab) => {
+                assert_eq!(1, ab.args.len(), "Must be Vec<T> for *one* generic T.");
+                match &ab.args[0] {
+                    syn::GenericArgument::Type(element_type) => ast_types::DataType::List(
+                        Box::new(graft.syn_type_to_ast_type(element_type)),
+                    ),
+                    other => panic!("Unsupported type {other:#?}"),
+                }
+            }
+            other => panic!("Unsupported type {other:#?}"),
+        }
+    }
+
     /// Defines the `a.clear()` method that can be called
     /// on a vector, resulting in an empty vector. Compatible with
     /// Rust's `clear` method on `Vec<T>`.

@@ -40,10 +40,18 @@ pub(crate) fn all_libraries() -> Box<[Box<dyn Library>]> {
         Box::new(unsigned_integers::UnsignedIntegersLib),
         Box::new(vector::VectorLib),
         Box::new(xfe::XfeLibrary),
+        Box::new(recursion::RecursionLib),
     ])
 }
 
 pub(crate) trait Library: Debug {
+    fn graft_type(
+        &self,
+        graft: &mut Graft,
+        rust_type_as_string: &str,
+        path_args: &syn::PathArguments,
+    ) -> Option<ast_types::DataType>;
+
     /// Return full function name iff library knows this function
     fn get_function_name(&self, full_name: &str) -> Option<String>;
 

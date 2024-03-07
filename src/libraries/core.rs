@@ -11,6 +11,11 @@ use crate::libraries::Library;
 use crate::tasm_code_generator::CompilerState;
 use crate::type_checker::CheckState;
 
+use self::option_type::rust_option_type_to_data_type;
+use self::option_type::OPTION_TYPE_NAME;
+use self::result_type::rust_result_type_to_data_type;
+use self::result_type::RESULT_TYPE_NAME;
+
 pub(crate) mod array;
 pub(crate) mod option_type;
 pub(crate) mod result_type;
@@ -20,6 +25,19 @@ pub(crate) mod result_type;
 pub(crate) struct Core;
 
 impl Library for Core {
+    fn graft_type(
+        &self,
+        graft: &mut Graft,
+        rust_type_as_string: &str,
+        path_args: &syn::PathArguments,
+    ) -> Option<DataType> {
+        match rust_type_as_string {
+            OPTION_TYPE_NAME => Some(rust_option_type_to_data_type(graft, path_args)),
+            RESULT_TYPE_NAME => Some(rust_result_type_to_data_type(graft, path_args)),
+            _ => None,
+        }
+    }
+
     fn get_function_name(&self, _full_name: &str) -> Option<String> {
         None
     }

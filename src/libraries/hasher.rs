@@ -32,6 +32,15 @@ const HASH_VARLEN_FUNCTION_NAME: &str = "Tip5::hash_varlen";
 pub(crate) struct HasherLib;
 
 impl Library for HasherLib {
+    fn graft_type(
+        &self,
+        _graft: &mut Graft,
+        _rust_type_as_string: &str,
+        _path_args: &syn::PathArguments,
+    ) -> Option<DataType> {
+        None
+    }
+
     fn get_function_name(&self, full_name: &str) -> Option<String> {
         if full_name.starts_with(HASHER_LIB_INDICATOR)
             || full_name.starts_with(STATEFUL_HASHER_LIB_INDICATOR)

@@ -1,3 +1,4 @@
+use syn::PathArguments;
 use tasm_lib::triton_vm::triton_asm;
 
 use crate::ast;
@@ -6,12 +7,37 @@ use crate::ast_types;
 use crate::ast_types::AbstractArgument;
 use crate::ast_types::AbstractValueArg;
 use crate::ast_types::DataType;
+use crate::graft::Graft;
 use crate::type_checker::Typing;
 
-pub(crate) fn result_type(ok_type: DataType) -> crate::composite_types::TypeContext {
+pub(super) const RESULT_TYPE_NAME: &str = "Result";
+
+pub(super) fn rust_result_type_to_data_type(
+    graft: &mut Graft,
+    path_args: &PathArguments,
+) -> DataType {
+    let PathArguments::AngleBracketed(generics) = path_args else {
+        panic!("Unsupported path argument {path_args:#?}");
+    };
+    assert_eq!(2, generics.args.len(), "`Result` must have two generics");
+
+    let ok_type_arg = &generics.args[0];
+    let syn::GenericArgument::Type(ok_type) = ok_type_arg else {
+        panic!("Unsupported type {ok_type_arg:#?}");
+    };
+    let ok_type = graft.syn_type_to_ast_type(ok_type);
+
+    let resolved_type = result_type(ok_type);
+    graft
+        .imported_custom_types
+        .add_type_context_if_new(resolved_type.clone());
+    ast_types::DataType::Enum(Box::new(resolved_type.composite_type.try_into().unwrap()))
+}
+
+fn result_type(ok_type: DataType) -> crate::composite_types::TypeContext {
     let enum_type = ast_types::EnumType {
         is_copy: ok_type.is_copy(),
-        name: "Result".to_owned(),
+        name: RESULT_TYPE_NAME.to_owned(),
         variants: vec![
             (
                 "Err".to_owned(),

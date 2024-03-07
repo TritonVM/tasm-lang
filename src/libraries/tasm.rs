@@ -2,6 +2,7 @@ use tasm_lib::triton_vm::prelude::*;
 
 use crate::ast;
 use crate::ast_types;
+use crate::ast_types::DataType;
 use crate::graft::Graft;
 use crate::tasm_code_generator::CompilerState;
 
@@ -13,6 +14,15 @@ const TASM_LIB_INDICATOR: &str = "tasm::";
 pub(crate) struct TasmLibrary;
 
 impl Library for TasmLibrary {
+    fn graft_type(
+        &self,
+        _graft: &mut Graft,
+        _rust_type_as_string: &str,
+        _path_args: &syn::PathArguments,
+    ) -> Option<DataType> {
+        None
+    }
+
     fn get_function_name(&self, full_name: &str) -> Option<String> {
         if full_name.starts_with(TASM_LIB_INDICATOR) {
             let stripped_name = &full_name[TASM_LIB_INDICATOR.len()..full_name.len()];
