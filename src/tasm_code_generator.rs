@@ -2349,15 +2349,19 @@ fn compile_expr(
                 }
 
                 ast::BinOp::Sub => {
+                    use ast_types::DataType::*;
                     let (_lhs_expr_addr, lhs_expr_code) =
                         compile_expr(lhs_expr, "_binop_lhs", state);
 
                     let (_rhs_expr_addr, rhs_expr_code) =
                         compile_expr(rhs_expr, "_binop_rhs", state);
 
-                    let sub_code: Vec<LabelledInstruction> = match result_type {
-                        ast_types::DataType::U32 => {
-                            // As standard, we use safe arithmetic that crashes on overflow
+                    state.function_state.vstack.pop();
+                    state.function_state.vstack.pop();
+
+                    let rhs_type = rhs_expr.get_type();
+                    let sub_code = match (&lhs_type, &rhs_type) {
+                        (U32, U32) => {
                             let safe_sub_u32 = state.import_snippet(Box::new(
                                 tasm_lib::arithmetic::u32::safesub::Safesub,
                             ));
@@ -2366,8 +2370,7 @@ fn compile_expr(
                                 call {safe_sub_u32}
                             )
                         }
-                        ast_types::DataType::U64 => {
-                            // As standard, we use safe arithmetic that crashes on overflow
+                        (U64, U64) => {
                             let sub_u64 = state.import_snippet(Box::new(
                                 tasm_lib::arithmetic::u64::sub_u64::SubU64,
                             ));
@@ -2380,8 +2383,7 @@ fn compile_expr(
                                 call {sub_u64}
                             )
                         }
-                        ast_types::DataType::U128 => {
-                            // As standard, we use safe arithmetic that crashes on overflow
+                        (U128, U128) => {
                             let sub_u128 = state.import_snippet(Box::new(
                                 tasm_lib::arithmetic::u128::sub_u128::SubU128,
                             ));
@@ -2410,14 +2412,14 @@ fn compile_expr(
                                 call {sub_u128}
                             )
                         }
-                        ast_types::DataType::Bfe => {
+                        (Bfe, Bfe) => {
                             triton_asm!(
                                 push -1
                                 mul
                                 add
                             )
                         }
-                        ast_types::DataType::Xfe => {
+                        (Xfe, Xfe) => {
                             triton_asm!(
                                   // multiply top element with -1
                                 push -1
@@ -2426,11 +2428,17 @@ fn compile_expr(
                                 xxadd
                             )
                         }
-                        _ => panic!("subtraction operator is not supported for {result_type}"),
+                        (Xfe, Bfe) => {
+                            triton_asm!(
+                                push -1
+                                mul
+                                add
+                            )
+                        }
+                        _ => panic!(
+                            "Unsupported subtraction for types LHS: {lhs_type}, RHS: {rhs_type}"
+                        ),
                     };
-
-                    state.function_state.vstack.pop();
-                    state.function_state.vstack.pop();
 
                     triton_asm!(
                         {&lhs_expr_code}

@@ -6,6 +6,7 @@ fn main() {
     let bfe: BFieldElement = tasm::tasm_io_read_stdin___bfe();
     let xfe: XFieldElement = tasm::tasm_io_read_stdin___xfe();
     tasm::tasm_io_write_to_stdout___xfe(xfe + bfe);
+    tasm::tasm_io_write_to_stdout___xfe(xfe - bfe);
 
     return;
 }
@@ -20,15 +21,15 @@ mod test {
     use super::*;
 
     #[test]
-    fn add_bfe_to_xfe() {
+    fn xfe_bfe_arithmetic() {
         let std_in = random_elements(4);
-        let native_output =
+        let native_output_add =
             rust_shadows::wrap_main_with_io(&main)(std_in.clone(), NonDeterminism::default());
-        let entrypoint = EntrypointLocation::disk("arithmetic", "xfe_bfe_add", "main");
-        let vm_output = TritonVMTestCase::new(entrypoint)
+        let entrypoint_add = EntrypointLocation::disk("arithmetic", "xfe_bfe", "main");
+        let vm_output = TritonVMTestCase::new(entrypoint_add)
             .with_std_in(std_in)
             .execute()
             .unwrap();
-        assert_eq!(native_output, vm_output.output);
+        assert_eq!(native_output_add, vm_output.output);
     }
 }

@@ -226,13 +226,13 @@ pub fn recufy() {
     RecufyDebug::dump_xfes(&out_of_domain_curr_row_quot_segments.to_vec());
 
     let initial_zerofier_inv: XFieldElement =
-        (out_of_domain_point_curr_row - XFieldElement::one()).inverse();
+        (out_of_domain_point_curr_row - BFieldElement::one()).inverse();
     RecufyDebug::dump_xfe(initial_zerofier_inv);
     let consistency_zerofier_inv: XFieldElement =
-        (out_of_domain_point_curr_row.mod_pow_u32(padded_height) - XFieldElement::one()).inverse();
+        (out_of_domain_point_curr_row.mod_pow_u32(padded_height) - BFieldElement::one()).inverse();
     RecufyDebug::dump_xfe(consistency_zerofier_inv);
     let except_last_row: XFieldElement =
-        out_of_domain_point_curr_row - trace_domain_generator.lift().inverse();
+        out_of_domain_point_curr_row - trace_domain_generator.inverse();
     RecufyDebug::dump_xfe(except_last_row);
     let transition_zerofier_inv: XFieldElement = except_last_row * consistency_zerofier_inv;
     RecufyDebug::dump_xfe(transition_zerofier_inv);

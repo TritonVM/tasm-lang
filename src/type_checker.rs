@@ -1345,7 +1345,8 @@ fn derive_annotate_expr_type(
                     };
 
                     // We are allowed to add an XFieldElement with a BFieldElement, but we
-                    // don't support the mirrored expression.
+                    // don't support the mirrored expression since that's more expensive to
+                    // execute.
                     if lhs_type == ast_types::DataType::Xfe && rhs_type == ast_types::DataType::Bfe
                     {
                         *binop_type = Typing::KnownType(ast_types::DataType::Xfe);
@@ -1644,13 +1645,22 @@ fn derive_annotate_expr_type(
                         env_fn_signature,
                     )?;
 
-                    assert_type_equals(&lhs_type, &rhs_type, "sub-expr");
-                    assert!(
-                        is_arithmetic_type(&lhs_type),
-                        "Cannot subtract non-arithmetic type '{lhs_type}'"
-                    );
-                    *binop_type = Typing::KnownType(lhs_type.clone());
-                    Ok(lhs_type)
+                    // We are allowed to sub an XFieldElement with a BFieldElement, but we
+                    // don't support the mirrored expression since that's more expensive to
+                    // execute.
+                    if lhs_type == ast_types::DataType::Xfe && rhs_type == ast_types::DataType::Bfe
+                    {
+                        *binop_type = Typing::KnownType(ast_types::DataType::Xfe);
+                        Ok(ast_types::DataType::Xfe)
+                    } else {
+                        assert_type_equals(&lhs_type, &rhs_type, "sub");
+                        assert!(
+                            is_arithmetic_type(&lhs_type),
+                            "Cannot subtract non-arithmetic type '{lhs_type}'"
+                        );
+                        *binop_type = Typing::KnownType(lhs_type.clone());
+                        Ok(lhs_type)
+                    }
                 }
             }
         }
