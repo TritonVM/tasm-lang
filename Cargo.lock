@@ -503,7 +503,7 @@ dependencies = [
 [[package]]
 name = "derive_tasm_object"
 version = "0.1.0"
-source = "git+https://github.com/TritonVM/tasm-lib.git?rev=0e4e719f#0e4e719f4aefcd1b091731efd99eb281bab13090"
+source = "git+https://github.com/TritonVM/tasm-lib.git?rev=17346b99#17346b99aaded0f42cf0f27ef3aea92639777bc8"
 dependencies = [
  "quote",
  "syn 2.0.52",
@@ -2086,7 +2086,7 @@ dependencies = [
 [[package]]
 name = "tasm-lib"
 version = "0.2.1"
-source = "git+https://github.com/TritonVM/tasm-lib.git?rev=0e4e719f#0e4e719f4aefcd1b091731efd99eb281bab13090"
+source = "git+https://github.com/TritonVM/tasm-lib.git?rev=17346b99#17346b99aaded0f42cf0f27ef3aea92639777bc8"
 dependencies = [
  "anyhow",
  "arbitrary",
