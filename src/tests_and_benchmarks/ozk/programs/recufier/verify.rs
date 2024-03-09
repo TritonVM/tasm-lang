@@ -100,7 +100,7 @@ impl Recufier {
     }
 
     const fn num_quotients() -> usize {
-        return 591;
+        return 587;
     }
 }
 

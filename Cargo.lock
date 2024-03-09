@@ -503,7 +503,7 @@ dependencies = [
 [[package]]
 name = "derive_tasm_object"
 version = "0.1.0"
-source = "git+https://github.com/TritonVM/tasm-lib.git?rev=ab8e8b0c#ab8e8b0cf2a49de399cd7615c90f197ce75c30c5"
+source = "git+https://github.com/TritonVM/tasm-lib.git?rev=0e4e719f#0e4e719f4aefcd1b091731efd99eb281bab13090"
 dependencies = [
  "quote",
  "syn 2.0.52",
@@ -2086,13 +2086,14 @@ dependencies = [
 [[package]]
 name = "tasm-lib"
 version = "0.2.1"
-source = "git+https://github.com/TritonVM/tasm-lib.git?rev=ab8e8b0c#ab8e8b0cf2a49de399cd7615c90f197ce75c30c5"
+source = "git+https://github.com/TritonVM/tasm-lib.git?rev=0e4e719f#0e4e719f4aefcd1b091731efd99eb281bab13090"
 dependencies = [
  "anyhow",
  "arbitrary",
  "derive_tasm_object",
  "hex",
- "itertools 0.12.1",
+ "itertools 0.10.5",
+ "ndarray",
  "num",
  "num-traits",
  "rand",
@@ -2248,12 +2249,11 @@ dependencies = [
 
 [[package]]
 name = "triton-vm"
-version = "0.37.0"
+version = "0.38.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4b175b3fec57c819f8242fe9a2b9f706bc75c0390ccdf3f88c9f30f6c49bb0ff"
+checksum = "613ea43d708f643b2a64ece1b68ce49430c7bbd7c28714421942f7eb3afe380b"
 dependencies = [
  "arbitrary",
- "bincode",
  "colored",
  "criterion",
  "get-size",
@@ -2283,9 +2283,9 @@ checksum = "e421abadd41a4225275504ea4d6566923418b7f05506fbc9c0fe86ba7396114b"
 
 [[package]]
 name = "twenty-first"
-version = "0.37.0"
+version = "0.38.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "74c2f4a50a2fc1a25d26aed9079e6295093ca8fe649f0f00391a9c2cbb03540d"
+checksum = "4d2737db0525aeead26d7ff5648bd626f144b52f87500d7f6c4946d609baf2eb"
 dependencies = [
  "arbitrary",
  "bfieldcodec_derive",
