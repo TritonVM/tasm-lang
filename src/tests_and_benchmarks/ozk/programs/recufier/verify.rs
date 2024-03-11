@@ -239,6 +239,10 @@ pub fn recufy() {
     let terminal_zerofier_inv: XFieldElement = except_last_row.inverse(); // i.e., only last row
     RecufyDebug::dump_xfe(terminal_zerofier_inv);
 
+    let evaluated_constraints: [XFieldElement; 587] =
+        tasm::tasm_recufier_master_ext_table_air_constraint_evaluation();
+    RecufyDebug::dump_xfes(&out_of_domain_curr_row_quot_segments.to_vec());
+
     RecufyDebug::sponge_state(Tip5WithState::squeeze());
     return;
 }

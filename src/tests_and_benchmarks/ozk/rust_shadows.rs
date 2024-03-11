@@ -13,12 +13,19 @@ use std::vec::Vec;
 use itertools::Itertools;
 use num::One;
 use num::Zero;
+use tasm_lib::recufier::master_ext_table::air_constraint_evaluation::AirConstraintEvaluation;
+use tasm_lib::recufier::master_ext_table::air_constraint_evaluation::AirConstraintSnippetInputs;
+use tasm_lib::structure::tasm_object::decode_from_memory_with_size;
 use tasm_lib::triton_vm::prelude::*;
 use tasm_lib::triton_vm::proof_item::ProofItem;
 use tasm_lib::triton_vm::proof_item::ProofItemVariant;
+use tasm_lib::triton_vm::table::master_table::num_quotients;
+use tasm_lib::triton_vm::table::NUM_BASE_COLUMNS;
+use tasm_lib::triton_vm::table::NUM_EXT_COLUMNS;
 use tasm_lib::twenty_first::shared_math::tip5::Tip5;
 use tasm_lib::twenty_first::shared_math::tip5::RATE;
 use tasm_lib::twenty_first::shared_math::traits::ModPowU32;
+use tasm_lib::twenty_first::shared_math::x_field_element::EXTENSION_DEGREE;
 use tasm_lib::twenty_first::util_types::algebraic_hasher::AlgebraicHasher;
 use tasm_lib::twenty_first::util_types::algebraic_hasher::Sponge;
 use tasm_lib::twenty_first::util_types::merkle_tree::MerkleTreeInclusionProof;
@@ -311,6 +318,60 @@ pub(super) fn tasm_recufier_challenges_new_empty_input_and_output_59_4(
     let Challenges { challenges } = Challenges::new(sampled_challenges, &claim);
     let challenges = TasmLangChallenges { challenges };
     Box::new(challenges)
+}
+
+const NUM_TOTAL_CONSTRAINTS: usize = num_quotients();
+pub(super) fn tasm_recufier_master_ext_table_air_constraint_evaluation(
+) -> [XFieldElement; NUM_TOTAL_CONSTRAINTS] {
+    const CHALLENGES_LENGTH: usize = Challenges::count();
+    let mem_layout = AirConstraintEvaluation::conventional_air_constraint_memory_layout();
+    let challenges: Box<[XFieldElement; CHALLENGES_LENGTH]> = ND_MEMORY.with_borrow(|memory| {
+        decode_from_memory_with_size(memory, mem_layout.challenges_ptr, EXTENSION_DEGREE * CHALLENGES_LENGTH)
+            .unwrap()
+    });
+    let current_base_row: Box<[XFieldElement; NUM_BASE_COLUMNS]> =
+        ND_MEMORY.with_borrow(|memory| {
+            decode_from_memory_with_size(
+                memory,
+                mem_layout.challenges_ptr,
+                EXTENSION_DEGREE * NUM_BASE_COLUMNS,
+            )
+            .unwrap()
+        });
+    let current_ext_row: Box<[XFieldElement; NUM_EXT_COLUMNS]> = ND_MEMORY.with_borrow(|memory| {
+        decode_from_memory_with_size(
+            memory,
+            mem_layout.challenges_ptr,
+            EXTENSION_DEGREE * NUM_EXT_COLUMNS,
+        )
+        .unwrap()
+    });
+    let next_base_row: Box<[XFieldElement; NUM_BASE_COLUMNS]> = ND_MEMORY.with_borrow(|memory| {
+        decode_from_memory_with_size(
+            memory,
+            mem_layout.challenges_ptr,
+            EXTENSION_DEGREE * NUM_BASE_COLUMNS,
+        )
+        .unwrap()
+    });
+    let next_ext_row: Box<[XFieldElement; NUM_EXT_COLUMNS]> = ND_MEMORY.with_borrow(|memory| {
+        decode_from_memory_with_size(
+            memory,
+            mem_layout.challenges_ptr,
+            EXTENSION_DEGREE * NUM_EXT_COLUMNS,
+        )
+        .unwrap()
+    });
+
+    let inputs = AirConstraintSnippetInputs {
+        current_base_row: current_base_row.to_vec(),
+        current_ext_row: current_ext_row.to_vec(),
+        next_base_row: next_base_row.to_vec(),
+        next_ext_row: next_ext_row.to_vec(),
+        challenges: Challenges { challenges },
+    };
+
+    todo!()
 }
 
 pub(super) fn _tasm_recufier_fri_verify(
