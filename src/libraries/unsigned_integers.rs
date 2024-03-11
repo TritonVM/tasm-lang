@@ -4,6 +4,7 @@ use tasm_lib::triton_vm::prelude::*;
 use crate::ast;
 use crate::ast_types;
 use crate::ast_types::DataType;
+use crate::composite_types::CompositeTypes;
 use crate::graft::Graft;
 use crate::tasm_code_generator::CompilerState;
 use crate::type_checker::is_u32_based_type;
@@ -33,7 +34,11 @@ impl Library for UnsignedIntegersLib {
         None
     }
 
-    fn handle_function_call(&self, _full_name: &str) -> bool {
+    fn handle_function_call(
+        &self,
+        _full_name: &str,
+        _qualified_self_type: &Option<DataType>,
+    ) -> bool {
         false
     }
 
@@ -82,6 +87,8 @@ impl Library for UnsignedIntegersLib {
         _fn_name: &str,
         _type_parameter: Option<ast_types::DataType>,
         _args: &[ast::Expr<super::Annotation>],
+        _qualified_self_type: &Option<DataType>,
+        _composite_types: &mut CompositeTypes,
     ) -> ast::FnSignature {
         panic!("unsigned_integers lib does not contain any functions");
     }
@@ -115,6 +122,7 @@ impl Library for UnsignedIntegersLib {
         _type_parameter: Option<ast_types::DataType>,
         _args: &[ast::Expr<super::Annotation>],
         _state: &mut CompilerState,
+        _qualified_self_type: &Option<DataType>,
     ) -> Vec<LabelledInstruction> {
         panic!("unsigned_integers lib does not contain any functions");
     }

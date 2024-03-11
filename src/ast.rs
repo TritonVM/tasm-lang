@@ -814,6 +814,7 @@ pub(crate) struct FnCall<T> {
     pub(crate) type_parameter: Option<DataType>,
     pub(crate) arg_evaluation_order: ArgEvaluationOrder,
     pub(crate) annot: T,
+    pub(crate) qualified_self_type: Option<DataType>,
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]

@@ -9,6 +9,7 @@ use crate::ast;
 use crate::ast::FnSignature;
 use crate::ast_types;
 use crate::ast_types::DataType;
+use crate::composite_types::CompositeTypes;
 use crate::graft::Graft;
 use crate::subroutine::SubRoutine;
 
@@ -46,11 +47,15 @@ impl Library for BfeLibrary {
         _graft: &mut Graft,
         _rust_type_as_string: &str,
         _path_args: &syn::PathArguments,
-    ) -> Option<ast_types::DataType> {
+    ) -> Option<DataType> {
         None
     }
 
-    fn handle_function_call(&self, full_name: &str) -> bool {
+    fn handle_function_call(
+        &self,
+        full_name: &str,
+        _qualified_self_type: &Option<DataType>,
+    ) -> bool {
         matches!(
             full_name,
             FUNCTION_NAME_NEW_BFE | FUNCTION_ROOT_FULL_NAME | FUNCTION_GENERATOR_NAME
@@ -94,6 +99,8 @@ impl Library for BfeLibrary {
         fn_name: &str,
         _type_parameter: Option<ast_types::DataType>,
         _args: &[ast::Expr<super::Annotation>],
+        _qualified_self_type: &Option<DataType>,
+        _composite_types: &mut CompositeTypes,
     ) -> ast::FnSignature {
         match fn_name {
             FUNCTION_NAME_NEW_BFE => bfe_new_function().signature,
@@ -140,6 +147,7 @@ impl Library for BfeLibrary {
         _type_parameter: Option<ast_types::DataType>,
         _args: &[ast::Expr<super::Annotation>],
         state: &mut crate::tasm_code_generator::CompilerState,
+        _qualified_self_type: &Option<DataType>,
     ) -> Vec<LabelledInstruction> {
         if fn_name == FUNCTION_NAME_NEW_BFE {
             // Import the function and return the code to call it
@@ -286,6 +294,7 @@ fn graft_bfe_primitive_root(
                 type_parameter: None,
                 arg_evaluation_order: Default::default(),
                 annot: Default::default(),
+                qualified_self_type: Some(DataType::Bfe),
             })
         }
     }
@@ -333,6 +342,7 @@ fn graft_bfe_new(
                     type_parameter: None,
                     arg_evaluation_order: bfe_new_function.signature.arg_evaluation_order,
                     annot: Default::default(),
+                    qualified_self_type: Some(DataType::Bfe),
                 })
             }
         }
@@ -345,6 +355,7 @@ fn graft_bfe_new(
                 type_parameter: None,
                 arg_evaluation_order: bfe_new_function.signature.arg_evaluation_order,
                 annot: Default::default(),
+                qualified_self_type: Some(DataType::Bfe),
             })
         }
     }

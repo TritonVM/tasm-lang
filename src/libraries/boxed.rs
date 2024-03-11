@@ -5,6 +5,8 @@ use tasm_lib::triton_vm::prelude::LabelledInstruction;
 
 use crate::ast;
 use crate::ast_types;
+use crate::ast_types::DataType;
+use crate::composite_types::CompositeTypes;
 use crate::graft::Graft;
 use crate::subroutine::SubRoutine;
 
@@ -31,7 +33,11 @@ impl Library for Boxed {
         }
     }
 
-    fn handle_function_call(&self, full_name: &str) -> bool {
+    fn handle_function_call(
+        &self,
+        full_name: &str,
+        _qualified_self_type: &Option<DataType>,
+    ) -> bool {
         full_name == FUNCTION_NAME_NEW_BOX
     }
 
@@ -59,6 +65,8 @@ impl Library for Boxed {
         full_name: &str,
         type_parameter: Option<ast_types::DataType>,
         args: &[ast::Expr<super::Annotation>],
+        _qualified_self_type: &Option<DataType>,
+        _composite_types: &mut CompositeTypes,
     ) -> ast::FnSignature {
         if full_name == FUNCTION_NAME_NEW_BOX {
             assert!(
@@ -99,6 +107,7 @@ impl Library for Boxed {
         type_parameter: Option<crate::ast_types::DataType>,
         _args: &[crate::ast::Expr<super::Annotation>],
         state: &mut crate::tasm_code_generator::CompilerState,
+        _qualified_self_type: &Option<DataType>,
     ) -> Vec<LabelledInstruction> {
         if full_name == FUNCTION_NAME_NEW_BOX {
             let call_box_new = call_new_box(&type_parameter.unwrap(), state);

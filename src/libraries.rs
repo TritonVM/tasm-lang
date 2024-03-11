@@ -2,7 +2,8 @@ use std::fmt::Debug;
 
 use crate::ast;
 use crate::ast::FnSignature;
-use crate::ast_types;
+use crate::ast_types::DataType;
+use crate::composite_types::CompositeTypes;
 use crate::graft::Graft;
 use crate::tasm_code_generator::CompilerState;
 use crate::type_checker;
@@ -50,19 +51,20 @@ pub(crate) trait Library: Debug {
         graft: &mut Graft,
         rust_type_as_string: &str,
         path_args: &syn::PathArguments,
-    ) -> Option<ast_types::DataType>;
+    ) -> Option<DataType>;
 
     /// Return `true` iff library handles this function call
-    fn handle_function_call(&self, full_name: &str) -> bool;
+    fn handle_function_call(&self, full_name: &str, qualified_self_type: &Option<DataType>)
+        -> bool;
 
     /// Return `true` iff library handles this method call
-    fn handle_method_call(&self, method_name: &str, receiver_type: &ast_types::DataType) -> bool;
+    fn handle_method_call(&self, method_name: &str, receiver_type: &DataType) -> bool;
 
     /// Return function signature of method, if method is known.
     fn method_name_to_signature(
         &self,
         fn_name: &str,
-        receiver_type: &ast_types::DataType,
+        receiver_type: &DataType,
         args: &[ast::Expr<Annotation>],
         type_checker_state: &crate::type_checker::CheckState,
     ) -> ast::FnSignature;
@@ -71,15 +73,17 @@ pub(crate) trait Library: Debug {
     fn function_name_to_signature(
         &self,
         fn_name: &str,
-        type_parameter: Option<ast_types::DataType>,
+        type_parameter: Option<DataType>,
         args: &[ast::Expr<Annotation>],
+        qualified_self_type: &Option<DataType>,
+        composite_types: &mut CompositeTypes,
     ) -> ast::FnSignature;
 
     /// Return the instructions to call the method, and imports snippets into `state` if needed.
     fn call_method(
         &self,
         method_name: &str,
-        receiver_type: &ast_types::DataType,
+        receiver_type: &DataType,
         args: &[ast::Expr<Annotation>],
         state: &mut crate::tasm_code_generator::CompilerState,
     ) -> Vec<LabelledInstruction>;
@@ -88,9 +92,10 @@ pub(crate) trait Library: Debug {
     fn call_function(
         &self,
         fn_name: &str,
-        type_parameter: Option<ast_types::DataType>,
+        type_parameter: Option<DataType>,
         args: &[ast::Expr<Annotation>],
         state: &mut CompilerState,
+        qualified_self_type: &Option<DataType>,
     ) -> Vec<LabelledInstruction>;
 
     /// Return full function name iff grafting should be handled by
@@ -102,7 +107,7 @@ pub(crate) trait Library: Debug {
         graft_config: &mut Graft,
         fn_name: &str,
         args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
-        type_parameter: Option<ast_types::DataType>,
+        type_parameter: Option<DataType>,
     ) -> Option<ast::Expr<Annotation>>;
 
     fn graft_method_call(

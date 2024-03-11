@@ -7,6 +7,7 @@ use crate::ast_types;
 use crate::ast_types::AbstractArgument;
 use crate::ast_types::AbstractValueArg;
 use crate::ast_types::DataType;
+use crate::composite_types::CompositeTypes;
 use crate::graft::Graft;
 use crate::type_checker::Typing;
 
@@ -26,11 +27,15 @@ pub(super) fn rust_result_type_to_data_type(
         panic!("Unsupported type {ok_type_arg:#?}");
     };
     let ok_type = graft.syn_type_to_ast_type(ok_type);
+    wrap_and_import_result_type(ok_type, &mut graft.imported_custom_types)
+}
 
+pub(crate) fn wrap_and_import_result_type(
+    ok_type: DataType,
+    composite_types: &mut CompositeTypes,
+) -> DataType {
     let resolved_type = result_type(ok_type);
-    graft
-        .imported_custom_types
-        .add_type_context_if_new(resolved_type.clone());
+    composite_types.add_type_context_if_new(resolved_type.clone());
     ast_types::DataType::Enum(Box::new(resolved_type.composite_type.try_into().unwrap()))
 }
 

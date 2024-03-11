@@ -440,6 +440,7 @@ impl CompositeTypes {
             type_parameter: _,
             arg_evaluation_order: _,
             annot,
+            ..
         }: &ast::FnCall<type_checker::Typing>,
     ) -> Option<(ast_types::CustomTypeOil, Option<String>)> {
         let return_type = annot.get_type();

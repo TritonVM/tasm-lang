@@ -6,6 +6,7 @@ use tasm_lib::triton_vm::prelude::*;
 use crate::ast;
 use crate::ast_types;
 use crate::ast_types::DataType;
+use crate::composite_types::CompositeTypes;
 use crate::graft::Graft;
 use crate::tasm_code_generator::write_n_words_to_memory_leaving_address;
 use crate::tasm_code_generator::CompilerState;
@@ -174,7 +175,11 @@ impl Library for BFieldCodecLib {
         None
     }
 
-    fn handle_function_call(&self, _full_name: &str) -> bool {
+    fn handle_function_call(
+        &self,
+        _full_name: &str,
+        _qualified_self_type: &Option<DataType>,
+    ) -> bool {
         false
     }
 
@@ -220,6 +225,8 @@ impl Library for BFieldCodecLib {
         _fn_name: &str,
         _type_parameter: Option<crate::ast_types::DataType>,
         _args: &[crate::ast::Expr<super::Annotation>],
+        _qualified_self_type: &Option<DataType>,
+        _composite_types: &mut CompositeTypes,
     ) -> crate::ast::FnSignature {
         todo!()
     }
@@ -255,6 +262,7 @@ impl Library for BFieldCodecLib {
         _type_parameter: Option<crate::ast_types::DataType>,
         _args: &[crate::ast::Expr<super::Annotation>],
         _state: &mut crate::tasm_code_generator::CompilerState,
+        _qualified_self_type: &Option<DataType>,
     ) -> Vec<LabelledInstruction> {
         todo!()
     }

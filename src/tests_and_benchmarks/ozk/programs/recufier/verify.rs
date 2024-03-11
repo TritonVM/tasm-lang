@@ -304,7 +304,6 @@ pub fn recufy() {
 mod tests {
     use proptest::prelude::*;
     use proptest_arbitrary_interop::arb;
-    use tasm_lib::triton_vm::table::master_table::MasterExtTable;
     use tasm_lib::triton_vm::table::NUM_EXT_COLUMNS;
     use test_strategy::proptest;
 

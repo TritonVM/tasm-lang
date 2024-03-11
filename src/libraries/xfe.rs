@@ -7,6 +7,7 @@ use tasm_lib::twenty_first::prelude::x_field_element::EXTENSION_DEGREE;
 use crate::ast;
 use crate::ast_types;
 use crate::ast_types::DataType;
+use crate::composite_types::CompositeTypes;
 use crate::graft::Graft;
 use crate::libraries::Library;
 use crate::tasm_code_generator::CompilerState;
@@ -86,7 +87,11 @@ impl Library for XfeLibrary {
         None
     }
 
-    fn handle_function_call(&self, _full_name: &str) -> bool {
+    fn handle_function_call(
+        &self,
+        _full_name: &str,
+        _qualified_self_type: &Option<DataType>,
+    ) -> bool {
         false
     }
 
@@ -109,6 +114,8 @@ impl Library for XfeLibrary {
         _fn_name: &str,
         _type_parameter: Option<ast_types::DataType>,
         _args: &[ast::Expr<super::Annotation>],
+        _qualified_self_type: &Option<DataType>,
+        _composite_types: &mut CompositeTypes,
     ) -> ast::FnSignature {
         panic!("No functions implemented for XFE library");
     }
@@ -129,6 +136,7 @@ impl Library for XfeLibrary {
         _type_parameter: Option<ast_types::DataType>,
         _args: &[ast::Expr<super::Annotation>],
         _state: &mut crate::tasm_code_generator::CompilerState,
+        _qualified_self_type: &Option<DataType>,
     ) -> Vec<LabelledInstruction> {
         panic!("No functions implemented for XFE library");
     }

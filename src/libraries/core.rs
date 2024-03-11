@@ -5,11 +5,13 @@ use tasm_lib::triton_vm::prelude::LabelledInstruction;
 use crate::ast::Expr;
 use crate::ast::FnSignature;
 use crate::ast_types::DataType;
+use crate::composite_types::CompositeTypes;
 use crate::graft::Graft;
 use crate::libraries::Annotation;
 use crate::libraries::Library;
 use crate::tasm_code_generator::CompilerState;
 use crate::type_checker::CheckState;
+use crate::type_checker::GetType;
 
 use self::option_type::rust_option_type_to_data_type;
 use self::option_type::OPTION_TYPE_NAME;
@@ -19,6 +21,8 @@ use self::result_type::RESULT_TYPE_NAME;
 pub(crate) mod array;
 pub(crate) mod option_type;
 pub(crate) mod result_type;
+
+const TRY_FROM_FUNCTION_NAME: &str = "try_from";
 
 /// Everything that lives in the Rust `core` module belongs in here.
 #[derive(Debug)]
@@ -38,8 +42,15 @@ impl Library for Core {
         }
     }
 
-    fn handle_function_call(&self, _full_name: &str) -> bool {
-        false
+    fn handle_function_call(
+        &self,
+        full_name: &str,
+        qualified_self_type: &Option<DataType>,
+    ) -> bool {
+        matches!(
+            (qualified_self_type, full_name),
+            (Some(DataType::Array(_)), TRY_FROM_FUNCTION_NAME)
+        )
     }
 
     fn handle_method_call(&self, method_name: &str, receiver_type: &DataType) -> bool {
@@ -67,11 +78,23 @@ impl Library for Core {
 
     fn function_name_to_signature(
         &self,
-        _fn_name: &str,
+        fn_name: &str,
         _type_parameter: Option<DataType>,
-        _args: &[Expr<Annotation>],
+        args: &[Expr<Annotation>],
+        qualified_self_type: &Option<DataType>,
+        composite_types: &mut CompositeTypes,
     ) -> FnSignature {
-        todo!()
+        match (qualified_self_type, fn_name, args.len()) {
+            (Some(DataType::Array(array_type)), TRY_FROM_FUNCTION_NAME, 1) => {
+                let arg_type = args[0].get_type();
+                if let DataType::List(_) = arg_type {
+                    array::vec_to_array_function_signature(array_type, &arg_type, composite_types)
+                } else {
+                    panic!()
+                }
+            }
+            _ => panic!(),
+        }
     }
 
     fn call_method(
@@ -92,12 +115,23 @@ impl Library for Core {
 
     fn call_function(
         &self,
-        _fn_name: &str,
+        fn_name: &str,
         _type_parameter: Option<DataType>,
-        _args: &[Expr<Annotation>],
+        args: &[Expr<Annotation>],
         _state: &mut CompilerState,
+        qualified_self_type: &Option<DataType>,
     ) -> Vec<LabelledInstruction> {
-        panic!()
+        match (qualified_self_type, fn_name, args.len()) {
+            (Some(DataType::Array(array_type)), TRY_FROM_FUNCTION_NAME, 1) => {
+                let arg_type = args[0].get_type();
+                if let DataType::List(_) = arg_type {
+                    array::vec_to_array_function_code(array_type)
+                } else {
+                    panic!()
+                }
+            }
+            _ => panic!(),
+        }
     }
 
     fn get_graft_function_name(&self, _full_name: &str) -> Option<String> {

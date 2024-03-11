@@ -3,6 +3,7 @@ use tasm_lib::triton_vm::prelude::*;
 use crate::ast;
 use crate::ast_types;
 use crate::ast_types::DataType;
+use crate::composite_types::CompositeTypes;
 use crate::graft::Graft;
 use crate::tasm_code_generator::CompilerState;
 
@@ -23,7 +24,11 @@ impl Library for TasmLibrary {
         None
     }
 
-    fn handle_function_call(&self, full_name: &str) -> bool {
+    fn handle_function_call(
+        &self,
+        full_name: &str,
+        _qualified_self_type: &Option<DataType>,
+    ) -> bool {
         full_name.starts_with(TASM_LIB_INDICATOR)
     }
 
@@ -47,6 +52,8 @@ impl Library for TasmLibrary {
         full_name: &str,
         _type_parameter: Option<ast_types::DataType>,
         _args: &[ast::Expr<super::Annotation>],
+        _qualified_self_type: &Option<DataType>,
+        _composite_types: &mut CompositeTypes,
     ) -> ast::FnSignature {
         let stripped_name = &full_name[TASM_LIB_INDICATOR.len()..full_name.len()];
         let snippet = tasm_lib::exported_snippets::name_to_snippet(stripped_name);
@@ -70,6 +77,7 @@ impl Library for TasmLibrary {
         _type_parameter: Option<ast_types::DataType>,
         _args: &[ast::Expr<super::Annotation>],
         state: &mut CompilerState,
+        _qualified_self_type: &Option<DataType>,
     ) -> Vec<LabelledInstruction> {
         let stripped_name = &full_name[TASM_LIB_INDICATOR.len()..full_name.len()];
         let snippet = tasm_lib::exported_snippets::name_to_snippet(stripped_name);

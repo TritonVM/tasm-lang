@@ -4,6 +4,8 @@ use tasm_lib::prelude::MemCpy;
 use crate::ast::FnSignature;
 use crate::ast_types::ArrayType;
 use crate::ast_types::DataType;
+use crate::composite_types::CompositeTypes;
+use crate::libraries::core::result_type;
 use crate::subroutine::SubRoutine;
 use crate::tasm_code_generator::CompilerState;
 use crate::triton_vm::prelude::LabelledInstruction;
@@ -22,6 +24,40 @@ pub(crate) fn to_vec_method_signature(array_type: &ArrayType) -> FnSignature {
     let value_args = vec![("self", array_type.into())];
     let output_type = DataType::List(array_type.element_type.clone());
     FnSignature::value_function_immutable_args("to_vec", value_args, output_type)
+}
+
+pub(crate) fn vec_to_array_function_signature(
+    array_type: &ArrayType,
+    arg_type: &DataType,
+    composite_types: &mut CompositeTypes,
+) -> FnSignature {
+    let output_type = result_type::wrap_and_import_result_type(array_type.into(), composite_types);
+    FnSignature::value_function_immutable_args(
+        "try_from",
+        vec![("vec", arg_type.to_owned())],
+        output_type,
+    )
+}
+
+pub(crate) fn vec_to_array_function_code(array_type: &ArrayType) -> Vec<LabelledInstruction> {
+    let expected_vec_length = array_type.length;
+    triton_asm!(
+        // _ *len
+
+        read_mem 1
+        push 2
+        add
+        // _ vec_len *word_0
+
+        swap 1
+        // _ *word_0 vec_len
+
+        push {expected_vec_length}
+        eq
+        // _ *word_0 (vec_len == expected_vec_length)
+
+        // _ *word_0 result_discriminant
+    )
 }
 
 fn to_vec_method_code(compiler_state: &mut CompilerState, array_type: &ArrayType) -> SubRoutine {

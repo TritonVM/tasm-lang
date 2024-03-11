@@ -9,6 +9,7 @@ use crate::ast;
 use crate::ast::FnSignature;
 use crate::ast_types;
 use crate::ast_types::DataType;
+use crate::composite_types::CompositeTypes;
 use crate::graft::Graft;
 use crate::tasm_code_generator::CompilerState;
 use crate::type_checker::GetType;
@@ -43,7 +44,11 @@ impl Library for VectorLib {
         }
     }
 
-    fn handle_function_call(&self, full_name: &str) -> bool {
+    fn handle_function_call(
+        &self,
+        full_name: &str,
+        _qualified_self_type: &Option<DataType>,
+    ) -> bool {
         full_name.starts_with(VECTOR_LIB_INDICATOR)
     }
 
@@ -92,6 +97,8 @@ impl Library for VectorLib {
         full_name: &str,
         type_parameter: Option<ast_types::DataType>,
         args: &[ast::Expr<super::Annotation>],
+        _qualified_self_type: &Option<DataType>,
+        _composite_types: &mut CompositeTypes,
     ) -> ast::FnSignature {
         let stripped_name = &full_name[VECTOR_LIB_INDICATOR.len()..full_name.len()];
         let snippet = self
@@ -146,6 +153,7 @@ impl Library for VectorLib {
         type_parameter: Option<ast_types::DataType>,
         args: &[ast::Expr<super::Annotation>],
         state: &mut CompilerState,
+        _qualified_self_type: &Option<DataType>,
     ) -> Vec<LabelledInstruction> {
         let stripped_name = &full_name[VECTOR_LIB_INDICATOR.len()..full_name.len()];
         let snippet = self
@@ -184,7 +192,7 @@ impl Library for VectorLib {
 
         match last_method_name.as_str() {
             UNWRAP_NAME => {
-                // Handle `a.pop().unwrap();`
+                // Handle `a.pop().unwrap();` or `a.try_into().unwrap()`
                 match rust_method_call.receiver.as_ref() {
                     syn::Expr::MethodCall(rust_inner_method_call) => {
                         let inner_method_call =

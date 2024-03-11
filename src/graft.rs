@@ -523,15 +523,16 @@ impl<'a> Graft<'a> {
         type_parameter
     }
 
-    pub(crate) fn graft_call_exp(
-        &mut self,
-        syn::ExprCall { func, args, .. }: &syn::ExprCall,
-    ) -> ast::Expr<Annotation> {
-        let syn::Expr::Path(syn::ExprPath { path, .. }) = func.as_ref() else {
+    pub(crate) fn graft_call_exp(&mut self, expr_call: &syn::ExprCall) -> ast::Expr<Annotation> {
+        let syn::ExprCall { func, args, .. } = expr_call;
+        let syn::Expr::Path(syn::ExprPath { path, qself, .. }) = func.as_ref() else {
             panic!("unsupported: {func:?}");
         };
         let full_name = Graft::path_to_ident(path);
         let function_type_parameter = self.path_to_type_parameter(path);
+        let qualified_self_type = qself
+            .as_ref()
+            .map(|qself| self.syn_type_to_ast_type(&qself.ty));
 
         // Check if grafting should be handled by a library
         for lib in self.libraries {
@@ -553,6 +554,7 @@ impl<'a> Graft<'a> {
             annot,
             type_parameter: function_type_parameter,
             arg_evaluation_order: Default::default(),
+            qualified_self_type,
         })
     }
 

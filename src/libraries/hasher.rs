@@ -7,6 +7,7 @@ use crate::ast;
 use crate::ast::FnSignature;
 use crate::ast_types;
 use crate::ast_types::DataType;
+use crate::composite_types::CompositeTypes;
 use crate::graft::Graft;
 use crate::libraries::Library;
 use crate::subroutine::SubRoutine;
@@ -41,7 +42,11 @@ impl Library for HasherLib {
         None
     }
 
-    fn handle_function_call(&self, full_name: &str) -> bool {
+    fn handle_function_call(
+        &self,
+        full_name: &str,
+        _qualified_self_type: &Option<DataType>,
+    ) -> bool {
         full_name.starts_with(HASHER_LIB_INDICATOR)
             || full_name.starts_with(STATEFUL_HASHER_LIB_INDICATOR)
     }
@@ -65,6 +70,8 @@ impl Library for HasherLib {
         fn_name: &str,
         _type_parameter: Option<DataType>,
         _args: &[ast::Expr<super::Annotation>],
+        _qualified_self_type: &Option<DataType>,
+        _composite_types: &mut CompositeTypes,
     ) -> ast::FnSignature {
         match fn_name {
             HASH_PAIR_FUNCTION_NAME => hash_pair_function().signature,
@@ -113,6 +120,7 @@ impl Library for HasherLib {
         _type_parameter: Option<DataType>,
         _args: &[ast::Expr<super::Annotation>],
         state: &mut CompilerState,
+        _qualified_self_type: &Option<DataType>,
     ) -> Vec<LabelledInstruction> {
         let snippet = name_to_tasm_lib_snippet(fn_name);
         match snippet {

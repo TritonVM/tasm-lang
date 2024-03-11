@@ -1434,12 +1434,13 @@ fn compile_fn_call(
 
     let mut call_fn_code = vec![];
     for lib in state.libraries.iter() {
-        if lib.handle_function_call(&fn_call.name) {
+        if lib.handle_function_call(&fn_call.name, &fn_call.qualified_self_type) {
             call_fn_code.append(&mut lib.call_function(
                 &fn_call.name,
                 fn_call.type_parameter.to_owned(),
                 &fn_call.args,
                 state,
+                &fn_call.qualified_self_type,
             ));
             break;
         }

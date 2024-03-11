@@ -8,6 +8,7 @@ use num::One;
 use tasm_lib::triton_vm::prelude::*;
 
 use crate::ast;
+use crate::ast::FnCall;
 use crate::ast::MethodCall;
 use crate::ast::TupleDestructStmt;
 use crate::ast::UnaryOp;
@@ -138,7 +139,7 @@ impl<T: GetType> GetType for ast::MethodCall<T> {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub(crate) struct CheckState<'a> {
     pub(crate) libraries: &'a [Box<dyn libraries::Library>],
 
@@ -153,7 +154,7 @@ pub(crate) struct CheckState<'a> {
     pub(crate) ftable: HashMap<String, Vec<ast::FnSignature>>,
 
     /// All non-atomic types that are in scope
-    pub(crate) composite_types: &'a CompositeTypes,
+    pub(crate) composite_types: &'a mut CompositeTypes,
 }
 
 #[derive(Clone, Debug)]
@@ -183,7 +184,7 @@ impl DataTypeAndMutability {
 // TODO: Delete `annotate_method`, use `annotate_function` instead
 fn annotate_method(
     method: &mut ast::Method<Typing>,
-    composite_types: &CompositeTypes,
+    composite_types: &mut CompositeTypes,
     libraries: &[Box<dyn libraries::Library>],
     ftable: HashMap<String, Vec<ast::FnSignature>>,
 ) {
@@ -246,7 +247,7 @@ fn annotate_method(
 
 fn annotate_fn_inner(
     function: &mut ast::Fn<Typing>,
-    composite_types: &CompositeTypes,
+    composite_types: &mut CompositeTypes,
     libraries: &[Box<dyn libraries::Library>],
     mut ftable: HashMap<String, Vec<ast::FnSignature>>,
 ) {
@@ -336,17 +337,22 @@ pub(crate) fn annotate_fn_outer(
     annotate_fn_inner(function, composite_types, libraries, ftable);
 
     // Type annotate all declared methods and associated functions
-    let composite_type_copy = composite_types.clone();
+    let mut composite_type_copy = composite_types.clone();
     composite_types.methods_mut().for_each(|method| {
         annotate_method(
             method,
-            &composite_type_copy,
+            &mut composite_type_copy,
             libraries,
             ftable_outer.clone(),
         );
     });
     composite_types.associated_functions_mut().for_each(|func| {
-        annotate_fn_inner(func, &composite_type_copy, libraries, ftable_outer.clone());
+        annotate_fn_inner(
+            func,
+            &mut composite_type_copy,
+            libraries,
+            ftable_outer.clone(),
+        );
     });
 }
 
@@ -453,31 +459,25 @@ fn annotate_stmt(
             }
         },
 
-        ast::Stmt::FnCall(ast::FnCall {
-            name,
-            args,
-            annot,
-            type_parameter,
-            arg_evaluation_order,
-        }) => {
+        ast::Stmt::FnCall(fn_call) => {
             // Attempt to annotate all arguments before getting the function signature
-            for arg in args.iter_mut() {
+            for arg in fn_call.args.iter_mut() {
                 // It's OK if this fails, as a later invocation of the argument expressions
                 // might pass.
                 let _ = derive_annotate_expr_type(arg, None, state, env_fn_signature);
             }
 
-            let callees_fn_signature =
-                get_fn_signature(name, state, type_parameter, args, env_fn_signature, None);
+            let callees_fn_signature = get_fn_signature(fn_call, env_fn_signature, None, state);
             assert!(
                 callees_fn_signature.output.is_unit(),
-                "Function call '{name}' at statement-level must return the unit type."
+                "Function call '{}' at statement-level must return the unit type.",
+                fn_call.name
             );
 
-            derive_annotate_fn_call_args(&callees_fn_signature, args, state);
+            derive_annotate_fn_call_args(&callees_fn_signature, &mut fn_call.args, state);
 
-            *arg_evaluation_order = callees_fn_signature.arg_evaluation_order;
-            *annot = Typing::KnownType(callees_fn_signature.output);
+            fn_call.arg_evaluation_order = callees_fn_signature.arg_evaluation_order;
+            fn_call.annot = Typing::KnownType(callees_fn_signature.output);
         }
 
         ast::Stmt::MethodCall(method_call) => {
@@ -845,13 +845,18 @@ pub(crate) fn annotate_identifier_type(
 }
 
 fn get_fn_signature(
-    name: &str,
-    state: &CheckState,
-    type_parameter: &Option<ast_types::DataType>,
-    args: &[ast::Expr<Typing>],
+    fn_call: &FnCall<Typing>,
     env_fn_signature: &ast::FnSignature,
     output_type_hint: Option<ast_types::DataType>,
+    state: &mut CheckState,
 ) -> ast::FnSignature {
+    let FnCall {
+        name,
+        args,
+        type_parameter,
+        qualified_self_type,
+        ..
+    } = fn_call;
     if let Some(fn_signatures) = state.ftable.get(name) {
         match fn_signatures.len() {
             0 => unreachable!("Function signature list must never be empty."),
@@ -879,15 +884,23 @@ fn get_fn_signature(
 
     // Function from libraries are in scope
     for lib in state.libraries.iter() {
-        if lib.handle_function_call(name) {
-            return lib.function_name_to_signature(name, type_parameter.to_owned(), args);
+        if lib.handle_function_call(name, qualified_self_type) {
+            return lib.function_name_to_signature(
+                name,
+                type_parameter.to_owned(),
+                args,
+                qualified_self_type,
+                state.composite_types,
+            );
         }
     }
 
     panic!(
         "Function call in {} – Don't know return type of \"{name}\"! \
         Type parameter: {type_parameter:?}. \
-        ftable:\n{}",
+        Output type hint: {output_type_hint:?}. \
+        fully-qualified self type was: {qualified_self_type:?}
+        \n\nftable:\n{}",
         env_fn_signature.name,
         state.ftable.keys().join("\n")
     )
@@ -1236,14 +1249,7 @@ fn derive_annotate_expr_type(
                 let _ = derive_annotate_expr_type(arg, None, state, env_fn_signature);
             }
 
-            let callees_fn_signature = get_fn_signature(
-                &fn_call.name,
-                state,
-                &fn_call.type_parameter,
-                &fn_call.args,
-                env_fn_signature,
-                hint,
-            );
+            let callees_fn_signature = get_fn_signature(fn_call, env_fn_signature, hint, state);
 
             derive_annotate_fn_call_args(&callees_fn_signature, &mut fn_call.args, state);
             fn_call.annot = Typing::KnownType(callees_fn_signature.output.clone());
