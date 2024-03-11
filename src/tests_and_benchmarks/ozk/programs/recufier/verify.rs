@@ -241,7 +241,7 @@ pub fn recufy() {
 
     let evaluated_constraints: [XFieldElement; 587] =
         tasm::tasm_recufier_master_ext_table_air_constraint_evaluation();
-    RecufyDebug::dump_xfes(&out_of_domain_curr_row_quot_segments.to_vec());
+    RecufyDebug::dump_xfes(&evaluated_constraints.to_vec());
 
     RecufyDebug::sponge_state(Tip5WithState::squeeze());
     return;

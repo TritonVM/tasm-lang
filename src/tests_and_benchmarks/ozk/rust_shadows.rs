@@ -13,6 +13,7 @@ use std::vec::Vec;
 use itertools::Itertools;
 use num::One;
 use num::Zero;
+use tasm_lib::memory::encode_to_memory;
 use tasm_lib::recufier::master_ext_table::air_constraint_evaluation::AirConstraintEvaluation;
 use tasm_lib::recufier::master_ext_table::air_constraint_evaluation::AirConstraintSnippetInputs;
 use tasm_lib::structure::tasm_object::decode_from_memory_with_size;
@@ -316,6 +317,13 @@ pub(super) fn tasm_recufier_challenges_new_empty_input_and_output_59_4(
     });
     let claim = Claim::new(digest);
     let Challenges { challenges } = Challenges::new(sampled_challenges, &claim);
+
+    // Store Challenges at their expected value in memory
+    let mem_layout = AirConstraintEvaluation::conventional_air_constraint_memory_layout();
+    ND_MEMORY.with_borrow_mut(|memory| {
+        encode_to_memory(memory, mem_layout.challenges_ptr, challenges);
+    });
+
     let challenges = TasmLangChallenges { challenges };
     Box::new(challenges)
 }
@@ -326,14 +334,19 @@ pub(super) fn tasm_recufier_master_ext_table_air_constraint_evaluation(
     const CHALLENGES_LENGTH: usize = Challenges::count();
     let mem_layout = AirConstraintEvaluation::conventional_air_constraint_memory_layout();
     let challenges: Box<[XFieldElement; CHALLENGES_LENGTH]> = ND_MEMORY.with_borrow(|memory| {
-        decode_from_memory_with_size(memory, mem_layout.challenges_ptr, EXTENSION_DEGREE * CHALLENGES_LENGTH)
-            .unwrap()
+        decode_from_memory_with_size(
+            memory,
+            mem_layout.challenges_ptr,
+            EXTENSION_DEGREE * CHALLENGES_LENGTH,
+        )
+        .unwrap()
     });
+
     let current_base_row: Box<[XFieldElement; NUM_BASE_COLUMNS]> =
         ND_MEMORY.with_borrow(|memory| {
             decode_from_memory_with_size(
                 memory,
-                mem_layout.challenges_ptr,
+                mem_layout.curr_base_row_ptr,
                 EXTENSION_DEGREE * NUM_BASE_COLUMNS,
             )
             .unwrap()
@@ -341,7 +354,7 @@ pub(super) fn tasm_recufier_master_ext_table_air_constraint_evaluation(
     let current_ext_row: Box<[XFieldElement; NUM_EXT_COLUMNS]> = ND_MEMORY.with_borrow(|memory| {
         decode_from_memory_with_size(
             memory,
-            mem_layout.challenges_ptr,
+            mem_layout.curr_ext_row_ptr,
             EXTENSION_DEGREE * NUM_EXT_COLUMNS,
         )
         .unwrap()
@@ -349,7 +362,7 @@ pub(super) fn tasm_recufier_master_ext_table_air_constraint_evaluation(
     let next_base_row: Box<[XFieldElement; NUM_BASE_COLUMNS]> = ND_MEMORY.with_borrow(|memory| {
         decode_from_memory_with_size(
             memory,
-            mem_layout.challenges_ptr,
+            mem_layout.next_base_row_ptr,
             EXTENSION_DEGREE * NUM_BASE_COLUMNS,
         )
         .unwrap()
@@ -357,21 +370,25 @@ pub(super) fn tasm_recufier_master_ext_table_air_constraint_evaluation(
     let next_ext_row: Box<[XFieldElement; NUM_EXT_COLUMNS]> = ND_MEMORY.with_borrow(|memory| {
         decode_from_memory_with_size(
             memory,
-            mem_layout.challenges_ptr,
+            mem_layout.next_ext_row_ptr,
             EXTENSION_DEGREE * NUM_EXT_COLUMNS,
         )
         .unwrap()
     });
 
-    let inputs = AirConstraintSnippetInputs {
+    let input_values = AirConstraintSnippetInputs {
         current_base_row: current_base_row.to_vec(),
         current_ext_row: current_ext_row.to_vec(),
         next_base_row: next_base_row.to_vec(),
         next_ext_row: next_ext_row.to_vec(),
-        challenges: Challenges { challenges },
+        challenges: Challenges {
+            challenges: *challenges,
+        },
     };
 
-    todo!()
+    AirConstraintEvaluation::host_machine_air_constraint_evaluation(input_values)
+        .try_into()
+        .unwrap()
 }
 
 pub(super) fn _tasm_recufier_fri_verify(
