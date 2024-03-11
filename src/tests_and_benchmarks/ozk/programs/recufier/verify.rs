@@ -102,6 +102,70 @@ impl Recufier {
     const fn num_quotients() -> usize {
         return 587;
     }
+
+    const fn constraint_evaluation_lengths() -> [usize; 4] {
+        return [81usize, 94, 387, 23];
+    }
+
+    const fn constraint_evaluation_lengths_running_sum() -> [usize; 4] {
+        let mut running_sum: usize = 0;
+        let mut lengths: [usize; 4] = Recufier::constraint_evaluation_lengths();
+        let mut i: usize = 0;
+        while i < 4 {
+            running_sum += lengths[i];
+            lengths[i] = running_sum;
+            i += 1;
+        }
+
+        return lengths;
+    }
+
+    fn quotient_summands(
+        out_of_domain_point_curr_row: XFieldElement,
+        padded_height: u32,
+        trace_domain_generator: BFieldElement,
+    ) -> [XFieldElement; 587] {
+        let initial_zerofier_inv: XFieldElement =
+            (out_of_domain_point_curr_row - BFieldElement::one()).inverse();
+        RecufyDebug::dump_xfe(initial_zerofier_inv);
+        let consistency_zerofier_inv: XFieldElement =
+            (out_of_domain_point_curr_row.mod_pow_u32(padded_height) - BFieldElement::one())
+                .inverse();
+        RecufyDebug::dump_xfe(consistency_zerofier_inv);
+        let except_last_row: XFieldElement =
+            out_of_domain_point_curr_row - trace_domain_generator.inverse();
+        RecufyDebug::dump_xfe(except_last_row);
+        let transition_zerofier_inv: XFieldElement = except_last_row * consistency_zerofier_inv;
+        RecufyDebug::dump_xfe(transition_zerofier_inv);
+        let terminal_zerofier_inv: XFieldElement = except_last_row.inverse();
+        // i.e., only last row
+        RecufyDebug::dump_xfe(terminal_zerofier_inv);
+
+        let mut evaluated_constraints: [XFieldElement; 587] =
+            tasm::tasm_recufier_master_ext_table_air_constraint_evaluation();
+
+        let categories_running_sum_lengths: [usize; 4] =
+            Recufier::constraint_evaluation_lengths_running_sum();
+        let mut i: usize = 0;
+        while i < categories_running_sum_lengths[0] {
+            evaluated_constraints[i] *= initial_zerofier_inv;
+            i += 1;
+        }
+        while i < categories_running_sum_lengths[1] {
+            evaluated_constraints[i] *= consistency_zerofier_inv;
+            i += 1;
+        }
+        while i < categories_running_sum_lengths[2] {
+            evaluated_constraints[i] *= transition_zerofier_inv;
+            i += 1;
+        }
+        while i < categories_running_sum_lengths[3] {
+            evaluated_constraints[i] *= terminal_zerofier_inv;
+            i += 1;
+        }
+
+        return evaluated_constraints;
+    }
 }
 
 /// Gives statements only intended for debugging its own scope.
@@ -225,23 +289,12 @@ pub fn recufy() {
         proof_iter.next_as_outofdomainquotientsegments();
     RecufyDebug::dump_xfes(&out_of_domain_curr_row_quot_segments.to_vec());
 
-    let initial_zerofier_inv: XFieldElement =
-        (out_of_domain_point_curr_row - BFieldElement::one()).inverse();
-    RecufyDebug::dump_xfe(initial_zerofier_inv);
-    let consistency_zerofier_inv: XFieldElement =
-        (out_of_domain_point_curr_row.mod_pow_u32(padded_height) - BFieldElement::one()).inverse();
-    RecufyDebug::dump_xfe(consistency_zerofier_inv);
-    let except_last_row: XFieldElement =
-        out_of_domain_point_curr_row - trace_domain_generator.inverse();
-    RecufyDebug::dump_xfe(except_last_row);
-    let transition_zerofier_inv: XFieldElement = except_last_row * consistency_zerofier_inv;
-    RecufyDebug::dump_xfe(transition_zerofier_inv);
-    let terminal_zerofier_inv: XFieldElement = except_last_row.inverse(); // i.e., only last row
-    RecufyDebug::dump_xfe(terminal_zerofier_inv);
-
-    let evaluated_constraints: [XFieldElement; 587] =
-        tasm::tasm_recufier_master_ext_table_air_constraint_evaluation();
-    RecufyDebug::dump_xfes(&evaluated_constraints.to_vec());
+    let quotient_summands: [XFieldElement; 587] = Recufier::quotient_summands(
+        out_of_domain_point_curr_row,
+        padded_height,
+        trace_domain_generator,
+    );
+    RecufyDebug::dump_xfes(&quotient_summands.to_vec());
 
     RecufyDebug::sponge_state(Tip5WithState::squeeze());
     return;
@@ -251,6 +304,7 @@ pub fn recufy() {
 mod tests {
     use proptest::prelude::*;
     use proptest_arbitrary_interop::arb;
+    use tasm_lib::triton_vm::table::master_table::MasterExtTable;
     use tasm_lib::triton_vm::table::NUM_EXT_COLUMNS;
     use test_strategy::proptest;
 
@@ -332,6 +386,14 @@ mod tests {
             Challenges::count()
         );
     }
+
+    // #[test]
+    // fn local_category_count_agrees_with_tvm() {
+    //     use crate::triton_vm::table::master_table::*;
+    //     let from_tvm = num_initial_quotients();
+    //     num_quotients();
+    //     // assert_eq!(Recufier::constraint_evaluation_lengths(), [ ])
+    // }
 
     #[test]
     fn default_stark_parameters_match_triton_vms_defaults() {
