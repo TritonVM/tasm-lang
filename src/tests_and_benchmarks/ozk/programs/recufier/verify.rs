@@ -229,11 +229,11 @@ pub(crate) struct FriVerify {
 }
 
 pub fn recufy() {
-    let own_digest: Digest = tasm::tasm_recufier_read_and_verify_own_program_digest_from_std_in();
+    let own_digest: Box<Digest> = Box::<Digest>::new(tasm::tasm_recufier_own_program_digest());
     let parameters: Box<StarkParameters> = Box::<StarkParameters>::new(StarkParameters::small());
 
     Tip5WithState::init();
-    let encoded_claim: Vec<BFieldElement> = Recufier::encode_claim(own_digest);
+    let encoded_claim: Vec<BFieldElement> = Recufier::encode_claim(*own_digest);
     Tip5WithState::pad_and_absorb_all(&encoded_claim);
 
     let inner_proof_iter: VmProofIter = VmProofIter::new();
@@ -249,7 +249,7 @@ pub fn recufy() {
     RecufyDebug::dump_digest(*base_merkle_tree_root);
 
     let challenges: Box<Challenges> =
-        tasm::tasm_recufier_challenges_new_empty_input_and_output_59_4(own_digest);
+        tasm::tasm_recufier_challenges_new_empty_input_and_output_59_4(*own_digest);
     RecufyDebug::dump_xfes(&challenges.challenges.to_vec());
 
     let extension_tree_merkle_root: Box<Digest> = proof_iter.next_as_merkleroot();
@@ -301,6 +301,14 @@ pub fn recufy() {
         tasm::tasm_array_inner_product_of_587_xfes(quot_codeword_weights, quotient_summands);
     RecufyDebug::dump_xfe(out_of_domain_quotient_value);
 
+    let sum_of_evaluated_out_of_domain_quotient_segments: XFieldElement =
+        tasm::tasm_array_horner_evaluation_with_4_coefficients(
+            *out_of_domain_curr_row_quot_segments,
+            out_of_domain_point_curr_row,
+        );
+    RecufyDebug::dump_xfe(sum_of_evaluated_out_of_domain_quotient_segments);
+    // assert!(sum_of_evaluated_out_of_domain_quotient_segments == out_of_domain_quotient_value);
+
     RecufyDebug::sponge_state(Tip5WithState::squeeze());
     return;
 }
@@ -326,14 +334,6 @@ mod tests {
     use crate::triton_vm::table::NUM_BASE_COLUMNS;
 
     use super::*;
-
-    fn recufier_std_in(test_case: &TritonVMTestCase) -> Vec<BFieldElement> {
-        let code = test_case.compile();
-        let program = Program::new(&code);
-        let program_digest = program.hash::<Tip5>();
-
-        program_digest.reversed().values().to_vec()
-    }
 
     fn proof() -> Proof {
         let dummy_digest_base_mt = Digest::new([42u64, 43, 44, 45, 46].map(BFieldElement::new));
@@ -453,14 +453,16 @@ mod tests {
     fn recursive_verification() {
         let entrypoint_location = EntrypointLocation::disk("recufier", "verify", "recufy");
         let test_case = TritonVMTestCase::new(entrypoint_location);
-        let std_in = recufier_std_in(&test_case);
         let non_determinism = recufier_non_determinism();
+        let program = test_case.program();
 
-        let native_output =
-            rust_shadows::wrap_main_with_io(&recufy)(std_in.clone(), non_determinism.clone());
+        let native_output = rust_shadows::wrap_main_with_io_and_program_digest(&recufy)(
+            Vec::default(),
+            non_determinism.clone(),
+            program,
+        );
 
         let vm_output = test_case
-            .with_std_in(std_in)
             .with_non_determinism(non_determinism)
             .execute()
             .unwrap();

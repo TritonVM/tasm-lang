@@ -167,6 +167,10 @@ impl TritonVMTestCase {
         compile_for_test(&self.entrypoint)
     }
 
+    pub(crate) fn program(&self) -> Program {
+        Program::new(&self.compile())
+    }
+
     fn verify_stack_len_unchanged(vm_state: &VMState) -> Result<()> {
         let terminal_stack_len = vm_state.op_stack.len();
         match terminal_stack_len {

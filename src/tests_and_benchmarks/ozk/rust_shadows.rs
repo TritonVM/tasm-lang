@@ -52,6 +52,7 @@ thread_local! {
     static ND_MEMORY: RefCell<HashMap<BFieldElement, BFieldElement>> =
         RefCell::new(HashMap::default());
     static SPONGE_STATE: RefCell<Option<Tip5>> = RefCell::new(None);
+    static PROGRAM_DIGEST: RefCell<Option<Digest>> = RefCell::new(None);
 }
 
 pub(super) struct Tip5WithState;
@@ -105,6 +106,7 @@ pub(super) fn load_from_memory(start_address: BFieldElement) -> Vec<BFieldElemen
 pub(super) fn init_vm_state(
     pub_input: Vec<BFieldElement>,
     non_determinism: NonDeterminism<BFieldElement>,
+    program_digest: Option<Digest>,
 ) {
     let mut pub_input_reversed = pub_input;
     pub_input_reversed.reverse();
@@ -132,6 +134,9 @@ pub(super) fn init_vm_state(
     SPONGE_STATE.with_borrow_mut(|v| {
         *v = None;
     });
+    PROGRAM_DIGEST.with_borrow_mut(|v| {
+        *v = program_digest;
+    })
 }
 
 pub(super) fn get_pub_output() -> Vec<BFieldElement> {
@@ -260,6 +265,14 @@ pub(super) fn tasm_arithmetic_u64_mul_two_u64s_to_u128_u64(lhs: u64, rhs: u64) -
     lhs as u128 * rhs as u128
 }
 
+pub(super) fn tasm_arithmetic_xfe_square(base: XFieldElement) -> XFieldElement {
+    base.mod_pow_u32(2)
+}
+
+pub(super) fn tasm_arithmetic_xfe_cube(base: XFieldElement) -> XFieldElement {
+    base.mod_pow_u32(3)
+}
+
 pub(super) fn tasm_arithmetic_xfe_to_the_fourth(base: XFieldElement) -> XFieldElement {
     base.mod_pow_u32(4)
 }
@@ -270,7 +283,22 @@ pub(super) fn wrap_main_with_io(
 ) -> Box<dyn Fn(Vec<BFieldElement>, NonDeterminism<BFieldElement>) -> Vec<BFieldElement>> {
     Box::new(
         |input: Vec<BFieldElement>, non_determinism: NonDeterminism<BFieldElement>| {
-            init_vm_state(input, non_determinism);
+            init_vm_state(input, non_determinism, None);
+            main_func();
+            get_pub_output()
+        },
+    )
+}
+
+#[allow(clippy::type_complexity)]
+pub(super) fn wrap_main_with_io_and_program_digest(
+    main_func: &'static dyn Fn(),
+) -> Box<dyn Fn(Vec<BFieldElement>, NonDeterminism<BFieldElement>, Program) -> Vec<BFieldElement>> {
+    Box::new(
+        |input: Vec<BFieldElement>,
+         non_determinism: NonDeterminism<BFieldElement>,
+         program: Program| {
+            init_vm_state(input, non_determinism, Some(program.hash::<Tip5>()));
             main_func();
             get_pub_output()
         },
@@ -308,6 +336,14 @@ pub(super) fn tasm_recufier_read_and_verify_own_program_digest_from_std_in() -> 
     tasm_io_read_stdin___digest()
 }
 
+pub(super) fn tasm_recufier_own_program_digest() -> Digest {
+    // TODO: How do we get the real program digest here? Maybe from
+    // the static `thread_local` state?
+    // Digest::default()
+    PROGRAM_DIGEST
+        .with_borrow(|digest| digest.expect("Program digest must be set for this function to work"))
+}
+
 pub(super) fn tasm_recufier_challenges_new_empty_input_and_output_59_4(
     digest: Digest,
 ) -> Box<TasmLangChallenges> {
@@ -333,8 +369,22 @@ pub(super) fn tasm_array_inner_product_of_587_xfes(
     b: [XFieldElement; 587],
 ) -> XFieldElement {
     a.into_iter()
-        .zip_eq(b.into_iter())
+        .zip_eq(b)
         .fold(XFieldElement::zero(), |acc, (a, b)| acc + a * b)
+}
+
+pub(super) fn tasm_array_horner_evaluation_with_4_coefficients(
+    coefficients: [XFieldElement; 4],
+    indeterminate: XFieldElement,
+) -> XFieldElement {
+    // evaluate polynomial using Horner's method
+    let mut running_evaluation = XFieldElement::zero();
+    for c in coefficients.into_iter().rev() {
+        running_evaluation *= indeterminate;
+        running_evaluation += c;
+    }
+
+    running_evaluation
 }
 
 const NUM_TOTAL_CONSTRAINTS: usize = num_quotients();
