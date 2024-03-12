@@ -381,6 +381,26 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf0a07a401f374238ab8e2f11a104d2851bf9ce711ec69804834de8af45c7af"
 
 [[package]]
+name = "const_format"
+version = "0.2.32"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e3a214c7af3d04997541b18d432afaff4c455e79e2029079647e72fc2bd27673"
+dependencies = [
+ "const_format_proc_macros",
+]
+
+[[package]]
+name = "const_format_proc_macros"
+version = "0.2.32"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c7f6ff08fd20f4f299298a28e2dfa8a8ba1036e6cd2460ac1de7b425d76f2500"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "unicode-xid",
+]
+
+[[package]]
 name = "constant_time_eq"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -503,7 +523,7 @@ dependencies = [
 [[package]]
 name = "derive_tasm_object"
 version = "0.1.0"
-source = "git+https://github.com/TritonVM/tasm-lib.git?rev=abcdb48e#abcdb48eb526f36aa3dd89e0914caf97d42c3418"
+source = "git+https://github.com/TritonVM/tasm-lib.git?rev=6f920831#6f920831bed80eb89d09ecb18d51a1ce06f343bb"
 dependencies = [
  "quote",
  "syn 2.0.52",
@@ -2086,10 +2106,11 @@ dependencies = [
 [[package]]
 name = "tasm-lib"
 version = "0.2.1"
-source = "git+https://github.com/TritonVM/tasm-lib.git?rev=abcdb48e#abcdb48eb526f36aa3dd89e0914caf97d42c3418"
+source = "git+https://github.com/TritonVM/tasm-lib.git?rev=6f920831#6f920831bed80eb89d09ecb18d51a1ce06f343bb"
 dependencies = [
  "anyhow",
  "arbitrary",
+ "const_format",
  "derive_tasm_object",
  "hex",
  "itertools 0.10.5",
@@ -2353,6 +2374,12 @@ name = "unicode-width"
 version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e51733f11c9c4f72aa0c160008246859e340b00807569a0da0e7a1079b27ba85"
+
+[[package]]
+name = "unicode-xid"
+version = "0.2.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f962df74c8c05a667b5ee8bcf162993134c104e96440b663c8daa176dc772d8c"
 
 [[package]]
 name = "url"

@@ -255,9 +255,10 @@ pub fn recufy() {
     let extension_tree_merkle_root: Box<Digest> = proof_iter.next_as_merkleroot();
     RecufyDebug::dump_digest(*extension_tree_merkle_root);
 
-    let quot_codeword_weights: Vec<XFieldElement> =
-        Tip5WithState::sample_scalars(Recufier::num_quotients());
-    RecufyDebug::dump_xfes(&quot_codeword_weights);
+    let quot_codeword_weights: [XFieldElement; 587] =
+        <[XFieldElement; 587]>::try_from(Tip5WithState::sample_scalars(Recufier::num_quotients()))
+            .unwrap();
+    RecufyDebug::dump_xfes(&quot_codeword_weights.to_vec());
     let quotient_codeword_merkle_root: Box<Digest> = proof_iter.next_as_merkleroot();
     RecufyDebug::dump_digest(*quotient_codeword_merkle_root);
 
@@ -295,6 +296,10 @@ pub fn recufy() {
         trace_domain_generator,
     );
     RecufyDebug::dump_xfes(&quotient_summands.to_vec());
+
+    let out_of_domain_quotient_value: XFieldElement =
+        tasm::tasm_array_inner_product_of_587_xfes(quot_codeword_weights, quotient_summands);
+    RecufyDebug::dump_xfe(out_of_domain_quotient_value);
 
     RecufyDebug::sponge_state(Tip5WithState::squeeze());
     return;

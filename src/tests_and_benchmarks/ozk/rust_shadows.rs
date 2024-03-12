@@ -328,6 +328,15 @@ pub(super) fn tasm_recufier_challenges_new_empty_input_and_output_59_4(
     Box::new(challenges)
 }
 
+pub(super) fn tasm_array_inner_product_of_587_xfes(
+    a: [XFieldElement; 587],
+    b: [XFieldElement; 587],
+) -> XFieldElement {
+    a.into_iter()
+        .zip_eq(b.into_iter())
+        .fold(XFieldElement::zero(), |acc, (a, b)| acc + a * b)
+}
+
 const NUM_TOTAL_CONSTRAINTS: usize = num_quotients();
 pub(super) fn tasm_recufier_master_ext_table_air_constraint_evaluation(
 ) -> [XFieldElement; NUM_TOTAL_CONSTRAINTS] {
