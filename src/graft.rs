@@ -1273,6 +1273,7 @@ impl<'a> Graft<'a> {
         match ident.as_str() {
             "panic" => self.graft_panic_macro_stmt(),
             "assert" => self.graft_assert_macro(expr_macro),
+            "println" => Stmt::Nop,
             _ => panic!("unsupported macro: {ident}"),
         }
     }

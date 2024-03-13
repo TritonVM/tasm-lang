@@ -676,6 +676,7 @@ fn annotate_stmt(
                 vec![function.signature.clone()],
             );
         }
+        ast::Stmt::Nop => (),
     }
 }
 

@@ -222,6 +222,7 @@ pub(crate) enum Stmt<T> {
     Panic(PanicMacro),
     FnDeclaration(Fn<T>),
     Match(MatchStmt<T>),
+    Nop,
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]

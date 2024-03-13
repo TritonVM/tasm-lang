@@ -1014,7 +1014,6 @@ fn compile_function_inner(
     };
 
     // Run the compilation again now that we know which values to spill
-    println!("\n\n\nRunning compiler again\n\n\n");
     let mut state = CompilerState::with_known_spills(
         global_compiler_state.to_owned(),
         spills,
@@ -1409,6 +1408,7 @@ fn compile_stmt(
                 // _
             )
         }
+        ast::Stmt::Nop => triton_asm!(),
     }
 }
 

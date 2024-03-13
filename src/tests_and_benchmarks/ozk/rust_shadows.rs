@@ -349,7 +349,7 @@ pub(super) fn tasm_recufier_challenges_new_empty_input_and_output_59_4(
 ) -> Box<TasmLangChallenges> {
     let sampled_challenges = SPONGE_STATE.with_borrow_mut(|maybe_sponge| {
         let sponge = maybe_sponge.as_mut().unwrap();
-        sponge.sample_scalars(Challenges::num_challenges_to_sample())
+        sponge.sample_scalars(Challenges::SAMPLE_COUNT)
     });
     let claim = Claim::new(digest);
     let Challenges { challenges } = Challenges::new(sampled_challenges, &claim);
@@ -364,9 +364,18 @@ pub(super) fn tasm_recufier_challenges_new_empty_input_and_output_59_4(
     Box::new(challenges)
 }
 
-pub(super) fn tasm_array_inner_product_of_587_xfes(
-    a: [XFieldElement; 587],
-    b: [XFieldElement; 587],
+pub(super) fn tasm_array_inner_product_of_4_xfes(
+    a: [XFieldElement; 4],
+    b: [XFieldElement; 4],
+) -> XFieldElement {
+    a.into_iter()
+        .zip_eq(b)
+        .fold(XFieldElement::zero(), |acc, (a, b)| acc + a * b)
+}
+
+pub(super) fn tasm_array_inner_product_of_596_xfes(
+    a: [XFieldElement; 596],
+    b: [XFieldElement; 596],
 ) -> XFieldElement {
     a.into_iter()
         .zip_eq(b)
@@ -390,7 +399,7 @@ pub(super) fn tasm_array_horner_evaluation_with_4_coefficients(
 const NUM_TOTAL_CONSTRAINTS: usize = num_quotients();
 pub(super) fn tasm_recufier_master_ext_table_air_constraint_evaluation(
 ) -> [XFieldElement; NUM_TOTAL_CONSTRAINTS] {
-    const CHALLENGES_LENGTH: usize = Challenges::count();
+    const CHALLENGES_LENGTH: usize = Challenges::COUNT;
     let mem_layout = AirConstraintEvaluation::conventional_air_constraint_memory_layout();
     let challenges: Box<[XFieldElement; CHALLENGES_LENGTH]> = ND_MEMORY.with_borrow(|memory| {
         decode_from_memory_with_size(

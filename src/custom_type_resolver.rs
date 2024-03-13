@@ -204,6 +204,7 @@ impl CustomTypeResolution for Stmt<Typing> {
             Stmt::TupleDestructuring(TupleDestructStmt { ident, .. }) => {
                 ident.resolve_custom_types(composite_types);
             }
+            Stmt::Nop => (),
         }
     }
 }
