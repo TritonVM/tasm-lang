@@ -176,6 +176,14 @@ impl Recufier {
 
         return evaluated_constraints;
     }
+
+    const fn num_base_and_ext_and_quotient_segment_codeword_weights() -> usize {
+        return 443;
+    }
+
+    fn num_columns() -> usize {
+        return 439;
+    }
 }
 
 /// Gives statements only intended for debugging its own scope.
@@ -355,23 +363,20 @@ fn recufy() {
             out_of_domain_point_curr_row,
         );
 
-    let powers_of_out_of_domain_point_curr_row: [XFieldElement; 4] = [
-        XFieldElement::one(),
-        out_of_domain_point_curr_row,
-        tasm::tasm_arithmetic_xfe_square(out_of_domain_point_curr_row),
-        tasm::tasm_arithmetic_xfe_cube(out_of_domain_point_curr_row),
-    ];
-    let sum_of_evaluated_out_of_domain_quotient_segments_alt: XFieldElement =
-        tasm::tasm_array_inner_product_of_4_xfes(
-            *out_of_domain_curr_row_quot_segments,
-            powers_of_out_of_domain_point_curr_row,
-        );
     RecufyDebug::dump_xfe(sum_of_evaluated_out_of_domain_quotient_segments);
     println!("sum_of_evaluated_out_of_domain_quotient_segments: {sum_of_evaluated_out_of_domain_quotient_segments:?}");
-    println!("sum_of_evaluated_out_of_domain_quotient_segments_alt: {sum_of_evaluated_out_of_domain_quotient_segments_alt:?}");
     println!("out_of_domain_quotient_value: {out_of_domain_quotient_value:?}");
     assert!(sum_of_evaluated_out_of_domain_quotient_segments == out_of_domain_quotient_value);
 
+    let num_base_and_ext_and_quotient_segment_codeword_weights: usize =
+        Recufier::num_base_and_ext_and_quotient_segment_codeword_weights();
+    let mut base_and_ext_codeword_weights: Vec<XFieldElement> =
+        Tip5WithState::sample_scalars(num_base_and_ext_and_quotient_segment_codeword_weights);
+    RecufyDebug::dump_xfes(&base_and_ext_codeword_weights);
+
+    let quotient_segment_codeword_weights: Vec<XFieldElement> =
+        base_and_ext_codeword_weights.split_off(Recufier::num_columns());
+    RecufyDebug::dump_xfes(&quotient_segment_codeword_weights);
     // Good until here!!
 
     RecufyDebug::sponge_state(Tip5WithState::squeeze());
@@ -383,6 +388,7 @@ mod tests {
     use proptest::prelude::*;
     use proptest_arbitrary_interop::arb;
     use tasm_lib::triton_vm::table::NUM_EXT_COLUMNS;
+    use tasm_lib::triton_vm::table::NUM_QUOTIENT_SEGMENTS;
     use tasm_lib::triton_vm::triton_program;
     use test_strategy::proptest;
 
@@ -394,8 +400,6 @@ mod tests {
     use crate::triton_vm::prelude::NonDeterminism;
     use crate::triton_vm::prelude::Proof;
     use crate::triton_vm::prelude::Stark;
-    use crate::triton_vm::proof_item::ProofItem;
-    use crate::triton_vm::proof_stream::ProofStream;
     use crate::triton_vm::table::NUM_BASE_COLUMNS;
 
     use super::*;
@@ -478,6 +482,19 @@ mod tests {
                 MasterExtTable::NUM_TERMINAL_CONSTRAINTS
             ]
         );
+    }
+
+    #[test]
+    fn num_base_and_ext_and_quotient_segment_codeword_weights_agrees_with_tvm() {
+        assert_eq!(
+            NUM_BASE_COLUMNS + NUM_EXT_COLUMNS + NUM_QUOTIENT_SEGMENTS,
+            Recufier::num_base_and_ext_and_quotient_segment_codeword_weights()
+        )
+    }
+
+    #[test]
+    fn num_columns_agrees_with_tvm() {
+        assert_eq!(Recufier::num_columns(), NUM_BASE_COLUMNS + NUM_EXT_COLUMNS)
     }
 
     #[test]
