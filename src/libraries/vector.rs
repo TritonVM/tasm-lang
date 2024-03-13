@@ -1,5 +1,6 @@
 use itertools::Itertools;
 use num::One;
+use tasm_lib::memory::dyn_malloc;
 use tasm_lib::memory::memcpy::MemCpy;
 use tasm_lib::traits::basic_snippet::BasicSnippet;
 use tasm_lib::triton_vm::prelude::LabelledInstruction;
@@ -9,8 +10,10 @@ use crate::ast;
 use crate::ast::FnSignature;
 use crate::ast_types;
 use crate::ast_types::DataType;
+use crate::ast_types::Tuple;
 use crate::composite_types::CompositeTypes;
 use crate::graft::Graft;
+use crate::subroutine::SubRoutine;
 use crate::tasm_code_generator::CompilerState;
 use crate::type_checker::GetType;
 
@@ -27,6 +30,7 @@ const POP_METHOD_NAME: &str = "pop";
 const LEN_METHOD_NAME: &str = "len";
 const MAP_METHOD_NAME: &str = "map";
 const CLEAR_METHOD_NAME: &str = "clear";
+const SPLIT_OFF_METHOD_NAME: &str = "split_off";
 
 #[derive(Clone, Debug)]
 pub(crate) struct VectorLib;
@@ -62,6 +66,7 @@ impl Library for VectorLib {
                     | MAP_METHOD_NAME
                     | CLEAR_METHOD_NAME
                     | CLONE_FROM_METHOD_NAME
+                    | SPLIT_OFF_METHOD_NAME
             )
     }
 
@@ -84,6 +89,7 @@ impl Library for VectorLib {
             CLONE_FROM_METHOD_NAME => self.clone_from_method_signature(element_type),
             PUSH_METHOD_NAME => self.push_method_signature(element_type),
             LEN_METHOD_NAME => self.len_method_signature(element_type),
+            SPLIT_OFF_METHOD_NAME => self.split_at_method_signature(element_type),
             POP_METHOD_NAME => {
                 let snippet = Self::pop_snippet(receiver_type.type_parameter().as_ref().unwrap());
                 FnSignature::from_basic_snippet(snippet)
@@ -121,21 +127,14 @@ impl Library for VectorLib {
             )
         };
 
-        if method_name == CLEAR_METHOD_NAME {
-            return self.clear_method(element_type).body;
-        }
-
-        if method_name == CLONE_FROM_METHOD_NAME {
-            return Self::clone_from_method_body(element_type, state);
-        }
-
-        if method_name == PUSH_METHOD_NAME {
-            return self.push_method_body(element_type, state);
-        }
-
-        if method_name == LEN_METHOD_NAME {
-            return self.len_method_body();
-        }
+        match method_name {
+            CLEAR_METHOD_NAME => return self.clear_method(element_type).body,
+            CLONE_FROM_METHOD_NAME => return Self::clone_from_method_body(element_type, state),
+            PUSH_METHOD_NAME => return self.push_method_body(element_type, state),
+            LEN_METHOD_NAME => return self.len_method_body(),
+            SPLIT_OFF_METHOD_NAME => return self.split_at_method_body(element_type, state),
+            _ => (),
+        };
 
         // find inner function if needed
         let snippet = self
@@ -505,6 +504,110 @@ impl VectorLib {
             pop 1
             // _ length
         )
+    }
+
+    fn split_at_method_signature(&self, element_type: &DataType) -> FnSignature {
+        let self_type = ast_types::DataType::List(Box::new(element_type.to_owned()));
+        let return_type = self_type.clone();
+        ast::FnSignature::value_function_immutable_args(
+            SPLIT_OFF_METHOD_NAME,
+            vec![("self", self_type), ("mid", DataType::U32)],
+            return_type,
+        )
+    }
+
+    fn split_at_method_body(
+        &self,
+        element_type: &DataType,
+        state: &mut CompilerState,
+    ) -> Vec<LabelledInstruction> {
+        let dyn_malloc = state.import_snippet(Box::new(dyn_malloc::DynMalloc));
+        let mem_copy = state.import_snippet(Box::new(MemCpy));
+        let element_size = element_type.bfield_codec_static_length().unwrap();
+
+        let entrypoint = format!("vec_split_at_method_element_size_{element_size}");
+
+        // TODO: Migrate this to `tasm-lib`
+        let subroutine: SubRoutine = triton_asm!(
+            {entrypoint}:
+                // _ *list mid
+
+                // Get original length
+                dup 1
+                read_mem 1
+                pop 1
+                // _ *list mid original_length
+
+                // TODO: Assert that `mid <= original_length`
+
+                // Write new length
+                dup 1
+                dup 3
+                // _ *list mid original_length mid *list
+
+                write_mem 1
+                // _ *list mid original_length *word_0
+
+                // Jump to read source
+                push {element_size}
+                dup 3
+                mul
+                add
+                // _ *list mid original_length (*word_0 + (mid * element_size))
+                // _ *list mid original_length *read_source
+
+                call {dyn_malloc}
+                // _ *list mid original_length *read_source *new_vec
+
+                // Write length of new vector
+                dup 2
+                dup 4
+                push -1
+                mul
+                add
+                // _ *list mid original_length *read_source *new_vec (original_length - mid)
+                // _ *list mid original_length *read_source *new_vec new_length
+
+                dup 0
+                // _ *list mid original_length *read_source *new_vec new_length new_length
+
+                swap 2
+                // _ *list mid original_length *read_source new_length new_length *new_vec
+
+                dup 0
+                // _ *list mid original_length *read_source new_length new_length *new_vec *new_vec
+
+                swap 7
+                pop 1
+                // _ *new_vec mid original_length *read_source new_length new_length *new_vec
+
+                write_mem 1
+                // _ *new_vec mid original_length *read_source new_length *write_dest
+
+                swap 1
+                // _ *new_vec mid original_length *read_source *write_dest new_length
+
+                push {element_size}
+                mul
+                // _ *new_vec mid original_length *read_source *write_dest new_size
+
+                call {mem_copy}
+                // _ *new_vec mid original_length
+
+                pop 2
+                // _ *new_vec
+
+                return
+        )
+        .try_into()
+        .unwrap();
+
+        let subroutine_label = subroutine.get_label();
+        let code = triton_asm!(call { subroutine_label });
+
+        state.add_subroutine(subroutine);
+
+        code
     }
 
     fn name_to_tasm_lib_snippet(
