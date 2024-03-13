@@ -124,6 +124,7 @@ mod test {
     use tasm_lib::twenty_first::shared_math::other::random_elements;
     use tasm_lib::twenty_first::shared_math::x_field_element::EXTENSION_DEGREE;
     use tasm_lib::DIGEST_LENGTH;
+    use test_strategy::proptest;
 
     use super::*;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
@@ -178,6 +179,28 @@ mod test {
             wrap_main_with_io(&digest_vec)(std_in.clone(), NonDeterminism::default());
 
         let entrypoint = EntrypointLocation::disk("vectors", "split_off", "digest_vec");
+        let vm_output = TritonVMTestCase::new(entrypoint)
+            .with_std_in(std_in)
+            .execute()
+            .unwrap();
+        assert_eq!(native_output, vm_output.output);
+    }
+
+    #[proptest(cases = 10)]
+    fn xfe_vec_split_off_proptest(
+        #[strategy(0usize..=400)] original_length: usize,
+        #[strategy(0usize..#original_length)] mid: usize,
+    ) {
+        let std_in: Vec<BFieldElement> = [
+            vec![BFieldElement::new(original_length as u64)],
+            random_elements(original_length * EXTENSION_DEGREE),
+            vec![BFieldElement::new(mid as u64)],
+        ]
+        .concat();
+
+        let native_output = wrap_main_with_io(&xfe_vec)(std_in.clone(), NonDeterminism::default());
+
+        let entrypoint = EntrypointLocation::disk("vectors", "split_off", "xfe_vec");
         let vm_output = TritonVMTestCase::new(entrypoint)
             .with_std_in(std_in)
             .execute()
