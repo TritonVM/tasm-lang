@@ -523,7 +523,7 @@ dependencies = [
 [[package]]
 name = "derive_tasm_object"
 version = "0.1.0"
-source = "git+https://github.com/TritonVM/tasm-lib.git?rev=1c14fae9#1c14fae941a1003375d5e18309d4c9f152452d7c"
+source = "git+https://github.com/TritonVM/tasm-lib.git?rev=aaa1fcf3#aaa1fcf37ab106ae903667a329568bc2d29223ce"
 dependencies = [
  "quote",
  "syn 2.0.52",
@@ -2106,7 +2106,7 @@ dependencies = [
 [[package]]
 name = "tasm-lib"
 version = "0.2.1"
-source = "git+https://github.com/TritonVM/tasm-lib.git?rev=1c14fae9#1c14fae941a1003375d5e18309d4c9f152452d7c"
+source = "git+https://github.com/TritonVM/tasm-lib.git?rev=aaa1fcf3#aaa1fcf37ab106ae903667a329568bc2d29223ce"
 dependencies = [
  "anyhow",
  "arbitrary",
@@ -2270,8 +2270,9 @@ dependencies = [
 
 [[package]]
 name = "triton-vm"
-version = "0.38.1"
-source = "git+https://github.com/TritonVM/triton-vm.git?rev=c1984071#c1984071bc5c376a368453e62e89ffc227c5d1f3"
+version = "0.38.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "85fc0cd3dc6c5a78654584abe02c01d6c9fc7e6a4ad6346f595b434ef36f4ca2"
 dependencies = [
  "arbitrary",
  "colored",
