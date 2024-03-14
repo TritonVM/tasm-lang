@@ -1,6 +1,5 @@
 use itertools::Itertools;
 use num::One;
-use tasm_lib::memory::dyn_malloc;
 use tasm_lib::memory::memcpy::MemCpy;
 use tasm_lib::traits::basic_snippet::BasicSnippet;
 use tasm_lib::triton_vm::prelude::LabelledInstruction;
@@ -10,10 +9,8 @@ use crate::ast;
 use crate::ast::FnSignature;
 use crate::ast_types;
 use crate::ast_types::DataType;
-use crate::ast_types::Tuple;
 use crate::composite_types::CompositeTypes;
 use crate::graft::Graft;
-use crate::subroutine::SubRoutine;
 use crate::tasm_code_generator::CompilerState;
 use crate::type_checker::GetType;
 

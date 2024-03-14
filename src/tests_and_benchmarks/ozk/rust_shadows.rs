@@ -265,14 +265,6 @@ pub(super) fn tasm_arithmetic_u64_mul_two_u64s_to_u128_u64(lhs: u64, rhs: u64) -
     lhs as u128 * rhs as u128
 }
 
-pub(super) fn tasm_arithmetic_xfe_square(base: XFieldElement) -> XFieldElement {
-    base.mod_pow_u32(2)
-}
-
-pub(super) fn tasm_arithmetic_xfe_cube(base: XFieldElement) -> XFieldElement {
-    base.mod_pow_u32(3)
-}
-
 pub(super) fn tasm_arithmetic_xfe_to_the_fourth(base: XFieldElement) -> XFieldElement {
     base.mod_pow_u32(4)
 }
@@ -330,13 +322,7 @@ pub(super) fn tasm_hashing_merkle_verify(
     assert!(mt_inclusion_proof.verify(root));
 }
 
-/// Note: the rust shadowing does not actually assert digest equivalence – it has no way of knowing
-/// the digest of the own program. That property is inherent to Triton VM.
-pub(super) fn tasm_recufier_read_and_verify_own_program_digest_from_std_in() -> Digest {
-    tasm_io_read_stdin___digest()
-}
-
-pub(super) fn tasm_recufier_own_program_digest() -> Digest {
+pub(super) fn _tasm_recufier_own_program_digest() -> Digest {
     // TODO: How do we get the real program digest here? Maybe from
     // the static `thread_local` state?
     // Digest::default()
@@ -362,15 +348,6 @@ pub(super) fn tasm_recufier_challenges_new_empty_input_and_output_59_4(
 
     let challenges = TasmLangChallenges { challenges };
     Box::new(challenges)
-}
-
-pub(super) fn tasm_array_inner_product_of_4_xfes(
-    a: [XFieldElement; 4],
-    b: [XFieldElement; 4],
-) -> XFieldElement {
-    a.into_iter()
-        .zip_eq(b)
-        .fold(XFieldElement::zero(), |acc, (a, b)| acc + a * b)
 }
 
 pub(super) fn tasm_array_inner_product_of_596_xfes(

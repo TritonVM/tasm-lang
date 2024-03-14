@@ -38,7 +38,7 @@ impl StarkParameters {
         };
     }
 
-    pub fn small() -> StarkParameters {
+    pub fn _small() -> StarkParameters {
         return StarkParameters {
             security_level: 60,
             fri_expansion_factor: 4,
@@ -446,7 +446,6 @@ mod tests {
             claim.encode().iter().join(",")
         );
 
-        use itertools::Itertools;
         println!("proof beginning:\n{}", proof.0.iter().take(20).join("\n"));
 
         proof
