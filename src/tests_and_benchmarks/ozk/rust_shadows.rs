@@ -350,13 +350,24 @@ pub(super) fn tasm_recufier_challenges_new_empty_input_and_output_59_4(
     Box::new(challenges)
 }
 
+fn inner_product(a: &[XFieldElement], b: &[XFieldElement]) -> XFieldElement {
+    a.iter()
+        .zip_eq(b.iter())
+        .fold(XFieldElement::zero(), |acc, (a, b)| acc + *a * *b)
+}
+
+pub(super) fn tasm_array_inner_product_of_4_xfes(
+    a: [XFieldElement; 4],
+    b: [XFieldElement; 4],
+) -> XFieldElement {
+    inner_product(&a, &b)
+}
+
 pub(super) fn tasm_array_inner_product_of_596_xfes(
     a: [XFieldElement; 596],
     b: [XFieldElement; 596],
 ) -> XFieldElement {
-    a.into_iter()
-        .zip_eq(b)
-        .fold(XFieldElement::zero(), |acc, (a, b)| acc + a * b)
+    inner_product(&a, &b)
 }
 
 pub(super) fn tasm_array_horner_evaluation_with_4_coefficients(

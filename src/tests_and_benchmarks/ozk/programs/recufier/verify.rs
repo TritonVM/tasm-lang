@@ -396,11 +396,14 @@ fn recufy() {
     );
     RecufyDebug::dump_xfes(&base_and_ext_codeword_weights);
 
-    let quotient_segment_codeword_weights: Vec<XFieldElement> =
-        base_and_ext_codeword_weights.split_off(Recufier::num_columns());
-    RecufyDebug::dump_xfes(&quotient_segment_codeword_weights);
+    let quotient_segment_codeword_weights: [XFieldElement; 4] = <[XFieldElement; 4]>::try_from(
+        base_and_ext_codeword_weights.split_off(Recufier::num_columns()),
+    )
+    .unwrap();
+    RecufyDebug::dump_xfes(&quotient_segment_codeword_weights.to_vec());
     RecufyDebug::dump_xfes(&base_and_ext_codeword_weights);
 
+    // sum out-of-domain values
     let out_of_domain_curr_row_base_and_ext_value: XFieldElement =
         Recufier::linearly_sum_base_and_ext_row(
             out_of_domain_curr_base_row,
@@ -413,8 +416,20 @@ fn recufy() {
             out_of_domain_next_ext_row,
             &base_and_ext_codeword_weights,
         );
+    let out_of_domain_curr_row_quotient_segment_value: XFieldElement =
+        tasm::tasm_array_inner_product_of_4_xfes(
+            quotient_segment_codeword_weights,
+            *out_of_domain_curr_row_quot_segments,
+        );
     RecufyDebug::dump_xfe(out_of_domain_curr_row_base_and_ext_value);
     RecufyDebug::dump_xfe(out_of_domain_next_row_base_and_ext_value);
+    RecufyDebug::dump_xfe(out_of_domain_curr_row_quotient_segment_value);
+
+    // Fiat-Shamir 3
+    let deep_coreword_weights: [XFieldElement; 3] =
+        <[XFieldElement; 3]>::try_from(Tip5WithState::sample_scalars(3)).unwrap();
+    RecufyDebug::dump_xfes(&deep_coreword_weights.to_vec());
+
     // Good until here!!
 
     RecufyDebug::sponge_state(Tip5WithState::squeeze());
