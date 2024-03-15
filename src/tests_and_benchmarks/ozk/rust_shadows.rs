@@ -447,7 +447,7 @@ pub(super) fn tasm_recufier_master_ext_table_air_constraint_evaluation(
         .unwrap()
 }
 
-pub(super) fn _tasm_recufier_fri_verify(
+pub(super) fn tasm_recufier_fri_verify(
     proof_iter: &mut VmProofIter,
     fri_parameters: &FriVerify,
 ) -> Vec<(u32, XFieldElement)> {

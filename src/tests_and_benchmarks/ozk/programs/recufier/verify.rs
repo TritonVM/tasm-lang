@@ -279,6 +279,12 @@ pub(crate) struct FriVerify {
     domain_generator: BFieldElement,
 }
 
+impl FriVerify {
+    pub fn verify(&self, proof_iter: &mut VmProofIter) -> Vec<(u32, XFieldElement)> {
+        return tasm::tasm_recufier_fri_verify(proof_iter, self);
+    }
+}
+
 fn recufy() {
     let program_digest: Box<Digest> = Box::<Digest>::new(Digest::new([
         BFieldElement::new(7881280935549951237),
@@ -430,7 +436,9 @@ fn recufy() {
         <[XFieldElement; 3]>::try_from(Tip5WithState::sample_scalars(3)).unwrap();
     RecufyDebug::dump_xfes(&deep_coreword_weights.to_vec());
 
-    // Good until here!!
+    // FRI
+    // FAILS HERE:
+    let revealed_fri_indices_and_elements: Vec<(u32, XFieldElement)> = fri.verify(&mut proof_iter);
 
     RecufyDebug::sponge_state(Tip5WithState::squeeze());
     return;
@@ -440,6 +448,7 @@ fn recufy() {
 mod tests {
     use proptest::prelude::*;
     use proptest_arbitrary_interop::arb;
+    use tasm_lib::triton_vm::stark::StarkProofStream;
     use tasm_lib::triton_vm::table::NUM_EXT_COLUMNS;
     use tasm_lib::triton_vm::table::NUM_QUOTIENT_SEGMENTS;
     use tasm_lib::triton_vm::triton_program;
@@ -457,7 +466,7 @@ mod tests {
 
     use super::*;
 
-    fn proof() -> Proof {
+    fn recufier_non_determinism() -> NonDeterminism<BFieldElement> {
         let factorial_program = triton_program!(
             push 3           // n
             push 1              // n accumulator
@@ -501,18 +510,81 @@ mod tests {
 
         println!("proof beginning:\n{}", proof.0.iter().take(20).join("\n"));
 
-        proof
-    }
+        let fri = stark.derive_fri(proof.padded_height().unwrap()).unwrap();
 
-    fn recufier_non_determinism() -> NonDeterminism<BFieldElement> {
-        let Proof(raw_proof) = proof();
+        fn extract_fri_proof(proof_stream: &StarkProofStream, claim: &Claim) -> StarkProofStream {
+            let mut fri_proof_stream = proof_stream.to_owned();
+            fri_proof_stream
+                .dequeue()
+                .unwrap()
+                .try_into_log2_padded_height()
+                .unwrap();
+            fri_proof_stream.alter_fiat_shamir_state_with(claim);
+
+            // base, ext, quot Merkle root
+            fri_proof_stream
+                .dequeue()
+                .unwrap()
+                .try_into_merkle_root()
+                .unwrap();
+            fri_proof_stream.sample_scalars(triton_vm::table::challenges::Challenges::SAMPLE_COUNT);
+            fri_proof_stream
+                .dequeue()
+                .unwrap()
+                .try_into_merkle_root()
+                .unwrap();
+            fri_proof_stream.sample_scalars(MasterExtTable::NUM_CONSTRAINTS);
+            fri_proof_stream
+                .dequeue()
+                .unwrap()
+                .try_into_merkle_root()
+                .unwrap();
+
+            // Five out-of-domain values
+            fri_proof_stream
+                .dequeue()
+                .unwrap()
+                .try_into_out_of_domain_base_row()
+                .unwrap();
+            fri_proof_stream
+                .dequeue()
+                .unwrap()
+                .try_into_out_of_domain_ext_row()
+                .unwrap();
+            fri_proof_stream
+                .dequeue()
+                .unwrap()
+                .try_into_out_of_domain_base_row()
+                .unwrap();
+            fri_proof_stream
+                .dequeue()
+                .unwrap()
+                .try_into_out_of_domain_ext_row()
+                .unwrap();
+            fri_proof_stream
+                .dequeue()
+                .unwrap()
+                .try_into_out_of_domain_quot_segments()
+                .unwrap();
+
+            fri_proof_stream
+        }
+
+        let proof_stream = StarkProofStream::try_from(&proof).unwrap();
+        let fri_proof_stream = extract_fri_proof(&proof_stream);
+        let tasm_lib_fri: tasm_lib::recufier::fri_verify::FriVerify = fri.into();
+        let fri_proof_digests =
+            tasm_lib_fri.extract_digests_required_for_proving(&fri_proof_stream);
+        let Proof(raw_proof) = proof;
         let ram = raw_proof
             .into_iter()
             .enumerate()
             .map(|(k, v)| (BFieldElement::new(k as u64), v))
             .collect();
 
-        NonDeterminism::default().with_ram(ram)
+        NonDeterminism::default()
+            .with_ram(ram)
+            .with_digests(fri_proof_digests)
     }
 
     #[test]
