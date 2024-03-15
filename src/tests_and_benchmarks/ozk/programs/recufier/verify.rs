@@ -184,6 +184,28 @@ impl Recufier {
     fn num_columns() -> usize {
         return 439;
     }
+
+    fn linearly_sum_base_and_ext_row(
+        out_of_domain_curr_base_row: Box<Box<[XFieldElement; 356]>>,
+        out_of_domain_curr_ext_row: Box<Box<[XFieldElement; 83]>>,
+        base_and_ext_codeword_weights: &Vec<XFieldElement>,
+    ) -> XFieldElement {
+        let mut acc: XFieldElement = XFieldElement::zero();
+        let mut i: usize = 0;
+        while i < out_of_domain_curr_base_row.len() {
+            acc += out_of_domain_curr_base_row[i] * base_and_ext_codeword_weights[i];
+            i += 1;
+        }
+
+        i = 0;
+        while i < out_of_domain_curr_ext_row.len() {
+            acc += out_of_domain_curr_ext_row[i]
+                * base_and_ext_codeword_weights[i + out_of_domain_curr_base_row.len()];
+            i += 1;
+        }
+
+        return acc;
+    }
 }
 
 /// Gives statements only intended for debugging its own scope.
@@ -368,15 +390,31 @@ fn recufy() {
     println!("out_of_domain_quotient_value: {out_of_domain_quotient_value:?}");
     assert!(sum_of_evaluated_out_of_domain_quotient_segments == out_of_domain_quotient_value);
 
-    let num_base_and_ext_and_quotient_segment_codeword_weights: usize =
-        Recufier::num_base_and_ext_and_quotient_segment_codeword_weights();
-    let mut base_and_ext_codeword_weights: Vec<XFieldElement> =
-        Tip5WithState::sample_scalars(num_base_and_ext_and_quotient_segment_codeword_weights);
+    // Fiat-shamir 2
+    let mut base_and_ext_codeword_weights: Vec<XFieldElement> = Tip5WithState::sample_scalars(
+        Recufier::num_base_and_ext_and_quotient_segment_codeword_weights(),
+    );
     RecufyDebug::dump_xfes(&base_and_ext_codeword_weights);
 
     let quotient_segment_codeword_weights: Vec<XFieldElement> =
         base_and_ext_codeword_weights.split_off(Recufier::num_columns());
     RecufyDebug::dump_xfes(&quotient_segment_codeword_weights);
+    RecufyDebug::dump_xfes(&base_and_ext_codeword_weights);
+
+    let out_of_domain_curr_row_base_and_ext_value: XFieldElement =
+        Recufier::linearly_sum_base_and_ext_row(
+            out_of_domain_curr_base_row,
+            out_of_domain_curr_ext_row,
+            &base_and_ext_codeword_weights,
+        );
+    let out_of_domain_next_row_base_and_ext_value: XFieldElement =
+        Recufier::linearly_sum_base_and_ext_row(
+            out_of_domain_next_base_row,
+            out_of_domain_next_ext_row,
+            &base_and_ext_codeword_weights,
+        );
+    RecufyDebug::dump_xfe(out_of_domain_curr_row_base_and_ext_value);
+    RecufyDebug::dump_xfe(out_of_domain_next_row_base_and_ext_value);
     // Good until here!!
 
     RecufyDebug::sponge_state(Tip5WithState::squeeze());
