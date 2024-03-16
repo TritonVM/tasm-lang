@@ -322,6 +322,13 @@ pub(super) fn tasm_hashing_merkle_verify(
     assert!(mt_inclusion_proof.verify(root));
 }
 
+pub(super) fn tasm_hashing_algebraic_hasher_hash_varlen(
+    preimage: &[BFieldElement],
+    _length: usize,
+) -> Digest {
+    Tip5::hash_varlen(preimage)
+}
+
 pub(super) fn _tasm_recufier_own_program_digest() -> Digest {
     // TODO: How do we get the real program digest here? Maybe from
     // the static `thread_local` state?

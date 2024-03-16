@@ -185,6 +185,9 @@ impl Recufier {
         return 439;
     }
 
+    #[allow(clippy::boxed_local)]
+    #[allow(clippy::redundant_allocation)]
+    #[allow(clippy::ptr_arg)]
     fn linearly_sum_base_and_ext_row(
         out_of_domain_curr_base_row: Box<Box<[XFieldElement; 356]>>,
         out_of_domain_curr_ext_row: Box<Box<[XFieldElement; 83]>>,
@@ -253,6 +256,16 @@ impl RecufyDebug {
         let mut i: usize = 0;
         while i < xfes.len() {
             tasm::tasm_io_write_to_stdout___xfe(xfes[i]);
+            i += 1;
+        }
+
+        return;
+    }
+
+    pub fn dump_digests(digests: &Vec<Digest>) {
+        let mut i: usize = 0;
+        while i < digests.len() {
+            tasm::tasm_io_write_to_stdout___digest(digests[i]);
             i += 1;
         }
 
@@ -437,8 +450,41 @@ fn recufy() {
     RecufyDebug::dump_xfes(&deep_coreword_weights.to_vec());
 
     // FRI
-    // FAILS HERE:
     let revealed_fri_indices_and_elements: Vec<(u32, XFieldElement)> = fri.verify(&mut proof_iter);
+
+    // Check leafs
+    // Dequeue base elements
+    // Could be read from secret-in, but it's much more efficient to get them from memory
+    let base_table_rows: Box<Vec<[BFieldElement; 356]>> = proof_iter.next_as_masterbasetablerows();
+    {
+        let mut i: usize = 0;
+        while i < fri.num_colinearity_checks as usize {
+            RecufyDebug::dump_bfes(&base_table_rows[i].to_vec());
+            i += 1;
+        }
+    }
+
+    // Read base authentication structure but ignore its value, as we divine-in the digests instead
+    {
+        let dummy: Box<Vec<Digest>> = proof_iter.next_as_authenticationstructure();
+    }
+    // let mut leaf_digests_base: Vec<Digest> = Vec::<Digest>::default();
+    // {
+    //     let mut i: usize = 0;
+    //     while i < fri.num_colinearity_checks as usize {
+    //         leaf_digests_base.push(tasm::tasm_hashing_algebraic_hasher_hash_varlen(
+    //             &base_table_rows[i],
+    //             356,
+    //         ));
+    //         i += 1;
+    //     }
+    // }
+    // RecufyDebug::dump_digests(&leaf_digests_base);
+
+    // tasm_hashing_algebraic_hasher_hash_varlen
+    // fn input_field_names(&self) -> Vec<String> {
+    //     vec!["*addr".to_string(), "length".to_string()]
+    // }
 
     RecufyDebug::sponge_state(Tip5WithState::squeeze());
     return;
@@ -455,6 +501,7 @@ mod tests {
     use test_strategy::proptest;
 
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
+    use crate::tests_and_benchmarks::ozk::programs::recufier::fri_verify::extract_fri_proof;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::TritonVMTestCase;
     use crate::triton_vm;
@@ -512,66 +559,8 @@ mod tests {
 
         let fri = stark.derive_fri(proof.padded_height().unwrap()).unwrap();
 
-        fn extract_fri_proof(proof_stream: &StarkProofStream, claim: &Claim) -> StarkProofStream {
-            let mut fri_proof_stream = proof_stream.to_owned();
-            fri_proof_stream
-                .dequeue()
-                .unwrap()
-                .try_into_log2_padded_height()
-                .unwrap();
-            fri_proof_stream.alter_fiat_shamir_state_with(claim);
-
-            // base, ext, quot Merkle root
-            fri_proof_stream
-                .dequeue()
-                .unwrap()
-                .try_into_merkle_root()
-                .unwrap();
-            fri_proof_stream.sample_scalars(triton_vm::table::challenges::Challenges::SAMPLE_COUNT);
-            fri_proof_stream
-                .dequeue()
-                .unwrap()
-                .try_into_merkle_root()
-                .unwrap();
-            fri_proof_stream.sample_scalars(MasterExtTable::NUM_CONSTRAINTS);
-            fri_proof_stream
-                .dequeue()
-                .unwrap()
-                .try_into_merkle_root()
-                .unwrap();
-
-            // Five out-of-domain values
-            fri_proof_stream
-                .dequeue()
-                .unwrap()
-                .try_into_out_of_domain_base_row()
-                .unwrap();
-            fri_proof_stream
-                .dequeue()
-                .unwrap()
-                .try_into_out_of_domain_ext_row()
-                .unwrap();
-            fri_proof_stream
-                .dequeue()
-                .unwrap()
-                .try_into_out_of_domain_base_row()
-                .unwrap();
-            fri_proof_stream
-                .dequeue()
-                .unwrap()
-                .try_into_out_of_domain_ext_row()
-                .unwrap();
-            fri_proof_stream
-                .dequeue()
-                .unwrap()
-                .try_into_out_of_domain_quot_segments()
-                .unwrap();
-
-            fri_proof_stream
-        }
-
         let proof_stream = StarkProofStream::try_from(&proof).unwrap();
-        let fri_proof_stream = extract_fri_proof(&proof_stream);
+        let fri_proof_stream = extract_fri_proof(&proof_stream, &claim);
         let tasm_lib_fri: tasm_lib::recufier::fri_verify::FriVerify = fri.into();
         let fri_proof_digests =
             tasm_lib_fri.extract_digests_required_for_proving(&fri_proof_stream);
