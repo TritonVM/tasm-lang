@@ -13,7 +13,7 @@ use crate::{
     type_checker::Typing,
 };
 
-use super::RecursionLib;
+use super::RecufyLib;
 
 pub(super) const NEXT_AS_METHOD_NAMES_PREFIX: &str = "next_as_";
 pub(super) const VM_PROOF_ITER_TYPE_NAME: &str = "VmProofIter";
@@ -23,7 +23,7 @@ pub(super) fn graft_vm_proof_iter(graft: &mut Graft) -> DataType {
     graft
         .imported_custom_types
         .add_type_context_if_new(vm_proof_iter.clone());
-    let fri_response = RecursionLib::fri_response_type(graft);
+    let fri_response = RecufyLib::fri_response_type(graft);
     graft
         .imported_custom_types
         .add_type_context_if_new(fri_response);

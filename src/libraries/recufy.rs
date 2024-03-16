@@ -22,9 +22,9 @@ const BASE_ROW_TYPE_NAME: &str = "BaseRow";
 const EXT_ROW_TYPE_NAME: &str = "ExtensionRow";
 
 #[derive(Debug)]
-pub(crate) struct RecursionLib;
+pub(crate) struct RecufyLib;
 
-impl Library for RecursionLib {
+impl Library for RecufyLib {
     fn graft_type(
         &self,
         graft: &mut Graft,
@@ -116,7 +116,7 @@ impl Library for RecursionLib {
     }
 }
 
-impl RecursionLib {
+impl RecufyLib {
     fn fri_response_type(graft_config: &mut Graft) -> TypeContext {
         let struct_type = Self::fri_response_as_struct_type(graft_config);
 

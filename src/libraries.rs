@@ -14,7 +14,7 @@ pub(crate) mod bfield_codec;
 pub(crate) mod boxed;
 pub(crate) mod core;
 pub(crate) mod hasher;
-pub(crate) mod recursion;
+pub(crate) mod recufy;
 pub(crate) mod tasm;
 pub(crate) mod unsigned_integers;
 pub(crate) mod vector;
@@ -41,7 +41,7 @@ pub(crate) fn all_libraries() -> Box<[Box<dyn Library>]> {
         Box::new(unsigned_integers::UnsignedIntegersLib),
         Box::new(vector::VectorLib),
         Box::new(xfe::XfeLibrary),
-        Box::new(recursion::RecursionLib),
+        Box::new(recufy::RecufyLib),
     ])
 }
 
