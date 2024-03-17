@@ -188,41 +188,6 @@ impl DataType {
         }
     }
 
-    pub(crate) fn from_tasm_lib_datatype(tasm_lib_type: tasm_lib::data_type::DataType) -> Self {
-        use DataType::*;
-        match tasm_lib_type {
-            tasm_lib::data_type::DataType::Bool => Bool,
-            tasm_lib::data_type::DataType::U32 => U32,
-            tasm_lib::data_type::DataType::U64 => U64,
-            tasm_lib::data_type::DataType::U128 => U128,
-            tasm_lib::data_type::DataType::Bfe => Bfe,
-            tasm_lib::data_type::DataType::Xfe => Xfe,
-            tasm_lib::data_type::DataType::Digest => Digest,
-            tasm_lib::data_type::DataType::List(elem_type) => {
-                let element_type = Self::from_tasm_lib_datatype(*elem_type);
-                List(Box::new(element_type))
-            }
-            tasm_lib::data_type::DataType::Array(array_type) => {
-                let element_type = Self::from_tasm_lib_datatype(array_type.element_type);
-                Array(ArrayType {
-                    element_type: Box::new(element_type),
-                    length: array_type.length,
-                })
-            }
-            tasm_lib::data_type::DataType::Tuple(tasm_types) => {
-                let element_types: Vec<DataType> = tasm_types
-                    .into_iter()
-                    .map(Self::from_tasm_lib_datatype)
-                    .collect();
-                Tuple(element_types.into())
-            }
-            tasm_lib::data_type::DataType::VoidPointer => VoidPointer,
-            tasm_lib::data_type::DataType::StructRef(struct_type) => {
-                Boxed(Box::new(Self::tasm_lib_struct_to_lang_struct(struct_type)))
-            }
-        }
-    }
-
     /// What type is returned when type is accessed with a field of name `field_name`?
     pub(crate) fn field_access_returned_type(&self, field_id: &FieldId) -> Self {
         match &self {
@@ -262,24 +227,6 @@ impl DataType {
                 "Field getter can only operate on type of struct or pointer to struct. \
                 Attempted to access field `{field_id}` on type `{self}`"
             ),
-        }
-    }
-
-    // TODO: Consider getting rid of this method
-    /// Return the element type for lists
-    pub(crate) fn type_parameter(&self) -> Option<DataType> {
-        match self {
-            DataType::List(element_type) => Some(*element_type.to_owned()),
-            // TODO: Is this the right solution, or do we perhaps need to resolve
-            // other types for our field access operators? I'm leaning towards the
-            // latter ... but what if the are more field operators following each
-            // other? Then the 2nd layer is a `struct` which should then probably
-            // be `MemPointer(Struct)`. I think we need to resolve our problems
-            // as best we can in the type resolver for expressions!
-            // Can we do automatic, or selective dereferencing when meating a `.`
-            // operator?
-            // DataType::MemPointer(inner_type) => inner_type.type_parameter(),
-            _ => None,
         }
     }
 
@@ -370,7 +317,7 @@ impl DataType {
         let tasm_lib::data_type::StructType { name, fields } = struct_type;
         let fields = fields
             .into_iter()
-            .map(|(name, dtype)| (name, Self::from_tasm_lib_datatype(dtype)))
+            .map(|(name, dtype)| (name, dtype.try_into().unwrap()))
             .collect();
 
         let named_fields_struct = NamedFieldsStruct { fields };
@@ -382,6 +329,48 @@ impl DataType {
         };
 
         Self::Struct(new_struct_type)
+    }
+}
+
+impl TryFrom<tasm_lib::data_type::DataType> for DataType {
+    type Error = String;
+
+    fn try_from(tasm_lib_type: tasm_lib::data_type::DataType) -> Result<Self, Self::Error> {
+        use DataType::*;
+        let resolved = match tasm_lib_type {
+            tasm_lib::data_type::DataType::Bool => Bool,
+            tasm_lib::data_type::DataType::U32 => U32,
+            tasm_lib::data_type::DataType::U64 => U64,
+            tasm_lib::data_type::DataType::U128 => U128,
+            tasm_lib::data_type::DataType::Bfe => Bfe,
+            tasm_lib::data_type::DataType::Xfe => Xfe,
+            tasm_lib::data_type::DataType::Digest => Digest,
+            tasm_lib::data_type::DataType::List(elem_type) => {
+                let element_type = (*elem_type).try_into()?;
+                List(Box::new(element_type))
+            }
+            tasm_lib::data_type::DataType::Array(array_type) => {
+                let element_type = array_type.element_type.try_into()?;
+                Array(ArrayType {
+                    element_type: Box::new(element_type),
+                    length: array_type.length,
+                })
+            }
+            tasm_lib::data_type::DataType::Tuple(tasm_types) => {
+                let mut element_types: Vec<DataType> = vec![];
+                for tasm_type in tasm_types.into_iter() {
+                    element_types.push(tasm_type.try_into()?);
+                }
+
+                Tuple(element_types.into())
+            }
+            tasm_lib::data_type::DataType::VoidPointer => VoidPointer,
+            tasm_lib::data_type::DataType::StructRef(struct_type) => {
+                Boxed(Box::new(Self::tasm_lib_struct_to_lang_struct(struct_type)))
+            }
+        };
+
+        Ok(resolved)
     }
 }
 

@@ -147,7 +147,7 @@ impl FnSignature {
         for (ty, name) in snippet.inputs().into_iter() {
             let fn_arg = ast_types::AbstractValueArg {
                 name,
-                data_type: ast_types::DataType::from_tasm_lib_datatype(ty),
+                data_type: ty.try_into().unwrap(),
                 mutable: true,
             };
             args.push(ast_types::AbstractArgument::ValueArgument(fn_arg));
@@ -155,7 +155,7 @@ impl FnSignature {
 
         let mut output_types: Vec<ast_types::DataType> = vec![];
         for (ty, _name) in snippet.outputs() {
-            output_types.push(ast_types::DataType::from_tasm_lib_datatype(ty));
+            output_types.push(ty.try_into().unwrap());
         }
 
         let output = match output_types.len() {

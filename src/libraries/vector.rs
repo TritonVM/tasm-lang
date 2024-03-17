@@ -92,7 +92,7 @@ impl Library for VectorLib {
                 },
             )),
             POP_METHOD_NAME => {
-                let snippet = Self::pop_snippet(receiver_type.type_parameter().as_ref().unwrap());
+                let snippet = Self::pop_snippet(element_type);
                 FnSignature::from_basic_snippet(snippet)
             }
             _ => panic!(),
