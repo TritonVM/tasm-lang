@@ -262,6 +262,7 @@ impl RecufyDebug {
         return;
     }
 
+    #[allow(clippy::ptr_arg)]
     pub fn dump_digests(digests: &Vec<Digest>) {
         let mut i: usize = 0;
         while i < digests.len() {
@@ -466,26 +467,22 @@ fn recufy() {
 
     // Read base authentication structure but ignore its value, as we divine-in the digests instead
     {
-        let dummy: Box<Vec<Digest>> = proof_iter.next_as_authenticationstructure();
+        let _dummy: Box<Vec<Digest>> = proof_iter.next_as_authenticationstructure();
     }
-    // let mut leaf_digests_base: Vec<Digest> = Vec::<Digest>::default();
-    // {
-    //     let mut i: usize = 0;
-    //     while i < fri.num_colinearity_checks as usize {
-    //         leaf_digests_base.push(tasm::tasm_hashing_algebraic_hasher_hash_varlen(
-    //             &base_table_rows[i],
-    //             356,
-    //         ));
-    //         i += 1;
-    //     }
-    // }
-    // RecufyDebug::dump_digests(&leaf_digests_base);
+    let mut leaf_digests_base: Vec<Digest> = Vec::<Digest>::default();
+    {
+        let mut i: usize = 0;
+        while i < fri.num_colinearity_checks as usize {
+            leaf_digests_base.push(tasm::tasm_hashing_algebraic_hasher_hash_varlen(
+                &base_table_rows[i],
+                356,
+            ));
+            i += 1;
+        }
+    }
+    RecufyDebug::dump_digests(&leaf_digests_base);
 
-    // tasm_hashing_algebraic_hasher_hash_varlen
-    // fn input_field_names(&self) -> Vec<String> {
-    //     vec!["*addr".to_string(), "length".to_string()]
-    // }
-
+    // Ensure that sponge-states are in sync
     RecufyDebug::sponge_state(Tip5WithState::squeeze());
     return;
 }

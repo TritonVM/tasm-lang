@@ -13,6 +13,7 @@ use std::vec::Vec;
 use itertools::Itertools;
 use num::One;
 use num::Zero;
+use tasm_lib::hashing::algebraic_hasher::hash_varlen::HashVarlen;
 use tasm_lib::memory::encode_to_memory;
 use tasm_lib::recufier::master_ext_table::air_constraint_evaluation::AirConstraintEvaluation;
 use tasm_lib::recufier::master_ext_table::air_constraint_evaluation::AirConstraintSnippetInputs;
@@ -326,6 +327,11 @@ pub(super) fn tasm_hashing_algebraic_hasher_hash_varlen(
     preimage: &[BFieldElement],
     _length: usize,
 ) -> Digest {
+    // Mutate sponge state the same way that Triton-VM does
+    SPONGE_STATE.with_borrow_mut(|sponge| {
+        HashVarlen.sponge_mutation(sponge.as_mut().unwrap(), preimage);
+    });
+
     Tip5::hash_varlen(preimage)
 }
 
