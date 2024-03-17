@@ -1028,12 +1028,23 @@ fn derive_annotate_fn_call_args(
                 ..
             }) => {
                 let arg_pos = arg_pos + 1;
-                assert_eq!(
-                    arg_type, expr_type,
-                    "Wrong type of function argument {arg_pos} function call '{arg_name}' in \
-                    '{fn_name}'\n \n\
-                    expected type \"{arg_type}\", but got type  \"{expr_type}\"\n\n",
-                );
+
+                // If arg_type is `VoidPointer`, it matches *any* pointer type.
+                match arg_type {
+                    ast_types::DataType::VoidPointer => assert!(
+                        expr_type.is_pointer(),
+                        "Wrong type of function argument {arg_pos} function call '{arg_name}' in \
+                        '{fn_name}'\n \n\
+                        Functions taking void pointer arguments must be called with pointer types.
+                        Function was called with an argument of type {expr_type}."
+                    ),
+                    _ => assert_eq!(
+                        arg_type, expr_type,
+                        "Wrong type of function argument {arg_pos} function call '{arg_name}' in \
+                        '{fn_name}'\n \n\
+                        expected type \"{arg_type}\", but got type  \"{expr_type}\"\n\n",
+                    ),
+                }
             }
         }
     }

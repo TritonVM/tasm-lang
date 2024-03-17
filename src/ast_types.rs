@@ -157,6 +157,14 @@ impl DataType {
         }
     }
 
+    /// Return true if this type only has a pointer into memory on the stack
+    pub(crate) fn is_pointer(&self) -> bool {
+        matches!(
+            self,
+            DataType::List(_) | DataType::Array(_) | DataType::VoidPointer | DataType::Boxed(_)
+        )
+    }
+
     /// Use this if the type is used to make labels in the TASM code
     pub(crate) fn label_friendly_name(&self) -> String {
         use DataType::*;
