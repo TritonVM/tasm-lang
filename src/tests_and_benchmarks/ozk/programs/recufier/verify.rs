@@ -189,22 +189,46 @@ impl Recufier {
     #[allow(clippy::boxed_local)]
     #[allow(clippy::redundant_allocation)]
     #[allow(clippy::ptr_arg)]
-    fn linearly_sum_base_and_ext_row(
-        out_of_domain_curr_base_row: Box<Box<[XFieldElement; 356]>>,
-        out_of_domain_curr_ext_row: Box<Box<[XFieldElement; 83]>>,
+    fn linearly_sum_xfe_base_and_ext_row(
+        base_row: Box<Box<BaseRow<XFieldElement>>>,
+        ext_row: Box<Box<ExtensionRow>>,
         base_and_ext_codeword_weights: &Vec<XFieldElement>,
     ) -> XFieldElement {
         let mut acc: XFieldElement = XFieldElement::zero();
         let mut i: usize = 0;
-        while i < out_of_domain_curr_base_row.len() {
-            acc += out_of_domain_curr_base_row[i] * base_and_ext_codeword_weights[i];
+        while i < base_row.len() {
+            acc += base_and_ext_codeword_weights[i] * base_row[i];
             i += 1;
         }
 
         i = 0;
-        while i < out_of_domain_curr_ext_row.len() {
-            acc += out_of_domain_curr_ext_row[i]
-                * base_and_ext_codeword_weights[i + out_of_domain_curr_base_row.len()];
+        while i < ext_row.len() {
+            acc += ext_row[i] * base_and_ext_codeword_weights[i + base_row.len()];
+            i += 1;
+        }
+
+        return acc;
+    }
+
+    #[allow(clippy::boxed_local)]
+    #[allow(clippy::redundant_allocation)]
+    #[allow(clippy::ptr_arg)]
+    fn linearly_sum_bfe_base_and_ext_row(
+        base_row: BaseRow<BFieldElement>,
+        ext_row: ExtensionRow,
+        base_and_ext_codeword_weights: &Vec<XFieldElement>,
+    ) -> XFieldElement {
+        let mut acc: XFieldElement = XFieldElement::zero();
+        let mut i: usize = 0;
+        while i < base_row.len() {
+            acc += base_and_ext_codeword_weights[i] * base_row[i];
+            i += 1;
+        }
+
+        i = 0;
+        let number_of_randomizers: usize = 0;
+        while i < ext_row.len() - number_of_randomizers {
+            acc += ext_row[i] * base_and_ext_codeword_weights[i + base_row.len()];
             i += 1;
         }
 
@@ -425,13 +449,13 @@ fn recufy() {
 
     // sum out-of-domain values
     let out_of_domain_curr_row_base_and_ext_value: XFieldElement =
-        Recufier::linearly_sum_base_and_ext_row(
+        Recufier::linearly_sum_xfe_base_and_ext_row(
             out_of_domain_curr_base_row,
             out_of_domain_curr_ext_row,
             &base_and_ext_codeword_weights,
         );
     let out_of_domain_next_row_base_and_ext_value: XFieldElement =
-        Recufier::linearly_sum_base_and_ext_row(
+        Recufier::linearly_sum_xfe_base_and_ext_row(
             out_of_domain_next_base_row,
             out_of_domain_next_ext_row,
             &base_and_ext_codeword_weights,
@@ -446,9 +470,9 @@ fn recufy() {
     RecufyDebug::dump_xfe(out_of_domain_curr_row_quotient_segment_value);
 
     // Fiat-Shamir 3
-    let deep_coreword_weights: [XFieldElement; 3] =
+    let deep_codeword_weights: [XFieldElement; 3] =
         <[XFieldElement; 3]>::try_from(Tip5WithState::sample_scalars(3)).unwrap();
-    RecufyDebug::dump_xfes(&deep_coreword_weights.to_vec());
+    RecufyDebug::dump_xfes(&deep_codeword_weights.to_vec());
 
     // FRI
     let revealed_fri_indices_and_elements: Vec<(u32, XFieldElement)> = fri.verify(&mut proof_iter);
@@ -578,6 +602,59 @@ fn recufy() {
     // Main loop
     {
         let mut i: usize = 0;
+        while i < num_combination_codeword_checks {
+            let row_idx: u32 = revealed_fri_indices_and_elements[i].0;
+            let fri_value: XFieldElement = revealed_fri_indices_and_elements[i].1;
+            let base_row: BaseRow<BFieldElement> = base_table_rows[i];
+            let ext_row: ExtensionRow = ext_table_rows[i];
+            // let randomizer_value: XFieldElement = ext_row[ext_row.len() - 1];
+            let randomizer_value: XFieldElement = XFieldElement::zero();
+            let quot_segment_elements: QuotientSegments = quotient_segment_elements[i];
+            let current_fri_domain_value: BFieldElement =
+                fri.domain_offset * fri.domain_generator.mod_pow_u32(row_idx);
+            RecufyDebug::dump_bfe(current_fri_domain_value);
+
+            let base_and_ext_curr_row_element: XFieldElement =
+                Recufier::linearly_sum_bfe_base_and_ext_row(
+                    base_row,
+                    ext_row,
+                    &base_and_ext_codeword_weights,
+                );
+            RecufyDebug::dump_xfe(base_and_ext_curr_row_element);
+
+            let quotient_segments_curr_row_element: XFieldElement =
+                tasm::tasm_array_inner_product_of_4_xfes(
+                    quotient_segment_codeword_weights,
+                    quot_segment_elements,
+                );
+            RecufyDebug::dump_xfe(quotient_segments_curr_row_element);
+
+            let base_and_ext_curr_row_deep_value: XFieldElement =
+                (out_of_domain_curr_row_base_and_ext_value - base_and_ext_curr_row_element)
+                    / (out_of_domain_point_curr_row - current_fri_domain_value);
+            RecufyDebug::dump_xfe(base_and_ext_curr_row_deep_value);
+
+            let base_and_ext_next_row_deep_value: XFieldElement =
+                (out_of_domain_next_row_base_and_ext_value - base_and_ext_curr_row_element)
+                    / (out_of_domain_point_next_row - current_fri_domain_value);
+            RecufyDebug::dump_xfe(base_and_ext_next_row_deep_value);
+
+            let quot_curr_row_deep_value: XFieldElement =
+                (out_of_domain_curr_row_quotient_segment_value
+                    - quotient_segments_curr_row_element)
+                    / (out_of_domain_point_curr_row_pow_num_segments - current_fri_domain_value);
+            RecufyDebug::dump_xfe(quot_curr_row_deep_value);
+
+            let deep_value: XFieldElement = base_and_ext_curr_row_deep_value
+                * deep_codeword_weights[0]
+                + base_and_ext_next_row_deep_value * deep_codeword_weights[1]
+                + quot_curr_row_deep_value * deep_codeword_weights[2];
+            RecufyDebug::dump_xfe(deep_value);
+
+            assert!(fri_value == deep_value + randomizer_value);
+
+            i += 1;
+        }
     }
 
     // Ensure that sponge-states are in sync
@@ -773,12 +850,17 @@ mod tests {
             program,
         );
 
-        let vm_output = test_case
+        let final_vm_state = test_case
             .with_non_determinism(non_determinism)
             .execute()
             .unwrap();
 
-        assert_eq!(native_output, vm_output.output);
+        assert_eq!(native_output, final_vm_state.public_output);
+
+        println!(
+            "Clock cycle count of TASM-verifier of factorial(3) : {}",
+            final_vm_state.cycle_count
+        );
     }
 
     #[proptest]
