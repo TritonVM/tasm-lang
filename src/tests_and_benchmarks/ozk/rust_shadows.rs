@@ -18,6 +18,7 @@ use tasm_lib::memory::encode_to_memory;
 use tasm_lib::recufier::master_ext_table::air_constraint_evaluation::AirConstraintEvaluation;
 use tasm_lib::recufier::master_ext_table::air_constraint_evaluation::AirConstraintSnippetInputs;
 use tasm_lib::structure::tasm_object::decode_from_memory_with_size;
+use tasm_lib::triton_vm;
 use tasm_lib::triton_vm::prelude::*;
 use tasm_lib::triton_vm::proof_item::ProofItem;
 use tasm_lib::triton_vm::proof_item::ProofItemVariant;
@@ -464,22 +465,36 @@ pub(super) fn tasm_recufier_fri_verify(
     proof_iter: &mut VmProofIter,
     fri_parameters: &FriVerify,
 ) -> Vec<(u32, XFieldElement)> {
-    let fri = fri_parameters._to_fri();
-    SPONGE_STATE.with_borrow_mut(|maybe_sponge_state| {
+    let fri: triton_vm::fri::Fri<Tip5> = fri_parameters._to_fri();
+    let tasm_lib_fri: tasm_lib::recufier::fri_verify::FriVerify = fri.clone().into();
+    let (advance_nd_digests_by, ret) = SPONGE_STATE.with_borrow_mut(|maybe_sponge_state| {
         let sponge_state = maybe_sponge_state.as_mut().unwrap();
         let proof_stream_before_fri = proof_iter
             .to_owned()
             ._into_proof_stream(sponge_state.to_owned());
+        let advance_nd_digests_by =
+            tasm_lib_fri.extract_digests_required_for_proving(&proof_stream_before_fri);
         let mut proof_stream = proof_stream_before_fri.clone();
         let indexed_leaves = fri.verify(&mut proof_stream, &mut None).unwrap();
         let num_items_used_by_fri = proof_stream.items_index - proof_stream_before_fri.items_index;
         proof_iter._advance_by(num_items_used_by_fri).unwrap();
         *sponge_state = proof_stream.sponge;
-        indexed_leaves
-            .into_iter()
-            .map(|(idx, leaf)| (idx as u32, leaf))
-            .collect()
-    })
+        (
+            advance_nd_digests_by.len(),
+            indexed_leaves
+                .into_iter()
+                .map(|(idx, leaf)| (idx as u32, leaf))
+                .collect(),
+        )
+    });
+
+    ND_DIGESTS.with_borrow_mut(|nd_digests| {
+        for _ in 0..advance_nd_digests_by {
+            nd_digests.pop().unwrap();
+        }
+    });
+
+    ret
 }
 
 impl FriVerify {

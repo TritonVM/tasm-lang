@@ -325,7 +325,6 @@ fn recufy() {
     RecufyDebug::dump_u32(padded_height);
 
     let fri: Box<FriVerify> = Box::<FriVerify>::new(parameters.derive_fri(padded_height));
-    let _merkle_tree_height: usize = fri.domain_length.ilog2() as usize;
 
     let base_merkle_tree_root: Box<Digest> = proof_iter.next_as_merkleroot();
     println!("base_merkle_tree_root: {base_merkle_tree_root:?}");
@@ -482,6 +481,21 @@ fn recufy() {
     }
     RecufyDebug::dump_digests(&leaf_digests_base);
 
+    // Merkle verify (base tree)
+    let merkle_tree_height: u32 = fri.domain_length.ilog2();
+    {
+        let mut i: usize = 0;
+        while i < fri.num_colinearity_checks as usize {
+            tasm::tasm_hashing_merkle_verify(
+                *base_merkle_tree_root,
+                revealed_fri_indices_and_elements[i].0,
+                leaf_digests_base[i],
+                merkle_tree_height,
+            );
+            i += 1;
+        }
+    }
+
     // Ensure that sponge-states are in sync
     RecufyDebug::sponge_state(Tip5WithState::squeeze());
     return;
@@ -498,7 +512,7 @@ mod tests {
     use test_strategy::proptest;
 
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
-    use crate::tests_and_benchmarks::ozk::programs::recufier::fri_verify::extract_fri_proof;
+    use crate::tests_and_benchmarks::ozk::programs::recufier::fri_verify::test::extract_fri_proof;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::TritonVMTestCase;
     use crate::triton_vm;
@@ -533,34 +547,20 @@ mod tests {
         );
         let public_input = [];
         let non_determinism = NonDeterminism::default();
-        println!(
-            "factorial_program digest:\n{}",
-            factorial_program.hash::<Tip5>()
-        );
         let (stark, claim, proof) =
             triton_vm::prove_program(&factorial_program, &public_input, &non_determinism).unwrap();
         assert!(
             triton_vm::verify(stark, &claim, &proof),
             "Proof must verify"
         );
-        println!("test-setup, claim:\n{claim:?}\n\n");
-        println!("Claim program digest:\n{}", claim.program_digest);
-        println!("Claim input:\n{:?}", claim.input);
-        println!("Claim output:\n{:?}", claim.output);
-        println!(
-            "Test setup, encoded claim: {}",
-            claim.encode().iter().join(",")
-        );
-
-        println!("proof beginning:\n{}", proof.0.iter().take(20).join("\n"));
 
         let fri = stark.derive_fri(proof.padded_height().unwrap()).unwrap();
 
         let proof_stream = StarkProofStream::try_from(&proof).unwrap();
-        let fri_proof_stream = extract_fri_proof(&proof_stream, &claim);
+        let proof_extraction = extract_fri_proof(&proof_stream, &claim, stark);
         let tasm_lib_fri: tasm_lib::recufier::fri_verify::FriVerify = fri.into();
         let fri_proof_digests =
-            tasm_lib_fri.extract_digests_required_for_proving(&fri_proof_stream);
+            tasm_lib_fri.extract_digests_required_for_proving(&proof_extraction.fri_proof_stream);
         let Proof(raw_proof) = proof;
         let ram = raw_proof
             .into_iter()
@@ -568,9 +568,18 @@ mod tests {
             .map(|(k, v)| (BFieldElement::new(k as u64), v))
             .collect();
 
+        let nd_digests = [
+            fri_proof_digests,
+            proof_extraction
+                .base_tree_authentication_paths
+                .into_iter()
+                .flatten()
+                .collect_vec(),
+        ]
+        .concat();
         NonDeterminism::default()
             .with_ram(ram)
-            .with_digests(fri_proof_digests)
+            .with_digests(nd_digests)
     }
 
     #[test]
