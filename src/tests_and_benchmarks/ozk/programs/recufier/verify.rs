@@ -130,32 +130,32 @@ impl Recufier {
     ) -> [XFieldElement; 596] {
         let initial_zerofier_inv: XFieldElement =
             (out_of_domain_point_curr_row - BFieldElement::one()).inverse();
-        RecufyDebug::dump_xfe(initial_zerofier_inv);
-        println!("initial_zerofier_inv: {initial_zerofier_inv:?}");
+        // RecufyDebug::dump_xfe(initial_zerofier_inv);
+        // println!("initial_zerofier_inv: {initial_zerofier_inv:?}");
         let consistency_zerofier_inv: XFieldElement =
             (out_of_domain_point_curr_row.mod_pow_u32(padded_height) - BFieldElement::one())
                 .inverse();
-        println!("consistency_zerofier_inv: {consistency_zerofier_inv:?}");
-        RecufyDebug::dump_xfe(consistency_zerofier_inv);
+        // println!("consistency_zerofier_inv: {consistency_zerofier_inv:?}");
+        // RecufyDebug::dump_xfe(consistency_zerofier_inv);
         let except_last_row: XFieldElement =
             out_of_domain_point_curr_row - trace_domain_generator.inverse();
-        println!("except_last_row: {except_last_row:?}");
-        RecufyDebug::dump_xfe(except_last_row);
+        // println!("except_last_row: {except_last_row:?}");
+        // RecufyDebug::dump_xfe(except_last_row);
         let transition_zerofier_inv: XFieldElement = except_last_row * consistency_zerofier_inv;
-        println!("transition_zerofier_inv: {transition_zerofier_inv:?}");
-        RecufyDebug::dump_xfe(transition_zerofier_inv);
+        // println!("transition_zerofier_inv: {transition_zerofier_inv:?}");
+        // RecufyDebug::dump_xfe(transition_zerofier_inv);
         let terminal_zerofier_inv: XFieldElement = except_last_row.inverse();
-        println!("terminal_zerofier_inv: {terminal_zerofier_inv:?}");
+        // println!("terminal_zerofier_inv: {terminal_zerofier_inv:?}");
         // i.e., only last row
-        RecufyDebug::dump_xfe(terminal_zerofier_inv);
+        // RecufyDebug::dump_xfe(terminal_zerofier_inv);
 
         let mut evaluated_constraints: [XFieldElement; 596] =
             tasm::tasm_recufier_master_ext_table_air_constraint_evaluation();
-        println!("evaluated_constraints: {evaluated_constraints:?}");
+        // println!("evaluated_constraints: {evaluated_constraints:?}");
 
         let categories_running_sum_lengths: [usize; 4] =
             Recufier::constraint_evaluation_lengths_running_sum();
-        println!("categories_running_sum_lengths: {categories_running_sum_lengths:?}");
+        // println!("categories_running_sum_lengths: {categories_running_sum_lengths:?}");
         let mut i: usize = 0;
         while i < categories_running_sum_lengths[0] {
             evaluated_constraints[i] *= initial_zerofier_inv;
@@ -307,82 +307,82 @@ fn recufy() {
         BFieldElement::new(2749753857496185052),
         BFieldElement::new(14083115970614877960),
     ]));
-    println!("program_digest:\n{program_digest}");
+    // println!("program_digest:\n{program_digest}");
     let parameters: Box<StarkParameters> = Box::<StarkParameters>::new(StarkParameters::default());
 
     Tip5WithState::init();
     let encoded_claim: Vec<BFieldElement> = Recufier::encode_claim(*program_digest);
-    println!("encoded_claim: {}", encoded_claim.iter().join(","));
+    // println!("encoded_claim: {}", encoded_claim.iter().join(","));
     RecufyDebug::dump_bfes(&encoded_claim);
     Tip5WithState::pad_and_absorb_all(&encoded_claim);
 
     let inner_proof_iter: VmProofIter = VmProofIter::new();
     let mut proof_iter: Box<VmProofIter> = Box::<VmProofIter>::new(inner_proof_iter);
     let log_2_padded_height: Box<u32> = proof_iter.next_as_log2paddedheight();
-    println!("log_2_padded_height: {log_2_padded_height}");
+    // println!("log_2_padded_height: {log_2_padded_height}");
     let padded_height: u32 = 1 << *log_2_padded_height;
-    println!("padded_height: {padded_height}");
+    // println!("padded_height: {padded_height}");
     RecufyDebug::dump_u32(padded_height);
 
     let fri: Box<FriVerify> = Box::<FriVerify>::new(parameters.derive_fri(padded_height));
 
     let base_merkle_tree_root: Box<Digest> = proof_iter.next_as_merkleroot();
-    println!("base_merkle_tree_root: {base_merkle_tree_root:?}");
+    // println!("base_merkle_tree_root: {base_merkle_tree_root:?}");
     RecufyDebug::dump_digest(*base_merkle_tree_root);
 
     let challenges: Box<Challenges> =
         tasm::tasm_recufier_challenges_new_empty_input_and_output_59_4(*program_digest);
-    println!("challenges: {:?}", challenges.challenges);
+    // println!("challenges: {:?}", challenges.challenges);
     RecufyDebug::dump_xfes(&challenges.challenges.to_vec());
 
     let extension_tree_merkle_root: Box<Digest> = proof_iter.next_as_merkleroot();
-    println!("extension_tree_merkle_root: {extension_tree_merkle_root:?}");
+    // println!("extension_tree_merkle_root: {extension_tree_merkle_root:?}");
     RecufyDebug::dump_digest(*extension_tree_merkle_root);
 
     let quot_codeword_weights: [XFieldElement; 596] =
         <[XFieldElement; 596]>::try_from(Tip5WithState::sample_scalars(Recufier::num_quotients()))
             .unwrap();
-    println!("quot_codeword_weights: {quot_codeword_weights:?}");
+    // println!("quot_codeword_weights: {quot_codeword_weights:?}");
     RecufyDebug::dump_xfes(&quot_codeword_weights.to_vec());
     let quotient_codeword_merkle_root: Box<Digest> = proof_iter.next_as_merkleroot();
-    println!("quotient_codeword_merkle_root: {quotient_codeword_merkle_root:?}");
+    // println!("quotient_codeword_merkle_root: {quotient_codeword_merkle_root:?}");
     RecufyDebug::dump_digest(*quotient_codeword_merkle_root);
 
     let trace_domain_generator: BFieldElement =
         ArithmeticDomain::generator_for_length(padded_height as u64);
-    println!("trace_domain_generator: {trace_domain_generator:?}");
+    // println!("trace_domain_generator: {trace_domain_generator:?}");
     RecufyDebug::dump_bfe(trace_domain_generator);
 
     let ___out_of_domain_point_curr_row: Vec<XFieldElement> = Tip5WithState::sample_scalars(1);
     let out_of_domain_point_curr_row: XFieldElement = ___out_of_domain_point_curr_row[0];
-    println!("out_of_domain_point_curr_row: {out_of_domain_point_curr_row:?}");
+    // println!("out_of_domain_point_curr_row: {out_of_domain_point_curr_row:?}");
     RecufyDebug::dump_xfe(out_of_domain_point_curr_row);
     let out_of_domain_point_next_row: XFieldElement =
         out_of_domain_point_curr_row * trace_domain_generator;
-    println!("out_of_domain_point_next_row: {out_of_domain_point_next_row:?}");
+    // println!("out_of_domain_point_next_row: {out_of_domain_point_next_row:?}");
     RecufyDebug::dump_xfe(out_of_domain_point_next_row);
     let out_of_domain_point_curr_row_pow_num_segments: XFieldElement =
         tasm::tasm_arithmetic_xfe_to_the_fourth(out_of_domain_point_curr_row);
-    println!("out_of_domain_point_curr_row_pow_num_segments: {out_of_domain_point_curr_row_pow_num_segments:?}");
+    // println!("out_of_domain_point_curr_row_pow_num_segments: {out_of_domain_point_curr_row_pow_num_segments:?}");
     RecufyDebug::dump_xfe(out_of_domain_point_curr_row_pow_num_segments);
 
     let out_of_domain_curr_base_row: Box<Box<BaseRow<XFieldElement>>> =
         proof_iter.next_as_outofdomainbaserow();
-    println!("out_of_domain_curr_base_row: {out_of_domain_curr_base_row:?}");
+    // println!("out_of_domain_curr_base_row: {out_of_domain_curr_base_row:?}");
     RecufyDebug::dump_xfes(&out_of_domain_curr_base_row.to_vec());
     let out_of_domain_curr_ext_row: Box<Box<ExtensionRow>> = proof_iter.next_as_outofdomainextrow();
-    println!("out_of_domain_curr_ext_row: {out_of_domain_curr_ext_row:?}");
+    // println!("out_of_domain_curr_ext_row: {out_of_domain_curr_ext_row:?}");
     RecufyDebug::dump_xfes(&out_of_domain_curr_ext_row.to_vec());
     let out_of_domain_next_base_row: Box<Box<BaseRow<XFieldElement>>> =
         proof_iter.next_as_outofdomainbaserow();
-    println!("out_of_domain_next_base_row: {out_of_domain_next_base_row:?}");
+    // println!("out_of_domain_next_base_row: {out_of_domain_next_base_row:?}");
     RecufyDebug::dump_xfes(&out_of_domain_next_base_row.to_vec());
     let out_of_domain_next_ext_row: Box<Box<ExtensionRow>> = proof_iter.next_as_outofdomainextrow();
-    println!("out_of_domain_next_ext_row: {out_of_domain_next_ext_row:?}");
+    // println!("out_of_domain_next_ext_row: {out_of_domain_next_ext_row:?}");
     RecufyDebug::dump_xfes(&out_of_domain_next_ext_row.to_vec());
     let out_of_domain_curr_row_quot_segments: Box<[XFieldElement; 4]> =
         proof_iter.next_as_outofdomainquotientsegments();
-    println!("out_of_domain_curr_row_quot_segments: {out_of_domain_curr_row_quot_segments:?}");
+    // println!("out_of_domain_curr_row_quot_segments: {out_of_domain_curr_row_quot_segments:?}");
     RecufyDebug::dump_xfes(&out_of_domain_curr_row_quot_segments.to_vec());
 
     let quotient_summands: [XFieldElement; 596] = Recufier::quotient_summands(
@@ -390,12 +390,12 @@ fn recufy() {
         padded_height,
         trace_domain_generator,
     );
-    println!("quotient_summands: {quotient_summands:?}");
+    // println!("quotient_summands: {quotient_summands:?}");
     RecufyDebug::dump_xfes(&quotient_summands.to_vec());
 
     let out_of_domain_quotient_value: XFieldElement =
         tasm::tasm_array_inner_product_of_596_xfes(quot_codeword_weights, quotient_summands);
-    println!("out_of_domain_quotient_value: {out_of_domain_quotient_value:?}");
+    // println!("out_of_domain_quotient_value: {out_of_domain_quotient_value:?}");
     RecufyDebug::dump_xfe(out_of_domain_quotient_value);
 
     let sum_of_evaluated_out_of_domain_quotient_segments: XFieldElement =
@@ -405,8 +405,8 @@ fn recufy() {
         );
 
     RecufyDebug::dump_xfe(sum_of_evaluated_out_of_domain_quotient_segments);
-    println!("sum_of_evaluated_out_of_domain_quotient_segments: {sum_of_evaluated_out_of_domain_quotient_segments:?}");
-    println!("out_of_domain_quotient_value: {out_of_domain_quotient_value:?}");
+    // println!("sum_of_evaluated_out_of_domain_quotient_segments: {sum_of_evaluated_out_of_domain_quotient_segments:?}");
+    // println!("out_of_domain_quotient_value: {out_of_domain_quotient_value:?}");
     assert!(sum_of_evaluated_out_of_domain_quotient_segments == out_of_domain_quotient_value);
 
     // Fiat-shamir 2
@@ -459,8 +459,8 @@ fn recufy() {
         proof_iter.next_as_masterbasetablerows();
     {
         let mut i: usize = 0;
-        while i < fri.num_colinearity_checks as usize {
-            RecufyDebug::dump_bfes(&base_table_rows[i].to_vec());
+        while i < 2 * fri.num_colinearity_checks as usize {
+            // RecufyDebug::dump_bfes(&base_table_rows[i].to_vec());
             i += 1;
         }
     }
@@ -474,7 +474,7 @@ fn recufy() {
     let mut leaf_digests_base: Vec<Digest> = Vec::<Digest>::default();
     {
         let mut i: usize = 0;
-        while i < fri.num_colinearity_checks as usize {
+        while i < 2 * fri.num_colinearity_checks as usize {
             leaf_digests_base.push(tasm::tasm_hashing_algebraic_hasher_hash_varlen(
                 &base_table_rows[i],
                 356,
@@ -488,7 +488,7 @@ fn recufy() {
     let merkle_tree_height: u32 = fri.domain_length.ilog2();
     {
         let mut i: usize = 0;
-        while i < fri.num_colinearity_checks as usize {
+        while i < 2 * fri.num_colinearity_checks as usize {
             tasm::tasm_hashing_merkle_verify(
                 *base_merkle_tree_root,
                 revealed_fri_indices_and_elements[i].0,
@@ -502,11 +502,16 @@ fn recufy() {
     // dequeue extension elements
     let ext_table_rows: Box<Vec<ExtensionRow>> = proof_iter.next_as_masterexttablerows();
 
+    // dequeue extension rows' authentication structure but ignore it (divination instead)
+    {
+        let _dummy: Box<Vec<Digest>> = proof_iter.next_as_authenticationstructure();
+    }
+
     // hash extension rows to get leafs
     let mut leaf_digests_ext: Vec<Digest> = Vec::<Digest>::default();
     {
         let mut i: usize = 0;
-        while i < fri.num_colinearity_checks as usize {
+        while i < 2 * fri.num_colinearity_checks as usize {
             leaf_digests_ext.push(tasm::tasm_hashing_algebraic_hasher_hash_varlen(
                 &ext_table_rows[i],
                 83 * 3,
@@ -515,6 +520,20 @@ fn recufy() {
         }
     }
     RecufyDebug::dump_digests(&leaf_digests_ext);
+
+    // Merkle verify (extension tree)
+    {
+        let mut i: usize = 0;
+        while i < 2 * fri.num_colinearity_checks as usize {
+            tasm::tasm_hashing_merkle_verify(
+                *extension_tree_merkle_root,
+                revealed_fri_indices_and_elements[i].0,
+                leaf_digests_ext[i],
+                merkle_tree_height,
+            );
+            i += 1;
+        }
+    }
 
     // Ensure that sponge-states are in sync
     RecufyDebug::sponge_state(Tip5WithState::squeeze());
@@ -592,6 +611,11 @@ mod tests {
             fri_proof_digests,
             proof_extraction
                 .base_tree_authentication_paths
+                .into_iter()
+                .flatten()
+                .collect_vec(),
+            proof_extraction
+                .ext_tree_authentication_paths
                 .into_iter()
                 .flatten()
                 .collect_vec(),
