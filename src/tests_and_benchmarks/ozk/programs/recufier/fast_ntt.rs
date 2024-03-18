@@ -233,6 +233,6 @@ mod benches {
             worst_case_input,
             0,
         );
-        profile(name, code, common_case_input);
+        profile(name, code, common_case_input, true);
     }
 }

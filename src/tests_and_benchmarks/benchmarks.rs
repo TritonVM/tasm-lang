@@ -49,7 +49,12 @@ fn benchmark_code(
     }
 }
 
-pub(crate) fn profile(function_name: String, code: Vec<LabelledInstruction>, case: BenchmarkInput) {
+pub(crate) fn profile(
+    function_name: String,
+    code: Vec<LabelledInstruction>,
+    case: BenchmarkInput,
+    only_aggregated_profile: bool,
+) {
     // Write profile for common-case input
     let nondeterminism = case.non_determinism;
     let public_input = PublicInput::from(case.std_in);
@@ -62,8 +67,13 @@ pub(crate) fn profile(function_name: String, code: Vec<LabelledInstruction>, cas
         "Can only profile on empty init memory for now"
     );
     let program: Program = Program::new(&code);
-    let profile =
-        tasm_lib::generate_full_profile(&function_name, program, &public_input, &nondeterminism);
+    let profile = tasm_lib::generate_full_profile(
+        &function_name,
+        program,
+        &public_input,
+        &nondeterminism,
+        only_aggregated_profile,
+    );
 
     let mut path = PathBuf::new();
     path.push("profiles");

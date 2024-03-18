@@ -52,6 +52,10 @@ bench:
 bench-no-run:
 	cargo bench --no-run
 
+# Run prove/verify on `verify_factorial_program`. Meant to measure recursive proof generation.
+prove-recursive:
+	RUSTFLAGS="-C opt-level=3 -C debug-assertions=no" DYING_TO_PROVE=1 cargo t verify_factorial_program -- --test-threads=1 --nocapture
+
 help:
 	@echo "usage: make [debug=1]"
 
