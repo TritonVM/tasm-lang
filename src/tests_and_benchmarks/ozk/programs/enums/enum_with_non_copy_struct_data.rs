@@ -67,7 +67,7 @@ mod tests {
                 0,
             )
             .unwrap();
-            if native_output != vm_output.output {
+            if native_output != vm_output.public_output {
                 {
                     let mut ram: Vec<(BFieldElement, BFieldElement)> =
                         non_determinism.ram.clone().into_iter().collect();
@@ -80,7 +80,7 @@ mod tests {
                 panic!(
                     "native_output:\n{}\nVM output:\n{}. Code was:\n{}\nrand was {}\ninput was: {enum_value:#?}",
                     native_output.iter().join(", "),
-                    vm_output.output.iter().join(", "),
+                    vm_output.public_output.iter().join(", "),
                     test_program.iter().join("\n"),
                     rand.iter().join(",")
                 );

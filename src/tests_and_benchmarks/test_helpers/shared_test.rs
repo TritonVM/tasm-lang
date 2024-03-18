@@ -11,7 +11,6 @@ use tasm_lib::triton_vm::op_stack::NUM_OP_STACK_REGISTERS;
 use tasm_lib::triton_vm::prelude::*;
 use tasm_lib::twenty_first::shared_math::b_field_element::BFIELD_ONE;
 use tasm_lib::twenty_first::shared_math::b_field_element::BFIELD_ZERO;
-use tasm_lib::VmOutputState;
 use tasm_lib::DIGEST_LENGTH;
 
 use crate::ast;
@@ -144,13 +143,13 @@ impl TritonVMTestCase {
         self
     }
 
-    pub(crate) fn execute(self) -> Result<VmOutputState> {
+    pub(crate) fn execute(self) -> Result<VMState> {
         let mut vm_state = self.initial_vm_state();
         vm_state.run()?;
 
         Self::verify_stack_len_unchanged(&vm_state)?;
 
-        Ok(Self::convert_vm_state_to_output_state(vm_state))
+        Ok(vm_state)
     }
 
     fn initial_vm_state(self) -> VMState {
@@ -180,15 +179,6 @@ impl TritonVMTestCase {
             ),
         }
     }
-
-    fn convert_vm_state_to_output_state(vm_state: VMState) -> VmOutputState {
-        VmOutputState {
-            output: vm_state.public_output,
-            final_stack: vm_state.op_stack.stack,
-            final_ram: vm_state.ram,
-            final_sponge: vm_state.sponge,
-        }
-    }
 }
 
 pub(crate) fn execute_compiled_with_stack_and_ins_for_test(
@@ -197,7 +187,7 @@ pub(crate) fn execute_compiled_with_stack_and_ins_for_test(
     std_in: Vec<BFieldElement>,
     non_determinism: NonDeterminism<BFieldElement>,
     expected_stack_diff: isize,
-) -> Result<VmOutputState> {
+) -> Result<VMState> {
     let mut initial_stack = empty_stack();
     for input_arg in input_args {
         let input_arg_seq = input_arg.encode();
@@ -216,21 +206,14 @@ pub(crate) fn execute_compiled_with_stack_and_ins_for_test(
         bail!("Expected stack length to be {expected_terminal_stack_len} but was {terminal_stack_len}");
     }
 
-    let output_state = VmOutputState {
-        output: vm_state.public_output,
-        final_stack: vm_state.op_stack.stack,
-        final_ram: vm_state.ram,
-        final_sponge: vm_state.sponge,
-    };
-
-    Ok(output_state)
+    Ok(vm_state)
 }
 
 pub(crate) fn execute_with_stack_safe_lists(
     rust_ast: &syn::ItemFn,
     stack_start: Vec<ast::ExprLit<Typing>>,
     expected_stack_diff: isize,
-) -> Result<VmOutputState> {
+) -> Result<VMState> {
     let (code, _fn_name) = compile_for_run_test(rust_ast);
     execute_compiled_with_stack_and_ins_for_test(
         &code,
@@ -248,7 +231,7 @@ pub(crate) fn execute_with_stack_and_ins_safe_lists(
     std_in: Vec<BFieldElement>,
     non_determinism: NonDeterminism<BFieldElement>,
     expected_stack_diff: isize,
-) -> Result<VmOutputState> {
+) -> Result<VMState> {
     let (code, _fn_name) = compile_for_run_test(rust_ast);
 
     execute_compiled_with_stack_and_ins_for_test(
@@ -279,7 +262,7 @@ pub(crate) fn compare_compiled_prop_with_stack_and_ins(
             .iter()
             .map(|arg| arg.get_type().stack_size())
             .sum::<usize>();
-    let exec_result = execute_compiled_with_stack_and_ins_for_test(
+    let vm_state = execute_compiled_with_stack_and_ins_for_test(
         code,
         input_args,
         std_in,
@@ -288,8 +271,8 @@ pub(crate) fn compare_compiled_prop_with_stack_and_ins(
     )
     .unwrap();
 
-    assert_stack_equivalence(expected_final_stack, exec_result.final_stack);
-    maybe_assert_ram_equivalence(expected_final_memory, exec_result.final_ram);
+    assert_stack_equivalence(expected_final_stack, vm_state.op_stack.stack);
+    maybe_assert_ram_equivalence(expected_final_memory, vm_state.ram);
 }
 
 fn assert_stack_equivalence(

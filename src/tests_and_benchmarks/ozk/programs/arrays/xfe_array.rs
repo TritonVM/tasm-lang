@@ -99,9 +99,6 @@ mod test {
             .execute()
             .unwrap();
 
-        assert_eq!(expected_output, vm_output.output);
-        println!("vm_output.output: {:#?}", vm_output.output);
-
-        println!("Final stack is: {}", vm_output.final_stack.iter().join(","));
+        assert_eq!(expected_output, vm_output.public_output);
     }
 }

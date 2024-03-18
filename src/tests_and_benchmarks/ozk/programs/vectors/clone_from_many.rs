@@ -48,6 +48,6 @@ mod test {
             rust_shadows::wrap_main_with_io(&main)(vec![], NonDeterminism::default());
         let entrypoint = EntrypointLocation::disk("vectors", "clone_from_many", "test::main");
         let vm_output = TritonVMTestCase::new(entrypoint).execute().unwrap();
-        assert_eq!(native_output, vm_output.output);
+        assert_eq!(native_output, vm_output.public_output);
     }
 }

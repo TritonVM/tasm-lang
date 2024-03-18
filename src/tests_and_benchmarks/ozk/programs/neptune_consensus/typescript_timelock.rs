@@ -75,7 +75,7 @@ mod test {
             .execute()
             .unwrap();
 
-        assert_eq!(native_output, vm_output.output);
+        assert_eq!(native_output, vm_output.public_output);
 
         let code = TritonVMTestCase::new(entrypoint).compile();
         println!("{}", code.iter().join("\n"));

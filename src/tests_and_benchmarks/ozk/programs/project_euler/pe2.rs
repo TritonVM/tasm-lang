@@ -39,10 +39,13 @@ mod test {
         let entrypoint = EntrypointLocation::disk("project_euler", "pe2", "main");
         let vm_output = TritonVMTestCase::new(entrypoint).execute().unwrap();
 
-        assert_eq!(native_output, vm_output.output);
+        assert_eq!(native_output, vm_output.public_output);
         assert_eq!(4613732, native_output[0].value());
 
-        println!("vm_output.output: {}", vm_output.output.iter().join(","));
+        println!(
+            "vm_output.public_output: {}",
+            vm_output.public_output.iter().join(",")
+        );
     }
 }
 

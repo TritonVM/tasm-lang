@@ -30,6 +30,6 @@ mod test {
             .with_std_in(std_in)
             .execute()
             .unwrap();
-        assert_eq!(native_output_add, vm_output.output);
+        assert_eq!(native_output_add, vm_output.public_output);
     }
 }

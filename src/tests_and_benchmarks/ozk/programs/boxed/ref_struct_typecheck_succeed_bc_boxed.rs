@@ -52,11 +52,11 @@ mod test {
             .with_std_in(stdin.clone())
             .execute()
             .unwrap();
-        if expected_output != vm_output.output {
+        if expected_output != vm_output.public_output {
             panic!(
                 "expected:\n{}\n\ngot:\n{}",
                 expected_output.iter().join(","),
-                vm_output.output.iter().join(",")
+                vm_output.public_output.iter().join(",")
             );
         }
 

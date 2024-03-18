@@ -100,11 +100,11 @@ mod test {
                 0,
             )
             .unwrap();
-            if native_output != vm_output.output {
+            if native_output != vm_output.public_output {
                 panic!(
                     "native_output:\n {}, got:\n{}. Code was:\n{}",
                     native_output.iter().join(", "),
-                    vm_output.output.iter().join(", "),
+                    vm_output.public_output.iter().join(", "),
                     test_program.iter().join("\n")
                 );
             }

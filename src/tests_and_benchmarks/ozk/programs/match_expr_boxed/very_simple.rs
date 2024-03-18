@@ -44,7 +44,7 @@ mod test {
             .with_non_determinism(non_determinism_a)
             .execute()
             .unwrap();
-        assert_eq!(native_output_a, vm_output_a.output);
+        assert_eq!(native_output_a, vm_output_a.public_output);
     }
 
     #[test]
@@ -58,6 +58,6 @@ mod test {
             .with_non_determinism(non_determinism_b)
             .execute()
             .unwrap();
-        assert_eq!(native_output_b, vm_output_b.output);
+        assert_eq!(native_output_b, vm_output_b.public_output);
     }
 }

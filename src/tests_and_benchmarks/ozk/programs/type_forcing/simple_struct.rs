@@ -62,7 +62,7 @@ mod tests {
         let entrypoint =
             EntrypointLocation::disk("type_forcing", "simple_struct", "access_simple_struct_list");
         let vm_output = TritonVMTestCase::new(entrypoint).execute().unwrap();
-        assert_eq!(native_output, vm_output.output);
+        assert_eq!(native_output, vm_output.public_output);
     }
 
     #[test]
@@ -78,7 +78,7 @@ mod tests {
             "access_boxed_simple_struct_list",
         );
         let vm_output = TritonVMTestCase::new(entrypoint).execute().unwrap();
-        assert_eq!(native_output, vm_output.output);
+        assert_eq!(native_output, vm_output.public_output);
     }
 
     #[test]
@@ -94,7 +94,7 @@ mod tests {
             "access_simple_struct_list_len",
         );
         let vm_output = TritonVMTestCase::new(entrypoint).execute().unwrap();
-        assert_eq!(native_output, vm_output.output);
+        assert_eq!(native_output, vm_output.public_output);
     }
 
     #[test]
@@ -110,6 +110,6 @@ mod tests {
             "access_boxed_simple_struct_list_len",
         );
         let vm_output = TritonVMTestCase::new(entrypoint).execute().unwrap();
-        assert_eq!(native_output, vm_output.output);
+        assert_eq!(native_output, vm_output.public_output);
     }
 }

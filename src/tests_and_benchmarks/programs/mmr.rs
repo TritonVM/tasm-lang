@@ -647,17 +647,17 @@ mod run_tests {
         assert_list_equal(
             new_peaks.iter().map(|x| digest_lit(*x)).collect_vec(),
             list_pointer,
-            &state.final_ram,
+            &state.ram,
         );
 
         // Verify that the authentication path calculated in the VM match that calculated in Rust
-        let auth_path_pointer = *state.final_stack.last().unwrap();
+        let auth_path_pointer = *state.op_stack.stack.last().unwrap();
         let auth_path_list = mp
             .authentication_path
             .iter()
             .map(|&x| digest_lit(x))
             .collect_vec();
-        assert_list_equal(auth_path_list, auth_path_pointer, &state.final_ram);
+        assert_list_equal(auth_path_list, auth_path_pointer, &state.ram);
     }
 
     fn calculate_new_peaks_from_leaf_mutation_inlined_rast() -> ItemFn {
@@ -833,7 +833,7 @@ mod run_tests {
                 .map(|x| digest_lit(*x))
                 .collect_vec(),
             old_peaks_pointer,
-            &vm_state.final_ram,
+            &vm_state.ram,
         );
 
         // Sanity check
@@ -887,7 +887,7 @@ mod run_tests {
                 };
 
                 let expected_result = mp.verify(&peaks, own_leaf, ammr.count_leaves()).0;
-                let vm_result: bool = vm_res.final_stack.last().unwrap().value() == 1;
+                let vm_result: bool = vm_res.op_stack.stack.last().unwrap().value() == 1;
                 assert_eq!(
                     expected_result, vm_result,
                     "VM result must agree with Rust result"
@@ -914,7 +914,8 @@ mod run_tests {
                     Err(err) => panic!("VM execution must succeed. Got: {err}"),
                 };
                 let expected_result_neg = mp.verify(&peaks, bad_leaf, ammr.count_leaves()).0;
-                let vm_result_neg: bool = vm_res_negative.final_stack.last().unwrap().value() == 1;
+                let vm_result_neg: bool =
+                    vm_res_negative.op_stack.stack.last().unwrap().value() == 1;
                 assert_eq!(
                     expected_result_neg, vm_result_neg,
                     "VM result must agree with Rust result"

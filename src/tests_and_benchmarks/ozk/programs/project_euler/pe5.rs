@@ -33,8 +33,11 @@ mod test {
             .execute()
             .unwrap();
 
-        assert_eq!(native_output, vm_output.output);
-        println!("vm_output.output: {}", vm_output.output.iter().join(","));
+        assert_eq!(native_output, vm_output.public_output);
+        println!(
+            "vm_output.public_output: {}",
+            vm_output.public_output.iter().join(",")
+        );
     }
 }
 

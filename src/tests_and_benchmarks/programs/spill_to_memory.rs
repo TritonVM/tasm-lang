@@ -776,8 +776,8 @@ mod run_tests {
         )
         .unwrap();
 
-        let final_vm_memory = exec_result.final_ram;
-        let list_pointer = exec_result.final_stack.last().unwrap();
+        let final_vm_memory = exec_result.ram;
+        let list_pointer = exec_result.op_stack.stack.last().unwrap();
         println!("list_pointer: {list_pointer}");
         println!(
             "memory value at list_pointer: {}",
@@ -796,9 +796,9 @@ mod run_tests {
         )
         .unwrap();
 
-        let list_pointer = exec_result.final_stack.last().unwrap();
+        let list_pointer = exec_result.op_stack.stack.last().unwrap();
         let expected_list = (0..16).map(|i| u32_lit(200 + i)).collect_vec();
-        assert_list_equal(expected_list, *list_pointer, &exec_result.final_ram)
+        assert_list_equal(expected_list, *list_pointer, &exec_result.ram)
     }
 
     #[test]
@@ -810,9 +810,9 @@ mod run_tests {
         )
         .unwrap();
 
-        let list_pointer = exec_result.final_stack.last().unwrap();
+        let list_pointer = exec_result.op_stack.stack.last().unwrap();
         let expected_list = (0..16).map(|i| u32_lit(200 + i)).collect_vec();
-        assert_list_equal(expected_list, *list_pointer, &exec_result.final_ram)
+        assert_list_equal(expected_list, *list_pointer, &exec_result.ram)
     }
 
     #[test]
@@ -826,11 +826,11 @@ mod run_tests {
         )
         .unwrap();
 
-        let list_pointer = exec_result.final_stack[exec_result.final_stack.len() - 3];
+        let list_pointer = exec_result.op_stack.stack[exec_result.op_stack.stack.len() - 3];
 
         // Check against expected list
         let expected_list = (0..16).map(|i| u32_lit(200 + i)).collect_vec();
-        assert_list_equal(expected_list, list_pointer, &exec_result.final_ram);
+        assert_list_equal(expected_list, list_pointer, &exec_result.ram);
 
         // Check the other return value
         compare_prop_with_stack_safe_lists(
@@ -851,15 +851,15 @@ mod run_tests {
         )
         .unwrap();
 
-        let list_pointer_b = exec_result.final_stack[exec_result.final_stack.len() - 12];
-        let list_pointer_a = exec_result.final_stack[exec_result.final_stack.len() - 1];
+        let list_pointer_b = exec_result.op_stack.stack[exec_result.op_stack.stack.len() - 12];
+        let list_pointer_a = exec_result.op_stack.stack[exec_result.op_stack.stack.len() - 1];
 
         // Check against expected list
         let expected_list_b = (0..16).map(|i| u32_lit(200 + i)).collect_vec();
-        assert_list_equal(expected_list_b, list_pointer_b, &exec_result.final_ram);
+        assert_list_equal(expected_list_b, list_pointer_b, &exec_result.ram);
 
         let expected_list_a = vec![];
-        assert_list_equal(expected_list_a, list_pointer_a, &exec_result.final_ram);
+        assert_list_equal(expected_list_a, list_pointer_a, &exec_result.ram);
 
         // Check the other return value
         compare_prop_with_stack_safe_lists(

@@ -65,11 +65,11 @@ mod test {
         let entrypoint = EntrypointLocation::disk("project_euler", "pe7", "main");
         let vm_output = TritonVMTestCase::new(entrypoint).execute().unwrap();
 
-        assert_eq!(native_output, vm_output.output);
+        assert_eq!(native_output, vm_output.public_output);
 
         println!(
-            "vm_output.output for prime number {prime_number_count}: {}",
-            vm_output.output.iter().skip(1).join("\n")
+            "vm_output.public_output for prime number {prime_number_count}: {}",
+            vm_output.public_output.iter().skip(1).join("\n")
         );
     }
 }

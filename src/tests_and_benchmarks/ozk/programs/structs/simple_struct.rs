@@ -36,7 +36,6 @@ fn main() {
 
 #[cfg(test)]
 mod test {
-    use itertools::Itertools;
     use rand::random;
     use tasm_lib::triton_vm::prelude::*;
 
@@ -94,8 +93,6 @@ mod test {
             0,
         )
         .unwrap();
-        assert_eq!(expected_output, vm_output.output);
-
-        println!("Final stack is: {}", vm_output.final_stack.iter().join(","));
+        assert_eq!(expected_output, vm_output.public_output);
     }
 }

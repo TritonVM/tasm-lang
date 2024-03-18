@@ -66,6 +66,6 @@ mod test {
         )
         .unwrap();
 
-        assert_eq!(expected_output, vm_output.output);
+        assert_eq!(expected_output, vm_output.public_output);
     }
 }

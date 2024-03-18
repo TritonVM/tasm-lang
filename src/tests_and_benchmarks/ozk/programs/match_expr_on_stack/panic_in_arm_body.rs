@@ -90,7 +90,7 @@ fn assert_no_panic_in_arm_body_b() {
         "choose_variant_b_and_panic_on_variants_a_and_c",
     );
     let vm_output = TritonVMTestCase::new(entrypoint).execute().unwrap();
-    assert_eq!(native_output, vm_output.output);
+    assert_eq!(native_output, vm_output.public_output);
 }
 
 fn choose_variant_c_and_panic_on_variants_a_and_b() {
@@ -132,7 +132,7 @@ fn assert_no_panic_in_arm_body_c(
         .with_std_in(std_in)
         .execute()
         .unwrap();
-    prop_assert_eq!(native_output, vm_output.output);
+    prop_assert_eq!(native_output, vm_output.public_output);
 }
 
 fn choose_variant_a_and_panic_on_variant_a() {

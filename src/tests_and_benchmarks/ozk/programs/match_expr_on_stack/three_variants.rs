@@ -80,6 +80,6 @@ mod test {
             .with_std_in(input)
             .execute()
             .unwrap();
-        assert_eq!(native_output, vm_output.output);
+        assert_eq!(native_output, vm_output.public_output);
     }
 }

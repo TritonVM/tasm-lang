@@ -67,11 +67,11 @@ mod test {
         );
         match vm_output {
             Ok(vm_output) => {
-                if native_output != vm_output.output {
+                if native_output != vm_output.public_output {
                     panic!(
                         "expected:\n{}\n\ngot:\n{}\nCode was:\n{}\n",
                         native_output.iter().join(","),
-                        vm_output.output.iter().join(","),
+                        vm_output.public_output.iter().join(","),
                         test_program.iter().join("\n"),
                     );
                 }

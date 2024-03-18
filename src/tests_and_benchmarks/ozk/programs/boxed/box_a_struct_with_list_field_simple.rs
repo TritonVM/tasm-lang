@@ -37,6 +37,6 @@ mod test {
         let entrypoint =
             EntrypointLocation::disk("boxed", "box_a_struct_with_list_field_simple", "main");
         let vm_output = TritonVMTestCase::new(entrypoint).execute().unwrap();
-        assert_eq!(native_output, vm_output.output);
+        assert_eq!(native_output, vm_output.public_output);
     }
 }

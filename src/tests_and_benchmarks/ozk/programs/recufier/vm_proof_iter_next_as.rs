@@ -147,10 +147,10 @@ mod test {
             .execute()
             .unwrap();
 
-        // assert_eq!(native_output, vm_output.output);
-        if native_output != vm_output.output {
+        // assert_eq!(native_output, vm_output.public_output);
+        if native_output != vm_output.public_output {
             println!("Expected:\n{}", native_output.iter().join(","));
-            println!("Got:\n{}", vm_output.output.iter().join(","));
+            println!("Got:\n{}", vm_output.public_output.iter().join(","));
             panic!()
         }
     }

@@ -51,7 +51,7 @@ mod test {
             .with_non_determinism(non_determinism_a)
             .execute()
             .unwrap();
-        assert_eq!(native_output_a, vm_output_a.output);
+        assert_eq!(native_output_a, vm_output_a.public_output);
 
         println!("b");
         let variant_b = SimpleEnum::B(BFieldElement::new(12345678901234567890));
@@ -64,6 +64,6 @@ mod test {
             .with_non_determinism(non_determinism_b)
             .execute()
             .unwrap();
-        assert_eq!(native_output_b, vm_output_b.output);
+        assert_eq!(native_output_b, vm_output_b.public_output);
     }
 }

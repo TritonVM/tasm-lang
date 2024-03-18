@@ -324,12 +324,6 @@ pub(super) fn tasm_hashing_merkle_verify(
     assert!(mt_inclusion_proof.verify(root));
 }
 
-pub(super) fn verify_nd_digests_is_empty() -> bool {
-    ND_DIGESTS.with_borrow(|ndds| assert!(ndds.is_empty(), "Length was: {}", ndds.len()));
-
-    true
-}
-
 pub(super) fn tasm_hashing_algebraic_hasher_hash_varlen<T: BFieldCodec>(
     preimage: &[T],
     length: usize,

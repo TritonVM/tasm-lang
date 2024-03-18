@@ -85,7 +85,7 @@ mod test {
             .execute()
             .unwrap();
 
-        prop_assert_eq!(expected_output, vm_output.output);
+        prop_assert_eq!(expected_output, vm_output.public_output);
     }
 }
 

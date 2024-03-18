@@ -250,17 +250,17 @@ pub(crate) mod run_tests {
         .unwrap();
 
         // Verify that expected lists were built
-        let mut final_stack = exec_result.final_stack.clone();
+        let mut final_stack = exec_result.op_stack.stack.clone();
         let b_10 = final_stack.pop().unwrap();
         assert_eq!(405, b_10.value());
 
         let list_pointer_b = final_stack.pop().unwrap();
         let expected_list_b = (400..416).map(u32_lit).rev().collect_vec();
-        assert_list_equal(expected_list_b, list_pointer_b, &exec_result.final_ram);
+        assert_list_equal(expected_list_b, list_pointer_b, &exec_result.ram);
 
         let list_pointer_a = final_stack.pop().unwrap();
         let expected_list_a = (0..16).map(u32_lit).collect_vec();
-        assert_list_equal(expected_list_a, list_pointer_a, &exec_result.final_ram);
+        assert_list_equal(expected_list_a, list_pointer_a, &exec_result.ram);
 
         fn build_and_read_u32_vector_in_while_loop_rast() -> syn::ItemFn {
             item_fn(parse_quote! {
@@ -316,9 +316,9 @@ pub(crate) mod run_tests {
             DataType::List(Box::new(DataType::U32)).stack_size() as isize,
         )
         .unwrap();
-        let mut list_pointer = exec_result.final_stack.last().unwrap();
+        let mut list_pointer = exec_result.op_stack.stack.last().unwrap();
         let mut expected_list = (0..16).map(u32_lit).collect_vec();
-        assert_list_equal(expected_list, *list_pointer, &exec_result.final_ram);
+        assert_list_equal(expected_list, *list_pointer, &exec_result.ram);
 
         exec_result = execute_with_stack_and_ins_safe_lists(
             &item_fn(parse_quote! {
@@ -340,9 +340,9 @@ pub(crate) mod run_tests {
             DataType::List(Box::new(DataType::U64)).stack_size() as isize,
         )
         .unwrap();
-        list_pointer = exec_result.final_stack.last().unwrap();
+        list_pointer = exec_result.op_stack.stack.last().unwrap();
         expected_list = (0..16).map(u64_lit).collect_vec();
-        assert_list_equal(expected_list, *list_pointer, &exec_result.final_ram)
+        assert_list_equal(expected_list, *list_pointer, &exec_result.ram)
     }
 
     #[test]

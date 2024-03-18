@@ -33,6 +33,6 @@ mod tests {
         let native_output =
             rust_shadows::wrap_main_with_io(&main)(std_in.clone(), NonDeterminism::default());
         let vm_output = test_case.with_std_in(std_in).execute().unwrap();
-        assert_eq!(native_output, vm_output.output);
+        assert_eq!(native_output, vm_output.public_output);
     }
 }

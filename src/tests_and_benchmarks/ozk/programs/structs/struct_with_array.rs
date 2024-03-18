@@ -89,11 +89,11 @@ mod test {
             0,
         )
         .unwrap();
-        if expected_output != vm_output.output {
+        if expected_output != vm_output.public_output {
             panic!(
                 "expected_output:\n{}\ngot:\n{}\n. Code was:\n{}",
                 expected_output.iter().join(", "),
-                vm_output.output.iter().join(", "),
+                vm_output.public_output.iter().join(", "),
                 test_program.iter().join("\n")
             );
         }

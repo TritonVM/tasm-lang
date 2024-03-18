@@ -48,12 +48,12 @@ mod tests {
                 0,
             )
             .unwrap();
-            let list_pointer = exec_result.final_stack.last().unwrap();
+            let list_pointer = exec_result.op_stack.stack.last().unwrap();
             let expected_list = init_list_u64s
                 .into_iter()
                 .map(|x| u64_lit(x * 2))
                 .collect_vec();
-            assert_list_equal(expected_list, *list_pointer, &exec_result.final_ram);
+            assert_list_equal(expected_list, *list_pointer, &exec_result.ram);
         }
     }
 }

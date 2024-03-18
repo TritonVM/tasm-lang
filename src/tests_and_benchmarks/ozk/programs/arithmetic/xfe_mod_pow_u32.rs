@@ -85,7 +85,7 @@ mod test {
             .with_std_in(std_in)
             .execute()
             .unwrap();
-        assert_eq!(native_output, vm_output.output);
+        assert_eq!(native_output, vm_output.public_output);
     }
 
     #[test]
@@ -100,6 +100,6 @@ mod test {
             "verify_no_name_clash_xfe_bfe_mod_pow_u32",
         );
         let vm_output = TritonVMTestCase::new(entrypoint).execute().unwrap();
-        assert_eq!(native_output, vm_output.output);
+        assert_eq!(native_output, vm_output.public_output);
     }
 }

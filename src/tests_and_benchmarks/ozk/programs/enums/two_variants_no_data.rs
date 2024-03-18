@@ -70,12 +70,12 @@ mod test {
             0,
         )
         .unwrap();
-        // assert_eq!(expected_output, vm_output.output);
-        if expected_output != vm_output.output {
+        // assert_eq!(expected_output, vm_output.public_output);
+        if expected_output != vm_output.public_output {
             panic!(
                 "expected_output:\n {}, got:\n{}. Code was:\n{}",
                 expected_output.iter().join(", "),
-                vm_output.output.iter().join(", "),
+                vm_output.public_output.iter().join(", "),
                 test_program.iter().join("\n")
             );
         }

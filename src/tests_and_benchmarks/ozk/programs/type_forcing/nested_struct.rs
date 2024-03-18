@@ -49,7 +49,7 @@ mod tests {
             "access_nested_struct_list_len",
         );
         let vm_output = TritonVMTestCase::new(entrypoint).execute().unwrap();
-        assert_eq!(native_output, vm_output.output);
+        assert_eq!(native_output, vm_output.public_output);
     }
 
     #[test]
@@ -65,6 +65,6 @@ mod tests {
             "access_boxed_nested_struct_list_len",
         );
         let vm_output = TritonVMTestCase::new(entrypoint).execute().unwrap();
-        assert_eq!(native_output, vm_output.output);
+        assert_eq!(native_output, vm_output.public_output);
     }
 }

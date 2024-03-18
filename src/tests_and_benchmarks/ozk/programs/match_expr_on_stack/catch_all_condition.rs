@@ -64,7 +64,7 @@ fn catch_all_covers_a_test(
         .with_std_in(std_in)
         .execute()
         .unwrap();
-    prop_assert_eq!(native_output, vm_output.output);
+    prop_assert_eq!(native_output, vm_output.public_output);
 }
 
 fn catch_all_covers_b() {
@@ -118,7 +118,7 @@ fn catch_all_covers_b_test(
         .with_std_in(std_in)
         .execute()
         .unwrap();
-    prop_assert_eq!(native_output, vm_output.output);
+    prop_assert_eq!(native_output, vm_output.public_output);
 }
 
 fn catch_all_covers_c() {
@@ -172,7 +172,7 @@ fn catch_all_covers_c_test(
         .with_std_in(std_in)
         .execute()
         .unwrap();
-    prop_assert_eq!(native_output, vm_output.output);
+    prop_assert_eq!(native_output, vm_output.public_output);
 }
 
 fn catch_all_covers_a_and_b() {
@@ -222,7 +222,7 @@ fn catch_all_covers_a_and_b_test(
         .with_std_in(std_in)
         .execute()
         .unwrap();
-    prop_assert_eq!(native_output, vm_output.output);
+    prop_assert_eq!(native_output, vm_output.public_output);
 }
 
 fn catch_all_covers_a_and_c() {
@@ -274,7 +274,7 @@ fn catch_all_covers_a_and_c_test(
         .with_std_in(std_in)
         .execute()
         .unwrap();
-    prop_assert_eq!(native_output, vm_output.output);
+    prop_assert_eq!(native_output, vm_output.public_output);
 }
 
 fn catch_all_covers_b_and_c() {
@@ -321,7 +321,7 @@ fn catch_all_covers_b_and_c_test(
         .with_std_in(std_in)
         .execute()
         .unwrap();
-    prop_assert_eq!(native_output, vm_output.output);
+    prop_assert_eq!(native_output, vm_output.public_output);
 }
 
 #[allow(clippy::match_single_binding)]
@@ -362,5 +362,5 @@ fn catch_all_covers_a_b_c_test(
         .with_std_in(std_in)
         .execute()
         .unwrap();
-    prop_assert_eq!(native_output, vm_output.output);
+    prop_assert_eq!(native_output, vm_output.public_output);
 }
