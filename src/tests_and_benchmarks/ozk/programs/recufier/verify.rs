@@ -455,7 +455,8 @@ fn recufy() {
     // Check leafs
     // Dequeue base elements
     // Could be read from secret-in, but it's much more efficient to get them from memory
-    let base_table_rows: Box<Vec<[BFieldElement; 356]>> = proof_iter.next_as_masterbasetablerows();
+    let base_table_rows: Box<Vec<BaseRow<BFieldElement>>> =
+        proof_iter.next_as_masterbasetablerows();
     {
         let mut i: usize = 0;
         while i < fri.num_colinearity_checks as usize {
@@ -468,6 +469,8 @@ fn recufy() {
     {
         let _dummy: Box<Vec<Digest>> = proof_iter.next_as_authenticationstructure();
     }
+
+    // hash base rows to get leafs
     let mut leaf_digests_base: Vec<Digest> = Vec::<Digest>::default();
     {
         let mut i: usize = 0;
@@ -495,6 +498,23 @@ fn recufy() {
             i += 1;
         }
     }
+
+    // dequeue extension elements
+    let ext_table_rows: Box<Vec<ExtensionRow>> = proof_iter.next_as_masterexttablerows();
+
+    // hash extension rows to get leafs
+    let mut leaf_digests_ext: Vec<Digest> = Vec::<Digest>::default();
+    {
+        let mut i: usize = 0;
+        while i < fri.num_colinearity_checks as usize {
+            leaf_digests_ext.push(tasm::tasm_hashing_algebraic_hasher_hash_varlen(
+                &ext_table_rows[i],
+                83 * 3,
+            ));
+            i += 1;
+        }
+    }
+    RecufyDebug::dump_digests(&leaf_digests_ext);
 
     // Ensure that sponge-states are in sync
     RecufyDebug::sponge_state(Tip5WithState::squeeze());

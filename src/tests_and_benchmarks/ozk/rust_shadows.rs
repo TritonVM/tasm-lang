@@ -324,11 +324,14 @@ pub(super) fn tasm_hashing_merkle_verify(
     assert!(mt_inclusion_proof.verify(root));
 }
 
-pub(super) fn tasm_hashing_algebraic_hasher_hash_varlen(
-    preimage: &[BFieldElement],
-    _length: usize,
+pub(super) fn tasm_hashing_algebraic_hasher_hash_varlen<T: BFieldCodec>(
+    preimage: &[T],
+    length: usize,
 ) -> Digest {
+    assert!(T::static_length().is_some());
+
     // Mutate sponge state the same way that Triton-VM does
+    let preimage = &preimage.iter().flat_map(|c| c.encode()).collect_vec()[..length];
     SPONGE_STATE.with_borrow_mut(|sponge| {
         HashVarlen.sponge_mutation(sponge.as_mut().unwrap(), preimage);
     });
