@@ -5,6 +5,7 @@ use serde_derive::Serialize;
 use tasm_lib::triton_vm::table::extension_table::Quotientable;
 use tasm_lib::triton_vm::table::master_table::MasterExtTable;
 use tasm_lib::triton_vm::table::ExtensionRow;
+use tasm_lib::triton_vm::table::QuotientSegments;
 
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 use crate::tests_and_benchmarks::ozk::rust_shadows::Tip5WithState;
@@ -344,9 +345,9 @@ fn recufy() {
             .unwrap();
     // println!("quot_codeword_weights: {quot_codeword_weights:?}");
     RecufyDebug::dump_xfes(&quot_codeword_weights.to_vec());
-    let quotient_codeword_merkle_root: Box<Digest> = proof_iter.next_as_merkleroot();
+    let quotient_tree_merkle_root: Box<Digest> = proof_iter.next_as_merkleroot();
     // println!("quotient_codeword_merkle_root: {quotient_codeword_merkle_root:?}");
-    RecufyDebug::dump_digest(*quotient_codeword_merkle_root);
+    RecufyDebug::dump_digest(*quotient_tree_merkle_root);
 
     let trace_domain_generator: BFieldElement =
         ArithmeticDomain::generator_for_length(padded_height as u64);
@@ -535,6 +536,37 @@ fn recufy() {
         }
     }
 
+    // dequeue quotient segments
+    let quotient_segment_elements: Box<Vec<QuotientSegments>> =
+        proof_iter.next_as_quotientsegmentselements();
+
+    // hash rows
+    let mut leaf_digests_quot: Vec<Digest> = Vec::<Digest>::default();
+    {
+        let mut i: usize = 0;
+        while i < 2 * fri.num_colinearity_checks as usize {
+            leaf_digests_quot.push(tasm::tasm_hashing_algebraic_hasher_hash_varlen(
+                &quotient_segment_elements[i],
+                4 * 3,
+            ));
+            i += 1;
+        }
+    }
+
+    // Merkle verify (quotient tree)
+    {
+        let mut i: usize = 0;
+        while i < 2 * fri.num_colinearity_checks as usize {
+            tasm::tasm_hashing_merkle_verify(
+                *quotient_tree_merkle_root,
+                revealed_fri_indices_and_elements[i].0,
+                leaf_digests_quot[i],
+                merkle_tree_height,
+            );
+            i += 1;
+        }
+    }
+
     // Ensure that sponge-states are in sync
     RecufyDebug::sponge_state(Tip5WithState::squeeze());
     return;
@@ -616,6 +648,11 @@ mod tests {
                 .collect_vec(),
             proof_extraction
                 .ext_tree_authentication_paths
+                .into_iter()
+                .flatten()
+                .collect_vec(),
+            proof_extraction
+                .quot_tree_authentication_paths
                 .into_iter()
                 .flatten()
                 .collect_vec(),

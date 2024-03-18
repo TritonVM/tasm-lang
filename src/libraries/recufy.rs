@@ -4,6 +4,7 @@ use syn::parse_quote;
 use syn::PathArguments;
 use tasm_lib::triton_vm::table::NUM_BASE_COLUMNS;
 use tasm_lib::triton_vm::table::NUM_EXT_COLUMNS;
+use tasm_lib::triton_vm::table::NUM_QUOTIENT_SEGMENTS;
 
 use crate::ast;
 use crate::ast_types;
@@ -20,6 +21,7 @@ use super::Library;
 
 const BASE_ROW_TYPE_NAME: &str = "BaseRow";
 const EXT_ROW_TYPE_NAME: &str = "ExtensionRow";
+const QUOT_SEGMENTS_TYPE_NAME: &str = "QuotientSegments";
 
 #[derive(Debug)]
 pub(crate) struct RecufyLib;
@@ -35,6 +37,7 @@ impl Library for RecufyLib {
             VM_PROOF_ITER_TYPE_NAME => Some(graft_vm_proof_iter(graft)),
             BASE_ROW_TYPE_NAME => Some(Self::graft_base_row(path_args, graft)),
             EXT_ROW_TYPE_NAME => Some(Self::graft_ext_row(path_args)),
+            QUOT_SEGMENTS_TYPE_NAME => Some(Self::graft_quot_segments(path_args)),
             _ => None,
         }
     }
@@ -132,6 +135,14 @@ impl RecufyLib {
         ast_types::DataType::Array(ast_types::ArrayType {
             element_type: Box::new(ast_types::DataType::Xfe),
             length: NUM_EXT_COLUMNS,
+        })
+    }
+
+    fn graft_quot_segments(arguments: &PathArguments) -> ast_types::DataType {
+        assert!(matches!(arguments, PathArguments::None));
+        ast_types::DataType::Array(ast_types::ArrayType {
+            element_type: Box::new(ast_types::DataType::Xfe),
+            length: NUM_QUOTIENT_SEGMENTS,
         })
     }
 

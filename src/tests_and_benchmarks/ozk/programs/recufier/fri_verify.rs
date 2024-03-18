@@ -105,7 +105,7 @@ pub(crate) mod test {
         pub(crate) fri_proof_stream: StarkProofStream,
         pub(crate) base_tree_authentication_paths: Vec<Vec<Digest>>,
         pub(crate) ext_tree_authentication_paths: Vec<Vec<Digest>>,
-        // quot_tree_authentication_paths: Vec<Vec<Digest>>,
+        pub(crate) quot_tree_authentication_paths: Vec<Vec<Digest>>,
     }
 
     /// Extracts a proof stream that will work for FRI verification from a proof stream that works for
@@ -124,7 +124,7 @@ pub(crate) mod test {
         proof_stream.alter_fiat_shamir_state_with(claim);
 
         // Base-table Merkle root
-        proof_stream
+        let base_table_root = proof_stream
             .dequeue()
             .unwrap()
             .try_into_merkle_root()
@@ -144,7 +144,7 @@ pub(crate) mod test {
         proof_stream.sample_scalars(MasterExtTable::NUM_CONSTRAINTS);
 
         // Quotient codeword Merkle root
-        proof_stream
+        let quotient_root = proof_stream
             .dequeue()
             .unwrap()
             .try_into_merkle_root()
@@ -191,68 +191,89 @@ pub(crate) mod test {
         let fri: triton_vm::fri::Fri<Tip5> = stark.derive_fri(padded_height).unwrap();
         let fri_proof_stream = proof_stream.clone();
         let fri_verify_result = fri.verify(&mut proof_stream, &mut None).unwrap();
+        let indices = fri_verify_result.iter().map(|(i, _)| *i).collect_vec();
+        let tree_height = fri.domain.length.ilog2() as usize;
 
+        // base
         let base_table_rows = proof_stream
             .dequeue()
             .unwrap()
             .try_into_master_base_table_rows()
             .unwrap();
-        let base_table_leaf_digests = base_table_rows.iter().map(|x| Tip5::hash_varlen(x));
         let base_authentication_structure = proof_stream
             .dequeue()
             .unwrap()
             .try_into_authentication_structure()
             .unwrap();
-        let fri_indexed_base_leaves = fri_verify_result
-            .iter()
-            .map(|(index, _)| *index)
-            .zip(base_table_leaf_digests)
-            .collect_vec();
-        let tree_height = fri.domain.length.ilog2() as usize;
-        let base_tree_inclusion_proof = MerkleTreeInclusionProof::<Tip5> {
+        let base_tree_auth_paths = extract_paths(
+            base_table_root,
+            &indices,
+            &base_table_rows,
+            &base_authentication_structure,
             tree_height,
-            indexed_leaves: fri_indexed_base_leaves,
-            authentication_structure: base_authentication_structure,
-            _hasher: std::marker::PhantomData,
-        };
-        let base_tree_auth_paths = base_tree_inclusion_proof.into_authentication_paths();
-        if let Err(err) = base_tree_auth_paths {
-            println!("base_tree_auth_paths: {}", err);
-        }
-        let base_tree_auth_paths = base_tree_auth_paths.unwrap();
+        );
 
+        // extension
         let ext_table_rows = proof_stream
             .dequeue()
             .unwrap()
             .try_into_master_ext_table_rows()
             .unwrap();
-        let ext_table_leaf_digests = ext_table_rows.iter().map(Tip5::hash).collect_vec();
         let ext_authentication_structure = proof_stream
             .dequeue()
             .unwrap()
             .try_into_authentication_structure()
             .unwrap();
-        let fri_indexed_ext_leafs = fri_verify_result
-            .iter()
-            .map(|(index, _)| *index)
-            .zip(ext_table_leaf_digests)
-            .collect_vec();
-        let ext_tree_inclusion_proof = MerkleTreeInclusionProof::<Tip5> {
+        let ext_tree_auth_paths = extract_paths(
+            ext_mt_root,
+            &indices,
+            &ext_table_rows,
+            &ext_authentication_structure,
             tree_height,
-            indexed_leaves: fri_indexed_ext_leafs,
-            authentication_structure: ext_authentication_structure,
-            _hasher: std::marker::PhantomData,
-        };
-        assert!(ext_tree_inclusion_proof.clone().verify(ext_mt_root));
-        let ext_tree_auth_paths = ext_tree_inclusion_proof
-            .into_authentication_paths()
+        );
+
+        // quotient
+        let quot_table_rows = proof_stream
+            .dequeue()
+            .unwrap()
+            .try_into_quot_segments_elements()
             .unwrap();
+        let quot_authentication_structure = proof_stream
+            .dequeue()
+            .unwrap()
+            .try_into_authentication_structure()
+            .unwrap();
+        let quot_tree_auth_paths = extract_paths(
+            quotient_root,
+            &indices,
+            &quot_table_rows,
+            &quot_authentication_structure,
+            tree_height,
+        );
 
         StarkProofExtraction {
             fri_proof_stream,
             base_tree_authentication_paths: base_tree_auth_paths,
             ext_tree_authentication_paths: ext_tree_auth_paths,
-            // quot_tree_authentication_paths: todo!(),
+            quot_tree_authentication_paths: quot_tree_auth_paths,
         }
+    }
+
+    fn extract_paths<const N: usize, T: BFieldCodec>(
+        root: Digest,
+        indices: &[usize],
+        rows: &[[T; N]],
+        authentication_structure: &[Digest],
+        tree_height: usize,
+    ) -> Vec<Vec<Digest>> {
+        let leafs = rows.iter().map(Tip5::hash).collect_vec();
+        let inclusion_proof = MerkleTreeInclusionProof::<Tip5> {
+            tree_height,
+            indexed_leaves: indices.iter().cloned().zip(leafs).collect_vec(),
+            authentication_structure: authentication_structure.to_vec(),
+            _hasher: std::marker::PhantomData,
+        };
+        assert!(inclusion_proof.clone().verify(root));
+        inclusion_proof.into_authentication_paths().unwrap()
     }
 }
