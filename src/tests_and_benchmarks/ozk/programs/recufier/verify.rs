@@ -456,11 +456,12 @@ fn recufy() {
     // Check leafs
     // Dequeue base elements
     // Could be read from secret-in, but it's much more efficient to get them from memory
+    let num_combination_codeword_checks: usize = 2 * fri.num_colinearity_checks as usize;
     let base_table_rows: Box<Vec<BaseRow<BFieldElement>>> =
         proof_iter.next_as_masterbasetablerows();
     {
         let mut i: usize = 0;
-        while i < 2 * fri.num_colinearity_checks as usize {
+        while i < num_combination_codeword_checks {
             // RecufyDebug::dump_bfes(&base_table_rows[i].to_vec());
             i += 1;
         }
@@ -475,7 +476,7 @@ fn recufy() {
     let mut leaf_digests_base: Vec<Digest> = Vec::<Digest>::default();
     {
         let mut i: usize = 0;
-        while i < 2 * fri.num_colinearity_checks as usize {
+        while i < num_combination_codeword_checks {
             leaf_digests_base.push(tasm::tasm_hashing_algebraic_hasher_hash_varlen(
                 &base_table_rows[i],
                 356,
@@ -489,7 +490,7 @@ fn recufy() {
     let merkle_tree_height: u32 = fri.domain_length.ilog2();
     {
         let mut i: usize = 0;
-        while i < 2 * fri.num_colinearity_checks as usize {
+        while i < num_combination_codeword_checks {
             tasm::tasm_hashing_merkle_verify(
                 *base_merkle_tree_root,
                 revealed_fri_indices_and_elements[i].0,
@@ -512,7 +513,7 @@ fn recufy() {
     let mut leaf_digests_ext: Vec<Digest> = Vec::<Digest>::default();
     {
         let mut i: usize = 0;
-        while i < 2 * fri.num_colinearity_checks as usize {
+        while i < num_combination_codeword_checks {
             leaf_digests_ext.push(tasm::tasm_hashing_algebraic_hasher_hash_varlen(
                 &ext_table_rows[i],
                 83 * 3,
@@ -525,7 +526,7 @@ fn recufy() {
     // Merkle verify (extension tree)
     {
         let mut i: usize = 0;
-        while i < 2 * fri.num_colinearity_checks as usize {
+        while i < num_combination_codeword_checks {
             tasm::tasm_hashing_merkle_verify(
                 *extension_tree_merkle_root,
                 revealed_fri_indices_and_elements[i].0,
@@ -544,7 +545,7 @@ fn recufy() {
     let mut leaf_digests_quot: Vec<Digest> = Vec::<Digest>::default();
     {
         let mut i: usize = 0;
-        while i < 2 * fri.num_colinearity_checks as usize {
+        while i < num_combination_codeword_checks {
             leaf_digests_quot.push(tasm::tasm_hashing_algebraic_hasher_hash_varlen(
                 &quotient_segment_elements[i],
                 4 * 3,
@@ -556,7 +557,7 @@ fn recufy() {
     // Merkle verify (quotient tree)
     {
         let mut i: usize = 0;
-        while i < 2 * fri.num_colinearity_checks as usize {
+        while i < num_combination_codeword_checks {
             tasm::tasm_hashing_merkle_verify(
                 *quotient_tree_merkle_root,
                 revealed_fri_indices_and_elements[i].0,
@@ -565,6 +566,18 @@ fn recufy() {
             );
             i += 1;
         }
+    }
+
+    // Linear combination
+    // Some of these checks may be redundant, but this is what the verifier in TVM does
+    assert!(num_combination_codeword_checks == revealed_fri_indices_and_elements.len());
+    assert!(num_combination_codeword_checks == base_table_rows.len());
+    assert!(num_combination_codeword_checks == ext_table_rows.len());
+    assert!(num_combination_codeword_checks == quotient_segment_elements.len());
+
+    // Main loop
+    {
+        let mut i: usize = 0;
     }
 
     // Ensure that sponge-states are in sync
