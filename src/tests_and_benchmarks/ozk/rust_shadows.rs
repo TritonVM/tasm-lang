@@ -647,3 +647,21 @@ vm_proof_iter_impl!(
     FriResponse(FriResponse) defines next_as_friresponse
         uses try_into_fri_response,
 );
+
+pub fn tasm_array_inner_product_of_three_rows_with_weights<const N: usize>(
+    weights: [XFieldElement; N],
+    base_row: BaseRow<BFieldElement>,
+    ext_row: ExtensionRow,
+) -> XFieldElement {
+    let mut acc: XFieldElement = XFieldElement::zero();
+    for i in 0..base_row.len() {
+        acc += weights[i] * base_row[i];
+    }
+
+    let number_of_randomizers: usize = 0;
+    for i in 0..(ext_row.len() - number_of_randomizers) {
+        acc += ext_row[i] * weights[i + base_row.len()];
+    }
+
+    acc
+}

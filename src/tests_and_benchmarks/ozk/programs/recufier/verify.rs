@@ -124,6 +124,7 @@ impl Recufier {
         return lengths;
     }
 
+    /// Evaluate AIR constraintd and multiply with the correct inverse of zerofier.
     fn quotient_summands(
         out_of_domain_point_curr_row: XFieldElement,
         padded_height: u32,
@@ -150,6 +151,8 @@ impl Recufier {
         // i.e., only last row
         // RecufyDebug::dump_xfe(terminal_zerofier_inv);
 
+        // Along with the challenges, the out-of-domain rows ({base,ext}*{curr,next}) are stored at
+        // a statically-known location; those locations are assumed by the next function call.
         let mut evaluated_constraints: [XFieldElement; 596] =
             tasm::tasm_recufier_master_ext_table_air_constraint_evaluation();
         // println!("evaluated_constraints: {evaluated_constraints:?}");
@@ -203,31 +206,6 @@ impl Recufier {
 
         i = 0;
         while i < ext_row.len() {
-            acc += ext_row[i] * base_and_ext_codeword_weights[i + base_row.len()];
-            i += 1;
-        }
-
-        return acc;
-    }
-
-    #[allow(clippy::boxed_local)]
-    #[allow(clippy::redundant_allocation)]
-    #[allow(clippy::ptr_arg)]
-    fn linearly_sum_bfe_base_and_ext_row(
-        base_row: BaseRow<BFieldElement>,
-        ext_row: ExtensionRow,
-        base_and_ext_codeword_weights: &Vec<XFieldElement>,
-    ) -> XFieldElement {
-        let mut acc: XFieldElement = XFieldElement::zero();
-        let mut i: usize = 0;
-        while i < base_row.len() {
-            acc += base_and_ext_codeword_weights[i] * base_row[i];
-            i += 1;
-        }
-
-        i = 0;
-        let number_of_randomizers: usize = 0;
-        while i < ext_row.len() - number_of_randomizers {
             acc += ext_row[i] * base_and_ext_codeword_weights[i + base_row.len()];
             i += 1;
         }
@@ -319,6 +297,7 @@ pub(crate) struct FriVerify {
 }
 
 impl FriVerify {
+    // This wrapper is probably not necessary; consider removing.
     pub fn verify(&self, proof_iter: &mut VmProofIter) -> Vec<(u32, XFieldElement)> {
         return tasm::tasm_recufier_fri_verify(proof_iter, self);
     }
@@ -332,96 +311,61 @@ fn verify_factorial_program() {
         BFieldElement::new(2749753857496185052),
         BFieldElement::new(14083115970614877960),
     ]));
-    // println!("program_digest:\n{program_digest}");
     let parameters: Box<StarkParameters> = Box::<StarkParameters>::new(StarkParameters::default());
 
     Tip5WithState::init();
     let encoded_claim: Vec<BFieldElement> = Recufier::encode_claim(*program_digest);
-    // println!("encoded_claim: {}", encoded_claim.iter().join(","));
-    // RecufyDebug::dump_bfes(&encoded_claim);
     Tip5WithState::pad_and_absorb_all(&encoded_claim);
 
     let inner_proof_iter: VmProofIter = VmProofIter::new();
     let mut proof_iter: Box<VmProofIter> = Box::<VmProofIter>::new(inner_proof_iter);
     let log_2_padded_height: Box<u32> = proof_iter.next_as_log2paddedheight();
-    // println!("log_2_padded_height: {log_2_padded_height}");
     let padded_height: u32 = 1 << *log_2_padded_height;
-    // println!("padded_height: {padded_height}");
-    // RecufyDebug::dump_u32(padded_height);
 
     let fri: Box<FriVerify> = Box::<FriVerify>::new(parameters.derive_fri(padded_height));
 
     let base_merkle_tree_root: Box<Digest> = proof_iter.next_as_merkleroot();
-    // println!("base_merkle_tree_root: {base_merkle_tree_root:?}");
-    // RecufyDebug::dump_digest(*base_merkle_tree_root);
 
+    // The next function returns a pointer, but the value of this pointer is known statically. So
+    // whenever the challenges are needed (which is for constraint evaluation), we can assume their
+    // location and do not need to read this variable.
     let challenges: Box<Challenges> =
         tasm::tasm_recufier_challenges_new_empty_input_and_output_59_4(*program_digest);
-    // println!("challenges: {:?}", challenges.challenges);
-    // RecufyDebug::dump_xfes(&challenges.challenges.to_vec());
 
     let extension_tree_merkle_root: Box<Digest> = proof_iter.next_as_merkleroot();
-    // println!("extension_tree_merkle_root: {extension_tree_merkle_root:?}");
-    // RecufyDebug::dump_digest(*extension_tree_merkle_root);
 
     let quot_codeword_weights: [XFieldElement; 596] =
         <[XFieldElement; 596]>::try_from(Tip5WithState::sample_scalars(Recufier::num_quotients()))
             .unwrap();
-    // println!("quot_codeword_weights: {quot_codeword_weights:?}");
-    // RecufyDebug::dump_xfes(&quot_codeword_weights.to_vec());
     let quotient_tree_merkle_root: Box<Digest> = proof_iter.next_as_merkleroot();
-    // println!("quotient_codeword_merkle_root: {quotient_codeword_merkle_root:?}");
-    // RecufyDebug::dump_digest(*quotient_tree_merkle_root);
 
     let trace_domain_generator: BFieldElement =
         ArithmeticDomain::generator_for_length(padded_height as u64);
-    // println!("trace_domain_generator: {trace_domain_generator:?}");
-    // RecufyDebug::dump_bfe(trace_domain_generator);
 
     let ___out_of_domain_point_curr_row: Vec<XFieldElement> = Tip5WithState::sample_scalars(1);
     let out_of_domain_point_curr_row: XFieldElement = ___out_of_domain_point_curr_row[0];
-    // println!("out_of_domain_point_curr_row: {out_of_domain_point_curr_row:?}");
-    // RecufyDebug::dump_xfe(out_of_domain_point_curr_row);
     let out_of_domain_point_next_row: XFieldElement =
         out_of_domain_point_curr_row * trace_domain_generator;
-    // println!("out_of_domain_point_next_row: {out_of_domain_point_next_row:?}");
-    // RecufyDebug::dump_xfe(out_of_domain_point_next_row);
     let out_of_domain_point_curr_row_pow_num_segments: XFieldElement =
         tasm::tasm_arithmetic_xfe_to_the_fourth(out_of_domain_point_curr_row);
-    // println!("out_of_domain_point_curr_row_pow_num_segments: {out_of_domain_point_curr_row_pow_num_segments:?}");
-    // RecufyDebug::dump_xfe(out_of_domain_point_curr_row_pow_num_segments);
 
     let out_of_domain_curr_base_row: Box<Box<BaseRow<XFieldElement>>> =
         proof_iter.next_as_outofdomainbaserow();
-    // println!("out_of_domain_curr_base_row: {out_of_domain_curr_base_row:?}");
-    // RecufyDebug::dump_xfes(&out_of_domain_curr_base_row.to_vec());
     let out_of_domain_curr_ext_row: Box<Box<ExtensionRow>> = proof_iter.next_as_outofdomainextrow();
-    // println!("out_of_domain_curr_ext_row: {out_of_domain_curr_ext_row:?}");
-    // RecufyDebug::dump_xfes(&out_of_domain_curr_ext_row.to_vec());
     let out_of_domain_next_base_row: Box<Box<BaseRow<XFieldElement>>> =
         proof_iter.next_as_outofdomainbaserow();
-    // println!("out_of_domain_next_base_row: {out_of_domain_next_base_row:?}");
-    // RecufyDebug::dump_xfes(&out_of_domain_next_base_row.to_vec());
     let out_of_domain_next_ext_row: Box<Box<ExtensionRow>> = proof_iter.next_as_outofdomainextrow();
-    // println!("out_of_domain_next_ext_row: {out_of_domain_next_ext_row:?}");
-    // RecufyDebug::dump_xfes(&out_of_domain_next_ext_row.to_vec());
     let out_of_domain_curr_row_quot_segments: Box<[XFieldElement; 4]> =
         proof_iter.next_as_outofdomainquotientsegments();
-    // println!("out_of_domain_curr_row_quot_segments: {out_of_domain_curr_row_quot_segments:?}");
-    // RecufyDebug::dump_xfes(&out_of_domain_curr_row_quot_segments.to_vec());
 
     let quotient_summands: [XFieldElement; 596] = Recufier::quotient_summands(
         out_of_domain_point_curr_row,
         padded_height,
         trace_domain_generator,
     );
-    // println!("quotient_summands: {quotient_summands:?}");
-    // RecufyDebug::dump_xfes(&quotient_summands.to_vec());
 
     let out_of_domain_quotient_value: XFieldElement =
         tasm::tasm_array_inner_product_of_596_xfes(quot_codeword_weights, quotient_summands);
-    // println!("out_of_domain_quotient_value: {out_of_domain_quotient_value:?}");
-    // RecufyDebug::dump_xfe(out_of_domain_quotient_value);
 
     let sum_of_evaluated_out_of_domain_quotient_segments: XFieldElement =
         tasm::tasm_array_horner_evaluation_with_4_coefficients(
@@ -429,23 +373,18 @@ fn verify_factorial_program() {
             out_of_domain_point_curr_row,
         );
 
-    // RecufyDebug::dump_xfe(sum_of_evaluated_out_of_domain_quotient_segments);
-    // println!("sum_of_evaluated_out_of_domain_quotient_segments: {sum_of_evaluated_out_of_domain_quotient_segments:?}");
-    // println!("out_of_domain_quotient_value: {out_of_domain_quotient_value:?}");
     assert!(sum_of_evaluated_out_of_domain_quotient_segments == out_of_domain_quotient_value);
 
     // Fiat-shamir 2
     let mut base_and_ext_codeword_weights: Vec<XFieldElement> = Tip5WithState::sample_scalars(
         Recufier::num_base_and_ext_and_quotient_segment_codeword_weights(),
     );
-    // RecufyDebug::dump_xfes(&base_and_ext_codeword_weights);
 
+    // Split off the weights for the quotients
     let quotient_segment_codeword_weights: [XFieldElement; 4] = <[XFieldElement; 4]>::try_from(
         base_and_ext_codeword_weights.split_off(Recufier::num_columns()),
     )
     .unwrap();
-    // RecufyDebug::dump_xfes(&quotient_segment_codeword_weights.to_vec());
-    // RecufyDebug::dump_xfes(&base_and_ext_codeword_weights);
 
     // sum out-of-domain values
     let out_of_domain_curr_row_base_and_ext_value: XFieldElement =
@@ -465,14 +404,10 @@ fn verify_factorial_program() {
             quotient_segment_codeword_weights,
             *out_of_domain_curr_row_quot_segments,
         );
-    // RecufyDebug::dump_xfe(out_of_domain_curr_row_base_and_ext_value);
-    // RecufyDebug::dump_xfe(out_of_domain_next_row_base_and_ext_value);
-    // RecufyDebug::dump_xfe(out_of_domain_curr_row_quotient_segment_value);
 
     // Fiat-Shamir 3
     let deep_codeword_weights: [XFieldElement; 3] =
         <[XFieldElement; 3]>::try_from(Tip5WithState::sample_scalars(3)).unwrap();
-    // RecufyDebug::dump_xfes(&deep_codeword_weights.to_vec());
 
     // FRI
     let revealed_fri_indices_and_elements: Vec<(u32, XFieldElement)> = fri.verify(&mut proof_iter);
@@ -483,13 +418,6 @@ fn verify_factorial_program() {
     let num_combination_codeword_checks: usize = 2 * fri.num_colinearity_checks as usize;
     let base_table_rows: Box<Vec<BaseRow<BFieldElement>>> =
         proof_iter.next_as_masterbasetablerows();
-    // {
-    // let mut i: usize = 0;
-    // while i < num_combination_codeword_checks {
-    // RecufyDebug::dump_bfes(&base_table_rows[i].to_vec());
-    // i += 1;
-    // }
-    // }
 
     // Read base authentication structure but ignore its value, as we divine-in the digests instead
     {
@@ -508,7 +436,6 @@ fn verify_factorial_program() {
             i += 1;
         }
     }
-    // RecufyDebug::dump_digests(&leaf_digests_base);
 
     // Merkle verify (base tree)
     let merkle_tree_height: u32 = fri.domain_length.ilog2();
@@ -545,7 +472,6 @@ fn verify_factorial_program() {
             i += 1;
         }
     }
-    // RecufyDebug::dump_digests(&leaf_digests_ext);
 
     // Merkle verify (extension tree)
     {
@@ -600,6 +526,8 @@ fn verify_factorial_program() {
     assert!(num_combination_codeword_checks == quotient_segment_elements.len());
 
     // Main loop
+    let trace_weights: [XFieldElement; 439] =
+        <[XFieldElement; 439]>::try_from(base_and_ext_codeword_weights).unwrap();
     {
         let mut i: usize = 0;
         while i < num_combination_codeword_checks {
@@ -612,44 +540,37 @@ fn verify_factorial_program() {
             let quot_segment_elements: QuotientSegments = quotient_segment_elements[i];
             let current_fri_domain_value: BFieldElement =
                 fri.domain_offset * fri.domain_generator.mod_pow_u32(row_idx);
-            // RecufyDebug::dump_bfe(current_fri_domain_value);
 
-            let base_and_ext_curr_row_element: XFieldElement =
-                Recufier::linearly_sum_bfe_base_and_ext_row(
+            let base_and_ext_opened_row_element: XFieldElement =
+                tasm::tasm_array_inner_product_of_three_rows_with_weights(
+                    trace_weights,
                     base_row,
                     ext_row,
-                    &base_and_ext_codeword_weights,
                 );
-            // RecufyDebug::dump_xfe(base_and_ext_curr_row_element);
 
-            let quotient_segments_curr_row_element: XFieldElement =
+            let quotient_segments_opened_row_element: XFieldElement =
                 tasm::tasm_array_inner_product_of_4_xfes(
                     quotient_segment_codeword_weights,
                     quot_segment_elements,
                 );
-            // RecufyDebug::dump_xfe(quotient_segments_curr_row_element);
 
             let base_and_ext_curr_row_deep_value: XFieldElement =
-                (out_of_domain_curr_row_base_and_ext_value - base_and_ext_curr_row_element)
+                (out_of_domain_curr_row_base_and_ext_value - base_and_ext_opened_row_element)
                     / (out_of_domain_point_curr_row - current_fri_domain_value);
-            // RecufyDebug::dump_xfe(base_and_ext_curr_row_deep_value);
 
             let base_and_ext_next_row_deep_value: XFieldElement =
-                (out_of_domain_next_row_base_and_ext_value - base_and_ext_curr_row_element)
+                (out_of_domain_next_row_base_and_ext_value - base_and_ext_opened_row_element)
                     / (out_of_domain_point_next_row - current_fri_domain_value);
-            // RecufyDebug::dump_xfe(base_and_ext_next_row_deep_value);
 
             let quot_curr_row_deep_value: XFieldElement =
                 (out_of_domain_curr_row_quotient_segment_value
-                    - quotient_segments_curr_row_element)
+                    - quotient_segments_opened_row_element)
                     / (out_of_domain_point_curr_row_pow_num_segments - current_fri_domain_value);
-            // RecufyDebug::dump_xfe(quot_curr_row_deep_value);
 
             let deep_value: XFieldElement = base_and_ext_curr_row_deep_value
                 * deep_codeword_weights[0]
                 + base_and_ext_next_row_deep_value * deep_codeword_weights[1]
                 + quot_curr_row_deep_value * deep_codeword_weights[2];
-            // RecufyDebug::dump_xfe(deep_value);
 
             assert!(fri_value == deep_value + randomizer_value);
 
@@ -657,8 +578,6 @@ fn verify_factorial_program() {
         }
     }
 
-    // Ensure that sponge-states are in sync
-    // RecufyDebug::sponge_state(Tip5WithState::squeeze());
     return;
 }
 
