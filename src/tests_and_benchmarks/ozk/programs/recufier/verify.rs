@@ -68,6 +68,9 @@ impl StarkParameters {
 }
 
 pub(crate) struct Challenges {
+    #[allow(dead_code)]
+    // Value is never read, since the position of `Challenges` in memory is statically known.
+    //  Therefore, we need to ignore the linter warning here.
     pub challenges: [XFieldElement; 63],
 }
 
@@ -329,7 +332,7 @@ fn verify_factorial_program() {
     // The next function returns a pointer, but the value of this pointer is known statically. So
     // whenever the challenges are needed (which is for constraint evaluation), we can assume their
     // location and do not need to read this variable.
-    let challenges: Box<Challenges> =
+    let _challenges: Box<Challenges> =
         tasm::tasm_recufier_challenges_new_empty_input_and_output_59_4(*program_digest);
 
     let extension_tree_merkle_root: Box<Digest> = proof_iter.next_as_merkleroot();
