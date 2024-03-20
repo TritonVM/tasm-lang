@@ -345,19 +345,23 @@ pub(super) fn _tasm_recufier_own_program_digest() -> Digest {
         .with_borrow(|digest| digest.expect("Program digest must be set for this function to work"))
 }
 
-pub(super) fn fiat_shamir_claim(claim: &TasmLangClaim) {
+pub(super) fn tasm_recufier_claim_instantiate_fiat_shamir_with_claim(claim: &TasmLangClaim) {
     SPONGE_STATE
         .with_borrow_mut(|sponge| sponge.as_mut().unwrap().pad_and_absorb_all(&claim.encode()));
 }
 
-pub(super) fn tasm_recufier_challenges_new_empty_input_and_output_59_4(
-    digest: Digest,
+pub(super) fn tasm_recufier_challenges_new_generic_dyn_claim_59_4(
+    claim: &TasmLangClaim,
 ) -> Box<TasmLangChallenges> {
     let sampled_challenges = SPONGE_STATE.with_borrow_mut(|maybe_sponge| {
         let sponge = maybe_sponge.as_mut().unwrap();
         sponge.sample_scalars(Challenges::SAMPLE_COUNT)
     });
-    let claim = Claim::new(digest);
+    let claim = Claim {
+        program_digest: claim.program_digest,
+        input: claim.input.clone(),
+        output: claim.output.clone(),
+    };
     let Challenges { challenges } = Challenges::new(sampled_challenges, &claim);
 
     // Store Challenges at their expected value in memory

@@ -21,28 +21,6 @@ use super::stark_parameters::*;
 struct Recufier;
 
 impl Recufier {
-    /// Manual encoding of a [`Claim`][claim] containing only a program digest.
-    ///
-    /// [claim]: crate::triton_vm::prelude::Claim
-    #[allow(clippy::vec_init_then_push)]
-    pub fn encode_claim(program_digest: Digest) -> Vec<BFieldElement> {
-        let mut encoding: Vec<BFieldElement> = Vec::<BFieldElement>::default();
-        encoding.push(BFieldElement::one());
-        encoding.push(BFieldElement::zero());
-        encoding.push(BFieldElement::one());
-        encoding.push(BFieldElement::zero());
-
-        let Digest([elt_0, elt_1, elt_2, elt_3, elt_4]) = program_digest;
-
-        encoding.push(elt_0);
-        encoding.push(elt_1);
-        encoding.push(elt_2);
-        encoding.push(elt_3);
-        encoding.push(elt_4);
-
-        return encoding;
-    }
-
     const fn num_quotients() -> usize {
         return 596;
     }
@@ -228,13 +206,13 @@ impl RecufyDebug {
 }
 
 fn verify_factorial_program() {
-    fn verify_program_empty_input_and_output(program_digest: &Digest) {
+    fn verify_program_empty_input_and_output(claim: &Claim) {
         let parameters: Box<StarkParameters> =
             Box::<StarkParameters>::new(StarkParameters::default());
 
         Tip5WithState::init();
-        let encoded_claim: Vec<BFieldElement> = Recufier::encode_claim(*program_digest);
-        Tip5WithState::pad_and_absorb_all(&encoded_claim);
+
+        tasm::tasm_recufier_claim_instantiate_fiat_shamir_with_claim(claim);
 
         // For `tasm-lang` `VmProofIter` comes from the `recufy` library. For rustc in
         // comes from `rust-shadowing`.
@@ -251,7 +229,7 @@ fn verify_factorial_program() {
         // whenever the challenges are needed (which is for constraint evaluation), we can assume their
         // location and do not need to read this variable.
         let _challenges: Box<Challenges> =
-            tasm::tasm_recufier_challenges_new_empty_input_and_output_59_4(*program_digest);
+            tasm::tasm_recufier_challenges_new_generic_dyn_claim_59_4(claim);
 
         let extension_tree_merkle_root: Box<Digest> = proof_iter.next_as_merkleroot();
 
@@ -507,21 +485,24 @@ fn verify_factorial_program() {
         return;
     }
 
-    let program_digest: Box<Digest> = Box::<Digest>::new(Digest::new([
-        BFieldElement::new(7881280935549951237),
-        BFieldElement::new(18116781179058631336),
-        BFieldElement::new(15683079992428274309),
-        BFieldElement::new(2749753857496185052),
-        BFieldElement::new(14083115970614877960),
-    ]));
+    let claim: Box<Claim> = Box::<Claim>::new(Claim {
+        program_digest: Digest::new([
+            BFieldElement::new(7881280935549951237),
+            BFieldElement::new(18116781179058631336),
+            BFieldElement::new(15683079992428274309),
+            BFieldElement::new(2749753857496185052),
+            BFieldElement::new(14083115970614877960),
+        ]),
+        input: Vec::<BFieldElement>::default(),
+        output: Vec::<BFieldElement>::default(),
+    });
 
-    return verify_program_empty_input_and_output(&program_digest);
+    return verify_program_empty_input_and_output(&claim);
 }
 
 #[cfg(test)]
 mod tests {
     use proptest::prelude::*;
-    use proptest_arbitrary_interop::arb;
     use tasm_lib::triton_vm::stark::StarkProofStream;
     use tasm_lib::triton_vm::table::NUM_EXT_COLUMNS;
     use tasm_lib::triton_vm::table::NUM_QUOTIENT_SEGMENTS;
@@ -533,7 +514,6 @@ mod tests {
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::TritonVMTestCase;
     use crate::triton_vm;
-    use crate::triton_vm::prelude::Claim;
     use crate::triton_vm::prelude::NonDeterminism;
     use crate::triton_vm::prelude::Proof;
     use crate::triton_vm::prelude::Stark;
@@ -712,19 +692,6 @@ mod tests {
         if std::env::var("DYING_TO_PROVE").is_ok() {
             tasm_lib::prove_and_verify(&program, &[], &non_determinism, &[], None);
         }
-    }
-
-    #[proptest]
-    fn manual_claim_encoding_corresponds_to_actual_encoded_claim_without_input_and_output(
-        #[strategy(arb())] program_digest: Digest,
-    ) {
-        let actual_claim = Claim {
-            program_digest,
-            input: vec![],
-            output: vec![],
-        };
-        let manual_encoding = Recufier::encode_claim(program_digest);
-        prop_assert_eq!(actual_claim.encode(), manual_encoding);
     }
 }
 
