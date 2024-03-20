@@ -784,7 +784,7 @@ mod tests {
         );
 
         if std::env::var("DYING_TO_PROVE").is_ok() {
-            tasm_lib::prove_and_verify(&program, &[], &non_determinism, &[]);
+            tasm_lib::prove_and_verify(&program, &[], &non_determinism, &[], None);
         }
     }
 
