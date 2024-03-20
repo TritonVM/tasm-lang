@@ -33,8 +33,9 @@ use tasm_lib::twenty_first::util_types::algebraic_hasher::AlgebraicHasher;
 use tasm_lib::twenty_first::util_types::algebraic_hasher::Sponge;
 use tasm_lib::twenty_first::util_types::merkle_tree::MerkleTreeInclusionProof;
 
-use crate::tests_and_benchmarks::ozk::programs::recufier::verify::Challenges as TasmLangChallenges;
-use crate::tests_and_benchmarks::ozk::programs::recufier::verify::FriVerify;
+use crate::tests_and_benchmarks::ozk::programs::recufier::challenges::Challenges as TasmLangChallenges;
+use crate::tests_and_benchmarks::ozk::programs::recufier::claim::Claim as TasmLangClaim;
+use crate::tests_and_benchmarks::ozk::programs::recufier::stark_parameters::FriVerify;
 use crate::triton_vm::arithmetic_domain::ArithmeticDomain;
 use crate::triton_vm::fri::AuthenticationStructure;
 use crate::triton_vm::fri::Fri;
@@ -340,11 +341,13 @@ pub(super) fn tasm_hashing_algebraic_hasher_hash_varlen<T: BFieldCodec>(
 }
 
 pub(super) fn _tasm_recufier_own_program_digest() -> Digest {
-    // TODO: How do we get the real program digest here? Maybe from
-    // the static `thread_local` state?
-    // Digest::default()
     PROGRAM_DIGEST
         .with_borrow(|digest| digest.expect("Program digest must be set for this function to work"))
+}
+
+pub(super) fn fiat_shamir_claim(claim: &TasmLangClaim) {
+    SPONGE_STATE
+        .with_borrow_mut(|sponge| sponge.as_mut().unwrap().pad_and_absorb_all(&claim.encode()));
 }
 
 pub(super) fn tasm_recufier_challenges_new_empty_input_and_output_59_4(

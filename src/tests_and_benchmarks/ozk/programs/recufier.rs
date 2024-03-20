@@ -1,4 +1,6 @@
 mod arithmetic_domain;
+pub(crate) mod challenges;
+pub(crate) mod claim;
 mod eval_arg;
 mod fast_ntt;
 mod fast_ntt_to_basic_snippet;
@@ -6,6 +8,7 @@ mod fri_verify;
 mod host_machine_vm_proof_iter;
 mod merkle_root;
 mod merkle_root_autogen;
+pub(crate) mod stark_parameters;
 pub(crate) mod verify;
 mod vm_proof_iter_next_as;
 mod xfe_ntt_recursive;

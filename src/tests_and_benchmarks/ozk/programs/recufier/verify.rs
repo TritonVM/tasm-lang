@@ -1,7 +1,6 @@
 use itertools::Itertools;
 use num::One;
 use num::Zero;
-use serde_derive::Serialize;
 use tasm_lib::triton_vm::table::extension_table::Quotientable;
 use tasm_lib::triton_vm::table::master_table::MasterExtTable;
 use tasm_lib::triton_vm::table::ExtensionRow;
@@ -12,73 +11,11 @@ use crate::tests_and_benchmarks::ozk::rust_shadows::Tip5WithState;
 use crate::tests_and_benchmarks::ozk::rust_shadows::VmProofIter;
 use crate::triton_vm::table::BaseRow;
 use crate::twenty_first::prelude::*;
-use crate::twenty_first::shared_math::traits::PrimitiveRootOfUnity;
 
 use super::arithmetic_domain::*;
-
-/// See [StarkParameters][params].
-///
-/// [params]: crate::triton_vm::stark::StarkParameters
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize)]
-struct StarkParameters {
-    pub security_level: usize,
-    pub fri_expansion_factor: usize,
-    pub num_trace_randomizers: usize,
-    pub num_collinearity_checks: usize,
-    pub num_combination_codeword_checks: usize,
-}
-
-impl StarkParameters {
-    pub fn default() -> StarkParameters {
-        return StarkParameters {
-            security_level: 160,
-            fri_expansion_factor: 4,
-            num_trace_randomizers: 166,
-            num_collinearity_checks: 80,
-            num_combination_codeword_checks: 160,
-        };
-    }
-
-    pub fn _small() -> StarkParameters {
-        return StarkParameters {
-            security_level: 60,
-            fri_expansion_factor: 4,
-            num_trace_randomizers: 166,
-            num_collinearity_checks: 20,
-            num_combination_codeword_checks: 60,
-        };
-    }
-
-    pub fn derive_fri(&self, padded_height: u32) -> FriVerify {
-        let interpolant_codeword_length: u32 =
-            (padded_height + self.num_trace_randomizers as u32).next_power_of_two();
-        let fri_domain_length: usize =
-            self.fri_expansion_factor * interpolant_codeword_length as usize;
-        let generator: BFieldElement =
-            BFieldElement::primitive_root_of_unity(fri_domain_length as u64).unwrap();
-
-        return FriVerify {
-            expansion_factor: self.fri_expansion_factor as u32,
-            num_colinearity_checks: self.num_collinearity_checks as u32,
-            domain_length: fri_domain_length as u32,
-            domain_offset: BFieldElement::generator(),
-            domain_generator: generator,
-        };
-    }
-}
-
-pub(crate) struct Challenges {
-    #[allow(dead_code)]
-    // Value is never read, since the position of `Challenges` in memory is statically known.
-    //  Therefore, we need to ignore the linter warning here.
-    pub challenges: [XFieldElement; 63],
-}
-
-impl Challenges {
-    const fn count() -> usize {
-        return 63;
-    }
-}
+use super::challenges::*;
+use super::claim::*;
+use super::stark_parameters::*;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 struct Recufier;
@@ -290,22 +227,6 @@ impl RecufyDebug {
     }
 }
 
-pub(crate) struct FriVerify {
-    // expansion factor = 1 / rate
-    pub expansion_factor: u32,
-    pub num_colinearity_checks: u32,
-    pub domain_length: u32,
-    pub domain_offset: BFieldElement,
-    domain_generator: BFieldElement,
-}
-
-impl FriVerify {
-    // This wrapper is probably not necessary; consider removing.
-    pub fn verify(&self, proof_iter: &mut VmProofIter) -> Vec<(u32, XFieldElement)> {
-        return tasm::tasm_recufier_fri_verify(proof_iter, self);
-    }
-}
-
 fn verify_factorial_program() {
     fn verify_program_empty_input_and_output(program_digest: &Digest) {
         let parameters: Box<StarkParameters> =
@@ -315,6 +236,8 @@ fn verify_factorial_program() {
         let encoded_claim: Vec<BFieldElement> = Recufier::encode_claim(*program_digest);
         Tip5WithState::pad_and_absorb_all(&encoded_claim);
 
+        // For `tasm-lang` `VmProofIter` comes from the `recufy` library. For rustc in
+        // comes from `rust-shadowing`.
         let inner_proof_iter: VmProofIter = VmProofIter::new();
         let mut proof_iter: Box<VmProofIter> = Box::<VmProofIter>::new(inner_proof_iter);
         let log_2_padded_height: Box<u32> = proof_iter.next_as_log2paddedheight();
@@ -684,14 +607,6 @@ mod tests {
         NonDeterminism::default()
             .with_ram(ram)
             .with_digests(nd_digests)
-    }
-
-    #[test]
-    fn local_challenges_count_agrees_with_tvm() {
-        assert_eq!(
-            triton_vm::table::challenges::Challenges::COUNT,
-            Challenges::count()
-        );
     }
 
     #[test]
