@@ -307,6 +307,283 @@ impl FriVerify {
 }
 
 fn verify_factorial_program() {
+    fn verify_program_empty_input_and_output(program_digest: &Digest) {
+        let parameters: Box<StarkParameters> =
+            Box::<StarkParameters>::new(StarkParameters::default());
+
+        Tip5WithState::init();
+        let encoded_claim: Vec<BFieldElement> = Recufier::encode_claim(*program_digest);
+        Tip5WithState::pad_and_absorb_all(&encoded_claim);
+
+        let inner_proof_iter: VmProofIter = VmProofIter::new();
+        let mut proof_iter: Box<VmProofIter> = Box::<VmProofIter>::new(inner_proof_iter);
+        let log_2_padded_height: Box<u32> = proof_iter.next_as_log2paddedheight();
+        let padded_height: u32 = 1 << *log_2_padded_height;
+
+        let fri: Box<FriVerify> = Box::<FriVerify>::new(parameters.derive_fri(padded_height));
+
+        let base_merkle_tree_root: Box<Digest> = proof_iter.next_as_merkleroot();
+
+        // The next function returns a pointer, but the value of this pointer is known statically. So
+        // whenever the challenges are needed (which is for constraint evaluation), we can assume their
+        // location and do not need to read this variable.
+        let _challenges: Box<Challenges> =
+            tasm::tasm_recufier_challenges_new_empty_input_and_output_59_4(*program_digest);
+
+        let extension_tree_merkle_root: Box<Digest> = proof_iter.next_as_merkleroot();
+
+        let quot_codeword_weights: [XFieldElement; 596] = <[XFieldElement; 596]>::try_from(
+            Tip5WithState::sample_scalars(Recufier::num_quotients()),
+        )
+        .unwrap();
+        let quotient_tree_merkle_root: Box<Digest> = proof_iter.next_as_merkleroot();
+
+        let trace_domain_generator: BFieldElement =
+            ArithmeticDomain::generator_for_length(padded_height as u64);
+
+        let ___out_of_domain_point_curr_row: Vec<XFieldElement> = Tip5WithState::sample_scalars(1);
+        let out_of_domain_point_curr_row: XFieldElement = ___out_of_domain_point_curr_row[0];
+        let out_of_domain_point_next_row: XFieldElement =
+            out_of_domain_point_curr_row * trace_domain_generator;
+        let out_of_domain_point_curr_row_pow_num_segments: XFieldElement =
+            tasm::tasm_arithmetic_xfe_to_the_fourth(out_of_domain_point_curr_row);
+
+        let out_of_domain_curr_base_row: Box<Box<BaseRow<XFieldElement>>> =
+            proof_iter.next_as_outofdomainbaserow();
+        let out_of_domain_curr_ext_row: Box<Box<ExtensionRow>> =
+            proof_iter.next_as_outofdomainextrow();
+        let out_of_domain_next_base_row: Box<Box<BaseRow<XFieldElement>>> =
+            proof_iter.next_as_outofdomainbaserow();
+        let out_of_domain_next_ext_row: Box<Box<ExtensionRow>> =
+            proof_iter.next_as_outofdomainextrow();
+        let out_of_domain_curr_row_quot_segments: Box<[XFieldElement; 4]> =
+            proof_iter.next_as_outofdomainquotientsegments();
+
+        let quotient_summands: [XFieldElement; 596] = Recufier::quotient_summands(
+            out_of_domain_point_curr_row,
+            padded_height,
+            trace_domain_generator,
+        );
+
+        let out_of_domain_quotient_value: XFieldElement =
+            tasm::tasm_array_inner_product_of_596_xfes(quot_codeword_weights, quotient_summands);
+
+        let sum_of_evaluated_out_of_domain_quotient_segments: XFieldElement =
+            tasm::tasm_array_horner_evaluation_with_4_coefficients(
+                *out_of_domain_curr_row_quot_segments,
+                out_of_domain_point_curr_row,
+            );
+
+        assert!(sum_of_evaluated_out_of_domain_quotient_segments == out_of_domain_quotient_value);
+
+        // Fiat-shamir 2
+        let mut base_and_ext_codeword_weights: Vec<XFieldElement> = Tip5WithState::sample_scalars(
+            Recufier::num_base_and_ext_and_quotient_segment_codeword_weights(),
+        );
+
+        // Split off the weights for the quotients
+        let quotient_segment_codeword_weights: [XFieldElement; 4] = <[XFieldElement; 4]>::try_from(
+            base_and_ext_codeword_weights.split_off(Recufier::num_columns()),
+        )
+        .unwrap();
+
+        // sum out-of-domain values
+        let out_of_domain_curr_row_base_and_ext_value: XFieldElement =
+            Recufier::linearly_sum_xfe_base_and_ext_row(
+                out_of_domain_curr_base_row,
+                out_of_domain_curr_ext_row,
+                &base_and_ext_codeword_weights,
+            );
+        let out_of_domain_next_row_base_and_ext_value: XFieldElement =
+            Recufier::linearly_sum_xfe_base_and_ext_row(
+                out_of_domain_next_base_row,
+                out_of_domain_next_ext_row,
+                &base_and_ext_codeword_weights,
+            );
+        let out_of_domain_curr_row_quotient_segment_value: XFieldElement =
+            tasm::tasm_array_inner_product_of_4_xfes(
+                quotient_segment_codeword_weights,
+                *out_of_domain_curr_row_quot_segments,
+            );
+
+        // Fiat-Shamir 3
+        let deep_codeword_weights: [XFieldElement; 3] =
+            <[XFieldElement; 3]>::try_from(Tip5WithState::sample_scalars(3)).unwrap();
+
+        // FRI
+        let revealed_fri_indices_and_elements: Vec<(u32, XFieldElement)> =
+            fri.verify(&mut proof_iter);
+
+        // Check leafs
+        // Dequeue base elements
+        // Could be read from secret-in, but it's much more efficient to get them from memory
+        let num_combination_codeword_checks: usize = 2 * fri.num_colinearity_checks as usize;
+        let base_table_rows: Box<Vec<BaseRow<BFieldElement>>> =
+            proof_iter.next_as_masterbasetablerows();
+
+        // Read base authentication structure but ignore its value, as we divine-in the digests instead
+        {
+            let _dummy: Box<Vec<Digest>> = proof_iter.next_as_authenticationstructure();
+        }
+
+        // hash base rows to get leafs
+        let mut leaf_digests_base: Vec<Digest> = Vec::<Digest>::default();
+        {
+            let mut i: usize = 0;
+            while i < num_combination_codeword_checks {
+                leaf_digests_base.push(tasm::tasm_hashing_algebraic_hasher_hash_varlen(
+                    &base_table_rows[i],
+                    356,
+                ));
+                i += 1;
+            }
+        }
+
+        // Merkle verify (base tree)
+        let merkle_tree_height: u32 = fri.domain_length.ilog2();
+        {
+            let mut i: usize = 0;
+            while i < num_combination_codeword_checks {
+                tasm::tasm_hashing_merkle_verify(
+                    *base_merkle_tree_root,
+                    revealed_fri_indices_and_elements[i].0,
+                    leaf_digests_base[i],
+                    merkle_tree_height,
+                );
+                i += 1;
+            }
+        }
+
+        // dequeue extension elements
+        let ext_table_rows: Box<Vec<ExtensionRow>> = proof_iter.next_as_masterexttablerows();
+
+        // dequeue extension rows' authentication structure but ignore it (divination instead)
+        {
+            let _dummy: Box<Vec<Digest>> = proof_iter.next_as_authenticationstructure();
+        }
+
+        // hash extension rows to get leafs
+        let mut leaf_digests_ext: Vec<Digest> = Vec::<Digest>::default();
+        {
+            let mut i: usize = 0;
+            while i < num_combination_codeword_checks {
+                leaf_digests_ext.push(tasm::tasm_hashing_algebraic_hasher_hash_varlen(
+                    &ext_table_rows[i],
+                    83 * 3,
+                ));
+                i += 1;
+            }
+        }
+
+        // Merkle verify (extension tree)
+        {
+            let mut i: usize = 0;
+            while i < num_combination_codeword_checks {
+                tasm::tasm_hashing_merkle_verify(
+                    *extension_tree_merkle_root,
+                    revealed_fri_indices_and_elements[i].0,
+                    leaf_digests_ext[i],
+                    merkle_tree_height,
+                );
+                i += 1;
+            }
+        }
+
+        // dequeue quotient segments
+        let quotient_segment_elements: Box<Vec<QuotientSegments>> =
+            proof_iter.next_as_quotientsegmentselements();
+
+        // hash rows
+        let mut leaf_digests_quot: Vec<Digest> = Vec::<Digest>::default();
+        {
+            let mut i: usize = 0;
+            while i < num_combination_codeword_checks {
+                leaf_digests_quot.push(tasm::tasm_hashing_algebraic_hasher_hash_varlen(
+                    &quotient_segment_elements[i],
+                    4 * 3,
+                ));
+                i += 1;
+            }
+        }
+
+        // Merkle verify (quotient tree)
+        {
+            let mut i: usize = 0;
+            while i < num_combination_codeword_checks {
+                tasm::tasm_hashing_merkle_verify(
+                    *quotient_tree_merkle_root,
+                    revealed_fri_indices_and_elements[i].0,
+                    leaf_digests_quot[i],
+                    merkle_tree_height,
+                );
+                i += 1;
+            }
+        }
+
+        // Linear combination
+        // Some of these checks may be redundant, but this is what the verifier in TVM does
+        assert!(num_combination_codeword_checks == revealed_fri_indices_and_elements.len());
+        assert!(num_combination_codeword_checks == base_table_rows.len());
+        assert!(num_combination_codeword_checks == ext_table_rows.len());
+        assert!(num_combination_codeword_checks == quotient_segment_elements.len());
+
+        // Main loop
+        let trace_weights: [XFieldElement; 439] =
+            <[XFieldElement; 439]>::try_from(base_and_ext_codeword_weights).unwrap();
+        {
+            let mut i: usize = 0;
+            while i < num_combination_codeword_checks {
+                let row_idx: u32 = revealed_fri_indices_and_elements[i].0;
+                let fri_value: XFieldElement = revealed_fri_indices_and_elements[i].1;
+                let base_row: BaseRow<BFieldElement> = base_table_rows[i];
+                let ext_row: ExtensionRow = ext_table_rows[i];
+                // let randomizer_value: XFieldElement = ext_row[ext_row.len() - 1];
+                let randomizer_value: XFieldElement = XFieldElement::zero();
+                let quot_segment_elements: QuotientSegments = quotient_segment_elements[i];
+                let current_fri_domain_value: BFieldElement =
+                    fri.domain_offset * fri.domain_generator.mod_pow_u32(row_idx);
+
+                let base_and_ext_opened_row_element: XFieldElement =
+                    tasm::tasm_array_inner_product_of_three_rows_with_weights(
+                        trace_weights,
+                        base_row,
+                        ext_row,
+                    );
+
+                let quotient_segments_opened_row_element: XFieldElement =
+                    tasm::tasm_array_inner_product_of_4_xfes(
+                        quotient_segment_codeword_weights,
+                        quot_segment_elements,
+                    );
+
+                let base_and_ext_curr_row_deep_value: XFieldElement =
+                    (out_of_domain_curr_row_base_and_ext_value - base_and_ext_opened_row_element)
+                        / (out_of_domain_point_curr_row - current_fri_domain_value);
+
+                let base_and_ext_next_row_deep_value: XFieldElement =
+                    (out_of_domain_next_row_base_and_ext_value - base_and_ext_opened_row_element)
+                        / (out_of_domain_point_next_row - current_fri_domain_value);
+
+                let quot_curr_row_deep_value: XFieldElement =
+                    (out_of_domain_curr_row_quotient_segment_value
+                        - quotient_segments_opened_row_element)
+                        / (out_of_domain_point_curr_row_pow_num_segments
+                            - current_fri_domain_value);
+
+                let deep_value: XFieldElement = base_and_ext_curr_row_deep_value
+                    * deep_codeword_weights[0]
+                    + base_and_ext_next_row_deep_value * deep_codeword_weights[1]
+                    + quot_curr_row_deep_value * deep_codeword_weights[2];
+
+                assert!(fri_value == deep_value + randomizer_value);
+
+                i += 1;
+            }
+        }
+
+        return;
+    }
+
     let program_digest: Box<Digest> = Box::<Digest>::new(Digest::new([
         BFieldElement::new(7881280935549951237),
         BFieldElement::new(18116781179058631336),
@@ -314,274 +591,8 @@ fn verify_factorial_program() {
         BFieldElement::new(2749753857496185052),
         BFieldElement::new(14083115970614877960),
     ]));
-    let parameters: Box<StarkParameters> = Box::<StarkParameters>::new(StarkParameters::default());
 
-    Tip5WithState::init();
-    let encoded_claim: Vec<BFieldElement> = Recufier::encode_claim(*program_digest);
-    Tip5WithState::pad_and_absorb_all(&encoded_claim);
-
-    let inner_proof_iter: VmProofIter = VmProofIter::new();
-    let mut proof_iter: Box<VmProofIter> = Box::<VmProofIter>::new(inner_proof_iter);
-    let log_2_padded_height: Box<u32> = proof_iter.next_as_log2paddedheight();
-    let padded_height: u32 = 1 << *log_2_padded_height;
-
-    let fri: Box<FriVerify> = Box::<FriVerify>::new(parameters.derive_fri(padded_height));
-
-    let base_merkle_tree_root: Box<Digest> = proof_iter.next_as_merkleroot();
-
-    // The next function returns a pointer, but the value of this pointer is known statically. So
-    // whenever the challenges are needed (which is for constraint evaluation), we can assume their
-    // location and do not need to read this variable.
-    let _challenges: Box<Challenges> =
-        tasm::tasm_recufier_challenges_new_empty_input_and_output_59_4(*program_digest);
-
-    let extension_tree_merkle_root: Box<Digest> = proof_iter.next_as_merkleroot();
-
-    let quot_codeword_weights: [XFieldElement; 596] =
-        <[XFieldElement; 596]>::try_from(Tip5WithState::sample_scalars(Recufier::num_quotients()))
-            .unwrap();
-    let quotient_tree_merkle_root: Box<Digest> = proof_iter.next_as_merkleroot();
-
-    let trace_domain_generator: BFieldElement =
-        ArithmeticDomain::generator_for_length(padded_height as u64);
-
-    let ___out_of_domain_point_curr_row: Vec<XFieldElement> = Tip5WithState::sample_scalars(1);
-    let out_of_domain_point_curr_row: XFieldElement = ___out_of_domain_point_curr_row[0];
-    let out_of_domain_point_next_row: XFieldElement =
-        out_of_domain_point_curr_row * trace_domain_generator;
-    let out_of_domain_point_curr_row_pow_num_segments: XFieldElement =
-        tasm::tasm_arithmetic_xfe_to_the_fourth(out_of_domain_point_curr_row);
-
-    let out_of_domain_curr_base_row: Box<Box<BaseRow<XFieldElement>>> =
-        proof_iter.next_as_outofdomainbaserow();
-    let out_of_domain_curr_ext_row: Box<Box<ExtensionRow>> = proof_iter.next_as_outofdomainextrow();
-    let out_of_domain_next_base_row: Box<Box<BaseRow<XFieldElement>>> =
-        proof_iter.next_as_outofdomainbaserow();
-    let out_of_domain_next_ext_row: Box<Box<ExtensionRow>> = proof_iter.next_as_outofdomainextrow();
-    let out_of_domain_curr_row_quot_segments: Box<[XFieldElement; 4]> =
-        proof_iter.next_as_outofdomainquotientsegments();
-
-    let quotient_summands: [XFieldElement; 596] = Recufier::quotient_summands(
-        out_of_domain_point_curr_row,
-        padded_height,
-        trace_domain_generator,
-    );
-
-    let out_of_domain_quotient_value: XFieldElement =
-        tasm::tasm_array_inner_product_of_596_xfes(quot_codeword_weights, quotient_summands);
-
-    let sum_of_evaluated_out_of_domain_quotient_segments: XFieldElement =
-        tasm::tasm_array_horner_evaluation_with_4_coefficients(
-            *out_of_domain_curr_row_quot_segments,
-            out_of_domain_point_curr_row,
-        );
-
-    assert!(sum_of_evaluated_out_of_domain_quotient_segments == out_of_domain_quotient_value);
-
-    // Fiat-shamir 2
-    let mut base_and_ext_codeword_weights: Vec<XFieldElement> = Tip5WithState::sample_scalars(
-        Recufier::num_base_and_ext_and_quotient_segment_codeword_weights(),
-    );
-
-    // Split off the weights for the quotients
-    let quotient_segment_codeword_weights: [XFieldElement; 4] = <[XFieldElement; 4]>::try_from(
-        base_and_ext_codeword_weights.split_off(Recufier::num_columns()),
-    )
-    .unwrap();
-
-    // sum out-of-domain values
-    let out_of_domain_curr_row_base_and_ext_value: XFieldElement =
-        Recufier::linearly_sum_xfe_base_and_ext_row(
-            out_of_domain_curr_base_row,
-            out_of_domain_curr_ext_row,
-            &base_and_ext_codeword_weights,
-        );
-    let out_of_domain_next_row_base_and_ext_value: XFieldElement =
-        Recufier::linearly_sum_xfe_base_and_ext_row(
-            out_of_domain_next_base_row,
-            out_of_domain_next_ext_row,
-            &base_and_ext_codeword_weights,
-        );
-    let out_of_domain_curr_row_quotient_segment_value: XFieldElement =
-        tasm::tasm_array_inner_product_of_4_xfes(
-            quotient_segment_codeword_weights,
-            *out_of_domain_curr_row_quot_segments,
-        );
-
-    // Fiat-Shamir 3
-    let deep_codeword_weights: [XFieldElement; 3] =
-        <[XFieldElement; 3]>::try_from(Tip5WithState::sample_scalars(3)).unwrap();
-
-    // FRI
-    let revealed_fri_indices_and_elements: Vec<(u32, XFieldElement)> = fri.verify(&mut proof_iter);
-
-    // Check leafs
-    // Dequeue base elements
-    // Could be read from secret-in, but it's much more efficient to get them from memory
-    let num_combination_codeword_checks: usize = 2 * fri.num_colinearity_checks as usize;
-    let base_table_rows: Box<Vec<BaseRow<BFieldElement>>> =
-        proof_iter.next_as_masterbasetablerows();
-
-    // Read base authentication structure but ignore its value, as we divine-in the digests instead
-    {
-        let _dummy: Box<Vec<Digest>> = proof_iter.next_as_authenticationstructure();
-    }
-
-    // hash base rows to get leafs
-    let mut leaf_digests_base: Vec<Digest> = Vec::<Digest>::default();
-    {
-        let mut i: usize = 0;
-        while i < num_combination_codeword_checks {
-            leaf_digests_base.push(tasm::tasm_hashing_algebraic_hasher_hash_varlen(
-                &base_table_rows[i],
-                356,
-            ));
-            i += 1;
-        }
-    }
-
-    // Merkle verify (base tree)
-    let merkle_tree_height: u32 = fri.domain_length.ilog2();
-    {
-        let mut i: usize = 0;
-        while i < num_combination_codeword_checks {
-            tasm::tasm_hashing_merkle_verify(
-                *base_merkle_tree_root,
-                revealed_fri_indices_and_elements[i].0,
-                leaf_digests_base[i],
-                merkle_tree_height,
-            );
-            i += 1;
-        }
-    }
-
-    // dequeue extension elements
-    let ext_table_rows: Box<Vec<ExtensionRow>> = proof_iter.next_as_masterexttablerows();
-
-    // dequeue extension rows' authentication structure but ignore it (divination instead)
-    {
-        let _dummy: Box<Vec<Digest>> = proof_iter.next_as_authenticationstructure();
-    }
-
-    // hash extension rows to get leafs
-    let mut leaf_digests_ext: Vec<Digest> = Vec::<Digest>::default();
-    {
-        let mut i: usize = 0;
-        while i < num_combination_codeword_checks {
-            leaf_digests_ext.push(tasm::tasm_hashing_algebraic_hasher_hash_varlen(
-                &ext_table_rows[i],
-                83 * 3,
-            ));
-            i += 1;
-        }
-    }
-
-    // Merkle verify (extension tree)
-    {
-        let mut i: usize = 0;
-        while i < num_combination_codeword_checks {
-            tasm::tasm_hashing_merkle_verify(
-                *extension_tree_merkle_root,
-                revealed_fri_indices_and_elements[i].0,
-                leaf_digests_ext[i],
-                merkle_tree_height,
-            );
-            i += 1;
-        }
-    }
-
-    // dequeue quotient segments
-    let quotient_segment_elements: Box<Vec<QuotientSegments>> =
-        proof_iter.next_as_quotientsegmentselements();
-
-    // hash rows
-    let mut leaf_digests_quot: Vec<Digest> = Vec::<Digest>::default();
-    {
-        let mut i: usize = 0;
-        while i < num_combination_codeword_checks {
-            leaf_digests_quot.push(tasm::tasm_hashing_algebraic_hasher_hash_varlen(
-                &quotient_segment_elements[i],
-                4 * 3,
-            ));
-            i += 1;
-        }
-    }
-
-    // Merkle verify (quotient tree)
-    {
-        let mut i: usize = 0;
-        while i < num_combination_codeword_checks {
-            tasm::tasm_hashing_merkle_verify(
-                *quotient_tree_merkle_root,
-                revealed_fri_indices_and_elements[i].0,
-                leaf_digests_quot[i],
-                merkle_tree_height,
-            );
-            i += 1;
-        }
-    }
-
-    // Linear combination
-    // Some of these checks may be redundant, but this is what the verifier in TVM does
-    assert!(num_combination_codeword_checks == revealed_fri_indices_and_elements.len());
-    assert!(num_combination_codeword_checks == base_table_rows.len());
-    assert!(num_combination_codeword_checks == ext_table_rows.len());
-    assert!(num_combination_codeword_checks == quotient_segment_elements.len());
-
-    // Main loop
-    let trace_weights: [XFieldElement; 439] =
-        <[XFieldElement; 439]>::try_from(base_and_ext_codeword_weights).unwrap();
-    {
-        let mut i: usize = 0;
-        while i < num_combination_codeword_checks {
-            let row_idx: u32 = revealed_fri_indices_and_elements[i].0;
-            let fri_value: XFieldElement = revealed_fri_indices_and_elements[i].1;
-            let base_row: BaseRow<BFieldElement> = base_table_rows[i];
-            let ext_row: ExtensionRow = ext_table_rows[i];
-            // let randomizer_value: XFieldElement = ext_row[ext_row.len() - 1];
-            let randomizer_value: XFieldElement = XFieldElement::zero();
-            let quot_segment_elements: QuotientSegments = quotient_segment_elements[i];
-            let current_fri_domain_value: BFieldElement =
-                fri.domain_offset * fri.domain_generator.mod_pow_u32(row_idx);
-
-            let base_and_ext_opened_row_element: XFieldElement =
-                tasm::tasm_array_inner_product_of_three_rows_with_weights(
-                    trace_weights,
-                    base_row,
-                    ext_row,
-                );
-
-            let quotient_segments_opened_row_element: XFieldElement =
-                tasm::tasm_array_inner_product_of_4_xfes(
-                    quotient_segment_codeword_weights,
-                    quot_segment_elements,
-                );
-
-            let base_and_ext_curr_row_deep_value: XFieldElement =
-                (out_of_domain_curr_row_base_and_ext_value - base_and_ext_opened_row_element)
-                    / (out_of_domain_point_curr_row - current_fri_domain_value);
-
-            let base_and_ext_next_row_deep_value: XFieldElement =
-                (out_of_domain_next_row_base_and_ext_value - base_and_ext_opened_row_element)
-                    / (out_of_domain_point_next_row - current_fri_domain_value);
-
-            let quot_curr_row_deep_value: XFieldElement =
-                (out_of_domain_curr_row_quotient_segment_value
-                    - quotient_segments_opened_row_element)
-                    / (out_of_domain_point_curr_row_pow_num_segments - current_fri_domain_value);
-
-            let deep_value: XFieldElement = base_and_ext_curr_row_deep_value
-                * deep_codeword_weights[0]
-                + base_and_ext_next_row_deep_value * deep_codeword_weights[1]
-                + quot_curr_row_deep_value * deep_codeword_weights[2];
-
-            assert!(fri_value == deep_value + randomizer_value);
-
-            i += 1;
-        }
-    }
-
-    return;
+    return verify_program_empty_input_and_output(&program_digest);
 }
 
 #[cfg(test)]
