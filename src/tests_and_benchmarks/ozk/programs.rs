@@ -2,6 +2,7 @@ mod algebraic_hasher;
 mod arithmetic;
 mod arrays;
 mod boxed;
+mod composite_types;
 mod destructuring;
 mod enums;
 mod match_expr_boxed;

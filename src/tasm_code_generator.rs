@@ -1574,7 +1574,7 @@ fn compile_method_call(
 
     assert!(
         found_match,
-        "Unknown method: \"{method_name}\" for receiver type \"{receiver_type}\""
+        "Unknown method: \"{method_name}\" for receiver type \"{receiver_type}\".\n\n Receiver type was:\n{receiver_type:?}"
     );
 
     // Update vstack to reflect that all input arguments, including receiver
