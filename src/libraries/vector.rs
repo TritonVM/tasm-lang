@@ -522,7 +522,8 @@ impl VectorLib {
                     .unwrap(),
             })),
             NEW_FUNCTION_NAME | DEFAULT_FUNCTION_NAME => {
-                Some(Self::new_list_snippet(type_parameter.as_ref().unwrap()))
+                let type_parameter = type_parameter.as_ref().unwrap_or_else(|| panic!("Type parameter must be set when initializing a new vector.\nUse `Vec::<T>::{public_name}()` instead of Vec::{public_name}()"));
+                Some(Self::new_list_snippet(type_parameter))
             }
             POP_METHOD_NAME => Some(Self::pop_snippet(type_parameter.as_ref().unwrap())),
             MAP_METHOD_NAME => {
