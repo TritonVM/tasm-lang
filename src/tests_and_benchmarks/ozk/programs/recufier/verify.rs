@@ -474,6 +474,7 @@ impl RecufyDebug {
 #[cfg(test)]
 mod test {
     use proptest::prelude::*;
+    use tasm_lib::triton_vm::program::Program;
     use tasm_lib::triton_vm::stark::StarkProofStream;
     use tasm_lib::triton_vm::table::NUM_EXT_COLUMNS;
     use tasm_lib::triton_vm::table::NUM_QUOTIENT_SEGMENTS;
@@ -492,46 +493,69 @@ mod test {
 
     use super::*;
 
-    fn verify_factorial_program() {
+    fn verify_stark_proof() {
         // Notice that this function is dual-compiled: By rustc and by this compiler.
-        let factorial_program_program_digest: Digest = tasm::tasm_io_read_stdin___digest();
+        let program_digest: Digest = tasm::tasm_io_read_stdin___digest();
+
+        let input_length: usize = tasm::tasm_io_read_stdin___u32() as usize;
+        let mut input: Vec<BFieldElement> = Vec::<BFieldElement>::default();
+        {
+            let mut i: usize = 0;
+            while i < input_length {
+                input.push(tasm::tasm_io_read_stdin___bfe());
+                i += 1;
+            }
+        }
+
+        let output_length: usize = tasm::tasm_io_read_stdin___u32() as usize;
+        let mut output: Vec<BFieldElement> = Vec::<BFieldElement>::default();
+        {
+            let mut i: usize = 0;
+            while i < output_length {
+                output.push(tasm::tasm_io_read_stdin___bfe());
+                i += 1;
+            }
+        }
+
+        #[allow(clippy::redundant_field_names)]
         let claim: Box<Claim> = Box::<Claim>::new(Claim {
-            program_digest: factorial_program_program_digest,
-            input: Vec::<BFieldElement>::default(),
-            output: Vec::<BFieldElement>::default(),
+            program_digest,
+            input: input,
+            output: output,
         });
 
         return Recufier::verify(&claim);
     }
 
-    /// Return `NonDeterminism` required for the `verify` function as well as program digest of the
-    // factorial program whose proof is verified
-    pub(crate) fn non_determinism_for_verify_of_factorial_program(
-    ) -> (NonDeterminism<BFieldElement>, Digest) {
-        let factorial_program = triton_program!(
-            push 3           // n
-            push 1              // n accumulator
-            call factorial      // 0 accumulator!
-            halt
+    /// Return the claim encoded as a list of BFieldElements in the format that
+    /// `verify_stark_proof` expects.
+    pub(super) fn claim_to_stdin_for_stark_verifier(
+        claim: &triton_vm::proof::Claim,
+    ) -> Vec<BFieldElement> {
+        let mut ret = claim.program_digest.reversed().values().to_vec();
+        ret.extend(claim.input.encode());
+        ret.extend(claim.output.encode());
 
-            factorial:          // n acc
-                // if n == 0: return
-                dup 1           // n acc n
-                push 0 eq       // n acc n==0
-                skiz            // n acc
-                return      // 0 acc
-                // else: multiply accumulator with n and recurse
-                dup 1           // n acc n
-                mul             // n acc·n
-                swap 1          // acc·n n
-                push -1 add     // acc·n n-1
-                swap 1          // n-1 acc·n
-                recurse
-        );
-        let public_input = [];
+        ret
+    }
+
+    /// Return `NonDeterminism` required for the `verify` function as well as the claim and the
+    // padded-height for the associated proof, the proof that is to be verified.
+    pub(super) fn non_determinism_for_verify_and_claim_and_padded_height(
+        program: &Program,
+        public_input: &[BFieldElement],
+    ) -> (
+        NonDeterminism<BFieldElement>,
+        triton_vm::proof::Claim,
+        usize,
+    ) {
         let non_determinism = NonDeterminism::default();
-        let (stark, claim, proof) =
-            triton_vm::prove_program(&factorial_program, &public_input, &non_determinism).unwrap();
+        let (stark, claim, proof) = triton_vm::prove_program(
+            program,
+            &public_input.iter().map(|x| x.value()).collect_vec(),
+            &non_determinism,
+        )
+        .unwrap();
         assert!(
             triton_vm::verify(stark, &claim, &proof),
             "Proof from TVM must verify through TVM"
@@ -544,6 +568,7 @@ mod test {
         let tasm_lib_fri: tasm_lib::recufier::fri_verify::FriVerify = fri.into();
         let fri_proof_digests =
             tasm_lib_fri.extract_digests_required_for_proving(&proof_extraction.fri_proof_stream);
+        let padded_height = proof.padded_height().unwrap();
         let Proof(raw_proof) = proof;
         let ram = raw_proof
             .into_iter()
@@ -570,11 +595,13 @@ mod test {
                 .collect_vec(),
         ]
         .concat();
+
         (
             NonDeterminism::default()
                 .with_ram(ram)
                 .with_digests(nd_digests),
-            factorial_program.hash::<Tip5>(),
+            claim,
+            padded_height,
         )
     }
 
@@ -655,65 +682,227 @@ mod test {
     }
 
     #[test]
-    fn verify_tvm_proof_factorial_program() {
-        let entrypoint_location =
-            EntrypointLocation::disk("recufier", "verify", "test::verify_factorial_program");
-        let test_case = TritonVMTestCase::new(entrypoint_location);
-        let (non_determinism, fact_program_digest) =
-            non_determinism_for_verify_of_factorial_program();
-        let program = test_case.program();
+    fn verify_tvm_proof_factorial_program_no_io() {
+        const FACTORIAL_ARGUMENT: u32 = 3;
+        let factorial_program = triton_program!(
+            push {FACTORIAL_ARGUMENT}  // n
+            push 1                     // n accumulator
+            call factorial             // 0 accumulator!
+            halt
 
-        let std_in = fact_program_digest.reversed().values();
-        let native_output = rust_shadows::wrap_main_with_io_and_program_digest(
-            &verify_factorial_program,
-        )(std_in.to_vec(), non_determinism.clone(), program.clone());
+            factorial:                 // n acc
+                // if n == 0: return
+                dup 1                  // n acc n
+                push 0 eq              // n acc n==0
+                skiz                   // n acc
+                return                 // 0 acc
+                // else: multiply accumulator with n and recurse
+                dup 1                  // n acc n
+                mul                    // n acc·n
+                swap 1                 // acc·n n
+                push -1 add            // acc·n n-1
+                swap 1                 // n-1 acc·n
+                recurse
+        );
+        let entrypoint_location =
+            EntrypointLocation::disk("recufier", "verify", "test::verify_stark_proof");
+        let test_case = TritonVMTestCase::new(entrypoint_location);
+        let (non_determinism, claim_for_proof, inner_padded_height) =
+            non_determinism_for_verify_and_claim_and_padded_height(&factorial_program, &[]);
+        let verifier_std_in = claim_to_stdin_for_stark_verifier(&claim_for_proof);
+
+        let verifier_program = test_case.program();
+        let native_output = rust_shadows::wrap_main_with_io_and_program_digest(&verify_stark_proof)(
+            verifier_std_in.to_vec(),
+            non_determinism.clone(),
+            verifier_program.clone(),
+        );
 
         let final_vm_state = test_case
             .with_non_determinism(non_determinism.clone())
-            .with_std_in(std_in.to_vec())
+            .with_std_in(verifier_std_in.to_vec())
             .execute()
             .unwrap();
 
         assert_eq!(native_output, final_vm_state.public_output);
 
         println!(
-            "Clock cycle count of TASM-verifier of factorial(3) : {}",
-            final_vm_state.cycle_count
+            "Clock cycle count of TASM-verifier of factorial({FACTORIAL_ARGUMENT}): {}.\nInner padded height was: {}",
+            final_vm_state.cycle_count,
+            inner_padded_height,
         );
 
         if std::env::var("DYING_TO_PROVE").is_ok() {
-            tasm_lib::prove_and_verify(&program, &[], &non_determinism, &[], None);
+            let verifier_std_out = [];
+            tasm_lib::prove_and_verify(
+                &verifier_program,
+                &verifier_std_in,
+                &non_determinism,
+                &verifier_std_out,
+                None,
+            );
         }
+    }
+
+    #[ignore = "Intended to generate data about verifier clock cycle count as a function of padded height"]
+    #[test]
+    fn verify_tvm_proof_scaling() {
+        let mut inner_padded_height_and_verifier_clock_cycle_count = vec![];
+        for fact_arg in [10, 40, 80, 100, 200, 400, 800, 1600, 3200, 6400, 12800] {
+            // for fact_arg in [10, 40, 80] {
+            let (inner_padded_height, verification_clock_cycle_count) =
+                verify_tvm_proof_factorial_program_with_io_prop(fact_arg);
+            println!("\n\n{inner_padded_height} => {verification_clock_cycle_count}");
+            inner_padded_height_and_verifier_clock_cycle_count
+                .push((inner_padded_height, verification_clock_cycle_count));
+        }
+
+        println!(
+            "Inner padded height, verifier clock cycle count:\n{}",
+            inner_padded_height_and_verifier_clock_cycle_count
+                .iter()
+                .map(|(x, y)| format!("{x} => {y}"))
+                .join("\n")
+        );
+    }
+
+    #[test]
+    fn verify_tvm_proof_factorial_program_with_io_fact_40() {
+        verify_tvm_proof_factorial_program_with_io_prop(40);
+    }
+
+    /// Verify the proof of the execution of a factorial program. Returns the padded height of the
+    /// factorial program execution (the execution that the proof pertains to), and the clock cycle
+    /// count of the verification program.
+    fn verify_tvm_proof_factorial_program_with_io_prop(factorial_argument: u64) -> (usize, u32) {
+        // Read $n$ from stdin and output $n!$!
+        let factorial_program_with_io = triton_program!(
+            read_io 1           // n
+            push 1              // n accumulator
+            call factorial      // 0 accumulator!
+            write_io 1
+            halt
+
+            factorial:          // n acc
+                // if n == 0: return
+                dup 1           // n acc n
+                push 0 eq       // n acc n==0
+                skiz            // n acc
+                return      // 0 acc
+                // else: multiply accumulator with n and recurse
+                dup 1           // n acc n
+                mul             // n acc·n
+                swap 1          // acc·n n
+                push -1 add     // acc·n n-1
+                swap 1          // n-1 acc·n
+                recurse
+        );
+        let entrypoint_location =
+            EntrypointLocation::disk("recufier", "verify", "test::verify_stark_proof");
+        let test_case = TritonVMTestCase::new(entrypoint_location);
+
+        let (non_determinism, claim_relating_to_proof, inner_padded_height) =
+            non_determinism_for_verify_and_claim_and_padded_height(
+                &factorial_program_with_io,
+                &[BFieldElement::new(factorial_argument)],
+            );
+        let verifier_std_in = claim_to_stdin_for_stark_verifier(&claim_relating_to_proof);
+
+        let verifier_program = test_case.program();
+        let native_output = rust_shadows::wrap_main_with_io_and_program_digest(&verify_stark_proof)(
+            verifier_std_in.to_vec(),
+            non_determinism.clone(),
+            verifier_program.clone(),
+        );
+
+        let final_vm_state = test_case
+            .with_non_determinism(non_determinism.clone())
+            .with_std_in(verifier_std_in.to_vec())
+            .execute()
+            .unwrap();
+
+        assert_eq!(native_output, final_vm_state.public_output);
+
+        println!(
+            "Clock cycle count of TASM-verifier of factorial({factorial_argument}) : {}.\nInner padded height was: {}",
+            final_vm_state.cycle_count,
+            inner_padded_height
+        );
+
+        if std::env::var("DYING_TO_PROVE").is_ok() {
+            let verifier_std_out = [];
+            tasm_lib::prove_and_verify(
+                &verifier_program,
+                &verifier_std_in,
+                &non_determinism,
+                &verifier_std_out,
+                None,
+            );
+        }
+
+        (inner_padded_height, final_vm_state.cycle_count)
     }
 }
 
 #[cfg(test)]
 mod profilers {
+    use tasm_lib::triton_vm::triton_program;
+
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
+    use crate::tests_and_benchmarks::ozk::programs::recufier::verify::test::claim_to_stdin_for_stark_verifier;
     use crate::tests_and_benchmarks::test_helpers::shared_test::TritonVMTestCase;
 
-    use super::test::non_determinism_for_verify_of_factorial_program;
+    use super::test::non_determinism_for_verify_and_claim_and_padded_height;
 
-    #[test]
-    fn profile_verify_factorial_program() {
+    fn generate_profile_for_verifier_execution_for_factorial_execution_proof(
+        factorial_arg: u64,
+        expected_factorial_execution_padded_height: usize,
+    ) {
         use std::fs::create_dir_all;
         use std::fs::File;
         use std::io::Write;
         use std::path::Path;
         use std::path::PathBuf;
 
-        let main_function_name = "verify_factorial_program";
+        let factorial_program = triton_program!(
+            push {factorial_arg} // n
+            push 1               // n accumulator
+            call factorial       // 0 accumulator!
+            halt
+
+            factorial:           // n acc
+                // if n == 0: return
+                dup 1            // n acc n
+                push 0 eq        // n acc n==0
+                skiz             // n acc
+                return           // 0 acc
+                // else: multiply accumulator with n and recurse
+                dup 1            // n acc n
+                mul              // n acc·n
+                swap 1           // acc·n n
+                push -1 add      // acc·n n-1
+                swap 1           // n-1 acc·n
+                recurse
+        );
+
+        let main_function_name = "verify_stark_proof";
         let entrypoint_location =
             EntrypointLocation::disk("recufier", "verify", &format!("test::{main_function_name}"));
         let test_case = TritonVMTestCase::new(entrypoint_location);
-        let (non_determinism, fact_program_digest) =
-            non_determinism_for_verify_of_factorial_program();
-        let program = test_case.program();
+        let (non_determinism, claim_for_proof, inner_padded_height) =
+            non_determinism_for_verify_and_claim_and_padded_height(&factorial_program, &[]);
+        assert_eq!(
+            expected_factorial_execution_padded_height,
+            inner_padded_height
+        );
+        let std_in = claim_to_stdin_for_stark_verifier(&claim_for_proof);
 
-        let std_in = fact_program_digest.reversed().values();
+        let profile_file_name =
+            format!("{main_function_name}_inner_padded_height_{inner_padded_height}");
+        let verifier_program = test_case.program();
         let profile = tasm_lib::generate_full_profile(
-            main_function_name,
-            program,
+            &profile_file_name,
+            verifier_program,
             &std_in.to_vec().into(),
             &non_determinism,
             true,
@@ -724,8 +913,47 @@ mod profilers {
         path.push("profiles");
         create_dir_all(&path).expect("profiles directory should exist or be created here");
 
-        path.push(Path::new(&main_function_name).with_extension("profile"));
+        path.push(Path::new(&profile_file_name).with_extension("profile"));
         let mut file = File::create(&path).expect("open file for writing");
         write!(file, "{profile}").unwrap();
+    }
+
+    #[test]
+    fn profile_verify_factorial_program_inner_padded_height_256() {
+        generate_profile_for_verifier_execution_for_factorial_execution_proof(3, 256);
+    }
+
+    #[test]
+    fn profile_verify_factorial_program_inner_padded_height_1024() {
+        generate_profile_for_verifier_execution_for_factorial_execution_proof(80, 1024);
+    }
+
+    #[ignore = "Rather slow, almost 20 seconds on my powerful laptop"]
+    #[test]
+    fn profile_verify_factorial_program_inner_padded_height_4096() {
+        generate_profile_for_verifier_execution_for_factorial_execution_proof(200, 4096);
+    }
+
+    #[ignore = "Intended to generate data about verifier clock cycle count as a function of padded height"]
+    #[test]
+    fn generate_many_verifier_execution_profiles() {
+        for (fact_arg, expected_inner_padded_height) in [
+            (10, 1 << 8),
+            (40, 1 << 9),
+            (80, 1 << 10),
+            (100, 1 << 11),
+            (200, 1 << 12),
+            (400, 1 << 13),
+            (800, 1 << 14),
+            (1600, 1 << 15),
+            (3200, 1 << 16),
+            (6400, 1 << 17),
+            (12800, 1 << 18),
+        ] {
+            generate_profile_for_verifier_execution_for_factorial_execution_proof(
+                fact_arg,
+                expected_inner_padded_height,
+            );
+        }
     }
 }
