@@ -1,48 +1,19 @@
-#![allow(clippy::explicit_auto_deref)]
-
-use tasm_lib::triton_vm::prelude::*;
-use tasm_lib::twenty_first::prelude::AlgebraicHasher;
-
-use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
-
-fn main() {
-    fn merkle_root(leafs: &Vec<Digest>, start: usize, stop: usize) -> Digest {
-        let result: Digest = if stop == start + 1usize {
-            leafs[start]
-        } else {
-            let half: usize = (stop - start) / 2;
-            let left: Digest = merkle_root(leafs, start, stop - half);
-            let right: Digest = merkle_root(leafs, start + half, stop);
-            Tip5::hash_pair(left, right)
-        };
-
-        return result;
-    }
-
-    let elements: Box<Vec<Digest>> =
-        Vec::<Digest>::decode(&tasm::load_from_memory(BFieldElement::new(2000))).unwrap();
-    let length: usize = elements.len();
-
-    let root: Digest = merkle_root(&(*elements), 0usize, length);
-    tasm::tasm_io_write_to_stdout___digest(root);
-
-    return;
-}
-
+#[allow(clippy::explicit_auto_deref)]
 #[cfg(test)]
 mod test {
+    use tasm_lib::triton_vm::prelude::*;
+    use tasm_lib::twenty_first::prelude::AlgebraicHasher;
     use tasm_lib::twenty_first::shared_math::other::random_elements;
     use tasm_lib::twenty_first::util_types::merkle_tree::CpuParallel;
     use tasm_lib::twenty_first::util_types::merkle_tree::MerkleTree;
     use tasm_lib::twenty_first::util_types::merkle_tree_maker::MerkleTreeMaker;
 
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
+    use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::execute_compiled_with_stack_and_ins_for_test;
     use crate::tests_and_benchmarks::test_helpers::shared_test::init_memory_from;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
-
-    use super::*;
 
     #[test]
     fn merkle_root_test() {
@@ -58,7 +29,8 @@ mod test {
             assert_eq!(native_output, expected_output);
 
             // Test function in Triton VM
-            let entrypoint_location = EntrypointLocation::disk("recufier", "merkle_root", "main");
+            let entrypoint_location =
+                EntrypointLocation::disk("recufier", "merkle_root", "test::main");
             let rust_ast = entrypoint_location.extract_entrypoint();
             let expected_stack_diff = 0;
             let (code, _fn_name) = compile_for_run_test(&rust_ast);
@@ -73,9 +45,34 @@ mod test {
             assert_eq!(expected_output, vm_output.public_output);
         }
     }
+
+    fn main() {
+        fn merkle_root(leafs: &Vec<Digest>, start: usize, stop: usize) -> Digest {
+            let result: Digest = if stop == start + 1usize {
+                leafs[start]
+            } else {
+                let half: usize = (stop - start) / 2;
+                let left: Digest = merkle_root(leafs, start, stop - half);
+                let right: Digest = merkle_root(leafs, start + half, stop);
+                Tip5::hash_pair(left, right)
+            };
+
+            return result;
+        }
+
+        let elements: Box<Vec<Digest>> =
+            Vec::<Digest>::decode(&tasm::load_from_memory(BFieldElement::new(2000))).unwrap();
+        let length: usize = elements.len();
+
+        let root: Digest = merkle_root(&(*elements), 0usize, length);
+        tasm::tasm_io_write_to_stdout___digest(root);
+
+        return;
+    }
 }
 
 mod benches {
+    use tasm_lib::triton_vm::prelude::*;
     use tasm_lib::twenty_first::shared_math::other::random_elements;
 
     use crate::tests_and_benchmarks::benchmarks::execute_and_write_benchmark;
@@ -84,8 +81,6 @@ mod benches {
     use crate::tests_and_benchmarks::ozk::ozk_parsing;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
-
-    use super::*;
 
     #[test]
     fn merkle_root_bench() {
@@ -99,7 +94,7 @@ mod benches {
             }
         }
 
-        let entrypoint_location = EntrypointLocation::disk("recufier", "merkle_root", "main");
+        let entrypoint_location = EntrypointLocation::disk("recufier", "merkle_root", "test::main");
         let code = ozk_parsing::compile_for_test(&entrypoint_location);
 
         let common_case_input = get_input(16);

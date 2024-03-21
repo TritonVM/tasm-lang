@@ -3,7 +3,7 @@ use num::One;
 use tasm_lib::triton_vm::prelude::*;
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
-pub struct EvalArg;
+struct EvalArg;
 
 impl EvalArg {
     fn _default_initial() -> XFieldElement {
@@ -14,6 +14,8 @@ impl EvalArg {
     /// and `symbols`. This amounts to evaluating polynomial
     /// `f(x) = initial·x^n + Σ_i symbols[n-i]·x^i`
     /// at point `challenge`, _i.e._, returns `f(challenge)`.
+    /// Consider using `tasm-lib` snippets directly instead of this code. The `tasm-lib` snippets
+    /// produce a much shorter execution trace.
     fn compute_terminal(
         symbols: Vec<BFieldElement>,
         initial: XFieldElement,

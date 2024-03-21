@@ -1,114 +1,3 @@
-use tasm_lib::triton_vm::prelude::*;
-use tasm_lib::triton_vm::proof_item::FriResponse;
-use tasm_lib::triton_vm::proof_item::ProofItem;
-use tasm_lib::triton_vm::proof_stream::ProofStream;
-
-use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
-use crate::tests_and_benchmarks::ozk::rust_shadows::Tip5WithState;
-use crate::tests_and_benchmarks::ozk::rust_shadows::VmProofIter;
-
-fn call_all_next_methods() {
-    Tip5WithState::init();
-    let vm_proof_iter_stack: VmProofIter = VmProofIter {
-        current_item_pointer: BFieldElement::new(2),
-    };
-    let mut vm_proof_iter: Box<VmProofIter> = Box::<VmProofIter>::new(vm_proof_iter_stack);
-    let a_merkle_root: Box<Digest> = vm_proof_iter.next_as_merkleroot();
-    tasm::tasm_io_write_to_stdout___digest(*a_merkle_root);
-
-    let out_of_domain_base_row: Box<Box<[XFieldElement; 356]>> =
-        vm_proof_iter.next_as_outofdomainbaserow();
-    tasm::tasm_io_write_to_stdout___xfe(out_of_domain_base_row[0]);
-    tasm::tasm_io_write_to_stdout___xfe(out_of_domain_base_row[1]);
-
-    let out_of_domain_ext_row: Box<Box<[XFieldElement; 83]>> =
-        vm_proof_iter.next_as_outofdomainextrow();
-    tasm::tasm_io_write_to_stdout___xfe(out_of_domain_ext_row[0]);
-    tasm::tasm_io_write_to_stdout___xfe(out_of_domain_ext_row[1]);
-
-    let out_of_domain_quotient_segments: Box<[XFieldElement; 4]> =
-        vm_proof_iter.next_as_outofdomainquotientsegments();
-    tasm::tasm_io_write_to_stdout___xfe(out_of_domain_quotient_segments[0]);
-    tasm::tasm_io_write_to_stdout___xfe(out_of_domain_quotient_segments[1]);
-    tasm::tasm_io_write_to_stdout___xfe(out_of_domain_quotient_segments[2]);
-    tasm::tasm_io_write_to_stdout___xfe(out_of_domain_quotient_segments[3]);
-
-    let authentication_structure: Box<Vec<Digest>> =
-        vm_proof_iter.next_as_authenticationstructure();
-    tasm::tasm_io_write_to_stdout___digest(authentication_structure[0]);
-    tasm::tasm_io_write_to_stdout___digest(authentication_structure[1]);
-    tasm::tasm_io_write_to_stdout___digest(authentication_structure[2]);
-
-    let mbtw: Box<Vec<[BFieldElement; 356]>> = vm_proof_iter.next_as_masterbasetablerows();
-    {
-        let mut j: usize = 0;
-        while j < mbtw.len() {
-            let mut i: usize = 0;
-            while i < mbtw[j].len() {
-                tasm::tasm_io_write_to_stdout___bfe(mbtw[j][i]);
-                i += 1;
-            }
-            j += 1;
-        }
-    }
-
-    let metr: Box<Vec<[XFieldElement; 83]>> = vm_proof_iter.next_as_masterexttablerows();
-    {
-        let mut j: usize = 0;
-        while j < metr.len() {
-            let mut i: usize = 0;
-            while i < metr[j].len() {
-                tasm::tasm_io_write_to_stdout___xfe(metr[j][i]);
-                i += 1;
-            }
-            j += 1;
-        }
-    }
-
-    let log2paddedheight: Box<u32> = vm_proof_iter.next_as_log2paddedheight();
-    tasm::tasm_io_write_to_stdout___u32(*log2paddedheight);
-
-    let quotient_segments_elements: Box<Vec<[XFieldElement; 4]>> =
-        vm_proof_iter.next_as_quotientsegmentselements();
-    {
-        let mut j: usize = 0;
-        while j < quotient_segments_elements.len() {
-            tasm::tasm_io_write_to_stdout___xfe(quotient_segments_elements[j][0]);
-            tasm::tasm_io_write_to_stdout___xfe(quotient_segments_elements[j][1]);
-            tasm::tasm_io_write_to_stdout___xfe(quotient_segments_elements[j][2]);
-            tasm::tasm_io_write_to_stdout___xfe(quotient_segments_elements[j][3]);
-            j += 1;
-        }
-    }
-
-    let fri_codeword: Box<Vec<XFieldElement>> = vm_proof_iter.next_as_fricodeword();
-    {
-        let mut j: usize = 0;
-        while j < fri_codeword.len() {
-            tasm::tasm_io_write_to_stdout___xfe(fri_codeword[j]);
-            j += 1;
-        }
-    }
-
-    let fri_response: Box<FriResponse> = vm_proof_iter.next_as_friresponse();
-    {
-        let mut j: usize = 0;
-        while j < fri_response.auth_structure.len() {
-            tasm::tasm_io_write_to_stdout___digest(fri_response.auth_structure[j]);
-            j += 1;
-        }
-    }
-    {
-        let mut j: usize = 0;
-        while j < fri_response.revealed_leaves.len() {
-            tasm::tasm_io_write_to_stdout___xfe(fri_response.revealed_leaves[j]);
-            j += 1;
-        }
-    }
-
-    return;
-}
-
 #[cfg(test)]
 mod test {
     use itertools::Itertools;
@@ -124,13 +13,124 @@ mod test {
     use crate::triton_vm::table::QuotientSegments;
     use crate::triton_vm::table::NUM_BASE_COLUMNS;
     use crate::triton_vm::table::NUM_EXT_COLUMNS;
+    use tasm_lib::triton_vm::prelude::*;
+    use tasm_lib::triton_vm::proof_item::ProofItem;
+    use tasm_lib::triton_vm::proof_stream::ProofStream;
 
-    use super::*;
+    use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
+    use crate::tests_and_benchmarks::ozk::rust_shadows::Tip5WithState;
+    use crate::tests_and_benchmarks::ozk::rust_shadows::VmProofIter;
+
+    /// The function being tested here. Dual-compiled by `rustc` and `tasm-lang`.
+    fn call_all_next_methods() {
+        Tip5WithState::init();
+        let vm_proof_iter_stack: VmProofIter = VmProofIter {
+            current_item_pointer: BFieldElement::new(2),
+        };
+        let mut vm_proof_iter: Box<VmProofIter> = Box::<VmProofIter>::new(vm_proof_iter_stack);
+        let a_merkle_root: Box<Digest> = vm_proof_iter.next_as_merkleroot();
+        tasm::tasm_io_write_to_stdout___digest(*a_merkle_root);
+
+        let out_of_domain_base_row: Box<Box<[XFieldElement; 356]>> =
+            vm_proof_iter.next_as_outofdomainbaserow();
+        tasm::tasm_io_write_to_stdout___xfe(out_of_domain_base_row[0]);
+        tasm::tasm_io_write_to_stdout___xfe(out_of_domain_base_row[1]);
+
+        let out_of_domain_ext_row: Box<Box<[XFieldElement; 83]>> =
+            vm_proof_iter.next_as_outofdomainextrow();
+        tasm::tasm_io_write_to_stdout___xfe(out_of_domain_ext_row[0]);
+        tasm::tasm_io_write_to_stdout___xfe(out_of_domain_ext_row[1]);
+
+        let out_of_domain_quotient_segments: Box<[XFieldElement; 4]> =
+            vm_proof_iter.next_as_outofdomainquotientsegments();
+        tasm::tasm_io_write_to_stdout___xfe(out_of_domain_quotient_segments[0]);
+        tasm::tasm_io_write_to_stdout___xfe(out_of_domain_quotient_segments[1]);
+        tasm::tasm_io_write_to_stdout___xfe(out_of_domain_quotient_segments[2]);
+        tasm::tasm_io_write_to_stdout___xfe(out_of_domain_quotient_segments[3]);
+
+        let authentication_structure: Box<Vec<Digest>> =
+            vm_proof_iter.next_as_authenticationstructure();
+        tasm::tasm_io_write_to_stdout___digest(authentication_structure[0]);
+        tasm::tasm_io_write_to_stdout___digest(authentication_structure[1]);
+        tasm::tasm_io_write_to_stdout___digest(authentication_structure[2]);
+
+        let mbtw: Box<Vec<[BFieldElement; 356]>> = vm_proof_iter.next_as_masterbasetablerows();
+        {
+            let mut j: usize = 0;
+            while j < mbtw.len() {
+                let mut i: usize = 0;
+                while i < mbtw[j].len() {
+                    tasm::tasm_io_write_to_stdout___bfe(mbtw[j][i]);
+                    i += 1;
+                }
+                j += 1;
+            }
+        }
+
+        let metr: Box<Vec<[XFieldElement; 83]>> = vm_proof_iter.next_as_masterexttablerows();
+        {
+            let mut j: usize = 0;
+            while j < metr.len() {
+                let mut i: usize = 0;
+                while i < metr[j].len() {
+                    tasm::tasm_io_write_to_stdout___xfe(metr[j][i]);
+                    i += 1;
+                }
+                j += 1;
+            }
+        }
+
+        let log2paddedheight: Box<u32> = vm_proof_iter.next_as_log2paddedheight();
+        tasm::tasm_io_write_to_stdout___u32(*log2paddedheight);
+
+        let quotient_segments_elements: Box<Vec<[XFieldElement; 4]>> =
+            vm_proof_iter.next_as_quotientsegmentselements();
+        {
+            let mut j: usize = 0;
+            while j < quotient_segments_elements.len() {
+                tasm::tasm_io_write_to_stdout___xfe(quotient_segments_elements[j][0]);
+                tasm::tasm_io_write_to_stdout___xfe(quotient_segments_elements[j][1]);
+                tasm::tasm_io_write_to_stdout___xfe(quotient_segments_elements[j][2]);
+                tasm::tasm_io_write_to_stdout___xfe(quotient_segments_elements[j][3]);
+                j += 1;
+            }
+        }
+
+        let fri_codeword: Box<Vec<XFieldElement>> = vm_proof_iter.next_as_fricodeword();
+        {
+            let mut j: usize = 0;
+            while j < fri_codeword.len() {
+                tasm::tasm_io_write_to_stdout___xfe(fri_codeword[j]);
+                j += 1;
+            }
+        }
+
+        let fri_response: Box<FriResponse> = vm_proof_iter.next_as_friresponse();
+        {
+            let mut j: usize = 0;
+            while j < fri_response.auth_structure.len() {
+                tasm::tasm_io_write_to_stdout___digest(fri_response.auth_structure[j]);
+                j += 1;
+            }
+        }
+        {
+            let mut j: usize = 0;
+            while j < fri_response.revealed_leaves.len() {
+                tasm::tasm_io_write_to_stdout___xfe(fri_response.revealed_leaves[j]);
+                j += 1;
+            }
+        }
+
+        return;
+    }
 
     #[test]
     fn test_all_next_as_methods() {
-        let entrypoint_location =
-            EntrypointLocation::disk("recufier", "vm_proof_iter_next_as", "call_all_next_methods");
+        let entrypoint_location = EntrypointLocation::disk(
+            "recufier",
+            "vm_proof_iter_next_as",
+            "test::call_all_next_methods",
+        );
         let test_case = TritonVMTestCase::new(entrypoint_location);
         let non_determinism = non_determinism();
         {

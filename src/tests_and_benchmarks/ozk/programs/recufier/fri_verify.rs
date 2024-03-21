@@ -40,12 +40,6 @@ impl FriVerify {
     }
 }
 
-fn main() {
-    let _a: FriVerify = FriVerify::new(BFieldElement::new(7), 32, 4, 3);
-
-    return;
-}
-
 #[cfg(test)]
 pub(crate) mod test {
     use rand::random;
@@ -58,6 +52,12 @@ pub(crate) mod test {
 
     use super::*;
 
+    fn main() {
+        let _a: FriVerify = FriVerify::new(BFieldElement::new(7), 32, 4, 3);
+
+        return;
+    }
+
     #[test]
     fn fri_verify_test() {
         // Rust program on host machine
@@ -67,7 +67,7 @@ pub(crate) mod test {
             rust_shadows::wrap_main_with_io(&main)(stdin.clone(), non_determinism.clone());
 
         // Run test on Triton-VM
-        let entrypoint_location = EntrypointLocation::disk("recufier", "fri_verify", "main");
+        let entrypoint_location = EntrypointLocation::disk("recufier", "fri_verify", "test::main");
         let test_program = ozk_parsing::compile_for_test(&entrypoint_location);
 
         let expected_stack_diff = 0;
