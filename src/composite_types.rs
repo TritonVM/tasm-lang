@@ -10,6 +10,7 @@ use crate::ast_types::CustomTypeOil;
 use crate::ast_types::DataType;
 use crate::ast_types::EnumType;
 use crate::custom_type_resolver::CustomTypeResolution;
+use crate::libraries;
 use crate::type_checker;
 use crate::type_checker::GetType;
 use crate::type_checker::Typing;
@@ -90,8 +91,13 @@ impl PartialEq for TypeContext {
 
 #[derive(Debug, Default, Clone)]
 pub(crate) struct CompositeTypes {
+    /// Map from type name to indices into `composite_types` list
     by_name: HashMap<String, Vec<usize>>,
+
+    // Map from data type to index into `composite_types` list
     by_type: HashMap<ast_types::DataType, usize>,
+
+    // A list of all custom types that have been added to the current compilation instance
     composite_types: Vec<TypeContext>,
 }
 
@@ -105,6 +111,11 @@ impl IntoIterator for CompositeTypes {
 }
 
 impl CompositeTypes {
+    /// Return the number of composite types
+    pub(crate) fn count(&self) -> usize {
+        self.by_type.len()
+    }
+
     /// Merge two composite type collections. Panics if intersection is non-empty.
     pub(crate) fn checked_merge(&mut self, other: Self) {
         for (type_name, dtype_indices) in other.by_name.into_iter() {
@@ -117,7 +128,9 @@ impl CompositeTypes {
         }
     }
 
-    /// Resolve all types. Handles nested type definitions and type resolution on methods and associated functions
+    /// Resolve all types. Handles nested type definitions and type resolution on methods and
+    /// associated functions. Notice that this is not type annotation but rather type-resolution
+    /// where the data type variant of `Unresolved` gets transformed.
     pub(crate) fn resolve_nested(&mut self) {
         let mut custom_types_copy = self.clone();
         while custom_types_copy
@@ -151,6 +164,39 @@ impl CompositeTypes {
         for (mut k, v) in custom_types_copy.clone().by_type.drain() {
             k.resolve_custom_types(&custom_types_copy);
             self.by_type.insert(k, v);
+        }
+    }
+
+    /// Type-annotate methods and associated functions for all non-atomic types
+    pub(crate) fn type_annotate(&mut self, libraries: &[Box<dyn libraries::Library>]) {
+        let mut annotate_again = true;
+        while annotate_again {
+            let mut custom_types_copy = self.clone();
+            let ftable = custom_types_copy.get_all_constructor_signatures();
+            self.methods_mut().for_each(|method| {
+                type_checker::annotate_method(
+                    method,
+                    &mut custom_types_copy,
+                    libraries,
+                    ftable.clone(),
+                );
+            });
+            self.associated_functions_mut().for_each(|func| {
+                type_checker::annotate_fn_inner(
+                    func,
+                    &mut custom_types_copy,
+                    libraries,
+                    ftable.clone(),
+                );
+            });
+
+            // Add all types collected in `custom_types_copy` to `self`.
+            // If any new declared types are added here, we need to annotate *their* methods and
+            // associated function, i.e. run this loop again.
+            annotate_again = custom_types_copy.count() != self.count();
+            for custom_type in custom_types_copy.composite_types {
+                self.add_type_context_if_new(custom_type);
+            }
         }
     }
 

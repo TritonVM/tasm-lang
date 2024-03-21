@@ -1,9 +1,9 @@
-#[allow(clippy::vec_init_then_push)]
+use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
+
+#[allow(unused_allocation)]
 fn main() {
-    let mut vec: Vec<u32> = Vec::<u32>::default();
-    vec.push(101);
-    // let _array: [u32; 1] = <[u32; 1]>::try_from(vec).unwrap();
-    Foo::bar();
+    Box::<Foo>::new(Foo(42)).ref_self_method();
+    Foo(43).owned_self_method();
 
     return;
 }
@@ -12,10 +12,21 @@ struct Foo(u32);
 
 impl Foo {
     #[allow(clippy::vec_init_then_push)]
-    fn bar() {
+    fn ref_self_method(&self) {
         let mut vec: Vec<u32> = Vec::<u32>::default();
         vec.push(101);
         let _array: [u32; 1] = <[u32; 1]>::try_from(vec).unwrap();
+
+        return;
+    }
+
+    #[allow(clippy::vec_init_then_push)]
+    fn owned_self_method(self) {
+        let mut vec: Vec<u32> = Vec::<u32>::default();
+        vec.push(101);
+        let maybe_array: Result<[u32; 1], _> = <[u32; 1]>::try_from(vec);
+        let array: [u32; 1] = maybe_array.unwrap();
+        tasm::tasm_io_write_to_stdout___u32(array[0]);
 
         return;
     }
@@ -31,14 +42,11 @@ mod tests {
     use crate::tests_and_benchmarks::test_helpers::shared_test::TritonVMTestCase;
 
     #[test]
-    fn test() {
+    fn composite_type_methods_test() {
         let native_output =
             rust_shadows::wrap_main_with_io(&main)(vec![], NonDeterminism::default());
-        let entrypoint_location = EntrypointLocation::disk(
-            "composite_types",
-            "composite_type_associated_function",
-            "main",
-        );
+        let entrypoint_location =
+            EntrypointLocation::disk("composite_types", "composite_types_from_methods", "main");
         let vm_output = TritonVMTestCase::new(entrypoint_location)
             .execute()
             .unwrap();

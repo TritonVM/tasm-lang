@@ -182,7 +182,7 @@ impl DataTypeAndMutability {
 }
 
 // TODO: Delete `annotate_method`, use `annotate_function` instead
-fn annotate_method(
+pub(super) fn annotate_method(
     method: &mut ast::Method<Typing>,
     composite_types: &mut CompositeTypes,
     libraries: &[Box<dyn libraries::Library>],
@@ -245,7 +245,7 @@ fn annotate_method(
     }
 }
 
-fn annotate_fn_inner(
+pub(super) fn annotate_fn_inner(
     function: &mut ast::Fn<Typing>,
     composite_types: &mut CompositeTypes,
     libraries: &[Box<dyn libraries::Library>],
@@ -328,32 +328,13 @@ pub(crate) fn annotate_fn_outer(
     // Populate `ftable` with tuple constructors, allowing initialization of tuple structs
     // using `struct Foo(u32); let a = Foo(200);` as well as data-carrying enum-type
     // variants such as `Bar::A(200u32);`.
-    // TODO: `ftable` probably needs a type parameter as well, so we can call
-    // both `Ok(1u32)` and `Ok(1u64)`.
     let ftable = composite_types.get_all_constructor_signatures();
 
     // Type annotate the function
-    let ftable_outer = ftable.clone();
     annotate_fn_inner(function, composite_types, libraries, ftable);
 
     // Type annotate all declared methods and associated functions
-    let mut composite_type_copy = composite_types.clone();
-    composite_types.methods_mut().for_each(|method| {
-        annotate_method(
-            method,
-            &mut composite_type_copy,
-            libraries,
-            ftable_outer.clone(),
-        );
-    });
-    composite_types.associated_functions_mut().for_each(|func| {
-        annotate_fn_inner(
-            func,
-            &mut composite_type_copy,
-            libraries,
-            ftable_outer.clone(),
-        );
-    });
+    composite_types.type_annotate(libraries);
 }
 
 fn annotate_stmt(

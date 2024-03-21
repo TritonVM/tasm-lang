@@ -1,1 +1,2 @@
-mod composite_type_associated_function;
+mod composite_types_from_associated_functions;
+mod composite_types_from_methods;
