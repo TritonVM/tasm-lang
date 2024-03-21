@@ -21,192 +21,7 @@ use super::stark_parameters::*;
 struct Recufier;
 
 impl Recufier {
-    const fn num_quotients() -> usize {
-        return 596;
-    }
-
-    const fn constraint_evaluation_lengths() -> [usize; 4] {
-        return [81usize, 94, 398, 23];
-    }
-
-    const fn constraint_evaluation_lengths_running_sum() -> [usize; 4] {
-        let mut running_sum: usize = 0;
-        let mut lengths: [usize; 4] = Recufier::constraint_evaluation_lengths();
-        let mut i: usize = 0;
-        while i < 4 {
-            running_sum += lengths[i];
-            lengths[i] = running_sum;
-            i += 1;
-        }
-
-        return lengths;
-    }
-
-    /// Evaluate AIR constraintd and multiply with the correct inverse of zerofier.
-    fn quotient_summands(
-        out_of_domain_point_curr_row: XFieldElement,
-        padded_height: u32,
-        trace_domain_generator: BFieldElement,
-    ) -> [XFieldElement; 596] {
-        let initial_zerofier_inv: XFieldElement =
-            (out_of_domain_point_curr_row - BFieldElement::one()).inverse();
-        // RecufyDebug::dump_xfe(initial_zerofier_inv);
-        // println!("initial_zerofier_inv: {initial_zerofier_inv:?}");
-        let consistency_zerofier_inv: XFieldElement =
-            (out_of_domain_point_curr_row.mod_pow_u32(padded_height) - BFieldElement::one())
-                .inverse();
-        // println!("consistency_zerofier_inv: {consistency_zerofier_inv:?}");
-        // RecufyDebug::dump_xfe(consistency_zerofier_inv);
-        let except_last_row: XFieldElement =
-            out_of_domain_point_curr_row - trace_domain_generator.inverse();
-        // println!("except_last_row: {except_last_row:?}");
-        // RecufyDebug::dump_xfe(except_last_row);
-        let transition_zerofier_inv: XFieldElement = except_last_row * consistency_zerofier_inv;
-        // println!("transition_zerofier_inv: {transition_zerofier_inv:?}");
-        // RecufyDebug::dump_xfe(transition_zerofier_inv);
-        let terminal_zerofier_inv: XFieldElement = except_last_row.inverse();
-        // println!("terminal_zerofier_inv: {terminal_zerofier_inv:?}");
-        // i.e., only last row
-        // RecufyDebug::dump_xfe(terminal_zerofier_inv);
-
-        // Along with the challenges, the out-of-domain rows ({base,ext}*{curr,next}) are stored at
-        // a statically-known location; those locations are assumed by the next function call.
-        let mut evaluated_constraints: [XFieldElement; 596] =
-            tasm::tasm_recufier_master_ext_table_air_constraint_evaluation();
-        // println!("evaluated_constraints: {evaluated_constraints:?}");
-
-        let categories_running_sum_lengths: [usize; 4] =
-            Recufier::constraint_evaluation_lengths_running_sum();
-        // println!("categories_running_sum_lengths: {categories_running_sum_lengths:?}");
-        let mut i: usize = 0;
-        while i < categories_running_sum_lengths[0] {
-            evaluated_constraints[i] *= initial_zerofier_inv;
-            i += 1;
-        }
-        while i < categories_running_sum_lengths[1] {
-            evaluated_constraints[i] *= consistency_zerofier_inv;
-            i += 1;
-        }
-        while i < categories_running_sum_lengths[2] {
-            evaluated_constraints[i] *= transition_zerofier_inv;
-            i += 1;
-        }
-        while i < categories_running_sum_lengths[3] {
-            evaluated_constraints[i] *= terminal_zerofier_inv;
-            i += 1;
-        }
-
-        return evaluated_constraints;
-    }
-
-    const fn num_base_and_ext_and_quotient_segment_codeword_weights() -> usize {
-        return 443;
-    }
-
-    fn num_columns() -> usize {
-        return 439;
-    }
-
-    #[allow(clippy::boxed_local)]
-    #[allow(clippy::redundant_allocation)]
-    #[allow(clippy::ptr_arg)]
-    fn linearly_sum_xfe_base_and_ext_row(
-        base_row: Box<Box<BaseRow<XFieldElement>>>,
-        ext_row: Box<Box<ExtensionRow>>,
-        base_and_ext_codeword_weights: &Vec<XFieldElement>,
-    ) -> XFieldElement {
-        let mut acc: XFieldElement = XFieldElement::zero();
-        let mut i: usize = 0;
-        while i < base_row.len() {
-            acc += base_and_ext_codeword_weights[i] * base_row[i];
-            i += 1;
-        }
-
-        i = 0;
-        while i < ext_row.len() {
-            acc += ext_row[i] * base_and_ext_codeword_weights[i + base_row.len()];
-            i += 1;
-        }
-
-        return acc;
-    }
-}
-
-/// Gives statements only intended for debugging its own scope.
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
-struct RecufyDebug;
-
-impl RecufyDebug {
-    pub fn _dump_u32(thing: u32) {
-        tasm::tasm_io_write_to_stdout___u32(thing);
-
-        return;
-    }
-
-    pub fn _dump_bfe(thing: BFieldElement) {
-        tasm::tasm_io_write_to_stdout___bfe(thing);
-
-        return;
-    }
-
-    pub fn _dump_xfe(thing: XFieldElement) {
-        tasm::tasm_io_write_to_stdout___xfe(thing);
-
-        return;
-    }
-
-    pub fn _dump_digest(digest: Digest) {
-        tasm::tasm_io_write_to_stdout___digest(digest);
-
-        return;
-    }
-
-    #[allow(clippy::ptr_arg)]
-    pub fn _dump_bfes(bfes: &Vec<BFieldElement>) {
-        let mut i: usize = 0;
-        while i < bfes.len() {
-            tasm::tasm_io_write_to_stdout___bfe(bfes[i]);
-            i += 1;
-        }
-
-        return;
-    }
-
-    #[allow(clippy::ptr_arg)]
-    pub fn _dump_xfes(xfes: &Vec<XFieldElement>) {
-        let mut i: usize = 0;
-        while i < xfes.len() {
-            tasm::tasm_io_write_to_stdout___xfe(xfes[i]);
-            i += 1;
-        }
-
-        return;
-    }
-
-    #[allow(clippy::ptr_arg)]
-    pub fn _dump_digests(digests: &Vec<Digest>) {
-        let mut i: usize = 0;
-        while i < digests.len() {
-            tasm::tasm_io_write_to_stdout___digest(digests[i]);
-            i += 1;
-        }
-
-        return;
-    }
-
-    pub fn _sponge_state(rate: [BFieldElement; 10]) {
-        let mut i: usize = 0;
-        while i < 10 {
-            tasm::tasm_io_write_to_stdout___bfe(rate[i]);
-            i += 1;
-        }
-
-        return;
-    }
-}
-
-fn verify_factorial_program() {
-    fn verify_program_empty_input_and_output(claim: &Claim) {
+    fn verify(claim: &Claim) {
         let parameters: Box<StarkParameters> =
             Box::<StarkParameters>::new(StarkParameters::default());
 
@@ -485,23 +300,179 @@ fn verify_factorial_program() {
         return;
     }
 
-    let claim: Box<Claim> = Box::<Claim>::new(Claim {
-        program_digest: Digest::new([
-            BFieldElement::new(7881280935549951237),
-            BFieldElement::new(18116781179058631336),
-            BFieldElement::new(15683079992428274309),
-            BFieldElement::new(2749753857496185052),
-            BFieldElement::new(14083115970614877960),
-        ]),
-        input: Vec::<BFieldElement>::default(),
-        output: Vec::<BFieldElement>::default(),
-    });
+    const fn num_quotients() -> usize {
+        return 596;
+    }
 
-    return verify_program_empty_input_and_output(&claim);
+    const fn constraint_evaluation_lengths() -> [usize; 4] {
+        return [81usize, 94, 398, 23];
+    }
+
+    const fn constraint_evaluation_lengths_running_sum() -> [usize; 4] {
+        let mut running_sum: usize = 0;
+        let mut lengths: [usize; 4] = Recufier::constraint_evaluation_lengths();
+        let mut i: usize = 0;
+        while i < 4 {
+            running_sum += lengths[i];
+            lengths[i] = running_sum;
+            i += 1;
+        }
+
+        return lengths;
+    }
+
+    /// Evaluate AIR constraintd and multiply with the correct inverse of zerofier.
+    fn quotient_summands(
+        out_of_domain_point_curr_row: XFieldElement,
+        padded_height: u32,
+        trace_domain_generator: BFieldElement,
+    ) -> [XFieldElement; 596] {
+        let initial_zerofier_inv: XFieldElement =
+            (out_of_domain_point_curr_row - BFieldElement::one()).inverse();
+        let consistency_zerofier_inv: XFieldElement =
+            (out_of_domain_point_curr_row.mod_pow_u32(padded_height) - BFieldElement::one())
+                .inverse();
+        let except_last_row: XFieldElement =
+            out_of_domain_point_curr_row - trace_domain_generator.inverse();
+        let transition_zerofier_inv: XFieldElement = except_last_row * consistency_zerofier_inv;
+        let terminal_zerofier_inv: XFieldElement = except_last_row.inverse();
+
+        // Along with the challenges, the out-of-domain rows ({base,ext}*{curr,next}) are stored at
+        // a statically-known location; those locations are assumed by the next function call.
+        let mut evaluated_constraints: [XFieldElement; 596] =
+            tasm::tasm_recufier_master_ext_table_air_constraint_evaluation();
+
+        let categories_running_sum_lengths: [usize; 4] =
+            Recufier::constraint_evaluation_lengths_running_sum();
+        let mut i: usize = 0;
+        while i < categories_running_sum_lengths[0] {
+            evaluated_constraints[i] *= initial_zerofier_inv;
+            i += 1;
+        }
+        while i < categories_running_sum_lengths[1] {
+            evaluated_constraints[i] *= consistency_zerofier_inv;
+            i += 1;
+        }
+        while i < categories_running_sum_lengths[2] {
+            evaluated_constraints[i] *= transition_zerofier_inv;
+            i += 1;
+        }
+        while i < categories_running_sum_lengths[3] {
+            evaluated_constraints[i] *= terminal_zerofier_inv;
+            i += 1;
+        }
+
+        return evaluated_constraints;
+    }
+
+    const fn num_base_and_ext_and_quotient_segment_codeword_weights() -> usize {
+        return 443;
+    }
+
+    fn num_columns() -> usize {
+        return 439;
+    }
+
+    #[allow(clippy::boxed_local)]
+    #[allow(clippy::redundant_allocation)]
+    #[allow(clippy::ptr_arg)]
+    fn linearly_sum_xfe_base_and_ext_row(
+        base_row: Box<Box<BaseRow<XFieldElement>>>,
+        ext_row: Box<Box<ExtensionRow>>,
+        base_and_ext_codeword_weights: &Vec<XFieldElement>,
+    ) -> XFieldElement {
+        let mut acc: XFieldElement = XFieldElement::zero();
+        let mut i: usize = 0;
+        while i < base_row.len() {
+            acc += base_and_ext_codeword_weights[i] * base_row[i];
+            i += 1;
+        }
+
+        i = 0;
+        while i < ext_row.len() {
+            acc += ext_row[i] * base_and_ext_codeword_weights[i + base_row.len()];
+            i += 1;
+        }
+
+        return acc;
+    }
+}
+
+/// Gives statements only intended for debugging its own scope.
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+struct RecufyDebug;
+
+impl RecufyDebug {
+    pub fn _dump_u32(thing: u32) {
+        tasm::tasm_io_write_to_stdout___u32(thing);
+
+        return;
+    }
+
+    pub fn _dump_bfe(thing: BFieldElement) {
+        tasm::tasm_io_write_to_stdout___bfe(thing);
+
+        return;
+    }
+
+    pub fn _dump_xfe(thing: XFieldElement) {
+        tasm::tasm_io_write_to_stdout___xfe(thing);
+
+        return;
+    }
+
+    pub fn _dump_digest(digest: Digest) {
+        tasm::tasm_io_write_to_stdout___digest(digest);
+
+        return;
+    }
+
+    #[allow(clippy::ptr_arg)]
+    pub fn _dump_bfes(bfes: &Vec<BFieldElement>) {
+        let mut i: usize = 0;
+        while i < bfes.len() {
+            tasm::tasm_io_write_to_stdout___bfe(bfes[i]);
+            i += 1;
+        }
+
+        return;
+    }
+
+    #[allow(clippy::ptr_arg)]
+    pub fn _dump_xfes(xfes: &Vec<XFieldElement>) {
+        let mut i: usize = 0;
+        while i < xfes.len() {
+            tasm::tasm_io_write_to_stdout___xfe(xfes[i]);
+            i += 1;
+        }
+
+        return;
+    }
+
+    #[allow(clippy::ptr_arg)]
+    pub fn _dump_digests(digests: &Vec<Digest>) {
+        let mut i: usize = 0;
+        while i < digests.len() {
+            tasm::tasm_io_write_to_stdout___digest(digests[i]);
+            i += 1;
+        }
+
+        return;
+    }
+
+    pub fn _sponge_state(rate: [BFieldElement; 10]) {
+        let mut i: usize = 0;
+        while i < 10 {
+            tasm::tasm_io_write_to_stdout___bfe(rate[i]);
+            i += 1;
+        }
+
+        return;
+    }
 }
 
 #[cfg(test)]
-mod tests {
+mod test {
     use proptest::prelude::*;
     use tasm_lib::triton_vm::stark::StarkProofStream;
     use tasm_lib::triton_vm::table::NUM_EXT_COLUMNS;
@@ -521,7 +492,22 @@ mod tests {
 
     use super::*;
 
-    pub(crate) fn recufier_non_determinism() -> NonDeterminism<BFieldElement> {
+    fn verify_factorial_program() {
+        // Notice that this function is dual-compiled: By rustc and by this compiler.
+        let factorial_program_program_digest: Digest = tasm::tasm_io_read_stdin___digest();
+        let claim: Box<Claim> = Box::<Claim>::new(Claim {
+            program_digest: factorial_program_program_digest,
+            input: Vec::<BFieldElement>::default(),
+            output: Vec::<BFieldElement>::default(),
+        });
+
+        return Recufier::verify(&claim);
+    }
+
+    /// Return `NonDeterminism` required for the `verify` function as well as program digest of the
+    // factorial program whose proof is verified
+    pub(crate) fn non_determinism_for_verify_of_factorial_program(
+    ) -> (NonDeterminism<BFieldElement>, Digest) {
         let factorial_program = triton_program!(
             push 3           // n
             push 1              // n accumulator
@@ -548,7 +534,7 @@ mod tests {
             triton_vm::prove_program(&factorial_program, &public_input, &non_determinism).unwrap();
         assert!(
             triton_vm::verify(stark, &claim, &proof),
-            "Proof must verify"
+            "Proof from TVM must verify through TVM"
         );
 
         let fri = stark.derive_fri(proof.padded_height().unwrap()).unwrap();
@@ -584,9 +570,12 @@ mod tests {
                 .collect_vec(),
         ]
         .concat();
-        NonDeterminism::default()
-            .with_ram(ram)
-            .with_digests(nd_digests)
+        (
+            NonDeterminism::default()
+                .with_ram(ram)
+                .with_digests(nd_digests),
+            factorial_program.hash::<Tip5>(),
+        )
     }
 
     #[test]
@@ -668,17 +657,20 @@ mod tests {
     #[test]
     fn verify_tvm_proof_factorial_program() {
         let entrypoint_location =
-            EntrypointLocation::disk("recufier", "verify", "verify_factorial_program");
+            EntrypointLocation::disk("recufier", "verify", "test::verify_factorial_program");
         let test_case = TritonVMTestCase::new(entrypoint_location);
-        let non_determinism = recufier_non_determinism();
+        let (non_determinism, fact_program_digest) =
+            non_determinism_for_verify_of_factorial_program();
         let program = test_case.program();
 
+        let std_in = fact_program_digest.reversed().values();
         let native_output = rust_shadows::wrap_main_with_io_and_program_digest(
             &verify_factorial_program,
-        )(Vec::default(), non_determinism.clone(), program.clone());
+        )(std_in.to_vec(), non_determinism.clone(), program.clone());
 
         let final_vm_state = test_case
             .with_non_determinism(non_determinism.clone())
+            .with_std_in(std_in.to_vec())
             .execute()
             .unwrap();
 
@@ -697,32 +689,32 @@ mod tests {
 
 #[cfg(test)]
 mod profilers {
-    use tasm_lib::triton_vm::program::PublicInput;
-
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::test_helpers::shared_test::TritonVMTestCase;
 
-    use super::tests::recufier_non_determinism;
+    use super::test::non_determinism_for_verify_of_factorial_program;
 
     #[test]
-    fn verify_profiler() {
+    fn profile_verify_factorial_program() {
         use std::fs::create_dir_all;
         use std::fs::File;
         use std::io::Write;
         use std::path::Path;
         use std::path::PathBuf;
 
-        let main_function_name = "verify_factorial_program";
+        let main_function_name = "test::verify_factorial_program";
         let entrypoint_location =
             EntrypointLocation::disk("recufier", "verify", main_function_name);
         let test_case = TritonVMTestCase::new(entrypoint_location);
-        let non_determinism = recufier_non_determinism();
+        let (non_determinism, fact_program_digest) =
+            non_determinism_for_verify_of_factorial_program();
         let program = test_case.program();
 
+        let std_in = fact_program_digest.reversed().values();
         let profile = tasm_lib::generate_full_profile(
             main_function_name,
             program,
-            &PublicInput::default(),
+            &std_in.to_vec().into(),
             &non_determinism,
             true,
         );
@@ -730,7 +722,7 @@ mod profilers {
 
         let mut path = PathBuf::new();
         path.push("profiles");
-        create_dir_all(&path).expect("profiles directory should exist");
+        create_dir_all(&path).expect("profiles directory should exist or be created here");
 
         path.push(Path::new(&main_function_name).with_extension("profile"));
         let mut file = File::create(&path).expect("open file for writing");
