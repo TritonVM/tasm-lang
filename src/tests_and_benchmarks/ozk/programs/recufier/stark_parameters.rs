@@ -5,7 +5,7 @@ use tasm_lib::twenty_first::shared_math::traits::PrimitiveRootOfUnity;
 
 /// See [StarkParameters][params].
 ///
-/// [params]: crate::triton_vm::stark::StarkParameters
+/// [params]: crate::triton_vm::stark::Stark
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize)]
 pub(crate) struct StarkParameters {
     pub security_level: usize,
@@ -46,7 +46,7 @@ impl StarkParameters {
 
         return FriVerify {
             expansion_factor: self.fri_expansion_factor as u32,
-            num_colinearity_checks: self.num_collinearity_checks as u32,
+            num_collinearity_checks: self.num_collinearity_checks as u32,
             domain_length: fri_domain_length as u32,
             domain_offset: BFieldElement::generator(),
             domain_generator: generator,
@@ -57,7 +57,7 @@ impl StarkParameters {
 pub(crate) struct FriVerify {
     // expansion factor = 1 / rate
     pub expansion_factor: u32,
-    pub num_colinearity_checks: u32,
+    pub num_collinearity_checks: u32,
     pub domain_length: u32,
     pub domain_offset: BFieldElement,
     pub domain_generator: BFieldElement,
@@ -67,5 +67,61 @@ impl FriVerify {
     // This wrapper is probably not necessary; consider removing.
     pub fn verify(&self, proof_iter: &mut VmProofIter) -> Vec<(u32, XFieldElement)> {
         return tasm::tasm_recufier_fri_verify(proof_iter, self);
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use tasm_lib::triton_vm;
+
+    use super::*;
+
+    #[test]
+    fn tvm_agreement() {
+        let default_local = StarkParameters::default();
+        let default_tvm = triton_vm::stark::Stark::default();
+
+        assert_eq!(default_local.security_level, default_tvm.security_level);
+        assert_eq!(
+            default_local.fri_expansion_factor,
+            default_tvm.fri_expansion_factor
+        );
+        assert_eq!(
+            default_local.num_trace_randomizers,
+            default_tvm.num_trace_randomizers
+        );
+        assert_eq!(
+            default_local.num_collinearity_checks,
+            default_tvm.num_collinearity_checks
+        );
+        assert_eq!(
+            default_local.num_combination_codeword_checks,
+            default_tvm.num_combination_codeword_checks
+        );
+
+        let padded_height = 1 << 20;
+        let derived_fri_local = default_local.derive_fri(padded_height);
+        let derived_fri_tvm = default_tvm.derive_fri(padded_height as usize).unwrap();
+
+        assert_eq!(
+            derived_fri_local.expansion_factor as usize,
+            derived_fri_tvm.expansion_factor
+        );
+        assert_eq!(
+            derived_fri_local.num_collinearity_checks as usize,
+            derived_fri_tvm.num_collinearity_checks
+        );
+        assert_eq!(
+            derived_fri_local.domain_length as usize,
+            derived_fri_tvm.domain.length
+        );
+        assert_eq!(
+            derived_fri_local.domain_offset,
+            derived_fri_tvm.domain.offset
+        );
+        assert_eq!(
+            derived_fri_local.domain_generator,
+            derived_fri_tvm.domain.generator
+        );
     }
 }

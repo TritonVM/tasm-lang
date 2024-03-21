@@ -133,7 +133,7 @@ impl Recufier {
         // Check leafs
         // Dequeue base elements
         // Could be read from secret-in, but it's much more efficient to get them from memory
-        let num_combination_codeword_checks: usize = 2 * fri.num_colinearity_checks as usize;
+        let num_combination_codeword_checks: usize = 2 * fri.num_collinearity_checks as usize;
         let base_table_rows: Box<Vec<BaseRow<BFieldElement>>> =
             proof_iter.next_as_masterbasetablerows();
 
@@ -647,7 +647,7 @@ mod test {
         prop_assert_eq!(vm_fri.expansion_factor, fri.expansion_factor as usize);
         prop_assert_eq!(
             vm_fri.num_collinearity_checks,
-            fri.num_colinearity_checks as usize
+            fri.num_collinearity_checks as usize
         );
         prop_assert_eq!(vm_fri.domain.length as u64, fri.domain_length as u64);
         prop_assert_eq!(vm_fri.domain.offset, fri.domain_offset);

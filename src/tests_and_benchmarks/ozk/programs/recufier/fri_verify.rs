@@ -14,7 +14,7 @@ use super::arithmetic_domain::*;
 #[derive(Debug, Clone, PartialEq, Eq, BFieldCodec, TasmObject)]
 struct FriVerify {
     pub(crate) expansion_factor: u32,
-    pub(crate) num_colinearity_checks: u32,
+    pub(crate) num_collinearity_checks: u32,
     pub(crate) domain_length: u32,
     pub(crate) domain_offset: BFieldElement,
     domain_generator: BFieldElement,
@@ -25,14 +25,14 @@ impl FriVerify {
         offset: BFieldElement,
         domain_length: u32,
         expansion_factor: u32,
-        num_colinearity_checks: u32,
+        num_collinearity_checks: u32,
     ) -> FriVerify {
         let domain: ArithmeticDomain =
             ArithmeticDomain::of_length(domain_length as usize).with_offset(offset);
 
         return FriVerify {
             expansion_factor,
-            num_colinearity_checks,
+            num_collinearity_checks,
             domain_length,
             domain_offset: domain.offset,
             domain_generator: domain.generator,

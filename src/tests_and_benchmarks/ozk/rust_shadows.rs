@@ -515,7 +515,7 @@ impl FriVerify {
         let maybe_fri = Fri::new(
             fri_domain,
             self.expansion_factor as usize,
-            self.num_colinearity_checks as usize,
+            self.num_collinearity_checks as usize,
         );
 
         maybe_fri.unwrap()

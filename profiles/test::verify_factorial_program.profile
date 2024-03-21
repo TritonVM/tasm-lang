@@ -277,8 +277,8 @@ test::verify_factorial_program:
                tasm_recufier_fri_verify_reduce_indices:, 960, 0.0005984601;
            tasm_recufier_fri_verify_compute_c_values_loop:, 48178, 0.030033968;
              tasm_list_get_element___u32:, 3520, 0.0021943536;
-             tasm_recufier_get_colinearity_check_x:, 8640, 0.0053861407;
-             tasm_recufier_colinear_y_xfe:, 14720, 0.009176388;
+             tasm_recufier_get_collinearity_check_x:, 8640, 0.0053861407;
+             tasm_recufier_collinear_y_xfe:, 14720, 0.009176388;
              tasm_list_push___xfe:, 3200, 0.0019948669;
          tasm_list_higher_order_u32_map_tasm_recufier_fri_verify_assert_codeword_membership:, 4607, 0.002871985;
            tasm_list_length___tuple_Lu32___xfeR:, 3, 0.0000018701878;
@@ -549,7 +549,7 @@ test::verify_factorial_program:
            tasm_list_higher_order_u32_map_tasm_recufier_fri_verify_convert_xfe_to_digest:, 6974, 0.0043475633;
        tasm_array_inner_product_of_4_xfes:, 7360, 0.004588194;
              tasm_hashing_merkle_verify:, 8160, 0.005086911;
-             tasm_recufier_get_colinearity_check_x:, 8640, 0.0053861407;
+             tasm_recufier_get_collinearity_check_x:, 8640, 0.0053861407;
                tasm_list_higher_order_u32_zip_u32_with_xfe_loop:, 8965, 0.0055887443;
        tasm_arithmetic_u32_safeadd:, 8968, 0.005590615;
              tasm_list_higher_order_u32_zip_u32_with_xfe:, 9015, 0.0056199143;
@@ -564,7 +564,7 @@ test::verify_factorial_program:
                tasm_memory_memcpy:, 12960, 0.008079211;
          tasm_arithmetic_u32_safeadd:, 13120, 0.008178955;
          tasm_recufier_fri_verify_tail_xfe0:, 13833, 0.008623436;
-             tasm_recufier_colinear_y_xfe:, 14720, 0.009176388;
+             tasm_recufier_collinear_y_xfe:, 14720, 0.009176388;
                tasm_hashing_merkle_verify:, 15760, 0.00982472;
            tasm_list_higher_order_u32_zip_u32_with_xfe_loop:, 17930, 0.011177489;
          tasm_list_higher_order_u32_zip_u32_with_xfe:, 18030, 0.011239829;
