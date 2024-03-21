@@ -1,4 +1,4 @@
-test::verify_factorial_program:
+verify_factorial_program:
 
 # aggregated unsorted
  verify_factorial_program:, 1604117, 1;

@@ -702,9 +702,9 @@ mod profilers {
         use std::path::Path;
         use std::path::PathBuf;
 
-        let main_function_name = "test::verify_factorial_program";
+        let main_function_name = "verify_factorial_program";
         let entrypoint_location =
-            EntrypointLocation::disk("recufier", "verify", main_function_name);
+            EntrypointLocation::disk("recufier", "verify", &format!("test::{main_function_name}"));
         let test_case = TritonVMTestCase::new(entrypoint_location);
         let (non_determinism, fact_program_digest) =
             non_determinism_for_verify_of_factorial_program();
