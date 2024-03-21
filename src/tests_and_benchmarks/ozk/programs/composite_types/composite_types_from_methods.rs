@@ -17,6 +17,9 @@ impl Foo {
         vec.push(101);
         let _array: [u32; 1] = <[u32; 1]>::try_from(vec).unwrap();
 
+        // print field-0 value to suppress linter-warning
+        tasm::tasm_io_write_to_stdout___u32(self.0);
+
         return;
     }
 
@@ -27,6 +30,9 @@ impl Foo {
         let maybe_array: Result<[u32; 1], _> = <[u32; 1]>::try_from(vec);
         let array: [u32; 1] = maybe_array.unwrap();
         tasm::tasm_io_write_to_stdout___u32(array[0]);
+
+        // print field-0 value to suppress linter-warning
+        tasm::tasm_io_write_to_stdout___u32(self.0);
 
         return;
     }

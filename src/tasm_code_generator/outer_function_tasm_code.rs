@@ -56,12 +56,9 @@ fn replace_hardcoded_snippet_names_and_spill_addresses(
             return None;
         };
 
-        let Some((value_identifier, (static_address, data_type))) = static_allocations
+        let (value_identifier, (static_address, data_type)) = static_allocations
             .iter()
-            .find(|(_val_id, (mem_spill_position, _))| mem_spill_position == presumed_address)
-        else {
-            return None;
-        };
+            .find(|(_val_id, (mem_spill_position, _))| mem_spill_position == presumed_address)?;
 
         let Ok(data_size) = NumberOfWords::try_from(data_type.stack_size()) else {
             return None;
@@ -90,16 +87,13 @@ fn replace_hardcoded_snippet_names_and_spill_addresses(
             return None;
         };
 
-        let Some((value_identifier, (static_address, data_type))) =
+        let (value_identifier, (static_address, data_type)) =
             static_allocations
                 .iter()
                 .find(|(_val_id, (mem_spill_position, data_type))| {
                     let mem_pointer_offset = BFieldElement::from(data_type.stack_size() as u32 - 1);
                     *mem_spill_position + mem_pointer_offset == *presumed_address_of_last_word
-                })
-        else {
-            return None;
-        };
+                })?;
 
         let Ok(data_size) = NumberOfWords::try_from(data_type.stack_size()) else {
             return None;

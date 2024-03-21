@@ -4,7 +4,7 @@ fn main() {
     return;
 }
 
-struct Foo(u32);
+struct Foo(());
 
 impl Foo {
     #[allow(clippy::vec_init_then_push)]

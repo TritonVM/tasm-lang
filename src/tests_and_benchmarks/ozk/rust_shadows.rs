@@ -47,15 +47,14 @@ use crate::triton_vm::table::ExtensionRow;
 use crate::triton_vm::table::QuotientSegments;
 
 thread_local! {
-    static PUB_INPUT: RefCell<Vec<BFieldElement>> = RefCell::new(vec![]);
-    static PUB_OUTPUT: RefCell<Vec<BFieldElement>> = RefCell::new(vec![]);
-
-    static ND_INDIVIDUAL_TOKEN: RefCell<Vec<BFieldElement>> = RefCell::new(vec![]);
-    static ND_DIGESTS: RefCell<Vec<Digest>> = RefCell::new(vec![]);
+    static PUB_INPUT: RefCell<Vec<BFieldElement>> = const { RefCell::new(vec![]) };
+    static PUB_OUTPUT: RefCell<Vec<BFieldElement>> = const { RefCell::new(vec![]) };
+    static ND_INDIVIDUAL_TOKEN: RefCell<Vec<BFieldElement>> = const { RefCell::new(vec![]) };
+    static ND_DIGESTS: RefCell<Vec<Digest>> = const { RefCell::new(vec![]) };
     static ND_MEMORY: RefCell<HashMap<BFieldElement, BFieldElement>> =
         RefCell::new(HashMap::default());
-    static SPONGE_STATE: RefCell<Option<Tip5>> = RefCell::new(None);
-    static PROGRAM_DIGEST: RefCell<Option<Digest>> = RefCell::new(None);
+    static SPONGE_STATE: RefCell<Option<Tip5>> = const {  RefCell::new(None) };
+    static PROGRAM_DIGEST: RefCell<Option<Digest>> = const {  RefCell::new(None) };
 }
 
 pub(super) struct Tip5WithState;

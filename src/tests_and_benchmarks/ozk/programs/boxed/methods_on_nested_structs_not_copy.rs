@@ -59,6 +59,8 @@ fn main() {
     tasm::tasm_io_write_to_stdout___u128(outer_struct_boxed.1.add());
     tasm::tasm_io_write_to_stdout___u128(outer_struct_boxed.2.add(300));
 
+    tasm::tasm_io_write_to_stdout___digest(outer_struct_boxed.1 .0);
+
     return;
 }
 
@@ -84,6 +86,13 @@ mod test {
             (44u128 + (1u128 << 31) + 200).encode(),
             ((1u128 << 42) + (1 << 31) + 4).encode(),
             ((1u128 << 41) + 14 + (1 << 21) - 300).encode(),
+            vec![
+                BFieldElement::new(2u64),
+                BFieldElement::new(4u64),
+                BFieldElement::new(8u64),
+                BFieldElement::new(16u64),
+                BFieldElement::new(32u64),
+            ],
         ]
         .concat();
         let native_output =

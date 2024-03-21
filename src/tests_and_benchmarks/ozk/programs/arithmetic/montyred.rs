@@ -48,6 +48,10 @@ fn main() {
     tasm::tasm_io_write_to_stdout___u64(DazeFieldElement::montyred(0xFFFFFFFF00000000));
     tasm::tasm_io_write_to_stdout___u64(DazeFieldElement::montyred(2u128 * 0xFFFFFFFE00000001u128));
 
+    // Use daze-field element value to suppress compiler-warning
+    let dfe: DazeFieldElement = DazeFieldElement(404);
+    tasm::tasm_io_write_to_stdout___u64(dfe.0);
+
     return;
 }
 
@@ -77,6 +81,7 @@ mod test {
             BFieldElement::montyred((1 << 40) + 1).encode(),
             BFieldElement::montyred(0xFFFFFFFF00000000).encode(),
             BFieldElement::montyred(2u128 * 0xFFFFFFFE00000001u128).encode(),
+            404u64.encode(),
         ]
         .concat();
         let native_output = rust_shadows::wrap_main_with_io(&main)(stdin, non_determinism);
