@@ -523,7 +523,7 @@ dependencies = [
 [[package]]
 name = "derive_tasm_object"
 version = "0.1.0"
-source = "git+https://github.com/TritonVM/tasm-lib.git?rev=692c463b#692c463b4f0fae9c9b600e803612a9612a4040c6"
+source = "git+https://github.com/TritonVM/tasm-lib.git?rev=b9e8957a#b9e8957a0fa52daf30abffbb699274cd8861b4b2"
 dependencies = [
  "quote",
  "syn 2.0.53",
@@ -2106,14 +2106,14 @@ dependencies = [
 [[package]]
 name = "tasm-lib"
 version = "0.2.1"
-source = "git+https://github.com/TritonVM/tasm-lib.git?rev=692c463b#692c463b4f0fae9c9b600e803612a9612a4040c6"
+source = "git+https://github.com/TritonVM/tasm-lib.git?rev=b9e8957a#b9e8957a0fa52daf30abffbb699274cd8861b4b2"
 dependencies = [
  "anyhow",
  "arbitrary",
  "const_format",
  "derive_tasm_object",
  "hex",
- "itertools 0.12.1",
+ "itertools 0.10.5",
  "ndarray",
  "num",
  "num-traits",
