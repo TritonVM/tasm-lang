@@ -949,6 +949,9 @@ mod profilers {
             (3200, 1 << 16),
             (6400, 1 << 17),
             (12800, 1 << 18),
+            (25600, 1 << 19),
+            (51200, 1 << 20),
+            (102400, 1 << 21),
         ] {
             generate_profile_for_verifier_execution_for_factorial_execution_proof(
                 fact_arg,
