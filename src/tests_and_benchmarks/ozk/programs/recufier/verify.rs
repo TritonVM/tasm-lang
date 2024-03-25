@@ -725,28 +725,6 @@ mod test {
         }
     }
 
-    #[ignore = "Intended to generate data about verifier clock cycle count as a function of padded height"]
-    #[test]
-    fn verify_tvm_proof_scaling() {
-        let mut inner_padded_height_and_verifier_clock_cycle_count = vec![];
-        for fact_arg in [10, 40, 80, 100, 200, 400, 800, 1600, 3200, 6400, 12800] {
-            // for fact_arg in [10, 40, 80] {
-            let (inner_padded_height, verification_clock_cycle_count) =
-                verify_tvm_proof_factorial_program_with_io_prop(fact_arg);
-            println!("\n\n{inner_padded_height} => {verification_clock_cycle_count}");
-            inner_padded_height_and_verifier_clock_cycle_count
-                .push((inner_padded_height, verification_clock_cycle_count));
-        }
-
-        println!(
-            "Inner padded height, verifier clock cycle count:\n{}",
-            inner_padded_height_and_verifier_clock_cycle_count
-                .iter()
-                .map(|(x, y)| format!("{x} => {y}"))
-                .join("\n")
-        );
-    }
-
     #[test]
     fn verify_tvm_proof_factorial_program_with_io_fact_40() {
         verify_tvm_proof_factorial_program_with_io_prop(40);
