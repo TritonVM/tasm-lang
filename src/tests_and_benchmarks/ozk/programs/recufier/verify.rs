@@ -684,26 +684,7 @@ mod test {
     #[test]
     fn verify_tvm_proof_factorial_program_no_io() {
         const FACTORIAL_ARGUMENT: u32 = 3;
-        let factorial_program = triton_program!(
-            push {FACTORIAL_ARGUMENT}  // n
-            push 1                     // n accumulator
-            call factorial             // 0 accumulator!
-            halt
-
-            factorial:                 // n acc
-                // if n == 0: return
-                dup 1                  // n acc n
-                push 0 eq              // n acc n==0
-                skiz                   // n acc
-                return                 // 0 acc
-                // else: multiply accumulator with n and recurse
-                dup 1                  // n acc n
-                mul                    // n acc·n
-                swap 1                 // acc·n n
-                push -1 add            // acc·n n-1
-                swap 1                 // n-1 acc·n
-                recurse
-        );
+        let factorial_program = factorial_program_no_io(FACTORIAL_ARGUMENT);
         let entrypoint_location =
             EntrypointLocation::disk("recufier", "verify", "test::verify_stark_proof");
         let test_case = TritonVMTestCase::new(entrypoint_location);
@@ -776,7 +757,7 @@ mod test {
     /// count of the verification program.
     fn verify_tvm_proof_factorial_program_with_io_prop(factorial_argument: u64) -> (usize, u32) {
         // Read $n$ from stdin and output $n!$!
-        let factorial_program_with_io = triton_program!(
+        let factorial_program = triton_program!(
             read_io 1           // n
             push 1              // n accumulator
             call factorial      // 0 accumulator!
@@ -797,15 +778,25 @@ mod test {
                 swap 1          // n-1 acc·n
                 recurse
         );
+
+        verify_tvm_proof_prop(
+            &factorial_program,
+            &format!("factorial({factorial_argument})"),
+            &[BFieldElement::new(factorial_argument)],
+        )
+    }
+
+    fn verify_tvm_proof_prop(
+        inner_program: &Program,
+        inner_program_name: &str,
+        input: &[BFieldElement],
+    ) -> (usize, u32) {
         let entrypoint_location =
             EntrypointLocation::disk("recufier", "verify", "test::verify_stark_proof");
         let test_case = TritonVMTestCase::new(entrypoint_location);
 
         let (non_determinism, claim_relating_to_proof, inner_padded_height) =
-            non_determinism_for_verify_and_claim_and_padded_height(
-                &factorial_program_with_io,
-                &[BFieldElement::new(factorial_argument)],
-            );
+            non_determinism_for_verify_and_claim_and_padded_height(inner_program, input);
         let verifier_std_in = claim_to_stdin_for_stark_verifier(&claim_relating_to_proof);
 
         let verifier_program = test_case.program();
@@ -824,7 +815,7 @@ mod test {
         assert_eq!(native_output, final_vm_state.public_output);
 
         println!(
-            "Clock cycle count of TASM-verifier of factorial({factorial_argument}) : {}.\nInner padded height was: {}",
+            "Clock cycle count of TASM-verifier of proof from {inner_program_name} execution : {}.\nInner padded height was: {}",
             final_vm_state.cycle_count,
             inner_padded_height
         );
@@ -842,29 +833,9 @@ mod test {
 
         (inner_padded_height, final_vm_state.cycle_count)
     }
-}
 
-#[cfg(test)]
-mod profilers {
-    use tasm_lib::triton_vm::triton_program;
-
-    use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
-    use crate::tests_and_benchmarks::ozk::programs::recufier::verify::test::claim_to_stdin_for_stark_verifier;
-    use crate::tests_and_benchmarks::test_helpers::shared_test::TritonVMTestCase;
-
-    use super::test::non_determinism_for_verify_and_claim_and_padded_height;
-
-    fn generate_profile_for_verifier_execution_for_factorial_execution_proof(
-        factorial_arg: u64,
-        expected_factorial_execution_padded_height: usize,
-    ) {
-        use std::fs::create_dir_all;
-        use std::fs::File;
-        use std::io::Write;
-        use std::path::Path;
-        use std::path::PathBuf;
-
-        let factorial_program = triton_program!(
+    pub(crate) fn factorial_program_no_io(factorial_arg: u32) -> Program {
+        triton_program!(
             push {factorial_arg} // n
             push 1               // n accumulator
             call factorial       // 0 accumulator!
@@ -882,41 +853,23 @@ mod profilers {
                 swap 1           // acc·n n
                 push -1 add      // acc·n n-1
                 swap 1           // n-1 acc·n
+
                 recurse
-        );
-
-        let main_function_name = "verify_stark_proof";
-        let entrypoint_location =
-            EntrypointLocation::disk("recufier", "verify", &format!("test::{main_function_name}"));
-        let test_case = TritonVMTestCase::new(entrypoint_location);
-        let (non_determinism, claim_for_proof, inner_padded_height) =
-            non_determinism_for_verify_and_claim_and_padded_height(&factorial_program, &[]);
-        assert_eq!(
-            expected_factorial_execution_padded_height,
-            inner_padded_height
-        );
-        let std_in = claim_to_stdin_for_stark_verifier(&claim_for_proof);
-
-        let profile_file_name =
-            format!("{main_function_name}_inner_padded_height_{inner_padded_height}");
-        let verifier_program = test_case.program();
-        let profile = tasm_lib::generate_full_profile(
-            &profile_file_name,
-            verifier_program,
-            &std_in.to_vec().into(),
-            &non_determinism,
-            true,
-        );
-        println!("{profile}");
-
-        let mut path = PathBuf::new();
-        path.push("profiles");
-        create_dir_all(&path).expect("profiles directory should exist or be created here");
-
-        path.push(Path::new(&profile_file_name).with_extension("profile"));
-        let mut file = File::create(&path).expect("open file for writing");
-        write!(file, "{profile}").unwrap();
+        )
     }
+}
+
+#[cfg(test)]
+mod profilers {
+    use tasm_lib::triton_vm::program::Program;
+    use tasm_lib::twenty_first::shared_math::b_field_element::BFieldElement;
+
+    use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
+    use crate::tests_and_benchmarks::ozk::programs::recufier::verify::test::claim_to_stdin_for_stark_verifier;
+    use crate::tests_and_benchmarks::ozk::programs::recufier::verify::test::factorial_program_no_io;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::TritonVMTestCase;
+
+    use super::test::non_determinism_for_verify_and_claim_and_padded_height;
 
     #[test]
     fn profile_verify_factorial_program_inner_padded_height_256() {
@@ -958,5 +911,60 @@ mod profilers {
                 expected_inner_padded_height,
             );
         }
+    }
+
+    fn generate_profile_for_verifier_execution_for_factorial_execution_proof(
+        factorial_arg: u32,
+        expected_factorial_execution_padded_height: usize,
+    ) {
+        let factorial_program = factorial_program_no_io(factorial_arg);
+        generate_profile_for_verifier(
+            &factorial_program,
+            &[],
+            expected_factorial_execution_padded_height,
+        )
+    }
+
+    fn generate_profile_for_verifier(
+        inner_program: &Program,
+        input: &[BFieldElement],
+        expected_inner_padded_height: usize,
+    ) {
+        use std::fs::create_dir_all;
+        use std::fs::File;
+        use std::io::Write;
+        use std::path::Path;
+        use std::path::PathBuf;
+
+        let main_function_name = "verify_stark_proof";
+        let entrypoint_location =
+            EntrypointLocation::disk("recufier", "verify", &format!("test::{main_function_name}"));
+        let test_case = TritonVMTestCase::new(entrypoint_location);
+        let (non_determinism, claim_for_proof, inner_padded_height) =
+            non_determinism_for_verify_and_claim_and_padded_height(inner_program, input);
+        assert_eq!(expected_inner_padded_height, inner_padded_height);
+        let std_in = claim_to_stdin_for_stark_verifier(&claim_for_proof);
+
+        let profile_file_name = format!(
+            "{main_function_name}_inner_padded_height_{inner_padded_height}_{}_input_words",
+            input.len()
+        );
+        let verifier_program = test_case.program();
+        let profile = tasm_lib::generate_full_profile(
+            &profile_file_name,
+            verifier_program,
+            &std_in.to_vec().into(),
+            &non_determinism,
+            true,
+        );
+        println!("{profile}");
+
+        let mut path = PathBuf::new();
+        path.push("profiles");
+        create_dir_all(&path).expect("profiles directory should exist or be created here");
+
+        path.push(Path::new(&profile_file_name).with_extension("profile"));
+        let mut file = File::create(&path).expect("open file for writing");
+        write!(file, "{profile}").unwrap();
     }
 }
