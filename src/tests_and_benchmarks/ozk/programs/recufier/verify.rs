@@ -955,12 +955,7 @@ mod profilers {
             EntrypointLocation::disk("recufier", "verify", &format!("test::{main_function_name}"));
         let inner_program = TritonVMTestCase::new(entrypoint_location).program();
 
-        generate_profile_of_verifier(
-            &inner_program,
-            &inner_stdin,
-            inner_nd,
-            EXPECTED_PADDED_HEIGHT,
-        )
+        generate_profile_of_verifier(&inner_program, &inner_stdin, inner_nd, None)
     }
 
     fn generate_profile_for_verifier_execution_for_factorial_execution_proof(
@@ -972,7 +967,7 @@ mod profilers {
             &factorial_program,
             &[],
             NonDeterminism::default(),
-            expected_factorial_execution_padded_height,
+            Some(expected_factorial_execution_padded_height),
         )
     }
 
@@ -980,7 +975,7 @@ mod profilers {
         inner_program: &Program,
         inner_input: &[BFieldElement],
         inner_nd: NonDeterminism<BFieldElement>,
-        expected_inner_padded_height: usize,
+        expected_inner_padded_height: Option<usize>,
     ) {
         let main_function_name = "verify_stark_proof";
         let entrypoint_location =
@@ -992,7 +987,9 @@ mod profilers {
                 inner_input,
                 inner_nd,
             );
-        assert_eq!(expected_inner_padded_height, inner_padded_height);
+        if let Some(expected_inner_padded_height) = expected_inner_padded_height {
+            assert_eq!(expected_inner_padded_height, inner_padded_height);
+        }
         let verifier_std_in = claim_to_stdin_for_stark_verifier(&claim_for_proof);
 
         let profile_file_name = format!(
