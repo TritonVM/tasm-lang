@@ -1,16 +1,24 @@
 [
   {
     "name": "project_euler_5",
-    "clock_cycle_count": 262,
-    "hash_table_height": 84,
-    "u32_table_height": 183,
+    "benchmark_result": {
+      "clock_cycle_count": 262,
+      "hash_table_height": 84,
+      "u32_table_height": 183,
+      "op_stack_table_height": 192,
+      "ram_table_height": 0
+    },
     "case": "CommonCase"
   },
   {
     "name": "project_euler_5",
-    "clock_cycle_count": 262,
-    "hash_table_height": 84,
-    "u32_table_height": 183,
+    "benchmark_result": {
+      "clock_cycle_count": 262,
+      "hash_table_height": 84,
+      "u32_table_height": 183,
+      "op_stack_table_height": 192,
+      "ram_table_height": 0
+    },
     "case": "WorstCase"
   }
 ]

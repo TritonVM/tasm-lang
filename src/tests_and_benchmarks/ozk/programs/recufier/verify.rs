@@ -873,6 +873,69 @@ mod test {
 }
 
 #[cfg(test)]
+mod benches {
+    use tasm_lib::snippet_bencher::write_benchmarks;
+    use tasm_lib::snippet_bencher::NamedBenchmarkResult;
+    use tasm_lib::triton_vm::program::NonDeterminism;
+
+    use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
+    use crate::tests_and_benchmarks::ozk::programs::recufier::verify::test::claim_to_stdin_for_stark_verifier;
+    use crate::tests_and_benchmarks::ozk::programs::recufier::verify::test::factorial_program_no_io;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::TritonVMTestCase;
+
+    use super::test::non_determinism_for_verify_and_claim_and_padded_height;
+
+    #[ignore = "Intended to generate data about verifier table heights as a function of inner padded
+       height Make sure to run with `RUSTFLAGS=\"-C opt-level=3 -C debug-assertions=no`"]
+    #[test]
+    fn benchmark_verification_as_a_function_of_inner_padded_height() {
+        for (fact_arg, expected_inner_padded_height) in [
+            (10, 1 << 8),
+            (40, 1 << 9),
+            (80, 1 << 10),
+            (100, 1 << 11),
+            (200, 1 << 12),
+            (400, 1 << 13),
+            (800, 1 << 14),
+            (1600, 1 << 15),
+            (3200, 1 << 16),
+            (6400, 1 << 17),
+            (12800, 1 << 18),
+            (25600, 1 << 19),
+            (51200, 1 << 20),
+            (102400, 1 << 21),
+        ] {
+            benchmark_verifier(fact_arg, expected_inner_padded_height);
+        }
+    }
+
+    fn benchmark_verifier(factorial_argument: u32, expected_inner_padded_height: usize) {
+        let factorial_program = factorial_program_no_io(factorial_argument);
+        let entrypoint_location =
+            EntrypointLocation::disk("recufier", "verify", "test::verify_stark_proof");
+        let (non_determinism, claim_for_proof, inner_padded_height) =
+            non_determinism_for_verify_and_claim_and_padded_height(
+                &factorial_program,
+                &[],
+                NonDeterminism::default(),
+            );
+        let verifier_std_in = claim_to_stdin_for_stark_verifier(&claim_for_proof);
+        assert_eq!(expected_inner_padded_height, inner_padded_height);
+
+        let test_case = TritonVMTestCase::new(entrypoint_location)
+            .with_non_determinism(non_determinism)
+            .with_std_in(verifier_std_in);
+        let benchmark_result = test_case.benchmark();
+        let named_benchmark_result = NamedBenchmarkResult {
+            name: format!("verification_with_inner_padded_height_{inner_padded_height}"),
+            benchmark_result,
+            case: tasm_lib::snippet_bencher::BenchmarkCase::CommonCase,
+        };
+        write_benchmarks(vec![named_benchmark_result]);
+    }
+}
+
+#[cfg(test)]
 mod profilers {
     use tasm_lib::triton_vm::program::NonDeterminism;
     use tasm_lib::triton_vm::program::Program;

@@ -1,16 +1,24 @@
 [
   {
     "name": "dazefield_element_mul",
-    "clock_cycle_count": 2466,
-    "hash_table_height": 588,
-    "u32_table_height": 568,
+    "benchmark_result": {
+      "clock_cycle_count": 2466,
+      "hash_table_height": 588,
+      "u32_table_height": 568,
+      "op_stack_table_height": 1746,
+      "ram_table_height": 20
+    },
     "case": "CommonCase"
   },
   {
     "name": "dazefield_element_mul",
-    "clock_cycle_count": 2466,
-    "hash_table_height": 588,
-    "u32_table_height": 948,
+    "benchmark_result": {
+      "clock_cycle_count": 2466,
+      "hash_table_height": 588,
+      "u32_table_height": 948,
+      "op_stack_table_height": 1746,
+      "ram_table_height": 20
+    },
     "case": "WorstCase"
   }
 ]

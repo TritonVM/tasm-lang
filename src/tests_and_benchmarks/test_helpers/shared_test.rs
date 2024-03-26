@@ -7,6 +7,7 @@ use itertools::Itertools;
 use tasm_lib::empty_stack;
 use tasm_lib::memory::dyn_malloc::DYN_MALLOC_ADDRESS;
 use tasm_lib::rust_shadowing_helper_functions;
+use tasm_lib::snippet_bencher::BenchmarkResult;
 use tasm_lib::triton_vm::op_stack::NUM_OP_STACK_REGISTERS;
 use tasm_lib::triton_vm::prelude::*;
 use tasm_lib::twenty_first::shared_math::b_field_element::BFIELD_ONE;
@@ -96,7 +97,7 @@ pub(crate) fn execute_compiled_with_stack_and_ins_for_bench(
     std_in: Vec<BFieldElement>,
     non_determinism: NonDeterminism<BFieldElement>,
     expected_stack_diff: isize,
-) -> Result<tasm_lib::ExecutionResult> {
+) -> Result<BenchmarkResult> {
     let mut stack = empty_stack();
     for input_arg in input_args {
         let input_arg_seq = input_arg.encode();
@@ -150,6 +151,20 @@ impl TritonVMTestCase {
         Self::verify_stack_len_unchanged(&vm_state)?;
 
         Ok(vm_state)
+    }
+
+    pub(crate) fn benchmark(self) -> BenchmarkResult {
+        let program = self.program();
+        let vm_state = self.initial_vm_state();
+        let (simulation_trace, _end_state) = program.trace_execution_of_state(vm_state).unwrap();
+
+        BenchmarkResult {
+            clock_cycle_count: simulation_trace.processor_table_length(),
+            hash_table_height: simulation_trace.hash_table_length(),
+            u32_table_height: simulation_trace.u32_table_length(),
+            op_stack_table_height: simulation_trace.op_stack_table_length(),
+            ram_table_height: simulation_trace.ram_table_length(),
+        }
     }
 
     fn initial_vm_state(self) -> VMState {

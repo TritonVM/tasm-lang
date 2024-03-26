@@ -6,7 +6,7 @@ use std::path::PathBuf;
 
 use tasm_lib::snippet_bencher::write_benchmarks;
 use tasm_lib::snippet_bencher::BenchmarkCase;
-use tasm_lib::snippet_bencher::BenchmarkResult;
+use tasm_lib::snippet_bencher::NamedBenchmarkResult;
 use tasm_lib::triton_vm::prelude::*;
 
 use crate::ast;
@@ -30,8 +30,8 @@ fn benchmark_code(
     benchmark_input: BenchmarkInput,
     expected_stack_diff: isize,
     case: BenchmarkCase,
-) -> BenchmarkResult {
-    let execution_result = execute_compiled_with_stack_and_ins_for_bench(
+) -> NamedBenchmarkResult {
+    let benchmark_result = execute_compiled_with_stack_and_ins_for_bench(
         &code,
         benchmark_input.input_args,
         benchmark_input.std_in,
@@ -40,11 +40,9 @@ fn benchmark_code(
     )
     .expect("Execution for benchmarking must succeed");
 
-    BenchmarkResult {
+    NamedBenchmarkResult {
         name: function_name,
-        clock_cycle_count: execution_result.cycle_count,
-        hash_table_height: execution_result.hash_table_height,
-        u32_table_height: execution_result.u32_table_height,
+        benchmark_result,
         case,
     }
 }
