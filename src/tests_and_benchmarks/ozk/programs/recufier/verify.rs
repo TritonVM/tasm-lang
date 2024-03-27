@@ -249,49 +249,40 @@ impl Recufier {
         {
             let mut i: usize = 0;
             while i < num_combination_codeword_checks {
-                let row_idx: u32 = revealed_fri_indices_and_elements[i].0;
-                let fri_value: XFieldElement = revealed_fri_indices_and_elements[i].1;
-                let base_row: BaseRow<BFieldElement> = base_table_rows[i];
-                let ext_row: ExtensionRow = ext_table_rows[i];
                 // let randomizer_value: XFieldElement = ext_row[ext_row.len() - 1];
-                let randomizer_value: XFieldElement = XFieldElement::zero();
-                let quot_segment_elements: QuotientSegments = quotient_segment_elements[i];
-                let current_fri_domain_value: BFieldElement =
-                    fri.domain_offset * fri.domain_generator.mod_pow_u32(row_idx);
+                let current_fri_domain_value: BFieldElement = fri.domain_offset
+                    * fri
+                        .domain_generator
+                        .mod_pow_u32(revealed_fri_indices_and_elements[i].0);
 
                 let base_and_ext_opened_row_element: XFieldElement =
                     tasm::tasm_array_inner_product_of_three_rows_with_weights(
                         trace_weights,
-                        base_row,
-                        ext_row,
+                        base_table_rows[i],
+                        ext_table_rows[i],
                     );
-
-                let quotient_segments_opened_row_element: XFieldElement =
-                    tasm::tasm_array_inner_product_of_4_xfes(
-                        quotient_segment_codeword_weights,
-                        quot_segment_elements,
-                    );
-
-                let base_and_ext_curr_row_deep_value: XFieldElement =
-                    (out_of_domain_curr_row_base_and_ext_value - base_and_ext_opened_row_element)
-                        / (out_of_domain_point_curr_row - current_fri_domain_value);
-
-                let base_and_ext_next_row_deep_value: XFieldElement =
-                    (out_of_domain_next_row_base_and_ext_value - base_and_ext_opened_row_element)
-                        / (out_of_domain_point_next_row - current_fri_domain_value);
 
                 let quot_curr_row_deep_value: XFieldElement =
                     (out_of_domain_curr_row_quotient_segment_value
-                        - quotient_segments_opened_row_element)
+                        - tasm::tasm_array_inner_product_of_4_xfes(
+                            quotient_segment_codeword_weights,
+                            quotient_segment_elements[i],
+                        ))
                         / (out_of_domain_point_curr_row_pow_num_segments
                             - current_fri_domain_value);
 
-                let deep_value: XFieldElement = base_and_ext_curr_row_deep_value
+                let deep_value: XFieldElement = (out_of_domain_curr_row_base_and_ext_value
+                    - base_and_ext_opened_row_element)
+                    / (out_of_domain_point_curr_row - current_fri_domain_value)
                     * deep_codeword_weights[0]
-                    + base_and_ext_next_row_deep_value * deep_codeword_weights[1]
+                    + (out_of_domain_next_row_base_and_ext_value - base_and_ext_opened_row_element)
+                        / (out_of_domain_point_next_row - current_fri_domain_value)
+                        * deep_codeword_weights[1]
                     + quot_curr_row_deep_value * deep_codeword_weights[2];
 
-                assert!(fri_value == deep_value + randomizer_value);
+                assert!(
+                    revealed_fri_indices_and_elements[i].1 == deep_value + XFieldElement::zero()
+                );
 
                 i += 1;
             }
