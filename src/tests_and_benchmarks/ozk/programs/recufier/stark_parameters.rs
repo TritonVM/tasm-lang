@@ -41,12 +41,18 @@ impl StarkParameters {
             (padded_height + self.num_trace_randomizers as u32).next_power_of_two();
         let fri_domain_length: usize =
             self.fri_expansion_factor * interpolant_codeword_length as usize;
+
+        // This runtime type-conversion prevents a FRI domain of length 2^32 from being created.
+        assert!(fri_domain_length <= 1 << 31);
+
         let generator: BFieldElement =
             BFieldElement::primitive_root_of_unity(fri_domain_length as u64).unwrap();
 
         return FriVerify {
             expansion_factor: self.fri_expansion_factor as u32,
             num_collinearity_checks: self.num_collinearity_checks as u32,
+
+            // This runtime type-conversion prevents a FRI domain of length 2^32 from being created.
             domain_length: fri_domain_length as u32,
             domain_offset: BFieldElement::generator(),
             domain_generator: generator,
