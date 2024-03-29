@@ -482,7 +482,6 @@ mod test {
     use test_strategy::proptest;
 
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
-    use crate::tests_and_benchmarks::ozk::programs::recufier::fri_verify::test::extract_fri_proof;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::TritonVMTestCase;
     use crate::triton_vm;
@@ -586,8 +585,9 @@ mod test {
         let fri = stark.derive_fri(proof.padded_height().unwrap()).unwrap();
 
         let proof_stream = StarkProofStream::try_from(&proof).unwrap();
-        let proof_extraction = extract_fri_proof(&proof_stream, &claim, stark);
-        let tasm_lib_fri: tasm_lib::recufier::fri_verify::FriVerify = fri.into();
+        let proof_extraction =
+            tasm_lib::recufier::fri::test_helpers::extract_fri_proof(&proof_stream, &claim, stark);
+        let tasm_lib_fri: tasm_lib::recufier::fri::verify::FriVerify = fri.into();
         let fri_proof_digests =
             tasm_lib_fri.extract_digests_required_for_proving(&proof_extraction.fri_proof_stream);
         let padded_height = proof.padded_height().unwrap();

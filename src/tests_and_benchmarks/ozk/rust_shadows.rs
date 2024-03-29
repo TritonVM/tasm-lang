@@ -475,7 +475,7 @@ pub(super) fn tasm_recufier_fri_verify(
     fri_parameters: &FriVerify,
 ) -> Vec<(u32, XFieldElement)> {
     let fri: triton_vm::fri::Fri<Tip5> = fri_parameters._to_fri();
-    let tasm_lib_fri: tasm_lib::recufier::fri_verify::FriVerify = fri.clone().into();
+    let tasm_lib_fri: tasm_lib::recufier::fri::verify::FriVerify = fri.clone().into();
     let (advance_nd_digests_by, ret) = SPONGE_STATE.with_borrow_mut(|maybe_sponge_state| {
         let sponge_state = maybe_sponge_state.as_mut().unwrap();
         let proof_stream_before_fri = proof_iter
