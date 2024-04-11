@@ -530,6 +530,54 @@ mod test {
         ret
     }
 
+    fn nd_from_proof(
+        stark: &Stark,
+        claim: &triton_vm::proof::Claim,
+        proof: Proof,
+    ) -> (NonDeterminism<BFieldElement>, usize) {
+        let fri = stark.derive_fri(proof.padded_height().unwrap()).unwrap();
+
+        let proof_stream = StarkProofStream::try_from(&proof).unwrap();
+        let proof_extraction = extract_fri_proof(&proof_stream, claim, stark);
+        let tasm_lib_fri: tasm_lib::recufier::fri_verify::FriVerify = fri.into();
+        let fri_proof_digests =
+            tasm_lib_fri.extract_digests_required_for_proving(&proof_extraction.fri_proof_stream);
+        let padded_height = proof.padded_height().unwrap();
+        let Proof(raw_proof) = proof;
+        let ram = raw_proof
+            .into_iter()
+            .enumerate()
+            .map(|(k, v)| (BFieldElement::new(k as u64), v))
+            .collect();
+
+        let nd_digests = [
+            fri_proof_digests,
+            proof_extraction
+                .base_tree_authentication_paths
+                .into_iter()
+                .flatten()
+                .collect_vec(),
+            proof_extraction
+                .ext_tree_authentication_paths
+                .into_iter()
+                .flatten()
+                .collect_vec(),
+            proof_extraction
+                .quot_tree_authentication_paths
+                .into_iter()
+                .flatten()
+                .collect_vec(),
+        ]
+        .concat();
+
+        (
+            NonDeterminism::default()
+                .with_ram(ram)
+                .with_digests(nd_digests),
+            padded_height,
+        )
+    }
+
     /// Return `NonDeterminism` required for the `verify` function as well as the claim and the
     // padded-height for the associated proof, the proof that is to be verified.
     pub(super) fn non_determinism_for_verify_and_claim_and_padded_height(
@@ -574,48 +622,11 @@ mod test {
             "Proof from TVM must verify through TVM"
         );
 
-        let fri = stark.derive_fri(proof.padded_height().unwrap()).unwrap();
+        maybe_write_tvm_output_to_disk(&stark, &claim, &proof);
 
-        let proof_stream = StarkProofStream::try_from(&proof).unwrap();
-        let proof_extraction = extract_fri_proof(&proof_stream, &claim, stark);
-        let tasm_lib_fri: tasm_lib::recufier::fri_verify::FriVerify = fri.into();
-        let fri_proof_digests =
-            tasm_lib_fri.extract_digests_required_for_proving(&proof_extraction.fri_proof_stream);
-        let padded_height = proof.padded_height().unwrap();
-        let Proof(raw_proof) = proof;
-        let ram = raw_proof
-            .into_iter()
-            .enumerate()
-            .map(|(k, v)| (BFieldElement::new(k as u64), v))
-            .collect();
+        let (nd, padded_height) = nd_from_proof(&stark, &claim, proof);
 
-        let nd_digests = [
-            fri_proof_digests,
-            proof_extraction
-                .base_tree_authentication_paths
-                .into_iter()
-                .flatten()
-                .collect_vec(),
-            proof_extraction
-                .ext_tree_authentication_paths
-                .into_iter()
-                .flatten()
-                .collect_vec(),
-            proof_extraction
-                .quot_tree_authentication_paths
-                .into_iter()
-                .flatten()
-                .collect_vec(),
-        ]
-        .concat();
-
-        (
-            NonDeterminism::default()
-                .with_ram(ram)
-                .with_digests(nd_digests),
-            claim,
-            padded_height,
-        )
+        (nd, claim, padded_height)
     }
 
     #[test]
