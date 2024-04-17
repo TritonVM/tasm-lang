@@ -1,8 +1,11 @@
 #[cfg(test)]
 mod test {
+    use std::collections::HashMap;
+
     use itertools::Itertools;
     use tasm_lib::triton_vm::proof_item::FriResponse;
-    use tasm_lib::twenty_first::shared_math::b_field_element::BFieldElement;
+    use tasm_lib::twenty_first::math::b_field_element::BFieldElement;
+    use tasm_lib::twenty_first::math::polynomial::Polynomial;
 
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
@@ -29,30 +32,30 @@ mod test {
         };
         let mut vm_proof_iter: Box<VmProofIter> = Box::<VmProofIter>::new(vm_proof_iter_stack);
         let a_merkle_root: Box<Digest> = vm_proof_iter.next_as_merkleroot();
-        tasm::tasm_io_write_to_stdout___digest(*a_merkle_root);
+        tasm::tasmlib_io_write_to_stdout___digest(*a_merkle_root);
 
         let out_of_domain_base_row: Box<Box<[XFieldElement; 356]>> =
             vm_proof_iter.next_as_outofdomainbaserow();
-        tasm::tasm_io_write_to_stdout___xfe(out_of_domain_base_row[0]);
-        tasm::tasm_io_write_to_stdout___xfe(out_of_domain_base_row[1]);
+        tasm::tasmlib_io_write_to_stdout___xfe(out_of_domain_base_row[0]);
+        tasm::tasmlib_io_write_to_stdout___xfe(out_of_domain_base_row[1]);
 
         let out_of_domain_ext_row: Box<Box<[XFieldElement; 83]>> =
             vm_proof_iter.next_as_outofdomainextrow();
-        tasm::tasm_io_write_to_stdout___xfe(out_of_domain_ext_row[0]);
-        tasm::tasm_io_write_to_stdout___xfe(out_of_domain_ext_row[1]);
+        tasm::tasmlib_io_write_to_stdout___xfe(out_of_domain_ext_row[0]);
+        tasm::tasmlib_io_write_to_stdout___xfe(out_of_domain_ext_row[1]);
 
         let out_of_domain_quotient_segments: Box<[XFieldElement; 4]> =
             vm_proof_iter.next_as_outofdomainquotientsegments();
-        tasm::tasm_io_write_to_stdout___xfe(out_of_domain_quotient_segments[0]);
-        tasm::tasm_io_write_to_stdout___xfe(out_of_domain_quotient_segments[1]);
-        tasm::tasm_io_write_to_stdout___xfe(out_of_domain_quotient_segments[2]);
-        tasm::tasm_io_write_to_stdout___xfe(out_of_domain_quotient_segments[3]);
+        tasm::tasmlib_io_write_to_stdout___xfe(out_of_domain_quotient_segments[0]);
+        tasm::tasmlib_io_write_to_stdout___xfe(out_of_domain_quotient_segments[1]);
+        tasm::tasmlib_io_write_to_stdout___xfe(out_of_domain_quotient_segments[2]);
+        tasm::tasmlib_io_write_to_stdout___xfe(out_of_domain_quotient_segments[3]);
 
         let authentication_structure: Box<Vec<Digest>> =
             vm_proof_iter.next_as_authenticationstructure();
-        tasm::tasm_io_write_to_stdout___digest(authentication_structure[0]);
-        tasm::tasm_io_write_to_stdout___digest(authentication_structure[1]);
-        tasm::tasm_io_write_to_stdout___digest(authentication_structure[2]);
+        tasm::tasmlib_io_write_to_stdout___digest(authentication_structure[0]);
+        tasm::tasmlib_io_write_to_stdout___digest(authentication_structure[1]);
+        tasm::tasmlib_io_write_to_stdout___digest(authentication_structure[2]);
 
         let mbtw: Box<Vec<[BFieldElement; 356]>> = vm_proof_iter.next_as_masterbasetablerows();
         {
@@ -60,7 +63,7 @@ mod test {
             while j < mbtw.len() {
                 let mut i: usize = 0;
                 while i < mbtw[j].len() {
-                    tasm::tasm_io_write_to_stdout___bfe(mbtw[j][i]);
+                    tasm::tasmlib_io_write_to_stdout___bfe(mbtw[j][i]);
                     i += 1;
                 }
                 j += 1;
@@ -73,7 +76,7 @@ mod test {
             while j < metr.len() {
                 let mut i: usize = 0;
                 while i < metr[j].len() {
-                    tasm::tasm_io_write_to_stdout___xfe(metr[j][i]);
+                    tasm::tasmlib_io_write_to_stdout___xfe(metr[j][i]);
                     i += 1;
                 }
                 j += 1;
@@ -81,17 +84,17 @@ mod test {
         }
 
         let log2paddedheight: Box<u32> = vm_proof_iter.next_as_log2paddedheight();
-        tasm::tasm_io_write_to_stdout___u32(*log2paddedheight);
+        tasm::tasmlib_io_write_to_stdout___u32(*log2paddedheight);
 
         let quotient_segments_elements: Box<Vec<[XFieldElement; 4]>> =
             vm_proof_iter.next_as_quotientsegmentselements();
         {
             let mut j: usize = 0;
             while j < quotient_segments_elements.len() {
-                tasm::tasm_io_write_to_stdout___xfe(quotient_segments_elements[j][0]);
-                tasm::tasm_io_write_to_stdout___xfe(quotient_segments_elements[j][1]);
-                tasm::tasm_io_write_to_stdout___xfe(quotient_segments_elements[j][2]);
-                tasm::tasm_io_write_to_stdout___xfe(quotient_segments_elements[j][3]);
+                tasm::tasmlib_io_write_to_stdout___xfe(quotient_segments_elements[j][0]);
+                tasm::tasmlib_io_write_to_stdout___xfe(quotient_segments_elements[j][1]);
+                tasm::tasmlib_io_write_to_stdout___xfe(quotient_segments_elements[j][2]);
+                tasm::tasmlib_io_write_to_stdout___xfe(quotient_segments_elements[j][3]);
                 j += 1;
             }
         }
@@ -100,7 +103,16 @@ mod test {
         {
             let mut j: usize = 0;
             while j < fri_codeword.len() {
-                tasm::tasm_io_write_to_stdout___xfe(fri_codeword[j]);
+                tasm::tasmlib_io_write_to_stdout___xfe(fri_codeword[j]);
+                j += 1;
+            }
+        }
+
+        let fri_polynomial: Box<Polynomial<XFieldElement>> = vm_proof_iter.next_as_fripolynomial();
+        {
+            let mut j: usize = 0;
+            while j < fri_polynomial.coefficients.len() {
+                tasm::tasmlib_io_write_to_stdout___xfe(fri_polynomial.coefficients[j]);
                 j += 1;
             }
         }
@@ -109,14 +121,14 @@ mod test {
         {
             let mut j: usize = 0;
             while j < fri_response.auth_structure.len() {
-                tasm::tasm_io_write_to_stdout___digest(fri_response.auth_structure[j]);
+                tasm::tasmlib_io_write_to_stdout___digest(fri_response.auth_structure[j]);
                 j += 1;
             }
         }
         {
             let mut j: usize = 0;
             while j < fri_response.revealed_leaves.len() {
-                tasm::tasm_io_write_to_stdout___xfe(fri_response.revealed_leaves[j]);
+                tasm::tasmlib_io_write_to_stdout___xfe(fri_response.revealed_leaves[j]);
                 j += 1;
             }
         }
@@ -155,9 +167,9 @@ mod test {
         }
     }
 
-    fn non_determinism() -> NonDeterminism<BFieldElement> {
+    fn non_determinism() -> NonDeterminism {
         let Proof(raw_proof) = proof();
-        let ram = raw_proof
+        let ram: HashMap<BFieldElement, BFieldElement> = raw_proof
             .into_iter()
             .enumerate()
             .map(|(k, v)| (BFieldElement::new(k as u64), v))
@@ -167,7 +179,7 @@ mod test {
     }
 
     fn into_xfe(seed: u64) -> XFieldElement {
-        XFieldElement::new_u64([seed, seed + 2, seed + 5])
+        xfe!([seed, seed + 2, seed + 5])
     }
 
     fn arbitrary_digest(seed: u64) -> Digest {
@@ -224,6 +236,10 @@ mod test {
         (14u64..=170).map(into_xfe).collect_vec()
     }
 
+    fn arbitrary_fri_polynomial() -> Polynomial<XFieldElement> {
+        Polynomial::new(arbitrary_fri_codeword())
+    }
+
     fn arbitrary_fri_response() -> FriResponse {
         FriResponse {
             auth_structure: arbitrary_auth_structure(),
@@ -232,7 +248,7 @@ mod test {
     }
 
     fn proof() -> Proof {
-        let mut proof_stream = ProofStream::<Tip5>::new();
+        let mut proof_stream = ProofStream::new();
         proof_stream.enqueue(ProofItem::MerkleRoot(arbitrary_digest(42)));
 
         let ood_base_row = Box::new(arbitrary_out_of_domain_base_row(1337));
@@ -258,6 +274,7 @@ mod test {
         let quot_segments_elements = arbitrary_quotient_segments_elements();
         proof_stream.enqueue(ProofItem::QuotientSegmentsElements(quot_segments_elements));
         proof_stream.enqueue(ProofItem::FriCodeword(arbitrary_fri_codeword()));
+        proof_stream.enqueue(ProofItem::FriPolynomial(arbitrary_fri_polynomial()));
         proof_stream.enqueue(ProofItem::FriResponse(arbitrary_fri_response()));
 
         proof_stream.into()

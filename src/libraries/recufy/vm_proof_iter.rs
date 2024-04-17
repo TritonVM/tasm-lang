@@ -85,7 +85,7 @@ fn all_next_as_methods(graft_config: &mut Graft) -> Vec<ast::Method<Typing>> {
     let receiver_type = DataType::Boxed(Box::new(receiver_type));
 
     for variant in ProofItemVariant::iter() {
-        let snippet = tasm_lib::recufier::vm_proof_iter::dequeue_next_as::DequeueNextAs {
+        let snippet = tasm_lib::verifier::vm_proof_iter::dequeue_next_as::DequeueNextAs {
             proof_item: variant,
         };
         let method_output = variant.payload_type();

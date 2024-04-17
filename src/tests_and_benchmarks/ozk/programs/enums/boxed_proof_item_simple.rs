@@ -89,8 +89,8 @@ impl ProofItem {
 fn main() {
     let boxed_proof_item: Box<ProofItem> =
         ProofItem::decode(&tasm::load_from_memory(BFieldElement::new(84))).unwrap();
-    tasm::tasm_io_write_to_stdout___bfe(boxed_proof_item.discriminant());
-    tasm::tasm_io_write_to_stdout___digest(boxed_proof_item.get_merkle_root());
+    tasm::tasmlib_io_write_to_stdout___bfe(boxed_proof_item.discriminant());
+    tasm::tasmlib_io_write_to_stdout___digest(boxed_proof_item.get_merkle_root());
 
     // Crash if not `MerkleRoot`. Explicitly don't use a wildcard.
     match *boxed_proof_item {
@@ -114,8 +114,8 @@ fn main() {
         }
         ProofItem::MerkleRoot(a) => {
             let b: BFieldElement = BFieldElement::new(10009 << 32);
-            tasm::tasm_io_write_to_stdout___digest(a);
-            tasm::tasm_io_write_to_stdout___bfe(b);
+            tasm::tasmlib_io_write_to_stdout___digest(a);
+            tasm::tasmlib_io_write_to_stdout___bfe(b);
         }
         ProofItem::Log2PaddedHeight(_) => {
             panic!();
@@ -140,12 +140,12 @@ fn main() {
         }
         _ => {
             let c: BFieldElement = BFieldElement::new(555u64 << 32);
-            tasm::tasm_io_write_to_stdout___bfe(c);
+            tasm::tasmlib_io_write_to_stdout___bfe(c);
             d = BFieldElement::new(200u64);
         }
     };
 
-    tasm::tasm_io_write_to_stdout___bfe(d);
+    tasm::tasmlib_io_write_to_stdout___bfe(d);
 
     return;
 }

@@ -16,27 +16,27 @@ fn main() {
     };
 
     // let b: BFieldElement = BFieldElement::new(200);
-    // bfe_array_boxed[0] = tasm::tasm_io_read_stdin___bfe();
-    // bfe_array_boxed[1] = tasm::tasm_io_read_stdin___bfe();
+    // bfe_array_boxed[0] = tasm::tasmlib_io_read_stdin___bfe();
+    // bfe_array_boxed[1] = tasm::tasmlib_io_read_stdin___bfe();
 
     // Don't set element 2 to verify that indexing into
     // agrees with ordering of a array declaration as made above
-    // let _l: BFieldElement = tasm::tasm_io_read_stdin___bfe();
-    // bfe_array_boxed[3] = tasm::tasm_io_read_stdin___bfe();
+    // let _l: BFieldElement = tasm::tasmlib_io_read_stdin___bfe();
+    // bfe_array_boxed[3] = tasm::tasmlib_io_read_stdin___bfe();
     // let c: BFieldElement = BFieldElement::new(400);
 
-    tasm::tasm_io_write_to_stdout___bfe(bfe_array_boxed[2]);
-    // tasm::tasm_io_write_to_stdout___bfe(bfe_array_boxed[0]);
-    // tasm::tasm_io_write_to_stdout___bfe(bfe_array_boxed[0]);
-    // tasm::tasm_io_write_to_stdout___bfe(bfe_array_boxed[2]);
-    // tasm::tasm_io_write_to_stdout___bfe(bfe_array_boxed[3]);
+    tasm::tasmlib_io_write_to_stdout___bfe(bfe_array_boxed[2]);
+    // tasm::tasmlib_io_write_to_stdout___bfe(bfe_array_boxed[0]);
+    // tasm::tasmlib_io_write_to_stdout___bfe(bfe_array_boxed[0]);
+    // tasm::tasmlib_io_write_to_stdout___bfe(bfe_array_boxed[2]);
+    // tasm::tasmlib_io_write_to_stdout___bfe(bfe_array_boxed[3]);
     // let d: BFieldElement = BFieldElement::new(1u64 << 50);
-    // tasm::tasm_io_write_to_stdout___bfe(bfe_array_boxed[3]);
-    // tasm::tasm_io_write_to_stdout___bfe(bfe_array_boxed[0]);
-    // tasm::tasm_io_write_to_stdout___bfe(a);
-    // tasm::tasm_io_write_to_stdout___bfe(b);
-    // tasm::tasm_io_write_to_stdout___bfe(c);
-    // tasm::tasm_io_write_to_stdout___bfe(d);
+    // tasm::tasmlib_io_write_to_stdout___bfe(bfe_array_boxed[3]);
+    // tasm::tasmlib_io_write_to_stdout___bfe(bfe_array_boxed[0]);
+    // tasm::tasmlib_io_write_to_stdout___bfe(a);
+    // tasm::tasmlib_io_write_to_stdout___bfe(b);
+    // tasm::tasmlib_io_write_to_stdout___bfe(c);
+    // tasm::tasmlib_io_write_to_stdout___bfe(d);
 
     return;
 }

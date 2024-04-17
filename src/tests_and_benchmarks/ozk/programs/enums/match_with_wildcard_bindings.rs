@@ -15,37 +15,37 @@ fn main() {
 
     match *b {
         EnumType::A(_) => {
-            tasm::tasm_io_write_to_stdout___bfe(BFieldElement::new(0));
+            tasm::tasmlib_io_write_to_stdout___bfe(BFieldElement::new(0));
         }
         EnumType::B(_) => {
-            tasm::tasm_io_write_to_stdout___bfe(BFieldElement::new(1));
+            tasm::tasmlib_io_write_to_stdout___bfe(BFieldElement::new(1));
         }
     };
 
     match *b {
         EnumType::A(_) => {
-            tasm::tasm_io_write_to_stdout___bfe(BFieldElement::new(2));
+            tasm::tasmlib_io_write_to_stdout___bfe(BFieldElement::new(2));
         }
         EnumType::B(_) => {
-            tasm::tasm_io_write_to_stdout___bfe(BFieldElement::new(3));
+            tasm::tasmlib_io_write_to_stdout___bfe(BFieldElement::new(3));
         }
     };
 
     match b.as_ref() {
         EnumType::A(_) => {
-            tasm::tasm_io_write_to_stdout___bfe(BFieldElement::new(4));
+            tasm::tasmlib_io_write_to_stdout___bfe(BFieldElement::new(4));
         }
         EnumType::B(_) => {
-            tasm::tasm_io_write_to_stdout___bfe(BFieldElement::new(5));
+            tasm::tasmlib_io_write_to_stdout___bfe(BFieldElement::new(5));
         }
     };
 
     match b.as_ref() {
         EnumType::A(_) => {
-            tasm::tasm_io_write_to_stdout___bfe(BFieldElement::new(6));
+            tasm::tasmlib_io_write_to_stdout___bfe(BFieldElement::new(6));
         }
         EnumType::B(_) => {
-            tasm::tasm_io_write_to_stdout___bfe(BFieldElement::new(7));
+            tasm::tasmlib_io_write_to_stdout___bfe(BFieldElement::new(7));
         }
     };
 

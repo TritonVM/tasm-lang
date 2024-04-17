@@ -29,25 +29,25 @@ fn main() {
     ];
 
     let b: Box<BFieldElement> = Box::<BFieldElement>::new(BFieldElement::new(200));
-    xfe_array[0] = tasm::tasm_io_read_stdin___xfe();
-    xfe_array[1] = tasm::tasm_io_read_stdin___xfe();
+    xfe_array[0] = tasm::tasmlib_io_read_stdin___xfe();
+    xfe_array[1] = tasm::tasmlib_io_read_stdin___xfe();
 
     // Don't set element 2 to verify that indexing into
     // agrees with ordering of a array declaration as made above
-    let l: XFieldElement = tasm::tasm_io_read_stdin___xfe();
-    xfe_array[3] = tasm::tasm_io_read_stdin___xfe();
+    let l: XFieldElement = tasm::tasmlib_io_read_stdin___xfe();
+    xfe_array[3] = tasm::tasmlib_io_read_stdin___xfe();
     let c: BFieldElement = BFieldElement::new(400);
 
-    tasm::tasm_io_write_to_stdout___xfe(xfe_array[3]);
-    tasm::tasm_io_write_to_stdout___xfe(xfe_array[0]);
-    tasm::tasm_io_write_to_stdout___xfe(xfe_array[2]);
-    tasm::tasm_io_write_to_stdout___xfe(xfe_array[2]);
-    tasm::tasm_io_write_to_stdout___xfe(xfe_array[1]);
-    tasm::tasm_io_write_to_stdout___bfe(*a);
-    tasm::tasm_io_write_to_stdout___bfe(*b);
-    tasm::tasm_io_write_to_stdout___bfe(c);
-    tasm::tasm_io_write_to_stdout___xfe(l);
-    tasm::tasm_io_write_to_stdout___bfe(k);
+    tasm::tasmlib_io_write_to_stdout___xfe(xfe_array[3]);
+    tasm::tasmlib_io_write_to_stdout___xfe(xfe_array[0]);
+    tasm::tasmlib_io_write_to_stdout___xfe(xfe_array[2]);
+    tasm::tasmlib_io_write_to_stdout___xfe(xfe_array[2]);
+    tasm::tasmlib_io_write_to_stdout___xfe(xfe_array[1]);
+    tasm::tasmlib_io_write_to_stdout___bfe(*a);
+    tasm::tasmlib_io_write_to_stdout___bfe(*b);
+    tasm::tasmlib_io_write_to_stdout___bfe(c);
+    tasm::tasmlib_io_write_to_stdout___xfe(l);
+    tasm::tasmlib_io_write_to_stdout___bfe(k);
 
     return;
 }

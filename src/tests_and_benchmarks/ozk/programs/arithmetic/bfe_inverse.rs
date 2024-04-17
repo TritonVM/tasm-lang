@@ -1,12 +1,12 @@
 use num::One;
 use tasm_lib::triton_vm::prelude::*;
-use tasm_lib::twenty_first::shared_math::traits::Inverse;
+use tasm_lib::twenty_first::math::traits::Inverse;
 
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
 fn main() {
-    let bfe: BFieldElement = tasm::tasm_io_read_stdin___bfe();
-    tasm::tasm_io_write_to_stdout___bfe(bfe.inverse());
+    let bfe: BFieldElement = tasm::tasmlib_io_read_stdin___bfe();
+    tasm::tasmlib_io_write_to_stdout___bfe(bfe.inverse());
 
     assert!(BFieldElement::one() == bfe.inverse() * bfe);
 
@@ -21,7 +21,7 @@ mod test {
     use crate::tests_and_benchmarks::ozk::rust_shadows::wrap_main_with_io;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
     use num::Zero;
-    use tasm_lib::twenty_first::shared_math::other::random_elements;
+    use tasm_lib::twenty_first::math::other::random_elements;
 
     use super::*;
 

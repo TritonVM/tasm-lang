@@ -9,7 +9,7 @@ pub(crate) enum SimpleEnum {
 }
 
 fn main() {
-    let a: SimpleEnum = SimpleEnum::A(tasm::tasm_io_read_stdin___xfe());
+    let a: SimpleEnum = SimpleEnum::A(tasm::tasmlib_io_read_stdin___xfe());
     let b: SimpleEnum = SimpleEnum::B;
 
     match b {
@@ -22,16 +22,16 @@ fn main() {
     match a {
         SimpleEnum::A(xfe) => {
             let i: u32 = 14;
-            tasm::tasm_io_write_to_stdout___xfe(xfe);
-            tasm::tasm_io_write_to_stdout___u32(i);
-            tasm::tasm_io_write_to_stdout___xfe(xfe);
+            tasm::tasmlib_io_write_to_stdout___xfe(xfe);
+            tasm::tasmlib_io_write_to_stdout___u32(i);
+            tasm::tasmlib_io_write_to_stdout___xfe(xfe);
 
             match a {
                 SimpleEnum::A(xfe_1) => {
-                    tasm::tasm_io_write_to_stdout___xfe(xfe_1);
-                    tasm::tasm_io_write_to_stdout___u32(i);
-                    tasm::tasm_io_write_to_stdout___xfe(xfe);
-                    tasm::tasm_io_write_to_stdout___xfe(xfe_1);
+                    tasm::tasmlib_io_write_to_stdout___xfe(xfe_1);
+                    tasm::tasmlib_io_write_to_stdout___u32(i);
+                    tasm::tasmlib_io_write_to_stdout___xfe(xfe);
+                    tasm::tasmlib_io_write_to_stdout___xfe(xfe_1);
                 }
                 SimpleEnum::B => {
                     panic!();

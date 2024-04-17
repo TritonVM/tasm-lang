@@ -1,18 +1,18 @@
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
 fn main() {
-    let i: u32 = tasm::tasm_io_read_stdin___bfe().value() as u32;
+    let i: u32 = tasm::tasmlib_io_read_stdin___bfe().value() as u32;
     let a: u32 = {
         let b: u32 = 100;
         let c: u32 = 200;
-        let j: u32 = tasm::tasm_io_read_stdin___bfe().value() as u32;
-        let k: u32 = tasm::tasm_io_read_stdin___bfe().value() as u32;
+        let j: u32 = tasm::tasmlib_io_read_stdin___bfe().value() as u32;
+        let k: u32 = tasm::tasmlib_io_read_stdin___bfe().value() as u32;
         let d: u32 = 400u32;
 
         b + c + d + i + j * k
     };
 
-    tasm::tasm_io_write_to_stdout___u32(a);
+    tasm::tasmlib_io_write_to_stdout___u32(a);
 
     return;
 }

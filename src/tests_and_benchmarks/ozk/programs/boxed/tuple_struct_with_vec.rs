@@ -11,8 +11,8 @@ fn main() {
         TupleStruct2::decode(&tasm::load_from_memory(BFieldElement::new(84))).unwrap();
     let on_stack: TupleStruct2 = *boxed_struct;
 
-    tasm::tasm_io_write_to_stdout___u32(on_stack.1);
-    tasm::tasm_io_write_to_stdout___u32(on_stack.0.len() as u32);
+    tasm::tasmlib_io_write_to_stdout___u32(on_stack.1);
+    tasm::tasmlib_io_write_to_stdout___u32(on_stack.0.len() as u32);
     return;
 }
 

@@ -13,13 +13,13 @@ struct SimpleStruct {
 fn main() {
     let struct_0: SimpleStruct = SimpleStruct {
         a: 403,
-        b: tasm::tasm_io_read_stdin___digest(),
-        c: tasm::tasm_io_read_stdin___xfe(),
+        b: tasm::tasmlib_io_read_stdin___digest(),
+        c: tasm::tasmlib_io_read_stdin___xfe(),
     };
     let boxed_struct_0: Box<SimpleStruct> = Box::<SimpleStruct>::new(struct_0);
-    tasm::tasm_io_write_to_stdout___u32(boxed_struct_0.a);
-    tasm::tasm_io_write_to_stdout___digest(boxed_struct_0.b);
-    tasm::tasm_io_write_to_stdout___xfe(boxed_struct_0.c);
+    tasm::tasmlib_io_write_to_stdout___u32(boxed_struct_0.a);
+    tasm::tasmlib_io_write_to_stdout___digest(boxed_struct_0.b);
+    tasm::tasmlib_io_write_to_stdout___xfe(boxed_struct_0.c);
 
     return;
 }
@@ -27,7 +27,7 @@ fn main() {
 #[cfg(test)]
 mod test {
     use tasm_lib::triton_vm::prelude::*;
-    use tasm_lib::twenty_first::shared_math::other::random_elements;
+    use tasm_lib::twenty_first::math::other::random_elements;
 
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;

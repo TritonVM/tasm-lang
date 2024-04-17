@@ -23,7 +23,7 @@ mod tests {
         use itertools::Itertools;
         use tasm_lib::rust_shadowing_helper_functions::list::list_insert;
         use tasm_lib::triton_vm::prelude::*;
-        use tasm_lib::twenty_first::shared_math::other::random_elements;
+        use tasm_lib::twenty_first::math::other::random_elements;
 
         use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 

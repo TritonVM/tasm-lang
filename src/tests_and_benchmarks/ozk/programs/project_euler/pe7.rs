@@ -34,8 +34,8 @@ fn main() {
         prime_candidate += 2;
     }
 
-    tasm::tasm_io_write_to_stdout___u32(index_of_prime_to_find);
-    tasm::tasm_io_write_to_stdout___u32(last_prime_found);
+    tasm::tasmlib_io_write_to_stdout___u32(index_of_prime_to_find);
+    tasm::tasmlib_io_write_to_stdout___u32(last_prime_found);
 
     return;
 }
@@ -97,6 +97,6 @@ mod benches {
             worst_case,
             0,
         );
-        profile(name, code, common_case, true);
+        profile(name, code, common_case);
     }
 }

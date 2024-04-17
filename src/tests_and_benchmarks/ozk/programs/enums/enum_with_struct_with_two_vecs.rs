@@ -22,9 +22,9 @@ fn main() {
 
     match boxed_enum_type.as_ref() {
         EnumType::B(non_copy_struct) => {
-            tasm::tasm_io_write_to_stdout___bfe(BFieldElement::new(8));
-            tasm::tasm_io_write_to_stdout___u32(non_copy_struct.xfes.len() as u32);
-            // tasm::tasm_io_write_to_stdout___u32(non_copy_struct.digests.len() as u32);
+            tasm::tasmlib_io_write_to_stdout___bfe(BFieldElement::new(8));
+            tasm::tasmlib_io_write_to_stdout___u32(non_copy_struct.xfes.len() as u32);
+            // tasm::tasmlib_io_write_to_stdout___u32(non_copy_struct.digests.len() as u32);
         }
     };
 
@@ -32,9 +32,9 @@ fn main() {
 
     match on_stack {
         EnumType::B(non_copy_struct) => {
-            tasm::tasm_io_write_to_stdout___bfe(BFieldElement::new(8));
-            // tasm::tasm_io_write_to_stdout___u32(non_copy_struct.digests.len() as u32);
-            tasm::tasm_io_write_to_stdout___u32(non_copy_struct.xfes.len() as u32);
+            tasm::tasmlib_io_write_to_stdout___bfe(BFieldElement::new(8));
+            // tasm::tasmlib_io_write_to_stdout___u32(non_copy_struct.digests.len() as u32);
+            tasm::tasmlib_io_write_to_stdout___u32(non_copy_struct.xfes.len() as u32);
         }
     };
 

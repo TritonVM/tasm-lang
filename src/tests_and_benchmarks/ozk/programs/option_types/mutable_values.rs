@@ -31,7 +31,7 @@ fn main() {
     none_to_some_value = Some((1u64 << 40) + 100);
     match none_to_some_value {
         Some(x) => {
-            tasm::tasm_io_write_to_stdout___u64(x);
+            tasm::tasmlib_io_write_to_stdout___u64(x);
         }
         None => {
             panic!();
@@ -39,11 +39,11 @@ fn main() {
     };
 
     // Some -> None
-    let mut some_to_none_value: Option<XFieldElement> = Some(tasm::tasm_io_read_stdin___xfe());
-    tasm::tasm_io_write_to_stdout___xfe(some_to_none_value.unwrap());
+    let mut some_to_none_value: Option<XFieldElement> = Some(tasm::tasmlib_io_read_stdin___xfe());
+    tasm::tasmlib_io_write_to_stdout___xfe(some_to_none_value.unwrap());
     match some_to_none_value {
         Some(x) => {
-            tasm::tasm_io_write_to_stdout___xfe(x);
+            tasm::tasmlib_io_write_to_stdout___xfe(x);
         }
         None => {
             panic!();
@@ -58,21 +58,21 @@ fn main() {
     };
 
     // Some -> Some
-    let mut some_value: Option<Digest> = Some(tasm::tasm_io_read_stdin___digest());
-    tasm::tasm_io_write_to_stdout___digest(some_value.unwrap());
+    let mut some_value: Option<Digest> = Some(tasm::tasmlib_io_read_stdin___digest());
+    tasm::tasmlib_io_write_to_stdout___digest(some_value.unwrap());
     match some_value {
         Some(x) => {
-            tasm::tasm_io_write_to_stdout___digest(x);
+            tasm::tasmlib_io_write_to_stdout___digest(x);
         }
         None => {
             panic!();
         }
     };
-    some_value = Some(tasm::tasm_io_read_stdin___digest());
-    tasm::tasm_io_write_to_stdout___digest(some_value.unwrap());
+    some_value = Some(tasm::tasmlib_io_read_stdin___digest());
+    tasm::tasmlib_io_write_to_stdout___digest(some_value.unwrap());
     match some_value {
         Some(x) => {
-            tasm::tasm_io_write_to_stdout___digest(x);
+            tasm::tasmlib_io_write_to_stdout___digest(x);
         }
         None => {
             panic!();

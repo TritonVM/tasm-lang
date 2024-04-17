@@ -16,9 +16,9 @@ fn main() {
 
     match on_stack {
         EnumType::A(elem0, elem1) => {
-            tasm::tasm_io_write_to_stdout___bfe(BFieldElement::new(1));
-            tasm::tasm_io_write_to_stdout___bfe(elem0);
-            tasm::tasm_io_write_to_stdout___bfe(elem1);
+            tasm::tasmlib_io_write_to_stdout___bfe(BFieldElement::new(1));
+            tasm::tasmlib_io_write_to_stdout___bfe(elem0);
+            tasm::tasmlib_io_write_to_stdout___bfe(elem1);
         }
     };
 

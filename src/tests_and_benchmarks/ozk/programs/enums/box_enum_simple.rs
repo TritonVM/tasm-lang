@@ -11,14 +11,14 @@ fn main() {
     let a_boxed: Box<EnumSimple> = Box::<EnumSimple>::new(a);
     match a_boxed.as_ref() {
         EnumSimple::A => {
-            tasm::tasm_io_write_to_stdout___u32(5);
+            tasm::tasmlib_io_write_to_stdout___u32(5);
         }
         EnumSimple::B(_) => {
             panic!();
         }
     };
 
-    let read_from_stdin: u128 = tasm::tasm_io_read_stdin___u128();
+    let read_from_stdin: u128 = tasm::tasmlib_io_read_stdin___u128();
     let b: EnumSimple = EnumSimple::B(read_from_stdin);
     let b_boxed: Box<EnumSimple> = Box::<EnumSimple>::new(b);
     match b_boxed.as_ref() {
@@ -27,7 +27,7 @@ fn main() {
         }
         EnumSimple::B(b_value) => {
             assert!(read_from_stdin == *b_value);
-            tasm::tasm_io_write_to_stdout___u128(*b_value);
+            tasm::tasmlib_io_write_to_stdout___u128(*b_value);
         }
     };
 

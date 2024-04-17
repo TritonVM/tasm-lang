@@ -1,6 +1,6 @@
 use num::One;
 use tasm_lib::triton_vm::prelude::*;
-use tasm_lib::twenty_first::shared_math::traits::ModPowU32;
+use tasm_lib::twenty_first::math::traits::ModPowU32;
 
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
@@ -15,7 +15,7 @@ fn main() {
         exponent += 1;
     }
 
-    tasm::tasm_io_write_to_stdout___bfe(base_number.mod_pow_u32(exponent));
+    tasm::tasmlib_io_write_to_stdout___bfe(base_number.mod_pow_u32(exponent));
 
     return;
 }

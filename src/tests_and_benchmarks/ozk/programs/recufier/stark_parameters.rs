@@ -1,7 +1,7 @@
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 use crate::{tests_and_benchmarks::ozk::rust_shadows::VmProofIter, triton_vm::prelude::*};
 use serde_derive::Serialize;
-use tasm_lib::twenty_first::shared_math::traits::PrimitiveRootOfUnity;
+use tasm_lib::twenty_first::math::traits::PrimitiveRootOfUnity;
 
 /// See [StarkParameters][params].
 ///
@@ -72,7 +72,7 @@ pub(crate) struct FriVerify {
 impl FriVerify {
     // This wrapper is probably not necessary; consider removing.
     pub fn verify(&self, proof_iter: &mut VmProofIter) -> Vec<(u32, XFieldElement)> {
-        return tasm::tasm_recufier_fri_verify(proof_iter, self);
+        return tasm::tasmlib_recufier_fri_verify(proof_iter, self);
     }
 }
 

@@ -39,17 +39,17 @@ impl DazeFieldElement {
 
     fn mul(self, rhs: DazeFieldElement) -> DazeFieldElement {
         return DazeFieldElement(DazeFieldElement::montyred(
-            tasm::tasm_arithmetic_u64_mul_two_u64s_to_u128_u64(self.0, rhs.0),
+            tasm::tasmlib_arithmetic_u64_mul_two_u64s_to_u128_u64(self.0, rhs.0),
         ));
     }
 }
 
 fn main() {
-    let a: DazeFieldElement = DazeFieldElement::new(tasm::tasm_io_read_stdin___bfe().value());
-    let b: DazeFieldElement = DazeFieldElement::new(tasm::tasm_io_read_stdin___bfe().value());
+    let a: DazeFieldElement = DazeFieldElement::new(tasm::tasmlib_io_read_stdin___bfe().value());
+    let b: DazeFieldElement = DazeFieldElement::new(tasm::tasmlib_io_read_stdin___bfe().value());
     let res: DazeFieldElement = a.mul(b);
-    tasm::tasm_io_write_to_stdout___bfe(BFieldElement::new(res.valued()));
-    tasm::tasm_io_write_to_stdout___u64(res.valued());
+    tasm::tasmlib_io_write_to_stdout___bfe(BFieldElement::new(res.valued()));
+    tasm::tasmlib_io_write_to_stdout___u64(res.valued());
 
     return;
 }
@@ -126,6 +126,6 @@ mod benches {
             worst_case_input,
             0,
         );
-        profile(name, code, common_case, true);
+        profile(name, code, common_case);
     }
 }

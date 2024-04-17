@@ -3,7 +3,7 @@ use rand::prelude::Distribution;
 use rand::Rng;
 use tasm_lib::prelude::TasmObject;
 use tasm_lib::triton_vm::prelude::*;
-use tasm_lib::twenty_first::shared_math::other::random_elements;
+use tasm_lib::twenty_first::math::other::random_elements;
 
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
@@ -58,30 +58,30 @@ fn main() {
     let test_struct: Box<TestStuctNested> =
         TestStuctNested::decode(&tasm::load_from_memory(BFieldElement::new(300))).unwrap();
 
-    tasm::tasm_io_write_to_stdout___digest(test_struct.a.a);
-    tasm::tasm_io_write_to_stdout___u64(test_struct.a.b.c);
-    tasm::tasm_io_write_to_stdout___u64(test_struct.a.c[1].c);
-    tasm::tasm_io_write_to_stdout___u128(test_struct.b[2].c[2].f[3].b[5]);
-    tasm::tasm_io_write_to_stdout___u64(test_struct.e);
-    tasm::tasm_io_write_to_stdout___u64(test_struct.c.c);
-    tasm::tasm_io_write_to_stdout___digest(test_struct.f[1][1][1].a);
-    tasm::tasm_io_write_to_stdout___xfe(test_struct.f[1][1][1].f[3].e[4]);
-    tasm::tasm_io_write_to_stdout___xfe(test_struct.f[2][2][2].f[2].e[2]);
-    tasm::tasm_io_write_to_stdout___u64(test_struct.f[2][2][2].f[2].e.len() as u64);
-    tasm::tasm_io_write_to_stdout___u128(test_struct.g[0][1][2][3]);
-    tasm::tasm_io_write_to_stdout___u128(test_struct.g[3][2][1][0]);
-    tasm::tasm_io_write_to_stdout___u128(test_struct.g[0][3][2][1]);
-    tasm::tasm_io_write_to_stdout___u128(test_struct.a.b.e.f.a);
-    tasm::tasm_io_write_to_stdout___bfe(test_struct.a.b.e.f.b);
-    tasm::tasm_io_write_to_stdout___bool(test_struct.a.b.e.f.c);
-    tasm::tasm_io_write_to_stdout___digest(test_struct.a.b.e.f.d[1][1][0][1][0]);
-    tasm::tasm_io_write_to_stdout___digest(test_struct.a.b.e.f.e);
+    tasm::tasmlib_io_write_to_stdout___digest(test_struct.a.a);
+    tasm::tasmlib_io_write_to_stdout___u64(test_struct.a.b.c);
+    tasm::tasmlib_io_write_to_stdout___u64(test_struct.a.c[1].c);
+    tasm::tasmlib_io_write_to_stdout___u128(test_struct.b[2].c[2].f[3].b[5]);
+    tasm::tasmlib_io_write_to_stdout___u64(test_struct.e);
+    tasm::tasmlib_io_write_to_stdout___u64(test_struct.c.c);
+    tasm::tasmlib_io_write_to_stdout___digest(test_struct.f[1][1][1].a);
+    tasm::tasmlib_io_write_to_stdout___xfe(test_struct.f[1][1][1].f[3].e[4]);
+    tasm::tasmlib_io_write_to_stdout___xfe(test_struct.f[2][2][2].f[2].e[2]);
+    tasm::tasmlib_io_write_to_stdout___u64(test_struct.f[2][2][2].f[2].e.len() as u64);
+    tasm::tasmlib_io_write_to_stdout___u128(test_struct.g[0][1][2][3]);
+    tasm::tasmlib_io_write_to_stdout___u128(test_struct.g[3][2][1][0]);
+    tasm::tasmlib_io_write_to_stdout___u128(test_struct.g[0][3][2][1]);
+    tasm::tasmlib_io_write_to_stdout___u128(test_struct.a.b.e.f.a);
+    tasm::tasmlib_io_write_to_stdout___bfe(test_struct.a.b.e.f.b);
+    tasm::tasmlib_io_write_to_stdout___bool(test_struct.a.b.e.f.c);
+    tasm::tasmlib_io_write_to_stdout___digest(test_struct.a.b.e.f.d[1][1][0][1][0]);
+    tasm::tasmlib_io_write_to_stdout___digest(test_struct.a.b.e.f.e);
 
-    tasm::tasm_io_write_to_stdout___u32(test_struct.a.b.e.f.d[1][1][0][1].len() as u32);
-    tasm::tasm_io_write_to_stdout___u32(test_struct.a.b.e.f.d[1][1][0].len() as u32);
-    tasm::tasm_io_write_to_stdout___u32(test_struct.a.b.e.f.d[1][1].len() as u32);
-    tasm::tasm_io_write_to_stdout___u32(test_struct.a.b.e.f.d[1].len() as u32);
-    tasm::tasm_io_write_to_stdout___u32(test_struct.a.b.e.f.d.len() as u32);
+    tasm::tasmlib_io_write_to_stdout___u32(test_struct.a.b.e.f.d[1][1][0][1].len() as u32);
+    tasm::tasmlib_io_write_to_stdout___u32(test_struct.a.b.e.f.d[1][1][0].len() as u32);
+    tasm::tasmlib_io_write_to_stdout___u32(test_struct.a.b.e.f.d[1][1].len() as u32);
+    tasm::tasmlib_io_write_to_stdout___u32(test_struct.a.b.e.f.d[1].len() as u32);
+    tasm::tasmlib_io_write_to_stdout___u32(test_struct.a.b.e.f.d.len() as u32);
 
     return;
 }

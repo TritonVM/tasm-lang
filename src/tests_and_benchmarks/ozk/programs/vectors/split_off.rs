@@ -3,18 +3,18 @@ use tasm_lib::triton_vm::prelude::*;
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
 fn xfe_vec() {
-    let orignal_vec_length: usize = tasm::tasm_io_read_stdin___u32() as usize;
+    let orignal_vec_length: usize = tasm::tasmlib_io_read_stdin___u32() as usize;
     let mut original_vec: Vec<XFieldElement> = Vec::<XFieldElement>::default();
 
     {
         let mut i: usize = 0;
         while i < orignal_vec_length {
-            original_vec.push(tasm::tasm_io_read_stdin___xfe());
+            original_vec.push(tasm::tasmlib_io_read_stdin___xfe());
             i += 1;
         }
     }
 
-    let mid: usize = tasm::tasm_io_read_stdin___u32() as usize;
+    let mid: usize = tasm::tasmlib_io_read_stdin___u32() as usize;
 
     let new_vec: Vec<XFieldElement> = original_vec.split_off(mid);
 
@@ -23,7 +23,7 @@ fn xfe_vec() {
     {
         let mut i: usize = 0;
         while i < mid {
-            tasm::tasm_io_write_to_stdout___xfe(original_vec[i]);
+            tasm::tasmlib_io_write_to_stdout___xfe(original_vec[i]);
             i += 1;
         }
     }
@@ -33,7 +33,7 @@ fn xfe_vec() {
     {
         let mut i: usize = 0;
         while i < new_vec.len() {
-            tasm::tasm_io_write_to_stdout___xfe(new_vec[i]);
+            tasm::tasmlib_io_write_to_stdout___xfe(new_vec[i]);
             i += 1;
         }
     }
@@ -42,18 +42,18 @@ fn xfe_vec() {
 }
 
 fn bfe_vec() {
-    let orignal_vec_length: usize = tasm::tasm_io_read_stdin___u32() as usize;
+    let orignal_vec_length: usize = tasm::tasmlib_io_read_stdin___u32() as usize;
     let mut original_vec: Vec<BFieldElement> = Vec::<BFieldElement>::default();
 
     {
         let mut i: usize = 0;
         while i < orignal_vec_length {
-            original_vec.push(tasm::tasm_io_read_stdin___bfe());
+            original_vec.push(tasm::tasmlib_io_read_stdin___bfe());
             i += 1;
         }
     }
 
-    let mid: usize = tasm::tasm_io_read_stdin___u32() as usize;
+    let mid: usize = tasm::tasmlib_io_read_stdin___u32() as usize;
 
     let new_vec: Vec<BFieldElement> = original_vec.split_off(mid);
 
@@ -62,7 +62,7 @@ fn bfe_vec() {
     {
         let mut i: usize = 0;
         while i < mid {
-            tasm::tasm_io_write_to_stdout___bfe(original_vec[i]);
+            tasm::tasmlib_io_write_to_stdout___bfe(original_vec[i]);
             i += 1;
         }
     }
@@ -72,7 +72,7 @@ fn bfe_vec() {
     {
         let mut i: usize = 0;
         while i < new_vec.len() {
-            tasm::tasm_io_write_to_stdout___bfe(new_vec[i]);
+            tasm::tasmlib_io_write_to_stdout___bfe(new_vec[i]);
             i += 1;
         }
     }
@@ -81,18 +81,18 @@ fn bfe_vec() {
 }
 
 fn digest_vec() {
-    let orignal_vec_length: usize = tasm::tasm_io_read_stdin___u32() as usize;
+    let orignal_vec_length: usize = tasm::tasmlib_io_read_stdin___u32() as usize;
     let mut original_vec: Vec<Digest> = Vec::<Digest>::default();
 
     {
         let mut i: usize = 0;
         while i < orignal_vec_length {
-            original_vec.push(tasm::tasm_io_read_stdin___digest());
+            original_vec.push(tasm::tasmlib_io_read_stdin___digest());
             i += 1;
         }
     }
 
-    let mid: usize = tasm::tasm_io_read_stdin___u32() as usize;
+    let mid: usize = tasm::tasmlib_io_read_stdin___u32() as usize;
 
     let new_vec: Vec<Digest> = original_vec.split_off(mid);
 
@@ -101,7 +101,7 @@ fn digest_vec() {
     {
         let mut i: usize = 0;
         while i < mid {
-            tasm::tasm_io_write_to_stdout___digest(original_vec[i]);
+            tasm::tasmlib_io_write_to_stdout___digest(original_vec[i]);
             i += 1;
         }
     }
@@ -111,7 +111,7 @@ fn digest_vec() {
     {
         let mut i: usize = 0;
         while i < new_vec.len() {
-            tasm::tasm_io_write_to_stdout___digest(new_vec[i]);
+            tasm::tasmlib_io_write_to_stdout___digest(new_vec[i]);
             i += 1;
         }
     }
@@ -121,8 +121,8 @@ fn digest_vec() {
 
 #[cfg(test)]
 mod test {
-    use tasm_lib::twenty_first::shared_math::other::random_elements;
-    use tasm_lib::twenty_first::shared_math::x_field_element::EXTENSION_DEGREE;
+    use tasm_lib::twenty_first::math::other::random_elements;
+    use tasm_lib::twenty_first::math::x_field_element::EXTENSION_DEGREE;
     use tasm_lib::DIGEST_LENGTH;
     use test_strategy::proptest;
 

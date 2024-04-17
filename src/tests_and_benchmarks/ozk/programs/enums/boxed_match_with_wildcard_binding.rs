@@ -28,7 +28,7 @@ impl EnumType {
 fn main() {
     let boxed_proof_item: Box<EnumType> =
         EnumType::decode(&tasm::load_from_memory(BFieldElement::new(84))).unwrap();
-    tasm::tasm_io_write_to_stdout___bfe(boxed_proof_item.discriminant());
+    tasm::tasmlib_io_write_to_stdout___bfe(boxed_proof_item.discriminant());
 
     return;
 }

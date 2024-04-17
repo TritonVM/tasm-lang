@@ -16,33 +16,33 @@ enum EnumDynSizedVariantField {
 #[allow(clippy::vec_init_then_push)]
 fn main_a() {
     let mut bfes: Vec<BFieldElement> = Vec::<BFieldElement>::default();
-    bfes.push(tasm::tasm_io_read_stdin___bfe());
-    bfes.push(tasm::tasm_io_read_stdin___bfe());
-    bfes.push(tasm::tasm_io_read_stdin___bfe());
-    bfes.push(tasm::tasm_io_read_stdin___bfe());
-    bfes.push(tasm::tasm_io_read_stdin___bfe());
+    bfes.push(tasm::tasmlib_io_read_stdin___bfe());
+    bfes.push(tasm::tasmlib_io_read_stdin___bfe());
+    bfes.push(tasm::tasmlib_io_read_stdin___bfe());
+    bfes.push(tasm::tasmlib_io_read_stdin___bfe());
+    bfes.push(tasm::tasmlib_io_read_stdin___bfe());
 
     let mut xfes: Vec<XFieldElement> = Vec::<XFieldElement>::default();
-    xfes.push(tasm::tasm_io_read_stdin___xfe());
-    xfes.push(tasm::tasm_io_read_stdin___xfe());
-    xfes.push(tasm::tasm_io_read_stdin___xfe());
-    xfes.push(tasm::tasm_io_read_stdin___xfe());
+    xfes.push(tasm::tasmlib_io_read_stdin___xfe());
+    xfes.push(tasm::tasmlib_io_read_stdin___xfe());
+    xfes.push(tasm::tasmlib_io_read_stdin___xfe());
+    xfes.push(tasm::tasmlib_io_read_stdin___xfe());
 
     let a: EnumDynSizedVariantField = EnumDynSizedVariantField::A(
-        tasm::tasm_io_read_stdin___bfe(),
+        tasm::tasmlib_io_read_stdin___bfe(),
         bfes,
-        tasm::tasm_io_read_stdin___digest(),
+        tasm::tasmlib_io_read_stdin___digest(),
         xfes,
     );
     let a_boxed: Box<EnumDynSizedVariantField> = Box::<EnumDynSizedVariantField>::new(a);
     match a_boxed.as_ref() {
         EnumDynSizedVariantField::A(bfe_again, bfes_again, digest_again, xfes_again) => {
-            tasm::tasm_io_write_to_stdout___bfe(*bfe_again);
-            tasm::tasm_io_write_to_stdout___bfe(bfes_again[4]);
-            tasm::tasm_io_write_to_stdout___bfe(bfes_again[3]);
-            tasm::tasm_io_write_to_stdout___bfe(bfes_again[2]);
-            tasm::tasm_io_write_to_stdout___digest(*digest_again);
-            tasm::tasm_io_write_to_stdout___xfe(xfes_again[2]);
+            tasm::tasmlib_io_write_to_stdout___bfe(*bfe_again);
+            tasm::tasmlib_io_write_to_stdout___bfe(bfes_again[4]);
+            tasm::tasmlib_io_write_to_stdout___bfe(bfes_again[3]);
+            tasm::tasmlib_io_write_to_stdout___bfe(bfes_again[2]);
+            tasm::tasmlib_io_write_to_stdout___digest(*digest_again);
+            tasm::tasmlib_io_write_to_stdout___xfe(xfes_again[2]);
         }
         EnumDynSizedVariantField::B(_d0, _d1) => {
             panic!();
@@ -57,8 +57,8 @@ fn main_a() {
 
 fn main_b() {
     let b: EnumDynSizedVariantField = EnumDynSizedVariantField::B(
-        tasm::tasm_io_read_stdin___digest(),
-        tasm::tasm_io_read_stdin___digest(),
+        tasm::tasmlib_io_read_stdin___digest(),
+        tasm::tasmlib_io_read_stdin___digest(),
     );
     let b_boxed: Box<EnumDynSizedVariantField> = Box::<EnumDynSizedVariantField>::new(b);
     match b_boxed.as_ref() {
@@ -66,8 +66,8 @@ fn main_b() {
             panic!();
         }
         EnumDynSizedVariantField::B(d0, d1) => {
-            tasm::tasm_io_write_to_stdout___digest(*d1);
-            tasm::tasm_io_write_to_stdout___digest(*d0);
+            tasm::tasmlib_io_write_to_stdout___digest(*d1);
+            tasm::tasmlib_io_write_to_stdout___digest(*d0);
         }
         EnumDynSizedVariantField::C(_a, _b) => {
             panic!();
@@ -80,16 +80,16 @@ fn main_b() {
 #[allow(clippy::vec_init_then_push)]
 fn main_c() {
     let mut digests: Vec<Digest> = Vec::<Digest>::default();
-    digests.push(tasm::tasm_io_read_stdin___digest());
-    digests.push(tasm::tasm_io_read_stdin___digest());
-    digests.push(tasm::tasm_io_read_stdin___digest());
-    digests.push(tasm::tasm_io_read_stdin___digest());
-    digests.push(tasm::tasm_io_read_stdin___digest());
+    digests.push(tasm::tasmlib_io_read_stdin___digest());
+    digests.push(tasm::tasmlib_io_read_stdin___digest());
+    digests.push(tasm::tasmlib_io_read_stdin___digest());
+    digests.push(tasm::tasmlib_io_read_stdin___digest());
+    digests.push(tasm::tasmlib_io_read_stdin___digest());
     let c: EnumDynSizedVariantField = EnumDynSizedVariantField::C(
         [
-            tasm::tasm_io_read_stdin___bfe(),
-            tasm::tasm_io_read_stdin___bfe(),
-            tasm::tasm_io_read_stdin___bfe(),
+            tasm::tasmlib_io_read_stdin___bfe(),
+            tasm::tasmlib_io_read_stdin___bfe(),
+            tasm::tasmlib_io_read_stdin___bfe(),
         ],
         digests,
     );
@@ -102,16 +102,16 @@ fn main_c() {
             panic!();
         }
         EnumDynSizedVariantField::C(bfe_array_3, digests) => {
-            tasm::tasm_io_write_to_stdout___bfe(bfe_array_3[1]);
-            tasm::tasm_io_write_to_stdout___bfe(bfe_array_3[0]);
-            tasm::tasm_io_write_to_stdout___bfe(bfe_array_3[2]);
-            tasm::tasm_io_write_to_stdout___digest(digests[3]);
-            tasm::tasm_io_write_to_stdout___digest(digests[4]);
-            tasm::tasm_io_write_to_stdout___digest(digests[0]);
-            tasm::tasm_io_write_to_stdout___digest(digests[1]);
-            tasm::tasm_io_write_to_stdout___digest(digests[2]);
-            tasm::tasm_io_write_to_stdout___digest(digests[4]);
-            tasm::tasm_io_write_to_stdout___digest(digests[4]);
+            tasm::tasmlib_io_write_to_stdout___bfe(bfe_array_3[1]);
+            tasm::tasmlib_io_write_to_stdout___bfe(bfe_array_3[0]);
+            tasm::tasmlib_io_write_to_stdout___bfe(bfe_array_3[2]);
+            tasm::tasmlib_io_write_to_stdout___digest(digests[3]);
+            tasm::tasmlib_io_write_to_stdout___digest(digests[4]);
+            tasm::tasmlib_io_write_to_stdout___digest(digests[0]);
+            tasm::tasmlib_io_write_to_stdout___digest(digests[1]);
+            tasm::tasmlib_io_write_to_stdout___digest(digests[2]);
+            tasm::tasmlib_io_write_to_stdout___digest(digests[4]);
+            tasm::tasmlib_io_write_to_stdout___digest(digests[4]);
         }
     };
 
@@ -125,7 +125,7 @@ mod test {
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::test_helpers::shared_test::TritonVMTestCase;
 
-    use tasm_lib::twenty_first::shared_math::other::random_elements;
+    use tasm_lib::twenty_first::math::other::random_elements;
 
     #[test]
     fn a_box_enum_two_dyn_sized_variant_fields_test() {

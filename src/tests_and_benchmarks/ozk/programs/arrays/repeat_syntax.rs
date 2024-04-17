@@ -1,5 +1,5 @@
 use tasm_lib::triton_vm::prelude::*;
-use tasm_lib::twenty_first::shared_math::other::random_elements;
+use tasm_lib::twenty_first::math::other::random_elements;
 
 use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
@@ -11,15 +11,15 @@ fn call_constructor_once() {
         return [xfe; 4];
     }
 
-    let element: XFieldElement = tasm::tasm_io_read_stdin___xfe();
+    let element: XFieldElement = tasm::tasmlib_io_read_stdin___xfe();
     let array: [XFieldElement; 4] = construct_xfe_4_array(element);
-    tasm::tasm_io_write_to_stdout___xfe(array[0]);
-    tasm::tasm_io_write_to_stdout___xfe(array[1]);
-    tasm::tasm_io_write_to_stdout___xfe(array[2]);
-    tasm::tasm_io_write_to_stdout___xfe(array[3]);
+    tasm::tasmlib_io_write_to_stdout___xfe(array[0]);
+    tasm::tasmlib_io_write_to_stdout___xfe(array[1]);
+    tasm::tasmlib_io_write_to_stdout___xfe(array[2]);
+    tasm::tasmlib_io_write_to_stdout___xfe(array[3]);
 
     // Print out earlier declaration to ensure stack-view is correct
-    tasm::tasm_io_write_to_stdout___xfe(element);
+    tasm::tasmlib_io_write_to_stdout___xfe(element);
 
     return;
 }
@@ -44,24 +44,24 @@ fn call_constructor_twice() {
         return [xfe; 5];
     }
 
-    let element0: XFieldElement = tasm::tasm_io_read_stdin___xfe();
+    let element0: XFieldElement = tasm::tasmlib_io_read_stdin___xfe();
     let array0: [XFieldElement; 5] = construct_xfe_5_array(element0);
-    let element1: XFieldElement = tasm::tasm_io_read_stdin___xfe();
+    let element1: XFieldElement = tasm::tasmlib_io_read_stdin___xfe();
     let array1: [XFieldElement; 5] = construct_xfe_5_array(element1);
-    tasm::tasm_io_write_to_stdout___xfe(array0[0]);
-    tasm::tasm_io_write_to_stdout___xfe(array0[1]);
-    tasm::tasm_io_write_to_stdout___xfe(array0[2]);
-    tasm::tasm_io_write_to_stdout___xfe(array0[3]);
-    tasm::tasm_io_write_to_stdout___xfe(array0[4]);
-    tasm::tasm_io_write_to_stdout___xfe(array1[0]);
-    tasm::tasm_io_write_to_stdout___xfe(array1[1]);
-    tasm::tasm_io_write_to_stdout___xfe(array1[2]);
-    tasm::tasm_io_write_to_stdout___xfe(array1[3]);
-    tasm::tasm_io_write_to_stdout___xfe(array1[4]);
+    tasm::tasmlib_io_write_to_stdout___xfe(array0[0]);
+    tasm::tasmlib_io_write_to_stdout___xfe(array0[1]);
+    tasm::tasmlib_io_write_to_stdout___xfe(array0[2]);
+    tasm::tasmlib_io_write_to_stdout___xfe(array0[3]);
+    tasm::tasmlib_io_write_to_stdout___xfe(array0[4]);
+    tasm::tasmlib_io_write_to_stdout___xfe(array1[0]);
+    tasm::tasmlib_io_write_to_stdout___xfe(array1[1]);
+    tasm::tasmlib_io_write_to_stdout___xfe(array1[2]);
+    tasm::tasmlib_io_write_to_stdout___xfe(array1[3]);
+    tasm::tasmlib_io_write_to_stdout___xfe(array1[4]);
 
     // Print out earlier declarations to ensure stack-view is correct
-    tasm::tasm_io_write_to_stdout___xfe(element1);
-    tasm::tasm_io_write_to_stdout___xfe(element0);
+    tasm::tasmlib_io_write_to_stdout___xfe(element1);
+    tasm::tasmlib_io_write_to_stdout___xfe(element0);
 
     return;
 }

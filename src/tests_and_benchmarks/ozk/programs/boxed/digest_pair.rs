@@ -2,14 +2,14 @@ use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 use tasm_lib::triton_vm::prelude::*;
 
 fn main() {
-    let a: Digest = tasm::tasm_io_read_stdin___digest();
+    let a: Digest = tasm::tasmlib_io_read_stdin___digest();
     let boxed_a: Box<Digest> = { Box::<Digest>::new(a) };
 
-    let b: Digest = tasm::tasm_io_read_stdin___digest();
+    let b: Digest = tasm::tasmlib_io_read_stdin___digest();
     let boxed_b: Box<Digest> = { Box::<Digest>::new(b) };
-    let c: Digest = tasm::tasm_io_read_stdin___digest();
+    let c: Digest = tasm::tasmlib_io_read_stdin___digest();
     let boxed_c: Box<Digest> = { Box::<Digest>::new(c) };
-    let d: Digest = tasm::tasm_io_read_stdin___digest();
+    let d: Digest = tasm::tasmlib_io_read_stdin___digest();
     let boxed_d: Box<Digest> = { Box::<Digest>::new(d) };
     let boxed_e: Box<(Digest, Digest)> = Box::<(Digest, Digest)>::new((c, a));
 
@@ -23,22 +23,22 @@ fn main() {
     assert!(c == e.0);
     assert!(a == e.1);
 
-    tasm::tasm_io_write_to_stdout___digest(a);
-    tasm::tasm_io_write_to_stdout___digest(b);
-    tasm::tasm_io_write_to_stdout___digest(*boxed_c);
-    tasm::tasm_io_write_to_stdout___digest(d);
-    tasm::tasm_io_write_to_stdout___digest(*boxed_a);
-    tasm::tasm_io_write_to_stdout___digest(*boxed_b);
-    tasm::tasm_io_write_to_stdout___digest(c);
-    tasm::tasm_io_write_to_stdout___digest(*boxed_d);
+    tasm::tasmlib_io_write_to_stdout___digest(a);
+    tasm::tasmlib_io_write_to_stdout___digest(b);
+    tasm::tasmlib_io_write_to_stdout___digest(*boxed_c);
+    tasm::tasmlib_io_write_to_stdout___digest(d);
+    tasm::tasmlib_io_write_to_stdout___digest(*boxed_a);
+    tasm::tasmlib_io_write_to_stdout___digest(*boxed_b);
+    tasm::tasmlib_io_write_to_stdout___digest(c);
+    tasm::tasmlib_io_write_to_stdout___digest(*boxed_d);
 
     return;
 }
 
 #[cfg(test)]
 mod test {
+    use tasm_lib::twenty_first::math::other::random_elements;
     use tasm_lib::twenty_first::prelude::BFieldCodec;
-    use tasm_lib::twenty_first::shared_math::other::random_elements;
 
     use itertools::Itertools;
 

@@ -15,23 +15,24 @@ use num::One;
 use num::Zero;
 use tasm_lib::hashing::algebraic_hasher::hash_varlen::HashVarlen;
 use tasm_lib::memory::encode_to_memory;
-use tasm_lib::recufier::master_ext_table::air_constraint_evaluation::AirConstraintEvaluation;
-use tasm_lib::recufier::master_ext_table::air_constraint_evaluation::AirConstraintSnippetInputs;
 use tasm_lib::structure::tasm_object::decode_from_memory_with_size;
 use tasm_lib::triton_vm;
 use tasm_lib::triton_vm::prelude::*;
 use tasm_lib::triton_vm::proof_item::ProofItem;
 use tasm_lib::triton_vm::proof_item::ProofItemVariant;
-use tasm_lib::triton_vm::table::master_table::num_quotients;
+use tasm_lib::triton_vm::table::extension_table::Quotientable;
+use tasm_lib::triton_vm::table::master_table::MasterExtTable;
 use tasm_lib::triton_vm::table::NUM_BASE_COLUMNS;
 use tasm_lib::triton_vm::table::NUM_EXT_COLUMNS;
-use tasm_lib::twenty_first::shared_math::tip5::Tip5;
-use tasm_lib::twenty_first::shared_math::tip5::RATE;
-use tasm_lib::twenty_first::shared_math::traits::ModPowU32;
-use tasm_lib::twenty_first::shared_math::x_field_element::EXTENSION_DEGREE;
+use tasm_lib::twenty_first::math::tip5::Tip5;
+use tasm_lib::twenty_first::math::tip5::RATE;
+use tasm_lib::twenty_first::math::traits::ModPowU32;
+use tasm_lib::twenty_first::math::x_field_element::EXTENSION_DEGREE;
 use tasm_lib::twenty_first::util_types::algebraic_hasher::AlgebraicHasher;
 use tasm_lib::twenty_first::util_types::algebraic_hasher::Sponge;
 use tasm_lib::twenty_first::util_types::merkle_tree::MerkleTreeInclusionProof;
+use tasm_lib::verifier::master_ext_table::air_constraint_evaluation::AirConstraintEvaluation;
+use tasm_lib::verifier::master_ext_table::air_constraint_evaluation::AirConstraintSnippetInputs;
 
 use crate::tests_and_benchmarks::ozk::programs::recufier::challenges::Challenges as TasmLangChallenges;
 use crate::tests_and_benchmarks::ozk::programs::recufier::claim::Claim as TasmLangClaim;
@@ -45,6 +46,7 @@ use crate::triton_vm::table::challenges::Challenges;
 use crate::triton_vm::table::BaseRow;
 use crate::triton_vm::table::ExtensionRow;
 use crate::triton_vm::table::QuotientSegments;
+use crate::twenty_first::prelude::*;
 
 thread_local! {
     static PUB_INPUT: RefCell<Vec<BFieldElement>> = const { RefCell::new(vec![]) };
@@ -107,7 +109,7 @@ pub(super) fn load_from_memory(start_address: BFieldElement) -> Vec<BFieldElemen
 
 pub(super) fn init_vm_state(
     pub_input: Vec<BFieldElement>,
-    non_determinism: NonDeterminism<BFieldElement>,
+    non_determinism: NonDeterminism,
     program_digest: Option<Digest>,
 ) {
     let mut pub_input_reversed = pub_input;
@@ -146,19 +148,19 @@ pub(super) fn get_pub_output() -> Vec<BFieldElement> {
 }
 
 #[allow(non_snake_case)]
-pub(super) fn tasm_io_read_stdin___bfe() -> BFieldElement {
+pub(super) fn tasmlib_io_read_stdin___bfe() -> BFieldElement {
     #[allow(clippy::unwrap_used)]
     PUB_INPUT.with(|v| v.borrow_mut().pop().unwrap())
 }
 
 #[allow(non_snake_case)]
-pub(super) fn tasm_io_read_secin___bfe() -> BFieldElement {
+pub(super) fn tasmlib_io_read_secin___bfe() -> BFieldElement {
     #[allow(clippy::unwrap_used)]
     ND_INDIVIDUAL_TOKEN.with(|v| v.borrow_mut().pop().unwrap())
 }
 
 #[allow(non_snake_case)]
-pub(super) fn tasm_io_read_stdin___xfe() -> XFieldElement {
+pub(super) fn tasmlib_io_read_stdin___xfe() -> XFieldElement {
     let x2 = PUB_INPUT.with(|v| v.borrow_mut().pop().unwrap());
     let x1 = PUB_INPUT.with(|v| v.borrow_mut().pop().unwrap());
     let x0 = PUB_INPUT.with(|v| v.borrow_mut().pop().unwrap());
@@ -167,13 +169,13 @@ pub(super) fn tasm_io_read_stdin___xfe() -> XFieldElement {
 
 #[allow(dead_code)]
 #[allow(non_snake_case)]
-pub(super) fn tasm_arithmetic_u64_log_2_floor(val: u64) -> u32 {
+pub(super) fn tasmlib_arithmetic_u64_log_2_floor(val: u64) -> u32 {
     assert!(!val.is_zero());
     u64::BITS - val.leading_zeros() - 1
 }
 
 #[allow(non_snake_case)]
-pub(super) fn tasm_io_read_stdin___u32() -> u32 {
+pub(super) fn tasmlib_io_read_stdin___u32() -> u32 {
     #[allow(clippy::unwrap_used)]
     let val: u32 = PUB_INPUT
         .with(|v| v.borrow_mut().pop().unwrap())
@@ -183,7 +185,7 @@ pub(super) fn tasm_io_read_stdin___u32() -> u32 {
 }
 
 #[allow(non_snake_case)]
-pub(super) fn tasm_io_read_stdin___u64() -> u64 {
+pub(super) fn tasmlib_io_read_stdin___u64() -> u64 {
     #[allow(clippy::unwrap_used)]
     let hi: u32 = PUB_INPUT
         .with(|v| v.borrow_mut().pop().unwrap())
@@ -197,7 +199,7 @@ pub(super) fn tasm_io_read_stdin___u64() -> u64 {
 }
 
 #[allow(non_snake_case)]
-pub(super) fn tasm_io_read_stdin___u128() -> u128 {
+pub(super) fn tasmlib_io_read_stdin___u128() -> u128 {
     #[allow(clippy::unwrap_used)]
     let e3: u32 = PUB_INPUT
         .with(|v| v.borrow_mut().pop().unwrap())
@@ -219,7 +221,7 @@ pub(super) fn tasm_io_read_stdin___u128() -> u128 {
 }
 
 #[allow(non_snake_case)]
-pub(super) fn tasm_io_read_stdin___digest() -> Digest {
+pub(super) fn tasmlib_io_read_stdin___digest() -> Digest {
     let e4 = PUB_INPUT.with(|v| v.borrow_mut().pop().unwrap());
     let e3 = PUB_INPUT.with(|v| v.borrow_mut().pop().unwrap());
     let e2 = PUB_INPUT.with(|v| v.borrow_mut().pop().unwrap());
@@ -229,54 +231,54 @@ pub(super) fn tasm_io_read_stdin___digest() -> Digest {
 }
 
 #[allow(non_snake_case)]
-pub(super) fn tasm_io_write_to_stdout___bfe(x: BFieldElement) {
+pub(super) fn tasmlib_io_write_to_stdout___bfe(x: BFieldElement) {
     PUB_OUTPUT.with(|v| v.borrow_mut().push(x));
 }
 
 #[allow(non_snake_case)]
-pub(super) fn tasm_io_write_to_stdout___xfe(x: XFieldElement) {
+pub(super) fn tasmlib_io_write_to_stdout___xfe(x: XFieldElement) {
     PUB_OUTPUT.with(|v| v.borrow_mut().extend(x.coefficients.to_vec()));
 }
 
 #[allow(non_snake_case)]
-pub(super) fn tasm_io_write_to_stdout___digest(x: Digest) {
+pub(super) fn tasmlib_io_write_to_stdout___digest(x: Digest) {
     PUB_OUTPUT.with(|v| v.borrow_mut().extend(x.values().to_vec()));
 }
 
 #[allow(non_snake_case)]
-pub(super) fn tasm_io_write_to_stdout___bool(x: bool) {
+pub(super) fn tasmlib_io_write_to_stdout___bool(x: bool) {
     PUB_OUTPUT.with(|v| v.borrow_mut().push(BFieldElement::new(x as u64)));
 }
 
 #[allow(non_snake_case)]
-pub(super) fn tasm_io_write_to_stdout___u32(x: u32) {
+pub(super) fn tasmlib_io_write_to_stdout___u32(x: u32) {
     PUB_OUTPUT.with(|v| v.borrow_mut().push(BFieldElement::new(x as u64)));
 }
 
 #[allow(non_snake_case)]
-pub(super) fn tasm_io_write_to_stdout___u64(x: u64) {
+pub(super) fn tasmlib_io_write_to_stdout___u64(x: u64) {
     PUB_OUTPUT.with(|v| v.borrow_mut().extend(x.encode()));
 }
 
 #[allow(non_snake_case)]
-pub(super) fn tasm_io_write_to_stdout___u128(x: u128) {
+pub(super) fn tasmlib_io_write_to_stdout___u128(x: u128) {
     PUB_OUTPUT.with(|v| v.borrow_mut().extend(x.encode()));
 }
 
-pub(super) fn tasm_arithmetic_u64_mul_two_u64s_to_u128_u64(lhs: u64, rhs: u64) -> u128 {
+pub(super) fn tasmlib_arithmetic_u64_mul_two_u64s_to_u128_u64(lhs: u64, rhs: u64) -> u128 {
     lhs as u128 * rhs as u128
 }
 
-pub(super) fn tasm_arithmetic_xfe_to_the_fourth(base: XFieldElement) -> XFieldElement {
+pub(super) fn tasmlib_arithmetic_xfe_to_the_fourth(base: XFieldElement) -> XFieldElement {
     base.mod_pow_u32(4)
 }
 
 #[allow(clippy::type_complexity)]
 pub(super) fn wrap_main_with_io(
     main_func: &'static dyn Fn(),
-) -> Box<dyn Fn(Vec<BFieldElement>, NonDeterminism<BFieldElement>) -> Vec<BFieldElement>> {
+) -> Box<dyn Fn(Vec<BFieldElement>, NonDeterminism) -> Vec<BFieldElement>> {
     Box::new(
-        |input: Vec<BFieldElement>, non_determinism: NonDeterminism<BFieldElement>| {
+        |input: Vec<BFieldElement>, non_determinism: NonDeterminism| {
             init_vm_state(input, non_determinism, None);
             main_func();
             get_pub_output()
@@ -287,11 +289,9 @@ pub(super) fn wrap_main_with_io(
 #[allow(clippy::type_complexity)]
 pub(super) fn wrap_main_with_io_and_program_digest(
     main_func: &'static dyn Fn(),
-) -> Box<dyn Fn(Vec<BFieldElement>, NonDeterminism<BFieldElement>, Program) -> Vec<BFieldElement>> {
+) -> Box<dyn Fn(Vec<BFieldElement>, NonDeterminism, Program) -> Vec<BFieldElement>> {
     Box::new(
-        |input: Vec<BFieldElement>,
-         non_determinism: NonDeterminism<BFieldElement>,
-         program: Program| {
+        |input: Vec<BFieldElement>, non_determinism: NonDeterminism, program: Program| {
             init_vm_state(input, non_determinism, Some(program.hash::<Tip5>()));
             main_func();
             get_pub_output()
@@ -300,7 +300,7 @@ pub(super) fn wrap_main_with_io_and_program_digest(
 }
 
 // Hashing-related shadows
-pub(super) fn tasm_hashing_merkle_verify(
+pub(super) fn tasmlib_hashing_merkle_verify(
     root: Digest,
     leaf_index: u32,
     leaf: Digest,
@@ -324,7 +324,7 @@ pub(super) fn tasm_hashing_merkle_verify(
     assert!(mt_inclusion_proof.verify(root));
 }
 
-pub(super) fn tasm_hashing_algebraic_hasher_hash_varlen<T: BFieldCodec>(
+pub(super) fn tasmlib_hashing_algebraic_hasher_hash_varlen<T: BFieldCodec>(
     preimage: &[T],
     length: usize,
 ) -> Digest {
@@ -344,12 +344,12 @@ pub(super) fn _tasm_recufier_own_program_digest() -> Digest {
         .with_borrow(|digest| digest.expect("Program digest must be set for this function to work"))
 }
 
-pub(super) fn tasm_recufier_claim_instantiate_fiat_shamir_with_claim(claim: &TasmLangClaim) {
+pub(super) fn tasmlib_recufier_claim_instantiate_fiat_shamir_with_claim(claim: &TasmLangClaim) {
     SPONGE_STATE
         .with_borrow_mut(|sponge| sponge.as_mut().unwrap().pad_and_absorb_all(&claim.encode()));
 }
 
-pub(super) fn tasm_recufier_challenges_new_generic_dyn_claim_59_4(
+pub(super) fn tasmlib_recufier_challenges_new_generic_dyn_claim_59_4(
     claim: &TasmLangClaim,
 ) -> Box<TasmLangChallenges> {
     let sampled_challenges = SPONGE_STATE.with_borrow_mut(|maybe_sponge| {
@@ -379,21 +379,21 @@ fn inner_product(a: &[XFieldElement], b: &[XFieldElement]) -> XFieldElement {
         .fold(XFieldElement::zero(), |acc, (a, b)| acc + *a * *b)
 }
 
-pub(super) fn tasm_array_inner_product_of_4_xfes(
+pub(super) fn tasmlib_array_inner_product_of_4_xfes(
     a: [XFieldElement; 4],
     b: [XFieldElement; 4],
 ) -> XFieldElement {
     inner_product(&a, &b)
 }
 
-pub(super) fn tasm_array_inner_product_of_596_xfes(
+pub(super) fn tasmlib_array_inner_product_of_596_xfes(
     a: [XFieldElement; 596],
     b: [XFieldElement; 596],
 ) -> XFieldElement {
     inner_product(&a, &b)
 }
 
-pub(super) fn tasm_array_horner_evaluation_with_4_coefficients(
+pub(super) fn tasmlib_array_horner_evaluation_with_4_coefficients(
     coefficients: [XFieldElement; 4],
     indeterminate: XFieldElement,
 ) -> XFieldElement {
@@ -407,9 +407,8 @@ pub(super) fn tasm_array_horner_evaluation_with_4_coefficients(
     running_evaluation
 }
 
-const NUM_TOTAL_CONSTRAINTS: usize = num_quotients();
-pub(super) fn tasm_recufier_master_ext_table_air_constraint_evaluation(
-) -> [XFieldElement; NUM_TOTAL_CONSTRAINTS] {
+pub(super) fn tasmlib_recufier_master_ext_table_air_constraint_evaluation(
+) -> [XFieldElement; MasterExtTable::NUM_CONSTRAINTS] {
     const CHALLENGES_LENGTH: usize = Challenges::COUNT;
     let mem_layout = AirConstraintEvaluation::conventional_air_constraint_memory_layout();
     let challenges: Box<[XFieldElement; CHALLENGES_LENGTH]> = ND_MEMORY.with_borrow(|memory| {
@@ -470,12 +469,12 @@ pub(super) fn tasm_recufier_master_ext_table_air_constraint_evaluation(
         .unwrap()
 }
 
-pub(super) fn tasm_recufier_fri_verify(
+pub(super) fn tasmlib_recufier_fri_verify(
     proof_iter: &mut VmProofIter,
     fri_parameters: &FriVerify,
 ) -> Vec<(u32, XFieldElement)> {
     let fri: triton_vm::fri::Fri<Tip5> = fri_parameters._to_fri();
-    let tasm_lib_fri: tasm_lib::recufier::fri::verify::FriVerify = fri.clone().into();
+    let tasm_lib_fri: tasm_lib::verifier::fri::verify::FriVerify = fri.clone().into();
     let (advance_nd_digests_by, ret) = SPONGE_STATE.with_borrow_mut(|maybe_sponge_state| {
         let sponge_state = maybe_sponge_state.as_mut().unwrap();
         let proof_stream_before_fri = proof_iter
@@ -543,7 +542,7 @@ impl VmProofIter {
         Ok(())
     }
 
-    fn _into_proof_stream(mut self, sponge: Tip5) -> ProofStream<Tip5> {
+    fn _into_proof_stream(mut self, sponge: Tip5) -> ProofStream {
         let mut items = vec![];
         while let Some(item) = self._decode_current_item() {
             items.push(item);
@@ -650,11 +649,12 @@ vm_proof_iter_impl!(
         uses try_into_quot_segments_elements,
     FriCodeword(Vec<XFieldElement>) defines next_as_fricodeword
         uses try_into_fri_codeword,
+    FriPolynomial(Polynomial<XFieldElement>) defines next_as_fripolynomial uses try_into_fri_polynomial,
     FriResponse(FriResponse) defines next_as_friresponse
         uses try_into_fri_response,
 );
 
-pub fn tasm_array_inner_product_of_three_rows_with_weights<const N: usize>(
+pub fn tasmlib_array_inner_product_of_three_rows_with_weights<const N: usize>(
     weights: [XFieldElement; N],
     base_row: BaseRow<BFieldElement>,
     ext_row: ExtensionRow,

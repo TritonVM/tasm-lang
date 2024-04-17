@@ -20,7 +20,7 @@ fn main() {
         }
     }
 
-    tasm::tasm_io_write_to_stdout___u64(composite_number);
+    tasm::tasmlib_io_write_to_stdout___u64(composite_number);
 
     return;
 }
@@ -75,6 +75,6 @@ mod benches {
             worst_case,
             0,
         );
-        profile(name, code, common_case, true);
+        profile(name, code, common_case);
     }
 }

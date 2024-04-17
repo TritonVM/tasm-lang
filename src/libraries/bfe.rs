@@ -2,8 +2,8 @@ use itertools::Itertools;
 use num::One;
 use num::Zero;
 use tasm_lib::triton_vm::prelude::*;
-use tasm_lib::twenty_first::shared_math::traits::Inverse;
-use tasm_lib::twenty_first::shared_math::traits::PrimitiveRootOfUnity;
+use tasm_lib::twenty_first::math::traits::Inverse;
+use tasm_lib::twenty_first::math::traits::PrimitiveRootOfUnity;
 
 use crate::ast;
 use crate::ast::FnSignature;

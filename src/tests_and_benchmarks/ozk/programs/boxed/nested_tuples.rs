@@ -10,14 +10,14 @@ struct TupleStructDoubter(TupleStructDinner, Digest, TupleStructDinner);
 
 #[allow(clippy::type_complexity)]
 fn main() {
-    let a_dinner_0: u64 = tasm::tasm_io_read_stdin___u64();
-    let a_dinner_1: BFieldElement = tasm::tasm_io_read_stdin___bfe();
+    let a_dinner_0: u64 = tasm::tasmlib_io_read_stdin___u64();
+    let a_dinner_1: BFieldElement = tasm::tasmlib_io_read_stdin___bfe();
     let a_dinner: TupleStructDinner = TupleStructDinner(a_dinner_0, a_dinner_1);
 
-    let doubter_1: Digest = tasm::tasm_io_read_stdin___digest();
+    let doubter_1: Digest = tasm::tasmlib_io_read_stdin___digest();
 
-    let b_dinner_0: u64 = tasm::tasm_io_read_stdin___u64();
-    let b_dinner_1: BFieldElement = tasm::tasm_io_read_stdin___bfe();
+    let b_dinner_0: u64 = tasm::tasmlib_io_read_stdin___u64();
+    let b_dinner_1: BFieldElement = tasm::tasmlib_io_read_stdin___bfe();
     let b_dinner: TupleStructDinner = TupleStructDinner(b_dinner_0, b_dinner_1);
 
     let s: TupleStructDoubter = TupleStructDoubter(a_dinner, doubter_1, b_dinner);

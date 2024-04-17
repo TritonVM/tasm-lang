@@ -10,8 +10,8 @@ use tasm_lib::rust_shadowing_helper_functions;
 use tasm_lib::snippet_bencher::BenchmarkResult;
 use tasm_lib::triton_vm::op_stack::NUM_OP_STACK_REGISTERS;
 use tasm_lib::triton_vm::prelude::*;
-use tasm_lib::twenty_first::shared_math::b_field_element::BFIELD_ONE;
-use tasm_lib::twenty_first::shared_math::b_field_element::BFIELD_ZERO;
+use tasm_lib::twenty_first::math::b_field_element::BFIELD_ONE;
+use tasm_lib::twenty_first::math::b_field_element::BFIELD_ZERO;
 use tasm_lib::DIGEST_LENGTH;
 
 use crate::ast;
@@ -55,7 +55,7 @@ pub(crate) fn item_fn(item: syn::Item) -> syn::ItemFn {
 pub(crate) fn init_memory_from<T: BFieldCodec>(
     data_struct: &T,
     memory_address: BFieldElement,
-) -> NonDeterminism<BFieldElement> {
+) -> NonDeterminism {
     let data_struct_encoded = data_struct.encode();
     let init_ram: HashMap<BFieldElement, BFieldElement> = data_struct_encoded
         .into_iter()
@@ -95,7 +95,7 @@ pub(crate) fn execute_compiled_with_stack_and_ins_for_bench(
     code: &[LabelledInstruction],
     input_args: Vec<ast::ExprLit<Typing>>,
     std_in: Vec<BFieldElement>,
-    non_determinism: NonDeterminism<BFieldElement>,
+    non_determinism: NonDeterminism,
     expected_stack_diff: isize,
 ) -> Result<BenchmarkResult> {
     let mut stack = empty_stack();
@@ -119,7 +119,7 @@ pub(crate) fn execute_compiled_with_stack_and_ins_for_bench(
 pub(crate) struct TritonVMTestCase {
     entrypoint: EntrypointLocation,
     std_in: Vec<BFieldElement>,
-    non_determinism: NonDeterminism<BFieldElement>,
+    non_determinism: NonDeterminism,
 }
 
 impl TritonVMTestCase {
@@ -136,10 +136,7 @@ impl TritonVMTestCase {
         self
     }
 
-    pub(crate) fn with_non_determinism(
-        mut self,
-        non_determinism: NonDeterminism<BFieldElement>,
-    ) -> Self {
+    pub(crate) fn with_non_determinism(mut self, non_determinism: NonDeterminism) -> Self {
         self.non_determinism = non_determinism;
         self
     }
@@ -156,15 +153,9 @@ impl TritonVMTestCase {
     pub(crate) fn benchmark(self) -> BenchmarkResult {
         let program = self.program();
         let vm_state = self.initial_vm_state();
-        let (simulation_trace, _end_state) = program.trace_execution_of_state(vm_state).unwrap();
+        let (aet, _end_state) = program.trace_execution_of_state(vm_state).unwrap();
 
-        BenchmarkResult {
-            clock_cycle_count: simulation_trace.processor_table_length(),
-            hash_table_height: simulation_trace.hash_table_length(),
-            u32_table_height: simulation_trace.u32_table_length(),
-            op_stack_table_height: simulation_trace.op_stack_table_length(),
-            ram_table_height: simulation_trace.ram_table_length(),
-        }
+        BenchmarkResult::new(&aet)
     }
 
     fn initial_vm_state(self) -> VMState {
@@ -200,7 +191,7 @@ pub(crate) fn execute_compiled_with_stack_and_ins_for_test(
     code: &[LabelledInstruction],
     input_args: Vec<ast::ExprLit<Typing>>,
     std_in: Vec<BFieldElement>,
-    non_determinism: NonDeterminism<BFieldElement>,
+    non_determinism: NonDeterminism,
     expected_stack_diff: isize,
 ) -> Result<VMState> {
     let mut initial_stack = empty_stack();
@@ -244,7 +235,7 @@ pub(crate) fn execute_with_stack_and_ins_safe_lists(
     rust_ast: &syn::ItemFn,
     input_args: Vec<ast::ExprLit<Typing>>,
     std_in: Vec<BFieldElement>,
-    non_determinism: NonDeterminism<BFieldElement>,
+    non_determinism: NonDeterminism,
     expected_stack_diff: isize,
 ) -> Result<VMState> {
     let (code, _fn_name) = compile_for_run_test(rust_ast);
@@ -264,7 +255,7 @@ pub(crate) fn compare_compiled_prop_with_stack_and_ins(
     expected_outputs: Vec<ast::ExprLit<Typing>>,
     expected_final_memory: Option<HashMap<BFieldElement, BFieldElement>>,
     std_in: Vec<BFieldElement>,
-    non_determinism: NonDeterminism<BFieldElement>,
+    non_determinism: NonDeterminism,
 ) {
     let mut expected_final_stack = empty_stack();
     for output in expected_outputs {
@@ -345,7 +336,7 @@ pub(crate) fn compare_prop_with_stack_and_ins_unsafe_lists(
     expected_outputs: Vec<ast::ExprLit<Typing>>,
     expected_final_memory: Option<HashMap<BFieldElement, BFieldElement>>,
     std_in: Vec<BFieldElement>,
-    non_determinism: NonDeterminism<BFieldElement>,
+    non_determinism: NonDeterminism,
 ) {
     let (code, _) = compile_for_run_test(item_fn);
     compare_compiled_prop_with_stack_and_ins(
@@ -364,7 +355,7 @@ pub(crate) fn compare_prop_with_stack_and_ins_safe_lists(
     expected_outputs: Vec<ast::ExprLit<Typing>>,
     expected_final_memory: Option<HashMap<BFieldElement, BFieldElement>>,
     std_in: Vec<BFieldElement>,
-    non_determinism: NonDeterminism<BFieldElement>,
+    non_determinism: NonDeterminism,
 ) {
     let (code, _) = compile_for_run_test(item_fn);
     compare_compiled_prop_with_stack_and_ins(

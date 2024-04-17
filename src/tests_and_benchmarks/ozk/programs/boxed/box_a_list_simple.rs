@@ -11,7 +11,7 @@ mod test {
         let mut list: Vec<BFieldElement> = Vec::<BFieldElement>::default();
         list.push(BFieldElement::new(102));
         let boxed_list: Box<Vec<BFieldElement>> = Box::<Vec<BFieldElement>>::new(list);
-        tasm::tasm_io_write_to_stdout___bfe(boxed_list[0]);
+        tasm::tasmlib_io_write_to_stdout___bfe(boxed_list[0]);
 
         return;
     }

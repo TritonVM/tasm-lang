@@ -20,33 +20,33 @@ fn main() {
     ];
 
     let b: Box<BFieldElement> = Box::<BFieldElement>::new(BFieldElement::new(200));
-    bfe_array[0] = tasm::tasm_io_read_stdin___bfe();
-    bfe_array[1] = tasm::tasm_io_read_stdin___bfe();
+    bfe_array[0] = tasm::tasmlib_io_read_stdin___bfe();
+    bfe_array[1] = tasm::tasmlib_io_read_stdin___bfe();
 
     // Don't set element 2 to verify that indexing into
     // agrees with ordering of a array declaration as made above
-    let _l: BFieldElement = tasm::tasm_io_read_stdin___bfe();
-    bfe_array[3] = tasm::tasm_io_read_stdin___bfe();
-    bfe_array[4] = tasm::tasm_io_read_stdin___bfe();
+    let _l: BFieldElement = tasm::tasmlib_io_read_stdin___bfe();
+    bfe_array[3] = tasm::tasmlib_io_read_stdin___bfe();
+    bfe_array[4] = tasm::tasmlib_io_read_stdin___bfe();
     let c: BFieldElement = BFieldElement::new(400);
-    bfe_array[5] = tasm::tasm_io_read_stdin___bfe();
-    bfe_array[6] = tasm::tasm_io_read_stdin___bfe();
-    bfe_array[7] = tasm::tasm_io_read_stdin___bfe();
-    bfe_array[8] = tasm::tasm_io_read_stdin___bfe();
-    bfe_array[9] = tasm::tasm_io_read_stdin___bfe();
+    bfe_array[5] = tasm::tasmlib_io_read_stdin___bfe();
+    bfe_array[6] = tasm::tasmlib_io_read_stdin___bfe();
+    bfe_array[7] = tasm::tasmlib_io_read_stdin___bfe();
+    bfe_array[8] = tasm::tasmlib_io_read_stdin___bfe();
+    bfe_array[9] = tasm::tasmlib_io_read_stdin___bfe();
 
-    tasm::tasm_io_write_to_stdout___bfe(bfe_array[7]);
-    tasm::tasm_io_write_to_stdout___bfe(bfe_array[0]);
-    tasm::tasm_io_write_to_stdout___bfe(bfe_array[2]);
-    tasm::tasm_io_write_to_stdout___bfe(bfe_array[2]);
-    tasm::tasm_io_write_to_stdout___bfe(bfe_array[9]);
+    tasm::tasmlib_io_write_to_stdout___bfe(bfe_array[7]);
+    tasm::tasmlib_io_write_to_stdout___bfe(bfe_array[0]);
+    tasm::tasmlib_io_write_to_stdout___bfe(bfe_array[2]);
+    tasm::tasmlib_io_write_to_stdout___bfe(bfe_array[2]);
+    tasm::tasmlib_io_write_to_stdout___bfe(bfe_array[9]);
     let d: BFieldElement = BFieldElement::new(1u64 << 50);
-    tasm::tasm_io_write_to_stdout___bfe(bfe_array[9]);
-    tasm::tasm_io_write_to_stdout___bfe(bfe_array[0]);
-    tasm::tasm_io_write_to_stdout___bfe(*a);
-    tasm::tasm_io_write_to_stdout___bfe(*b);
-    tasm::tasm_io_write_to_stdout___bfe(c);
-    tasm::tasm_io_write_to_stdout___bfe(d);
+    tasm::tasmlib_io_write_to_stdout___bfe(bfe_array[9]);
+    tasm::tasmlib_io_write_to_stdout___bfe(bfe_array[0]);
+    tasm::tasmlib_io_write_to_stdout___bfe(*a);
+    tasm::tasmlib_io_write_to_stdout___bfe(*b);
+    tasm::tasmlib_io_write_to_stdout___bfe(c);
+    tasm::tasmlib_io_write_to_stdout___bfe(d);
 
     return;
 }

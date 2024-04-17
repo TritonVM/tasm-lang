@@ -23,17 +23,17 @@ mod test {
         assert!(3 == b.len());
         assert!(4 == c.len());
 
-        tasm::tasm_io_write_to_stdout___bfe(a[0]);
-        tasm::tasm_io_write_to_stdout___bfe(a[1]);
+        tasm::tasmlib_io_write_to_stdout___bfe(a[0]);
+        tasm::tasmlib_io_write_to_stdout___bfe(a[1]);
 
-        tasm::tasm_io_write_to_stdout___bfe(b[0]);
-        tasm::tasm_io_write_to_stdout___bfe(b[1]);
-        tasm::tasm_io_write_to_stdout___bfe(b[2]);
+        tasm::tasmlib_io_write_to_stdout___bfe(b[0]);
+        tasm::tasmlib_io_write_to_stdout___bfe(b[1]);
+        tasm::tasmlib_io_write_to_stdout___bfe(b[2]);
 
-        tasm::tasm_io_write_to_stdout___bfe(c[0]);
-        tasm::tasm_io_write_to_stdout___bfe(c[1]);
-        tasm::tasm_io_write_to_stdout___bfe(c[2]);
-        tasm::tasm_io_write_to_stdout___bfe(c[3]);
+        tasm::tasmlib_io_write_to_stdout___bfe(c[0]);
+        tasm::tasmlib_io_write_to_stdout___bfe(c[1]);
+        tasm::tasmlib_io_write_to_stdout___bfe(c[2]);
+        tasm::tasmlib_io_write_to_stdout___bfe(c[3]);
 
         a.push(BFieldElement::new(104));
         a.push(BFieldElement::new(105));

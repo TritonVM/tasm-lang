@@ -5,13 +5,13 @@ use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
 fn main() {
     let mut array: [XFieldElement; 3] = [XFieldElement::zero(); 3];
-    array[0] = tasm::tasm_io_read_stdin___xfe();
-    array[1] = tasm::tasm_io_read_stdin___xfe();
-    array[2] = tasm::tasm_io_read_stdin___xfe();
+    array[0] = tasm::tasmlib_io_read_stdin___xfe();
+    array[1] = tasm::tasmlib_io_read_stdin___xfe();
+    array[2] = tasm::tasmlib_io_read_stdin___xfe();
     let as_vec: Vec<XFieldElement> = array.to_vec();
-    tasm::tasm_io_write_to_stdout___xfe(as_vec[0]);
-    tasm::tasm_io_write_to_stdout___xfe(as_vec[1]);
-    tasm::tasm_io_write_to_stdout___xfe(as_vec[2]);
+    tasm::tasmlib_io_write_to_stdout___xfe(as_vec[0]);
+    tasm::tasmlib_io_write_to_stdout___xfe(as_vec[1]);
+    tasm::tasmlib_io_write_to_stdout___xfe(as_vec[2]);
 
     return;
 }
@@ -21,8 +21,8 @@ mod test {
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
-    use tasm_lib::twenty_first::shared_math::other::random_elements;
-    use tasm_lib::twenty_first::shared_math::x_field_element::EXTENSION_DEGREE;
+    use tasm_lib::twenty_first::math::other::random_elements;
+    use tasm_lib::twenty_first::math::x_field_element::EXTENSION_DEGREE;
 
     use super::*;
 

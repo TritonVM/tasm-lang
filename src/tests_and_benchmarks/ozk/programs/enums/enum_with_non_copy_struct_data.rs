@@ -21,8 +21,8 @@ fn main() {
 
     match on_stack {
         EnumType::A(non_copy_struct) => {
-            tasm::tasm_io_write_to_stdout___bfe(BFieldElement::new(8));
-            tasm::tasm_io_write_to_stdout___u32(non_copy_struct.a_list_of_digests.len() as u32);
+            tasm::tasmlib_io_write_to_stdout___bfe(BFieldElement::new(8));
+            tasm::tasmlib_io_write_to_stdout___u32(non_copy_struct.a_list_of_digests.len() as u32);
         }
     };
 

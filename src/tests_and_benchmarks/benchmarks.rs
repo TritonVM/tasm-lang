@@ -21,7 +21,7 @@ pub(crate) struct BenchmarkInput {
     pub(crate) input_args: Vec<ast::ExprLit<Typing>>,
     pub(crate) memory: HashMap<BFieldElement, BFieldElement>,
     pub(crate) std_in: Vec<BFieldElement>,
-    pub(crate) non_determinism: NonDeterminism<BFieldElement>,
+    pub(crate) non_determinism: NonDeterminism,
 }
 
 fn benchmark_code(
@@ -47,12 +47,7 @@ fn benchmark_code(
     }
 }
 
-pub(crate) fn profile(
-    function_name: String,
-    code: Vec<LabelledInstruction>,
-    case: BenchmarkInput,
-    only_aggregated_profile: bool,
-) {
+pub(crate) fn profile(function_name: String, code: Vec<LabelledInstruction>, case: BenchmarkInput) {
     // Write profile for common-case input
     let nondeterminism = case.non_determinism;
     let public_input = PublicInput::from(case.std_in);
@@ -65,13 +60,8 @@ pub(crate) fn profile(
         "Can only profile on empty init memory for now"
     );
     let program: Program = Program::new(&code);
-    let profile = tasm_lib::generate_full_profile(
-        &function_name,
-        program,
-        &public_input,
-        &nondeterminism,
-        only_aggregated_profile,
-    );
+    let profile =
+        tasm_lib::generate_full_profile(&function_name, program, &public_input, &nondeterminism);
 
     let mut path = PathBuf::new();
     path.push("profiles");

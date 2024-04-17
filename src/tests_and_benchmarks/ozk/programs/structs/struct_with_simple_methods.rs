@@ -27,8 +27,8 @@ fn main() {
     let test_struct: Box<TestStruct> =
         TestStruct::decode(&tasm::load_from_memory(BFieldElement::new(2))).unwrap();
     let other_value: u64 = 2023;
-    tasm::tasm_io_write_to_stdout___bfe(test_struct.ab_sum());
-    tasm::tasm_io_write_to_stdout___u128(test_struct.cd_sum(other_value));
+    tasm::tasmlib_io_write_to_stdout___bfe(test_struct.ab_sum());
+    tasm::tasmlib_io_write_to_stdout___u128(test_struct.cd_sum(other_value));
     return;
 }
 

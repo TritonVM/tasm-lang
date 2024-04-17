@@ -27,7 +27,7 @@ impl Recufier {
 
         Tip5WithState::init();
 
-        tasm::tasm_recufier_claim_instantiate_fiat_shamir_with_claim(claim);
+        tasm::tasmlib_recufier_claim_instantiate_fiat_shamir_with_claim(claim);
 
         // For `tasm-lang` `VmProofIter` comes from the `recufy` library. For rustc in
         // comes from `rust-shadowing`.
@@ -44,7 +44,7 @@ impl Recufier {
         // whenever the challenges are needed (which is for constraint evaluation), we can assume their
         // location and do not need to read this variable.
         let _challenges: Box<Challenges> =
-            tasm::tasm_recufier_challenges_new_generic_dyn_claim_59_4(claim);
+            tasm::tasmlib_recufier_challenges_new_generic_dyn_claim_59_4(claim);
 
         let extension_tree_merkle_root: Box<Digest> = proof_iter.next_as_merkleroot();
 
@@ -62,7 +62,7 @@ impl Recufier {
         let out_of_domain_point_next_row: XFieldElement =
             out_of_domain_point_curr_row * trace_domain_generator;
         let out_of_domain_point_curr_row_pow_num_segments: XFieldElement =
-            tasm::tasm_arithmetic_xfe_to_the_fourth(out_of_domain_point_curr_row);
+            tasm::tasmlib_arithmetic_xfe_to_the_fourth(out_of_domain_point_curr_row);
 
         let out_of_domain_curr_base_row: Box<Box<BaseRow<XFieldElement>>> =
             proof_iter.next_as_outofdomainbaserow();
@@ -82,10 +82,10 @@ impl Recufier {
         );
 
         let out_of_domain_quotient_value: XFieldElement =
-            tasm::tasm_array_inner_product_of_596_xfes(quot_codeword_weights, quotient_summands);
+            tasm::tasmlib_array_inner_product_of_596_xfes(quot_codeword_weights, quotient_summands);
 
         let sum_of_evaluated_out_of_domain_quotient_segments: XFieldElement =
-            tasm::tasm_array_horner_evaluation_with_4_coefficients(
+            tasm::tasmlib_array_horner_evaluation_with_4_coefficients(
                 *out_of_domain_curr_row_quot_segments,
                 out_of_domain_point_curr_row,
             );
@@ -117,7 +117,7 @@ impl Recufier {
                 &base_and_ext_codeword_weights,
             );
         let out_of_domain_curr_row_quotient_segment_value: XFieldElement =
-            tasm::tasm_array_inner_product_of_4_xfes(
+            tasm::tasmlib_array_inner_product_of_4_xfes(
                 quotient_segment_codeword_weights,
                 *out_of_domain_curr_row_quot_segments,
             );
@@ -147,7 +147,7 @@ impl Recufier {
         {
             let mut i: usize = 0;
             while i < num_combination_codeword_checks {
-                leaf_digests_base.push(tasm::tasm_hashing_algebraic_hasher_hash_varlen(
+                leaf_digests_base.push(tasm::tasmlib_hashing_algebraic_hasher_hash_varlen(
                     &base_table_rows[i],
                     356,
                 ));
@@ -160,7 +160,7 @@ impl Recufier {
         {
             let mut i: usize = 0;
             while i < num_combination_codeword_checks {
-                tasm::tasm_hashing_merkle_verify(
+                tasm::tasmlib_hashing_merkle_verify(
                     *base_merkle_tree_root,
                     revealed_fri_indices_and_elements[i].0,
                     leaf_digests_base[i],
@@ -183,7 +183,7 @@ impl Recufier {
         {
             let mut i: usize = 0;
             while i < num_combination_codeword_checks {
-                leaf_digests_ext.push(tasm::tasm_hashing_algebraic_hasher_hash_varlen(
+                leaf_digests_ext.push(tasm::tasmlib_hashing_algebraic_hasher_hash_varlen(
                     &ext_table_rows[i],
                     83 * 3,
                 ));
@@ -195,7 +195,7 @@ impl Recufier {
         {
             let mut i: usize = 0;
             while i < num_combination_codeword_checks {
-                tasm::tasm_hashing_merkle_verify(
+                tasm::tasmlib_hashing_merkle_verify(
                     *extension_tree_merkle_root,
                     revealed_fri_indices_and_elements[i].0,
                     leaf_digests_ext[i],
@@ -214,7 +214,7 @@ impl Recufier {
         {
             let mut i: usize = 0;
             while i < num_combination_codeword_checks {
-                leaf_digests_quot.push(tasm::tasm_hashing_algebraic_hasher_hash_varlen(
+                leaf_digests_quot.push(tasm::tasmlib_hashing_algebraic_hasher_hash_varlen(
                     &quotient_segment_elements[i],
                     4 * 3,
                 ));
@@ -226,7 +226,7 @@ impl Recufier {
         {
             let mut i: usize = 0;
             while i < num_combination_codeword_checks {
-                tasm::tasm_hashing_merkle_verify(
+                tasm::tasmlib_hashing_merkle_verify(
                     *quotient_tree_merkle_root,
                     revealed_fri_indices_and_elements[i].0,
                     leaf_digests_quot[i],
@@ -260,14 +260,14 @@ impl Recufier {
                     fri.domain_offset * fri.domain_generator.mod_pow_u32(row_idx);
 
                 let base_and_ext_opened_row_element: XFieldElement =
-                    tasm::tasm_array_inner_product_of_three_rows_with_weights(
+                    tasm::tasmlib_array_inner_product_of_three_rows_with_weights(
                         trace_weights,
                         base_row,
                         ext_row,
                     );
 
                 let quotient_segments_opened_row_element: XFieldElement =
-                    tasm::tasm_array_inner_product_of_4_xfes(
+                    tasm::tasmlib_array_inner_product_of_4_xfes(
                         quotient_segment_codeword_weights,
                         quot_segment_elements,
                     );
@@ -340,7 +340,7 @@ impl Recufier {
         // Along with the challenges, the out-of-domain rows ({base,ext}*{curr,next}) are stored at
         // a statically-known location; those locations are assumed by the next function call.
         let mut evaluated_constraints: [XFieldElement; 596] =
-            tasm::tasm_recufier_master_ext_table_air_constraint_evaluation();
+            tasm::tasmlib_recufier_master_ext_table_air_constraint_evaluation();
 
         let categories_running_sum_lengths: [usize; 4] =
             Recufier::constraint_evaluation_lengths_running_sum();
@@ -404,25 +404,25 @@ struct RecufyDebug;
 
 impl RecufyDebug {
     pub fn _dump_u32(thing: u32) {
-        tasm::tasm_io_write_to_stdout___u32(thing);
+        tasm::tasmlib_io_write_to_stdout___u32(thing);
 
         return;
     }
 
     pub fn _dump_bfe(thing: BFieldElement) {
-        tasm::tasm_io_write_to_stdout___bfe(thing);
+        tasm::tasmlib_io_write_to_stdout___bfe(thing);
 
         return;
     }
 
     pub fn _dump_xfe(thing: XFieldElement) {
-        tasm::tasm_io_write_to_stdout___xfe(thing);
+        tasm::tasmlib_io_write_to_stdout___xfe(thing);
 
         return;
     }
 
     pub fn _dump_digest(digest: Digest) {
-        tasm::tasm_io_write_to_stdout___digest(digest);
+        tasm::tasmlib_io_write_to_stdout___digest(digest);
 
         return;
     }
@@ -431,7 +431,7 @@ impl RecufyDebug {
     pub fn _dump_bfes(bfes: &Vec<BFieldElement>) {
         let mut i: usize = 0;
         while i < bfes.len() {
-            tasm::tasm_io_write_to_stdout___bfe(bfes[i]);
+            tasm::tasmlib_io_write_to_stdout___bfe(bfes[i]);
             i += 1;
         }
 
@@ -442,7 +442,7 @@ impl RecufyDebug {
     pub fn _dump_xfes(xfes: &Vec<XFieldElement>) {
         let mut i: usize = 0;
         while i < xfes.len() {
-            tasm::tasm_io_write_to_stdout___xfe(xfes[i]);
+            tasm::tasmlib_io_write_to_stdout___xfe(xfes[i]);
             i += 1;
         }
 
@@ -453,7 +453,7 @@ impl RecufyDebug {
     pub fn _dump_digests(digests: &Vec<Digest>) {
         let mut i: usize = 0;
         while i < digests.len() {
-            tasm::tasm_io_write_to_stdout___digest(digests[i]);
+            tasm::tasmlib_io_write_to_stdout___digest(digests[i]);
             i += 1;
         }
 
@@ -463,7 +463,7 @@ impl RecufyDebug {
     pub fn _sponge_state(rate: [BFieldElement; 10]) {
         let mut i: usize = 0;
         while i < 10 {
-            tasm::tasm_io_write_to_stdout___bfe(rate[i]);
+            tasm::tasmlib_io_write_to_stdout___bfe(rate[i]);
             i += 1;
         }
 
@@ -473,9 +473,11 @@ impl RecufyDebug {
 
 #[cfg(test)]
 mod test {
+    use std::collections::HashMap;
+
     use proptest::prelude::*;
     use tasm_lib::triton_vm::program::Program;
-    use tasm_lib::triton_vm::stark::StarkProofStream;
+    use tasm_lib::triton_vm::proof_stream::ProofStream;
     use tasm_lib::triton_vm::table::NUM_EXT_COLUMNS;
     use tasm_lib::triton_vm::table::NUM_QUOTIENT_SEGMENTS;
     use tasm_lib::triton_vm::triton_program;
@@ -494,24 +496,24 @@ mod test {
 
     fn verify_stark_proof() {
         // Notice that this function is dual-compiled: By rustc and by this compiler.
-        let program_digest: Digest = tasm::tasm_io_read_stdin___digest();
+        let program_digest: Digest = tasm::tasmlib_io_read_stdin___digest();
 
-        let input_length: usize = tasm::tasm_io_read_stdin___u32() as usize;
+        let input_length: usize = tasm::tasmlib_io_read_stdin___u32() as usize;
         let mut input: Vec<BFieldElement> = Vec::<BFieldElement>::default();
         {
             let mut i: usize = 0;
             while i < input_length {
-                input.push(tasm::tasm_io_read_stdin___bfe());
+                input.push(tasm::tasmlib_io_read_stdin___bfe());
                 i += 1;
             }
         }
 
-        let output_length: usize = tasm::tasm_io_read_stdin___u32() as usize;
+        let output_length: usize = tasm::tasmlib_io_read_stdin___u32() as usize;
         let mut output: Vec<BFieldElement> = Vec::<BFieldElement>::default();
         {
             let mut i: usize = 0;
             while i < output_length {
-                output.push(tasm::tasm_io_read_stdin___bfe());
+                output.push(tasm::tasmlib_io_read_stdin___bfe());
                 i += 1;
             }
         }
@@ -543,38 +545,11 @@ mod test {
     pub(super) fn non_determinism_for_verify_and_claim_and_padded_height(
         program: &Program,
         public_input: &[BFieldElement],
-        non_determinism: NonDeterminism<BFieldElement>,
-    ) -> (
-        NonDeterminism<BFieldElement>,
-        triton_vm::proof::Claim,
-        usize,
-    ) {
-        // TODO: Delete this function once `u64` types are removed from TVM interface
-        fn nd_bf_to_u64(nd: NonDeterminism<BFieldElement>) -> NonDeterminism<u64> {
-            let individual_tokens = nd
-                .individual_tokens
-                .iter()
-                .map(|&element| element.into())
-                .collect();
-            let ram = nd
-                .ram
-                .iter()
-                .map(|(&key, &value)| (key.into(), value.into()))
-                .collect();
-            NonDeterminism {
-                individual_tokens,
-                digests: nd.digests.clone(),
-                ram,
-            }
-        }
-
+        non_determinism: NonDeterminism,
+    ) -> (NonDeterminism, triton_vm::proof::Claim, usize) {
         println!("Generating proof for non-determinism");
-        let (stark, claim, proof) = triton_vm::prove_program(
-            program,
-            &public_input.iter().map(|x| x.value()).collect_vec(),
-            &nd_bf_to_u64(non_determinism),
-        )
-        .unwrap();
+        let (stark, claim, proof) =
+            triton_vm::prove_program(program, public_input.into(), non_determinism).unwrap();
         println!("Done generating proof for non-determinism");
 
         assert!(
@@ -584,15 +559,15 @@ mod test {
 
         let fri = stark.derive_fri(proof.padded_height().unwrap()).unwrap();
 
-        let proof_stream = StarkProofStream::try_from(&proof).unwrap();
+        let proof_stream = ProofStream::try_from(&proof).unwrap();
         let proof_extraction =
-            tasm_lib::recufier::fri::test_helpers::extract_fri_proof(&proof_stream, &claim, stark);
-        let tasm_lib_fri: tasm_lib::recufier::fri::verify::FriVerify = fri.into();
+            tasm_lib::verifier::fri::test_helpers::extract_fri_proof(&proof_stream, &claim, &stark);
+        let tasm_lib_fri: tasm_lib::verifier::fri::verify::FriVerify = fri.into();
         let fri_proof_digests =
             tasm_lib_fri.extract_digests_required_for_proving(&proof_extraction.fri_proof_stream);
         let padded_height = proof.padded_height().unwrap();
         let Proof(raw_proof) = proof;
-        let ram = raw_proof
+        let ram: HashMap<BFieldElement, BFieldElement> = raw_proof
             .into_iter()
             .enumerate()
             .map(|(k, v)| (BFieldElement::new(k as u64), v))
@@ -677,8 +652,7 @@ mod test {
 
     #[test]
     fn num_quotients_agree_with_tvm_num_quotients() {
-        let tvm_num_quotients = triton_vm::table::master_table::num_quotients();
-        assert_eq!(tvm_num_quotients, Recufier::num_quotients());
+        assert_eq!(MasterExtTable::NUM_CONSTRAINTS, Recufier::num_quotients());
     }
 
     #[proptest]
@@ -939,7 +913,7 @@ mod benches {
 mod profilers {
     use tasm_lib::triton_vm::program::NonDeterminism;
     use tasm_lib::triton_vm::program::Program;
-    use tasm_lib::twenty_first::shared_math::b_field_element::BFieldElement;
+    use tasm_lib::twenty_first::math::b_field_element::BFieldElement;
 
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::programs::recufier::verify::test::claim_to_stdin_for_stark_verifier;
@@ -1037,7 +1011,7 @@ mod profilers {
     fn generate_profile_of_verifier(
         inner_program: &Program,
         inner_input: &[BFieldElement],
-        inner_nd: NonDeterminism<BFieldElement>,
+        inner_nd: NonDeterminism,
         expected_inner_padded_height: Option<usize>,
     ) {
         let main_function_name = "verify_stark_proof";
@@ -1065,7 +1039,6 @@ mod profilers {
             verifier_program.clone(),
             &verifier_std_in.to_vec().into(),
             &non_determinism,
-            true,
         );
         println!("{profile}");
 

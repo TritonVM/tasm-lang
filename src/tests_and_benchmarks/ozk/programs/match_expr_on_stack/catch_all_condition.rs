@@ -16,31 +16,31 @@ fn catch_all_covers_a() {
 
     let a: u32 = match val {
         ThreeVariants::C(digest) => {
-            tasm::tasm_io_write_to_stdout___u32(101);
+            tasm::tasmlib_io_write_to_stdout___u32(101);
             let b: u64 = 100;
-            tasm::tasm_io_write_to_stdout___u32(101);
-            tasm::tasm_io_write_to_stdout___digest(digest);
+            tasm::tasmlib_io_write_to_stdout___u32(101);
+            tasm::tasmlib_io_write_to_stdout___digest(digest);
 
             2 * b as u32
         }
         ThreeVariants::B(inner) => {
-            tasm::tasm_io_write_to_stdout___u32(100);
+            tasm::tasmlib_io_write_to_stdout___u32(100);
             let b: u32 = 50;
-            tasm::tasm_io_write_to_stdout___u32(100);
-            tasm::tasm_io_write_to_stdout___u128(inner);
+            tasm::tasmlib_io_write_to_stdout___u32(100);
+            tasm::tasmlib_io_write_to_stdout___u128(inner);
 
             b * 2
         }
         _ => {
-            tasm::tasm_io_write_to_stdout___u32(102);
+            tasm::tasmlib_io_write_to_stdout___u32(102);
             let b: u64 = 200;
-            tasm::tasm_io_write_to_stdout___u32(102);
+            tasm::tasmlib_io_write_to_stdout___u32(102);
 
             2 * b as u32
         }
     };
 
-    tasm::tasm_io_write_to_stdout___u32(a);
+    tasm::tasmlib_io_write_to_stdout___u32(a);
 
     return;
 }
@@ -71,30 +71,30 @@ fn catch_all_covers_b() {
     let val: ThreeVariants = ThreeVariants::random_from_std_in();
     let a: u32 = match val {
         ThreeVariants::A => {
-            tasm::tasm_io_write_to_stdout___u32(100);
+            tasm::tasmlib_io_write_to_stdout___u32(100);
             let b: u32 = 50;
-            tasm::tasm_io_write_to_stdout___u32(100);
+            tasm::tasmlib_io_write_to_stdout___u32(100);
 
             b * 2
         }
         ThreeVariants::C(digest) => {
-            tasm::tasm_io_write_to_stdout___u32(101);
+            tasm::tasmlib_io_write_to_stdout___u32(101);
             let b: u64 = 100;
-            tasm::tasm_io_write_to_stdout___u32(101);
-            tasm::tasm_io_write_to_stdout___digest(digest);
+            tasm::tasmlib_io_write_to_stdout___u32(101);
+            tasm::tasmlib_io_write_to_stdout___digest(digest);
 
             2 * b as u32
         }
         _ => {
-            tasm::tasm_io_write_to_stdout___u32(102);
+            tasm::tasmlib_io_write_to_stdout___u32(102);
             let b: u64 = 200;
-            tasm::tasm_io_write_to_stdout___u32(102);
+            tasm::tasmlib_io_write_to_stdout___u32(102);
 
             2 * b as u32
         }
     };
 
-    tasm::tasm_io_write_to_stdout___u32(a);
+    tasm::tasmlib_io_write_to_stdout___u32(a);
 
     return;
 }
@@ -126,29 +126,29 @@ fn catch_all_covers_c() {
 
     let a: u32 = match val {
         ThreeVariants::A => {
-            tasm::tasm_io_write_to_stdout___u32(100);
+            tasm::tasmlib_io_write_to_stdout___u32(100);
             let b: u32 = 50;
-            tasm::tasm_io_write_to_stdout___u32(100);
+            tasm::tasmlib_io_write_to_stdout___u32(100);
 
             b * 2
         }
         ThreeVariants::B(_) => {
-            tasm::tasm_io_write_to_stdout___u32(101);
+            tasm::tasmlib_io_write_to_stdout___u32(101);
             let b: u64 = 100;
-            tasm::tasm_io_write_to_stdout___u32(101);
+            tasm::tasmlib_io_write_to_stdout___u32(101);
 
             2 * b as u32
         }
         _ => {
-            tasm::tasm_io_write_to_stdout___u32(102);
+            tasm::tasmlib_io_write_to_stdout___u32(102);
             let b: u64 = 200;
-            tasm::tasm_io_write_to_stdout___u32(102);
+            tasm::tasmlib_io_write_to_stdout___u32(102);
 
             2 * b as u32
         }
     };
 
-    tasm::tasm_io_write_to_stdout___u32(a);
+    tasm::tasmlib_io_write_to_stdout___u32(a);
 
     return;
 }
@@ -181,24 +181,24 @@ fn catch_all_covers_a_and_b() {
 
     let a: u32 = match val {
         ThreeVariants::C(digest) => {
-            tasm::tasm_io_write_to_stdout___u32(101);
+            tasm::tasmlib_io_write_to_stdout___u32(101);
             let b: u64 = 100;
-            tasm::tasm_io_write_to_stdout___u32(101);
-            tasm::tasm_io_write_to_stdout___digest(digest);
+            tasm::tasmlib_io_write_to_stdout___u32(101);
+            tasm::tasmlib_io_write_to_stdout___digest(digest);
 
             2 * b as u32
         }
         _ => {
             let local_val_0: u32 = 1234;
-            tasm::tasm_io_write_to_stdout___u32(102);
-            tasm::tasm_io_write_to_stdout___u32(102);
+            tasm::tasmlib_io_write_to_stdout___u32(102);
+            tasm::tasmlib_io_write_to_stdout___u32(102);
             let local_val_1: u32 = 434343;
 
             2 * function_val + local_val_0 + local_val_1
         }
     };
 
-    tasm::tasm_io_write_to_stdout___u32(a);
+    tasm::tasmlib_io_write_to_stdout___u32(a);
 
     return;
 }
@@ -231,26 +231,26 @@ fn catch_all_covers_a_and_c() {
 
     let a: u32 = match val {
         ThreeVariants::B(_) => {
-            tasm::tasm_io_write_to_stdout___u32(101111);
+            tasm::tasmlib_io_write_to_stdout___u32(101111);
             let b: u64 = 999;
-            tasm::tasm_io_write_to_stdout___u32(101111);
-            tasm::tasm_io_write_to_stdout___u32(function_val);
+            tasm::tasmlib_io_write_to_stdout___u32(101111);
+            tasm::tasmlib_io_write_to_stdout___u32(function_val);
 
             2 * b as u32
         }
         _ => {
             let local_val_0: u32 = 1234;
-            tasm::tasm_io_write_to_stdout___u32(102);
-            tasm::tasm_io_write_to_stdout___u32(102);
-            tasm::tasm_io_write_to_stdout___u32(function_val + 3);
+            tasm::tasmlib_io_write_to_stdout___u32(102);
+            tasm::tasmlib_io_write_to_stdout___u32(102);
+            tasm::tasmlib_io_write_to_stdout___u32(function_val + 3);
             let local_val_1: u32 = 434343;
 
             2 * function_val + local_val_0 + local_val_1
         }
     };
 
-    tasm::tasm_io_write_to_stdout___u32(a);
-    tasm::tasm_io_write_to_stdout___u32(function_val);
+    tasm::tasmlib_io_write_to_stdout___u32(a);
+    tasm::tasmlib_io_write_to_stdout___u32(function_val);
 
     return;
 }
@@ -281,23 +281,23 @@ fn catch_all_covers_b_and_c() {
     let val: ThreeVariants = ThreeVariants::random_from_std_in();
     let a: u32 = match val {
         ThreeVariants::A => {
-            tasm::tasm_io_write_to_stdout___u32(100);
+            tasm::tasmlib_io_write_to_stdout___u32(100);
             let b: u32 = 50;
-            tasm::tasm_io_write_to_stdout___u32(100);
+            tasm::tasmlib_io_write_to_stdout___u32(100);
 
             b * 2
         }
         _ => {
             let local_val_0: u32 = 1234;
-            tasm::tasm_io_write_to_stdout___u32(102);
-            tasm::tasm_io_write_to_stdout___u32(102);
+            tasm::tasmlib_io_write_to_stdout___u32(102);
+            tasm::tasmlib_io_write_to_stdout___u32(102);
             let local_val_1: u32 = 434343;
 
             2 * local_val_0 + local_val_1
         }
     };
 
-    tasm::tasm_io_write_to_stdout___u32(a);
+    tasm::tasmlib_io_write_to_stdout___u32(a);
 
     return;
 }
@@ -330,15 +330,15 @@ fn catch_all_covers_a_b_c() {
     let a: u32 = match val {
         _ => {
             let local_val_0: u32 = 1234;
-            tasm::tasm_io_write_to_stdout___u32(102);
-            tasm::tasm_io_write_to_stdout___u32(102);
+            tasm::tasmlib_io_write_to_stdout___u32(102);
+            tasm::tasmlib_io_write_to_stdout___u32(102);
             let local_val_1: u32 = 434343;
 
             2 * local_val_0 + local_val_1
         }
     };
 
-    tasm::tasm_io_write_to_stdout___u32(a);
+    tasm::tasmlib_io_write_to_stdout___u32(a);
 
     return;
 }

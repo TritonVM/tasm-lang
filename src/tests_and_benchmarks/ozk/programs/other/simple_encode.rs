@@ -3,17 +3,17 @@ use tasm_lib::triton_vm::prelude::*;
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
 fn main() {
-    let a: Digest = tasm::tasm_io_read_stdin___digest();
-    let b: Digest = tasm::tasm_io_read_stdin___digest();
+    let a: Digest = tasm::tasmlib_io_read_stdin___digest();
+    let b: Digest = tasm::tasmlib_io_read_stdin___digest();
 
     let a_list: Vec<BFieldElement> = a.encode();
     let b_list: Vec<BFieldElement> = b.encode();
 
-    tasm::tasm_io_write_to_stdout___bfe(a_list[3]);
-    tasm::tasm_io_write_to_stdout___bfe(b_list[4]);
-    tasm::tasm_io_write_to_stdout___bfe(a_list[4]);
-    tasm::tasm_io_write_to_stdout___bfe(a_list[1]);
-    tasm::tasm_io_write_to_stdout___bfe(b_list[0]);
+    tasm::tasmlib_io_write_to_stdout___bfe(a_list[3]);
+    tasm::tasmlib_io_write_to_stdout___bfe(b_list[4]);
+    tasm::tasmlib_io_write_to_stdout___bfe(a_list[4]);
+    tasm::tasmlib_io_write_to_stdout___bfe(a_list[1]);
+    tasm::tasmlib_io_write_to_stdout___bfe(b_list[0]);
 
     return;
 }
@@ -21,7 +21,7 @@ fn main() {
 #[cfg(test)]
 mod test {
 
-    use tasm_lib::twenty_first::shared_math::other::random_elements;
+    use tasm_lib::twenty_first::math::other::random_elements;
 
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;

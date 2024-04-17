@@ -87,7 +87,7 @@ mod test {
         let list_pointer = BFieldElement::new(100);
         let list_length = BFieldElement::new(1);
         let item = XFieldElement::new([50, 0, 0].map(BFieldElement::new));
-        let init_memory = [list_length]
+        let init_memory: HashMap<BFieldElement, BFieldElement> = [list_length]
             .into_iter()
             .chain(item.coefficients)
             .enumerate()

@@ -9,19 +9,19 @@ enum EnumDynSizedVariantField {
 #[allow(clippy::vec_init_then_push)]
 fn main() {
     let mut bfes: Vec<BFieldElement> = Vec::<BFieldElement>::default();
-    bfes.push(tasm::tasm_io_read_stdin___bfe());
-    bfes.push(tasm::tasm_io_read_stdin___bfe());
-    bfes.push(tasm::tasm_io_read_stdin___bfe());
+    bfes.push(tasm::tasmlib_io_read_stdin___bfe());
+    bfes.push(tasm::tasmlib_io_read_stdin___bfe());
+    bfes.push(tasm::tasmlib_io_read_stdin___bfe());
     let a: EnumDynSizedVariantField = EnumDynSizedVariantField::A(bfes);
 
     let boxed: Box<EnumDynSizedVariantField> = Box::<EnumDynSizedVariantField>::new(a);
 
     match boxed.as_ref() {
         EnumDynSizedVariantField::A(bfes_again) => {
-            tasm::tasm_io_write_to_stdout___bfe(bfes_again[2]);
-            tasm::tasm_io_write_to_stdout___bfe(bfes_again[0]);
-            tasm::tasm_io_write_to_stdout___bfe(bfes_again[1]);
-            tasm::tasm_io_write_to_stdout___bfe(bfes_again[1]);
+            tasm::tasmlib_io_write_to_stdout___bfe(bfes_again[2]);
+            tasm::tasmlib_io_write_to_stdout___bfe(bfes_again[0]);
+            tasm::tasmlib_io_write_to_stdout___bfe(bfes_again[1]);
+            tasm::tasmlib_io_write_to_stdout___bfe(bfes_again[1]);
         }
     };
 

@@ -1,65 +1,33 @@
 recufier_merkle_root:
-
-# aggregated unsorted
- main:, 2266, 1;
-   merkle_root:, 2247, 0.9916152;
-     tasm_arithmetic_u32_safeadd:, 8, 0.0035304502;
-     _fn_call__LDigestR_Digest_30_else:, 2219, 0.9792586;
-       tasm_arithmetic_u32_safesub:, 22, 0.009708738;
-       merkle_root:, 2142, 0.94527805;
-         tasm_arithmetic_u32_safeadd:, 16, 0.0070609003;
-         _fn_call__LDigestR_Digest_30_else:, 2086, 0.9205649;
-           tasm_arithmetic_u32_safesub:, 44, 0.019417476;
-           merkle_root:, 1932, 0.85260373;
-             tasm_arithmetic_u32_safeadd:, 32, 0.014121801;
-             _fn_call__LDigestR_Digest_30_else:, 1820, 0.8031774;
-               tasm_arithmetic_u32_safesub:, 88, 0.03883495;
-               merkle_root:, 1512, 0.6672551;
-                 tasm_arithmetic_u32_safeadd:, 64, 0.028243601;
-                 _fn_call__LDigestR_Digest_30_else:, 1288, 0.56840247;
-                   tasm_arithmetic_u32_safesub:, 176, 0.0776699;
-                   merkle_root:, 672, 0.2965578;
-                     tasm_arithmetic_u32_safeadd:, 128, 0.056487203;
-                     _leafs_start__LDigestR_Digest_10_then:, 224, 0.098852605;
-                   tasm_arithmetic_u32_safeadd:, 64, 0.028243601;
-                   hash_pair:, 16, 0.0070609003;
-               tasm_arithmetic_u32_safeadd:, 32, 0.014121801;
-               hash_pair:, 8, 0.0035304502;
-           tasm_arithmetic_u32_safeadd:, 16, 0.0070609003;
-           hash_pair:, 4, 0.0017652251;
-       tasm_arithmetic_u32_safeadd:, 8, 0.0035304502;
-       hash_pair:, 2, 0.00088261254;
-   tasm_io_write_to_stdout___digest:, 2, 0.00088261254;
- total:, 2268, 1.0008826;
-
-# aggregated + sorted
-       hash_pair:, 2, 0.00088261254;
-   tasm_io_write_to_stdout___digest:, 2, 0.00088261254;
-           hash_pair:, 4, 0.0017652251;
-     tasm_arithmetic_u32_safeadd:, 8, 0.0035304502;
-               hash_pair:, 8, 0.0035304502;
-       tasm_arithmetic_u32_safeadd:, 8, 0.0035304502;
-         tasm_arithmetic_u32_safeadd:, 16, 0.0070609003;
-                   hash_pair:, 16, 0.0070609003;
-           tasm_arithmetic_u32_safeadd:, 16, 0.0070609003;
-       tasm_arithmetic_u32_safesub:, 22, 0.009708738;
-             tasm_arithmetic_u32_safeadd:, 32, 0.014121801;
-               tasm_arithmetic_u32_safeadd:, 32, 0.014121801;
-           tasm_arithmetic_u32_safesub:, 44, 0.019417476;
-                 tasm_arithmetic_u32_safeadd:, 64, 0.028243601;
-                   tasm_arithmetic_u32_safeadd:, 64, 0.028243601;
-               tasm_arithmetic_u32_safesub:, 88, 0.03883495;
-                     tasm_arithmetic_u32_safeadd:, 128, 0.056487203;
-                   tasm_arithmetic_u32_safesub:, 176, 0.0776699;
-                     _leafs_start__LDigestR_Digest_10_then:, 224, 0.098852605;
-                   merkle_root:, 672, 0.2965578;
-                 _fn_call__LDigestR_Digest_30_else:, 1288, 0.56840247;
-               merkle_root:, 1512, 0.6672551;
-             _fn_call__LDigestR_Digest_30_else:, 1820, 0.8031774;
-           merkle_root:, 1932, 0.85260373;
-         _fn_call__LDigestR_Digest_30_else:, 2086, 0.9205649;
-       merkle_root:, 2142, 0.94527805;
-     _fn_call__LDigestR_Digest_30_else:, 2219, 0.9792586;
-   merkle_root:, 2247, 0.9916152;
- main:, 2266, 1;
- total:, 2268, 1.0008826;
+| Subroutine                                                                    |            Processor |             Op Stack |                  RAM |                 Hash |                  U32 |
+|:------------------------------------------------------------------------------|---------------------:|---------------------:|---------------------:|---------------------:|---------------------:|
+| main                                                                          |        2266 ( 99.9%) |        1768 (100.0%) |          81 (100.0%) |          90 ( 40.5%) |          91 (100.0%) |
+| ··merkle_root                                                                 |        2247 ( 99.1%) |        1744 ( 98.6%) |          80 ( 98.8%) |          90 ( 40.5%) |          91 (100.0%) |
+| ····tasmlib_arithmetic_u32_safeadd                                            |           8 (  0.4%) |           7 (  0.4%) |           0 (  0.0%) |           0 (  0.0%) |           2 (  2.2%) |
+| ····_fn_call__LDigestR_Digest_30_else                                         |        2219 ( 97.8%) |        1727 ( 97.7%) |          80 ( 98.8%) |          90 ( 40.5%) |          89 ( 97.8%) |
+| ······tasmlib_arithmetic_u32_safesub                                          |          22 (  1.0%) |          18 (  1.0%) |           0 (  0.0%) |           0 (  0.0%) |          11 ( 12.1%) |
+| ······merkle_root                                                             |        2142 ( 94.4%) |        1664 ( 94.1%) |          80 ( 98.8%) |          84 ( 37.8%) |          69 ( 75.8%) |
+| ········tasmlib_arithmetic_u32_safeadd                                        |          16 (  0.7%) |          14 (  0.8%) |           0 (  0.0%) |           0 (  0.0%) |           5 (  5.5%) |
+| ········_fn_call__LDigestR_Digest_30_else                                     |        2086 ( 92.0%) |        1630 ( 92.2%) |          80 ( 98.8%) |          84 ( 37.8%) |          64 ( 70.3%) |
+| ··········tasmlib_arithmetic_u32_safesub                                      |          44 (  1.9%) |          36 (  2.0%) |           0 (  0.0%) |           0 (  0.0%) |           9 (  9.9%) |
+| ··········merkle_root                                                         |        1932 ( 85.2%) |        1504 ( 85.1%) |          80 ( 98.8%) |          72 ( 32.4%) |          50 ( 54.9%) |
+| ············tasmlib_arithmetic_u32_safeadd                                    |          32 (  1.4%) |          28 (  1.6%) |           0 (  0.0%) |           0 (  0.0%) |           9 (  9.9%) |
+| ············_fn_call__LDigestR_Digest_30_else                                 |        1820 ( 80.2%) |        1436 ( 81.2%) |          80 ( 98.8%) |          72 ( 32.4%) |          41 ( 45.1%) |
+| ··············tasmlib_arithmetic_u32_safesub                                  |          88 (  3.9%) |          72 (  4.1%) |           0 (  0.0%) |           0 (  0.0%) |          17 ( 18.7%) |
+| ··············merkle_root                                                     |        1512 ( 66.7%) |        1184 ( 67.0%) |          80 ( 98.8%) |          48 ( 21.6%) |          20 ( 22.0%) |
+| ················tasmlib_arithmetic_u32_safeadd                                |          64 (  2.8%) |          56 (  3.2%) |           0 (  0.0%) |           0 (  0.0%) |          17 ( 18.7%) |
+| ················_fn_call__LDigestR_Digest_30_else                             |        1288 ( 56.8%) |        1048 ( 59.3%) |          80 ( 98.8%) |          48 ( 21.6%) |           3 (  3.3%) |
+| ··················tasmlib_arithmetic_u32_safesub                              |         176 (  7.8%) |         144 (  8.1%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ··················merkle_root                                                 |         672 ( 29.6%) |         544 ( 30.8%) |          80 ( 98.8%) |           0 (  0.0%) |           0 (  0.0%) |
+| ····················tasmlib_arithmetic_u32_safeadd                            |         128 (  5.6%) |         112 (  6.3%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ····················_leafs_start__LDigestR_Digest_10_then                     |         224 (  9.9%) |         272 ( 15.4%) |          80 ( 98.8%) |           0 (  0.0%) |           0 (  0.0%) |
+| ··················tasmlib_arithmetic_u32_safeadd                              |          64 (  2.8%) |          56 (  3.2%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ··················hash_pair                                                   |          16 (  0.7%) |          40 (  2.3%) |           0 (  0.0%) |          48 ( 21.6%) |           0 (  0.0%) |
+| ··············tasmlib_arithmetic_u32_safeadd                                  |          32 (  1.4%) |          28 (  1.6%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ··············hash_pair                                                       |           8 (  0.4%) |          20 (  1.1%) |           0 (  0.0%) |          24 ( 10.8%) |           0 (  0.0%) |
+| ··········tasmlib_arithmetic_u32_safeadd                                      |          16 (  0.7%) |          14 (  0.8%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ··········hash_pair                                                           |           4 (  0.2%) |          10 (  0.6%) |           0 (  0.0%) |          12 (  5.4%) |           0 (  0.0%) |
+| ······tasmlib_arithmetic_u32_safeadd                                          |           8 (  0.4%) |           7 (  0.4%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ······hash_pair                                                               |           2 (  0.1%) |           5 (  0.3%) |           0 (  0.0%) |           6 (  2.7%) |           0 (  0.0%) |
+| ··tasmlib_io_write_to_stdout___digest                                         |           2 (  0.1%) |           5 (  0.3%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| Total                                                                         |        2268 (100.0%) |        1768 (100.0%) |          81 (100.0%) |         222 (100.0%) |          91 (100.0%) |

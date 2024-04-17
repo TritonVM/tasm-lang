@@ -3,7 +3,7 @@ use tasm_lib::triton_vm::prelude::*;
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
 fn acess_boxed_bfe_value() {
-    let a: BFieldElement = tasm::tasm_io_read_stdin___bfe();
+    let a: BFieldElement = tasm::tasmlib_io_read_stdin___bfe();
     let a_value: u64 = a.value();
     let boxed: Box<BFieldElement> = Box::<BFieldElement>::new(a);
     let boxed_value: u64 = boxed.value();

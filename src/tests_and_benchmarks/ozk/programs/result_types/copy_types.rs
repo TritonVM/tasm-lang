@@ -4,11 +4,11 @@ use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
 #[allow(clippy::unnecessary_literal_unwrap)]
 fn main() {
-    let bfe: BFieldElement = tasm::tasm_io_read_stdin___bfe();
+    let bfe: BFieldElement = tasm::tasmlib_io_read_stdin___bfe();
     let ok_bfe: Result<BFieldElement, ()> = Ok(bfe);
     match ok_bfe {
         Ok(inner) => {
-            tasm::tasm_io_write_to_stdout___bfe(inner);
+            tasm::tasmlib_io_write_to_stdout___bfe(inner);
         }
         Err(_) => {
             panic!();
@@ -29,18 +29,18 @@ fn main() {
         Box::<Result<XFieldElement, ()>>::new(ok_xfe);
     assert!(boxed_ok_xfe.is_ok());
 
-    let digest: Digest = tasm::tasm_io_read_stdin___digest();
+    let digest: Digest = tasm::tasmlib_io_read_stdin___digest();
     let ok_digest: Result<Digest, ()> = Ok(digest);
-    tasm::tasm_io_write_to_stdout___digest(ok_digest.unwrap());
+    tasm::tasmlib_io_write_to_stdout___digest(ok_digest.unwrap());
     let boxed_ok_digest: Box<Result<Digest, ()>> = Box::<Result<Digest, ()>>::new(ok_digest);
     assert!(boxed_ok_digest.is_ok());
     assert!(!boxed_ok_digest.is_err());
 
-    tasm::tasm_io_write_to_stdout___bfe(bfe);
+    tasm::tasmlib_io_write_to_stdout___bfe(bfe);
 
     match ok_bfe {
         Result::Ok(bfe_again) => {
-            tasm::tasm_io_write_to_stdout___bfe(bfe_again);
+            tasm::tasmlib_io_write_to_stdout___bfe(bfe_again);
             assert!(bfe == bfe_again);
         }
         Result::Err(_) => {
@@ -50,9 +50,9 @@ fn main() {
 
     match ok_xfe {
         Result::Ok(xfe_again) => {
-            tasm::tasm_io_write_to_stdout___bfe(bfe);
-            tasm::tasm_io_write_to_stdout___xfe(xfe_again);
-            tasm::tasm_io_write_to_stdout___bfe(bfe);
+            tasm::tasmlib_io_write_to_stdout___bfe(bfe);
+            tasm::tasmlib_io_write_to_stdout___xfe(xfe_again);
+            tasm::tasmlib_io_write_to_stdout___bfe(bfe);
             assert!(xfe == xfe_again);
         }
         Result::Err(_) => {
@@ -62,7 +62,7 @@ fn main() {
 
     match ok_digest {
         Result::Ok(digest_again) => {
-            tasm::tasm_io_write_to_stdout___digest(digest_again);
+            tasm::tasmlib_io_write_to_stdout___digest(digest_again);
             assert!(digest == digest_again);
         }
         Result::Err(_) => {
@@ -78,7 +78,7 @@ fn main() {
             panic!();
         }
         Result::Err(_) => {
-            tasm::tasm_io_write_to_stdout___bfe(bfe);
+            tasm::tasmlib_io_write_to_stdout___bfe(bfe);
         }
     };
     match xfe_err {
@@ -86,7 +86,7 @@ fn main() {
             panic!();
         }
         Result::Err(_) => {
-            tasm::tasm_io_write_to_stdout___bfe(bfe);
+            tasm::tasmlib_io_write_to_stdout___bfe(bfe);
         }
     };
     match digest_err {
@@ -94,12 +94,12 @@ fn main() {
             panic!();
         }
         Result::Err(_) => {
-            tasm::tasm_io_write_to_stdout___bfe(bfe);
+            tasm::tasmlib_io_write_to_stdout___bfe(bfe);
         }
     };
 
-    tasm::tasm_io_write_to_stdout___xfe(xfe);
-    tasm::tasm_io_write_to_stdout___bfe(bfe);
+    tasm::tasmlib_io_write_to_stdout___xfe(xfe);
+    tasm::tasmlib_io_write_to_stdout___bfe(bfe);
 
     return;
 }

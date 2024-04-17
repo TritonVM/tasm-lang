@@ -17,7 +17,6 @@ use tasm_lib::triton_vm::prelude::*;
 use tasm_lib::twenty_first::prelude::tip5::DIGEST_LENGTH;
 use tasm_lib::twenty_first::prelude::AlgebraicHasher;
 use tasm_lib::twenty_first::prelude::U32s;
-use tasm_lib::twenty_first::shared_math::other::log_2_floor;
 use tasm_lib::twenty_first::util_types::algebraic_hasher::Sponge;
 use tasm_lib::twenty_first::util_types::merkle_tree::CpuParallel;
 use tasm_lib::twenty_first::util_types::merkle_tree_maker::MerkleTreeMaker;
@@ -234,9 +233,11 @@ pub(crate) fn pseudorandom_mmra_with_mps(
         }
 
         // generate root and authentication paths
-        let tree_height =
-            log_2_floor(*leafs_and_mt_indices.first().map(|(_l, i, _o)| i).unwrap() as u128)
-                as usize;
+        let tree_height = leafs_and_mt_indices
+            .first()
+            .map(|(_l, i, _o)| i)
+            .unwrap()
+            .ilog2() as usize;
         let (root, authentication_paths) = pseudorandom_merkle_root_with_authentication_paths(
             rng.gen(),
             tree_height,
@@ -284,7 +285,7 @@ pub(crate) fn pseudorandom_mmra_with_mps(
         for (&(leaf, _mt_index, _original_index), mp) in
             leafs_and_mt_indices.iter().zip(membership_proofs.iter())
         {
-            assert!(mp.verify(&dummy_peaks, leaf, leaf_count).0);
+            assert!(mp.verify(&dummy_peaks, leaf, leaf_count));
         }
 
         // collect membership proofs in vector, with indices matching those of the supplied leafs
@@ -299,7 +300,7 @@ pub(crate) fn pseudorandom_mmra_with_mps(
 
     // sanity check
     for (&leaf, mp) in leafs.iter().zip(mps.iter()) {
-        assert!(mp.verify(&mmra.get_peaks(), leaf, mmra.count_leaves()).0);
+        assert!(mp.verify(&mmra.get_peaks(), leaf, mmra.count_leaves()));
     }
 
     (mmra, mps)
@@ -717,7 +718,7 @@ pub(crate) fn pseudorandom_removal_record_integrity_witness(
 
     for (mp, &cc) in mmr_mps.iter().zip_eq(canonical_commitments.iter()) {
         assert!(
-            mp.verify(&aocl.get_peaks(), cc, aocl.count_leaves()).0,
+            mp.verify(&aocl.get_peaks(), cc, aocl.count_leaves()),
             "Returned MPs must be valid for returned AOCL"
         );
     }

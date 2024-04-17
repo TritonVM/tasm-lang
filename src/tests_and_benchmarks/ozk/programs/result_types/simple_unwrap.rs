@@ -9,12 +9,12 @@ fn main() {
     let bfe_again: BFieldElement = result_bfe.unwrap();
     assert!(bfe == bfe_again);
 
-    let xfe: XFieldElement = tasm::tasm_io_read_stdin___xfe();
+    let xfe: XFieldElement = tasm::tasmlib_io_read_stdin___xfe();
     let result_xfe: Result<XFieldElement, ()> = Ok(xfe);
     let xfe_again: XFieldElement = result_xfe.unwrap();
     assert!(xfe == xfe_again);
 
-    let digest: Digest = tasm::tasm_io_read_stdin___digest();
+    let digest: Digest = tasm::tasmlib_io_read_stdin___digest();
     let result_digest: Result<Digest, ()> = Ok(digest);
     let digest_again: Digest = result_digest.unwrap();
     assert!(digest == digest_again);
@@ -25,7 +25,7 @@ fn main() {
 mod test {
     use std::default::Default;
 
-    use tasm_lib::twenty_first::shared_math::other::random_elements;
+    use tasm_lib::twenty_first::math::other::random_elements;
 
     use itertools::Itertools;
 

@@ -15,7 +15,7 @@ fn main() {
         previous = tmp;
     }
 
-    tasm::tasm_io_write_to_stdout___u32(acc);
+    tasm::tasmlib_io_write_to_stdout___u32(acc);
 
     return;
 }
@@ -72,6 +72,6 @@ mod benches {
             worst_case,
             0,
         );
-        profile(name, code, common_case, true);
+        profile(name, code, common_case);
     }
 }

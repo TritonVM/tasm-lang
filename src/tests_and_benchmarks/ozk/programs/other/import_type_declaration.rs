@@ -6,11 +6,11 @@ fn main() {
     let ts: Box<SimpleStruct> =
         SimpleStruct::decode(&tasm::load_from_memory(BFieldElement::new(300))).unwrap();
 
-    tasm::tasm_io_write_to_stdout___u128(ts.a);
-    tasm::tasm_io_write_to_stdout___bfe(ts.b);
-    tasm::tasm_io_write_to_stdout___bool(ts.c);
-    tasm::tasm_io_write_to_stdout___u32(ts.d.len() as u32);
-    tasm::tasm_io_write_to_stdout___digest(ts.e);
+    tasm::tasmlib_io_write_to_stdout___u128(ts.a);
+    tasm::tasmlib_io_write_to_stdout___bfe(ts.b);
+    tasm::tasmlib_io_write_to_stdout___bool(ts.c);
+    tasm::tasmlib_io_write_to_stdout___u32(ts.d.len() as u32);
+    tasm::tasmlib_io_write_to_stdout___digest(ts.e);
 
     return;
 }

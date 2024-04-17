@@ -2,8 +2,8 @@
 #[cfg(test)]
 mod test {
     use tasm_lib::triton_vm::prelude::*;
+    use tasm_lib::twenty_first::math::other::random_elements;
     use tasm_lib::twenty_first::prelude::AlgebraicHasher;
-    use tasm_lib::twenty_first::shared_math::other::random_elements;
     use tasm_lib::twenty_first::util_types::merkle_tree::CpuParallel;
     use tasm_lib::twenty_first::util_types::merkle_tree::MerkleTree;
     use tasm_lib::twenty_first::util_types::merkle_tree_maker::MerkleTreeMaker;
@@ -65,7 +65,7 @@ mod test {
         let length: usize = elements.len();
 
         let root: Digest = merkle_root(&(*elements), 0usize, length);
-        tasm::tasm_io_write_to_stdout___digest(root);
+        tasm::tasmlib_io_write_to_stdout___digest(root);
 
         return;
     }
@@ -73,7 +73,7 @@ mod test {
 
 mod benches {
     use tasm_lib::triton_vm::prelude::*;
-    use tasm_lib::twenty_first::shared_math::other::random_elements;
+    use tasm_lib::twenty_first::math::other::random_elements;
 
     use crate::tests_and_benchmarks::benchmarks::execute_and_write_benchmark;
     use crate::tests_and_benchmarks::benchmarks::profile;
@@ -108,6 +108,6 @@ mod benches {
             worst_case_input,
             0,
         );
-        profile(name, code, common_case_input, true);
+        profile(name, code, common_case_input);
     }
 }

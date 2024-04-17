@@ -66,7 +66,7 @@ mod compile_and_typecheck_tests {
                     let bit_shr_6: u64 = 1 >> 5;
                     let bit_shr_7: u64 = 1 >> a;
 
-                    let three: u64 = tasm::tasm_arithmetic_u64_add(1, 2);
+                    let three: u64 = tasm::tasmlib_arithmetic_u64_add(1, 2);
 
                     let mut arr: Vec<u64> = Vec::<u64>::default();
                     arr[0] = b;
@@ -124,7 +124,7 @@ mod run_tests {
         fn tasm_argument_evaluation_order_rast() -> syn::ItemFn {
             item_fn(parse_quote! {
                 fn tasm_argument_evaluation_order() -> u64 {
-                    let five: u64 = tasm::tasm_arithmetic_u64_sub(2, 7);
+                    let five: u64 = tasm::tasmlib_arithmetic_u64_sub(2, 7);
                     return five;
                 }
             })

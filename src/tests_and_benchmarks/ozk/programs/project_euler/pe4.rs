@@ -59,7 +59,7 @@ fn main() {
         lhs += 1;
     }
 
-    tasm::tasm_io_write_to_stdout___u32(max_palindrome);
+    tasm::tasmlib_io_write_to_stdout___u32(max_palindrome);
 
     return;
 }
@@ -114,6 +114,6 @@ mod benches {
             worst_case,
             0,
         );
-        profile(name, code, common_case, true);
+        profile(name, code, common_case);
     }
 }

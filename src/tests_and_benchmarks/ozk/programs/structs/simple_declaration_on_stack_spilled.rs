@@ -36,20 +36,20 @@ fn main() {
     let val_2: u128 = 15 << 101;
     let val_3: u128 = 16 << 101;
     let val_4: u128 = 17 << 101;
-    tasm::tasm_io_write_to_stdout___u128(test_struct.i);
-    tasm::tasm_io_write_to_stdout___u128(test_struct.i);
+    tasm::tasmlib_io_write_to_stdout___u128(test_struct.i);
+    tasm::tasmlib_io_write_to_stdout___u128(test_struct.i);
     let a: BFieldElement = test_struct.a;
-    tasm::tasm_io_write_to_stdout___bfe(test_struct.a);
-    tasm::tasm_io_write_to_stdout___bfe(a);
-    tasm::tasm_io_write_to_stdout___digest(test_struct.d);
-    tasm::tasm_io_write_to_stdout___u128(test_struct.h);
-    tasm::tasm_io_write_to_stdout___u128(test_struct.h);
-    tasm::tasm_io_write_to_stdout___u128(test_struct.i);
-    tasm::tasm_io_write_to_stdout___u128(val_0);
-    tasm::tasm_io_write_to_stdout___u128(val_1);
-    tasm::tasm_io_write_to_stdout___u128(val_2);
-    tasm::tasm_io_write_to_stdout___u128(val_3);
-    tasm::tasm_io_write_to_stdout___u128(val_4);
+    tasm::tasmlib_io_write_to_stdout___bfe(test_struct.a);
+    tasm::tasmlib_io_write_to_stdout___bfe(a);
+    tasm::tasmlib_io_write_to_stdout___digest(test_struct.d);
+    tasm::tasmlib_io_write_to_stdout___u128(test_struct.h);
+    tasm::tasmlib_io_write_to_stdout___u128(test_struct.h);
+    tasm::tasmlib_io_write_to_stdout___u128(test_struct.i);
+    tasm::tasmlib_io_write_to_stdout___u128(val_0);
+    tasm::tasmlib_io_write_to_stdout___u128(val_1);
+    tasm::tasmlib_io_write_to_stdout___u128(val_2);
+    tasm::tasmlib_io_write_to_stdout___u128(val_3);
+    tasm::tasmlib_io_write_to_stdout___u128(val_4);
 
     // Change a field value in the struct on stack
     test_struct.d = Digest::new([
@@ -59,9 +59,9 @@ fn main() {
         BFieldElement::new(32u64),
         BFieldElement::new(64u64),
     ]);
-    tasm::tasm_io_write_to_stdout___digest(test_struct.d);
+    tasm::tasmlib_io_write_to_stdout___digest(test_struct.d);
 
-    tasm::tasm_io_write_to_stdout___xfe(test_struct.b[0]);
+    tasm::tasmlib_io_write_to_stdout___xfe(test_struct.b[0]);
 
     return;
 }

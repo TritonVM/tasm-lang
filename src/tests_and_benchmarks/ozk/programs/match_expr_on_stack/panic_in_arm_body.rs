@@ -18,7 +18,7 @@ use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 use super::three_variants_type::*;
 
 fn choose_variant_a_and_panic_on_variant_b_and_c() {
-    let input: u32 = tasm::tasm_io_read_stdin___u32();
+    let input: u32 = tasm::tasmlib_io_read_stdin___u32();
     let tv: ThreeVariants = ThreeVariants::A;
     let val: u32 = match tv {
         ThreeVariants::A => {
@@ -35,7 +35,7 @@ fn choose_variant_a_and_panic_on_variant_b_and_c() {
         }
     };
 
-    tasm::tasm_io_write_to_stdout___u32(val);
+    tasm::tasmlib_io_write_to_stdout___u32(val);
 
     return;
 }
@@ -65,7 +65,7 @@ fn choose_variant_b_and_panic_on_variants_a_and_c() {
             panic!()
         }
         ThreeVariants::B(inner) => {
-            tasm::tasm_io_write_to_stdout___u128(inner);
+            tasm::tasmlib_io_write_to_stdout___u128(inner);
             200
         }
         ThreeVariants::C(_) => {
@@ -74,7 +74,7 @@ fn choose_variant_b_and_panic_on_variants_a_and_c() {
         }
     };
 
-    tasm::tasm_io_write_to_stdout___u32(val);
+    tasm::tasmlib_io_write_to_stdout___u32(val);
 
     return;
 }
@@ -94,24 +94,24 @@ fn assert_no_panic_in_arm_body_b() {
 }
 
 fn choose_variant_c_and_panic_on_variants_a_and_b() {
-    let tv: ThreeVariants = ThreeVariants::C(tasm::tasm_io_read_stdin___digest());
+    let tv: ThreeVariants = ThreeVariants::C(tasm::tasmlib_io_read_stdin___digest());
     let val: u32 = match tv {
         ThreeVariants::A => {
             //
             panic!()
         }
         ThreeVariants::B(inner) => {
-            tasm::tasm_io_write_to_stdout___u128(inner);
+            tasm::tasmlib_io_write_to_stdout___u128(inner);
             panic!()
         }
         ThreeVariants::C(digest) => {
-            tasm::tasm_io_write_to_stdout___digest(digest);
-            tasm::tasm_io_write_to_stdout___digest(digest);
+            tasm::tasmlib_io_write_to_stdout___digest(digest);
+            tasm::tasmlib_io_write_to_stdout___digest(digest);
             600
         }
     };
 
-    tasm::tasm_io_write_to_stdout___u32(val);
+    tasm::tasmlib_io_write_to_stdout___u32(val);
 
     return;
 }
@@ -185,7 +185,7 @@ fn choose_variant_b_and_panic_on_variant_b() {
             panic!()
         }
         ThreeVariants::C(_) => {
-            let my_digest: Digest = tasm::tasm_io_read_stdin___digest();
+            let my_digest: Digest = tasm::tasmlib_io_read_stdin___digest();
             my_digest
         }
     };

@@ -24,25 +24,25 @@ fn main() {
     fn inspect(event: WebEvent) {
         match event {
             WebEvent::PageLoad => {
-                tasm::tasm_io_write_to_stdout___u32(0);
+                tasm::tasmlib_io_write_to_stdout___u32(0);
             }
             WebEvent::PageUnload => {
-                tasm::tasm_io_write_to_stdout___u32(1);
+                tasm::tasmlib_io_write_to_stdout___u32(1);
             }
             // Destructure `c` from inside the `enum` variant.
             WebEvent::KeyPress(c) => {
-                tasm::tasm_io_write_to_stdout___u32(2);
-                tasm::tasm_io_write_to_stdout___u32(c);
+                tasm::tasmlib_io_write_to_stdout___u32(2);
+                tasm::tasmlib_io_write_to_stdout___u32(c);
             }
             WebEvent::Paste(s) => {
-                tasm::tasm_io_write_to_stdout___u32(3);
-                tasm::tasm_io_write_to_stdout___u128(s);
+                tasm::tasmlib_io_write_to_stdout___u32(3);
+                tasm::tasmlib_io_write_to_stdout___u128(s);
             }
             // Destructure `Click` into `x` and `y`.
             WebEvent::Click(x, y) => {
-                tasm::tasm_io_write_to_stdout___u32(4);
-                tasm::tasm_io_write_to_stdout___u64(x);
-                tasm::tasm_io_write_to_stdout___u64(y);
+                tasm::tasmlib_io_write_to_stdout___u32(4);
+                tasm::tasmlib_io_write_to_stdout___u64(x);
+                tasm::tasmlib_io_write_to_stdout___u64(y);
             }
         };
 

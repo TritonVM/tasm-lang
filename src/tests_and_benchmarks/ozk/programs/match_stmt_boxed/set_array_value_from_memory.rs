@@ -30,10 +30,10 @@ fn call_panic_on_a() {
     let boxed_enum_type: Box<EnumWithArrayData> =
         EnumWithArrayData::decode(&tasm::load_from_memory(BFieldElement::new(0))).unwrap();
     let array_value: [XFieldElement; 4] = boxed_enum_type.panic_on_a();
-    tasm::tasm_io_write_to_stdout___xfe(array_value[0]);
-    tasm::tasm_io_write_to_stdout___xfe(array_value[1]);
-    tasm::tasm_io_write_to_stdout___xfe(array_value[2]);
-    tasm::tasm_io_write_to_stdout___xfe(array_value[3]);
+    tasm::tasmlib_io_write_to_stdout___xfe(array_value[0]);
+    tasm::tasmlib_io_write_to_stdout___xfe(array_value[1]);
+    tasm::tasmlib_io_write_to_stdout___xfe(array_value[2]);
+    tasm::tasmlib_io_write_to_stdout___xfe(array_value[3]);
 
     return;
 }

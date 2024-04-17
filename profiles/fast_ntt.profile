@@ -1,93 +1,47 @@
 fast_ntt:
-
-# aggregated unsorted
- main:, 61375, 1;
-   tasm_io_read_stdin___bfe:, 2, 0.00003258656;
-   tasm_arithmetic_u32_leadingzeros:, 12, 0.00019551934;
-     tasm_arithmetic_u32_leadingzeros_non_zero:, 4, 0.00006517312;
-   tasm_arithmetic_u32_safesub:, 22, 0.00035845215;
-   xfe_ntt:, 28541, 0.46502647;
-     _binop_Neq__LboolR_bool_30_while_loop:, 13041, 0.21248065;
-       bitreverse:, 11232, 0.18300611;
-         _binop_Lt__LboolR_bool_9_while_loop:, 10976, 0.17883503;
-           tasm_arithmetic_u32_shiftleft:, 1760, 0.02867617;
-           tasm_arithmetic_u32_or:, 1120, 0.018248472;
-           tasm_arithmetic_u32_shiftright:, 2240, 0.036496945;
-           tasm_arithmetic_u32_safeadd:, 6008, 0.09789002;
-       _binop_Lt__LboolR_bool_36_else:, 20, 0.00032586558;
-       tasm_arithmetic_u32_safeadd:, 552, 0.00899389;
-       _binop_Lt__LboolR_bool_36_then:, 660, 0.010753565;
-     _binop_Neq__LboolR_bool_59_while_loop:, 15478, 0.25218737;
-       tasm_arithmetic_u32_safemul:, 80, 0.0013034623;
-       _binop_Lt__LboolR_bool_70_while_loop:, 15159, 0.24698982;
-         _binop_Neq__LboolR_bool_75_while_loop:, 13941, 0.2271446;
-         tasm_arithmetic_u32_safemul:, 328, 0.0053441953;
-         tasm_arithmetic_u32_safeadd:, 544, 0.008863544;
-   _binop_Lt__LboolR_bool_190_while_loop:, 1128, 0.018378818;
-     tasm_io_write_to_stdout___xfe:, 64, 0.0010427699;
-     tasm_arithmetic_u32_safeadd:, 512, 0.008342159;
-   xfe_intt:, 29959, 0.48813036;
-     xfe_ntt:, 28541, 0.46502647;
-       _binop_Neq__LboolR_bool_30_while_loop:, 13041, 0.21248065;
-         bitreverse:, 11232, 0.18300611;
-           _binop_Lt__LboolR_bool_9_while_loop:, 10976, 0.17883503;
-             tasm_arithmetic_u32_shiftleft:, 1760, 0.02867617;
-             tasm_arithmetic_u32_or:, 1120, 0.018248472;
-             tasm_arithmetic_u32_shiftright:, 2240, 0.036496945;
-             tasm_arithmetic_u32_safeadd:, 5760, 0.09384929;
-         _binop_Lt__LboolR_bool_36_else:, 20, 0.00032586558;
-         _binop_Lt__LboolR_bool_36_then:, 660, 0.010753565;
-       _binop_Neq__LboolR_bool_59_while_loop:, 15478, 0.25218737;
-         _binop_Lt__LboolR_bool_70_while_loop:, 15159, 0.24698982;
-           _binop_Neq__LboolR_bool_75_while_loop:, 13941, 0.2271446;
-           tasm_arithmetic_u32_safemul:, 248, 0.004040733;
-     bfe_new_from_u64:, 5, 0.000081466394;
-     _binop_Lt__LboolR_bool_152_while_loop:, 1384, 0.022549897;
-   _binop_Lt__LboolR_bool_206_while_loop:, 1672, 0.027242362;
- total:, 61377, 1.0000325;
-
-# aggregated + sorted
-   tasm_io_read_stdin___bfe:, 2, 0.00003258656;
-     tasm_arithmetic_u32_leadingzeros_non_zero:, 4, 0.00006517312;
-     bfe_new_from_u64:, 5, 0.000081466394;
-   tasm_arithmetic_u32_leadingzeros:, 12, 0.00019551934;
-       _binop_Lt__LboolR_bool_36_else:, 20, 0.00032586558;
-         _binop_Lt__LboolR_bool_36_else:, 20, 0.00032586558;
-   tasm_arithmetic_u32_safesub:, 22, 0.00035845215;
-     tasm_io_write_to_stdout___xfe:, 64, 0.0010427699;
-       tasm_arithmetic_u32_safemul:, 80, 0.0013034623;
-           tasm_arithmetic_u32_safemul:, 248, 0.004040733;
-         tasm_arithmetic_u32_safemul:, 328, 0.0053441953;
-     tasm_arithmetic_u32_safeadd:, 512, 0.008342159;
-         tasm_arithmetic_u32_safeadd:, 544, 0.008863544;
-       tasm_arithmetic_u32_safeadd:, 552, 0.00899389;
-       _binop_Lt__LboolR_bool_36_then:, 660, 0.010753565;
-         _binop_Lt__LboolR_bool_36_then:, 660, 0.010753565;
-           tasm_arithmetic_u32_or:, 1120, 0.018248472;
-             tasm_arithmetic_u32_or:, 1120, 0.018248472;
-   _binop_Lt__LboolR_bool_190_while_loop:, 1128, 0.018378818;
-     _binop_Lt__LboolR_bool_152_while_loop:, 1384, 0.022549897;
-   _binop_Lt__LboolR_bool_206_while_loop:, 1672, 0.027242362;
-           tasm_arithmetic_u32_shiftleft:, 1760, 0.02867617;
-             tasm_arithmetic_u32_shiftleft:, 1760, 0.02867617;
-           tasm_arithmetic_u32_shiftright:, 2240, 0.036496945;
-             tasm_arithmetic_u32_shiftright:, 2240, 0.036496945;
-             tasm_arithmetic_u32_safeadd:, 5760, 0.09384929;
-           tasm_arithmetic_u32_safeadd:, 6008, 0.09789002;
-         _binop_Lt__LboolR_bool_9_while_loop:, 10976, 0.17883503;
-           _binop_Lt__LboolR_bool_9_while_loop:, 10976, 0.17883503;
-       bitreverse:, 11232, 0.18300611;
-         bitreverse:, 11232, 0.18300611;
-     _binop_Neq__LboolR_bool_30_while_loop:, 13041, 0.21248065;
-       _binop_Neq__LboolR_bool_30_while_loop:, 13041, 0.21248065;
-         _binop_Neq__LboolR_bool_75_while_loop:, 13941, 0.2271446;
-           _binop_Neq__LboolR_bool_75_while_loop:, 13941, 0.2271446;
-       _binop_Lt__LboolR_bool_70_while_loop:, 15159, 0.24698982;
-         _binop_Lt__LboolR_bool_70_while_loop:, 15159, 0.24698982;
-     _binop_Neq__LboolR_bool_59_while_loop:, 15478, 0.25218737;
-       _binop_Neq__LboolR_bool_59_while_loop:, 15478, 0.25218737;
-   xfe_ntt:, 28541, 0.46502647;
-     xfe_ntt:, 28541, 0.46502647;
-   xfe_intt:, 29959, 0.48813036;
- main:, 61375, 1;
- total:, 61377, 1.0000325;
+| Subroutine                                                |            Processor |             Op Stack |                  RAM |                 Hash |                  U32 |
+|:----------------------------------------------------------|---------------------:|---------------------:|---------------------:|---------------------:|---------------------:|
+| main                                                      |       61375 (100.0%) |       54294 (100.0%) |        4069 (100.0%) |           0 (  0.0%) |        1711 (100.0%) |
+| ··tasmlib_io_read_stdin___bfe                             |           2 (  0.0%) |           1 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ··tasmlib_arithmetic_u32_leadingzeros                     |          12 (  0.0%) |           8 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |           7 (  0.4%) |
+| ····tasmlib_arithmetic_u32_leadingzeros_non_zero          |           4 (  0.0%) |           2 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |           7 (  0.4%) |
+| ··tasmlib_arithmetic_u32_safesub                          |          22 (  0.0%) |          18 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |           8 (  0.5%) |
+| ··xfe_ntt                                                 |       28541 ( 46.5%) |       25143 ( 46.3%) |        1793 ( 44.1%) |           0 (  0.0%) |        1564 ( 91.4%) |
+| ····_binop_Neq__LboolR_bool_30_while_loop                 |       13041 ( 21.2%) |       10312 ( 19.0%) |         192 (  4.7%) |           0 (  0.0%) |        1372 ( 80.2%) |
+| ······bitreverse                                          |       11232 ( 18.3%) |        8672 ( 16.0%) |           0 (  0.0%) |           0 (  0.0%) |        1114 ( 65.1%) |
+| ········_binop_Lt__LboolR_bool_9_while_loop               |       10976 ( 17.9%) |        8512 ( 15.7%) |           0 (  0.0%) |           0 (  0.0%) |        1114 ( 65.1%) |
+| ··········tasmlib_arithmetic_u32_shiftleft                |        1760 (  2.9%) |        1440 (  2.7%) |           0 (  0.0%) |           0 (  0.0%) |          78 (  4.6%) |
+| ··········tasmlib_arithmetic_u32_or                       |        1120 (  1.8%) |         800 (  1.5%) |           0 (  0.0%) |           0 (  0.0%) |         257 ( 15.0%) |
+| ··········tasmlib_arithmetic_u32_shiftright               |        2240 (  3.6%) |        2080 (  3.8%) |           0 (  0.0%) |           0 (  0.0%) |         598 ( 35.0%) |
+| ··········tasmlib_arithmetic_u32_safeadd                  |        6008 (  9.8%) |        5257 (  9.7%) |           0 (  0.0%) |           0 (  0.0%) |          12 (  0.7%) |
+| ······_binop_Lt__LboolR_bool_36_else                      |          20 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ······tasmlib_arithmetic_u32_safeadd                      |         552 (  0.9%) |         483 (  0.9%) |           0 (  0.0%) |           0 (  0.0%) |          79 (  4.6%) |
+| ······_binop_Lt__LboolR_bool_36_then                      |         660 (  1.1%) |         768 (  1.4%) |         192 (  4.7%) |           0 (  0.0%) |           0 (  0.0%) |
+| ····_binop_Neq__LboolR_bool_59_while_loop                 |       15478 ( 25.2%) |       14808 ( 27.3%) |        1597 ( 39.2%) |           0 (  0.0%) |         192 ( 11.2%) |
+| ······tasmlib_arithmetic_u32_safemul                      |          80 (  0.1%) |          70 (  0.1%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ······_binop_Lt__LboolR_bool_70_while_loop                |       15159 ( 24.7%) |       14550 ( 26.8%) |        1582 ( 38.9%) |           0 (  0.0%) |         119 (  7.0%) |
+| ········_binop_Neq__LboolR_bool_75_while_loop             |       13941 ( 22.7%) |       13590 ( 25.0%) |        1551 ( 38.1%) |           0 (  0.0%) |           0 (  0.0%) |
+| ········tasmlib_arithmetic_u32_safemul                    |         328 (  0.5%) |         287 (  0.5%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ········tasmlib_arithmetic_u32_safeadd                    |         544 (  0.9%) |         476 (  0.9%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ··_binop_Lt__LboolR_bool_190_while_loop                   |        1128 (  1.8%) |        1030 (  1.9%) |          96 (  2.4%) |           0 (  0.0%) |         105 (  6.1%) |
+| ····tasmlib_io_write_to_stdout___xfe                      |          64 (  0.1%) |          96 (  0.2%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ····tasmlib_arithmetic_u32_safeadd                        |         512 (  0.8%) |         448 (  0.8%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ··xfe_intt                                                |       29959 ( 48.8%) |       26521 ( 48.8%) |        1987 ( 48.8%) |           0 (  0.0%) |          20 (  1.2%) |
+| ····xfe_ntt                                               |       28541 ( 46.5%) |       25143 ( 46.3%) |        1793 ( 44.1%) |           0 (  0.0%) |          20 (  1.2%) |
+| ······_binop_Neq__LboolR_bool_30_while_loop               |       13041 ( 21.2%) |       10312 ( 19.0%) |         192 (  4.7%) |           0 (  0.0%) |           0 (  0.0%) |
+| ········bitreverse                                        |       11232 ( 18.3%) |        8672 ( 16.0%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ··········_binop_Lt__LboolR_bool_9_while_loop             |       10976 ( 17.9%) |        8512 ( 15.7%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ············tasmlib_arithmetic_u32_shiftleft              |        1760 (  2.9%) |        1440 (  2.7%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ············tasmlib_arithmetic_u32_or                     |        1120 (  1.8%) |         800 (  1.5%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ············tasmlib_arithmetic_u32_shiftright             |        2240 (  3.6%) |        2080 (  3.8%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ············tasmlib_arithmetic_u32_safeadd                |        5760 (  9.4%) |        5040 (  9.3%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ········_binop_Lt__LboolR_bool_36_else                    |          20 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ········_binop_Lt__LboolR_bool_36_then                    |         660 (  1.1%) |         768 (  1.4%) |         192 (  4.7%) |           0 (  0.0%) |           0 (  0.0%) |
+| ······_binop_Neq__LboolR_bool_59_while_loop               |       15478 ( 25.2%) |       14808 ( 27.3%) |        1597 ( 39.2%) |           0 (  0.0%) |          20 (  1.2%) |
+| ········_binop_Lt__LboolR_bool_70_while_loop              |       15159 ( 24.7%) |       14550 ( 26.8%) |        1582 ( 38.9%) |           0 (  0.0%) |           0 (  0.0%) |
+| ··········_binop_Neq__LboolR_bool_75_while_loop           |       13941 ( 22.7%) |       13590 ( 25.0%) |        1551 ( 38.1%) |           0 (  0.0%) |           0 (  0.0%) |
+| ··········tasmlib_arithmetic_u32_safemul                  |         248 (  0.4%) |         217 (  0.4%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ····bfe_new_from_u64                                      |           5 (  0.0%) |           3 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ····_binop_Lt__LboolR_bool_152_while_loop                 |        1384 (  2.3%) |        1350 (  2.5%) |         192 (  4.7%) |           0 (  0.0%) |           0 (  0.0%) |
+| ··_binop_Lt__LboolR_bool_206_while_loop                   |        1672 (  2.7%) |        1542 (  2.8%) |         192 (  4.7%) |           0 (  0.0%) |           0 (  0.0%) |
+| Total                                                     |       61377 (100.0%) |       54294 (100.0%) |        4069 (100.0%) |         594 (100.0%) |        1711 (100.0%) |

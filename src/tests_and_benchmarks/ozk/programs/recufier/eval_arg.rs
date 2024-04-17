@@ -42,26 +42,26 @@ mod test {
     use crate::tests_and_benchmarks::test_helpers::shared_test::TritonVMTestCase;
     use rand::thread_rng;
     use rand::Rng;
-    use tasm_lib::twenty_first::shared_math::other::random_elements;
-    use tasm_lib::twenty_first::shared_math::x_field_element::EXTENSION_DEGREE;
+    use tasm_lib::twenty_first::math::other::random_elements;
+    use tasm_lib::twenty_first::math::x_field_element::EXTENSION_DEGREE;
 
     fn call_compute_terminal() {
-        let symbols_length: usize = tasm::tasm_io_read_stdin___u32() as usize;
+        let symbols_length: usize = tasm::tasmlib_io_read_stdin___u32() as usize;
         let mut symbols: Vec<BFieldElement> = Vec::<BFieldElement>::default();
 
         {
             let mut i: usize = 0;
             while i < symbols_length {
-                symbols.push(tasm::tasm_io_read_stdin___bfe());
+                symbols.push(tasm::tasmlib_io_read_stdin___bfe());
                 i += 1;
             }
         }
 
-        let initial: XFieldElement = tasm::tasm_io_read_stdin___xfe();
-        let challenge: XFieldElement = tasm::tasm_io_read_stdin___xfe();
+        let initial: XFieldElement = tasm::tasmlib_io_read_stdin___xfe();
+        let challenge: XFieldElement = tasm::tasmlib_io_read_stdin___xfe();
 
         let terminal: XFieldElement = EvalArg::compute_terminal(symbols, initial, challenge);
-        tasm::tasm_io_write_to_stdout___xfe(terminal);
+        tasm::tasmlib_io_write_to_stdout___xfe(terminal);
 
         return;
     }

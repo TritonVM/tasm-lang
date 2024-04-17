@@ -4,8 +4,8 @@ use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 struct TupleStruct2(u32, u64); // TODO: Use (u128, XFieldElement) here instead
 
 fn main() {
-    let a: u32 = tasm::tasm_io_read_stdin___u32();
-    let b: u64 = tasm::tasm_io_read_stdin___u64();
+    let a: u32 = tasm::tasmlib_io_read_stdin___u32();
+    let b: u64 = tasm::tasmlib_io_read_stdin___u64();
     let ts: TupleStruct2 = TupleStruct2(a, b);
     let boxed_ts: Box<TupleStruct2> = Box::<TupleStruct2>::new(ts);
 

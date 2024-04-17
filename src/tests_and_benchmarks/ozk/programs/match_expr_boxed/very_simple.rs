@@ -14,12 +14,12 @@ fn main() {
         }
         SimpleEnum::B(inner) => {
             //
-            tasm::tasm_io_write_to_stdout___bfe(*inner);
+            tasm::tasmlib_io_write_to_stdout___bfe(*inner);
             1
         }
     };
 
-    tasm::tasm_io_write_to_stdout___u32(evaluated_discriminant);
+    tasm::tasmlib_io_write_to_stdout___u32(evaluated_discriminant);
 
     return;
 }

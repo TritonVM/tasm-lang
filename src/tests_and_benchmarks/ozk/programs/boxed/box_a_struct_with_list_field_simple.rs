@@ -15,9 +15,9 @@ fn main() {
     list.push(BFieldElement::new(3333333));
     let wlf: WithListField = WithListField { bfes: list };
     let boxed: Box<WithListField> = Box::<WithListField>::new(wlf);
-    tasm::tasm_io_write_to_stdout___bfe(boxed.bfes[0]);
-    tasm::tasm_io_write_to_stdout___bfe(boxed.bfes[1]);
-    tasm::tasm_io_write_to_stdout___bfe(boxed.bfes[2]);
+    tasm::tasmlib_io_write_to_stdout___bfe(boxed.bfes[0]);
+    tasm::tasmlib_io_write_to_stdout___bfe(boxed.bfes[1]);
+    tasm::tasmlib_io_write_to_stdout___bfe(boxed.bfes[2]);
 
     return;
 }

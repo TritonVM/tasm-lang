@@ -23,7 +23,7 @@ mod test {
             }
         };
 
-        tasm::tasm_io_write_to_stdout___bfe(a);
+        tasm::tasmlib_io_write_to_stdout___bfe(a);
         return;
     }
 
@@ -50,7 +50,7 @@ mod test {
             }
         };
 
-        tasm::tasm_io_write_to_stdout___bfe(a);
+        tasm::tasmlib_io_write_to_stdout___bfe(a);
         return;
     }
 
@@ -83,7 +83,7 @@ mod test {
             }
         };
 
-        tasm::tasm_io_write_to_stdout___xfe(a);
+        tasm::tasmlib_io_write_to_stdout___xfe(a);
         return;
     }
 

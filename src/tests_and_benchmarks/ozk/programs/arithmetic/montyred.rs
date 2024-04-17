@@ -37,20 +37,24 @@ fn main() {
     assert!(4294967297u64 == DazeFieldElement::montyred(u64::MAX as u128));
     assert!(8589934593u64 == DazeFieldElement::montyred(u64::MAX as u128 - 1));
 
-    tasm::tasm_io_write_to_stdout___u64(DazeFieldElement::montyred(1u128 << 90));
-    tasm::tasm_io_write_to_stdout___u64(DazeFieldElement::montyred(1));
-    tasm::tasm_io_write_to_stdout___u64(DazeFieldElement::montyred(1000));
-    tasm::tasm_io_write_to_stdout___u64(DazeFieldElement::montyred(u64::MAX as u128));
-    tasm::tasm_io_write_to_stdout___u64(DazeFieldElement::montyred(((1u128 << 40) as u64) as u128));
-    tasm::tasm_io_write_to_stdout___u64(DazeFieldElement::montyred(
+    tasm::tasmlib_io_write_to_stdout___u64(DazeFieldElement::montyred(1u128 << 90));
+    tasm::tasmlib_io_write_to_stdout___u64(DazeFieldElement::montyred(1));
+    tasm::tasmlib_io_write_to_stdout___u64(DazeFieldElement::montyred(1000));
+    tasm::tasmlib_io_write_to_stdout___u64(DazeFieldElement::montyred(u64::MAX as u128));
+    tasm::tasmlib_io_write_to_stdout___u64(DazeFieldElement::montyred(
+        ((1u128 << 40) as u64) as u128,
+    ));
+    tasm::tasmlib_io_write_to_stdout___u64(DazeFieldElement::montyred(
         (((1u128 << 40) + 1) as u64) as u128,
     ));
-    tasm::tasm_io_write_to_stdout___u64(DazeFieldElement::montyred(0xFFFFFFFF00000000));
-    tasm::tasm_io_write_to_stdout___u64(DazeFieldElement::montyred(2u128 * 0xFFFFFFFE00000001u128));
+    tasm::tasmlib_io_write_to_stdout___u64(DazeFieldElement::montyred(0xFFFFFFFF00000000));
+    tasm::tasmlib_io_write_to_stdout___u64(DazeFieldElement::montyred(
+        2u128 * 0xFFFFFFFE00000001u128,
+    ));
 
     // Use daze-field element value to suppress compiler-warning
     let dfe: DazeFieldElement = DazeFieldElement(404);
-    tasm::tasm_io_write_to_stdout___u64(dfe.0);
+    tasm::tasmlib_io_write_to_stdout___u64(dfe.0);
 
     return;
 }

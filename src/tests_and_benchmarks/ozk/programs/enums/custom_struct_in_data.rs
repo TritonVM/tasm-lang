@@ -15,7 +15,7 @@ fn main() {
             output = value.0;
         }
     };
-    tasm::tasm_io_write_to_stdout___u32(output);
+    tasm::tasmlib_io_write_to_stdout___u32(output);
 
     return;
 }

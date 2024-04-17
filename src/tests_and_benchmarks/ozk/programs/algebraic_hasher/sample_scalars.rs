@@ -5,25 +5,25 @@ use crate::triton_vm::prelude::*;
 
 fn sample_scalars() {
     Tip5WithState::init();
-    let input_count: usize = tasm::tasm_io_read_stdin___u32() as usize;
+    let input_count: usize = tasm::tasmlib_io_read_stdin___u32() as usize;
     let mut preimage: Vec<BFieldElement> = Vec::<BFieldElement>::default();
     {
         let mut i: usize = 0;
         while i < input_count {
-            preimage.push(tasm::tasm_io_read_stdin___bfe());
+            preimage.push(tasm::tasmlib_io_read_stdin___bfe());
             i += 1;
         }
     }
     assert!(input_count == preimage.len());
     Tip5WithState::pad_and_absorb_all(&preimage);
 
-    let scalar_count: usize = tasm::tasm_io_read_stdin___u32() as usize;
+    let scalar_count: usize = tasm::tasmlib_io_read_stdin___u32() as usize;
     let scalars: Vec<XFieldElement> = Tip5WithState::sample_scalars(scalar_count);
 
     {
         let mut i: usize = 0;
         while i < scalar_count {
-            tasm::tasm_io_write_to_stdout___xfe(scalars[i]);
+            tasm::tasmlib_io_write_to_stdout___xfe(scalars[i]);
             i += 1;
         }
     }
@@ -37,7 +37,7 @@ mod tests {
     use rand::thread_rng;
     use rand::Rng;
     use tasm_lib::triton_vm::program::NonDeterminism;
-    use tasm_lib::twenty_first::shared_math::other::random_elements;
+    use tasm_lib::twenty_first::math::other::random_elements;
 
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows::wrap_main_with_io;

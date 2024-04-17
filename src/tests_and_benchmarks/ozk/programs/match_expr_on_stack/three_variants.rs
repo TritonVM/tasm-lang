@@ -5,7 +5,7 @@ use tasm_lib::Digest;
 
 #[allow(clippy::collapsible_else_if)]
 fn main() {
-    let input: u32 = tasm::tasm_io_read_stdin___u32();
+    let input: u32 = tasm::tasmlib_io_read_stdin___u32();
     let discriminant: u32 = input % 3;
     let val: ThreeVariants = if discriminant == 0 {
         ThreeVariants::A
@@ -19,15 +19,15 @@ fn main() {
 
     let next_variant: ThreeVariants = match val {
         ThreeVariants::A => {
-            tasm::tasm_io_write_to_stdout___u32(0);
+            tasm::tasmlib_io_write_to_stdout___u32(0);
             ThreeVariants::B(303)
         }
         ThreeVariants::B(_) => {
-            tasm::tasm_io_write_to_stdout___u32(1);
+            tasm::tasmlib_io_write_to_stdout___u32(1);
             ThreeVariants::C(Digest::default())
         }
         ThreeVariants::C(_) => {
-            tasm::tasm_io_write_to_stdout___u32(2);
+            tasm::tasmlib_io_write_to_stdout___u32(2);
             ThreeVariants::A
         }
     };
@@ -35,25 +35,25 @@ fn main() {
     let final_discriminant: u32 = match next_variant {
         ThreeVariants::A => {
             //
-            tasm::tasm_io_write_to_stdout___u32(0);
-            tasm::tasm_io_write_to_stdout___u32(0);
+            tasm::tasmlib_io_write_to_stdout___u32(0);
+            tasm::tasmlib_io_write_to_stdout___u32(0);
             0
         }
         ThreeVariants::B(_) => {
             //
-            tasm::tasm_io_write_to_stdout___u32(1);
-            tasm::tasm_io_write_to_stdout___u32(1);
+            tasm::tasmlib_io_write_to_stdout___u32(1);
+            tasm::tasmlib_io_write_to_stdout___u32(1);
             1
         }
         ThreeVariants::C(_) => {
             //
-            tasm::tasm_io_write_to_stdout___u32(2);
-            tasm::tasm_io_write_to_stdout___u32(2);
+            tasm::tasmlib_io_write_to_stdout___u32(2);
+            tasm::tasmlib_io_write_to_stdout___u32(2);
             2
         }
     };
 
-    tasm::tasm_io_write_to_stdout___u32(final_discriminant);
+    tasm::tasmlib_io_write_to_stdout___u32(final_discriminant);
 
     return;
 }

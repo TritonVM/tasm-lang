@@ -1,5 +1,5 @@
 use arbitrary::Arbitrary;
-use tasm_lib::twenty_first::shared_math::x_field_element::XFieldElement;
+use tasm_lib::twenty_first::math::x_field_element::XFieldElement;
 
 #[derive(Debug, Clone, Arbitrary)]
 pub(crate) struct Challenges {

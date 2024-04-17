@@ -5,12 +5,12 @@ use crate::triton_vm::prelude::*;
 
 fn pad_and_absorb_all() {
     Tip5WithState::init();
-    let input_length: u32 = tasm::tasm_io_read_stdin___u32();
+    let input_length: u32 = tasm::tasmlib_io_read_stdin___u32();
     let mut preimage: Vec<BFieldElement> = Vec::<BFieldElement>::default();
     {
         let mut i: usize = 0;
         while i < input_length as usize {
-            preimage.push(tasm::tasm_io_read_stdin___bfe());
+            preimage.push(tasm::tasmlib_io_read_stdin___bfe());
             i += 1;
         }
     }
@@ -20,7 +20,7 @@ fn pad_and_absorb_all() {
     {
         let mut i: usize = 0;
         while i < 10 {
-            tasm::tasm_io_write_to_stdout___bfe(produce[i]);
+            tasm::tasmlib_io_write_to_stdout___bfe(produce[i]);
             i += 1;
         }
     }
@@ -33,7 +33,7 @@ mod tests {
     use rand::thread_rng;
     use rand::Rng;
     use tasm_lib::triton_vm::program::NonDeterminism;
-    use tasm_lib::twenty_first::shared_math::other::random_elements;
+    use tasm_lib::twenty_first::math::other::random_elements;
 
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows::wrap_main_with_io;

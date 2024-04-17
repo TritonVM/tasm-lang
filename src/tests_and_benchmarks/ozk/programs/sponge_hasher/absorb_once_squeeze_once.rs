@@ -10,7 +10,7 @@ fn absorb_and_squeeze() {
     {
         let mut i: usize = 0;
         while i < 10 {
-            preimage[i] = tasm::tasm_io_read_stdin___bfe();
+            preimage[i] = tasm::tasmlib_io_read_stdin___bfe();
             i += 1;
         }
     }
@@ -20,7 +20,7 @@ fn absorb_and_squeeze() {
     {
         let mut i: usize = 0;
         while i < 10 {
-            tasm::tasm_io_write_to_stdout___bfe(squeezed[i]);
+            tasm::tasmlib_io_write_to_stdout___bfe(squeezed[i]);
             i += 1;
         }
     }
@@ -35,7 +35,7 @@ mod tests {
     use crate::tests_and_benchmarks::ozk::rust_shadows::wrap_main_with_io;
     use itertools::Itertools;
     use tasm_lib::triton_vm::program::NonDeterminism;
-    use tasm_lib::twenty_first::shared_math::other::random_elements;
+    use tasm_lib::twenty_first::math::other::random_elements;
 
     #[test]
     fn absorb_and_squeeze_test() {

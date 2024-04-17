@@ -4,17 +4,17 @@ use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
 #[allow(clippy::unnecessary_literal_unwrap)]
 fn main() {
-    let bfe: BFieldElement = tasm::tasm_io_read_stdin___bfe();
+    let bfe: BFieldElement = tasm::tasmlib_io_read_stdin___bfe();
     let some_bfe_boxed: Box<Option<BFieldElement>> = Box::<Option<BFieldElement>>::new(Some(bfe));
     assert!(some_bfe_boxed.is_some());
     let some_bfe_stack: Option<BFieldElement> = Some(bfe);
-    tasm::tasm_io_write_to_stdout___u64(some_bfe_stack.unwrap().value());
+    tasm::tasmlib_io_write_to_stdout___u64(some_bfe_stack.unwrap().value());
 
-    let xfe: XFieldElement = tasm::tasm_io_read_stdin___xfe();
+    let xfe: XFieldElement = tasm::tasmlib_io_read_stdin___xfe();
     let some_xfe_boxed: Box<Option<XFieldElement>> = Box::<Option<XFieldElement>>::new(Some(xfe));
     assert!(some_xfe_boxed.is_some());
     let some_xfe_stack: Option<XFieldElement> = Some(xfe);
-    tasm::tasm_io_write_to_stdout___xfe(some_xfe_stack.unwrap());
+    tasm::tasmlib_io_write_to_stdout___xfe(some_xfe_stack.unwrap());
     let none_xfe_stack: Option<XFieldElement> = None;
     let none_xfe_boxed: Box<Option<XFieldElement>> =
         Box::<Option<XFieldElement>>::new(none_xfe_stack);
@@ -26,7 +26,7 @@ fn main() {
 
     match some_xfe_boxed.as_ref() {
         Some(inner) => {
-            tasm::tasm_io_write_to_stdout___xfe(*inner);
+            tasm::tasmlib_io_write_to_stdout___xfe(*inner);
         }
         None => {
             panic!();
@@ -34,7 +34,7 @@ fn main() {
     };
     match some_xfe_stack {
         Some(inner) => {
-            tasm::tasm_io_write_to_stdout___xfe(inner);
+            tasm::tasmlib_io_write_to_stdout___xfe(inner);
         }
         None => {
             panic!();
@@ -43,7 +43,7 @@ fn main() {
 
     match some_bfe_boxed.as_ref() {
         Some(inner) => {
-            tasm::tasm_io_write_to_stdout___bfe(*inner);
+            tasm::tasmlib_io_write_to_stdout___bfe(*inner);
         }
         None => {
             panic!();
@@ -51,7 +51,7 @@ fn main() {
     };
     match some_bfe_boxed.as_ref() {
         Some(inner) => {
-            tasm::tasm_io_write_to_stdout___bfe(*inner);
+            tasm::tasmlib_io_write_to_stdout___bfe(*inner);
         }
         _ => {
             panic!();
@@ -63,7 +63,7 @@ fn main() {
             panic!();
         }
         None => {
-            tasm::tasm_io_write_to_stdout___u32(100);
+            tasm::tasmlib_io_write_to_stdout___u32(100);
         }
     };
     match none_xfe_boxed.as_ref() {
@@ -71,7 +71,7 @@ fn main() {
             panic!();
         }
         _ => {
-            tasm::tasm_io_write_to_stdout___u32(100);
+            tasm::tasmlib_io_write_to_stdout___u32(100);
         }
     };
 
@@ -80,7 +80,7 @@ fn main() {
             panic!();
         }
         None => {
-            tasm::tasm_io_write_to_stdout___u32(101);
+            tasm::tasmlib_io_write_to_stdout___u32(101);
         }
     };
 

@@ -7,8 +7,8 @@ mod run_tests {
     use num::Zero;
     use rand::random;
     use tasm_lib::triton_vm::prelude::*;
-    use tasm_lib::twenty_first::shared_math::other::random_elements;
-    use tasm_lib::twenty_first::shared_math::traits::PrimitiveRootOfUnity;
+    use tasm_lib::twenty_first::math::other::random_elements;
+    use tasm_lib::twenty_first::math::traits::PrimitiveRootOfUnity;
 
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 

@@ -12,14 +12,14 @@ fn main() {
 
     let digest: Digest = Tip5::hash_varlen(&(*elements));
 
-    tasm::tasm_io_write_to_stdout___digest(digest);
+    tasm::tasmlib_io_write_to_stdout___digest(digest);
 
     return;
 }
 
 #[cfg(test)]
 mod test {
-    use tasm_lib::twenty_first::shared_math::other::random_elements;
+    use tasm_lib::twenty_first::math::other::random_elements;
 
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;

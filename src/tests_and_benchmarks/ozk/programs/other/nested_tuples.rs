@@ -19,11 +19,11 @@ fn main() {
         ),
     );
 
-    tasm::tasm_io_write_to_stdout___xfe(a.1 .1);
-    tasm::tasm_io_write_to_stdout___bfe(a.0);
-    tasm::tasm_io_write_to_stdout___xfe(a.1 .0);
-    tasm::tasm_io_write_to_stdout___xfe(a.1 .0);
-    tasm::tasm_io_write_to_stdout___bfe(a.0);
+    tasm::tasmlib_io_write_to_stdout___xfe(a.1 .1);
+    tasm::tasmlib_io_write_to_stdout___bfe(a.0);
+    tasm::tasmlib_io_write_to_stdout___xfe(a.1 .0);
+    tasm::tasmlib_io_write_to_stdout___xfe(a.1 .0);
+    tasm::tasmlib_io_write_to_stdout___bfe(a.0);
 
     a.1 .0 = XFieldElement::new([
         BFieldElement::new(0xffff_0000_0001_0002),
@@ -31,9 +31,9 @@ fn main() {
         BFieldElement::new(0xffff_0000_0001_0004),
     ]);
     a.0 = BFieldElement::new(900);
-    tasm::tasm_io_write_to_stdout___bfe(a.0);
-    tasm::tasm_io_write_to_stdout___xfe(a.1 .0);
-    tasm::tasm_io_write_to_stdout___xfe(a.1 .0);
+    tasm::tasmlib_io_write_to_stdout___bfe(a.0);
+    tasm::tasmlib_io_write_to_stdout___xfe(a.1 .0);
+    tasm::tasmlib_io_write_to_stdout___xfe(a.1 .0);
 
     return;
 }

@@ -17,7 +17,7 @@ struct NestedStruct {
 fn main() {
     let test_struct: Box<NestedStruct> =
         NestedStruct::decode(&tasm::load_from_memory(BFieldElement::new(300))).unwrap();
-    tasm::tasm_io_write_to_stdout___u32(test_struct.a.b);
+    tasm::tasmlib_io_write_to_stdout___u32(test_struct.a.b);
 
     return;
 }

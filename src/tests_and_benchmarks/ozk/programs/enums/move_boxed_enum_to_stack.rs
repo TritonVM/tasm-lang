@@ -21,30 +21,30 @@ fn main() {
 
     match on_stack {
         EnumType::A(num) => {
-            tasm::tasm_io_write_to_stdout___bfe(BFieldElement::new(1));
-            tasm::tasm_io_write_to_stdout___u32(num);
+            tasm::tasmlib_io_write_to_stdout___bfe(BFieldElement::new(1));
+            tasm::tasmlib_io_write_to_stdout___u32(num);
         }
         EnumType::B(num) => {
-            tasm::tasm_io_write_to_stdout___bfe(BFieldElement::new(2));
-            tasm::tasm_io_write_to_stdout___u64(num);
+            tasm::tasmlib_io_write_to_stdout___bfe(BFieldElement::new(2));
+            tasm::tasmlib_io_write_to_stdout___u64(num);
         }
         EnumType::C(digest) => {
-            tasm::tasm_io_write_to_stdout___bfe(BFieldElement::new(3));
-            tasm::tasm_io_write_to_stdout___digest(digest);
+            tasm::tasmlib_io_write_to_stdout___bfe(BFieldElement::new(3));
+            tasm::tasmlib_io_write_to_stdout___digest(digest);
         }
         EnumType::D(list) => {
-            tasm::tasm_io_write_to_stdout___bfe(BFieldElement::new(4));
-            tasm::tasm_io_write_to_stdout___u32(list.len() as u32);
+            tasm::tasmlib_io_write_to_stdout___bfe(BFieldElement::new(4));
+            tasm::tasmlib_io_write_to_stdout___u32(list.len() as u32);
         }
         EnumType::E => {
-            tasm::tasm_io_write_to_stdout___bfe(BFieldElement::new(5));
+            tasm::tasmlib_io_write_to_stdout___bfe(BFieldElement::new(5));
         }
         EnumType::F(digests) => {
-            tasm::tasm_io_write_to_stdout___bfe(BFieldElement::new(6));
-            tasm::tasm_io_write_to_stdout___digest(digests[0]);
-            tasm::tasm_io_write_to_stdout___digest(digests[1]);
-            tasm::tasm_io_write_to_stdout___digest(digests[3]);
-            tasm::tasm_io_write_to_stdout___digest(digests[2]);
+            tasm::tasmlib_io_write_to_stdout___bfe(BFieldElement::new(6));
+            tasm::tasmlib_io_write_to_stdout___digest(digests[0]);
+            tasm::tasmlib_io_write_to_stdout___digest(digests[1]);
+            tasm::tasmlib_io_write_to_stdout___digest(digests[3]);
+            tasm::tasmlib_io_write_to_stdout___digest(digests[2]);
         }
     };
 

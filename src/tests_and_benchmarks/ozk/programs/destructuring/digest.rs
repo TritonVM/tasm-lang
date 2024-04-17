@@ -2,14 +2,14 @@ use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 use crate::twenty_first::prelude::*;
 
 fn main() {
-    let digest: Digest = tasm::tasm_io_read_stdin___digest();
+    let digest: Digest = tasm::tasmlib_io_read_stdin___digest();
     let Digest([d0, d1, d2, d3, d4]) = digest;
 
-    tasm::tasm_io_write_to_stdout___bfe(d2);
-    tasm::tasm_io_write_to_stdout___bfe(d1);
-    tasm::tasm_io_write_to_stdout___bfe(d4);
-    tasm::tasm_io_write_to_stdout___bfe(d3);
-    tasm::tasm_io_write_to_stdout___bfe(d0);
+    tasm::tasmlib_io_write_to_stdout___bfe(d2);
+    tasm::tasmlib_io_write_to_stdout___bfe(d1);
+    tasm::tasmlib_io_write_to_stdout___bfe(d4);
+    tasm::tasmlib_io_write_to_stdout___bfe(d3);
+    tasm::tasmlib_io_write_to_stdout___bfe(d0);
 
     return;
 }
@@ -21,7 +21,7 @@ mod tests {
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::TritonVMTestCase;
     use crate::triton_vm::prelude::*;
-    use tasm_lib::twenty_first::shared_math::other::random_elements;
+    use tasm_lib::twenty_first::math::other::random_elements;
     use tasm_lib::DIGEST_LENGTH;
 
     #[test]

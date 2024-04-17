@@ -32,14 +32,14 @@ fn main() {
         g: 1 << 44,
     };
     let a: BFieldElement = test_struct.a;
-    tasm::tasm_io_write_to_stdout___bfe(test_struct.a);
-    tasm::tasm_io_write_to_stdout___bfe(a);
-    tasm::tasm_io_write_to_stdout___bfe(test_struct.b);
-    tasm::tasm_io_write_to_stdout___digest(test_struct.d);
+    tasm::tasmlib_io_write_to_stdout___bfe(test_struct.a);
+    tasm::tasmlib_io_write_to_stdout___bfe(a);
+    tasm::tasmlib_io_write_to_stdout___bfe(test_struct.b);
+    tasm::tasmlib_io_write_to_stdout___digest(test_struct.d);
 
     // Change a field value in the struct
     test_struct.a = BFieldElement::one();
-    tasm::tasm_io_write_to_stdout___bfe(test_struct.a);
+    tasm::tasmlib_io_write_to_stdout___bfe(test_struct.a);
 
     return;
 }

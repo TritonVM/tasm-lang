@@ -15,8 +15,8 @@ fn main() {
 
     let on_stack: NotCopyStruct = *boxed_enum_type;
 
-    tasm::tasm_io_write_to_stdout___u32(on_stack.digests.len() as u32);
-    tasm::tasm_io_write_to_stdout___u32(on_stack.xfes.len() as u32);
+    tasm::tasmlib_io_write_to_stdout___u32(on_stack.digests.len() as u32);
+    tasm::tasmlib_io_write_to_stdout___u32(on_stack.xfes.len() as u32);
 
     return;
 }

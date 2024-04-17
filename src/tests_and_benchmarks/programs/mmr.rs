@@ -17,8 +17,8 @@ pub(crate) fn verify_authentication_path_with_local_function() -> ItemFn {
 
                 // a) Get the index as if this was a Merkle tree
                 let local_mt_height_u32: u32 =
-                    tasm::tasm_arithmetic_u64_log_2_floor(leaf_index ^ leaf_count);
-                let local_mt_leaf_count: u64 = tasm::tasm_arithmetic_u64_pow2(local_mt_height_u32);
+                    tasm::tasmlib_arithmetic_u64_log_2_floor(leaf_index ^ leaf_count);
+                let local_mt_leaf_count: u64 = tasm::tasmlib_arithmetic_u64_pow2(local_mt_height_u32);
                 let remainder_bitmask: u64 = local_mt_leaf_count - 1;
                 let mt_index: u64 = (remainder_bitmask & leaf_index) as u64 + local_mt_leaf_count;
 
@@ -67,7 +67,7 @@ mod run_tests {
     use rand::RngCore;
     use tasm_lib::rust_shadowing_helper_functions::list::list_insert;
     use tasm_lib::triton_vm::prelude::*;
-    use tasm_lib::twenty_first::shared_math::other::random_elements;
+    use tasm_lib::twenty_first::math::other::random_elements;
     use tasm_lib::twenty_first::util_types::mmr;
     use tasm_lib::twenty_first::util_types::mmr::mmr_accumulator::util::mmra_with_mps;
     use tasm_lib::twenty_first::util_types::mmr::mmr_accumulator::MmrAccumulator;
@@ -130,7 +130,7 @@ mod run_tests {
         fn right_lineage_length_stmt_rast() -> ItemFn {
             item_fn(parse_quote! {
                  fn right_lineage_length(node_index: u64) -> u32 {
-                    let bit_width: u32 = tasm::tasm_arithmetic_u64_log_2_floor(node_index) + 1u32;
+                    let bit_width: u32 = tasm::tasmlib_arithmetic_u64_log_2_floor(node_index) + 1u32;
                     let npo2: u64 = 1u64 << bit_width;
                     let dist: u64 = npo2 - node_index;
 
@@ -149,7 +149,7 @@ mod run_tests {
         fn right_lineage_length_expr_rast() -> ItemFn {
             item_fn(parse_quote! {
                 fn right_lineage_length(node_index: u64) -> u32 {
-                    let bit_width: u32 = tasm::tasm_arithmetic_u64_log_2_floor(node_index) + 1u32;
+                    let bit_width: u32 = tasm::tasmlib_arithmetic_u64_log_2_floor(node_index) + 1u32;
                     let npo2: u64 = 1u64 << bit_width;
                     let dist: u64 = npo2 - node_index;
 
@@ -217,7 +217,7 @@ mod run_tests {
         fn leftmost_ancestor_rast() -> ItemFn {
             item_fn(parse_quote! {
                 fn leftmost_ancestor(node_index: u64) -> (u64, u32) {
-                    let h: u32 = tasm::tasm_arithmetic_u64_log_2_floor(node_index);
+                    let h: u32 = tasm::tasmlib_arithmetic_u64_log_2_floor(node_index);
                     let ret: u64 = (1 << (h + 1)) - 1;
 
                     return (ret, h);
@@ -248,7 +248,7 @@ mod run_tests {
             item_fn(parse_quote! {
                 // Obscure graph-traversel algorithm for transforming indices into other kinds of indices
                 fn right_lineage_length_and_own_height(node_index: u64) -> (u32, u32) {
-                    let leftmost_ancestor_height: u32 = tasm::tasm_arithmetic_u64_log_2_floor(node_index);
+                    let leftmost_ancestor_height: u32 = tasm::tasmlib_arithmetic_u64_log_2_floor(node_index);
                     let leftmost_ancestor_node_index: u64 = (1 << (leftmost_ancestor_height + 1)) - 1;
                     let mut candidate_and_candidate_height: (u64, u32) = (leftmost_ancestor_node_index, leftmost_ancestor_height);
 
@@ -370,8 +370,8 @@ mod run_tests {
                     assert!(leaf_index < leaf_count);
 
                     // a) Get the index as if this was a Merkle tree
-                    let local_mt_height_u32: u32 = tasm::tasm_arithmetic_u64_log_2_floor(leaf_index ^ leaf_count);
-                    let local_mt_leaf_count: u64 = tasm::tasm_arithmetic_u64_pow2(local_mt_height_u32);
+                    let local_mt_height_u32: u32 = tasm::tasmlib_arithmetic_u64_log_2_floor(leaf_index ^ leaf_count);
+                    let local_mt_leaf_count: u64 = tasm::tasmlib_arithmetic_u64_pow2(local_mt_height_u32);
                     let remainder_bitmask: u64 = local_mt_leaf_count - 1;
                     let mt_index: u64 = (remainder_bitmask & leaf_index) as u64 + local_mt_leaf_count;
 
@@ -390,8 +390,8 @@ mod run_tests {
                 fn old_leaf_index_to_mt_index_and_peak_index(leaf_index: u64, leaf_count: u64) -> (u64, u32) {
 
                     // a) Get the index as if this was a Merkle tree
-                    let local_mt_height_u32: u32 = tasm::tasm_arithmetic_u64_log_2_floor(leaf_index ^ leaf_count);
-                    let local_mt_leaf_count: u64 = tasm::tasm_arithmetic_u64_pow2(local_mt_height_u32);
+                    let local_mt_height_u32: u32 = tasm::tasmlib_arithmetic_u64_log_2_floor(leaf_index ^ leaf_count);
+                    let local_mt_leaf_count: u64 = tasm::tasmlib_arithmetic_u64_pow2(local_mt_height_u32);
                     let remainder_bitmask: u64 = local_mt_leaf_count - 1;
                     let mt_index: u64 = (remainder_bitmask & leaf_index) as u64 + local_mt_leaf_count;
 
@@ -671,8 +671,8 @@ mod run_tests {
         ) -> Vec<Digest> {
 
             let discrepancies: u64 = leaf_index ^ leaf_count;
-            let local_mt_height: u32 = tasm::tasm_arithmetic_u64_log_2_floor(discrepancies);
-            let local_mt_leaf_count: u64 = tasm::tasm_arithmetic_u64_pow2(local_mt_height);
+            let local_mt_height: u32 = tasm::tasmlib_arithmetic_u64_log_2_floor(discrepancies);
+            let local_mt_leaf_count: u64 = tasm::tasmlib_arithmetic_u64_pow2(local_mt_height);
             let remainder_bitmask: u64 = local_mt_leaf_count - 1u64;
             let local_leaf_index: u64 = remainder_bitmask & leaf_index;
             let mut mt_index: u64 = local_leaf_index + local_mt_leaf_count;
@@ -720,8 +720,8 @@ mod run_tests {
 
                     // a) Get the index as if this was a Merkle tree
                     let local_mt_height_u32: u32 =
-                        tasm::tasm_arithmetic_u64_log_2_floor(leaf_index ^ leaf_count);
-                    let local_mt_leaf_count: u64 = tasm::tasm_arithmetic_u64_pow2(local_mt_height_u32);
+                        tasm::tasmlib_arithmetic_u64_log_2_floor(leaf_index ^ leaf_count);
+                    let local_mt_leaf_count: u64 = tasm::tasmlib_arithmetic_u64_pow2(local_mt_height_u32);
                     let remainder_bitmask: u64 = local_mt_leaf_count - 1;
                     let mt_index: u64 = (remainder_bitmask & leaf_index) as u64 + local_mt_leaf_count;
 
@@ -901,7 +901,7 @@ mod run_tests {
                     Err(err) => panic!("VM execution must succeed. Got: {err}"),
                 };
 
-                let expected_result = mp.verify(&peaks, own_leaf, mmra.count_leaves()).0;
+                let expected_result = mp.verify(&peaks, own_leaf, mmra.count_leaves());
                 let vm_result: bool = vm_res.op_stack.stack.last().unwrap().value() == 1;
                 assert_eq!(
                     expected_result, vm_result,
@@ -928,7 +928,7 @@ mod run_tests {
                     Ok(vm_res) => vm_res,
                     Err(err) => panic!("VM execution must succeed. Got: {err}"),
                 };
-                let expected_result_neg = mp.verify(&peaks, bad_leaf, mmra.count_leaves()).0;
+                let expected_result_neg = mp.verify(&peaks, bad_leaf, mmra.count_leaves());
                 let vm_result_neg: bool =
                     vm_res_negative.op_stack.stack.last().unwrap().value() == 1;
                 assert_eq!(
@@ -953,8 +953,8 @@ mod run_tests {
                 ) -> bool {
                     // Find the mt_index in constant time
                     let discrepancies: u64 = leaf_index ^ leaf_count;
-                    let local_mt_height: u32 = tasm::tasm_arithmetic_u64_log_2_floor(discrepancies);
-                    let local_mt_leaf_count: u64 = tasm::tasm_arithmetic_u64_pow2(local_mt_height);
+                    let local_mt_height: u32 = tasm::tasmlib_arithmetic_u64_log_2_floor(discrepancies);
+                    let local_mt_leaf_count: u64 = tasm::tasmlib_arithmetic_u64_pow2(local_mt_height);
                     let remainder_bitmask: u64 = local_mt_leaf_count - 1u64;
                     let local_leaf_index: u64 = remainder_bitmask & leaf_index;
                     let mut mt_index: u64 = local_leaf_index + local_mt_leaf_count;

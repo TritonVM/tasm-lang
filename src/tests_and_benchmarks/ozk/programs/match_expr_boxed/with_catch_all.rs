@@ -18,7 +18,7 @@ fn catch_all_on_b() {
         }
     };
 
-    tasm::tasm_io_write_to_stdout___u32(evaluated_discriminant);
+    tasm::tasmlib_io_write_to_stdout___u32(evaluated_discriminant);
 
     return;
 }

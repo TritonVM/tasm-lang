@@ -1,12 +1,12 @@
 use num::One;
 use tasm_lib::triton_vm::prelude::*;
-use tasm_lib::twenty_first::shared_math::traits::Inverse;
+use tasm_lib::twenty_first::math::traits::Inverse;
 
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
 fn main() {
-    let xfe: XFieldElement = tasm::tasm_io_read_stdin___xfe();
-    tasm::tasm_io_write_to_stdout___xfe(xfe.inverse());
+    let xfe: XFieldElement = tasm::tasmlib_io_read_stdin___xfe();
+    tasm::tasmlib_io_write_to_stdout___xfe(xfe.inverse());
 
     assert!(XFieldElement::one() == xfe.inverse() * xfe);
 
@@ -14,14 +14,14 @@ fn main() {
 }
 
 fn no_name_clash_on_bfe_and_xfe_inverse() {
-    let xfe: XFieldElement = tasm::tasm_io_read_stdin___xfe();
-    let bfe: BFieldElement = tasm::tasm_io_read_stdin___bfe();
+    let xfe: XFieldElement = tasm::tasmlib_io_read_stdin___xfe();
+    let bfe: BFieldElement = tasm::tasmlib_io_read_stdin___bfe();
 
     assert!(XFieldElement::one() == xfe.inverse() * xfe);
     assert!(BFieldElement::one() == bfe.inverse() * bfe);
 
-    tasm::tasm_io_write_to_stdout___xfe(xfe.inverse());
-    tasm::tasm_io_write_to_stdout___bfe(bfe.inverse());
+    tasm::tasmlib_io_write_to_stdout___xfe(xfe.inverse());
+    tasm::tasmlib_io_write_to_stdout___bfe(bfe.inverse());
 
     return;
 }
@@ -34,8 +34,8 @@ mod test {
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
     use num::Zero;
     use std::panic::catch_unwind;
-    use tasm_lib::twenty_first::shared_math::other::random_elements;
-    use tasm_lib::twenty_first::shared_math::x_field_element::EXTENSION_DEGREE;
+    use tasm_lib::twenty_first::math::other::random_elements;
+    use tasm_lib::twenty_first::math::x_field_element::EXTENSION_DEGREE;
 
     #[test]
     fn xfe_inverse_test() {

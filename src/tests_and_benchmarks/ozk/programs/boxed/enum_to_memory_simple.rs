@@ -31,7 +31,7 @@ fn to_memory_b() {
     let b_boxed: Box<SimpleEnum> = Box::<SimpleEnum>::new(b);
     match b_boxed.as_ref() {
         SimpleEnum::B(value) => {
-            tasm::tasm_io_write_to_stdout___u32(*value);
+            tasm::tasmlib_io_write_to_stdout___u32(*value);
         }
         _ => {
             assert!(false);
@@ -47,9 +47,9 @@ fn to_memory_c() {
     let c_boxed: Box<SimpleEnum> = Box::<SimpleEnum>::new(c);
     match c_boxed.as_ref() {
         SimpleEnum::C(bfe, u32_0, u32_1) => {
-            tasm::tasm_io_write_to_stdout___u32(*u32_1);
-            tasm::tasm_io_write_to_stdout___u32(*u32_0);
-            tasm::tasm_io_write_to_stdout___bfe(*bfe);
+            tasm::tasmlib_io_write_to_stdout___u32(*u32_1);
+            tasm::tasmlib_io_write_to_stdout___u32(*u32_0);
+            tasm::tasmlib_io_write_to_stdout___bfe(*bfe);
         }
         _ => {
             assert!(false);
@@ -79,7 +79,7 @@ fn in_memory_b() {
         SimpleEnum::decode(&tasm::load_from_memory(BFieldElement::zero())).unwrap();
     match b_boxed.as_ref() {
         SimpleEnum::B(value) => {
-            tasm::tasm_io_write_to_stdout___u32(*value);
+            tasm::tasmlib_io_write_to_stdout___u32(*value);
         }
         _ => {
             assert!(false);
@@ -95,9 +95,9 @@ fn in_memory_c() {
         SimpleEnum::decode(&tasm::load_from_memory(BFieldElement::zero())).unwrap();
     match c_boxed.as_ref() {
         SimpleEnum::C(bfe, u32_0, u32_1) => {
-            tasm::tasm_io_write_to_stdout___u32(*u32_1);
-            tasm::tasm_io_write_to_stdout___u32(*u32_0);
-            tasm::tasm_io_write_to_stdout___bfe(*bfe);
+            tasm::tasmlib_io_write_to_stdout___u32(*u32_1);
+            tasm::tasmlib_io_write_to_stdout___u32(*u32_0);
+            tasm::tasmlib_io_write_to_stdout___bfe(*bfe);
         }
         _ => {
             assert!(false);
@@ -109,6 +109,8 @@ fn in_memory_c() {
 
 #[cfg(test)]
 mod test {
+    use std::collections::HashMap;
+
     use itertools::Itertools;
 
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
@@ -121,30 +123,28 @@ mod test {
     fn enum_to_memory_simple_test() {
         let stdin = vec![];
         let no_nondeterminism = NonDeterminism::default();
-        let a_encoded = NonDeterminism::default().with_ram(
-            SimpleEnum::A
-                .encode()
-                .into_iter()
-                .enumerate()
-                .map(|(k, v)| (BFieldElement::new(k as u64), v))
-                .collect(),
-        );
-        let b_encoded = NonDeterminism::default().with_ram(
-            SimpleEnum::B(4000)
-                .encode()
-                .into_iter()
-                .enumerate()
-                .map(|(k, v)| (BFieldElement::new(k as u64), v))
-                .collect(),
-        );
-        let c_encoded = NonDeterminism::default().with_ram(
+        let a_encoded: HashMap<BFieldElement, BFieldElement> = SimpleEnum::A
+            .encode()
+            .into_iter()
+            .enumerate()
+            .map(|(k, v)| (BFieldElement::new(k as u64), v))
+            .collect();
+        let a_encoded = NonDeterminism::default().with_ram(a_encoded);
+        let b_encoded: HashMap<BFieldElement, BFieldElement> = SimpleEnum::B(4000)
+            .encode()
+            .into_iter()
+            .enumerate()
+            .map(|(k, v)| (BFieldElement::new(k as u64), v))
+            .collect();
+        let b_encoded = NonDeterminism::default().with_ram(b_encoded);
+        let c_encoded: HashMap<BFieldElement, BFieldElement> =
             SimpleEnum::C(BFieldElement::new(5000), 5005, 5010)
                 .encode()
                 .into_iter()
                 .enumerate()
                 .map(|(k, v)| (BFieldElement::new(k as u64), v))
-                .collect(),
-        );
+                .collect();
+        let c_encoded = NonDeterminism::default().with_ram(c_encoded);
 
         for (func, func_name, non_determinism) in [
             (&(to_memory_a as fn()), "to_memory_a", &no_nondeterminism),

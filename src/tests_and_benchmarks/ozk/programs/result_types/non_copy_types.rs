@@ -4,8 +4,8 @@ use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
 #[allow(clippy::vec_init_then_push)]
 fn main() {
-    let bfe_0: BFieldElement = tasm::tasm_io_read_stdin___bfe();
-    let bfe_1: BFieldElement = tasm::tasm_io_read_stdin___bfe();
+    let bfe_0: BFieldElement = tasm::tasmlib_io_read_stdin___bfe();
+    let bfe_1: BFieldElement = tasm::tasmlib_io_read_stdin___bfe();
     let mut bfes: Vec<BFieldElement> = Vec::<BFieldElement>::default();
     bfes.push(bfe_0);
     bfes.push(bfe_1);
@@ -13,9 +13,9 @@ fn main() {
 
     match result_bfes {
         Result::Ok(bfes) => {
-            tasm::tasm_io_write_to_stdout___bfe(bfes[0]);
-            tasm::tasm_io_write_to_stdout___bfe(bfes[1]);
-            tasm::tasm_io_write_to_stdout___u32(bfes.len() as u32);
+            tasm::tasmlib_io_write_to_stdout___bfe(bfes[0]);
+            tasm::tasmlib_io_write_to_stdout___bfe(bfes[1]);
+            tasm::tasmlib_io_write_to_stdout___u32(bfes.len() as u32);
         }
         Result::Err(_) => {
             panic!();

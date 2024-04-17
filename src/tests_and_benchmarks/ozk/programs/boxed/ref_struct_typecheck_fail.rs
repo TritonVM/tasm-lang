@@ -21,8 +21,8 @@ impl SomeStruct {
 
 #[allow(dead_code)]
 fn main() {
-    let a: SomeStruct = SomeStruct::new(tasm::tasm_io_read_stdin___u64());
-    tasm::tasm_io_write_to_stdout___u64(a.valued()); // <-- Type check should fail here
+    let a: SomeStruct = SomeStruct::new(tasm::tasmlib_io_read_stdin___u64());
+    tasm::tasmlib_io_write_to_stdout___u64(a.valued()); // <-- Type check should fail here
     return;
 }
 

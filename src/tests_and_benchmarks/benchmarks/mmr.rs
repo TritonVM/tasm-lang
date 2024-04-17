@@ -5,8 +5,8 @@ mod benchmark {
     use rand::random;
     use tasm_lib::rust_shadowing_helper_functions;
     use tasm_lib::triton_vm::prelude::*;
-    use tasm_lib::twenty_first::shared_math::other::random_elements;
-    use tasm_lib::twenty_first::shared_math::tip5::Tip5;
+    use tasm_lib::twenty_first::math::other::random_elements;
+    use tasm_lib::twenty_first::math::tip5::Tip5;
     use tasm_lib::twenty_first::util_types::mmr::mmr_accumulator::MmrAccumulator;
     use tasm_lib::twenty_first::util_types::mmr::mmr_trait::Mmr;
     use tasm_lib::Digest;

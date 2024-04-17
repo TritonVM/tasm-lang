@@ -18,20 +18,20 @@ fn main() {
 
     // Print `a`
     let a: BFieldElement = test_struct.a;
-    tasm::tasm_io_write_to_stdout___bfe(a);
+    tasm::tasmlib_io_write_to_stdout___bfe(a);
 
     // Print `b`s
-    tasm::tasm_io_write_to_stdout___bfe(test_struct.b[0]);
-    tasm::tasm_io_write_to_stdout___bfe(test_struct.b[1]);
-    tasm::tasm_io_write_to_stdout___bfe(test_struct.b[2]);
-    tasm::tasm_io_write_to_stdout___bfe(test_struct.b[3]);
+    tasm::tasmlib_io_write_to_stdout___bfe(test_struct.b[0]);
+    tasm::tasmlib_io_write_to_stdout___bfe(test_struct.b[1]);
+    tasm::tasmlib_io_write_to_stdout___bfe(test_struct.b[2]);
+    tasm::tasmlib_io_write_to_stdout___bfe(test_struct.b[3]);
 
     // Print `c`s
-    tasm::tasm_io_write_to_stdout___digest(test_struct.c[0]);
-    tasm::tasm_io_write_to_stdout___digest(test_struct.c[1]);
+    tasm::tasmlib_io_write_to_stdout___digest(test_struct.c[0]);
+    tasm::tasmlib_io_write_to_stdout___digest(test_struct.c[1]);
 
     // Print `d`
-    tasm::tasm_io_write_to_stdout___u64(test_struct.d);
+    tasm::tasmlib_io_write_to_stdout___u64(test_struct.d);
 
     return;
 }

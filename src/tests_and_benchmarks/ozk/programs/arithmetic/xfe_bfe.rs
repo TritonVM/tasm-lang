@@ -3,10 +3,10 @@ use tasm_lib::triton_vm::prelude::*;
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
 fn main() {
-    let bfe: BFieldElement = tasm::tasm_io_read_stdin___bfe();
-    let xfe: XFieldElement = tasm::tasm_io_read_stdin___xfe();
-    tasm::tasm_io_write_to_stdout___xfe(xfe + bfe);
-    tasm::tasm_io_write_to_stdout___xfe(xfe - bfe);
+    let bfe: BFieldElement = tasm::tasmlib_io_read_stdin___bfe();
+    let xfe: XFieldElement = tasm::tasmlib_io_read_stdin___xfe();
+    tasm::tasmlib_io_write_to_stdout___xfe(xfe + bfe);
+    tasm::tasmlib_io_write_to_stdout___xfe(xfe - bfe);
 
     return;
 }
@@ -16,7 +16,7 @@ mod test {
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
-    use tasm_lib::twenty_first::shared_math::other::random_elements;
+    use tasm_lib::twenty_first::math::other::random_elements;
 
     use super::*;
 

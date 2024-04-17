@@ -6,14 +6,14 @@ use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 fn main() {
     let unlock_date: u64 = 1707475556087u64;
 
-    let tx_kernel_digest: Digest = tasm::tasm_io_read_stdin___digest();
+    let tx_kernel_digest: Digest = tasm::tasmlib_io_read_stdin___digest();
 
-    let timestamp: BFieldElement = tasm::tasm_io_read_secin___bfe();
+    let timestamp: BFieldElement = tasm::tasmlib_io_read_secin___bfe();
 
     let leaf_index: u32 = 5;
     let leaf: Digest = Tip5::hash_varlen(&timestamp.encode());
     let tree_height: u32 = 3;
-    tasm::tasm_hashing_merkle_verify(tx_kernel_digest, leaf_index, leaf, tree_height);
+    tasm::tasmlib_hashing_merkle_verify(tx_kernel_digest, leaf_index, leaf, tree_height);
     assert!(unlock_date < timestamp.value());
 
     return;
@@ -25,7 +25,7 @@ mod test {
     use std::time::UNIX_EPOCH;
 
     use itertools::Itertools;
-    use tasm_lib::twenty_first::shared_math::other::random_elements;
+    use tasm_lib::twenty_first::math::other::random_elements;
     use tasm_lib::twenty_first::util_types::merkle_tree::CpuParallel;
     use tasm_lib::twenty_first::util_types::merkle_tree::MerkleTree;
     use tasm_lib::twenty_first::util_types::merkle_tree_maker::MerkleTreeMaker;

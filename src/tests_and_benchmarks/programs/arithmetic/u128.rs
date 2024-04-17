@@ -4,7 +4,7 @@ mod run_tests {
     use rand::thread_rng;
     use rand::Rng;
     use syn::parse_quote;
-    use tasm_lib::twenty_first::shared_math::other::random_elements;
+    use tasm_lib::twenty_first::math::other::random_elements;
 
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 
@@ -377,7 +377,7 @@ mod run_tests {
         fn mul_two_u64s_rast() -> syn::ItemFn {
             item_fn(parse_quote! {
                 fn mul_u128_test(lhs: u64, rhs: u64) -> u128 {
-                    let a: u128 = tasm::tasm_arithmetic_u64_mul_two_u64s_to_u128_u64(lhs, rhs);
+                    let a: u128 = tasm::tasmlib_arithmetic_u64_mul_two_u64s_to_u128_u64(lhs, rhs);
                     let b: u128 = lhs as u128 * rhs as u128;
                     assert!(a == b);
                     assert!(a != b + 1);

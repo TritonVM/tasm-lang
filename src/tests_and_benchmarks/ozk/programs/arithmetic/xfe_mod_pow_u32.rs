@@ -5,15 +5,15 @@ use tasm_lib::twenty_first::prelude::*;
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
 fn data_from_std_in() {
-    let base: XFieldElement = tasm::tasm_io_read_stdin___xfe();
-    let exponent: u32 = tasm::tasm_io_read_stdin___u32();
-    tasm::tasm_io_write_to_stdout___xfe(base.mod_pow_u32(exponent));
+    let base: XFieldElement = tasm::tasmlib_io_read_stdin___xfe();
+    let exponent: u32 = tasm::tasmlib_io_read_stdin___u32();
+    tasm::tasmlib_io_write_to_stdout___xfe(base.mod_pow_u32(exponent));
 
     return;
 }
 
 fn _to_the_power_of_zero() {
-    let base: XFieldElement = tasm::tasm_io_read_stdin___xfe();
+    let base: XFieldElement = tasm::tasmlib_io_read_stdin___xfe();
     let res: XFieldElement = base.mod_pow_u32(0);
     assert!(res == XFieldElement::one());
 
@@ -21,7 +21,7 @@ fn _to_the_power_of_zero() {
 }
 
 fn _to_the_power_of_one() {
-    let base: XFieldElement = tasm::tasm_io_read_stdin___xfe();
+    let base: XFieldElement = tasm::tasmlib_io_read_stdin___xfe();
     let res: XFieldElement = base.mod_pow_u32(1);
     assert!(res == base);
 
@@ -32,8 +32,8 @@ fn verify_no_name_clash_xfe_bfe_mod_pow_u32() {
     let bfe: BFieldElement = BFieldElement::new(42);
     let xfe: XFieldElement = bfe.lift() + XFieldElement::one();
 
-    tasm::tasm_io_write_to_stdout___bfe(bfe.mod_pow_u32(121));
-    tasm::tasm_io_write_to_stdout___xfe(xfe.mod_pow_u32(121));
+    tasm::tasmlib_io_write_to_stdout___bfe(bfe.mod_pow_u32(121));
+    tasm::tasmlib_io_write_to_stdout___xfe(xfe.mod_pow_u32(121));
 
     return;
 }
@@ -44,7 +44,7 @@ mod test {
     use crate::tests_and_benchmarks::ozk::rust_shadows::wrap_main_with_io;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
     use rand::random;
-    use tasm_lib::twenty_first::shared_math::other::random_elements;
+    use tasm_lib::twenty_first::math::other::random_elements;
 
     use super::*;
 

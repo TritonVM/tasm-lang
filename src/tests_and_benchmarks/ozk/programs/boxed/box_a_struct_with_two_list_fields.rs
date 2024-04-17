@@ -14,24 +14,24 @@ fn main() {
     let mut xfes: Vec<XFieldElement> = Vec::<XFieldElement>::default();
     bfes.push(BFieldElement::new(102));
     bfes.push(BFieldElement::new(2222));
-    xfes.push(tasm::tasm_io_read_stdin___xfe());
-    xfes.push(tasm::tasm_io_read_stdin___xfe());
+    xfes.push(tasm::tasmlib_io_read_stdin___xfe());
+    xfes.push(tasm::tasmlib_io_read_stdin___xfe());
     let wlf: WithListFields = WithListFields {
         bfes: bfes,
         xfes: xfes,
     };
     let boxed: Box<WithListFields> = Box::<WithListFields>::new(wlf);
-    tasm::tasm_io_write_to_stdout___bfe(boxed.bfes[0]);
-    tasm::tasm_io_write_to_stdout___xfe(boxed.xfes[0]);
-    tasm::tasm_io_write_to_stdout___xfe(boxed.xfes[1]);
-    tasm::tasm_io_write_to_stdout___bfe(boxed.bfes[1]);
+    tasm::tasmlib_io_write_to_stdout___bfe(boxed.bfes[0]);
+    tasm::tasmlib_io_write_to_stdout___xfe(boxed.xfes[0]);
+    tasm::tasmlib_io_write_to_stdout___xfe(boxed.xfes[1]);
+    tasm::tasmlib_io_write_to_stdout___bfe(boxed.bfes[1]);
 
     return;
 }
 
 #[cfg(test)]
 mod test {
-    use tasm_lib::twenty_first::shared_math::other::random_elements;
+    use tasm_lib::twenty_first::math::other::random_elements;
 
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;

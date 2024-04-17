@@ -21,16 +21,16 @@ fn main() {
     let test_struct: Box<TestStruct> =
         TestStruct::decode(&tasm::load_from_memory(BFieldElement::new(84))).unwrap();
     let a: BFieldElement = test_struct.a; // Use 1 `&`, ignore the 2nd `&`.
-    tasm::tasm_io_write_to_stdout___u128(test_struct.h);
-    tasm::tasm_io_write_to_stdout___bfe(a); // Implement both `*` and method `to_owned` to mean put this onto the stack. We might need exceptions for list though.
+    tasm::tasmlib_io_write_to_stdout___u128(test_struct.h);
+    tasm::tasmlib_io_write_to_stdout___bfe(a); // Implement both `*` and method `to_owned` to mean put this onto the stack. We might need exceptions for list though.
 
-    tasm::tasm_io_write_to_stdout___bool(test_struct.e);
+    tasm::tasmlib_io_write_to_stdout___bool(test_struct.e);
     let b: BFieldElement = test_struct.b;
-    tasm::tasm_io_write_to_stdout___u64(test_struct.g);
-    tasm::tasm_io_write_to_stdout___bfe(b);
-    tasm::tasm_io_write_to_stdout___digest(test_struct.d);
-    tasm::tasm_io_write_to_stdout___xfe(test_struct.c);
-    tasm::tasm_io_write_to_stdout___u32(test_struct.f);
+    tasm::tasmlib_io_write_to_stdout___u64(test_struct.g);
+    tasm::tasmlib_io_write_to_stdout___bfe(b);
+    tasm::tasmlib_io_write_to_stdout___digest(test_struct.d);
+    tasm::tasmlib_io_write_to_stdout___xfe(test_struct.c);
+    tasm::tasmlib_io_write_to_stdout___u32(test_struct.f);
     return;
 }
 

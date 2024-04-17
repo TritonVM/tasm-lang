@@ -1,5 +1,5 @@
 use num::Zero;
-use tasm_lib::twenty_first::shared_math::other::random_elements;
+use tasm_lib::twenty_first::math::other::random_elements;
 
 use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
@@ -17,8 +17,8 @@ fn initialized_sponge_behaves_correctly_on_small_stack() {
     let b: u64 = 100;
     Tip5WithState::init();
     let a: u64 = 400;
-    tasm::tasm_io_write_to_stdout___u64(b);
-    tasm::tasm_io_write_to_stdout___u64(a);
+    tasm::tasmlib_io_write_to_stdout___u64(b);
+    tasm::tasmlib_io_write_to_stdout___u64(a);
     return;
 }
 
@@ -30,7 +30,7 @@ fn initialized_sponge_behaves_correctly_deep_in_stack() {
     {
         let mut i: usize = 0;
         while i < 10 {
-            preimage[i] = tasm::tasm_io_read_stdin___bfe();
+            preimage[i] = tasm::tasmlib_io_read_stdin___bfe();
             i += 1;
         }
     }
@@ -43,8 +43,8 @@ fn initialized_sponge_behaves_correctly_deep_in_stack() {
     let _h: u128 = 800;
     let _i: u128 = 900;
     let _j: u128 = 1000;
-    tasm::tasm_io_write_to_stdout___u128(b);
-    tasm::tasm_io_write_to_stdout___u128(a);
+    tasm::tasmlib_io_write_to_stdout___u128(b);
+    tasm::tasmlib_io_write_to_stdout___u128(a);
     Tip5WithState::absorb(preimage);
 
     return;

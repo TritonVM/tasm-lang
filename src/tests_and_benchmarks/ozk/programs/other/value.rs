@@ -6,12 +6,12 @@ fn main() {
     let a: BFieldElement = BFieldElement::new(17u64);
     let a_u64: u64 = a.value();
     let b: BFieldElement = BFieldElement::new(a_u64);
-    tasm::tasm_io_write_to_stdout___bfe(b);
+    tasm::tasmlib_io_write_to_stdout___bfe(b);
 
     let c: BFieldElement = BFieldElement::new((1 << 32) + 17u64);
     let c_u64: u64 = c.value();
     let d: BFieldElement = BFieldElement::new(c_u64);
-    tasm::tasm_io_write_to_stdout___bfe(d);
+    tasm::tasmlib_io_write_to_stdout___bfe(d);
     return;
 }
 
@@ -29,7 +29,7 @@ mod test {
     fn value_test() {
         // Test function on host machine
         let stdin: Vec<BFieldElement> = vec![];
-        let non_determinism: NonDeterminism<BFieldElement> = NonDeterminism::default();
+        let non_determinism = NonDeterminism::default();
         let native_output = rust_shadows::wrap_main_with_io(&main)(stdin, non_determinism);
 
         let expected_output = [17, (1 << 32) + 17].map(BFieldElement::new).to_vec();

@@ -19,21 +19,21 @@ fn main() {
 
     let on_stack: NotCopyStruct = *boxed_enum_type;
 
-    tasm::tasm_io_write_to_stdout___u32(on_stack.xfes.len() as u32);
-    tasm::tasm_io_write_to_stdout___xfe(on_stack.xfe);
-    tasm::tasm_io_write_to_stdout___bfe(on_stack.bfe);
-    tasm::tasm_io_write_to_stdout___u32(on_stack.digests.len() as u32);
+    tasm::tasmlib_io_write_to_stdout___u32(on_stack.xfes.len() as u32);
+    tasm::tasmlib_io_write_to_stdout___xfe(on_stack.xfe);
+    tasm::tasmlib_io_write_to_stdout___bfe(on_stack.bfe);
+    tasm::tasmlib_io_write_to_stdout___u32(on_stack.digests.len() as u32);
     if on_stack.digests.len() > 0 {
-        tasm::tasm_io_write_to_stdout___digest(on_stack.digests[0]);
+        tasm::tasmlib_io_write_to_stdout___digest(on_stack.digests[0]);
     }
     if on_stack.digests.len() > 1 {
-        tasm::tasm_io_write_to_stdout___digest(on_stack.digests[1]);
+        tasm::tasmlib_io_write_to_stdout___digest(on_stack.digests[1]);
     }
     if on_stack.xfes.len() > 0 {
-        tasm::tasm_io_write_to_stdout___xfe(on_stack.xfes[0]);
+        tasm::tasmlib_io_write_to_stdout___xfe(on_stack.xfes[0]);
     }
     if on_stack.xfes.len() > 1 {
-        tasm::tasm_io_write_to_stdout___xfe(on_stack.xfes[1]);
+        tasm::tasmlib_io_write_to_stdout___xfe(on_stack.xfes[1]);
     }
 
     return;

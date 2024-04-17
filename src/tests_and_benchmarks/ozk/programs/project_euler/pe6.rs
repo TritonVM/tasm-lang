@@ -13,7 +13,7 @@ fn main() {
     // $b = N * (N + 1) * (2N + 1) / 6$
 
     let n: u32 = 100;
-    tasm::tasm_io_write_to_stdout___u32(
+    tasm::tasmlib_io_write_to_stdout___u32(
         n.pow(2) * (n + 1).pow(2) / 4 - n * (n + 1) * (n * 2 + 1) / 6,
     );
 
@@ -72,6 +72,6 @@ mod benches {
             worst_case,
             0,
         );
-        profile(name, code, common_case, true);
+        profile(name, code, common_case);
     }
 }

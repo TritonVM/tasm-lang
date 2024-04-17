@@ -9,10 +9,10 @@ fn main() {
     }
     let mut input_values: Vec<BFieldElement> = Vec::<BFieldElement>::default();
 
-    let length_indication: usize = tasm::tasm_io_read_stdin___bfe().value() as usize;
+    let length_indication: usize = tasm::tasmlib_io_read_stdin___bfe().value() as usize;
     let mut i: usize = 0;
     while i < length_indication {
-        input_values.push(tasm::tasm_io_read_stdin___bfe());
+        input_values.push(tasm::tasmlib_io_read_stdin___bfe());
         i += 1;
     }
     let output_values: Vec<BFieldElement> =
@@ -20,7 +20,7 @@ fn main() {
 
     let mut j: usize = 0;
     while j < length_indication {
-        tasm::tasm_io_write_to_stdout___bfe(output_values[j]);
+        tasm::tasmlib_io_write_to_stdout___bfe(output_values[j]);
         j += 1;
     }
 
@@ -74,7 +74,7 @@ mod benches {
     use std::collections::HashMap;
 
     use tasm_lib::triton_vm::prelude::*;
-    use tasm_lib::twenty_first::shared_math::other::random_elements;
+    use tasm_lib::twenty_first::math::other::random_elements;
 
     use crate::tests_and_benchmarks::benchmarks::execute_and_write_benchmark;
     use crate::tests_and_benchmarks::benchmarks::BenchmarkInput;

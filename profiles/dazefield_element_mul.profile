@@ -1,73 +1,37 @@
 dazefield_element_mul:
-
-# aggregated unsorted
- main:, 2464, 1;
-   tasm_io_read_stdin___bfe:, 4, 0.0016233766;
-   new:, 1132, 0.45941558;
-     tasm_arithmetic_u128_safe_mul:, 290, 0.1176948;
-     montyred:, 1209, 0.49066558;
-       tasm_arithmetic_u128_shift_right:, 348, 0.14123377;
-         tasm_arithmetic_u128_shift_right_handle_hi_shift:, 198, 0.08035714;
-           tasm_arithmetic_u128_shift_right:, 147, 0.05965909;
-       tasm_arithmetic_u64_shift_left:, 69, 0.028003247;
-       tasm_arithmetic_u64_overflowing_add:, 33, 0.013392857;
-       tasm_arithmetic_u64_shift_right:, 78, 0.031655844;
-       tasm_arithmetic_u64_wrapping_sub:, 225, 0.091314934;
-       tasm_arithmetic_u64_overflowing_sub:, 84, 0.03409091;
-       tasm_arithmetic_u64_add:, 42, 0.017045455;
-       tasm_arithmetic_u64_safe_mul:, 114, 0.046266235;
-   method_DazeFieldElement_mul:, 448, 0.18181819;
-     tasm_arithmetic_u64_mul_two_u64s_to_u128_u64:, 33, 0.013392857;
-   method_DazeFieldElement_valued:, 848, 0.34415585;
-     method_DazeFieldElement_canonical_representation:, 832, 0.33766234;
-       montyred:, 806, 0.32711038;
-         tasm_arithmetic_u128_shift_right:, 232, 0.09415584;
-           tasm_arithmetic_u128_shift_right_handle_hi_shift:, 132, 0.05357143;
-             tasm_arithmetic_u128_shift_right:, 98, 0.039772727;
-         tasm_arithmetic_u64_shift_left:, 46, 0.01866883;
-         tasm_arithmetic_u64_overflowing_add:, 22, 0.008928572;
-         tasm_arithmetic_u64_shift_right:, 52, 0.021103896;
-         tasm_arithmetic_u64_wrapping_sub:, 150, 0.060876623;
-         tasm_arithmetic_u64_overflowing_sub:, 56, 0.022727273;
-         tasm_arithmetic_u64_add:, 28, 0.011363637;
-         tasm_arithmetic_u64_safe_mul:, 76, 0.030844156;
-   bfe_new_from_u64:, 5, 0.0020292208;
-   tasm_io_write_to_stdout___bfe:, 2, 0.0008116883;
-   tasm_io_write_to_stdout___u64:, 2, 0.0008116883;
- total:, 2466, 1.0008117;
-
-# aggregated + sorted
-   tasm_io_write_to_stdout___bfe:, 2, 0.0008116883;
-   tasm_io_write_to_stdout___u64:, 2, 0.0008116883;
-   tasm_io_read_stdin___bfe:, 4, 0.0016233766;
-   bfe_new_from_u64:, 5, 0.0020292208;
-         tasm_arithmetic_u64_overflowing_add:, 22, 0.008928572;
-         tasm_arithmetic_u64_add:, 28, 0.011363637;
-       tasm_arithmetic_u64_overflowing_add:, 33, 0.013392857;
-     tasm_arithmetic_u64_mul_two_u64s_to_u128_u64:, 33, 0.013392857;
-       tasm_arithmetic_u64_add:, 42, 0.017045455;
-         tasm_arithmetic_u64_shift_left:, 46, 0.01866883;
-         tasm_arithmetic_u64_shift_right:, 52, 0.021103896;
-         tasm_arithmetic_u64_overflowing_sub:, 56, 0.022727273;
-       tasm_arithmetic_u64_shift_left:, 69, 0.028003247;
-         tasm_arithmetic_u64_safe_mul:, 76, 0.030844156;
-       tasm_arithmetic_u64_shift_right:, 78, 0.031655844;
-       tasm_arithmetic_u64_overflowing_sub:, 84, 0.03409091;
-             tasm_arithmetic_u128_shift_right:, 98, 0.039772727;
-       tasm_arithmetic_u64_safe_mul:, 114, 0.046266235;
-           tasm_arithmetic_u128_shift_right_handle_hi_shift:, 132, 0.05357143;
-           tasm_arithmetic_u128_shift_right:, 147, 0.05965909;
-         tasm_arithmetic_u64_wrapping_sub:, 150, 0.060876623;
-         tasm_arithmetic_u128_shift_right_handle_hi_shift:, 198, 0.08035714;
-       tasm_arithmetic_u64_wrapping_sub:, 225, 0.091314934;
-         tasm_arithmetic_u128_shift_right:, 232, 0.09415584;
-     tasm_arithmetic_u128_safe_mul:, 290, 0.1176948;
-       tasm_arithmetic_u128_shift_right:, 348, 0.14123377;
-   method_DazeFieldElement_mul:, 448, 0.18181819;
-       montyred:, 806, 0.32711038;
-     method_DazeFieldElement_canonical_representation:, 832, 0.33766234;
-   method_DazeFieldElement_valued:, 848, 0.34415585;
-   new:, 1132, 0.45941558;
-     montyred:, 1209, 0.49066558;
- main:, 2464, 1;
- total:, 2466, 1.0008117;
+| Subroutine                                                              |            Processor |             Op Stack |                  RAM |                 Hash |                  U32 |
+|:------------------------------------------------------------------------|---------------------:|---------------------:|---------------------:|---------------------:|---------------------:|
+| main                                                                    |        2464 ( 99.9%) |        1746 (100.0%) |          20 (100.0%) |           0 (  0.0%) |         568 (100.0%) |
+| ··tasmlib_io_read_stdin___bfe                                           |           4 (  0.2%) |           2 (  0.1%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ··new                                                                   |        1132 ( 45.9%) |         832 ( 47.7%) |           8 ( 40.0%) |           0 (  0.0%) |         247 ( 43.5%) |
+| ····tasmlib_arithmetic_u128_safe_mul                                    |         290 ( 11.8%) |         252 ( 14.4%) |           0 (  0.0%) |           0 (  0.0%) |         103 ( 18.1%) |
+| ····montyred                                                            |        1209 ( 49.0%) |         840 ( 48.1%) |          12 ( 60.0%) |           0 (  0.0%) |         325 ( 57.2%) |
+| ······tasmlib_arithmetic_u128_shift_right                               |         348 ( 14.1%) |         207 ( 11.9%) |           0 (  0.0%) |           0 (  0.0%) |         100 ( 17.6%) |
+| ········tasmlib_arithmetic_u128_shift_right_handle_hi_shift             |         198 (  8.0%) |         114 (  6.5%) |           0 (  0.0%) |           0 (  0.0%) |          83 ( 14.6%) |
+| ··········tasmlib_arithmetic_u128_shift_right                           |         147 (  6.0%) |          93 (  5.3%) |           0 (  0.0%) |           0 (  0.0%) |          83 ( 14.6%) |
+| ······tasmlib_arithmetic_u64_shift_left                                 |          69 (  2.8%) |          51 (  2.9%) |           0 (  0.0%) |           0 (  0.0%) |          44 (  7.7%) |
+| ······tasmlib_arithmetic_u64_overflowing_add                            |          33 (  1.3%) |          15 (  0.9%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ······tasmlib_arithmetic_u64_shift_right                                |          78 (  3.2%) |          63 (  3.6%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ······tasmlib_arithmetic_u64_wrapping_sub                               |         225 (  9.1%) |         144 (  8.2%) |           0 (  0.0%) |           0 (  0.0%) |         113 ( 19.9%) |
+| ······tasmlib_arithmetic_u64_overflowing_sub                            |          84 (  3.4%) |          51 (  2.9%) |           0 (  0.0%) |           0 (  0.0%) |           2 (  0.4%) |
+| ······tasmlib_arithmetic_u64_add                                        |          42 (  1.7%) |          24 (  1.4%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ······tasmlib_arithmetic_u64_safe_mul                                   |         114 (  4.6%) |          78 (  4.5%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ··method_DazeFieldElement_mul                                           |         448 ( 18.2%) |         310 ( 17.8%) |           4 ( 20.0%) |           0 (  0.0%) |         288 ( 50.7%) |
+| ····tasmlib_arithmetic_u64_mul_two_u64s_to_u128_u64                     |          33 (  1.3%) |          22 (  1.3%) |           0 (  0.0%) |           0 (  0.0%) |         107 ( 18.8%) |
+| ··method_DazeFieldElement_valued                                        |         848 ( 34.4%) |         580 ( 33.2%) |           8 ( 40.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ····method_DazeFieldElement_canonical_representation                    |         832 ( 33.7%) |         572 ( 32.8%) |           8 ( 40.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ······montyred                                                          |         806 ( 32.7%) |         560 ( 32.1%) |           8 ( 40.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ········tasmlib_arithmetic_u128_shift_right                             |         232 (  9.4%) |         138 (  7.9%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ··········tasmlib_arithmetic_u128_shift_right_handle_hi_shift           |         132 (  5.4%) |          76 (  4.4%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ············tasmlib_arithmetic_u128_shift_right                         |          98 (  4.0%) |          62 (  3.6%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ········tasmlib_arithmetic_u64_shift_left                               |          46 (  1.9%) |          34 (  1.9%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ········tasmlib_arithmetic_u64_overflowing_add                          |          22 (  0.9%) |          10 (  0.6%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ········tasmlib_arithmetic_u64_shift_right                              |          52 (  2.1%) |          42 (  2.4%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ········tasmlib_arithmetic_u64_wrapping_sub                             |         150 (  6.1%) |          96 (  5.5%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ········tasmlib_arithmetic_u64_overflowing_sub                          |          56 (  2.3%) |          34 (  1.9%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ········tasmlib_arithmetic_u64_add                                      |          28 (  1.1%) |          16 (  0.9%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ········tasmlib_arithmetic_u64_safe_mul                                 |          76 (  3.1%) |          52 (  3.0%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ··bfe_new_from_u64                                                      |           5 (  0.2%) |           3 (  0.2%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ··tasmlib_io_write_to_stdout___bfe                                      |           2 (  0.1%) |           1 (  0.1%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ··tasmlib_io_write_to_stdout___u64                                      |           2 (  0.1%) |           2 (  0.1%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| Total                                                                   |        2466 (100.0%) |        1746 (100.0%) |          20 (100.0%) |         588 (100.0%) |         568 (100.0%) |

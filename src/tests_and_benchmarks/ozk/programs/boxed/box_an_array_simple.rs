@@ -9,7 +9,7 @@ mod test {
     fn main() {
         let array: [BFieldElement; 2] = [BFieldElement::new(101), BFieldElement::new(102)];
         let boxed_array: Box<[BFieldElement; 2]> = Box::<[BFieldElement; 2]>::new(array);
-        tasm::tasm_io_write_to_stdout___bfe(boxed_array[0]);
+        tasm::tasmlib_io_write_to_stdout___bfe(boxed_array[0]);
 
         return;
     }

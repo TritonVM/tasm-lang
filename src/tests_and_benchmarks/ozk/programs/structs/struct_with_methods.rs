@@ -54,12 +54,12 @@ impl TestStruct {
 fn main() {
     let test_struct: Box<TestStruct> =
         TestStruct::decode(&tasm::load_from_memory(BFieldElement::new(200))).unwrap();
-    tasm::tasm_io_write_to_stdout___u32(test_struct.bc_count_ones_and_add(200));
-    tasm::tasm_io_write_to_stdout___u32(test_struct.bc_count_ones_and_add(8043));
-    tasm::tasm_io_write_to_stdout___u32(test_struct.a_length());
-    tasm::tasm_io_write_to_stdout___xfe(test_struct.lift_element_zero());
-    tasm::tasm_io_write_to_stdout___u32(test_struct.call_other_methods(4));
-    tasm::tasm_io_write_to_stdout___xfe(test_struct.call_all_methods(200, 7));
+    tasm::tasmlib_io_write_to_stdout___u32(test_struct.bc_count_ones_and_add(200));
+    tasm::tasmlib_io_write_to_stdout___u32(test_struct.bc_count_ones_and_add(8043));
+    tasm::tasmlib_io_write_to_stdout___u32(test_struct.a_length());
+    tasm::tasmlib_io_write_to_stdout___xfe(test_struct.lift_element_zero());
+    tasm::tasmlib_io_write_to_stdout___u32(test_struct.call_other_methods(4));
+    tasm::tasmlib_io_write_to_stdout___xfe(test_struct.call_all_methods(200, 7));
     return;
 }
 
@@ -70,7 +70,7 @@ mod test {
     use rand::prelude::Distribution;
     use rand::random;
     use rand::Rng;
-    use tasm_lib::twenty_first::shared_math::other::random_elements;
+    use tasm_lib::twenty_first::math::other::random_elements;
 
     use crate::tests_and_benchmarks::ozk::ozk_parsing;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;

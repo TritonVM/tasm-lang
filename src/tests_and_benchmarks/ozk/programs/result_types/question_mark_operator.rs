@@ -6,7 +6,7 @@ use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
 fn main() {
     fn create_result_type(succeed: bool) -> Result<BFieldElement, ()> {
-        let bfe: BFieldElement = tasm::tasm_io_read_stdin___bfe();
+        let bfe: BFieldElement = tasm::tasmlib_io_read_stdin___bfe();
         let result_bfe: Result<BFieldElement, ()> = if succeed { Ok(bfe) } else { Err(()) };
         return result_bfe;
     }
@@ -44,13 +44,13 @@ fn main() {
     let bfe1: Result<BFieldElement, ()> = call_create(true);
     let bfe_sum_res: Result<BFieldElement, ()> = question_mark_try_is_just_unwrap_bfe(bfe0, bfe1);
     let bfe_sum_unwrapped: BFieldElement = bfe_sum_res.unwrap();
-    tasm::tasm_io_write_to_stdout___bfe(bfe_sum_unwrapped);
+    tasm::tasmlib_io_write_to_stdout___bfe(bfe_sum_unwrapped);
 
     // Result<Xfe>
-    let xfe0: Result<XFieldElement, ()> = Ok(tasm::tasm_io_read_stdin___xfe());
-    let xfe1: Result<XFieldElement, ()> = Ok(tasm::tasm_io_read_stdin___xfe());
+    let xfe0: Result<XFieldElement, ()> = Ok(tasm::tasmlib_io_read_stdin___xfe());
+    let xfe1: Result<XFieldElement, ()> = Ok(tasm::tasmlib_io_read_stdin___xfe());
     let xfe_sum_res: Result<XFieldElement, ()> = question_mark_try_is_just_unwrap_xfe(xfe0, xfe1);
-    tasm::tasm_io_write_to_stdout___xfe(xfe_sum_res.unwrap());
+    tasm::tasmlib_io_write_to_stdout___xfe(xfe_sum_res.unwrap());
 
     return;
 }
@@ -58,7 +58,7 @@ fn main() {
 mod test {
     use std::default::Default;
 
-    use tasm_lib::twenty_first::shared_math::other::random_elements;
+    use tasm_lib::twenty_first::math::other::random_elements;
 
     use crate::tests_and_benchmarks::ozk::ozk_parsing;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;

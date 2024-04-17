@@ -3,8 +3,8 @@ use tasm_lib::triton_vm::prelude::*;
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
 fn output_ilog2() {
-    let value: u32 = tasm::tasm_io_read_stdin___u32();
-    tasm::tasm_io_write_to_stdout___u32(value.ilog2());
+    let value: u32 = tasm::tasmlib_io_read_stdin___u32();
+    tasm::tasmlib_io_write_to_stdout___u32(value.ilog2());
 
     return;
 }

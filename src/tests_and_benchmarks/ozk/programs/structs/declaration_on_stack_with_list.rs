@@ -44,11 +44,11 @@ fn main() {
     test_struct
         .c
         .push(BFieldElement::new(0x0000002000000000u64));
-    tasm::tasm_io_write_to_stdout___bfe(test_struct.a);
-    tasm::tasm_io_write_to_stdout___digest(test_struct.b[0]);
-    tasm::tasm_io_write_to_stdout___digest(test_struct.b[1]);
-    tasm::tasm_io_write_to_stdout___bfe(test_struct.c[1]);
-    tasm::tasm_io_write_to_stdout___bfe(test_struct.c[0]);
+    tasm::tasmlib_io_write_to_stdout___bfe(test_struct.a);
+    tasm::tasmlib_io_write_to_stdout___digest(test_struct.b[0]);
+    tasm::tasmlib_io_write_to_stdout___digest(test_struct.b[1]);
+    tasm::tasmlib_io_write_to_stdout___bfe(test_struct.c[1]);
+    tasm::tasmlib_io_write_to_stdout___bfe(test_struct.c[0]);
 
     return;
 }
