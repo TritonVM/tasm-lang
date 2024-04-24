@@ -344,12 +344,12 @@ pub(super) fn _tasm_recufier_own_program_digest() -> Digest {
         .with_borrow(|digest| digest.expect("Program digest must be set for this function to work"))
 }
 
-pub(super) fn tasmlib_recufier_claim_instantiate_fiat_shamir_with_claim(claim: &TasmLangClaim) {
+pub(super) fn tasmlib_verifier_claim_instantiate_fiat_shamir_with_claim(claim: &TasmLangClaim) {
     SPONGE_STATE
         .with_borrow_mut(|sponge| sponge.as_mut().unwrap().pad_and_absorb_all(&claim.encode()));
 }
 
-pub(super) fn tasmlib_recufier_challenges_new_generic_dyn_claim_59_4(
+pub(super) fn tasmlib_verifier_challenges_new_generic_dyn_claim_59_4(
     claim: &TasmLangClaim,
 ) -> Box<TasmLangChallenges> {
     let sampled_challenges = SPONGE_STATE.with_borrow_mut(|maybe_sponge| {
@@ -407,7 +407,7 @@ pub(super) fn tasmlib_array_horner_evaluation_with_4_coefficients(
     running_evaluation
 }
 
-pub(super) fn tasmlib_recufier_master_ext_table_air_constraint_evaluation(
+pub(super) fn tasmlib_verifier_master_ext_table_air_constraint_evaluation(
 ) -> [XFieldElement; MasterExtTable::NUM_CONSTRAINTS] {
     const CHALLENGES_LENGTH: usize = Challenges::COUNT;
     let mem_layout = AirConstraintEvaluation::conventional_air_constraint_memory_layout();
@@ -469,7 +469,7 @@ pub(super) fn tasmlib_recufier_master_ext_table_air_constraint_evaluation(
         .unwrap()
 }
 
-pub(super) fn tasmlib_recufier_fri_verify(
+pub(super) fn tasmlib_verifier_fri_verify(
     proof_iter: &mut VmProofIter,
     fri_parameters: &FriVerify,
 ) -> Vec<(u32, XFieldElement)> {
@@ -654,7 +654,7 @@ vm_proof_iter_impl!(
         uses try_into_fri_response,
 );
 
-pub fn tasmlib_array_inner_product_of_three_rows_with_weights<const N: usize>(
+pub fn tasmlib_array_inner_product_of_three_rows_with_weights_Bfe_baserowelem<const N: usize>(
     weights: [XFieldElement; N],
     base_row: BaseRow<BFieldElement>,
     ext_row: ExtensionRow,

@@ -72,7 +72,7 @@ pub(crate) struct FriVerify {
 impl FriVerify {
     // This wrapper is probably not necessary; consider removing.
     pub fn verify(&self, proof_iter: &mut VmProofIter) -> Vec<(u32, XFieldElement)> {
-        return tasm::tasmlib_recufier_fri_verify(proof_iter, self);
+        return tasm::tasmlib_verifier_fri_verify(proof_iter, self);
     }
 }
 

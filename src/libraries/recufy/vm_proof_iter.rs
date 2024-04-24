@@ -89,6 +89,9 @@ fn all_next_as_methods(graft_config: &mut Graft) -> Vec<ast::Method<Typing>> {
             proof_item: variant,
         };
         let method_output = variant.payload_type();
+
+        // TODO: Handle Polyonomial<T> through polynomial library here, and add it to custom
+        // types in `graft_config`.
         let method_output = DataType::try_from_string(method_output).unwrap();
         let method_output = DataType::Boxed(Box::new(method_output));
         let snippet_label = snippet.entrypoint();

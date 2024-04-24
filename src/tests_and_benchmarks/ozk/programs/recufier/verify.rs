@@ -27,7 +27,7 @@ impl Recufier {
 
         Tip5WithState::init();
 
-        tasm::tasmlib_recufier_claim_instantiate_fiat_shamir_with_claim(claim);
+        tasm::tasmlib_verifier_claim_instantiate_fiat_shamir_with_claim(claim);
 
         // For `tasm-lang` `VmProofIter` comes from the `recufy` library. For rustc in
         // comes from `rust-shadowing`.
@@ -44,7 +44,7 @@ impl Recufier {
         // whenever the challenges are needed (which is for constraint evaluation), we can assume their
         // location and do not need to read this variable.
         let _challenges: Box<Challenges> =
-            tasm::tasmlib_recufier_challenges_new_generic_dyn_claim_59_4(claim);
+            tasm::tasmlib_verifier_challenges_new_generic_dyn_claim_59_4(claim);
 
         let extension_tree_merkle_root: Box<Digest> = proof_iter.next_as_merkleroot();
 
@@ -260,7 +260,7 @@ impl Recufier {
                     fri.domain_offset * fri.domain_generator.mod_pow_u32(row_idx);
 
                 let base_and_ext_opened_row_element: XFieldElement =
-                    tasm::tasmlib_array_inner_product_of_three_rows_with_weights(
+                    tasm::tasmlib_array_inner_product_of_three_rows_with_weights_Bfe_baserowelem(
                         trace_weights,
                         base_row,
                         ext_row,
@@ -340,7 +340,7 @@ impl Recufier {
         // Along with the challenges, the out-of-domain rows ({base,ext}*{curr,next}) are stored at
         // a statically-known location; those locations are assumed by the next function call.
         let mut evaluated_constraints: [XFieldElement; 596] =
-            tasm::tasmlib_recufier_master_ext_table_air_constraint_evaluation();
+            tasm::tasmlib_verifier_master_ext_table_air_constraint_evaluation();
 
         let categories_running_sum_lengths: [usize; 4] =
             Recufier::constraint_evaluation_lengths_running_sum();

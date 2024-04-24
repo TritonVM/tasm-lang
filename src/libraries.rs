@@ -14,6 +14,7 @@ pub(crate) mod bfield_codec;
 pub(crate) mod boxed;
 pub(crate) mod core;
 pub(crate) mod hasher;
+pub(crate) mod polynomial;
 pub(crate) mod recufy;
 pub(crate) mod tasm;
 pub(crate) mod unsigned_integers;
@@ -40,6 +41,7 @@ pub(crate) fn all_libraries() -> Box<[Box<dyn Library>]> {
         Box::new(tasm::TasmLibrary),
         Box::new(unsigned_integers::UnsignedIntegersLib),
         Box::new(vector::VectorLib),
+        Box::new(polynomial::PolynomialLib),
         Box::new(xfe::XfeLibrary),
         Box::new(recufy::RecufyLib),
     ])
