@@ -469,6 +469,81 @@ pub(super) fn tasmlib_verifier_master_ext_table_air_constraint_evaluation(
         .unwrap()
 }
 
+#[allow(non_snake_case)] // Name must agree with `tasm-lib`
+pub(super) fn tasmlib_verifier_master_ext_table_verify_Base_table_rows(
+    num_combination_codeword_checks: usize,
+    merkle_tree_height: u32,
+    merkle_tree_root: &Digest,
+    revealed_fri_indices_and_elements: &[(u32, XFieldElement)],
+    base_rows: &[BaseRow<BFieldElement>],
+) {
+    assert_eq!(base_rows.len(), num_combination_codeword_checks);
+    let leaf_digests_base: Vec<_> = base_rows
+        .iter()
+        .map(|revealed_base_elem| Tip5::hash_varlen(revealed_base_elem))
+        .collect();
+    for (i, leaf) in leaf_digests_base.into_iter().enumerate() {
+        tasmlib_hashing_merkle_verify(
+            *merkle_tree_root,
+            revealed_fri_indices_and_elements[i].0,
+            leaf,
+            merkle_tree_height,
+        );
+    }
+}
+
+#[allow(non_snake_case)] // Name must agree with `tasm-lib`
+pub(super) fn tasmlib_verifier_master_ext_table_verify_Extension_table_rows(
+    num_combination_codeword_checks: usize,
+    merkle_tree_height: u32,
+    merkle_tree_root: &Digest,
+    revealed_fri_indices_and_elements: &[(u32, XFieldElement)],
+    ext_rows: &[ExtensionRow],
+) {
+    assert_eq!(ext_rows.len(), num_combination_codeword_checks);
+    let leaf_digests_ext = ext_rows
+        .iter()
+        .map(|xvalues| {
+            let b_values = xvalues.iter().flat_map(|xfe| xfe.coefficients.to_vec());
+            Tip5::hash_varlen(&b_values.collect_vec())
+        })
+        .collect::<Vec<_>>();
+    for (i, leaf) in leaf_digests_ext.into_iter().enumerate() {
+        tasmlib_hashing_merkle_verify(
+            *merkle_tree_root,
+            revealed_fri_indices_and_elements[i].0,
+            leaf,
+            merkle_tree_height,
+        );
+    }
+}
+
+#[allow(non_snake_case)] // Name must agree with `tasm-lib`
+pub(super) fn tasmlib_verifier_master_ext_table_verify_Quotient_table_rows(
+    num_combination_codeword_checks: usize,
+    merkle_tree_height: u32,
+    merkle_tree_root: &Digest,
+    revealed_fri_indices_and_elements: &[(u32, XFieldElement)],
+    quotient_segment_rows: &[QuotientSegments],
+) {
+    assert_eq!(quotient_segment_rows.len(), num_combination_codeword_checks);
+    let interpret_xfe_as_bfes = |xfe: XFieldElement| xfe.coefficients.to_vec();
+    let collect_row_as_bfes = |row: &QuotientSegments| row.map(interpret_xfe_as_bfes).concat();
+    let leaf_digests_quot: Vec<_> = quotient_segment_rows
+        .iter()
+        .map(collect_row_as_bfes)
+        .map(|row| Tip5::hash_varlen(&row))
+        .collect();
+    for (i, leaf) in leaf_digests_quot.into_iter().enumerate() {
+        tasmlib_hashing_merkle_verify(
+            *merkle_tree_root,
+            revealed_fri_indices_and_elements[i].0,
+            leaf,
+            merkle_tree_height,
+        );
+    }
+}
+
 pub(super) fn tasmlib_verifier_fri_verify(
     proof_iter: &mut VmProofIter,
     fri_parameters: &FriVerify,

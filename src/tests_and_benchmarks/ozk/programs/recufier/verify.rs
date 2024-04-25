@@ -144,98 +144,46 @@ impl Recufier {
         }
 
         // hash base rows to get leafs
-        let mut leaf_digests_base: Vec<Digest> = Vec::<Digest>::default();
-        {
-            let mut i: usize = 0;
-            while i < num_combination_codeword_checks {
-                leaf_digests_base.push(tasm::tasmlib_hashing_algebraic_hasher_hash_varlen(
-                    &base_table_rows[i],
-                    356,
-                ));
-                i += 1;
-            }
-        }
-
-        // Merkle verify (base tree)
         let merkle_tree_height: u32 = fri.domain_length.ilog2();
-        {
-            let mut i: usize = 0;
-            while i < num_combination_codeword_checks {
-                tasm::tasmlib_hashing_merkle_verify(
-                    *base_merkle_tree_root,
-                    revealed_fri_indices_and_elements[i].0,
-                    leaf_digests_base[i],
-                    merkle_tree_height,
-                );
-                i += 1;
-            }
-        }
+        tasm::tasmlib_verifier_master_ext_table_verify_Base_table_rows(
+            num_combination_codeword_checks,
+            merkle_tree_height,
+            &base_merkle_tree_root,
+            &revealed_fri_indices_and_elements,
+            &base_table_rows,
+        );
 
         // dequeue extension elements
         let ext_table_rows: Box<Vec<ExtensionRow>> = proof_iter.next_as_masterexttablerows();
-
         // dequeue extension rows' authentication structure but ignore it (divination instead)
         {
             let _dummy: Box<Vec<Digest>> = proof_iter.next_as_authenticationstructure();
         }
 
-        // hash extension rows to get leafs
-        let mut leaf_digests_ext: Vec<Digest> = Vec::<Digest>::default();
-        {
-            let mut i: usize = 0;
-            while i < num_combination_codeword_checks {
-                leaf_digests_ext.push(tasm::tasmlib_hashing_algebraic_hasher_hash_varlen(
-                    &ext_table_rows[i],
-                    83 * 3,
-                ));
-                i += 1;
-            }
-        }
-
-        // Merkle verify (extension tree)
-        {
-            let mut i: usize = 0;
-            while i < num_combination_codeword_checks {
-                tasm::tasmlib_hashing_merkle_verify(
-                    *extension_tree_merkle_root,
-                    revealed_fri_indices_and_elements[i].0,
-                    leaf_digests_ext[i],
-                    merkle_tree_height,
-                );
-                i += 1;
-            }
-        }
+        tasm::tasmlib_verifier_master_ext_table_verify_Extension_table_rows(
+            num_combination_codeword_checks,
+            merkle_tree_height,
+            &extension_tree_merkle_root,
+            &revealed_fri_indices_and_elements,
+            &ext_table_rows,
+        );
 
         // dequeue quotient segments
         let quotient_segment_elements: Box<Vec<QuotientSegments>> =
             proof_iter.next_as_quotientsegmentselements();
 
-        // hash rows
-        let mut leaf_digests_quot: Vec<Digest> = Vec::<Digest>::default();
+        // dequeue quotient row's authentication structure but ignore it (divination instead)
         {
-            let mut i: usize = 0;
-            while i < num_combination_codeword_checks {
-                leaf_digests_quot.push(tasm::tasmlib_hashing_algebraic_hasher_hash_varlen(
-                    &quotient_segment_elements[i],
-                    4 * 3,
-                ));
-                i += 1;
-            }
+            let _dummy: Box<Vec<Digest>> = proof_iter.next_as_authenticationstructure();
         }
 
-        // Merkle verify (quotient tree)
-        {
-            let mut i: usize = 0;
-            while i < num_combination_codeword_checks {
-                tasm::tasmlib_hashing_merkle_verify(
-                    *quotient_tree_merkle_root,
-                    revealed_fri_indices_and_elements[i].0,
-                    leaf_digests_quot[i],
-                    merkle_tree_height,
-                );
-                i += 1;
-            }
-        }
+        tasm::tasmlib_verifier_master_ext_table_verify_Quotient_table_rows(
+            num_combination_codeword_checks,
+            merkle_tree_height,
+            &quotient_tree_merkle_root,
+            &revealed_fri_indices_and_elements,
+            &quotient_segment_elements,
+        );
 
         // Linear combination
         // Some of these checks may be redundant, but this is what the verifier in TVM does
@@ -868,10 +816,16 @@ mod benches {
 
     use super::test::non_determinism_for_verify_and_claim_and_padded_height;
 
+    #[ignore = "Takes up to a minute to run"]
+    #[test]
+    fn small_benchmark_verification_as_a_function_of_inner_padded_height() {
+        benchmark_verifier(10, 1 << 8);
+    }
+
     #[ignore = "Intended to generate data about verifier table heights as a function of inner padded
        height Make sure to run with `RUSTFLAGS=\"-C opt-level=3 -C debug-assertions=no`"]
     #[test]
-    fn benchmark_verification_as_a_function_of_inner_padded_height() {
+    fn big_benchmark_verification_as_a_function_of_inner_padded_height() {
         for (fact_arg, expected_inner_padded_height) in [
             (10, 1 << 8),
             (40, 1 << 9),
