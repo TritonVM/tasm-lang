@@ -1,497 +1,238 @@
 verify_stark_proof_inner_padded_height_1024_0_input_words:
-
-# aggregated unsorted
- verify_stark_proof:, 1502554, 1;
-   tasm_io_read_stdin___digest:, 2, 0.000001331067;
-   tasm_io_read_stdin___u32:, 4, 0.000002662134;
-   tasm_list_new___bfe:, 50, 0.000033276676;
-     tasm_memory_dyn_malloc:, 52, 0.00003460774;
-       tasm_memory_dyn_malloc_initialize:, 3, 0.0000019966005;
-   _binop_Lt__LboolR_bool_7_while_loop:, 8, 0.000005324268;
-   _binop_Lt__LboolR_bool_19_while_loop:, 8, 0.000005324268;
-   box_new_Claim:, 181, 0.00012046156;
-     store_Claim_to_memory:, 155, 0.00010315769;
-       tasm_memory_memcpy:, 144, 0.00009583682;
-         tasm_memory_memcpy_loop_cpy5_words:, 45, 0.000029949008;
-         tasm_memory_memcpy_cpy1_word:, 18, 0.000011979602;
-   verify:, 1502277, 0.99981564;
-     default:, 6, 0.000003993201;
-     box_new_StarkParameters:, 27, 0.000017969403;
-       tasm_memory_dyn_malloc:, 112, 0.00007453975;
-     tasm_hashing_sponge_hasher_init:, 2, 0.000001331067;
-     tasm_recufier_claim_instantiate_fiat_shamir_with_claim:, 145, 0.00009650236;
-       tasm_hashing_absorb_multiple:, 132, 0.00008785042;
-         tasm_hashing_absorb_multiple_hash_all_full_chunks:, 5, 0.0000033276674;
-         tasm_hashing_absorb_multiple_pad_varnum_zeros:, 5, 0.0000033276674;
-         tasm_hashing_absorb_multiple_read_remainder:, 86, 0.00005723588;
-     new:, 2, 0.000001331067;
-     box_new_VmProofIter:, 29, 0.00001930047;
-       store_VmProofIter_to_memory:, 3, 0.0000019966005;
-     method_boxed_LVmProofIterR_next_as_log2paddedheight:, 23, 0.00001530727;
-       tasm_recufier_vm_proof_iter_dequeue_next_as_log2paddedheight:, 21, 0.000013976203;
-     tasm_arithmetic_u32_shiftleft:, 11, 0.0000073208685;
-     method_boxed_LStarkParametersR_derive_fri:, 260, 0.0001730387;
-       tasm_arithmetic_u32_safeadd:, 8968, 0.005968504;
-       tasm_arithmetic_u32_next_power_of_two:, 22, 0.000014641737;
-         tasm_arithmetic_u32_next_power_of_two_greater_than_one:, 14, 0.0000093174685;
-       tasm_arithmetic_u32_safemul:, 2568, 0.00170909;
-       tasm_arithmetic_u32_shiftleft:, 11, 0.0000073208685;
-       tasm_arithmetic_bfe_primitive_root_of_unity:, 320, 0.00021297071;
-     box_new_FriVerify:, 33, 0.000021962605;
-       store_FriVerify_to_memory:, 7, 0.0000046587343;
-     method_boxed_LVmProofIterR_next_as_merkleroot:, 507, 0.00033742547;
-       tasm_recufier_vm_proof_iter_dequeue_next_as_merkleroot:, 501, 0.00033343228;
-         tasm_hashing_sponge_hasher_pad_and_absorb_all:, 4326, 0.0028790978;
-           tasm_hashing_absorb_multiple:, 4278, 0.0028471523;
-             tasm_hashing_absorb_multiple_hash_all_full_chunks:, 3196, 0.002127045;
-             tasm_hashing_absorb_multiple_pad_varnum_zeros:, 403, 0.00026821;
-             tasm_hashing_absorb_multiple_read_remainder:, 391, 0.0002602236;
-     tasm_recufier_challenges_new_generic_dyn_claim_59_4:, 1794, 0.0011939671;
-       tasm_hashing_algebraic_hasher_sample_scalars_static_length_static_pointer_59_18446744060824649728:, 113, 0.00007520529;
-         tasm_hashing_squeeze_repeatedly_static_number_18:, 110, 0.000073208685;
-       tasm_recufier_eval_arg_compute_terminal_dyn_sized_dynamic_symbols:, 52, 0.00003460774;
-         tasm_recufier_eval_arg_compute_terminal_dyn_sized_dynamic_symbols_loop:, 10, 0.000006655335;
-       tasm_recufier_eval_arg_compute_terminal_from_digest:, 37, 0.000024624738;
-       tasm_recufier_eval_arg_compute_terminal_const_sized_static_symbols_symbol_count_256_16790708486107472414:, 1537, 0.001022925;
-     num_quotients:, 2, 0.000001331067;
-     tasm_hashing_algebraic_hasher_sample_scalars:, 4298, 0.002860463;
-       tasm_list_new___xfe:, 92, 0.00006122908;
-         tasm_memory_dyn_malloc:, 64, 0.000042594143;
-       tasm_list_set_length___xfe:, 20, 0.00001331067;
-       tasm_hashing_squeeze_repeatedly:, 4102, 0.0027300185;
-     method_Result___array596_of_LXFieldR_unwrap:, 2, 0.000001331067;
-     generator_for_length:, 250, 0.00016638337;
-       is_power_of_two:, 65, 0.000043259675;
-         tasm_arithmetic_u64_sub:, 23, 0.00001530727;
-         tasm_arithmetic_u64_and:, 5, 0.0000033276674;
-     tasm_arithmetic_xfe_to_the_fourth:, 9, 0.000005989801;
-     method_boxed_LVmProofIterR_next_as_outofdomainbaserow:, 2870, 0.0019100811;
-       tasm_recufier_vm_proof_iter_dequeue_next_as_outofdomainbaserow:, 2866, 0.001907419;
-     method_boxed_LVmProofIterR_next_as_outofdomainextrow:, 962, 0.00064024323;
-       tasm_recufier_vm_proof_iter_dequeue_next_as_outofdomainextrow:, 958, 0.0006375811;
-     method_boxed_LVmProofIterR_next_as_outofdomainquotientsegments:, 187, 0.00012445476;
-       tasm_recufier_vm_proof_iter_dequeue_next_as_outofdomainquotientsegments:, 185, 0.0001231237;
-     quotient_summands:, 65660, 0.04369893;
-       tasm_arithmetic_xfe_mod_pow_u32:, 330, 0.00021962605;
-         tasm_arithmetic_xfe_mod_pow_u32_loop:, 319, 0.00021230518;
-           tasm_arithmetic_xfe_mod_pow_u32_acc_mul_x:, 5, 0.0000033276674;
-       tasm_recufier_master_ext_table_air_constraint_evaluation:, 33340, 0.022188887;
-       constraint_evaluation_lengths_running_sum:, 264, 0.00017570084;
-         constraint_evaluation_lengths:, 40, 0.00002662134;
-           tasm_memory_dyn_malloc:, 48, 0.00003194561;
-         _binop_Lt__LboolR_bool_179_while_loop:, 216, 0.00014375523;
-           tasm_arithmetic_u32_safeadd:, 64, 0.000042594143;
-       _binop_Lt__LboolR_bool_197_while_loop:, 4309, 0.002867784;
-         tasm_arithmetic_u32_safeadd:, 13120, 0.008731799;
-       _binop_Lt__LboolR_bool_212_while_loop:, 4998, 0.0033263364;
-       _binop_Lt__LboolR_bool_227_while_loop:, 21110, 0.014049412;
-       _binop_Lt__LboolR_bool_242_while_loop:, 1235, 0.00082193385;
-     tasm_array_inner_product_of_596_xfes:, 4782, 0.0031825812;
-     tasm_array_horner_evaluation_with_4_coefficients:, 51, 0.000033942208;
-     num_base_and_ext_and_quotient_segment_codeword_weights:, 2, 0.000001331067;
-     num_columns:, 2, 0.000001331067;
-     tasm_list_split_off_xfe:, 118, 0.000078532954;
-         tasm_memory_memcpy_cpy2_words:, 9, 0.000005989801;
-     method_Result___array4_of_LXFieldR_unwrap:, 2, 0.000001331067;
-     linearly_sum_xfe_base_and_ext_row:, 51234, 0.034097943;
-       _binop_Lt__LboolR_bool_288_while_loop:, 39892, 0.026549462;
-       _binop_Lt__LboolR_bool_307_while_loop:, 11308, 0.0075258524;
-     tasm_array_inner_product_of_4_xfes:, 46, 0.00003061454;
-     method_Result___array3_of_LXFieldR_unwrap:, 2, 0.000001331067;
-     method_boxed_LFriVerifyR_verify:, 452627, 0.30123842;
-       tasm_recufier_fri_verify:, 452620, 0.30123377;
-         tasm_list_new___xfe:, 23, 0.00001530727;
-         tasm_list_new___digest:, 23, 0.00001530727;
-         tasm_recufier_vm_proof_iter_dequeue_next_as_merkleroot:, 167, 0.000111144094;
-           tasm_hashing_sponge_hasher_pad_and_absorb_all:, 144, 0.00009583682;
-             tasm_hashing_absorb_multiple:, 138, 0.00009184362;
-               tasm_hashing_absorb_multiple_hash_all_full_chunks:, 5, 0.0000033276674;
-               tasm_hashing_absorb_multiple_pad_varnum_zeros:, 38, 0.000025290272;
-               tasm_hashing_absorb_multiple_read_remainder:, 59, 0.000039266477;
-         tasm_list_push___digest:, 20, 0.00001331067;
-         tasm_recufier_fri_verify_dequeue_commit_phase_remainder:, 1057, 0.0007034689;
-           tasm_hashing_algebraic_hasher_sample_scalars_static_length_dyn_malloc_1:, 112, 0.00007453975;
-             tasm_memory_dyn_malloc:, 256, 0.00017037657;
-             tasm_hashing_squeeze_repeatedly_static_number_1:, 32, 0.000021297072;
-           tasm_list_push___xfe:, 80, 0.00005324268;
-           tasm_recufier_vm_proof_iter_dequeue_next_as_merkleroot:, 668, 0.00044457638;
-             tasm_hashing_sponge_hasher_pad_and_absorb_all:, 576, 0.00038334727;
-               tasm_hashing_absorb_multiple:, 552, 0.00036737448;
-                 tasm_hashing_absorb_multiple_hash_all_full_chunks:, 20, 0.00001331067;
-                 tasm_hashing_absorb_multiple_pad_varnum_zeros:, 152, 0.00010116109;
-                 tasm_hashing_absorb_multiple_read_remainder:, 236, 0.00015706591;
-           tasm_list_push___digest:, 80, 0.00005324268;
-         tasm_recufier_vm_proof_iter_dequeue_next_as_fricodeword:, 23, 0.00001530727;
-         tasm_list_higher_order_u32_map_tasm_recufier_fri_verify_identity:, 7736, 0.0051485673;
-           tasm_list_new___xfe:, 115, 0.00007653635;
-           tasm_list_higher_order_u32_map_tasm_recufier_fri_verify_identity_loop:, 7685, 0.0051146247;
-         tasm_list_higher_order_u32_map_tasm_recufier_fri_verify_convert_xfe_to_digest:, 12544, 0.008348452;
-           tasm_list_new___digest:, 46, 0.00003061454;
-           tasm_list_higher_order_u32_map_tasm_recufier_fri_verify_convert_xfe_to_digest_loop:, 12442, 0.008280568;
-         tasm_list_length___digest:, 6, 0.000003993201;
-         tasm_hashing_merkle_root:, 37333, 0.024846362;
-           tasm_hashing_merkle_root_else:, 37314, 0.024833716;
-             tasm_hashing_merkle_root:, 37290, 0.024817744;
-               tasm_hashing_merkle_root_else:, 37252, 0.024792453;
-                 tasm_hashing_merkle_root:, 37204, 0.024760507;
-                   tasm_hashing_merkle_root_else:, 37128, 0.024709927;
-                     tasm_hashing_merkle_root:, 37032, 0.024646036;
-                       tasm_hashing_merkle_root_else:, 36880, 0.024544874;
-                         tasm_hashing_merkle_root:, 36688, 0.024417093;
-                           tasm_hashing_merkle_root_else:, 36384, 0.02421477;
-                             tasm_hashing_merkle_root:, 36000, 0.023959205;
-                               tasm_hashing_merkle_root_else:, 35392, 0.023554562;
-                                 tasm_hashing_merkle_root:, 34624, 0.023043431;
-                                   tasm_hashing_merkle_root_else:, 33408, 0.022234142;
-                                     tasm_hashing_merkle_root:, 31872, 0.021211883;
-                                       tasm_hashing_merkle_root_else:, 29440, 0.019593306;
-                                         tasm_hashing_merkle_root:, 26368, 0.017548786;
-                                           tasm_hashing_merkle_root_else:, 21504, 0.014311632;
-                                             tasm_hashing_merkle_root:, 15360, 0.010222594;
-                                               tasm_hashing_merkle_root_then:, 5632, 0.0037482847;
-         tasm_list_get_element___digest:, 26, 0.00001730387;
-         tasm_recufier_xfe_ntt:, 257112, 0.17111665;
-           tasm_list_length___xfe:, 1158, 0.00077068777;
-           tasm_arithmetic_u32_leadingzeros:, 12, 0.000007986402;
-             tasm_arithmetic_u32_leadingzeros_non_zero:, 4, 0.000002662134;
-           tasm_recufier_xfe_ntt_while_with_bitreverse:, 140357, 0.09341228;
-             tasm_recufier_xfe_ntt_bitreverse_function:, 125952, 0.083825275;
-               tasm_recufier_xfe_ntt_bitreverse_while:, 122368, 0.08144;
-             tasm_recufier_xfe_ntt_k_lt_r_then_branch:, 6480, 0.004312657;
-           tasm_recufier_xfe_ntt_while_outer:, 116721, 0.077681735;
-             tasm_recufier_xfe_ntt_while_middle:, 116500, 0.07753465;
-               tasm_recufier_xfe_ntt_while_inner:, 97019, 0.06456939;
-         tasm_recufier_fri_verify_tail_xfe0:, 13833, 0.009206325;
-           tasm_list_get_element___xfe:, 4992, 0.003322343;
-         tasm_hashing_algebraic_hasher_sample_indices:, 4633, 0.0030834167;
-           tasm_list_new___u32:, 23, 0.00001530727;
-           tasm_hashing_algebraic_hasher_sample_indices_main_loop:, 4601, 0.0030621195;
-             tasm_list_length___u32:, 267, 0.00017769744;
-             tasm_hashing_algebraic_hasher_sample_indices_then_reduce_and_save:, 2720, 0.001810251;
-               tasm_list_push___u32:, 1440, 0.00095836824;
-         tasm_recufier_vm_proof_iter_dequeue_next_as_friresponse:, 23, 0.00001530727;
-         tasm_list_length___xfe:, 3, 0.0000019966005;
-         tasm_list_length___u32:, 3, 0.0000019966005;
-         tasm_list_higher_order_u32_zip_u32_with_digest:, 1662, 0.0011061167;
-           tasm_list_new___tuple_Lu32___digestR:, 23, 0.00001530727;
-           tasm_list_higher_order_u32_zip_u32_with_digest_loop:, 1605, 0.0010681812;
-         tasm_recufier_verify_authentication_paths_for_leaf_and_index_list:, 11774, 0.007835992;
-           tasm_list_length___tuple_Lu32___digestR:, 3, 0.0000019966005;
-           tasm_recufier_verify_authentication_paths_for_leaf_and_index_list_main_loop:, 11765, 0.007830001;
-             tasm_list_get_element___tuple_Lu32___digestR:, 1120, 0.0007453975;
-             tasm_hashing_merkle_verify:, 9280, 0.006176151;
-               tasm_hashing_merkle_verify_traverse_tree:, 7680, 0.005111297;
-         tasm_list_higher_order_u32_zip_u32_with_xfe:, 3164, 0.002105748;
-           tasm_list_new___tuple_Lu32___xfeR:, 69, 0.00004592181;
-           tasm_list_higher_order_u32_zip_u32_with_xfe_loop:, 3050, 0.0020298772;
-         tasm_recufier_fri_verify_query_phase_main_loop:, 98256, 0.06539266;
-           tasm_list_higher_order_u32_map_tasm_recufier_fri_verify_add_half_domain:, 7232, 0.0048131384;
-             tasm_list_new___u32:, 184, 0.00012245816;
-               tasm_memory_dyn_malloc:, 256, 0.00017037657;
-             tasm_list_higher_order_u32_map_tasm_recufier_fri_verify_add_half_domain_loop:, 7060, 0.0046986663;
-           tasm_recufier_vm_proof_iter_dequeue_next_as_friresponse:, 92, 0.00006122908;
-           tasm_recufier_fri_verify_populate_return_vector_second_half:, 5518, 0.0036724138;
-             tasm_list_higher_order_u32_zip_u32_with_xfe:, 1582, 0.001052874;
-               tasm_list_new___tuple_Lu32___xfeR:, 23, 0.00001530727;
-                 tasm_memory_dyn_malloc:, 16, 0.000010648536;
-               tasm_list_higher_order_u32_zip_u32_with_xfe_loop:, 1525, 0.0010149386;
-             tasm_recufier_fri_verify_populate_return_vector_loop:, 3929, 0.0026148811;
-               tasm_list_length___u32:, 243, 0.00016172463;
-               tasm_list_get_element___tuple_Lu32___xfeR:, 1040, 0.0006921548;
-               tasm_list_push___tuple_Lu32___xfeR:, 1600, 0.0010648536;
-           tasm_list_higher_order_u32_map_tasm_recufier_fri_verify_convert_xfe_to_digest:, 6944, 0.0046214643;
-             tasm_list_new___digest:, 92, 0.00006122908;
-             tasm_list_higher_order_u32_map_tasm_recufier_fri_verify_convert_xfe_to_digest_loop:, 6740, 0.0044856956;
-           tasm_list_higher_order_u32_zip_u32_with_digest:, 6648, 0.0044244668;
-             tasm_list_new___tuple_Lu32___digestR:, 92, 0.00006122908;
-             tasm_list_higher_order_u32_zip_u32_with_digest_loop:, 6420, 0.004272725;
-           tasm_list_get_element___digest:, 52, 0.00003460774;
-           tasm_recufier_verify_authentication_paths_for_leaf_and_index_list:, 43736, 0.029107772;
-             tasm_list_length___tuple_Lu32___digestR:, 12, 0.000007986402;
-             tasm_recufier_verify_authentication_paths_for_leaf_and_index_list_main_loop:, 43700, 0.029083813;
-               tasm_list_get_element___tuple_Lu32___digestR:, 4480, 0.00298159;
-               tasm_hashing_merkle_verify:, 33760, 0.02246841;
-                 tasm_hashing_merkle_verify_traverse_tree:, 27360, 0.018208995;
-           tasm_list_higher_order_u32_map_tasm_recufier_fri_verify_reduce_indices:, 6592, 0.0043871966;
-             tasm_list_higher_order_u32_map_tasm_recufier_fri_verify_reduce_indices_loop:, 6420, 0.004272725;
-           tasm_recufier_fri_verify_compute_c_values_loop:, 20820, 0.013856407;
-         tasm_list_higher_order_u32_map_tasm_recufier_fri_verify_assert_codeword_membership:, 2936, 0.0019540063;
-           tasm_list_higher_order_u32_map_tasm_recufier_fri_verify_assert_codeword_membership_loop:, 2885, 0.0019200641;
-             tasm_list_get_element___xfe:, 1040, 0.0006921548;
-     tasm_arithmetic_u32_safemul:, 8, 0.000005324268;
-     method_boxed_LVmProofIterR_next_as_masterbasetablerows:, 25, 0.000016638338;
-       tasm_recufier_vm_proof_iter_dequeue_next_as_masterbasetablerows:, 23, 0.00001530727;
-     method_boxed_LVmProofIterR_next_as_authenticationstructure:, 50, 0.000033276676;
-       tasm_recufier_vm_proof_iter_dequeue_next_as_authenticationstructure:, 46, 0.00003061454;
-     tasm_list_new___digest:, 69, 0.00004592181;
-     _binop_Lt__LboolR_bool_360_while_loop:, 99848, 0.06645219;
-       tasm_hashing_algebraic_hasher_hash_varlen:, 188480, 0.12543975;
-         tasm_hashing_absorb_multiple:, 181760, 0.120967366;
-           tasm_hashing_absorb_multiple_hash_all_full_chunks:, 117600, 0.07826674;
-           tasm_hashing_absorb_multiple_pad_varnum_zeros:, 20000, 0.01331067;
-           tasm_hashing_absorb_multiple_read_remainder:, 26880, 0.01788954;
-       tasm_list_push___digest:, 9600, 0.0063891215;
-     _binop_Lt__LboolR_bool_376_while_loop:, 27528, 0.018320806;
-       tasm_hashing_merkle_verify:, 55680, 0.037056904;
-         tasm_hashing_merkle_verify_traverse_tree:, 46080, 0.030667784;
-     method_boxed_LVmProofIterR_next_as_masterexttablerows:, 25, 0.000016638338;
-       tasm_recufier_vm_proof_iter_dequeue_next_as_masterexttablerows:, 23, 0.00001530727;
-     _binop_Lt__LboolR_bool_397_while_loop:, 79368, 0.05282206;
-     _binop_Lt__LboolR_bool_413_while_loop:, 27528, 0.018320806;
-     method_boxed_LVmProofIterR_next_as_quotientsegmentselements:, 25, 0.000016638338;
-       tasm_recufier_vm_proof_iter_dequeue_next_as_quotientsegmentselements:, 23, 0.00001530727;
-     _binop_Lt__LboolR_bool_432_while_loop:, 37448, 0.024922898;
-     _binop_Lt__LboolR_bool_448_while_loop:, 27528, 0.018320806;
-     method_Result___array439_of_LXFieldR_unwrap:, 2, 0.000001331067;
-     _binop_Lt__LboolR_bool_486_while_loop:, 616490, 0.41029474;
-       tasm_array_inner_product_of_three_rows_with_weights:, 565280, 0.37621278;
-       tasm_array_inner_product_of_4_xfes:, 7360, 0.0048983265;
- total:, 1502556, 1.0000013;
-
-# aggregated + sorted
-   tasm_io_read_stdin___digest:, 2, 0.000001331067;
-     tasm_hashing_sponge_hasher_init:, 2, 0.000001331067;
-     new:, 2, 0.000001331067;
-     num_quotients:, 2, 0.000001331067;
-     method_Result___array596_of_LXFieldR_unwrap:, 2, 0.000001331067;
-     num_base_and_ext_and_quotient_segment_codeword_weights:, 2, 0.000001331067;
-     num_columns:, 2, 0.000001331067;
-     method_Result___array4_of_LXFieldR_unwrap:, 2, 0.000001331067;
-     method_Result___array3_of_LXFieldR_unwrap:, 2, 0.000001331067;
-     method_Result___array439_of_LXFieldR_unwrap:, 2, 0.000001331067;
-       tasm_memory_dyn_malloc_initialize:, 3, 0.0000019966005;
-       store_VmProofIter_to_memory:, 3, 0.0000019966005;
-         tasm_list_length___xfe:, 3, 0.0000019966005;
-         tasm_list_length___u32:, 3, 0.0000019966005;
-           tasm_list_length___tuple_Lu32___digestR:, 3, 0.0000019966005;
-   tasm_io_read_stdin___u32:, 4, 0.000002662134;
-             tasm_arithmetic_u32_leadingzeros_non_zero:, 4, 0.000002662134;
-         tasm_hashing_absorb_multiple_hash_all_full_chunks:, 5, 0.0000033276674;
-         tasm_hashing_absorb_multiple_pad_varnum_zeros:, 5, 0.0000033276674;
-         tasm_arithmetic_u64_and:, 5, 0.0000033276674;
-           tasm_arithmetic_xfe_mod_pow_u32_acc_mul_x:, 5, 0.0000033276674;
-               tasm_hashing_absorb_multiple_hash_all_full_chunks:, 5, 0.0000033276674;
-     default:, 6, 0.000003993201;
-         tasm_list_length___digest:, 6, 0.000003993201;
-       store_FriVerify_to_memory:, 7, 0.0000046587343;
-   _binop_Lt__LboolR_bool_7_while_loop:, 8, 0.000005324268;
-   _binop_Lt__LboolR_bool_19_while_loop:, 8, 0.000005324268;
-     tasm_arithmetic_u32_safemul:, 8, 0.000005324268;
-     tasm_arithmetic_xfe_to_the_fourth:, 9, 0.000005989801;
-         tasm_memory_memcpy_cpy2_words:, 9, 0.000005989801;
-         tasm_recufier_eval_arg_compute_terminal_dyn_sized_dynamic_symbols_loop:, 10, 0.000006655335;
-     tasm_arithmetic_u32_shiftleft:, 11, 0.0000073208685;
-       tasm_arithmetic_u32_shiftleft:, 11, 0.0000073208685;
-           tasm_arithmetic_u32_leadingzeros:, 12, 0.000007986402;
-             tasm_list_length___tuple_Lu32___digestR:, 12, 0.000007986402;
-         tasm_arithmetic_u32_next_power_of_two_greater_than_one:, 14, 0.0000093174685;
-                 tasm_memory_dyn_malloc:, 16, 0.000010648536;
-         tasm_memory_memcpy_cpy1_word:, 18, 0.000011979602;
-       tasm_list_set_length___xfe:, 20, 0.00001331067;
-         tasm_list_push___digest:, 20, 0.00001331067;
-                 tasm_hashing_absorb_multiple_hash_all_full_chunks:, 20, 0.00001331067;
-       tasm_recufier_vm_proof_iter_dequeue_next_as_log2paddedheight:, 21, 0.000013976203;
-       tasm_arithmetic_u32_next_power_of_two:, 22, 0.000014641737;
-     method_boxed_LVmProofIterR_next_as_log2paddedheight:, 23, 0.00001530727;
-         tasm_arithmetic_u64_sub:, 23, 0.00001530727;
-         tasm_list_new___xfe:, 23, 0.00001530727;
-         tasm_list_new___digest:, 23, 0.00001530727;
-         tasm_recufier_vm_proof_iter_dequeue_next_as_fricodeword:, 23, 0.00001530727;
-           tasm_list_new___u32:, 23, 0.00001530727;
-         tasm_recufier_vm_proof_iter_dequeue_next_as_friresponse:, 23, 0.00001530727;
-           tasm_list_new___tuple_Lu32___digestR:, 23, 0.00001530727;
-               tasm_list_new___tuple_Lu32___xfeR:, 23, 0.00001530727;
-       tasm_recufier_vm_proof_iter_dequeue_next_as_masterbasetablerows:, 23, 0.00001530727;
-       tasm_recufier_vm_proof_iter_dequeue_next_as_masterexttablerows:, 23, 0.00001530727;
-       tasm_recufier_vm_proof_iter_dequeue_next_as_quotientsegmentselements:, 23, 0.00001530727;
-     method_boxed_LVmProofIterR_next_as_masterbasetablerows:, 25, 0.000016638338;
-     method_boxed_LVmProofIterR_next_as_masterexttablerows:, 25, 0.000016638338;
-     method_boxed_LVmProofIterR_next_as_quotientsegmentselements:, 25, 0.000016638338;
-         tasm_list_get_element___digest:, 26, 0.00001730387;
-     box_new_StarkParameters:, 27, 0.000017969403;
-     box_new_VmProofIter:, 29, 0.00001930047;
-             tasm_hashing_squeeze_repeatedly_static_number_1:, 32, 0.000021297072;
-     box_new_FriVerify:, 33, 0.000021962605;
-       tasm_recufier_eval_arg_compute_terminal_from_digest:, 37, 0.000024624738;
-               tasm_hashing_absorb_multiple_pad_varnum_zeros:, 38, 0.000025290272;
-         constraint_evaluation_lengths:, 40, 0.00002662134;
-         tasm_memory_memcpy_loop_cpy5_words:, 45, 0.000029949008;
-     tasm_array_inner_product_of_4_xfes:, 46, 0.00003061454;
-           tasm_list_new___digest:, 46, 0.00003061454;
-       tasm_recufier_vm_proof_iter_dequeue_next_as_authenticationstructure:, 46, 0.00003061454;
-           tasm_memory_dyn_malloc:, 48, 0.00003194561;
-   tasm_list_new___bfe:, 50, 0.000033276676;
-     method_boxed_LVmProofIterR_next_as_authenticationstructure:, 50, 0.000033276676;
-     tasm_array_horner_evaluation_with_4_coefficients:, 51, 0.000033942208;
-     tasm_memory_dyn_malloc:, 52, 0.00003460774;
-       tasm_recufier_eval_arg_compute_terminal_dyn_sized_dynamic_symbols:, 52, 0.00003460774;
-           tasm_list_get_element___digest:, 52, 0.00003460774;
-               tasm_hashing_absorb_multiple_read_remainder:, 59, 0.000039266477;
-         tasm_memory_dyn_malloc:, 64, 0.000042594143;
-           tasm_arithmetic_u32_safeadd:, 64, 0.000042594143;
-       is_power_of_two:, 65, 0.000043259675;
-           tasm_list_new___tuple_Lu32___xfeR:, 69, 0.00004592181;
-     tasm_list_new___digest:, 69, 0.00004592181;
-           tasm_list_push___xfe:, 80, 0.00005324268;
-           tasm_list_push___digest:, 80, 0.00005324268;
-         tasm_hashing_absorb_multiple_read_remainder:, 86, 0.00005723588;
-       tasm_list_new___xfe:, 92, 0.00006122908;
-           tasm_recufier_vm_proof_iter_dequeue_next_as_friresponse:, 92, 0.00006122908;
-             tasm_list_new___digest:, 92, 0.00006122908;
-             tasm_list_new___tuple_Lu32___digestR:, 92, 0.00006122908;
-         tasm_hashing_squeeze_repeatedly_static_number_18:, 110, 0.000073208685;
-       tasm_memory_dyn_malloc:, 112, 0.00007453975;
-           tasm_hashing_algebraic_hasher_sample_scalars_static_length_dyn_malloc_1:, 112, 0.00007453975;
-       tasm_hashing_algebraic_hasher_sample_scalars_static_length_static_pointer_59_18446744060824649728:, 113, 0.00007520529;
-           tasm_list_new___xfe:, 115, 0.00007653635;
-     tasm_list_split_off_xfe:, 118, 0.000078532954;
-       tasm_hashing_absorb_multiple:, 132, 0.00008785042;
-             tasm_hashing_absorb_multiple:, 138, 0.00009184362;
-       tasm_memory_memcpy:, 144, 0.00009583682;
-           tasm_hashing_sponge_hasher_pad_and_absorb_all:, 144, 0.00009583682;
-     tasm_recufier_claim_instantiate_fiat_shamir_with_claim:, 145, 0.00009650236;
-                 tasm_hashing_absorb_multiple_pad_varnum_zeros:, 152, 0.00010116109;
-     store_Claim_to_memory:, 155, 0.00010315769;
-         tasm_recufier_vm_proof_iter_dequeue_next_as_merkleroot:, 167, 0.000111144094;
-   box_new_Claim:, 181, 0.00012046156;
-             tasm_list_new___u32:, 184, 0.00012245816;
-       tasm_recufier_vm_proof_iter_dequeue_next_as_outofdomainquotientsegments:, 185, 0.0001231237;
-     method_boxed_LVmProofIterR_next_as_outofdomainquotientsegments:, 187, 0.00012445476;
-         _binop_Lt__LboolR_bool_179_while_loop:, 216, 0.00014375523;
-                 tasm_hashing_absorb_multiple_read_remainder:, 236, 0.00015706591;
-               tasm_list_length___u32:, 243, 0.00016172463;
-     generator_for_length:, 250, 0.00016638337;
-             tasm_memory_dyn_malloc:, 256, 0.00017037657;
-               tasm_memory_dyn_malloc:, 256, 0.00017037657;
-     method_boxed_LStarkParametersR_derive_fri:, 260, 0.0001730387;
-       constraint_evaluation_lengths_running_sum:, 264, 0.00017570084;
-             tasm_list_length___u32:, 267, 0.00017769744;
-         tasm_arithmetic_xfe_mod_pow_u32_loop:, 319, 0.00021230518;
-       tasm_arithmetic_bfe_primitive_root_of_unity:, 320, 0.00021297071;
-       tasm_arithmetic_xfe_mod_pow_u32:, 330, 0.00021962605;
-             tasm_hashing_absorb_multiple_read_remainder:, 391, 0.0002602236;
-             tasm_hashing_absorb_multiple_pad_varnum_zeros:, 403, 0.00026821;
-       tasm_recufier_vm_proof_iter_dequeue_next_as_merkleroot:, 501, 0.00033343228;
-     method_boxed_LVmProofIterR_next_as_merkleroot:, 507, 0.00033742547;
-               tasm_hashing_absorb_multiple:, 552, 0.00036737448;
-             tasm_hashing_sponge_hasher_pad_and_absorb_all:, 576, 0.00038334727;
-           tasm_recufier_vm_proof_iter_dequeue_next_as_merkleroot:, 668, 0.00044457638;
-       tasm_recufier_vm_proof_iter_dequeue_next_as_outofdomainextrow:, 958, 0.0006375811;
-     method_boxed_LVmProofIterR_next_as_outofdomainextrow:, 962, 0.00064024323;
-               tasm_list_get_element___tuple_Lu32___xfeR:, 1040, 0.0006921548;
-             tasm_list_get_element___xfe:, 1040, 0.0006921548;
-         tasm_recufier_fri_verify_dequeue_commit_phase_remainder:, 1057, 0.0007034689;
-             tasm_list_get_element___tuple_Lu32___digestR:, 1120, 0.0007453975;
-           tasm_list_length___xfe:, 1158, 0.00077068777;
-       _binop_Lt__LboolR_bool_242_while_loop:, 1235, 0.00082193385;
-               tasm_list_push___u32:, 1440, 0.00095836824;
-               tasm_list_higher_order_u32_zip_u32_with_xfe_loop:, 1525, 0.0010149386;
-       tasm_recufier_eval_arg_compute_terminal_const_sized_static_symbols_symbol_count_256_16790708486107472414:, 1537, 0.001022925;
-             tasm_list_higher_order_u32_zip_u32_with_xfe:, 1582, 0.001052874;
-               tasm_list_push___tuple_Lu32___xfeR:, 1600, 0.0010648536;
-           tasm_list_higher_order_u32_zip_u32_with_digest_loop:, 1605, 0.0010681812;
-         tasm_list_higher_order_u32_zip_u32_with_digest:, 1662, 0.0011061167;
-     tasm_recufier_challenges_new_generic_dyn_claim_59_4:, 1794, 0.0011939671;
-       tasm_arithmetic_u32_safemul:, 2568, 0.00170909;
-             tasm_hashing_algebraic_hasher_sample_indices_then_reduce_and_save:, 2720, 0.001810251;
-       tasm_recufier_vm_proof_iter_dequeue_next_as_outofdomainbaserow:, 2866, 0.001907419;
-     method_boxed_LVmProofIterR_next_as_outofdomainbaserow:, 2870, 0.0019100811;
-           tasm_list_higher_order_u32_map_tasm_recufier_fri_verify_assert_codeword_membership_loop:, 2885, 0.0019200641;
-         tasm_list_higher_order_u32_map_tasm_recufier_fri_verify_assert_codeword_membership:, 2936, 0.0019540063;
-           tasm_list_higher_order_u32_zip_u32_with_xfe_loop:, 3050, 0.0020298772;
-         tasm_list_higher_order_u32_zip_u32_with_xfe:, 3164, 0.002105748;
-             tasm_hashing_absorb_multiple_hash_all_full_chunks:, 3196, 0.002127045;
-             tasm_recufier_fri_verify_populate_return_vector_loop:, 3929, 0.0026148811;
-       tasm_hashing_squeeze_repeatedly:, 4102, 0.0027300185;
-           tasm_hashing_absorb_multiple:, 4278, 0.0028471523;
-     tasm_hashing_algebraic_hasher_sample_scalars:, 4298, 0.002860463;
-       _binop_Lt__LboolR_bool_197_while_loop:, 4309, 0.002867784;
-         tasm_hashing_sponge_hasher_pad_and_absorb_all:, 4326, 0.0028790978;
-               tasm_list_get_element___tuple_Lu32___digestR:, 4480, 0.00298159;
-           tasm_hashing_algebraic_hasher_sample_indices_main_loop:, 4601, 0.0030621195;
-         tasm_hashing_algebraic_hasher_sample_indices:, 4633, 0.0030834167;
-     tasm_array_inner_product_of_596_xfes:, 4782, 0.0031825812;
-           tasm_list_get_element___xfe:, 4992, 0.003322343;
-       _binop_Lt__LboolR_bool_212_while_loop:, 4998, 0.0033263364;
-           tasm_recufier_fri_verify_populate_return_vector_second_half:, 5518, 0.0036724138;
-                                               tasm_hashing_merkle_root_then:, 5632, 0.0037482847;
-             tasm_list_higher_order_u32_zip_u32_with_digest_loop:, 6420, 0.004272725;
-             tasm_list_higher_order_u32_map_tasm_recufier_fri_verify_reduce_indices_loop:, 6420, 0.004272725;
-             tasm_recufier_xfe_ntt_k_lt_r_then_branch:, 6480, 0.004312657;
-           tasm_list_higher_order_u32_map_tasm_recufier_fri_verify_reduce_indices:, 6592, 0.0043871966;
-           tasm_list_higher_order_u32_zip_u32_with_digest:, 6648, 0.0044244668;
-             tasm_list_higher_order_u32_map_tasm_recufier_fri_verify_convert_xfe_to_digest_loop:, 6740, 0.0044856956;
-           tasm_list_higher_order_u32_map_tasm_recufier_fri_verify_convert_xfe_to_digest:, 6944, 0.0046214643;
-             tasm_list_higher_order_u32_map_tasm_recufier_fri_verify_add_half_domain_loop:, 7060, 0.0046986663;
-           tasm_list_higher_order_u32_map_tasm_recufier_fri_verify_add_half_domain:, 7232, 0.0048131384;
-       tasm_array_inner_product_of_4_xfes:, 7360, 0.0048983265;
-               tasm_hashing_merkle_verify_traverse_tree:, 7680, 0.005111297;
-           tasm_list_higher_order_u32_map_tasm_recufier_fri_verify_identity_loop:, 7685, 0.0051146247;
-         tasm_list_higher_order_u32_map_tasm_recufier_fri_verify_identity:, 7736, 0.0051485673;
-       tasm_arithmetic_u32_safeadd:, 8968, 0.005968504;
-             tasm_hashing_merkle_verify:, 9280, 0.006176151;
-       tasm_list_push___digest:, 9600, 0.0063891215;
-       _binop_Lt__LboolR_bool_307_while_loop:, 11308, 0.0075258524;
-           tasm_recufier_verify_authentication_paths_for_leaf_and_index_list_main_loop:, 11765, 0.007830001;
-         tasm_recufier_verify_authentication_paths_for_leaf_and_index_list:, 11774, 0.007835992;
-           tasm_list_higher_order_u32_map_tasm_recufier_fri_verify_convert_xfe_to_digest_loop:, 12442, 0.008280568;
-         tasm_list_higher_order_u32_map_tasm_recufier_fri_verify_convert_xfe_to_digest:, 12544, 0.008348452;
-         tasm_arithmetic_u32_safeadd:, 13120, 0.008731799;
-         tasm_recufier_fri_verify_tail_xfe0:, 13833, 0.009206325;
-                                             tasm_hashing_merkle_root:, 15360, 0.010222594;
-           tasm_hashing_absorb_multiple_pad_varnum_zeros:, 20000, 0.01331067;
-           tasm_recufier_fri_verify_compute_c_values_loop:, 20820, 0.013856407;
-       _binop_Lt__LboolR_bool_227_while_loop:, 21110, 0.014049412;
-                                           tasm_hashing_merkle_root_else:, 21504, 0.014311632;
-                                         tasm_hashing_merkle_root:, 26368, 0.017548786;
-           tasm_hashing_absorb_multiple_read_remainder:, 26880, 0.01788954;
-                 tasm_hashing_merkle_verify_traverse_tree:, 27360, 0.018208995;
-     _binop_Lt__LboolR_bool_376_while_loop:, 27528, 0.018320806;
-     _binop_Lt__LboolR_bool_413_while_loop:, 27528, 0.018320806;
-     _binop_Lt__LboolR_bool_448_while_loop:, 27528, 0.018320806;
-                                       tasm_hashing_merkle_root_else:, 29440, 0.019593306;
-                                     tasm_hashing_merkle_root:, 31872, 0.021211883;
-       tasm_recufier_master_ext_table_air_constraint_evaluation:, 33340, 0.022188887;
-                                   tasm_hashing_merkle_root_else:, 33408, 0.022234142;
-               tasm_hashing_merkle_verify:, 33760, 0.02246841;
-                                 tasm_hashing_merkle_root:, 34624, 0.023043431;
-                               tasm_hashing_merkle_root_else:, 35392, 0.023554562;
-                             tasm_hashing_merkle_root:, 36000, 0.023959205;
-                           tasm_hashing_merkle_root_else:, 36384, 0.02421477;
-                         tasm_hashing_merkle_root:, 36688, 0.024417093;
-                       tasm_hashing_merkle_root_else:, 36880, 0.024544874;
-                     tasm_hashing_merkle_root:, 37032, 0.024646036;
-                   tasm_hashing_merkle_root_else:, 37128, 0.024709927;
-                 tasm_hashing_merkle_root:, 37204, 0.024760507;
-               tasm_hashing_merkle_root_else:, 37252, 0.024792453;
-             tasm_hashing_merkle_root:, 37290, 0.024817744;
-           tasm_hashing_merkle_root_else:, 37314, 0.024833716;
-         tasm_hashing_merkle_root:, 37333, 0.024846362;
-     _binop_Lt__LboolR_bool_432_while_loop:, 37448, 0.024922898;
-       _binop_Lt__LboolR_bool_288_while_loop:, 39892, 0.026549462;
-             tasm_recufier_verify_authentication_paths_for_leaf_and_index_list_main_loop:, 43700, 0.029083813;
-           tasm_recufier_verify_authentication_paths_for_leaf_and_index_list:, 43736, 0.029107772;
-         tasm_hashing_merkle_verify_traverse_tree:, 46080, 0.030667784;
-     linearly_sum_xfe_base_and_ext_row:, 51234, 0.034097943;
-       tasm_hashing_merkle_verify:, 55680, 0.037056904;
-     quotient_summands:, 65660, 0.04369893;
-     _binop_Lt__LboolR_bool_397_while_loop:, 79368, 0.05282206;
-               tasm_recufier_xfe_ntt_while_inner:, 97019, 0.06456939;
-         tasm_recufier_fri_verify_query_phase_main_loop:, 98256, 0.06539266;
-     _binop_Lt__LboolR_bool_360_while_loop:, 99848, 0.06645219;
-             tasm_recufier_xfe_ntt_while_middle:, 116500, 0.07753465;
-           tasm_recufier_xfe_ntt_while_outer:, 116721, 0.077681735;
-           tasm_hashing_absorb_multiple_hash_all_full_chunks:, 117600, 0.07826674;
-               tasm_recufier_xfe_ntt_bitreverse_while:, 122368, 0.08144;
-             tasm_recufier_xfe_ntt_bitreverse_function:, 125952, 0.083825275;
-           tasm_recufier_xfe_ntt_while_with_bitreverse:, 140357, 0.09341228;
-         tasm_hashing_absorb_multiple:, 181760, 0.120967366;
-       tasm_hashing_algebraic_hasher_hash_varlen:, 188480, 0.12543975;
-         tasm_recufier_xfe_ntt:, 257112, 0.17111665;
-       tasm_recufier_fri_verify:, 452620, 0.30123377;
-     method_boxed_LFriVerifyR_verify:, 452627, 0.30123842;
-       tasm_array_inner_product_of_three_rows_with_weights:, 565280, 0.37621278;
-     _binop_Lt__LboolR_bool_486_while_loop:, 616490, 0.41029474;
-   verify:, 1502277, 0.99981564;
- verify_stark_proof:, 1502554, 1;
- total:, 1502556, 1.0000013;
+| Subroutine                                                                                                                    |            Processor |             Op Stack |                  RAM |                 Hash |                  U32 |
+|:------------------------------------------------------------------------------------------------------------------------------|---------------------:|---------------------:|---------------------:|---------------------:|---------------------:|
+| verify_stark_proof                                                                                                            |     1237863 (100.0%) |     1676088 (100.0%) |      499709 (100.0%) |      136399 ( 72.8%) |       46720 (100.0%) |
+| ··tasmlib_io_read_stdin___digest                                                                                              |           2 (  0.0%) |           5 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ··tasmlib_io_read_stdin___u32                                                                                                 |           4 (  0.0%) |           2 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ··tasmlib_list_new___bfe                                                                                                      |          50 (  0.0%) |          40 (  0.0%) |           6 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ····tasmlib_memory_dyn_malloc                                                                                                 |          52 (  0.0%) |          47 (  0.0%) |           6 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ······tasmlib_memory_dyn_malloc_initialize                                                                                    |           3 (  0.0%) |           2 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ··_binop_Lt__LboolR_bool_7_while_loop                                                                                         |           8 (  0.0%) |           6 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |           1 (  0.0%) |
+| ··_binop_Lt__LboolR_bool_19_while_loop                                                                                        |           8 (  0.0%) |           6 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ··box_new_Claim                                                                                                               |         181 (  0.0%) |         158 (  0.0%) |          21 (  0.0%) |           0 (  0.0%) |           4 (  0.0%) |
+| ····store_Claim_to_memory                                                                                                     |         155 (  0.0%) |         136 (  0.0%) |          17 (  0.0%) |           0 (  0.0%) |           4 (  0.0%) |
+| ······tasmlib_memory_memcpy                                                                                                   |         197 (  0.0%) |         186 (  0.0%) |          46 (  0.0%) |           0 (  0.0%) |          26 (  0.1%) |
+| ········tasmlib_memory_memcpy_loop_cpy5_words                                                                                 |          65 (  0.0%) |          70 (  0.0%) |          30 (  0.0%) |           0 (  0.0%) |          26 (  0.1%) |
+| ········tasmlib_memory_memcpy_cpy1_word                                                                                       |          18 (  0.0%) |          12 (  0.0%) |           4 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ··verify                                                                                                                      |     1237586 (100.0%) |     1675849 (100.0%) |      499682 (100.0%) |      136399 ( 72.8%) |       46715 (100.0%) |
+| ····default                                                                                                                   |           6 (  0.0%) |           5 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ····box_new_StarkParameters                                                                                                   |          27 (  0.0%) |          28 (  0.0%) |           9 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ······tasmlib_memory_dyn_malloc                                                                                               |         128 (  0.0%) |         120 (  0.0%) |          16 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ····tasmlib_hashing_sponge_hasher_init                                                                                        |           2 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |           1 (  0.0%) |           0 (  0.0%) |
+| ····tasmlib_verifier_claim_instantiate_fiat_shamir_with_claim                                                                 |         145 (  0.0%) |         103 (  0.0%) |          11 (  0.0%) |           6 (  0.0%) |          10 (  0.0%) |
+| ······tasmlib_hashing_absorb_multiple                                                                                         |         132 (  0.0%) |          92 (  0.0%) |           9 (  0.0%) |           6 (  0.0%) |          10 (  0.0%) |
+| ········tasmlib_hashing_absorb_multiple_hash_all_full_chunks                                                                  |           5 (  0.0%) |           4 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ········tasmlib_hashing_absorb_multiple_pad_varnum_zeros                                                                      |           5 (  0.0%) |           4 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ········tasmlib_hashing_absorb_multiple_read_remainder                                                                        |          86 (  0.0%) |          49 (  0.0%) |           9 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ····new                                                                                                                       |           2 (  0.0%) |           1 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ····box_new_VmProofIter                                                                                                       |          29 (  0.0%) |          24 (  0.0%) |           5 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ······store_VmProofIter_to_memory                                                                                             |           3 (  0.0%) |           2 (  0.0%) |           1 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ····method_boxed_LVmProofIterR_next_as_log2paddedheight                                                                       |          23 (  0.0%) |          16 (  0.0%) |           3 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ······tasmlib_verifier_vm_proof_iter_dequeue_next_as_log2paddedheight                                                         |          21 (  0.0%) |          16 (  0.0%) |           3 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ····tasmlib_arithmetic_u32_shiftleft                                                                                          |          11 (  0.0%) |           9 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |          24 (  0.1%) |
+| ····method_boxed_LStarkParametersR_derive_fri                                                                                 |         260 (  0.0%) |         239 (  0.0%) |           4 (  0.0%) |           0 (  0.0%) |         166 (  0.4%) |
+| ······tasmlib_arithmetic_u32_safeadd                                                                                          |        8968 (  0.7%) |        7847 (  0.5%) |           0 (  0.0%) |           0 (  0.0%) |          12 (  0.0%) |
+| ······tasmlib_arithmetic_u32_next_power_of_two                                                                                |          22 (  0.0%) |          18 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |          29 (  0.1%) |
+| ········tasmlib_arithmetic_u32_next_power_of_two_greater_than_one                                                             |          14 (  0.0%) |          12 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |          17 (  0.0%) |
+| ······tasmlib_arithmetic_u32_safemul                                                                                          |        2568 (  0.2%) |        2247 (  0.1%) |           0 (  0.0%) |           0 (  0.0%) |          15 (  0.0%) |
+| ······tasmlib_arithmetic_u32_shiftleft                                                                                        |          11 (  0.0%) |           9 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |          46 (  0.1%) |
+| ······tasmlib_arithmetic_bfe_primitive_root_of_unity                                                                          |         320 (  0.0%) |         318 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |          64 (  0.1%) |
+| ····box_new_FriVerify                                                                                                         |          33 (  0.0%) |          28 (  0.0%) |           9 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ······store_FriVerify_to_memory                                                                                               |           7 (  0.0%) |           6 (  0.0%) |           5 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ····method_boxed_LVmProofIterR_next_as_merkleroot                                                                             |         507 (  0.0%) |         354 (  0.0%) |          30 (  0.0%) |          18 (  0.0%) |           9 (  0.0%) |
+| ······tasmlib_verifier_vm_proof_iter_dequeue_next_as_merkleroot                                                               |         501 (  0.0%) |         354 (  0.0%) |          30 (  0.0%) |          18 (  0.0%) |           9 (  0.0%) |
+| ········tasmlib_hashing_sponge_hasher_pad_and_absorb_all                                                                      |        4326 (  0.3%) |        8190 (  0.5%) |        2677 (  0.5%) |        1626 (  0.9%) |          45 (  0.1%) |
+| ··········tasmlib_hashing_absorb_multiple                                                                                     |        4278 (  0.3%) |        8166 (  0.5%) |        2669 (  0.5%) |        1626 (  0.9%) |          45 (  0.1%) |
+| ············tasmlib_hashing_absorb_multiple_hash_all_full_chunks                                                              |        3196 (  0.3%) |        7396 (  0.4%) |        2630 (  0.5%) |        1578 (  0.8%) |           0 (  0.0%) |
+| ············tasmlib_hashing_absorb_multiple_pad_varnum_zeros                                                                  |         403 (  0.0%) |         263 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ············tasmlib_hashing_absorb_multiple_read_remainder                                                                    |         391 (  0.0%) |         227 (  0.0%) |          39 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ····tasmlib_verifier_challenges_new_generic_dyn_claim_59_4                                                                    |        1794 (  0.1%) |        2588 (  0.2%) |         213 (  0.0%) |         108 (  0.1%) |           0 (  0.0%) |
+| ······tasmlib_hashing_algebraic_hasher_sample_scalars_static_length_static_pointer_59_18446744060824649728                    |         113 (  0.0%) |         398 (  0.0%) |         180 (  0.0%) |         108 (  0.1%) |           0 (  0.0%) |
+| ········tasmlib_hashing_squeeze_repeatedly_static_number_18                                                                   |         110 (  0.0%) |         397 (  0.0%) |         180 (  0.0%) |         108 (  0.1%) |           0 (  0.0%) |
+| ······tasmlib_verifier_eval_arg_compute_terminal_dyn_sized_dynamic_symbols                                                    |          52 (  0.0%) |          28 (  0.0%) |           2 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ········tasmlib_verifier_eval_arg_compute_terminal_dyn_sized_dynamic_symbols_loop                                             |          10 (  0.0%) |           8 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ······tasmlib_verifier_eval_arg_compute_terminal_from_digest                                                                  |          37 (  0.0%) |          45 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ······tasmlib_verifier_eval_arg_compute_terminal_const_sized_static_symbols_symbol_count_256_16790708486107472414             |        1537 (  0.1%) |        2048 (  0.1%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ····num_quotients                                                                                                             |           2 (  0.0%) |           1 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ····tasmlib_hashing_algebraic_hasher_sample_scalars                                                                           |        4244 (  0.3%) |        8912 (  0.5%) |        3152 (  0.6%) |        1884 (  1.0%) |          39 (  0.1%) |
+| ······tasmlib_list_new___xfe                                                                                                  |          69 (  0.0%) |          57 (  0.0%) |           9 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ········tasmlib_memory_dyn_malloc                                                                                             |          48 (  0.0%) |          45 (  0.0%) |           6 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ······tasmlib_list_set_length___xfe                                                                                           |          15 (  0.0%) |           9 (  0.0%) |           3 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ······tasmlib_hashing_squeeze_repeatedly                                                                                      |        4097 (  0.3%) |        8804 (  0.5%) |        3140 (  0.6%) |        1884 (  1.0%) |           0 (  0.0%) |
+| ····method_Result___array596_of_LXFieldR_unwrap                                                                               |           2 (  0.0%) |           1 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ····generator_for_length                                                                                                      |         250 (  0.0%) |         221 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |          58 (  0.1%) |
+| ······is_power_of_two                                                                                                         |          65 (  0.0%) |          43 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |          25 (  0.1%) |
+| ········tasmlib_arithmetic_u64_sub                                                                                            |          23 (  0.0%) |          16 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |          12 (  0.0%) |
+| ········tasmlib_arithmetic_u64_and                                                                                            |           5 (  0.0%) |           2 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |          13 (  0.0%) |
+| ····tasmlib_arithmetic_xfe_to_the_fourth                                                                                      |           9 (  0.0%) |          12 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ····method_boxed_LVmProofIterR_next_as_outofdomainbaserow                                                                     |        2870 (  0.2%) |        6160 (  0.4%) |        2146 (  0.4%) |        1284 (  0.7%) |          12 (  0.0%) |
+| ······tasmlib_verifier_vm_proof_iter_dequeue_next_as_outofdomainbaserow                                                       |        2866 (  0.2%) |        6160 (  0.4%) |        2146 (  0.4%) |        1284 (  0.7%) |          12 (  0.0%) |
+| ····method_boxed_LVmProofIterR_next_as_outofdomainextrow                                                                      |         962 (  0.1%) |        1660 (  0.1%) |         508 (  0.1%) |         312 (  0.2%) |          14 (  0.0%) |
+| ······tasmlib_verifier_vm_proof_iter_dequeue_next_as_outofdomainextrow                                                        |         958 (  0.1%) |        1660 (  0.1%) |         508 (  0.1%) |         312 (  0.2%) |          14 (  0.0%) |
+| ····method_boxed_LVmProofIterR_next_as_outofdomainquotientsegments                                                            |         187 (  0.0%) |         152 (  0.0%) |          17 (  0.0%) |          12 (  0.0%) |          10 (  0.0%) |
+| ······tasmlib_verifier_vm_proof_iter_dequeue_next_as_outofdomainquotientsegments                                              |         185 (  0.0%) |         152 (  0.0%) |          17 (  0.0%) |          12 (  0.0%) |          10 (  0.0%) |
+| ····quotient_summands                                                                                                         |       65660 (  5.3%) |       94830 (  5.7%) |       26638 (  5.3%) |           0 (  0.0%) |       11876 ( 25.4%) |
+| ······tasmlib_arithmetic_xfe_mod_pow_u32                                                                                      |         330 (  0.0%) |         259 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |         160 (  0.3%) |
+| ········tasmlib_arithmetic_xfe_mod_pow_u32_loop                                                                               |         319 (  0.0%) |         252 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |         160 (  0.3%) |
+| ··········tasmlib_arithmetic_xfe_mod_pow_u32_acc_mul_x                                                                        |           5 (  0.0%) |           6 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ······tasmlib_verifier_master_ext_table_air_constraint_evaluation                                                             |       33340 (  2.7%) |       61679 (  3.7%) |       21912 (  4.4%) |           0 (  0.0%) |           0 (  0.0%) |
+| ······constraint_evaluation_lengths_running_sum                                                                               |         264 (  0.0%) |         219 (  0.0%) |          14 (  0.0%) |           0 (  0.0%) |          69 (  0.1%) |
+| ········constraint_evaluation_lengths                                                                                         |          40 (  0.0%) |          33 (  0.0%) |           6 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ··········tasmlib_memory_dyn_malloc                                                                                           |          64 (  0.0%) |          60 (  0.0%) |           8 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ········_binop_Lt__LboolR_bool_179_while_loop                                                                                 |         216 (  0.0%) |         182 (  0.0%) |           8 (  0.0%) |           0 (  0.0%) |          69 (  0.1%) |
+| ··········tasmlib_arithmetic_u32_safeadd                                                                                      |          64 (  0.0%) |          56 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |          49 (  0.1%) |
+| ······_binop_Lt__LboolR_bool_197_while_loop                                                                                   |        4309 (  0.3%) |        4550 (  0.3%) |         811 (  0.2%) |           0 (  0.0%) |        1155 (  2.5%) |
+| ········tasmlib_arithmetic_u32_safeadd                                                                                        |       13120 (  1.1%) |       11480 (  0.7%) |           0 (  0.0%) |           0 (  0.0%) |        5483 ( 11.7%) |
+| ······_binop_Lt__LboolR_bool_212_while_loop                                                                                   |        4998 (  0.4%) |        5278 (  0.3%) |         941 (  0.2%) |           0 (  0.0%) |        1646 (  3.5%) |
+| ······_binop_Lt__LboolR_bool_227_while_loop                                                                                   |       21110 (  1.7%) |       21506 (  1.3%) |        2787 (  0.6%) |           0 (  0.0%) |        8340 ( 17.9%) |
+| ······_binop_Lt__LboolR_bool_242_while_loop                                                                                   |        1235 (  0.1%) |        1256 (  0.1%) |         162 (  0.0%) |           0 (  0.0%) |         506 (  1.1%) |
+| ····tasmlib_array_inner_product_of_596_xfes                                                                                   |        4782 (  0.4%) |        8353 (  0.5%) |        3576 (  0.7%) |           0 (  0.0%) |           0 (  0.0%) |
+| ····tasmlib_array_horner_evaluation_with_4_coefficients                                                                       |          51 (  0.0%) |          65 (  0.0%) |          12 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ····num_base_ext_quotient_deep_weights                                                                                        |           2 (  0.0%) |           1 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ····num_columns_plus_quotient_segments                                                                                        |           2 (  0.0%) |           1 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ····tasmlib_list_split_off_xfe                                                                                                |         221 (  0.0%) |         212 (  0.0%) |          52 (  0.0%) |           0 (  0.0%) |          42 (  0.1%) |
+| ········tasmlib_memory_memcpy_cpy4_words                                                                                      |           9 (  0.0%) |          12 (  0.0%) |           8 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ····method_Result___array3_of_LXFieldR_unwrap                                                                                 |           2 (  0.0%) |           1 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ····num_columns                                                                                                               |           2 (  0.0%) |           1 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ········tasmlib_memory_memcpy_cpy2_words                                                                                      |           9 (  0.0%) |           8 (  0.0%) |           4 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ····method_Result___array4_of_LXFieldR_unwrap                                                                                 |           2 (  0.0%) |           1 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ····linearly_sum_xfe_base_and_ext_row                                                                                         |       51234 (  4.1%) |       50880 (  3.0%) |        5268 (  1.1%) |           0 (  0.0%) |        4242 (  9.1%) |
+| ······_binop_Lt__LboolR_bool_294_while_loop                                                                                   |       39892 (  3.2%) |       39888 (  2.4%) |        4272 (  0.9%) |           0 (  0.0%) |        3570 (  7.6%) |
+| ······_binop_Lt__LboolR_bool_313_while_loop                                                                                   |       11308 (  0.9%) |       10972 (  0.7%) |         996 (  0.2%) |           0 (  0.0%) |         672 (  1.4%) |
+| ····tasmlib_array_inner_product_of_4_xfes                                                                                     |          46 (  0.0%) |          65 (  0.0%) |          24 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ····method_boxed_LFriVerifyR_verify                                                                                           |      187862 ( 15.2%) |      205593 ( 12.3%) |       26843 (  5.4%) |       31494 ( 16.8%) |       27449 ( 58.8%) |
+| ······tasmlib_verifier_fri_verify                                                                                             |      187855 ( 15.2%) |      205589 ( 12.3%) |       26843 (  5.4%) |       31494 ( 16.8%) |       27449 ( 58.8%) |
+| ········tasmlib_verifier_fri_number_of_rounds                                                                                 |          53 (  0.0%) |          46 (  0.0%) |           3 (  0.0%) |           0 (  0.0%) |          41 (  0.1%) |
+| ········tasmlib_list_new___xfe                                                                                                |          23 (  0.0%) |          19 (  0.0%) |           3 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ········tasmlib_list_new___digest                                                                                             |          23 (  0.0%) |          19 (  0.0%) |           3 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ········tasmlib_verifier_vm_proof_iter_dequeue_next_as_merkleroot                                                             |         167 (  0.0%) |         118 (  0.0%) |          10 (  0.0%) |           6 (  0.0%) |           0 (  0.0%) |
+| ··········tasmlib_hashing_sponge_hasher_pad_and_absorb_all                                                                    |         144 (  0.0%) |         101 (  0.0%) |           7 (  0.0%) |           6 (  0.0%) |           0 (  0.0%) |
+| ············tasmlib_hashing_absorb_multiple                                                                                   |         138 (  0.0%) |          98 (  0.0%) |           6 (  0.0%) |           6 (  0.0%) |           0 (  0.0%) |
+| ··············tasmlib_hashing_absorb_multiple_hash_all_full_chunks                                                            |           5 (  0.0%) |           4 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ··············tasmlib_hashing_absorb_multiple_pad_varnum_zeros                                                                |          38 (  0.0%) |          25 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ··············tasmlib_hashing_absorb_multiple_read_remainder                                                                  |          59 (  0.0%) |          34 (  0.0%) |           6 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ········tasmlib_list_push___digest                                                                                            |          20 (  0.0%) |          20 (  0.0%) |           8 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ········tasmlib_verifier_fri_verify_dequeue_commit_phase_remainder                                                            |        1057 (  0.1%) |         876 (  0.1%) |         176 (  0.0%) |          48 (  0.0%) |           0 (  0.0%) |
+| ··········tasmlib_hashing_algebraic_hasher_sample_scalars_static_length_dyn_malloc_1                                          |         112 (  0.0%) |         156 (  0.0%) |          48 (  0.0%) |          24 (  0.0%) |           0 (  0.0%) |
+| ············tasmlib_memory_dyn_malloc                                                                                         |         240 (  0.0%) |         225 (  0.0%) |          30 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ············tasmlib_hashing_squeeze_repeatedly_static_number_1                                                                |          32 (  0.0%) |          92 (  0.0%) |          40 (  0.0%) |          24 (  0.0%) |           0 (  0.0%) |
+| ··········tasmlib_list_push___xfe                                                                                             |          80 (  0.0%) |          72 (  0.0%) |          24 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ··········tasmlib_verifier_vm_proof_iter_dequeue_next_as_merkleroot                                                           |         668 (  0.1%) |         472 (  0.0%) |          40 (  0.0%) |          24 (  0.0%) |           0 (  0.0%) |
+| ············tasmlib_hashing_sponge_hasher_pad_and_absorb_all                                                                  |         576 (  0.0%) |         404 (  0.0%) |          28 (  0.0%) |          24 (  0.0%) |           0 (  0.0%) |
+| ··············tasmlib_hashing_absorb_multiple                                                                                 |         552 (  0.0%) |         392 (  0.0%) |          24 (  0.0%) |          24 (  0.0%) |           0 (  0.0%) |
+| ················tasmlib_hashing_absorb_multiple_hash_all_full_chunks                                                          |          20 (  0.0%) |          16 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ················tasmlib_hashing_absorb_multiple_pad_varnum_zeros                                                              |         152 (  0.0%) |         100 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ················tasmlib_hashing_absorb_multiple_read_remainder                                                                |         236 (  0.0%) |         136 (  0.0%) |          24 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ··········tasmlib_list_push___digest                                                                                          |          80 (  0.0%) |          80 (  0.0%) |          32 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ········tasmlib_verifier_vm_proof_iter_dequeue_next_as_fricodeword                                                            |          27 (  0.0%) |          22 (  0.0%) |           4 (  0.0%) |           0 (  0.0%) |          24 (  0.1%) |
+| ········tasmlib_list_higher_order_u32_map_tasmlib_verifier_fri_verify_identity                                                |        7736 (  0.6%) |        8238 (  0.5%) |        3077 (  0.6%) |           0 (  0.0%) |           0 (  0.0%) |
+| ··········tasmlib_list_new___xfe                                                                                              |         115 (  0.0%) |          95 (  0.0%) |          15 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ··········tasmlib_list_higher_order_u32_map_tasmlib_verifier_fri_verify_identity_loop                                         |        7685 (  0.6%) |        8196 (  0.5%) |        3072 (  0.6%) |           0 (  0.0%) |           0 (  0.0%) |
+| ········tasmlib_list_higher_order_u32_map_tasmlib_verifier_fri_verify_convert_xfe_to_digest                                   |       10808 (  0.9%) |       10286 (  0.6%) |        4101 (  0.8%) |           0 (  0.0%) |           0 (  0.0%) |
+| ··········tasmlib_list_new___digest                                                                                           |          23 (  0.0%) |          19 (  0.0%) |           3 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ··········tasmlib_list_higher_order_u32_map_tasmlib_verifier_fri_verify_convert_xfe_to_digest_loop                            |       10757 (  0.9%) |       10244 (  0.6%) |        4096 (  0.8%) |           0 (  0.0%) |           0 (  0.0%) |
+| ········tasmlib_list_length___digest                                                                                          |           6 (  0.0%) |           4 (  0.0%) |           2 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ········tasmlib_hashing_merkle_root                                                                                           |       37333 (  3.0%) |       31708 (  1.9%) |        2560 (  0.5%) |        3066 (  1.6%) |           0 (  0.0%) |
+| ··········tasmlib_hashing_merkle_root_else                                                                                    |       37314 (  3.0%) |       31696 (  1.9%) |        2560 (  0.5%) |        3066 (  1.6%) |           0 (  0.0%) |
+| ············tasmlib_hashing_merkle_root                                                                                       |       37290 (  3.0%) |       31672 (  1.9%) |        2560 (  0.5%) |        3060 (  1.6%) |           0 (  0.0%) |
+| ··············tasmlib_hashing_merkle_root_else                                                                                |       37252 (  3.0%) |       31648 (  1.9%) |        2560 (  0.5%) |        3060 (  1.6%) |           0 (  0.0%) |
+| ················tasmlib_hashing_merkle_root                                                                                   |       37204 (  3.0%) |       31600 (  1.9%) |        2560 (  0.5%) |        3048 (  1.6%) |           0 (  0.0%) |
+| ··················tasmlib_hashing_merkle_root_else                                                                            |       37128 (  3.0%) |       31552 (  1.9%) |        2560 (  0.5%) |        3048 (  1.6%) |           0 (  0.0%) |
+| ····················tasmlib_hashing_merkle_root                                                                               |       37032 (  3.0%) |       31456 (  1.9%) |        2560 (  0.5%) |        3024 (  1.6%) |           0 (  0.0%) |
+| ······················tasmlib_hashing_merkle_root_else                                                                        |       36880 (  3.0%) |       31360 (  1.9%) |        2560 (  0.5%) |        3024 (  1.6%) |           0 (  0.0%) |
+| ························tasmlib_hashing_merkle_root                                                                           |       36688 (  3.0%) |       31168 (  1.9%) |        2560 (  0.5%) |        2976 (  1.6%) |           0 (  0.0%) |
+| ··························tasmlib_hashing_merkle_root_else                                                                    |       36384 (  2.9%) |       30976 (  1.8%) |        2560 (  0.5%) |        2976 (  1.6%) |           0 (  0.0%) |
+| ····························tasmlib_hashing_merkle_root                                                                       |       36000 (  2.9%) |       30592 (  1.8%) |        2560 (  0.5%) |        2880 (  1.5%) |           0 (  0.0%) |
+| ······························tasmlib_hashing_merkle_root_else                                                                |       35392 (  2.9%) |       30208 (  1.8%) |        2560 (  0.5%) |        2880 (  1.5%) |           0 (  0.0%) |
+| ································tasmlib_hashing_merkle_root                                                                   |       34624 (  2.8%) |       29440 (  1.8%) |        2560 (  0.5%) |        2688 (  1.4%) |           0 (  0.0%) |
+| ··································tasmlib_hashing_merkle_root_else                                                            |       33408 (  2.7%) |       28672 (  1.7%) |        2560 (  0.5%) |        2688 (  1.4%) |           0 (  0.0%) |
+| ····································tasmlib_hashing_merkle_root                                                               |       31872 (  2.6%) |       27136 (  1.6%) |        2560 (  0.5%) |        2304 (  1.2%) |           0 (  0.0%) |
+| ······································tasmlib_hashing_merkle_root_else                                                        |       29440 (  2.4%) |       25600 (  1.5%) |        2560 (  0.5%) |        2304 (  1.2%) |           0 (  0.0%) |
+| ········································tasmlib_hashing_merkle_root                                                           |       26368 (  2.1%) |       22528 (  1.3%) |        2560 (  0.5%) |        1536 (  0.8%) |           0 (  0.0%) |
+| ··········································tasmlib_hashing_merkle_root_else                                                    |       21504 (  1.7%) |       19456 (  1.2%) |        2560 (  0.5%) |        1536 (  0.8%) |           0 (  0.0%) |
+| ············································tasmlib_hashing_merkle_root                                                       |       15360 (  1.2%) |       13312 (  0.8%) |        2560 (  0.5%) |           0 (  0.0%) |           0 (  0.0%) |
+| ··············································tasmlib_hashing_merkle_root_then                                                |        5632 (  0.5%) |        7168 (  0.4%) |        2560 (  0.5%) |           0 (  0.0%) |           0 (  0.0%) |
+| ········tasmlib_list_get_element___digest                                                                                     |          26 (  0.0%) |          30 (  0.0%) |          10 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ········tasmlib_verifier_vm_proof_iter_dequeue_next_as_fripolynomial                                                          |          55 (  0.0%) |          50 (  0.0%) |           8 (  0.0%) |           0 (  0.0%) |          24 (  0.1%) |
+| ········tasmlib_hashing_algebraic_hasher_sample_indices                                                                       |        4633 (  0.4%) |        3325 (  0.2%) |         412 (  0.1%) |          48 (  0.0%) |        5199 ( 11.1%) |
+| ··········tasmlib_list_new___u32                                                                                              |          23 (  0.0%) |          19 (  0.0%) |           3 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ··········tasmlib_hashing_algebraic_hasher_sample_indices_main_loop                                                           |        4601 (  0.4%) |        3302 (  0.2%) |         409 (  0.1%) |          48 (  0.0%) |        5199 ( 11.1%) |
+| ············tasmlib_list_length___u32                                                                                         |         267 (  0.0%) |         178 (  0.0%) |          89 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ············tasmlib_hashing_algebraic_hasher_sample_indices_then_reduce_and_save                                              |        2720 (  0.2%) |        1680 (  0.1%) |         320 (  0.1%) |           0 (  0.0%) |        5199 ( 11.1%) |
+| ··············tasmlib_list_push___u32                                                                                         |        1440 (  0.1%) |        1120 (  0.1%) |         320 (  0.1%) |           0 (  0.0%) |           0 (  0.0%) |
+| ········tasmlib_list_length___xfe                                                                                             |           6 (  0.0%) |           4 (  0.0%) |           2 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ········tasmlib_hashing_algebraic_hasher_sample_scalars_static_length_dyn_malloc_1                                            |          28 (  0.0%) |          39 (  0.0%) |          12 (  0.0%) |           6 (  0.0%) |           0 (  0.0%) |
+| ··········tasmlib_hashing_squeeze_repeatedly_static_number_1                                                                  |           8 (  0.0%) |          23 (  0.0%) |          10 (  0.0%) |           6 (  0.0%) |           0 (  0.0%) |
+| ········tasmlib_list_get_element___xfe                                                                                        |          26 (  0.0%) |          26 (  0.0%) |           6 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ········tasmlib_list_horner_evaluation_dynamic_length                                                                         |        1384 (  0.1%) |        1995 (  0.1%) |         385 (  0.1%) |           0 (  0.0%) |          33 (  0.1%) |
+| ··········tasmlib_list_length___xfe                                                                                           |           3 (  0.0%) |           2 (  0.0%) |           1 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ··········tasmlib_list_horner_evaluation_dynamic_length_loop_batches                                                          |        1096 (  0.1%) |        1648 (  0.1%) |         336 (  0.1%) |           0 (  0.0%) |          33 (  0.1%) |
+| ··········tasmlib_list_horner_evaluation_dynamic_length_loop_remainder                                                        |         263 (  0.0%) |         326 (  0.0%) |          48 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ········tasmlib_verifier_fri_barycentric_evaluation                                                                           |       23241 (  1.9%) |       18621 (  1.1%) |        1537 (  0.3%) |           0 (  0.0%) |          32 (  0.1%) |
+| ··········tasmlib_arithmetic_bfe_primitive_root_of_unity                                                                      |         160 (  0.0%) |         159 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |          32 (  0.1%) |
+| ··········tasmlib_verifier_fri_barycentric_evaluation_loop                                                                    |       23045 (  1.9%) |       18436 (  1.1%) |        1536 (  0.3%) |           0 (  0.0%) |           0 (  0.0%) |
+| ········tasmlib_verifier_vm_proof_iter_dequeue_next_as_friresponse                                                            |          27 (  0.0%) |          22 (  0.0%) |           4 (  0.0%) |           0 (  0.0%) |          24 (  0.1%) |
+| ········tasmlib_list_length___u32                                                                                             |           3 (  0.0%) |           2 (  0.0%) |           1 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ········tasmlib_list_higher_order_u32_zip_u32_with_xfe                                                                        |        4746 (  0.4%) |        4953 (  0.3%) |        1938 (  0.4%) |           0 (  0.0%) |           0 (  0.0%) |
+| ··········tasmlib_list_new___tuple_Lu32___xfeR                                                                                |          92 (  0.0%) |          76 (  0.0%) |          12 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ··········tasmlib_list_higher_order_u32_zip_u32_with_xfe_loop                                                                 |        4575 (  0.4%) |        4812 (  0.3%) |        1920 (  0.4%) |           0 (  0.0%) |           0 (  0.0%) |
+| ········tasmlib_verifier_verify_authentication_paths_for_leaf_and_index_list                                                  |        9873 (  0.8%) |       16823 (  1.0%) |         321 (  0.1%) |        6240 (  3.3%) |           5 (  0.0%) |
+| ··········tasmlib_verifier_verify_authentication_paths_for_leaf_and_index_list_main_loop                                      |        9845 (  0.8%) |       16804 (  1.0%) |         320 (  0.1%) |        6240 (  3.3%) |           0 (  0.0%) |
+| ············tasmlib_verifier_verify_authentication_paths_for_leaf_and_index_list_loop_over_auth_path_elements                 |        7680 (  0.6%) |       14880 (  0.9%) |           0 (  0.0%) |        6240 (  3.3%) |           0 (  0.0%) |
+| ········tasmlib_verifier_fri_verify_query_phase_main_loop                                                                     |       83392 (  6.7%) |      104738 (  6.2%) |       11359 (  2.3%) |       22080 ( 11.8%) |       21563 ( 46.2%) |
+| ··········tasmlib_list_higher_order_u32_map_tasmlib_verifier_fri_verify_add_half_domain                                       |        7232 (  0.6%) |        5272 (  0.3%) |         660 (  0.1%) |           0 (  0.0%) |        8096 ( 17.3%) |
+| ············tasmlib_list_new___u32                                                                                            |         184 (  0.0%) |         152 (  0.0%) |          24 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ··············tasmlib_memory_dyn_malloc                                                                                       |         192 (  0.0%) |         180 (  0.0%) |          24 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ············tasmlib_list_higher_order_u32_map_tasmlib_verifier_fri_verify_add_half_domain_loop                                |        7060 (  0.6%) |        5136 (  0.3%) |         640 (  0.1%) |           0 (  0.0%) |        8096 ( 17.3%) |
+| ··········tasmlib_verifier_vm_proof_iter_dequeue_next_as_friresponse                                                          |         108 (  0.0%) |          88 (  0.0%) |          16 (  0.0%) |           0 (  0.0%) |          72 (  0.2%) |
+| ··········tasmlib_verifier_fri_verify_populate_return_vector_second_half                                                      |        5518 (  0.4%) |        5182 (  0.3%) |        1607 (  0.3%) |           0 (  0.0%) |           0 (  0.0%) |
+| ············tasmlib_list_higher_order_u32_zip_u32_with_xfe                                                                    |        1582 (  0.1%) |        1651 (  0.1%) |         646 (  0.1%) |           0 (  0.0%) |           0 (  0.0%) |
+| ··············tasmlib_list_new___tuple_Lu32___xfeR                                                                            |          23 (  0.0%) |          19 (  0.0%) |           3 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ················tasmlib_memory_dyn_malloc                                                                                     |          16 (  0.0%) |          15 (  0.0%) |           2 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ··············tasmlib_list_higher_order_u32_zip_u32_with_xfe_loop                                                             |        1525 (  0.1%) |        1604 (  0.1%) |         640 (  0.1%) |           0 (  0.0%) |           0 (  0.0%) |
+| ············tasmlib_verifier_fri_verify_populate_return_vector_loop                                                           |        3929 (  0.3%) |        3526 (  0.2%) |         961 (  0.2%) |           0 (  0.0%) |           0 (  0.0%) |
+| ··············tasmlib_list_length___u32                                                                                       |         243 (  0.0%) |         162 (  0.0%) |          81 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ··············tasmlib_list_get_element___tuple_Lu32___xfeR                                                                    |        1040 (  0.1%) |        1120 (  0.1%) |         320 (  0.1%) |           0 (  0.0%) |           0 (  0.0%) |
+| ··············tasmlib_list_push___tuple_Lu32___xfeR                                                                           |        1600 (  0.1%) |        1520 (  0.1%) |         560 (  0.1%) |           0 (  0.0%) |           0 (  0.0%) |
+| ··········tasmlib_list_higher_order_u32_zip_u32_with_xfe                                                                      |        6328 (  0.5%) |        6604 (  0.4%) |        2584 (  0.5%) |           0 (  0.0%) |           0 (  0.0%) |
+| ············tasmlib_list_new___tuple_Lu32___xfeR                                                                              |          92 (  0.0%) |          76 (  0.0%) |          12 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ············tasmlib_list_higher_order_u32_zip_u32_with_xfe_loop                                                               |        6100 (  0.5%) |        6416 (  0.4%) |        2560 (  0.5%) |           0 (  0.0%) |           0 (  0.0%) |
+| ··········tasmlib_list_get_element___digest                                                                                   |          52 (  0.0%) |          60 (  0.0%) |          20 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ··········tasmlib_verifier_verify_authentication_paths_for_leaf_and_index_list                                                |       36132 (  2.9%) |       60572 (  3.6%) |        1284 (  0.3%) |       22080 ( 11.8%) |           5 (  0.0%) |
+| ············tasmlib_verifier_verify_authentication_paths_for_leaf_and_index_list_main_loop                                    |       36020 (  2.9%) |       60496 (  3.6%) |        1280 (  0.3%) |       22080 ( 11.8%) |           0 (  0.0%) |
+| ··············tasmlib_verifier_verify_authentication_paths_for_leaf_and_index_list_loop_over_auth_path_elements               |       27360 (  2.2%) |       52800 (  3.2%) |           0 (  0.0%) |       22080 ( 11.8%) |           0 (  0.0%) |
+| ··········tasmlib_list_higher_order_u32_map_tasmlib_verifier_fri_verify_reduce_indices                                        |        6592 (  0.5%) |        4632 (  0.3%) |         660 (  0.1%) |           0 (  0.0%) |        6660 ( 14.3%) |
+| ············tasmlib_list_higher_order_u32_map_tasmlib_verifier_fri_verify_reduce_indices_loop                                 |        6420 (  0.5%) |        4496 (  0.3%) |         640 (  0.1%) |           0 (  0.0%) |        6660 ( 14.3%) |
+| ··········tasmlib_verifier_fri_verify_compute_c_values_loop                                                                   |       20820 (  1.7%) |       21776 (  1.3%) |        4480 (  0.9%) |           0 (  0.0%) |        6679 ( 14.3%) |
+| ········tasmlib_list_higher_order_u32_map_tasmlib_verifier_fri_verify_assert_codeword_membership                              |        2936 (  0.2%) |        3406 (  0.2%) |         885 (  0.2%) |           0 (  0.0%) |         442 (  0.9%) |
+| ··········tasmlib_list_higher_order_u32_map_tasmlib_verifier_fri_verify_assert_codeword_membership_loop                       |        2885 (  0.2%) |        3364 (  0.2%) |         880 (  0.2%) |           0 (  0.0%) |         442 (  0.9%) |
+| ············tasmlib_list_get_element___xfe                                                                                    |        1040 (  0.1%) |        1040 (  0.1%) |         240 (  0.0%) |           0 (  0.0%) |         442 (  0.9%) |
+| ····tasmlib_arithmetic_u32_safemul                                                                                            |           8 (  0.0%) |           7 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ····method_boxed_LVmProofIterR_next_as_masterbasetablerows                                                                    |          29 (  0.0%) |          22 (  0.0%) |           4 (  0.0%) |           0 (  0.0%) |          24 (  0.1%) |
+| ······tasmlib_verifier_vm_proof_iter_dequeue_next_as_masterbasetablerows                                                      |          27 (  0.0%) |          22 (  0.0%) |           4 (  0.0%) |           0 (  0.0%) |          24 (  0.1%) |
+| ····method_boxed_LVmProofIterR_next_as_authenticationstructure                                                                |          58 (  0.0%) |          44 (  0.0%) |           8 (  0.0%) |           0 (  0.0%) |          24 (  0.1%) |
+| ······tasmlib_verifier_vm_proof_iter_dequeue_next_as_authenticationstructure                                                  |          54 (  0.0%) |          44 (  0.0%) |           8 (  0.0%) |           0 (  0.0%) |          24 (  0.1%) |
+| ····tasmlib_list_new___digest                                                                                                 |          69 (  0.0%) |          57 (  0.0%) |           9 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ····_binop_Lt__LboolR_bool_362_while_loop                                                                                     |       99848 (  8.1%) |      182086 ( 10.9%) |       58240 ( 11.7%) |       35680 ( 19.0%) |        1459 (  3.1%) |
+| ······tasmlib_hashing_algebraic_hasher_hash_varlen                                                                            |      188480 ( 15.2%) |      323360 ( 19.3%) |       98720 ( 19.8%) |       63840 ( 34.1%) |          19 (  0.0%) |
+| ········tasmlib_hashing_absorb_multiple                                                                                       |      181760 ( 14.7%) |      316160 ( 18.9%) |       98720 ( 19.8%) |       60480 ( 32.3%) |          19 (  0.0%) |
+| ··········tasmlib_hashing_absorb_multiple_hash_all_full_chunks                                                                |      117600 (  9.5%) |      270720 ( 16.2%) |       96000 ( 19.2%) |       57600 ( 30.7%) |           0 (  0.0%) |
+| ··········tasmlib_hashing_absorb_multiple_pad_varnum_zeros                                                                    |       20000 (  1.6%) |       13120 (  0.8%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ··········tasmlib_hashing_absorb_multiple_read_remainder                                                                      |       26880 (  2.2%) |       15520 (  0.9%) |        2720 (  0.5%) |           0 (  0.0%) |           0 (  0.0%) |
+| ······tasmlib_list_push___digest                                                                                              |        9600 (  0.8%) |        9600 (  0.6%) |        3840 (  0.8%) |           0 (  0.0%) |           0 (  0.0%) |
+| ····_binop_Lt__LboolR_bool_378_while_loop                                                                                     |       27528 (  2.2%) |       42246 (  2.5%) |        2240 (  0.4%) |       12480 (  6.7%) |        1200 (  2.6%) |
+| ······tasmlib_hashing_merkle_verify                                                                                           |       55680 (  4.5%) |       98880 (  5.9%) |           0 (  0.0%) |       37440 ( 20.0%) |        1200 (  2.6%) |
+| ········tasmlib_hashing_merkle_verify_traverse_tree                                                                           |       46080 (  3.7%) |       89280 (  5.3%) |           0 (  0.0%) |       37440 ( 20.0%) |           0 (  0.0%) |
+| ····method_boxed_LVmProofIterR_next_as_masterexttablerows                                                                     |          29 (  0.0%) |          22 (  0.0%) |           4 (  0.0%) |           0 (  0.0%) |          24 (  0.1%) |
+| ······tasmlib_verifier_vm_proof_iter_dequeue_next_as_masterexttablerows                                                       |          27 (  0.0%) |          22 (  0.0%) |           4 (  0.0%) |           0 (  0.0%) |          24 (  0.1%) |
+| ····_binop_Lt__LboolR_bool_399_while_loop                                                                                     |       79368 (  6.4%) |      133126 (  7.9%) |       41120 (  8.2%) |       25120 ( 13.4%) |           9 (  0.0%) |
+| ····_binop_Lt__LboolR_bool_415_while_loop                                                                                     |       27528 (  2.2%) |       42246 (  2.5%) |        2240 (  0.4%) |       12480 (  6.7%) |           0 (  0.0%) |
+| ····method_boxed_LVmProofIterR_next_as_quotientsegmentselements                                                               |          29 (  0.0%) |          22 (  0.0%) |           4 (  0.0%) |           0 (  0.0%) |          24 (  0.1%) |
+| ······tasmlib_verifier_vm_proof_iter_dequeue_next_as_quotientsegmentselements                                                 |          27 (  0.0%) |          22 (  0.0%) |           4 (  0.0%) |           0 (  0.0%) |          24 (  0.1%) |
+| ····_binop_Lt__LboolR_bool_434_while_loop                                                                                     |       37448 (  3.0%) |       32326 (  1.9%) |        3200 (  0.6%) |        3040 (  1.6%) |           0 (  0.0%) |
+| ····_binop_Lt__LboolR_bool_450_while_loop                                                                                     |       27528 (  2.2%) |       42246 (  2.5%) |        2240 (  0.4%) |       12480 (  6.7%) |           0 (  0.0%) |
+| ····method_Result___array439_of_LXFieldR_unwrap                                                                               |           2 (  0.0%) |           1 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |           0 (  0.0%) |
+| ····_binop_Lt__LboolR_bool_488_while_loop                                                                                     |      616490 ( 49.8%) |      820488 ( 49.0%) |      321761 ( 64.4%) |           0 (  0.0%) |           0 (  0.0%) |
+| ······tasmlib_array_inner_product_of_three_rows_with_weights_Bfe_baserowelem                                                  |      565280 ( 45.7%) |      757440 ( 45.2%) |      307520 ( 61.5%) |           0 (  0.0%) |           0 (  0.0%) |
+| ······tasmlib_array_inner_product_of_4_xfes                                                                                   |        7360 (  0.6%) |       10400 (  0.6%) |        3840 (  0.8%) |           0 (  0.0%) |           0 (  0.0%) |
+| Total                                                                                                                         |     1237865 (100.0%) |     1676088 (100.0%) |      499709 (100.0%) |      187387 (100.0%) |       46720 (100.0%) |
