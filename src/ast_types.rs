@@ -8,7 +8,6 @@ use regex::Regex;
 use tasm_lib::triton_vm::table::{NUM_BASE_COLUMNS, NUM_EXT_COLUMNS, NUM_QUOTIENT_SEGMENTS};
 
 use crate::ast::FnSignature;
-use crate::libraries::polynomial::PolynomialCoefficientType;
 
 pub(crate) use self::abstract_argument::*;
 pub(crate) use self::array_type::ArrayType;
@@ -149,7 +148,6 @@ impl DataType {
             DataType::Tuple(tuple) => tuple.is_copy(),
             DataType::Array(array_type) => array_type.element_type.is_copy(),
             DataType::List(_) => false,
-            DataType::Polynomial(_) => false,
             DataType::VoidPointer => false,
             DataType::Function(_) => false,
             DataType::Struct(struct_type) => struct_type.is_copy,
@@ -179,7 +177,6 @@ impl DataType {
             Xfe => "XField".to_string(),
             Digest => "Digest".to_string(),
             List(ty) => format!("Vec_L{}R", ty.label_friendly_name()),
-            Polynomial(ty) => format!("Polynomial_L{}R", ty.label_friendly_name()),
             Array(array_type) => format!(
                 "array{}_of_L{}R",
                 array_type.length,
@@ -259,7 +256,6 @@ impl DataType {
                 .map(|x| x.bfield_codec_static_length())
                 .try_fold(0, |acc: usize, x| x.map(|x| x + acc)),
             DataType::List(_) => None,
-            DataType::Polynomial(_) => None,
             DataType::Struct(struct_type) => struct_type
                 .field_types()
                 .try_fold(0, |acc: usize, field_type| {
@@ -291,7 +287,6 @@ impl DataType {
             Self::Xfe => 3,
             Self::Digest => 5,
             Self::List(_) => 1,
-            Self::Polynomial(_) => 1,
             Self::Array(_) => 1,
             Self::Tuple(tuple_type) => tuple_type.stack_size(),
             Self::VoidPointer => 1,
@@ -421,9 +416,6 @@ impl TryFrom<DataType> for tasm_lib::data_type::DataType {
                 };
                 Ok(tasm_lib::data_type::DataType::List(Box::new(element_type)))
             }
-            DataType::Polynomial(_) => {
-                Err("Polynomial types not yet supported by tasm-lib".to_owned())
-            }
             DataType::Array(_array_type) => {
                 Err("Array types not yet supported by tasm-lib".to_owned())
             }
@@ -481,7 +473,6 @@ impl Display for DataType {
             Xfe => "XFieldElement".to_string(),
             Digest => "Digest".to_string(),
             List(ty) => format!("Vec<{ty}>"),
-            Polynomial(ty) => format!("Polynomial<{ty}>"),
             Array(array_type) => format!("[{}; {}]", array_type.element_type, array_type.length),
             Tuple(tys) => format!("({})", tys.into_iter().join(", ")),
             VoidPointer => "void pointer".to_string(),

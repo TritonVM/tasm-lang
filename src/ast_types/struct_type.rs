@@ -1,6 +1,7 @@
 use std::fmt::Display;
 
 use itertools::Itertools;
+use syn::Data;
 
 use crate::libraries::LibraryFunction;
 
@@ -27,6 +28,10 @@ impl Display for NamedFieldsStruct {
 }
 
 impl NamedFieldsStruct {
+    pub(crate) fn new(fields: Vec<(String, DataType)>) -> Self {
+        Self { fields }
+    }
+
     pub(crate) fn stack_size(&self) -> usize {
         self.fields
             .iter()
@@ -39,6 +44,12 @@ impl NamedFieldsStruct {
 pub(crate) enum StructVariant {
     TupleStruct(Tuple),
     NamedFields(NamedFieldsStruct),
+}
+
+impl StructVariant {
+    pub(crate) fn named_fields(fields: Vec<(String, DataType)>) -> Self {
+        Self::NamedFields(NamedFieldsStruct::new(fields))
+    }
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]

@@ -4,6 +4,7 @@ use tasm_lib::traits::basic_snippet::BasicSnippet;
 use tasm_lib::triton_vm::proof_item::ProofItemVariant;
 
 use crate::ast_types::StructType;
+use crate::libraries::polynomial::PolynomialLib;
 use crate::triton_vm::prelude::*;
 use crate::{
     ast::{self, RoutineBody},
@@ -92,7 +93,17 @@ fn all_next_as_methods(graft_config: &mut Graft) -> Vec<ast::Method<Typing>> {
 
         // TODO: Handle Polyonomial<T> through polynomial library here, and add it to custom
         // types in `graft_config`.
-        let method_output = DataType::try_from_string(method_output).unwrap();
+        println!("{method_output}");
+
+        let method_output = if let Ok(poly_type) = PolynomialLib::try_from_string(method_output) {
+            graft_config
+                .imported_custom_types
+                .add_type_context_if_new(poly_type.clone());
+            poly_type.into()
+        } else {
+            DataType::try_from_string(method_output).unwrap()
+        };
+
         let method_output = DataType::Boxed(Box::new(method_output));
         let snippet_label = snippet.entrypoint();
         let code = triton_asm!(call { snippet_label });

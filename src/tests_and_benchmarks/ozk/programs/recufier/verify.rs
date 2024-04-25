@@ -93,9 +93,14 @@ impl Recufier {
         assert!(sum_of_evaluated_out_of_domain_quotient_segments == out_of_domain_quotient_value);
 
         // Fiat-shamir 2
-        let mut base_and_ext_codeword_weights: Vec<XFieldElement> = Tip5WithState::sample_scalars(
-            Recufier::num_base_and_ext_and_quotient_segment_codeword_weights(),
-        );
+        let mut base_and_ext_codeword_weights: Vec<XFieldElement> =
+            Tip5WithState::sample_scalars(Recufier::num_base_ext_quotient_deep_weights());
+
+        // Split off deep weights
+        let deep_codeword_weights: [XFieldElement; 3] = <[XFieldElement; 3]>::try_from(
+            base_and_ext_codeword_weights.split_off(Recufier::num_columns_plus_quotient_segments()),
+        )
+        .unwrap();
 
         // Split off the weights for the quotients
         let quotient_segment_codeword_weights: [XFieldElement; 4] = <[XFieldElement; 4]>::try_from(
@@ -121,10 +126,6 @@ impl Recufier {
                 quotient_segment_codeword_weights,
                 *out_of_domain_curr_row_quot_segments,
             );
-
-        // Fiat-Shamir 3
-        let deep_codeword_weights: [XFieldElement; 3] =
-            <[XFieldElement; 3]>::try_from(Tip5WithState::sample_scalars(3)).unwrap();
 
         // FRI
         let revealed_fri_indices_and_elements: Vec<(u32, XFieldElement)> =
@@ -365,7 +366,11 @@ impl Recufier {
         return evaluated_constraints;
     }
 
-    const fn num_base_and_ext_and_quotient_segment_codeword_weights() -> usize {
+    const fn num_base_ext_quotient_deep_weights() -> usize {
+        return 446;
+    }
+
+    fn num_columns_plus_quotient_segments() -> usize {
         return 443;
     }
 
@@ -617,9 +622,13 @@ mod test {
 
     #[test]
     fn num_base_and_ext_and_quotient_segment_codeword_weights_agrees_with_tvm() {
+        const NUM_DEEP_CODEWORD_COMPONENTS: usize = 3; // TODO: Use from TVM when made public
         assert_eq!(
-            NUM_BASE_COLUMNS + NUM_EXT_COLUMNS + NUM_QUOTIENT_SEGMENTS,
-            Recufier::num_base_and_ext_and_quotient_segment_codeword_weights()
+            NUM_BASE_COLUMNS
+                + NUM_EXT_COLUMNS
+                + NUM_QUOTIENT_SEGMENTS
+                + NUM_DEEP_CODEWORD_COMPONENTS,
+            Recufier::num_base_ext_quotient_deep_weights()
         )
     }
 

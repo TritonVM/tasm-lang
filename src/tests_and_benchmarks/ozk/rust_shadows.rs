@@ -654,6 +654,7 @@ vm_proof_iter_impl!(
         uses try_into_fri_response,
 );
 
+#[allow(non_snake_case)] // Name must agree with `tasm-lib`
 pub fn tasmlib_array_inner_product_of_three_rows_with_weights_Bfe_baserowelem<const N: usize>(
     weights: [XFieldElement; N],
     base_row: BaseRow<BFieldElement>,

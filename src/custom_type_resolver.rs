@@ -261,7 +261,6 @@ impl DataType {
             DataType::Boxed(inner) => inner.is_unresolved(),
             DataType::Tuple(inners) => inners.into_iter().any(|inner| inner.is_unresolved()),
             DataType::List(element) => element.is_unresolved(),
-            DataType::Polynomial(_) => false,
             DataType::Struct(struct_type) => struct_type
                 .field_types()
                 .any(|field_type| field_type.is_unresolved()),
@@ -351,7 +350,6 @@ impl CustomTypeResolution for DataType {
             Xfe => (),
             Digest => (),
             VoidPointer => (),
-            Polynomial(_) => (),
         }
     }
 }
