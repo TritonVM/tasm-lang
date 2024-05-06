@@ -187,7 +187,7 @@ mod tests {
                 }
 
                 // make implicit parameter explicit
-                member.params = free_variables.clone();
+                member.params.clone_from(&free_variables);
 
                 // mark visited
                 visited.insert(member_index);
@@ -381,7 +381,9 @@ mod tests {
         match expression {
             Expr::Var(variable) => {
                 if name_map.contains_key(&variable.name) {
-                    variable.name = name_map.get(&variable.name).unwrap().clone();
+                    variable
+                        .name
+                        .clone_from(name_map.get(&variable.name).unwrap());
                 }
             }
             Expr::Lit(_) => {}
@@ -396,7 +398,7 @@ mod tests {
     ) {
         for param in member.params.iter_mut() {
             if name_map.contains_key(&param.name) {
-                param.name = name_map.get(&param.name).unwrap().clone();
+                param.name.clone_from(name_map.get(&param.name).unwrap());
             }
         }
 
@@ -404,7 +406,10 @@ mod tests {
             match statement {
                 Statement::Let(assignment) | Statement::Re(assignment) => {
                     if name_map.contains_key(&assignment.var.name) {
-                        assignment.var.name = name_map.get(&assignment.var.name).unwrap().clone();
+                        assignment
+                            .var
+                            .name
+                            .clone_from(name_map.get(&assignment.var.name).unwrap());
                     }
                     substitute_names_in_expression(&mut assignment.expr, name_map);
                 }

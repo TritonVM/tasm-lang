@@ -13,7 +13,6 @@ use std::vec::Vec;
 use itertools::Itertools;
 use num::One;
 use num::Zero;
-use tasm_lib::hashing::algebraic_hasher::hash_varlen::HashVarlen;
 use tasm_lib::memory::encode_to_memory;
 use tasm_lib::structure::tasm_object::decode_from_memory_with_size;
 use tasm_lib::triton_vm;
@@ -322,21 +321,6 @@ pub(super) fn tasmlib_hashing_merkle_verify(
     };
 
     assert!(mt_inclusion_proof.verify(root));
-}
-
-pub(super) fn tasmlib_hashing_algebraic_hasher_hash_varlen<T: BFieldCodec>(
-    preimage: &[T],
-    length: usize,
-) -> Digest {
-    assert!(T::static_length().is_some());
-
-    // Mutate sponge state the same way that Triton-VM does
-    let preimage = &preimage.iter().flat_map(|c| c.encode()).collect_vec()[..length];
-    SPONGE_STATE.with_borrow_mut(|sponge| {
-        HashVarlen.sponge_mutation(sponge.as_mut().unwrap(), preimage);
-    });
-
-    Tip5::hash_varlen(preimage)
 }
 
 pub(super) fn _tasm_recufier_own_program_digest() -> Digest {

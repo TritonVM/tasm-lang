@@ -40,7 +40,7 @@ impl<T: Clone> Method<T> {
     #[allow(clippy::wrong_self_convention)]
     pub(crate) fn as_ast_function(self, new_name: &str) -> Fn<T> {
         let mut fn_signature = self.signature;
-        fn_signature.name = new_name.to_owned();
+        new_name.clone_into(&mut fn_signature.name);
         Fn {
             signature: fn_signature,
             body: self.body,

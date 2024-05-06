@@ -1,7 +1,6 @@
 use std::fmt::Display;
 
 use itertools::Itertools;
-use syn::Data;
 
 use crate::libraries::LibraryFunction;
 

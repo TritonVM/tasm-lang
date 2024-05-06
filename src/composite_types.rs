@@ -143,7 +143,7 @@ impl CompositeTypes {
                     .field_or_variant_types_mut()
                     .for_each(|y| y.resolve_custom_types(&custom_types_copy))
             });
-            custom_types_copy = self.to_owned();
+            self.clone_into(&mut custom_types_copy);
         }
 
         self.composite_types.iter_mut().for_each(|tyctx| {

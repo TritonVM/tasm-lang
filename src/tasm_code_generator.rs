@@ -2672,7 +2672,7 @@ fn compile_returning_block_expr(
         state.clear_all_but_top_stack_value_above_height(start_vstack.get_stack_height());
 
     state.function_state.vstack = start_vstack.clone();
-    state.function_state.var_addr = start_var_addr.clone();
+    state.function_state.var_addr.clone_from(&start_var_addr);
     state.verify_same_ordering_of_bindings(&start_vstack, &start_var_addr);
 
     (expr_add, [statement_code, expr_code, cleanup_code].concat())

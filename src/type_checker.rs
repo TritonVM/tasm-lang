@@ -1988,7 +1988,7 @@ fn derive_annotate_returning_block_expr(
         .for_each(|stmt| annotate_stmt(stmt, state, env_fn_signature));
     let resolved_return_type =
         derive_annotate_expr_type(&mut ret_block.return_expr, hint, state, env_fn_signature);
-    state.vtable = vtable_before.clone();
+    state.vtable.clone_from(&vtable_before);
 
     resolved_return_type
 }

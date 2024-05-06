@@ -41,7 +41,6 @@ pub(crate) fn all_libraries() -> Box<[Box<dyn Library>]> {
         Box::new(tasm::TasmLibrary),
         Box::new(unsigned_integers::UnsignedIntegersLib),
         Box::new(vector::VectorLib),
-        Box::new(polynomial::PolynomialLib),
         Box::new(xfe::XfeLibrary),
         Box::new(recufy::RecufyLib),
     ])

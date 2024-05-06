@@ -32,7 +32,7 @@ impl FunctionState {
         previous_stack: &VStack,
         previous_var_addr: &VarAddr,
     ) {
-        self.vstack = previous_stack.to_owned();
-        self.var_addr = previous_var_addr.to_owned();
+        previous_stack.clone_into(&mut self.vstack);
+        previous_var_addr.clone_into(&mut self.var_addr);
     }
 }
