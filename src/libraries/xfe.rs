@@ -71,7 +71,7 @@ fn call_method_inner(method_name: &str, state: &mut CompilerState) -> Vec<Labell
             )
         }
         INVERSE_METHOD_NAME => {
-            triton_asm!(xinvert)
+            triton_asm!(x_invert)
         }
         _ => panic!("XFE library does not know method {method_name}"),
     }

@@ -1765,7 +1765,7 @@ fn compile_expr(
             let code = match unaryop {
                 ast::UnaryOp::Neg => match rhs_type {
                     ast_types::DataType::Bfe => triton_asm!(push -1 mul),
-                    ast_types::DataType::Xfe => triton_asm!(push -1 xbmul),
+                    ast_types::DataType::Xfe => triton_asm!(push -1 xb_mul),
                     _ => panic!("Unsupported negation of type {rhs_type}"),
                 },
                 ast::UnaryOp::Not => match rhs_type {
@@ -1841,7 +1841,7 @@ fn compile_expr(
                             triton_asm!(call { add_u128 })
                         }
                         (Bfe, Bfe) => triton_asm!(add),
-                        (Xfe, Xfe) => triton_asm!(xxadd),
+                        (Xfe, Xfe) => triton_asm!(xx_add),
                         (Xfe, Bfe) => triton_asm!(add),
                         _ => panic!("Unsupported ADD for types LHS: {lhs_type}, RHS: {rhs_type}"),
                     };
@@ -2036,8 +2036,8 @@ fn compile_expr(
                             triton_asm!(
                                 {&lhs_expr_code}
                                 {&rhs_expr_code}
-                                xinvert
-                                xxmul
+                                x_invert
+                                xx_mul
                             )
                         }
                         _ => panic!("Unsupported div for type {result_type}"),
@@ -2237,12 +2237,12 @@ fn compile_expr(
                         (Xfe, Xfe) => triton_asm!(
                             {&lhs_expr_code}
                             {&rhs_expr_code}
-                            xxmul
+                            xx_mul
                         ),
                         (Xfe, Bfe) => triton_asm!(
                             {&lhs_expr_code}
                             {&rhs_expr_code}
-                            xbmul
+                            xb_mul
                         ),
                         _ => panic!("Unsupported MUL for types LHS: {lhs_type}, RHS: {rhs_type}"),
                     }
@@ -2424,9 +2424,9 @@ fn compile_expr(
                             triton_asm!(
                                   // multiply top element with -1
                                 push -1
-                                xbmul
+                                xb_mul
                                 // Perform (lhs - rhs)
-                                xxadd
+                                xx_add
                             )
                         }
                         (Xfe, Bfe) => {

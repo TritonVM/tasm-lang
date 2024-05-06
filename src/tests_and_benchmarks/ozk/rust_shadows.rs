@@ -386,9 +386,9 @@ pub(super) fn tasmlib_array_inner_product_of_4_xfes(
     inner_product(&a, &b)
 }
 
-pub(super) fn tasmlib_array_inner_product_of_596_xfes(
-    a: [XFieldElement; 596],
-    b: [XFieldElement; 596],
+pub(super) fn tasmlib_array_inner_product_of_606_xfes(
+    a: [XFieldElement; 606],
+    b: [XFieldElement; 606],
 ) -> XFieldElement {
     inner_product(&a, &b)
 }
@@ -731,9 +731,9 @@ vm_proof_iter_impl!(
 
 #[allow(non_snake_case)] // Name must agree with `tasm-lib`
 pub fn tasmlib_array_inner_product_of_three_rows_with_weights_Bfe_baserowelem<const N: usize>(
-    weights: [XFieldElement; N],
-    base_row: BaseRow<BFieldElement>,
     ext_row: ExtensionRow,
+    base_row: BaseRow<BFieldElement>,
+    weights: [XFieldElement; N],
 ) -> XFieldElement {
     let mut acc: XFieldElement = XFieldElement::zero();
     for i in 0..base_row.len() {

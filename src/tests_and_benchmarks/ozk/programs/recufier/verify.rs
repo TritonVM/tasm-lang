@@ -48,7 +48,7 @@ impl Recufier {
 
         let extension_tree_merkle_root: Box<Digest> = proof_iter.next_as_merkleroot();
 
-        let quot_codeword_weights: [XFieldElement; 596] = <[XFieldElement; 596]>::try_from(
+        let quot_codeword_weights: [XFieldElement; 606] = <[XFieldElement; 606]>::try_from(
             Tip5WithState::sample_scalars(Recufier::num_quotients()),
         )
         .unwrap();
@@ -75,14 +75,14 @@ impl Recufier {
         let out_of_domain_curr_row_quot_segments: Box<[XFieldElement; 4]> =
             proof_iter.next_as_outofdomainquotientsegments();
 
-        let quotient_summands: [XFieldElement; 596] = Recufier::quotient_summands(
+        let quotient_summands: [XFieldElement; 606] = Recufier::quotient_summands(
             out_of_domain_point_curr_row,
             padded_height,
             trace_domain_generator,
         );
 
         let out_of_domain_quotient_value: XFieldElement =
-            tasm::tasmlib_array_inner_product_of_596_xfes(quot_codeword_weights, quotient_summands);
+            tasm::tasmlib_array_inner_product_of_606_xfes(quot_codeword_weights, quotient_summands);
 
         let sum_of_evaluated_out_of_domain_quotient_segments: XFieldElement =
             tasm::tasmlib_array_horner_evaluation_with_4_coefficients(
@@ -193,8 +193,8 @@ impl Recufier {
         assert!(num_combination_codeword_checks == quotient_segment_elements.len());
 
         // Main loop
-        let trace_weights: [XFieldElement; 439] =
-            <[XFieldElement; 439]>::try_from(base_and_ext_codeword_weights).unwrap();
+        let trace_weights: [XFieldElement; 449] =
+            <[XFieldElement; 449]>::try_from(base_and_ext_codeword_weights).unwrap();
         {
             let mut i: usize = 0;
             while i < num_combination_codeword_checks {
@@ -210,9 +210,9 @@ impl Recufier {
 
                 let base_and_ext_opened_row_element: XFieldElement =
                     tasm::tasmlib_array_inner_product_of_three_rows_with_weights_Bfe_baserowelem(
-                        trace_weights,
-                        base_row,
                         ext_row,
+                        base_row,
+                        trace_weights,
                     );
 
                 let quotient_segments_opened_row_element: XFieldElement =
@@ -250,11 +250,11 @@ impl Recufier {
     }
 
     const fn num_quotients() -> usize {
-        return 596;
+        return 606;
     }
 
     const fn constraint_evaluation_lengths() -> [usize; 4] {
-        return [81usize, 94, 398, 23];
+        return [81usize, 94, 408, 23];
     }
 
     const fn constraint_evaluation_lengths_running_sum() -> [usize; 4] {
@@ -275,7 +275,7 @@ impl Recufier {
         out_of_domain_point_curr_row: XFieldElement,
         padded_height: u32,
         trace_domain_generator: BFieldElement,
-    ) -> [XFieldElement; 596] {
+    ) -> [XFieldElement; 606] {
         let initial_zerofier_inv: XFieldElement =
             (out_of_domain_point_curr_row - BFieldElement::one()).inverse();
         let consistency_zerofier_inv: XFieldElement =
@@ -288,7 +288,7 @@ impl Recufier {
 
         // Along with the challenges, the out-of-domain rows ({base,ext}*{curr,next}) are stored at
         // a statically-known location; those locations are assumed by the next function call.
-        let mut evaluated_constraints: [XFieldElement; 596] =
+        let mut evaluated_constraints: [XFieldElement; 606] =
             tasm::tasmlib_verifier_master_ext_table_air_constraint_evaluation();
 
         let categories_running_sum_lengths: [usize; 4] =
@@ -315,15 +315,15 @@ impl Recufier {
     }
 
     const fn num_base_ext_quotient_deep_weights() -> usize {
-        return 446;
+        return 456;
     }
 
     fn num_columns_plus_quotient_segments() -> usize {
-        return 443;
+        return 453;
     }
 
     fn num_columns() -> usize {
-        return 439;
+        return 449;
     }
 
     #[allow(clippy::boxed_local)]
@@ -583,6 +583,14 @@ mod test {
     #[test]
     fn num_columns_agrees_with_tvm() {
         assert_eq!(Recufier::num_columns(), NUM_BASE_COLUMNS + NUM_EXT_COLUMNS)
+    }
+
+    #[test]
+    fn num_columns_plus_quotient_segments_agrees_with_tvm() {
+        assert_eq!(
+            Recufier::num_columns_plus_quotient_segments(),
+            NUM_BASE_COLUMNS + NUM_EXT_COLUMNS + NUM_QUOTIENT_SEGMENTS
+        )
     }
 
     #[test]
