@@ -1,17 +1,16 @@
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
 fn main() {
-    // https://projecteuler.net/problem=7
-    // Find the 10_001st prime number.
-
-    // We reduce the problem size to 101 as this algorithm otherwise takes too
-    // long to run.
-    let index_of_prime_to_find: u32 = 101;
-    let log_of_desired_index: u32 = u32::BITS - index_of_prime_to_find.leading_zeros() - 1;
-    let sieve_size: u32 = index_of_prime_to_find * log_of_desired_index;
+    let index_of_prime_to_find: u32 = tasm::tasmlib_io_read_stdin___u32();
+    let log2_of_desired_index: u32 = index_of_prime_to_find.ilog2();
+    let sieve_size: u32 = index_of_prime_to_find * log2_of_desired_index;
     let mut primes: Vec<bool> = Vec::<bool>::default();
+
+    // 0 and 1 are not primes
     primes.push(false);
     primes.push(false);
+
+    // Initialize all cells to `true`
     let mut tmp_vec_initializer: u32 = 2;
     while tmp_vec_initializer < sieve_size {
         primes.push(true);
@@ -34,7 +33,6 @@ fn main() {
         prime_candidate += 2;
     }
 
-    tasm::tasmlib_io_write_to_stdout___u32(index_of_prime_to_find);
     tasm::tasmlib_io_write_to_stdout___u32(last_prime_found);
 
     return;
@@ -52,23 +50,25 @@ mod test {
 
     #[test]
     fn pe7_test() {
-        // Test function on host machine
         let timer = std::time::Instant::now();
-        let stdin = vec![];
+        let index_of_prime = 101;
+        let stdin = vec![bfe!(index_of_prime)];
         let non_determinism = NonDeterminism::default();
-        let native_output = rust_shadows::wrap_main_with_io(&main)(stdin, non_determinism);
-        let prime_number_count: u32 = native_output[0].try_into().unwrap();
-        let computed_element = native_output[1];
+        let native_output = rust_shadows::wrap_main_with_io(&main)(stdin.clone(), non_determinism);
+        let computed_element = native_output[0];
         let time_passed = timer.elapsed();
-        println!("native_output for prime number {prime_number_count} (took {time_passed:?}): {computed_element}");
+        println!("native_output for prime number {index_of_prime} (took {time_passed:?}): {computed_element}");
 
         let entrypoint = EntrypointLocation::disk("project_euler", "pe7", "main");
-        let vm_output = TritonVMTestCase::new(entrypoint).execute().unwrap();
+        let vm_output = TritonVMTestCase::new(entrypoint)
+            .with_std_in(stdin)
+            .execute()
+            .unwrap();
 
         assert_eq!(native_output, vm_output.public_output);
 
         println!(
-            "vm_output.public_output for prime number {prime_number_count}: {}",
+            "vm_output.public_output for prime number {index_of_prime}: {}",
             vm_output.public_output.iter().skip(1).join("\n")
         );
     }
@@ -80,6 +80,7 @@ mod benches {
     use crate::tests_and_benchmarks::benchmarks::BenchmarkInput;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
+    use crate::twenty_first::prelude::*;
 
     #[test]
     fn pe7_bench() {
@@ -87,8 +88,15 @@ mod benches {
         let parsed = entrypoint_location.extract_entrypoint();
         let (code, _) = compile_for_run_test(&parsed);
 
-        let common_case = BenchmarkInput::default();
-        let worst_case = BenchmarkInput::default();
+        let common_case = BenchmarkInput {
+            std_in: vec![bfe!(101)],
+            ..Default::default()
+        };
+        let worst_case = BenchmarkInput {
+            std_in: vec![bfe!(1001)],
+            ..Default::default()
+        };
+
         let name = "project_euler_7_i101".to_owned();
         execute_and_write_benchmark(
             name.clone(),
