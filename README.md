@@ -105,19 +105,26 @@ example, the program must be initialized with an encoded structure `TestStructur
 struct TestStruct {
     a: BFieldElement,
     b: BFieldElement,
+    c: u32,
+    d: u64,
 }
 
 impl TestStruct {
     fn ab_sum(&self) -> BFieldElement {
         return self.a + self.b;
     }
+
+    fn cd_sum(&self, other_value: u64) -> u128 {
+        return self.c as u128 + self.d as u128 + other_value as u128;
+    }
 }
 
 fn main() {
     let test_struct: Box<TestStruct> =
-        TestStruct::decode(&tasm::load_from_memory(BFieldElement::new(0))).unwrap();
+        TestStruct::decode(&tasm::load_from_memory(BFieldElement::new(2))).unwrap();
     let other_value: u64 = 2023;
     tasm::tasmlib_io_write_to_stdout___bfe(test_struct.ab_sum());
+    tasm::tasmlib_io_write_to_stdout___u128(test_struct.cd_sum(other_value));
     return;
 }
 ```
