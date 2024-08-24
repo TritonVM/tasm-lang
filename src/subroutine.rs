@@ -20,8 +20,8 @@ impl Display for SubRoutine {
 }
 
 impl SubRoutine {
-    /// Returns true iff subroutine starts with a label, ends with a return or a
-    /// recurse, and contains a return.
+    /// Returns true iff subroutine starts with a label, ends with a return. Or
+    /// if it ends with a recurse or a recurse_or_return, and contains a return.
     fn instructions_are_subroutine(instructions: &[LabelledInstruction]) -> bool {
         use LabelledInstruction::*;
 
@@ -33,7 +33,8 @@ impl SubRoutine {
         let last_instruction = instructions.last().unwrap();
 
         let ends_with_return_or_recurse = *last_instruction == triton_instr!(return)
-            || *last_instruction == triton_instr!(recurse);
+            || *last_instruction == triton_instr!(recurse)
+            || *last_instruction == triton_instr!(recurse_or_return);
         let contains_return = instructions.iter().any(|x| *x == triton_instr!(return));
         ends_with_return_or_recurse && contains_return
     }

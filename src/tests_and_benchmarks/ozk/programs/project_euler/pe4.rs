@@ -106,7 +106,7 @@ mod benches {
 
         let common_case = BenchmarkInput::default();
         let worst_case = BenchmarkInput::default();
-        let name = "project_euler_4_w_unsafe_lists_i10_to_50".to_owned();
+        let name = "project_euler_4_i10_to_50".to_owned();
         execute_and_write_benchmark(
             name.clone(),
             code.clone(),

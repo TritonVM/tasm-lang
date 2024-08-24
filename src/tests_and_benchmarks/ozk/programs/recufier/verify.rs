@@ -1,5 +1,4 @@
 use itertools::Itertools;
-use num::One;
 use num::Zero;
 use tasm_lib::triton_vm::table::extension_table::Quotientable;
 use tasm_lib::triton_vm::table::master_table::MasterExtTable;
@@ -48,7 +47,7 @@ impl Recufier {
 
         let extension_tree_merkle_root: Box<Digest> = proof_iter.next_as_merkleroot();
 
-        let quot_codeword_weights: [XFieldElement; 606] = <[XFieldElement; 606]>::try_from(
+        let quot_codeword_weights: [XFieldElement; 592] = <[XFieldElement; 592]>::try_from(
             Tip5WithState::sample_scalars(Recufier::num_quotients()),
         )
         .unwrap();
@@ -75,14 +74,24 @@ impl Recufier {
         let out_of_domain_curr_row_quot_segments: Box<[XFieldElement; 4]> =
             proof_iter.next_as_outofdomainquotientsegments();
 
-        let quotient_summands: [XFieldElement; 606] = Recufier::quotient_summands(
-            out_of_domain_point_curr_row,
-            padded_height,
-            trace_domain_generator,
-        );
+        let air_evaluation_result: [XFieldElement; 592] =
+            tasm::tasmlib_verifier_master_ext_table_air_constraint_evaluation(
+                &out_of_domain_curr_base_row,
+                &out_of_domain_curr_ext_row,
+                &out_of_domain_next_base_row,
+                &out_of_domain_next_ext_row,
+            );
+
+        let quotient_summands: [XFieldElement; 592] =
+            tasm::tasmlib_verifier_master_ext_table_divide_out_zerofiers(
+                air_evaluation_result,
+                out_of_domain_point_curr_row,
+                padded_height,
+                trace_domain_generator,
+            );
 
         let out_of_domain_quotient_value: XFieldElement =
-            tasm::tasmlib_array_inner_product_of_606_xfes(quot_codeword_weights, quotient_summands);
+            tasm::tasmlib_array_inner_product_of_592_xfes(quot_codeword_weights, quotient_summands);
 
         let sum_of_evaluated_out_of_domain_quotient_segments: XFieldElement =
             tasm::tasmlib_array_horner_evaluation_with_4_coefficients(
@@ -134,7 +143,7 @@ impl Recufier {
         // Check leafs
         // Dequeue base elements
         // Could be read from secret-in, but it's much more efficient to get them from memory
-        let num_combination_codeword_checks: usize = 2 * fri.num_collinearity_checks as usize;
+        let num_combination_codeword_checks: usize = fri.num_collinearity_checks as usize;
         let base_table_rows: Box<Vec<BaseRow<BFieldElement>>> =
             proof_iter.next_as_masterbasetablerows();
 
@@ -193,8 +202,8 @@ impl Recufier {
         assert!(num_combination_codeword_checks == quotient_segment_elements.len());
 
         // Main loop
-        let trace_weights: [XFieldElement; 449] =
-            <[XFieldElement; 449]>::try_from(base_and_ext_codeword_weights).unwrap();
+        let trace_weights: [XFieldElement; 463] =
+            <[XFieldElement; 463]>::try_from(base_and_ext_codeword_weights).unwrap();
         {
             let mut i: usize = 0;
             while i < num_combination_codeword_checks {
@@ -250,80 +259,19 @@ impl Recufier {
     }
 
     const fn num_quotients() -> usize {
-        return 606;
-    }
-
-    const fn constraint_evaluation_lengths() -> [usize; 4] {
-        return [81usize, 94, 408, 23];
-    }
-
-    const fn constraint_evaluation_lengths_running_sum() -> [usize; 4] {
-        let mut running_sum: usize = 0;
-        let mut lengths: [usize; 4] = Recufier::constraint_evaluation_lengths();
-        let mut i: usize = 0;
-        while i < 4 {
-            running_sum += lengths[i];
-            lengths[i] = running_sum;
-            i += 1;
-        }
-
-        return lengths;
-    }
-
-    /// Evaluate AIR constraintd and multiply with the correct inverse of zerofier.
-    fn quotient_summands(
-        out_of_domain_point_curr_row: XFieldElement,
-        padded_height: u32,
-        trace_domain_generator: BFieldElement,
-    ) -> [XFieldElement; 606] {
-        let initial_zerofier_inv: XFieldElement =
-            (out_of_domain_point_curr_row - BFieldElement::one()).inverse();
-        let consistency_zerofier_inv: XFieldElement =
-            (out_of_domain_point_curr_row.mod_pow_u32(padded_height) - BFieldElement::one())
-                .inverse();
-        let except_last_row: XFieldElement =
-            out_of_domain_point_curr_row - trace_domain_generator.inverse();
-        let transition_zerofier_inv: XFieldElement = except_last_row * consistency_zerofier_inv;
-        let terminal_zerofier_inv: XFieldElement = except_last_row.inverse();
-
-        // Along with the challenges, the out-of-domain rows ({base,ext}*{curr,next}) are stored at
-        // a statically-known location; those locations are assumed by the next function call.
-        let mut evaluated_constraints: [XFieldElement; 606] =
-            tasm::tasmlib_verifier_master_ext_table_air_constraint_evaluation();
-
-        let categories_running_sum_lengths: [usize; 4] =
-            Recufier::constraint_evaluation_lengths_running_sum();
-        let mut i: usize = 0;
-        while i < categories_running_sum_lengths[0] {
-            evaluated_constraints[i] *= initial_zerofier_inv;
-            i += 1;
-        }
-        while i < categories_running_sum_lengths[1] {
-            evaluated_constraints[i] *= consistency_zerofier_inv;
-            i += 1;
-        }
-        while i < categories_running_sum_lengths[2] {
-            evaluated_constraints[i] *= transition_zerofier_inv;
-            i += 1;
-        }
-        while i < categories_running_sum_lengths[3] {
-            evaluated_constraints[i] *= terminal_zerofier_inv;
-            i += 1;
-        }
-
-        return evaluated_constraints;
+        return 592;
     }
 
     const fn num_base_ext_quotient_deep_weights() -> usize {
-        return 456;
+        return 470;
     }
 
     fn num_columns_plus_quotient_segments() -> usize {
-        return 453;
+        return 467;
     }
 
     fn num_columns() -> usize {
-        return 449;
+        return 463;
     }
 
     #[allow(clippy::boxed_local)]
@@ -483,19 +431,6 @@ mod test {
     }
 
     #[test]
-    fn local_category_count_agrees_with_tvm() {
-        assert_eq!(
-            Recufier::constraint_evaluation_lengths(),
-            [
-                MasterExtTable::NUM_INITIAL_CONSTRAINTS,
-                MasterExtTable::NUM_CONSISTENCY_CONSTRAINTS,
-                MasterExtTable::NUM_TRANSITION_CONSTRAINTS,
-                MasterExtTable::NUM_TERMINAL_CONSTRAINTS
-            ]
-        );
-    }
-
-    #[test]
     fn num_base_and_ext_and_quotient_segment_codeword_weights_agrees_with_tvm() {
         const NUM_DEEP_CODEWORD_COMPONENTS: usize = 3; // TODO: Use from TVM when made public
         assert_eq!(
@@ -532,10 +467,6 @@ mod test {
         let vm_num_collin_checks = stark.num_collinearity_checks;
         let num_collin_checks = sp.num_collinearity_checks;
         assert_eq!(vm_num_collin_checks, num_collin_checks);
-
-        let vm_num_combi_checks = stark.num_combination_codeword_checks;
-        let num_combi_checks = sp.num_combination_codeword_checks;
-        assert_eq!(vm_num_combi_checks, num_combi_checks);
 
         let vm_ps_str = serde_json::to_string(&stark).unwrap();
         let ps_str = serde_json::to_string(&sp).unwrap();

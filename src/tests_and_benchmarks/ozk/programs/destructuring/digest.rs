@@ -22,13 +22,12 @@ mod tests {
     use crate::tests_and_benchmarks::test_helpers::shared_test::TritonVMTestCase;
     use crate::triton_vm::prelude::*;
     use tasm_lib::twenty_first::math::other::random_elements;
-    use tasm_lib::DIGEST_LENGTH;
 
     #[test]
     fn destructure_digest() {
         let entrypoint_location = EntrypointLocation::disk("destructuring", "digest", "main");
         let test_case = TritonVMTestCase::new(entrypoint_location);
-        let std_in = random_elements(DIGEST_LENGTH);
+        let std_in = random_elements(Digest::LEN);
 
         let native_output =
             rust_shadows::wrap_main_with_io(&main)(std_in.clone(), NonDeterminism::default());

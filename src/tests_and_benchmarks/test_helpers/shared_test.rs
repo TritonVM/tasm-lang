@@ -4,15 +4,14 @@ use anyhow::bail;
 use anyhow::Ok;
 use anyhow::Result;
 use itertools::Itertools;
+use num::traits::ConstOne;
+use num::traits::ConstZero;
 use tasm_lib::empty_stack;
 use tasm_lib::memory::dyn_malloc::DYN_MALLOC_ADDRESS;
 use tasm_lib::rust_shadowing_helper_functions;
 use tasm_lib::snippet_bencher::BenchmarkResult;
 use tasm_lib::triton_vm::op_stack::NUM_OP_STACK_REGISTERS;
 use tasm_lib::triton_vm::prelude::*;
-use tasm_lib::twenty_first::math::b_field_element::BFIELD_ONE;
-use tasm_lib::twenty_first::math::b_field_element::BFIELD_ZERO;
-use tasm_lib::DIGEST_LENGTH;
 
 use crate::ast;
 use crate::ast_types;
@@ -286,7 +285,7 @@ fn assert_stack_equivalence(
     final_stack: Vec<BFieldElement>,
 ) {
     let skip_program_digest =
-        |stack: Vec<BFieldElement>| stack.into_iter().skip(DIGEST_LENGTH).collect_vec();
+        |stack: Vec<BFieldElement>| stack.into_iter().skip(Digest::LEN).collect_vec();
     let stack_to_string = |stack: &[BFieldElement]| stack.iter().join(",");
 
     let final_stack_str = stack_to_string(&final_stack);
@@ -529,9 +528,9 @@ pub(crate) fn digest_lit(value: Digest) -> ast::ExprLit<type_checker::Typing> {
 
 pub(crate) fn bool_to_bfe(b: bool) -> BFieldElement {
     if b {
-        BFIELD_ONE
+        BFieldElement::ONE
     } else {
-        BFIELD_ZERO
+        BFieldElement::ZERO
     }
 }
 

@@ -12,7 +12,6 @@ pub(crate) struct StarkParameters {
     pub fri_expansion_factor: usize,
     pub num_trace_randomizers: usize,
     pub num_collinearity_checks: usize,
-    pub num_combination_codeword_checks: usize,
 }
 
 impl StarkParameters {
@@ -20,9 +19,8 @@ impl StarkParameters {
         return StarkParameters {
             security_level: 160,
             fri_expansion_factor: 4,
-            num_trace_randomizers: 166,
+            num_trace_randomizers: 98,
             num_collinearity_checks: 80,
-            num_combination_codeword_checks: 160,
         };
     }
 
@@ -30,9 +28,8 @@ impl StarkParameters {
         return StarkParameters {
             security_level: 60,
             fri_expansion_factor: 4,
-            num_trace_randomizers: 166,
+            num_trace_randomizers: 98,
             num_collinearity_checks: 20,
-            num_combination_codeword_checks: 60,
         };
     }
 
@@ -99,10 +96,6 @@ mod test {
         assert_eq!(
             default_local.num_collinearity_checks,
             default_tvm.num_collinearity_checks
-        );
-        assert_eq!(
-            default_local.num_combination_codeword_checks,
-            default_tvm.num_combination_codeword_checks
         );
 
         let padded_height = 1 << 20;

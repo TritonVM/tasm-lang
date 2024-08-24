@@ -1835,7 +1835,7 @@ fn compile_expr(
                         }
                         (U128, U128) => {
                             let add_u128 = state.import_snippet(Box::new(
-                                tasm_lib::arithmetic::u128::add_u128::AddU128,
+                                tasm_lib::arithmetic::u128::safe_add::SafeAddU128,
                             ));
 
                             triton_asm!(call { add_u128 })
@@ -2133,7 +2133,7 @@ fn compile_expr(
 
                         U64 => {
                             let lt_u64 = state.import_snippet(Box::new(
-                                tasm_lib::arithmetic::u64::lt_u64::LtStandardU64,
+                                tasm_lib::arithmetic::u64::lt_u64::LtU64ConsumeArgs,
                             ));
                             triton_asm!(
                                 {&lhs_expr_code}
@@ -2169,7 +2169,7 @@ fn compile_expr(
                         ),
                         U64 => {
                             let lt_u64 = state.import_snippet(Box::new(
-                                tasm_lib::arithmetic::u64::lt_u64::LtStandardU64,
+                                tasm_lib::arithmetic::u64::lt_u64::LtU64ConsumeArgs,
                             ));
 
                             triton_asm!(

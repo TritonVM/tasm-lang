@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1"
-chrono = "^0.4.31"
+chrono = "^0.4.38"
 regex = "1.10"
 inflections = "1.1"
 itertools = "0.12"
@@ -13,7 +13,7 @@ num = "0.4"
 rand = "0"
 strum = { version = "0.26", features = ["derive"] }
 syn = { version = "1.0", features = ["full", "extra-traits"] }
-tasm-lib = { git = "https://github.com/TritonVM/tasm-lib.git", rev = "7b34bbbf69b72e5b9b8f95b93714b8a7998c3dbf" }
+tasm-lib = { git = "https://github.com/TritonVM/tasm-lib.git", rev = "9d9ead4455fa1016feed50cef0b2b020ba6e9a46" }
 quote = "1.0"
 
 [dev-dependencies]
@@ -21,7 +21,7 @@ anyhow = "1"
 arbitrary = { version = "1", features = ["derive"] }
 field_count = "0.1.1"
 pretty_assertions = "1.4"
-proptest = "1.4"
+proptest = "1.5"
 proptest-arbitrary-interop = "0.1"
 reqwest = { version = "0.11", features = ["blocking"] }
 serde = { version = "1", features = ["derive"] }

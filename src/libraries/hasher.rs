@@ -1,7 +1,6 @@
 use tasm_lib::list::LIST_METADATA_SIZE;
 use tasm_lib::traits::basic_snippet::BasicSnippet;
 use tasm_lib::triton_vm::prelude::*;
-use tasm_lib::twenty_first::prelude::tip5::DIGEST_LENGTH;
 
 use crate::ast;
 use crate::ast::FnSignature;
@@ -293,10 +292,11 @@ fn graft_digest_new(arg_0: &syn::Expr, graft_config: &mut Graft) -> ast::Expr<su
                 }
             }
 
-            let bfe_literals: [BFieldElement; DIGEST_LENGTH] =
+            let bfe_literals: [BFieldElement; Digest::LEN] =
                 bfe_literals.clone().try_into().unwrap_or_else(|_| {
                     panic!(
-                        "Digest initialization must happen with {DIGEST_LENGTH} BFEs. Got {}",
+                        "Digest initialization must happen with {} BFEs. Got {}",
+                        Digest::LEN,
                         bfe_literals.len(),
                     )
                 });

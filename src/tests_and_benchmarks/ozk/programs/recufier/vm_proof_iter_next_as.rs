@@ -34,12 +34,12 @@ mod test {
         let a_merkle_root: Box<Digest> = vm_proof_iter.next_as_merkleroot();
         tasm::tasmlib_io_write_to_stdout___digest(*a_merkle_root);
 
-        let out_of_domain_base_row: Box<Box<[XFieldElement; 363]>> =
+        let out_of_domain_base_row: Box<Box<[XFieldElement; 375]>> =
             vm_proof_iter.next_as_outofdomainbaserow();
         tasm::tasmlib_io_write_to_stdout___xfe(out_of_domain_base_row[0]);
         tasm::tasmlib_io_write_to_stdout___xfe(out_of_domain_base_row[1]);
 
-        let out_of_domain_ext_row: Box<Box<[XFieldElement; 86]>> =
+        let out_of_domain_ext_row: Box<Box<[XFieldElement; 88]>> =
             vm_proof_iter.next_as_outofdomainextrow();
         tasm::tasmlib_io_write_to_stdout___xfe(out_of_domain_ext_row[0]);
         tasm::tasmlib_io_write_to_stdout___xfe(out_of_domain_ext_row[1]);
@@ -57,7 +57,7 @@ mod test {
         tasm::tasmlib_io_write_to_stdout___digest(authentication_structure[1]);
         tasm::tasmlib_io_write_to_stdout___digest(authentication_structure[2]);
 
-        let mbtw: Box<Vec<[BFieldElement; 363]>> = vm_proof_iter.next_as_masterbasetablerows();
+        let mbtw: Box<Vec<[BFieldElement; 375]>> = vm_proof_iter.next_as_masterbasetablerows();
         {
             let mut j: usize = 0;
             while j < mbtw.len() {
@@ -70,7 +70,7 @@ mod test {
             }
         }
 
-        let metr: Box<Vec<[XFieldElement; 86]>> = vm_proof_iter.next_as_masterexttablerows();
+        let metr: Box<Vec<[XFieldElement; 88]>> = vm_proof_iter.next_as_masterexttablerows();
         {
             let mut j: usize = 0;
             while j < metr.len() {

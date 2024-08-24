@@ -8,7 +8,6 @@ use tasm_lib::triton_vm::prelude::*;
 use proptest::collection::vec;
 use proptest::prop_assert_eq;
 use proptest_arbitrary_interop::arb;
-use tasm_lib::DIGEST_LENGTH;
 use test_strategy::proptest;
 
 fn catch_all_covers_a() {
@@ -47,7 +46,7 @@ fn catch_all_covers_a() {
 
 #[proptest(cases = 10)]
 fn catch_all_covers_a_test(
-    #[strategy(vec(arb(), DIGEST_LENGTH))] std_in: Vec<BFieldElement>,
+    #[strategy(vec(arb(), Digest::LEN))] std_in: Vec<BFieldElement>,
     #[strategy(arb())] input: u32,
 ) {
     let std_in = [vec![BFieldElement::new(input as u64)], std_in].concat();
@@ -101,7 +100,7 @@ fn catch_all_covers_b() {
 
 #[proptest(cases = 10)]
 fn catch_all_covers_b_test(
-    #[strategy(vec(arb(), DIGEST_LENGTH))] std_in: Vec<BFieldElement>,
+    #[strategy(vec(arb(), Digest::LEN))] std_in: Vec<BFieldElement>,
     #[strategy(arb())] input: u32,
 ) {
     let std_in = [vec![BFieldElement::new(input as u64)], std_in].concat();
@@ -155,7 +154,7 @@ fn catch_all_covers_c() {
 
 #[proptest(cases = 10)]
 fn catch_all_covers_c_test(
-    #[strategy(vec(arb(), DIGEST_LENGTH))] std_in: Vec<BFieldElement>,
+    #[strategy(vec(arb(), Digest::LEN))] std_in: Vec<BFieldElement>,
     #[strategy(arb())] input: u32,
 ) {
     let std_in = [vec![BFieldElement::new(input as u64)], std_in].concat();
@@ -205,7 +204,7 @@ fn catch_all_covers_a_and_b() {
 
 #[proptest(cases = 10)]
 fn catch_all_covers_a_and_b_test(
-    #[strategy(vec(arb(), DIGEST_LENGTH))] std_in: Vec<BFieldElement>,
+    #[strategy(vec(arb(), Digest::LEN))] std_in: Vec<BFieldElement>,
     #[strategy(arb())] input: u32,
 ) {
     let std_in = [vec![BFieldElement::new(input as u64)], std_in].concat();
@@ -257,7 +256,7 @@ fn catch_all_covers_a_and_c() {
 
 #[proptest(cases = 10)]
 fn catch_all_covers_a_and_c_test(
-    #[strategy(vec(arb(), DIGEST_LENGTH))] std_in: Vec<BFieldElement>,
+    #[strategy(vec(arb(), Digest::LEN))] std_in: Vec<BFieldElement>,
     #[strategy(arb())] input: u32,
 ) {
     let std_in = [vec![BFieldElement::new(input as u64)], std_in].concat();
@@ -304,7 +303,7 @@ fn catch_all_covers_b_and_c() {
 
 #[proptest(cases = 10)]
 fn catch_all_covers_b_and_c_test(
-    #[strategy(vec(arb(), DIGEST_LENGTH))] std_in: Vec<BFieldElement>,
+    #[strategy(vec(arb(), Digest::LEN))] std_in: Vec<BFieldElement>,
     #[strategy(arb())] input: u32,
 ) {
     let std_in = [vec![BFieldElement::new(input as u64)], std_in].concat();
@@ -345,7 +344,7 @@ fn catch_all_covers_a_b_c() {
 
 #[proptest(cases = 10)]
 fn catch_all_covers_a_b_c_test(
-    #[strategy(vec(arb(), DIGEST_LENGTH))] std_in: Vec<BFieldElement>,
+    #[strategy(vec(arb(), Digest::LEN))] std_in: Vec<BFieldElement>,
     #[strategy(arb())] input: u32,
 ) {
     let std_in = [vec![BFieldElement::new(input as u64)], std_in].concat();

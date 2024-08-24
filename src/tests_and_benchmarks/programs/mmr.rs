@@ -624,13 +624,13 @@ mod run_tests {
     }
 
     fn test_new_peak_calculation_equivalence(src: &ItemFn, digests: Vec<Digest>) {
-        let msa = MmrAccumulator::<Tip5>::new(digests);
+        let msa = MmrAccumulator::new_from_leafs(digests);
         let mut init_memory = HashMap::default();
         let list_pointer = 10_000u64.into();
-        list_insert(list_pointer, msa.get_peaks(), &mut init_memory);
+        list_insert(list_pointer, msa.peaks(), &mut init_memory);
         let new_leaf: Digest = random();
         let inputs = vec![
-            u64_lit(msa.count_leaves()),
+            u64_lit(msa.num_leafs()),
             bfe_lit(list_pointer),
             digest_lit(new_leaf),
         ];
@@ -641,7 +641,7 @@ mod run_tests {
             .unwrap();
 
         let (new_peaks, mp) =
-            calculate_new_peaks_from_append::<Tip5>(msa.count_leaves(), msa.get_peaks(), new_leaf);
+            calculate_new_peaks_from_append(msa.num_leafs(), msa.peaks(), new_leaf);
 
         // Verify that the new peaks calculated in the VM match those calculated in Rust
         assert_list_equal(
@@ -799,7 +799,7 @@ mod run_tests {
 
         let mut init_memory = HashMap::default();
         let old_peaks_pointer: BFieldElement = 10000u64.into();
-        let old_peaks = mmra.get_peaks();
+        let old_peaks = mmra.peaks();
         list_insert(old_peaks_pointer, old_peaks.clone(), &mut init_memory);
         let ap_pointer: BFieldElement = 20000u64.into();
         let old_mp = mps[index_of_leaf_to_change as usize].clone();
@@ -811,7 +811,7 @@ mod run_tests {
         let inputs = vec![
             bfe_lit(old_peaks_pointer),
             digest_lit(new_leaf),
-            u64_lit(mmra.count_leaves()),
+            u64_lit(mmra.num_leafs()),
             bfe_lit(ap_pointer),
             u64_lit(index_of_leaf_to_change),
         ];
@@ -826,10 +826,11 @@ mod run_tests {
         )
         .unwrap();
 
-        let expected_new_peaks = calculate_new_peaks_from_leaf_mutation::<Tip5>(
+        let expected_new_peaks = calculate_new_peaks_from_leaf_mutation(
             &old_peaks,
+            mmra.num_leafs(),
             new_leaf,
-            mmra.count_leaves(),
+            index_of_leaf_to_change,
             &old_mp,
         );
 
@@ -872,16 +873,16 @@ mod run_tests {
 
                 let mut init_memory = HashMap::default();
                 let peaks_pointer: BFieldElement = 10000u64.into();
-                let peaks = mmra.get_peaks();
+                let peaks = mmra.peaks();
                 list_insert(peaks_pointer, peaks.clone(), &mut init_memory);
                 let ap_pointer: BFieldElement = 20_000u64.into();
-                let mp: MmrMembershipProof<Tip5> = mps[leaf_index as usize].clone();
+                let mp: MmrMembershipProof = mps[leaf_index as usize].clone();
                 list_insert(ap_pointer, mp.authentication_path.clone(), &mut init_memory);
 
                 let own_leaf = digests[leaf_index as usize];
                 let good_inputs = vec![
                     bfe_lit(peaks_pointer),
-                    u64_lit(mmra.count_leaves()),
+                    u64_lit(mmra.num_leafs()),
                     bfe_lit(ap_pointer),
                     u64_lit(leaf_index),
                     digest_lit(own_leaf),
@@ -901,7 +902,7 @@ mod run_tests {
                     Err(err) => panic!("VM execution must succeed. Got: {err}"),
                 };
 
-                let expected_result = mp.verify(&peaks, own_leaf, mmra.count_leaves());
+                let expected_result = mp.verify(leaf_index, own_leaf, &peaks, mmra.num_leafs());
                 let vm_result: bool = vm_res.op_stack.stack.last().unwrap().value() == 1;
                 assert_eq!(
                     expected_result, vm_result,
@@ -913,7 +914,7 @@ mod run_tests {
                 let bad_leaf: Digest = random();
                 let bad_inputs = vec![
                     bfe_lit(peaks_pointer),
-                    u64_lit(mmra.count_leaves()),
+                    u64_lit(mmra.num_leafs()),
                     bfe_lit(ap_pointer),
                     u64_lit(leaf_index),
                     digest_lit(bad_leaf),
@@ -928,7 +929,7 @@ mod run_tests {
                     Ok(vm_res) => vm_res,
                     Err(err) => panic!("VM execution must succeed. Got: {err}"),
                 };
-                let expected_result_neg = mp.verify(&peaks, bad_leaf, mmra.count_leaves());
+                let expected_result_neg = mp.verify(leaf_index, bad_leaf, &peaks, mmra.num_leafs());
                 let vm_result_neg: bool =
                     vm_res_negative.op_stack.stack.last().unwrap().value() == 1;
                 assert_eq!(

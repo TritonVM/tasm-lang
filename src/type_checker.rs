@@ -1176,7 +1176,7 @@ fn derive_annotate_expr_type(
                 assert_type_equals(
                     &derived_field_type,
                     &expected_field_type,
-                    &format!("Struct initialization of {}", struct_expr.struct_type),
+                    format!("Struct initialization of {}", struct_expr.struct_type),
                 );
 
                 let m = remaining_fields

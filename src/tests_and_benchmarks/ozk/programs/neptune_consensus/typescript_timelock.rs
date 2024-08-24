@@ -13,7 +13,7 @@ fn main() {
     let leaf_index: u32 = 5;
     let leaf: Digest = Tip5::hash_varlen(&timestamp.encode());
     let tree_height: u32 = 3;
-    tasm::tasmlib_hashing_merkle_verify(tx_kernel_digest, leaf_index, leaf, tree_height);
+    tasm::tasmlib_hashing_merkle_verify(tx_kernel_digest, tree_height, leaf_index, leaf);
     assert!(unlock_date < timestamp.value());
 
     return;
@@ -28,7 +28,7 @@ mod test {
     use tasm_lib::twenty_first::math::other::random_elements;
     use tasm_lib::twenty_first::util_types::merkle_tree::CpuParallel;
     use tasm_lib::twenty_first::util_types::merkle_tree::MerkleTree;
-    use tasm_lib::twenty_first::util_types::merkle_tree_maker::MerkleTreeMaker;
+    use twenty_first::prelude::MerkleTreeMaker;
 
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
@@ -46,7 +46,7 @@ mod test {
     fn tx_kernel_merkle_tree_with_specific_leaf(
         leaf: Digest,
         leaf_index: usize,
-    ) -> (MerkleTree<Tip5>, Vec<Digest>) {
+    ) -> (MerkleTree, Vec<Digest>) {
         let mut eight_digests = random_elements(8);
         eight_digests[leaf_index] = leaf;
         let mt = CpuParallel::from_digests(&eight_digests).unwrap();

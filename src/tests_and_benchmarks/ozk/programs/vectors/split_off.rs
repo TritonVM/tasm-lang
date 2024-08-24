@@ -123,7 +123,6 @@ fn digest_vec() {
 mod test {
     use tasm_lib::twenty_first::math::other::random_elements;
     use tasm_lib::twenty_first::math::x_field_element::EXTENSION_DEGREE;
-    use tasm_lib::DIGEST_LENGTH;
     use test_strategy::proptest;
 
     use super::*;
@@ -171,7 +170,7 @@ mod test {
     fn digest_vec_split_off_test() {
         let std_in: Vec<BFieldElement> = [
             vec![BFieldElement::new(12)],
-            random_elements(12 * DIGEST_LENGTH),
+            random_elements(12 * Digest::LEN),
             vec![BFieldElement::new(8)],
         ]
         .concat();

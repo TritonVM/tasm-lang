@@ -7,7 +7,6 @@ use proptest::collection::vec;
 use proptest::prelude::*;
 use proptest_arbitrary_interop::arb;
 use tasm_lib::Digest;
-use tasm_lib::DIGEST_LENGTH;
 use test_strategy::proptest;
 
 use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
@@ -117,9 +116,7 @@ fn choose_variant_c_and_panic_on_variants_a_and_b() {
 }
 
 #[proptest(cases = 10)]
-fn assert_no_panic_in_arm_body_c(
-    #[strategy(vec(arb(), DIGEST_LENGTH))] std_in: Vec<BFieldElement>,
-) {
+fn assert_no_panic_in_arm_body_c(#[strategy(vec(arb(), Digest::LEN))] std_in: Vec<BFieldElement>) {
     let rust_program = wrap_main_with_io(&choose_variant_c_and_panic_on_variants_a_and_b);
     let native_output = rust_program(std_in.clone(), NonDeterminism::default());
 

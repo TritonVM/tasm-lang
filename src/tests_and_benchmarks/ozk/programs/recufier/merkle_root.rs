@@ -6,7 +6,7 @@ mod test {
     use tasm_lib::twenty_first::prelude::AlgebraicHasher;
     use tasm_lib::twenty_first::util_types::merkle_tree::CpuParallel;
     use tasm_lib::twenty_first::util_types::merkle_tree::MerkleTree;
-    use tasm_lib::twenty_first::util_types::merkle_tree_maker::MerkleTreeMaker;
+    use twenty_first::prelude::MerkleTreeMaker;
 
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
@@ -22,7 +22,7 @@ mod test {
             let stdin = vec![];
             let digest_list = random_elements(input_length);
             let non_determinism = init_memory_from(&digest_list, 2000u64.into());
-            let merkle_tree: MerkleTree<Tip5> = CpuParallel::from_digests(&digest_list).unwrap();
+            let merkle_tree: MerkleTree = CpuParallel::from_digests(&digest_list).unwrap();
             let expected_output = merkle_tree.root().values().to_vec();
             let native_output =
                 rust_shadows::wrap_main_with_io(&main)(stdin.clone(), non_determinism.clone());

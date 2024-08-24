@@ -21,8 +21,6 @@ use tasm_lib::triton_vm::proof_item::ProofItem;
 use tasm_lib::triton_vm::proof_item::ProofItemVariant;
 use tasm_lib::triton_vm::table::extension_table::Quotientable;
 use tasm_lib::triton_vm::table::master_table::MasterExtTable;
-use tasm_lib::triton_vm::table::NUM_BASE_COLUMNS;
-use tasm_lib::triton_vm::table::NUM_EXT_COLUMNS;
 use tasm_lib::twenty_first::math::tip5::Tip5;
 use tasm_lib::twenty_first::math::tip5::RATE;
 use tasm_lib::twenty_first::math::traits::ModPowU32;
@@ -30,6 +28,7 @@ use tasm_lib::twenty_first::math::x_field_element::EXTENSION_DEGREE;
 use tasm_lib::twenty_first::util_types::algebraic_hasher::AlgebraicHasher;
 use tasm_lib::twenty_first::util_types::algebraic_hasher::Sponge;
 use tasm_lib::twenty_first::util_types::merkle_tree::MerkleTreeInclusionProof;
+use tasm_lib::verifier::master_ext_table::air_constraint_evaluation;
 use tasm_lib::verifier::master_ext_table::air_constraint_evaluation::AirConstraintEvaluation;
 use tasm_lib::verifier::master_ext_table::air_constraint_evaluation::AirConstraintSnippetInputs;
 
@@ -291,7 +290,7 @@ pub(super) fn wrap_main_with_io_and_program_digest(
 ) -> Box<dyn Fn(Vec<BFieldElement>, NonDeterminism, Program) -> Vec<BFieldElement>> {
     Box::new(
         |input: Vec<BFieldElement>, non_determinism: NonDeterminism, program: Program| {
-            init_vm_state(input, non_determinism, Some(program.hash::<Tip5>()));
+            init_vm_state(input, non_determinism, Some(program.hash()));
             main_func();
             get_pub_output()
         },
@@ -301,9 +300,9 @@ pub(super) fn wrap_main_with_io_and_program_digest(
 // Hashing-related shadows
 pub(super) fn tasmlib_hashing_merkle_verify(
     root: Digest,
+    tree_height: u32,
     leaf_index: u32,
     leaf: Digest,
-    tree_height: u32,
 ) {
     let mut path: Vec<Digest> = vec![];
 
@@ -313,11 +312,10 @@ pub(super) fn tasmlib_hashing_merkle_verify(
         }
     });
 
-    let mt_inclusion_proof = MerkleTreeInclusionProof::<Tip5> {
+    let mt_inclusion_proof = MerkleTreeInclusionProof {
         tree_height: tree_height as usize,
-        indexed_leaves: vec![(leaf_index as usize, leaf)],
+        indexed_leafs: vec![(leaf_index as usize, leaf)],
         authentication_structure: path,
-        _hasher: std::marker::PhantomData,
     };
 
     assert!(mt_inclusion_proof.verify(root));
@@ -348,9 +346,9 @@ pub(super) fn tasmlib_verifier_challenges_new_generic_dyn_claim_59_4(
     let Challenges { challenges } = Challenges::new(sampled_challenges, &claim);
 
     // Store Challenges at their expected value in memory
-    let mem_layout = AirConstraintEvaluation::conventional_air_constraint_memory_layout();
+    let memory_layout = air_constraint_evaluation::MemoryLayout::conventional_dynamic();
     ND_MEMORY.with_borrow_mut(|memory| {
-        encode_to_memory(memory, mem_layout.challenges_ptr, challenges);
+        encode_to_memory(memory, memory_layout.challenges_pointer(), &challenges);
     });
 
     let challenges = TasmLangChallenges { challenges };
@@ -370,9 +368,9 @@ pub(super) fn tasmlib_array_inner_product_of_4_xfes(
     inner_product(&a, &b)
 }
 
-pub(super) fn tasmlib_array_inner_product_of_606_xfes(
-    a: [XFieldElement; 606],
-    b: [XFieldElement; 606],
+pub(super) fn tasmlib_array_inner_product_of_592_xfes(
+    a: [XFieldElement; 592],
+    b: [XFieldElement; 592],
 ) -> XFieldElement {
     inner_product(&a, &b)
 }
@@ -392,57 +390,27 @@ pub(super) fn tasmlib_array_horner_evaluation_with_4_coefficients(
 }
 
 pub(super) fn tasmlib_verifier_master_ext_table_air_constraint_evaluation(
+    curr_main: &BaseRow<XFieldElement>,
+    curr_aux: &ExtensionRow,
+    next_main: &BaseRow<XFieldElement>,
+    next_aux: &ExtensionRow,
 ) -> [XFieldElement; MasterExtTable::NUM_CONSTRAINTS] {
     const CHALLENGES_LENGTH: usize = Challenges::COUNT;
-    let mem_layout = AirConstraintEvaluation::conventional_air_constraint_memory_layout();
+    let mem_layout = air_constraint_evaluation::MemoryLayout::conventional_static();
     let challenges: Box<[XFieldElement; CHALLENGES_LENGTH]> = ND_MEMORY.with_borrow(|memory| {
         decode_from_memory_with_size(
             memory,
-            mem_layout.challenges_ptr,
+            mem_layout.challenges_pointer(),
             EXTENSION_DEGREE * CHALLENGES_LENGTH,
         )
         .unwrap()
     });
 
-    let current_base_row: Box<[XFieldElement; NUM_BASE_COLUMNS]> =
-        ND_MEMORY.with_borrow(|memory| {
-            decode_from_memory_with_size(
-                memory,
-                mem_layout.curr_base_row_ptr,
-                EXTENSION_DEGREE * NUM_BASE_COLUMNS,
-            )
-            .unwrap()
-        });
-    let current_ext_row: Box<[XFieldElement; NUM_EXT_COLUMNS]> = ND_MEMORY.with_borrow(|memory| {
-        decode_from_memory_with_size(
-            memory,
-            mem_layout.curr_ext_row_ptr,
-            EXTENSION_DEGREE * NUM_EXT_COLUMNS,
-        )
-        .unwrap()
-    });
-    let next_base_row: Box<[XFieldElement; NUM_BASE_COLUMNS]> = ND_MEMORY.with_borrow(|memory| {
-        decode_from_memory_with_size(
-            memory,
-            mem_layout.next_base_row_ptr,
-            EXTENSION_DEGREE * NUM_BASE_COLUMNS,
-        )
-        .unwrap()
-    });
-    let next_ext_row: Box<[XFieldElement; NUM_EXT_COLUMNS]> = ND_MEMORY.with_borrow(|memory| {
-        decode_from_memory_with_size(
-            memory,
-            mem_layout.next_ext_row_ptr,
-            EXTENSION_DEGREE * NUM_EXT_COLUMNS,
-        )
-        .unwrap()
-    });
-
     let input_values = AirConstraintSnippetInputs {
-        current_base_row: current_base_row.to_vec(),
-        current_ext_row: current_ext_row.to_vec(),
-        next_base_row: next_base_row.to_vec(),
-        next_ext_row: next_ext_row.to_vec(),
+        current_base_row: curr_main.to_vec(),
+        current_ext_row: curr_aux.to_vec(),
+        next_base_row: next_main.to_vec(),
+        next_ext_row: next_aux.to_vec(),
         challenges: Challenges {
             challenges: *challenges,
         },
@@ -451,6 +419,50 @@ pub(super) fn tasmlib_verifier_master_ext_table_air_constraint_evaluation(
     AirConstraintEvaluation::host_machine_air_constraint_evaluation(input_values)
         .try_into()
         .unwrap()
+}
+
+pub(super) fn tasmlib_verifier_master_ext_table_divide_out_zerofiers(
+    mut air_evaluation_result: [XFieldElement; MasterExtTable::NUM_CONSTRAINTS],
+    out_of_domain_point_curr_row: XFieldElement,
+    padded_height: u32,
+    trace_domain_generator: BFieldElement,
+) -> [XFieldElement; MasterExtTable::NUM_CONSTRAINTS] {
+    let initial_zerofier_inv: XFieldElement =
+        (out_of_domain_point_curr_row - BFieldElement::one()).inverse();
+    let consistency_zerofier_inv: XFieldElement =
+        (out_of_domain_point_curr_row.mod_pow_u32(padded_height) - BFieldElement::one()).inverse();
+    let except_last_row: XFieldElement =
+        out_of_domain_point_curr_row - trace_domain_generator.inverse();
+    let transition_zerofier_inv: XFieldElement = except_last_row * consistency_zerofier_inv;
+    let terminal_zerofier_inv: XFieldElement = except_last_row.inverse();
+
+    let mut i: usize = 0;
+    while i < MasterExtTable::NUM_INITIAL_CONSTRAINTS {
+        air_evaluation_result[i] *= initial_zerofier_inv;
+        i += 1;
+    }
+    while i < MasterExtTable::NUM_INITIAL_CONSTRAINTS + MasterExtTable::NUM_CONSISTENCY_CONSTRAINTS
+    {
+        air_evaluation_result[i] *= consistency_zerofier_inv;
+        i += 1;
+    }
+    while i < MasterExtTable::NUM_INITIAL_CONSTRAINTS
+        + MasterExtTable::NUM_CONSISTENCY_CONSTRAINTS
+        + MasterExtTable::NUM_TRANSITION_CONSTRAINTS
+    {
+        air_evaluation_result[i] *= transition_zerofier_inv;
+        i += 1;
+    }
+    while i < MasterExtTable::NUM_INITIAL_CONSTRAINTS
+        + MasterExtTable::NUM_CONSISTENCY_CONSTRAINTS
+        + MasterExtTable::NUM_TRANSITION_CONSTRAINTS
+        + MasterExtTable::NUM_TERMINAL_CONSTRAINTS
+    {
+        air_evaluation_result[i] *= terminal_zerofier_inv;
+        i += 1;
+    }
+
+    air_evaluation_result
 }
 
 #[allow(non_snake_case)] // Name must agree with `tasm-lib`
@@ -469,9 +481,9 @@ pub(super) fn tasmlib_verifier_master_ext_table_verify_Base_table_rows(
     for (i, leaf) in leaf_digests_base.into_iter().enumerate() {
         tasmlib_hashing_merkle_verify(
             *merkle_tree_root,
+            merkle_tree_height,
             revealed_fri_indices_and_elements[i].0,
             leaf,
-            merkle_tree_height,
         );
     }
 }
@@ -495,9 +507,9 @@ pub(super) fn tasmlib_verifier_master_ext_table_verify_Extension_table_rows(
     for (i, leaf) in leaf_digests_ext.into_iter().enumerate() {
         tasmlib_hashing_merkle_verify(
             *merkle_tree_root,
+            merkle_tree_height,
             revealed_fri_indices_and_elements[i].0,
             leaf,
-            merkle_tree_height,
         );
     }
 }
@@ -521,9 +533,9 @@ pub(super) fn tasmlib_verifier_master_ext_table_verify_Quotient_table_rows(
     for (i, leaf) in leaf_digests_quot.into_iter().enumerate() {
         tasmlib_hashing_merkle_verify(
             *merkle_tree_root,
+            merkle_tree_height,
             revealed_fri_indices_and_elements[i].0,
             leaf,
-            merkle_tree_height,
         );
     }
 }
@@ -542,7 +554,7 @@ pub(super) fn tasmlib_verifier_fri_verify(
         let advance_nd_digests_by =
             tasm_lib_fri.extract_digests_required_for_proving(&proof_stream_before_fri);
         let mut proof_stream = proof_stream_before_fri.clone();
-        let indexed_leaves = fri.verify(&mut proof_stream, &mut None).unwrap();
+        let indexed_leaves = fri.verify(&mut proof_stream).unwrap();
         let num_items_used_by_fri = proof_stream.items_index - proof_stream_before_fri.items_index;
         proof_iter._advance_by(num_items_used_by_fri).unwrap();
         *sponge_state = proof_stream.sponge;

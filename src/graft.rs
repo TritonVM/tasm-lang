@@ -7,7 +7,7 @@ use std::str::FromStr;
 use syn::parse_quote;
 use syn::ExprMacro;
 use syn::PathArguments;
-use tasm_lib::DIGEST_LENGTH;
+use tasm_lib::triton_vm::prelude::Digest;
 
 use crate::ast;
 use crate::ast::ReturningBlock;
@@ -1067,9 +1067,10 @@ impl<'a> Graft<'a> {
         };
 
         assert_eq!(
-            DIGEST_LENGTH,
+            Digest::LEN,
             pat_slice.elems.len(),
-            "Expected exactly {DIGEST_LENGTH} in destructuring pattern"
+            "Expected exactly {} in destructuring pattern",
+            Digest::LEN,
         );
 
         let mut bindings = vec![];
