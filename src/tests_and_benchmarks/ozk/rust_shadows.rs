@@ -7,6 +7,7 @@
 
 use std::cell::RefCell;
 use std::collections::HashMap;
+use std::collections::VecDeque;
 use std::thread_local;
 use std::vec::Vec;
 
@@ -47,10 +48,10 @@ use crate::triton_vm::table::QuotientSegments;
 use crate::twenty_first::prelude::*;
 
 thread_local! {
-    static PUB_INPUT: RefCell<Vec<BFieldElement>> = const { RefCell::new(vec![]) };
+    static PUB_INPUT: RefCell<VecDeque<BFieldElement>> = const { RefCell::new(VecDeque::new()) };
     static PUB_OUTPUT: RefCell<Vec<BFieldElement>> = const { RefCell::new(vec![]) };
-    static ND_INDIVIDUAL_TOKEN: RefCell<Vec<BFieldElement>> = const { RefCell::new(vec![]) };
-    static ND_DIGESTS: RefCell<Vec<Digest>> = const { RefCell::new(vec![]) };
+    static ND_INDIVIDUAL_TOKEN: RefCell<VecDeque<BFieldElement>> = const { RefCell::new(VecDeque::new()) };
+    static ND_DIGESTS: RefCell<VecDeque<Digest>> = const { RefCell::new(VecDeque::new()) };
     static ND_MEMORY: RefCell<HashMap<BFieldElement, BFieldElement>> =
         RefCell::new(HashMap::default());
     static SPONGE_STATE: RefCell<Option<Tip5>> = const {  RefCell::new(None) };
@@ -110,22 +111,14 @@ pub(super) fn init_vm_state(
     non_determinism: NonDeterminism,
     program_digest: Option<Digest>,
 ) {
-    let mut pub_input_reversed = pub_input;
-    pub_input_reversed.reverse();
-    let mut inidividual_tokens_reversed = non_determinism.individual_tokens;
-    inidividual_tokens_reversed.reverse();
-    let mut digests_reversed = non_determinism.digests;
-    digests_reversed.reverse();
-
-    // TODO: Do we need to handle ND-memory as well?
     PUB_INPUT.with(|v| {
-        *v.borrow_mut() = pub_input_reversed;
+        *v.borrow_mut() = pub_input.into();
     });
     ND_INDIVIDUAL_TOKEN.with(|v| {
-        *v.borrow_mut() = inidividual_tokens_reversed;
+        *v.borrow_mut() = non_determinism.individual_tokens.into();
     });
     ND_DIGESTS.with(|v| {
-        *v.borrow_mut() = digests_reversed;
+        *v.borrow_mut() = non_determinism.digests.into();
     });
     ND_MEMORY.with(|v| {
         *v.borrow_mut() = non_determinism.ram;
@@ -148,20 +141,20 @@ pub(super) fn get_pub_output() -> Vec<BFieldElement> {
 #[allow(non_snake_case)]
 pub(super) fn tasmlib_io_read_stdin___bfe() -> BFieldElement {
     #[allow(clippy::unwrap_used)]
-    PUB_INPUT.with(|v| v.borrow_mut().pop().unwrap())
+    PUB_INPUT.with(|v| v.borrow_mut().pop_front().unwrap())
 }
 
 #[allow(non_snake_case)]
 pub(super) fn tasmlib_io_read_secin___bfe() -> BFieldElement {
     #[allow(clippy::unwrap_used)]
-    ND_INDIVIDUAL_TOKEN.with(|v| v.borrow_mut().pop().unwrap())
+    ND_INDIVIDUAL_TOKEN.with(|v| v.borrow_mut().pop_front().unwrap())
 }
 
 #[allow(non_snake_case)]
 pub(super) fn tasmlib_io_read_stdin___xfe() -> XFieldElement {
-    let x2 = PUB_INPUT.with(|v| v.borrow_mut().pop().unwrap());
-    let x1 = PUB_INPUT.with(|v| v.borrow_mut().pop().unwrap());
-    let x0 = PUB_INPUT.with(|v| v.borrow_mut().pop().unwrap());
+    let x2 = PUB_INPUT.with(|v| v.borrow_mut().pop_front().unwrap());
+    let x1 = PUB_INPUT.with(|v| v.borrow_mut().pop_front().unwrap());
+    let x0 = PUB_INPUT.with(|v| v.borrow_mut().pop_front().unwrap());
     XFieldElement::new([x0, x1, x2])
 }
 
@@ -176,7 +169,7 @@ pub(super) fn tasmlib_arithmetic_u64_log_2_floor(val: u64) -> u32 {
 pub(super) fn tasmlib_io_read_stdin___u32() -> u32 {
     #[allow(clippy::unwrap_used)]
     let val: u32 = PUB_INPUT
-        .with(|v| v.borrow_mut().pop().unwrap())
+        .with(|v| v.borrow_mut().pop_front().unwrap())
         .try_into()
         .unwrap();
     val
@@ -186,11 +179,11 @@ pub(super) fn tasmlib_io_read_stdin___u32() -> u32 {
 pub(super) fn tasmlib_io_read_stdin___u64() -> u64 {
     #[allow(clippy::unwrap_used)]
     let hi: u32 = PUB_INPUT
-        .with(|v| v.borrow_mut().pop().unwrap())
+        .with(|v| v.borrow_mut().pop_front().unwrap())
         .try_into()
         .unwrap();
     let lo: u32 = PUB_INPUT
-        .with(|v| v.borrow_mut().pop().unwrap())
+        .with(|v| v.borrow_mut().pop_front().unwrap())
         .try_into()
         .unwrap();
     ((hi as u64) << 32) + lo as u64
@@ -200,19 +193,19 @@ pub(super) fn tasmlib_io_read_stdin___u64() -> u64 {
 pub(super) fn tasmlib_io_read_stdin___u128() -> u128 {
     #[allow(clippy::unwrap_used)]
     let e3: u32 = PUB_INPUT
-        .with(|v| v.borrow_mut().pop().unwrap())
+        .with(|v| v.borrow_mut().pop_front().unwrap())
         .try_into()
         .unwrap();
     let e2: u32 = PUB_INPUT
-        .with(|v| v.borrow_mut().pop().unwrap())
+        .with(|v| v.borrow_mut().pop_front().unwrap())
         .try_into()
         .unwrap();
     let e1: u32 = PUB_INPUT
-        .with(|v| v.borrow_mut().pop().unwrap())
+        .with(|v| v.borrow_mut().pop_front().unwrap())
         .try_into()
         .unwrap();
     let e0: u32 = PUB_INPUT
-        .with(|v| v.borrow_mut().pop().unwrap())
+        .with(|v| v.borrow_mut().pop_front().unwrap())
         .try_into()
         .unwrap();
     ((e3 as u128) << 96) + ((e2 as u128) << 64) + ((e1 as u128) << 32) + e0 as u128
@@ -220,11 +213,11 @@ pub(super) fn tasmlib_io_read_stdin___u128() -> u128 {
 
 #[allow(non_snake_case)]
 pub(super) fn tasmlib_io_read_stdin___digest() -> Digest {
-    let e4 = PUB_INPUT.with(|v| v.borrow_mut().pop().unwrap());
-    let e3 = PUB_INPUT.with(|v| v.borrow_mut().pop().unwrap());
-    let e2 = PUB_INPUT.with(|v| v.borrow_mut().pop().unwrap());
-    let e1 = PUB_INPUT.with(|v| v.borrow_mut().pop().unwrap());
-    let e0 = PUB_INPUT.with(|v| v.borrow_mut().pop().unwrap());
+    let e4 = PUB_INPUT.with(|v| v.borrow_mut().pop_front().unwrap());
+    let e3 = PUB_INPUT.with(|v| v.borrow_mut().pop_front().unwrap());
+    let e2 = PUB_INPUT.with(|v| v.borrow_mut().pop_front().unwrap());
+    let e1 = PUB_INPUT.with(|v| v.borrow_mut().pop_front().unwrap());
+    let e0 = PUB_INPUT.with(|v| v.borrow_mut().pop_front().unwrap());
     Digest::new([e0, e1, e2, e3, e4])
 }
 
@@ -308,7 +301,7 @@ pub(super) fn tasmlib_hashing_merkle_verify(
 
     ND_DIGESTS.with_borrow_mut(|nd_digests| {
         for _ in 0..tree_height {
-            path.push(nd_digests.pop().unwrap());
+            path.push(nd_digests.pop_front().unwrap());
         }
     });
 
@@ -569,7 +562,7 @@ pub(super) fn tasmlib_verifier_fri_verify(
 
     ND_DIGESTS.with_borrow_mut(|nd_digests| {
         for _ in 0..advance_nd_digests_by {
-            nd_digests.pop().unwrap();
+            nd_digests.pop_front().unwrap();
         }
     });
 
