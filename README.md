@@ -15,8 +15,28 @@ This compiler only handles a small part of the Rust language.
 And more ...
 
 ## How to use
-Executing `cargo run <input-file.rs> <output-file> [-v]` will create an assembler file in `output-file.tasm` of the compilation of the
-`main` function in `<intput-file.rs>`. If you run `cargo install --path .`, this compiler can be executed as `tasm-lang`.
+### Install the Compiler
+- Clone this repo
+- `cd tasm-lang`
+- `cargo install --path .`
+
+### Compile for Triton VM
+Executing `tasm-lang <input-file.rs> <output-file>` will create an assembler file in `<output-file>.tasm` of the compilation of the
+`main` function in `<intput-file.rs>`.
+
+### Execute Assembler
+The compiled assembler code can be executed through Triton VM's `run` function, or through [triton-tui](https://github.com/TritonVM/triton-tui),
+the debugger for Triton VM. triton-tui allows you to step through the assember one instruction at a time and see the state of the virtual
+machine before each instruction. If you've installed triton-tui, you can execute your compiled assembler:
+
+```
+triton-tui <output-file.tasm>
+```
+<!---
+TODO: Add better explanation of how to set std-in, secret-in and initialize nondeterminstic memory, or improve interface for this
+in Triton VM.
+-->
+See the examples in triton-tui to see how to set initial conditions (like input streams) on Triton VM executions.
 
 ## Examples
 ### Arithmetic with `u32` numbers
@@ -121,7 +141,7 @@ impl TestStruct {
 
 fn main() {
     let test_struct: Box<TestStruct> =
-        TestStruct::decode(&tasm::load_from_memory(BFieldElement::new(2))).unwrap();
+        TestStruct::decode(&tasm::load_from_memory(BFieldElement::new(0))).unwrap();
     let other_value: u64 = 2023;
     tasm::tasmlib_io_write_to_stdout___bfe(test_struct.ab_sum());
     tasm::tasmlib_io_write_to_stdout___u128(test_struct.cd_sum(other_value));
