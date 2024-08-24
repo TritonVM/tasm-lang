@@ -7,16 +7,19 @@ A compiler from a subset of Rust to [Triton VM assembly](https://github.com/Trit
 
 ## Restrictions
 This compiler only handles a small part of the Rust language.
-- There are no `for` loops, use `while` instead
+- There are no `for` loops, use `while` instead.
 - All functions must end with the `return` keyword and functions may only contain *one* `return`
-  statement
+  statement, i.e. early returns are not possible.
 - All declarations must use explicit types.
 
 And more ...
 
-## Examples
+## How to use
+Executing `cargo run <input-file.rs> <output-file> [-v]` will create an assembler file in `output-file.tasm` of the compilation of the
+`main` function in `<intput-file.rs>`. If you run `cargo install --path .`, this compiler can be executed as `tasm-lang`.
 
-### Simple arithmetic with `u32` numbers
+## Examples
+### Arithmetic with `u32` numbers
 Solution to [Project Euler Problem 1](https://projecteuler.net/problem=1)
 >If we list all the natural numbers below $10$ that are multiples of $3$ or $5$, we get $3, 5, 6$ and $9$. The sum of these multiples is $23$.
 Find the sum of all the multiples of $3$ or $5$ below $1000$.
@@ -44,7 +47,7 @@ Notice that the result is printed to std-out through helper functions from the [
 Also notice that the above code is valid Rust code that will run on both Triton VM and your host-machine, provided that the host-machine
 implementation of `tasmlib_io_write_to_stdout___u32` is available.
 
-### Simple use of lists, a naive implementation of Sieve of Eratosthenes
+### Lists
 Solution to [Project Euler Problem 7](https://projecteuler.net/problem=7)
 > By listing the first six prime numbers: $2, 3, 5, 7, 11$, and $13$, we can see that the $6^{th}$ prime is $13$.
 What is the $10\,001^{st}$ prime number?
@@ -91,7 +94,7 @@ fn main() {
 }
 ```
 
-### Basic object-oriented programming style
+### Object-oriented Programming
 
 Notice that there is full support for types native to Triton VM like `BFieldElement`, `XFieldElement`, and `Digest`.
 And support for an object-oriented programming style and the initialization of memory at program execution start. In this

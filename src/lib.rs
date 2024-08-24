@@ -1,10 +1,12 @@
 use std::collections::HashMap;
-use std::env;
 use std::fs;
 use std::fs::File;
-use std::io::Read;
+use std::io::Write;
 use std::process;
 
+use clap::Arg;
+use clap::ArgAction;
+use clap::Command;
 use itertools::Itertools;
 use syn::ImplItemMethod;
 use syn::Item;
@@ -41,26 +43,64 @@ pub(crate) mod tasm_code_generator;
 pub(crate) mod tests_and_benchmarks;
 pub(crate) mod type_checker;
 
-pub fn main() {
-    let mut args = env::args();
-    let _ = args.next(); // executable name
+const DEFAULT_ENTRYPOINT_NAME: &str = "main";
 
-    let filename = match (args.next(), args.next()) {
-        (Some(filename), None) => filename,
-        _ => {
-            eprintln!("Usage: dump-syntax path/to/filename.rs");
-            process::exit(1);
-        }
+pub fn main() {
+    let matches = Command::new("tasm-lang")
+        .version("0.0")
+        .about("A limited Rust -> TASM compiler")
+        .arg(
+            Arg::new("input")
+                .help("The input file to process")
+                .required(true)
+                .index(1),
+        )
+        .arg(
+            Arg::new("output")
+                .help("The output file to write to")
+                .required(true)
+                .index(2),
+        )
+        .arg(
+            Arg::new("verbose")
+                .short('v')
+                .long("verbose")
+                .help("Verbose: Print generated assembler to standard-out")
+                .action(ArgAction::SetTrue),
+        )
+        .get_matches();
+
+    let input_file_name = matches.get_one::<String>("input").unwrap();
+    let output_file_name = matches.get_one::<String>("output").unwrap();
+    let verbose = matches.get_flag("verbose");
+
+    // Check if the input file has a .rs extension
+    if !input_file_name.ends_with(".rs") {
+        eprintln!("Error: The input file must have a .rs extension.");
+        process::exit(1);
+    }
+
+    // Ensure the output file has a .tasm extension
+    let output_file_name = if output_file_name.ends_with(".tasm") {
+        output_file_name.clone()
+    } else {
+        format!("{output_file_name}.tasm")
     };
 
-    let mut file = File::open(&filename).expect("Unable to open file");
+    let assembler = compile_to_string(input_file_name);
 
-    let mut src = String::new();
-    file.read_to_string(&mut src).expect("Unable to read file");
+    // Write result to file
+    let mut output_file =
+        File::create(output_file_name.clone()).expect("Unable to create file {output_file}");
+    output_file
+        .write_all(assembler.as_bytes())
+        .expect("Failed to write to output file {output_file}");
 
-    let output = compile_to_string(&filename);
+    println!("Successfully compiled {input_file_name} to {output_file_name}.",);
 
-    println!("{output}");
+    if verbose {
+        println!("{assembler}");
+    }
 }
 
 /// Mapping from name of a custom type to its type declaration and associated function and methods.
@@ -186,7 +226,7 @@ fn unwrap_custom_rust_type(
 fn parse_function_and_types(file_path: &str) -> (syn::ItemFn, StructsAndMethodsRustAst) {
     let content = fs::read_to_string(file_path).expect("Unable to read file {path}");
     let parsed_file: syn::File = syn::parse_str(&content).expect("Unable to parse rust code");
-    let entrypoint = extract_entrypoint(&parsed_file, "main");
+    let entrypoint = extract_entrypoint(&parsed_file, DEFAULT_ENTRYPOINT_NAME);
     let (custom_types, dependencies) = extract_types_and_function(&parsed_file);
 
     assert!(
@@ -218,7 +258,10 @@ pub(crate) fn compile_to_instructions(file_path: &str) -> Vec<LabelledInstructio
 }
 
 pub(crate) fn compile_to_string(file_path: &str) -> String {
-    compile_to_instructions(file_path).into_iter().join("\n")
+    format!(
+        "{}\n",
+        compile_to_instructions(file_path).into_iter().join("\n")
+    )
 }
 
 fn extract_entrypoint(parsed_file: &syn::File, entrypoint: &str) -> syn::ItemFn {
