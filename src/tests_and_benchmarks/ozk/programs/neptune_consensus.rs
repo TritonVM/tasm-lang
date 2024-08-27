@@ -1,2 +1,2 @@
-mod single_proof;
+mod claims;
 mod typescript_timelock;

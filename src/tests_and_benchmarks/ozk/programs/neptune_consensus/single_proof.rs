@@ -1,6 +1,8 @@
 use tasm_lib::prelude::TasmObject;
 use tasm_lib::triton_vm::prelude::BFieldCodec;
 use tasm_lib::triton_vm::prelude::BFieldElement;
+use tasm_lib::triton_vm::proof::Claim;
+use tasm_lib::triton_vm::stark::Stark;
 
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 use crate::twenty_first::prelude::*;
@@ -21,6 +23,22 @@ pub struct ProofCollection {
     pub kernel_mast_hash: Digest,
     pub salted_inputs_hash: Digest,
     pub salted_outputs_hash: Digest,
+}
+
+impl ProofCollection {
+    fn removal_records_integrity_claim(&self) -> Claim {
+        #[allow(clippy::redundant_field_names)]
+        let claim: Box<Claim> = Box::<Claim>::new(Claim {
+            program_digest,
+            input: self.kernel_mast_hash.reversed().values().to_vec(),
+            output: self.salted_inputs_hash.values().to_vec(),
+        });
+        // Claim {
+        //     program_digest: RemovalRecordsIntegrity.program().hash(),
+        //     input: self.kernel_mast_hash.reversed().values().to_vec(),
+        //     output: self.salted_inputs_hash.values().to_vec(),
+        // }
+    }
 }
 
 #[derive(Debug, Clone, BFieldCodec)]
@@ -54,26 +72,26 @@ impl SingleProof {
                     &pc.removal_records_integrity,
                 );
 
-                let kernel_to_outputs_claim: Claim = pc.kernel_to_outputs_claim();
-                tasm::verify_stark(
-                    Stark::default(),
-                    &kernel_to_outputs_claim,
-                    &pc.kernel_to_outputs,
-                );
+                // let kernel_to_outputs_claim: Claim = pc.kernel_to_outputs_claim();
+                // tasm::verify_stark(
+                //     Stark::default(),
+                //     &kernel_to_outputs_claim,
+                //     &pc.kernel_to_outputs,
+                // );
 
-                let collect_lock_scripts_claim: Claim = pc.collect_lock_scripts_claim();
-                tasm::verify_stark(
-                    Stark::default(),
-                    &collect_lock_scripts_claim,
-                    &pc.collect_lock_scripts,
-                );
+                // let collect_lock_scripts_claim: Claim = pc.collect_lock_scripts_claim();
+                // tasm::verify_stark(
+                //     Stark::default(),
+                //     &collect_lock_scripts_claim,
+                //     &pc.collect_lock_scripts,
+                // );
 
-                let collect_type_scripts_claim: Claim = pc.collect_type_scripts_claim();
-                tasm::verify_stark(
-                    Stark::default(),
-                    &collect_type_scripts_claim,
-                    &pc.collect_type_scripts,
-                );
+                // let collect_type_scripts_claim: Claim = pc.collect_type_scripts_claim();
+                // tasm::verify_stark(
+                //     Stark::default(),
+                //     &collect_type_scripts_claim,
+                //     &pc.collect_type_scripts,
+                // );
 
                 // let mut i = 0;
                 // let lock_script_claims: Vec<Claim> = pc.lock_script_claims();

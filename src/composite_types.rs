@@ -268,7 +268,10 @@ impl CompositeTypes {
     /// Otherwise this function panics.
     pub(crate) fn get_unique_by_name(&self, type_name: &str) -> TypeContext {
         let Some(indices) = self.by_name.get(type_name) else {
-            panic!("Did not find composite type with name {type_name}");
+            panic!(
+                "Did not find composite type with name {type_name}. Known types are:\n{}",
+                self.by_name.keys().join(", ")
+            );
         };
 
         assert!(

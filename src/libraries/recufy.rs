@@ -8,6 +8,7 @@ use tasm_lib::triton_vm::table::NUM_QUOTIENT_SEGMENTS;
 
 use crate::ast;
 use crate::ast_types;
+use crate::ast_types::CustomTypeOil;
 use crate::ast_types::DataType;
 use crate::ast_types::StructType;
 use crate::composite_types::CompositeTypes;
@@ -22,6 +23,8 @@ use super::Library;
 const BASE_ROW_TYPE_NAME: &str = "BaseRow";
 const EXT_ROW_TYPE_NAME: &str = "ExtensionRow";
 const QUOT_SEGMENTS_TYPE_NAME: &str = "QuotientSegments";
+const PROOF_TYPE_NAME: &str = "Proof";
+const CLAIM_TYPE_NAME: &str = "Claim";
 
 #[derive(Debug)]
 pub(crate) struct RecufyLib;
@@ -38,6 +41,8 @@ impl Library for RecufyLib {
             BASE_ROW_TYPE_NAME => Some(Self::graft_base_row(path_args, graft)),
             EXT_ROW_TYPE_NAME => Some(Self::graft_ext_row(path_args)),
             QUOT_SEGMENTS_TYPE_NAME => Some(Self::graft_quot_segments(path_args)),
+            PROOF_TYPE_NAME => Some(Self::graft_proof(graft, path_args)),
+            CLAIM_TYPE_NAME => Some(Self::graft_claim(graft, path_args)),
             _ => None,
         }
     }
@@ -167,6 +172,44 @@ impl RecufyLib {
             }
             other => panic!("Unsupported type {other:#?}"),
         }
+    }
+
+    fn graft_proof(graft: &mut Graft, path_args: &syn::PathArguments) -> ast_types::DataType {
+        assert!(matches!(path_args, PathArguments::None));
+        let proof_type: syn::ItemStruct = parse_quote! {
+            struct Proof(pub Vec<BFieldElement>);
+        };
+
+        let as_struct_type = graft.graft_struct_type(&proof_type);
+        let as_custom_type: CustomTypeOil = as_struct_type.clone().into();
+        let as_type_context: TypeContext = as_custom_type.into();
+
+        graft
+            .imported_custom_types
+            .add_type_context_if_new(as_type_context);
+
+        ast_types::DataType::Struct(as_struct_type)
+    }
+
+    fn graft_claim(graft: &mut Graft, path_args: &PathArguments) -> ast_types::DataType {
+        assert!(matches!(path_args, PathArguments::None));
+        let claim_type: syn::ItemStruct = parse_quote! {
+            struct Claim {
+                pub program_digest: Digest,
+                pub input: Vec<BFieldElement>,
+                pub output: Vec<BFieldElement>,
+            }
+        };
+
+        let as_struct_type = graft.graft_struct_type(&claim_type);
+        let as_custom_type: CustomTypeOil = as_struct_type.clone().into();
+        let as_type_context: TypeContext = as_custom_type.into();
+
+        graft
+            .imported_custom_types
+            .add_type_context_if_new(as_type_context);
+
+        ast_types::DataType::Struct(as_struct_type)
     }
 
     fn fri_response_as_struct_type(graft_config: &mut Graft) -> StructType {
