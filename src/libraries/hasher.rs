@@ -27,6 +27,7 @@ const SPONGE_HASHER_PAD_AND_ABSORB_ALL_NAME: &str = "Tip5WithState::pad_and_abso
 const SAMPLE_SCALARS_FUNCTION_NAME: &str = "Tip5WithState::sample_scalars";
 const HASH_PAIR_FUNCTION_NAME: &str = "Tip5::hash_pair";
 const HASH_VARLEN_FUNCTION_NAME: &str = "Tip5::hash_varlen";
+const REVERSED_DIGEST_METHOD_NAME: &str = "reversed";
 
 #[derive(Clone, Debug)]
 pub(crate) struct HasherLib;
@@ -50,18 +51,24 @@ impl Library for HasherLib {
             || full_name.starts_with(STATEFUL_HASHER_LIB_INDICATOR)
     }
 
-    fn handle_method_call(&self, _method_name: &str, _receiver_type: &DataType) -> bool {
-        false
+    fn handle_method_call(&self, method_name: &str, receiver_type: &DataType) -> bool {
+        matches!(
+            (method_name, receiver_type),
+            (REVERSED_DIGEST_METHOD_NAME, DataType::Digest)
+        )
     }
 
     fn method_name_to_signature(
         &self,
-        _fn_name: &str,
-        _receiver_type: &DataType,
+        method_name: &str,
+        receiver_type: &ast_types::DataType,
         _args: &[ast::Expr<super::Annotation>],
         _type_checker_state: &CheckState,
     ) -> FnSignature {
-        panic!("HasherLib does not contain any methods")
+        match (method_name, receiver_type) {
+            (REVERSED_DIGEST_METHOD_NAME, DataType::Digest) => Self::reversed_method_signature(),
+            _ => panic!("Unknown med {method_name} called on receiver of type {receiver_type}"),
+        }
     }
 
     fn function_name_to_signature(
@@ -105,12 +112,15 @@ impl Library for HasherLib {
 
     fn call_method(
         &self,
-        _method_name: &str,
-        _receiver_type: &DataType,
+        method_name: &str,
+        receiver_type: &DataType,
         _args: &[ast::Expr<super::Annotation>],
         _state: &mut CompilerState,
     ) -> Vec<LabelledInstruction> {
-        panic!("HasherLib does not contain any methods")
+        match (method_name, receiver_type) {
+            (REVERSED_DIGEST_METHOD_NAME, DataType::Digest) => Self::reversed_method_code(),
+            _ => panic!("Unknown med {method_name} called on receiver of type {receiver_type}"),
+        }
     }
 
     fn call_function(
@@ -181,6 +191,26 @@ impl Library for HasherLib {
 }
 
 impl HasherLib {
+    fn reversed_method_signature() -> ast::FnSignature {
+        ast::FnSignature::value_function_immutable_args(
+            REVERSED_DIGEST_METHOD_NAME,
+            vec![("self", DataType::Digest)],
+            DataType::Digest,
+        )
+    }
+
+    fn reversed_method_code() -> Vec<LabelledInstruction> {
+        triton_asm!(
+            // _ d4 d3 d2 d1 d0
+
+            swap 4
+            swap 1
+            swap 3
+            swap 1
+            // _ d0 d1 d2 d3 d4
+        )
+    }
+
     pub(super) fn hash_varlen_signature(&self) -> ast::FnSignature {
         ast::FnSignature::value_function_immutable_args(
             "hash_varlen",

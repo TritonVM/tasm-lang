@@ -918,11 +918,12 @@ impl<'a> CompilerState<'a> {
             }
             (3, 2) => triton_asm!(swap 2 swap 4 pop 1 swap 2 pop 1),
             (4, 2) => triton_asm!(swap 1 swap 3 swap 5 pop 1 swap 1 swap 3 pop 1),
-            (5, 2) => triton_asm!(swap 5 pop 1 swap 5 pop 1 swap 2 swap 4 swap 1 swap 3),
-            (6, 2) => triton_asm!(swap 2 swap 4 swap 6 pop 1 swap 2 swap 4 swap 6 pop 1),
             (4, 3) => triton_asm!(swap 3 swap 6 pop 1 swap 3 pop 1 swap 3 pop 1),
+            (5, 2) => triton_asm!(swap 5 pop 1 swap 5 pop 1 swap 2 swap 4 swap 1 swap 3),
             (5, 3) => triton_asm!(swap 4 swap 7 pop 1 swap 2 swap 5 pop 1 swap 3 pop 1 swap 1),
+            (6, 2) => triton_asm!(swap 2 swap 4 swap 6 pop 1 swap 2 swap 4 swap 6 pop 1),
             (6, 4) => triton_asm!(swap 4 swap 8 pop 1 swap 4 swap 8 pop 1 swap 4 pop 1 swap 4 pop 1),
+            (7, 2) => triton_asm!(swap 2 swap 4 swap 6 swap 8 pop 1 swap 2 swap 4 swap 6 pop 1),
             (8, 4) => triton_asm!(swap 4 swap 8 pop 1 swap 4 swap 8 pop 1 swap 4 swap 8 pop 1 swap 4 swap 8 pop 1),
 
             _ => panic!("Unsupported. Please cover more special cases. Got: {top_value_size}, {words_to_remove}"),

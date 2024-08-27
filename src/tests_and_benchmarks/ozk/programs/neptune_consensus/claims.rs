@@ -1,1 +1,1 @@
-mod rri_claim;
+mod single_proof_claims;

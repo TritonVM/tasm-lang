@@ -870,7 +870,7 @@ impl<'a> Graft<'a> {
             }
             syn::Expr::Repeat(repeat) => self.graft_expr_repeat(repeat),
             syn::Expr::Match(expr_match) => self.graft_expr_match(expr_match),
-            syn::Expr::Macro(_expr_macro) => self.graft_panic_macro_expr(),
+            syn::Expr::Macro(expr_macro) => self.graft_expr_macro_expr(expr_macro),
             other => panic!("unsupported: {}", quote!(#other)),
         }
     }
@@ -1234,7 +1234,7 @@ impl<'a> Graft<'a> {
                     _ => panic!("Statement method call must graft to method call"),
                 }
             }
-            syn::Expr::Macro(expr_macro) => self.graft_expr_macro(expr_macro),
+            syn::Expr::Macro(expr_macro) => self.graft_expr_macro_stmt(expr_macro),
             syn::Expr::Match(syn::ExprMatch {
                 attrs: _,
                 match_token: _,
@@ -1269,13 +1269,21 @@ impl<'a> Graft<'a> {
         }
     }
 
-    fn graft_expr_macro(&mut self, expr_macro: &ExprMacro) -> Stmt<Annotation> {
+    fn graft_expr_macro_stmt(&mut self, expr_macro: &ExprMacro) -> Stmt<Annotation> {
         let ident = Graft::path_to_ident(&expr_macro.mac.path);
         match ident.as_str() {
             "panic" => self.graft_panic_macro_stmt(),
             "assert" => self.graft_assert_macro(expr_macro),
             "println" => Stmt::Nop,
             _ => panic!("unsupported macro: {ident}"),
+        }
+    }
+
+    fn graft_expr_macro_expr(&mut self, expr_macro: &ExprMacro) -> ast::Expr<Annotation> {
+        let ident = Graft::path_to_ident(&expr_macro.mac.path);
+        match ident.as_str() {
+            "panic" => self.graft_panic_macro_expr(),
+            _ => panic!("unsupported macro as expression: {ident}"),
         }
     }
 
