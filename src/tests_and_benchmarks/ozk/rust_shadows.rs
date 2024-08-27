@@ -34,7 +34,6 @@ use tasm_lib::verifier::master_ext_table::air_constraint_evaluation::AirConstrai
 use tasm_lib::verifier::master_ext_table::air_constraint_evaluation::AirConstraintSnippetInputs;
 
 use crate::tests_and_benchmarks::ozk::programs::recufier::challenges::Challenges as TasmLangChallenges;
-use crate::tests_and_benchmarks::ozk::programs::recufier::claim::Claim as TasmLangClaim;
 use crate::tests_and_benchmarks::ozk::programs::recufier::stark_parameters::FriVerify;
 use crate::triton_vm::arithmetic_domain::ArithmeticDomain;
 use crate::triton_vm::fri::AuthenticationStructure;
@@ -319,13 +318,13 @@ pub(super) fn _tasm_recufier_own_program_digest() -> Digest {
         .with_borrow(|digest| digest.expect("Program digest must be set for this function to work"))
 }
 
-pub(super) fn tasmlib_verifier_claim_instantiate_fiat_shamir_with_claim(claim: &TasmLangClaim) {
+pub(super) fn tasmlib_verifier_claim_instantiate_fiat_shamir_with_claim(claim: &Claim) {
     SPONGE_STATE
         .with_borrow_mut(|sponge| sponge.as_mut().unwrap().pad_and_absorb_all(&claim.encode()));
 }
 
 pub(super) fn tasmlib_verifier_challenges_new_generic_dyn_claim_59_4(
-    claim: &TasmLangClaim,
+    claim: &Claim,
 ) -> Box<TasmLangChallenges> {
     let sampled_challenges = SPONGE_STATE.with_borrow_mut(|maybe_sponge| {
         let sponge = maybe_sponge.as_mut().unwrap();

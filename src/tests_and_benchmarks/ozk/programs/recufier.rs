@@ -1,6 +1,5 @@
 mod arithmetic_domain;
 pub(crate) mod challenges;
-pub(crate) mod claim;
 mod eval_arg;
 mod fast_ntt;
 mod fast_ntt_to_basic_snippet;

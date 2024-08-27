@@ -1,5 +1,6 @@
 use itertools::Itertools;
 use num::Zero;
+use tasm_lib::triton_vm::proof::Claim;
 use tasm_lib::triton_vm::table::extension_table::Quotientable;
 use tasm_lib::triton_vm::table::master_table::MasterExtTable;
 use tasm_lib::triton_vm::table::ExtensionRow;
@@ -13,7 +14,6 @@ use crate::twenty_first::prelude::*;
 
 use super::arithmetic_domain::*;
 use super::challenges::*;
-use super::claim::*;
 use super::stark_parameters::*;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
