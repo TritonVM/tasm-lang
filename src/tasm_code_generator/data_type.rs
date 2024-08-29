@@ -16,6 +16,36 @@ pub(crate) mod struct_type;
 pub(crate) mod tuple_type;
 
 impl ast_types::DataType {
+    /// Maximum jump distance for encoded size and length indicators.
+    /// The field getters must compare any length or size indicator read
+    /// from memory against this value and crash the VM if the indicator
+    /// is larger or equal.
+    // TODO: Import this value from `tasm-lib` once available
+    pub(super) const MAX_DYN_FIELD_SIZE: u64 = 1u64 << 30;
+
+    /// BEFORE: _ *value
+    /// AFTER: _ size_in_memory
+    pub(crate) fn boxed_encoding_size(&self) -> Vec<LabelledInstruction> {
+        // _ *value
+
+        if let Some(static_size) = self.bfield_codec_static_length() {
+            triton_asm!(pop 1 push {static_size})
+        } else {
+            match self {
+                ast_types::DataType::Struct(struct_type) => struct_type.boxed_encoding_size(),
+                ast_types::DataType::Enum(_) => todo!(),
+                ast_types::DataType::Boxed(_) => todo!(),
+                ast_types::DataType::List(_) => todo!(),
+                ast_types::DataType::Tuple(_) => todo!(),
+                ast_types::DataType::Array(_) => todo!(),
+                ast_types::DataType::VoidPointer => todo!(),
+                ast_types::DataType::Function(_) => todo!(),
+                ast_types::DataType::Unresolved(_) => todo!(),
+                _ => unreachable!(),
+            }
+        }
+    }
+
     /// BEFORE: _ (*first_word | ∅)
     /// AFTER:  _ [value; value_size]
     // TODO: MAKE PRIVATE if possible

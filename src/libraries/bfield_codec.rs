@@ -40,8 +40,7 @@ impl BFieldCodecLib {
         }
     }
 
-    fn encode_method(
-        &self,
+    pub(super) fn encode_method(
         method_name: &str,
         receiver_type: &DataType,
         state: &mut CompilerState,
@@ -247,7 +246,7 @@ impl Library for BFieldCodecLib {
         }
 
         let (encode_subroutine_label, encode_subroutine_code) =
-            self.encode_method(method_name, receiver_type, state);
+            Self::encode_method(method_name, receiver_type, state);
 
         state.add_subroutine(encode_subroutine_code.try_into().unwrap());
 

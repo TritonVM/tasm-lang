@@ -123,6 +123,65 @@ impl ast_types::StructType {
         call_store_sr
     }
 
+    /// BEFORE: _ *struct
+    /// AFTER:  _ struct_size
+    pub(crate) fn boxed_encoding_size(&self) -> Vec<LabelledInstruction> {
+        let mut code = triton_asm!(push 0);
+        for (_field_id, field_type) in self.field_ids_and_types_reversed() {
+            let acc_and_move_to_next_field = match field_type.bfield_codec_static_length() {
+                Some(statically_known_size) => triton_asm!(
+                    // _ *field_si acc_struct_size
+                    addi {statically_known_size}
+                    // _ *field_si acc_struct_size'
+
+                    swap 1
+                    addi {statically_known_size}
+                    swap 1
+                    // _ *next_field_si acc_struct_size'
+                ),
+
+                None => {
+                    triton_asm!(
+                        dup 1
+                        read_mem 1
+                        pop 1
+                        // _ *field_si acc_struct_size field_size'
+
+                        /* Ensure size-indicator is a `u32` and within allowed limits */
+                        push {ast_types::DataType::MAX_DYN_FIELD_SIZE}
+                        dup 1
+                        lt
+                        assert
+
+                        /* Acccount for size of size-indicator */
+                        addi 1
+
+                        dup 2
+                        dup 1
+                        add
+                        // _ *field_si acc_struct_size field_size *next_field_si
+
+                        swap 3
+                        pop 1
+                        // _ *next_field_si acc_struct_size field_size
+
+                        add
+                        // _ *next_field_si acc_struct_size'
+                    )
+                }
+            };
+
+            code.extend(acc_and_move_to_next_field);
+        }
+
+        // cleanup stack
+        code.extend(triton_asm!(swap 1 pop 1));
+
+        // _ total_struct_size
+
+        code
+    }
+
     /// Return the code to get all field pointers. The field pointers are stored
     /// in memory, not on stack. The address for the field pointers is returned.
     /// BEFORE: _ *struct

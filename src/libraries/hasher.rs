@@ -8,10 +8,12 @@ use crate::ast_types;
 use crate::ast_types::DataType;
 use crate::composite_types::CompositeTypes;
 use crate::graft::Graft;
+use crate::libraries::bfield_codec::BFieldCodecLib;
 use crate::libraries::Library;
 use crate::subroutine::SubRoutine;
 use crate::tasm_code_generator::CompilerState;
 use crate::type_checker::CheckState;
+use crate::type_checker::GetType;
 
 use super::bfe::BfeLibrary;
 use super::LibraryFunction;
@@ -28,6 +30,7 @@ const SAMPLE_SCALARS_FUNCTION_NAME: &str = "Tip5WithState::sample_scalars";
 const HASH_PAIR_FUNCTION_NAME: &str = "Tip5::hash_pair";
 const HASH_VARLEN_FUNCTION_NAME: &str = "Tip5::hash_varlen";
 const REVERSED_DIGEST_METHOD_NAME: &str = "reversed";
+const HASH_FUNCTION_NAME: &str = "Tip5::hash";
 
 #[derive(Clone, Debug)]
 pub(crate) struct HasherLib;
@@ -75,7 +78,7 @@ impl Library for HasherLib {
         &self,
         fn_name: &str,
         _type_parameter: Option<DataType>,
-        _args: &[ast::Expr<super::Annotation>],
+        args: &[ast::Expr<super::Annotation>],
         _qualified_self_type: &Option<DataType>,
         _composite_types: &mut CompositeTypes,
     ) -> ast::FnSignature {
@@ -106,6 +109,14 @@ impl Library for HasherLib {
             SAMPLE_SCALARS_FUNCTION_NAME => ast::FnSignature::from_basic_snippet(Box::new(
                 tasm_lib::hashing::algebraic_hasher::sample_scalars::SampleScalars,
             )),
+            HASH_FUNCTION_NAME => {
+                let arg = &args[0];
+                ast::FnSignature::value_function_immutable_args(
+                    HASH_FUNCTION_NAME,
+                    vec![("value", arg.get_type())],
+                    DataType::Digest,
+                )
+            }
             _ => panic!("Unknown function {fn_name}"),
         }
     }
@@ -127,7 +138,7 @@ impl Library for HasherLib {
         &self,
         fn_name: &str,
         _type_parameter: Option<DataType>,
-        _args: &[ast::Expr<super::Annotation>],
+        args: &[ast::Expr<super::Annotation>],
         state: &mut CompilerState,
         _qualified_self_type: &Option<DataType>,
     ) -> Vec<LabelledInstruction> {
@@ -145,7 +156,16 @@ impl Library for HasherLib {
 
                     triton_asm!(call { hash_pair_label })
                 }
-                HASH_VARLEN_FUNCTION_NAME => self.hash_varlen_code(state),
+                HASH_VARLEN_FUNCTION_NAME => Self::hash_varlen_code(state),
+                HASH_FUNCTION_NAME => {
+                    let arg = &args[0];
+                    let ast::Expr::Unary(ast::UnaryOp::Ref(false), ref behind_ref, _) = arg else {
+                        panic!("Expected `&` in front of argument to `hash`");
+                    };
+
+                    let behind_ref = behind_ref.get_type();
+                    Self::hash_code(state, behind_ref)
+                }
                 _ => panic!("Unknown function {fn_name}"),
             },
         }
@@ -224,7 +244,7 @@ impl HasherLib {
         )
     }
 
-    pub(super) fn hash_varlen_code(&self, state: &mut CompilerState) -> Vec<LabelledInstruction> {
+    pub(super) fn hash_varlen_code(state: &mut CompilerState) -> Vec<LabelledInstruction> {
         // This is just a thin wrapper around `tasm-lib`'s `hash_varlen`, such that
         // you can call `Tip5::hash_varlen(&bfes)`, where `bfes` has to be a list of
         // `BFieldElement`s, no other element type works.
@@ -256,6 +276,59 @@ impl HasherLib {
         triton_asm!(call {
             tasm_langs_hash_varlen_label
         })
+    }
+
+    /// Before: _ (*value| [value])
+    /// After: _ [Tip5::hash(&value)]
+    fn hash_code(state: &mut CompilerState, arg_type: DataType) -> Vec<LabelledInstruction> {
+        if let DataType::Boxed(inner) = arg_type {
+            // Value is already encoded. Just get its length
+            // and call tasm-lib's `hash_varlen`
+            let tasm_libs_hash_varlen_label = state.import_snippet(Box::new(
+                tasm_lib::hashing::algebraic_hasher::hash_varlen::HashVarlen,
+            ));
+            let boxed_value_function_label = format!(
+                "tasm_langs_hash_varlen_boxed_value___{}",
+                inner.label_friendly_name()
+            );
+            let get_encoding_size = inner.boxed_encoding_size();
+
+            let tasm_langs_hash_varlen = triton_asm!(
+                {boxed_value_function_label}:
+                // _ *obj
+
+                dup 0
+                {&get_encoding_size}
+                // _ *obj obj_size
+
+
+                call { tasm_libs_hash_varlen_label }
+                // _ [digest]
+
+                return
+            );
+            state.add_subroutine(tasm_langs_hash_varlen.try_into().unwrap());
+
+            triton_asm!(call {
+                boxed_value_function_label
+            })
+        } else {
+            // First encode, then call `hash_varlen`
+            let (encode_subroutine_label, encode_subroutine_code) =
+                BFieldCodecLib::encode_method("encode", &arg_type, state);
+            state.add_subroutine(encode_subroutine_code.try_into().unwrap());
+
+            let hash_varlen = Self::hash_varlen_code(state);
+            triton_asm!(
+                // _ [something: arg_type]
+
+                call {encode_subroutine_label}
+                // _ *something_encoded
+
+                {&hash_varlen}
+                // _ [digest]
+            )
+        }
     }
 }
 
