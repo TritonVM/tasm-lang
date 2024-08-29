@@ -313,7 +313,7 @@ pub(super) fn tasmlib_hashing_merkle_verify(
     assert!(mt_inclusion_proof.verify(root));
 }
 
-pub(super) fn _tasm_recufier_own_program_digest() -> Digest {
+pub(super) fn tasmlib_verifier_own_program_digest() -> Digest {
     PROGRAM_DIGEST
         .with_borrow(|digest| digest.expect("Program digest must be set for this function to work"))
 }
