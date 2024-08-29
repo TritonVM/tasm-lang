@@ -4,6 +4,7 @@ use tasm_lib::triton_vm::op_stack::OpStackElement;
 use tasm_lib::triton_vm::prelude::*;
 
 use crate::ast_types;
+use crate::libraries::vector::VectorLib;
 use crate::tasm_code_generator::read_n_words_from_memory;
 use crate::tasm_code_generator::CompilerState;
 
@@ -21,7 +22,7 @@ impl ast_types::DataType {
     /// from memory against this value and crash the VM if the indicator
     /// is larger or equal.
     // TODO: Import this value from `tasm-lib` once available
-    pub(super) const MAX_DYN_FIELD_SIZE: u64 = 1u64 << 30;
+    pub(crate) const MAX_DYN_FIELD_SIZE: u64 = 1u64 << 30;
 
     /// BEFORE: _ *value
     /// AFTER: _ size_in_memory
@@ -35,7 +36,9 @@ impl ast_types::DataType {
                 ast_types::DataType::Struct(struct_type) => struct_type.boxed_encoding_size(),
                 ast_types::DataType::Enum(_) => todo!(),
                 ast_types::DataType::Boxed(_) => todo!(),
-                ast_types::DataType::List(_) => todo!(),
+                ast_types::DataType::List(elem_type) => {
+                    VectorLib::list_encoding_size_code(elem_type)
+                }
                 ast_types::DataType::Tuple(_) => todo!(),
                 ast_types::DataType::Array(_) => todo!(),
                 ast_types::DataType::VoidPointer => todo!(),

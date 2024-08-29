@@ -291,6 +291,38 @@ impl Library for VectorLib {
 
 /// Map list-function or method name to the TASM lib snippet type
 impl VectorLib {
+    /// BEFORE: _ *list
+    /// AFTER: _ list_size_in_memory
+    pub(crate) fn list_encoding_size_code(
+        elem_type: &ast_types::DataType,
+    ) -> Vec<LabelledInstruction> {
+        if let Some(static_size) = elem_type.bfield_codec_static_length() {
+            triton_asm!(
+                // _ *list
+
+                read_mem 1
+                pop 1
+                // _ list_len
+
+                push {static_size}
+                mul
+                addi 1
+                // _ list_size
+
+                push {ast_types::DataType::MAX_DYN_FIELD_SIZE}
+                dup 1
+                lt
+                // _ list_size (list_size < max_size)
+
+                assert
+
+                // _ list_size
+            )
+        } else {
+            todo!("Length-reading of list with dynamically-sized elements not yet supported");
+        }
+    }
+
     fn rust_vec_to_data_type(
         graft: &mut Graft,
         path_args: &syn::PathArguments,
