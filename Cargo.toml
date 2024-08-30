@@ -15,7 +15,7 @@ rand = "0"
 regex = "1.10"
 strum = { version = "0.26", features = ["derive"] }
 syn = { version = "1.0", features = ["full", "extra-traits"] }
-tasm-lib = { git = "https://github.com/TritonVM/tasm-lib.git", rev = "9d9ead4455fa1016feed50cef0b2b020ba6e9a46" }
+tasm-lib = { git = "https://github.com/TritonVM/tasm-lib.git", rev = "4f58791ecab112971e38c3ad5042b21ec88a85af" }
 
 [dev-dependencies]
 anyhow = "1"
