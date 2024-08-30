@@ -33,7 +33,7 @@ test-strategy = "0.3"
 [dev-dependencies.cargo-husky]
 version = "1"
 default-features = false
-features = ["precommit-hook", "run-cargo-clippy", "run-cargo-fmt"]
+features = ["user-hooks"]
 
 [lints.clippy]
 used_underscore_binding = "warn"
