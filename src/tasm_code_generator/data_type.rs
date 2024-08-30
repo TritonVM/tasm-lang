@@ -428,7 +428,7 @@ fn clone_vector_to_allocated_memory(
     state: &mut CompilerState,
 ) -> Vec<LabelledInstruction> {
     let element_size = element_type.stack_size();
-    let add_metadata_size = triton_asm!(push {LIST_METADATA_SIZE} add);
+    let add_metadata_size = triton_asm!(addi { LIST_METADATA_SIZE });
     let memcpy_label = state.import_snippet(Box::new(MemCpy));
 
     triton_asm!(

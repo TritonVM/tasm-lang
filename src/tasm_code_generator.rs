@@ -28,6 +28,7 @@ use crate::ast::AsmDefinedBody;
 use crate::ast::Identifier;
 use crate::ast::RoutineBody;
 use crate::ast_types;
+use crate::ast_types::DataType;
 use crate::ast_types::StructVariant;
 use crate::composite_types::CompositeTypes;
 use crate::libraries;
@@ -337,6 +338,17 @@ impl<'a> CompilerState<'a> {
                             triton_asm!(
                                 {&ident_addr_code}
                                 {&relative_address}
+                                // _ *value offset
+
+                                /* Verify bounds on size-indicator of field */
+                                push {DataType::MAX_DYN_FIELD_SIZE}
+                                dup 1
+                                lt
+                                // _ *value offset (offset < MAX)
+
+                                assert
+                                // _ *value offset
+
                                 add
                             )
                         }
@@ -362,14 +374,22 @@ impl<'a> CompilerState<'a> {
                                     read_mem 1
                                     // _ index vec<T>[n]_size (*vec<T>[n]_size - 1)
 
-                                    push 2 add add
+                                    /* Verify bounds on size-indicator of field */
+                                    push {DataType::MAX_DYN_FIELD_SIZE}
+                                    dup 2
+                                    lt
+                                    // _ index vec<T>[n]_size (*vec<T>[n]_size - 1) (vec<T>[n]_size < MAX)
+
+                                    assert
+                                    // _ index vec<T>[n]_size (*vec<T>[n]_size - 1)
+
+                                    addi 2 add
                                     // _ index *vec<T>[n+1]_size
 
                                     swap 1
                                     // _ *vec<T>[n+1]_size index
 
-                                    push -1
-                                    add
+                                    addi -1
                                     // _ *vec<T>[n+1]_size (index - 1)
 
                                     recurse
@@ -388,7 +408,7 @@ impl<'a> CompilerState<'a> {
                                 // _ *vec<T>[index]_size 0
 
                                 pop 1
-                                push 1 add
+                                addi 1
                                 // _ *vec<T>[index]
                             )
                         }

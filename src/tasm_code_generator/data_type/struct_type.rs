@@ -2,6 +2,7 @@ use num::Zero;
 use tasm_lib::triton_vm::prelude::*;
 
 use crate::ast_types;
+use crate::ast_types::DataType;
 use crate::ast_types::StructVariant;
 use crate::tasm_code_generator::move_top_stack_value_to_memory;
 use crate::tasm_code_generator::write_n_words_to_memory_leaving_address;
@@ -147,8 +148,8 @@ impl ast_types::StructType {
                         pop 1
                         // _ *field_si acc_struct_size field_size'
 
-                        /* Ensure size-indicator is a `u32` and within allowed limits */
-                        push {ast_types::DataType::MAX_DYN_FIELD_SIZE}
+                        /* Verify bounds on size-indicator of field */
+                        push {DataType::MAX_DYN_FIELD_SIZE}
                         dup 1
                         lt
                         assert
@@ -217,8 +218,7 @@ impl ast_types::StructType {
                         // _ *current_field
 
                         // TODO: Not needed for last loop-iteration
-                        push {static_size}
-                        add
+                        addi {static_size}
                         // _ *field_or_fieldsize_next
 
                     ));
@@ -240,6 +240,15 @@ impl ast_types::StructType {
                         pop 1
                         // _ current_field_size *current_field
 
+                        /* Verify bounds on size-indicator of field */
+                        push {DataType::MAX_DYN_FIELD_SIZE}
+                        dup 2
+                        lt
+                        // _ current_field_size *current_field (current_field_size < MAX)
+
+                        assert
+                        // _ current_field_size *current_field
+
                         add
                         // _ *next_field_or_field_size
                     ))
@@ -252,11 +261,43 @@ impl ast_types::StructType {
         (pointer_for_result.into(), code)
     }
 
+    /// BEFORE: _ *current_field
+    /// AFTER:  _ *next_field
+    pub(crate) fn advance_pointer_to_next_field_code(
+        current_field_type: &DataType,
+    ) -> Vec<LabelledInstruction> {
+        match current_field_type.bfield_codec_static_length() {
+            Some(static_length) => triton_asm!(addi {static_length + 1}),
+            None => triton_asm!(
+                // _ *current_field
+
+                read_mem 1
+                // _ field_si (*current_field - 1)
+
+                /* Verify bounds on size-indicator of field */
+                push {DataType::MAX_DYN_FIELD_SIZE}
+                dup 2
+                lt
+                // _ field_si (*current_field - 1) (field_si < MAX)
+
+                assert
+                // _ field_si (*current_field - 1)
+
+                addi 2
+                add
+                // _ *next_field
+            ),
+        }
+    }
+
     /// Assuming the stack top points to the start of the struct, returns the code
     /// that modifies the top stack value to point to the indicated field. So the top
     /// stack element is consumed and the returned value is a pointer to the requested
     /// field in the struct. Note that the top of the stack is where the field begins,
     /// not the size indication of that field.
+    ///
+    /// BEFORE: _ *struct
+    /// AFTER: _ *field
     pub(crate) fn get_field_accessor_code_for_reference(
         &self,
         field_id: &ast_types::FieldId,
@@ -281,10 +322,12 @@ impl ast_types::StructType {
                     Some(static_length) => static_pointer_addition += static_length,
                     None => {
                         if !static_pointer_addition.is_zero() {
-                            instructions
-                                .append(&mut triton_asm!(push {static_pointer_addition} add));
+                            instructions.append(&mut triton_asm!(addi {
+                                static_pointer_addition
+                            }));
                         }
-                        instructions.append(&mut triton_asm!(read_mem 1 add push 2 add));
+                        instructions
+                            .append(&mut Self::advance_pointer_to_next_field_code(haystack_type));
                         static_pointer_addition = 0;
                     }
                 }
@@ -299,7 +342,9 @@ impl ast_types::StructType {
         }
 
         if !static_pointer_addition.is_zero() {
-            instructions.append(&mut triton_asm!(push {static_pointer_addition} add));
+            instructions.append(&mut triton_asm!(addi {
+                static_pointer_addition
+            }));
         }
 
         instructions

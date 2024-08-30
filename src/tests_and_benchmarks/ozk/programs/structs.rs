@@ -1,4 +1,5 @@
 mod declaration_on_stack_with_list;
+mod exceed_allowed_field_size;
 mod nested_structs;
 mod simple_declaration_on_stack;
 mod simple_declaration_on_stack_spilled;
