@@ -34,15 +34,15 @@ mod test {
         let a_merkle_root: Box<Digest> = vm_proof_iter.next_as_merkleroot();
         tasm::tasmlib_io_write_to_stdout___digest(*a_merkle_root);
 
-        let out_of_domain_base_row: Box<Box<[XFieldElement; 375]>> =
-            vm_proof_iter.next_as_outofdomainbaserow();
-        tasm::tasmlib_io_write_to_stdout___xfe(out_of_domain_base_row[0]);
-        tasm::tasmlib_io_write_to_stdout___xfe(out_of_domain_base_row[1]);
+        let out_of_domain_main_row: Box<Box<[XFieldElement; 375]>> =
+            vm_proof_iter.next_as_outofdomainmainrow();
+        tasm::tasmlib_io_write_to_stdout___xfe(out_of_domain_main_row[0]);
+        tasm::tasmlib_io_write_to_stdout___xfe(out_of_domain_main_row[1]);
 
-        let out_of_domain_ext_row: Box<Box<[XFieldElement; 88]>> =
-            vm_proof_iter.next_as_outofdomainextrow();
-        tasm::tasmlib_io_write_to_stdout___xfe(out_of_domain_ext_row[0]);
-        tasm::tasmlib_io_write_to_stdout___xfe(out_of_domain_ext_row[1]);
+        let out_of_domain_aux_row: Box<Box<[XFieldElement; 88]>> =
+            vm_proof_iter.next_as_outofdomainauxrow();
+        tasm::tasmlib_io_write_to_stdout___xfe(out_of_domain_aux_row[0]);
+        tasm::tasmlib_io_write_to_stdout___xfe(out_of_domain_aux_row[1]);
 
         let out_of_domain_quotient_segments: Box<[XFieldElement; 4]> =
             vm_proof_iter.next_as_outofdomainquotientsegments();
@@ -57,7 +57,7 @@ mod test {
         tasm::tasmlib_io_write_to_stdout___digest(authentication_structure[1]);
         tasm::tasmlib_io_write_to_stdout___digest(authentication_structure[2]);
 
-        let mbtw: Box<Vec<[BFieldElement; 375]>> = vm_proof_iter.next_as_masterbasetablerows();
+        let mbtw: Box<Vec<[BFieldElement; 375]>> = vm_proof_iter.next_as_mastermaintablerows();
         {
             let mut j: usize = 0;
             while j < mbtw.len() {
@@ -70,7 +70,7 @@ mod test {
             }
         }
 
-        let metr: Box<Vec<[XFieldElement; 88]>> = vm_proof_iter.next_as_masterexttablerows();
+        let metr: Box<Vec<[XFieldElement; 88]>> = vm_proof_iter.next_as_masterauxtablerows();
         {
             let mut j: usize = 0;
             while j < metr.len() {
@@ -187,13 +187,13 @@ mod test {
         Digest::new(pseudo_digest(seed))
     }
 
-    fn arbitrary_out_of_domain_base_row(from: u64) -> MainRow<XFieldElement> {
+    fn arbitrary_out_of_domain_main_row(from: u64) -> MainRow<XFieldElement> {
         let to = from + MasterMainTable::NUM_COLUMNS as u64;
         let row = (from..to).map(into_xfe).collect_vec();
         row.try_into().unwrap()
     }
 
-    fn arbitrary_ext_row(from: u64) -> AuxiliaryRow {
+    fn arbitrary_aux_row(from: u64) -> AuxiliaryRow {
         let to = from + MasterAuxTable::NUM_COLUMNS as u64;
         let row = (from..to).map(into_xfe).collect_vec();
         row.try_into().unwrap()
@@ -208,18 +208,18 @@ mod test {
         (400..403).map(arbitrary_digest).collect_vec()
     }
 
-    fn arbitrary_base_row(from: u64) -> MainRow<BFieldElement> {
+    fn arbitrary_main_row(from: u64) -> MainRow<BFieldElement> {
         let to = from + MasterMainTable::NUM_COLUMNS as u64;
         let row = (from..to).map(BFieldElement::new).collect_vec();
         row.try_into().unwrap()
     }
 
-    fn arbitrary_master_base_table_rows() -> Vec<MainRow<BFieldElement>> {
-        [420, 1420, 2420].map(arbitrary_base_row).to_vec()
+    fn arbitrary_master_main_table_rows() -> Vec<MainRow<BFieldElement>> {
+        [420, 1420, 2420].map(arbitrary_main_row).to_vec()
     }
 
-    fn arbitrary_ext_base_table_rows() -> Vec<AuxiliaryRow> {
-        [14u64, 1014u64, 2014u64].map(arbitrary_ext_row).to_vec()
+    fn arbitrary_aux_main_table_rows() -> Vec<AuxiliaryRow> {
+        [14u64, 1014u64, 2014u64].map(arbitrary_aux_row).to_vec()
     }
 
     fn arbitrary_log2_padded_height() -> u32 {
@@ -251,11 +251,11 @@ mod test {
         let mut proof_stream = ProofStream::new();
         proof_stream.enqueue(ProofItem::MerkleRoot(arbitrary_digest(42)));
 
-        let ood_base_row = Box::new(arbitrary_out_of_domain_base_row(1337));
-        proof_stream.enqueue(ProofItem::OutOfDomainMainRow(ood_base_row));
+        let ood_main_row = Box::new(arbitrary_out_of_domain_main_row(1337));
+        proof_stream.enqueue(ProofItem::OutOfDomainMainRow(ood_main_row));
 
-        let ood_ext_row = Box::new(arbitrary_ext_row(1001));
-        proof_stream.enqueue(ProofItem::OutOfDomainAuxRow(ood_ext_row));
+        let ood_aux_row = Box::new(arbitrary_aux_row(1001));
+        proof_stream.enqueue(ProofItem::OutOfDomainAuxRow(ood_aux_row));
 
         let quot_segments = arbitrary_quotient_segments(800);
         proof_stream.enqueue(ProofItem::OutOfDomainQuotientSegments(quot_segments));
@@ -263,10 +263,10 @@ mod test {
         let auth_structure = arbitrary_auth_structure();
         proof_stream.enqueue(ProofItem::AuthenticationStructure(auth_structure));
 
-        let base_rows = arbitrary_master_base_table_rows();
+        let base_rows = arbitrary_master_main_table_rows();
         proof_stream.enqueue(ProofItem::MasterMainTableRows(base_rows));
 
-        let ext_rows = arbitrary_ext_base_table_rows();
+        let ext_rows = arbitrary_aux_main_table_rows();
         proof_stream.enqueue(ProofItem::MasterAuxTableRows(ext_rows));
 
         proof_stream.enqueue(ProofItem::Log2PaddedHeight(arbitrary_log2_padded_height()));

@@ -5,17 +5,17 @@ use twenty_first::prelude::AlgebraicHasher;
 
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
-#[derive(BFieldCodec, PartialEq, Eq, Clone, Debug, Arbitrary)]
-enum MyEnum {
-    A(u64, Digest),
-    B,
-    C,
+#[derive(BFieldCodec, TasmObject, PartialEq, Eq, Clone, Debug, Arbitrary)]
+struct MyStruct {
+    inner_a: (u64, Digest),
+    inner_b: Digest,
+    inner_c: Vec<u128>,
 }
 
 #[derive(BFieldCodec, TasmObject, PartialEq, Eq, Clone, Debug, Arbitrary)]
 struct TestStruct {
     a: Vec<XFieldElement>,
-    b: MyEnum,
+    b: MyStruct,
     c: u32,
     d: Vec<Digest>,
     e: Digest,
