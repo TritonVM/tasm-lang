@@ -20,8 +20,8 @@ use crate::triton_vm::table::master_table::MasterTable;
 
 use super::Library;
 
-const BASE_ROW_TYPE_NAME: &str = "BaseRow";
-const EXT_ROW_TYPE_NAME: &str = "ExtensionRow";
+const BASE_ROW_TYPE_NAME: &str = "MainRow";
+const EXT_ROW_TYPE_NAME: &str = "AuxiliaryRow";
 const QUOT_SEGMENTS_TYPE_NAME: &str = "QuotientSegments";
 const PROOF_TYPE_NAME: &str = "Proof";
 const CLAIM_TYPE_NAME: &str = "Claim";
@@ -38,8 +38,8 @@ impl Library for RecufyLib {
     ) -> Option<ast_types::DataType> {
         match rust_type_as_string {
             VM_PROOF_ITER_TYPE_NAME => Some(graft_vm_proof_iter(graft)),
-            BASE_ROW_TYPE_NAME => Some(Self::graft_base_row(path_args, graft)),
-            EXT_ROW_TYPE_NAME => Some(Self::graft_ext_row(path_args)),
+            BASE_ROW_TYPE_NAME => Some(Self::graft_main_row(path_args, graft)),
+            EXT_ROW_TYPE_NAME => Some(Self::graft_aux_row(path_args)),
             QUOT_SEGMENTS_TYPE_NAME => Some(Self::graft_quot_segments(path_args)),
             PROOF_TYPE_NAME => Some(Self::graft_proof(graft, path_args)),
             CLAIM_TYPE_NAME => Some(Self::graft_claim(graft, path_args)),
@@ -135,7 +135,7 @@ impl RecufyLib {
         }
     }
 
-    fn graft_ext_row(arguments: &PathArguments) -> ast_types::DataType {
+    fn graft_aux_row(arguments: &PathArguments) -> ast_types::DataType {
         assert!(matches!(arguments, PathArguments::None));
         ast_types::DataType::Array(ast_types::ArrayType {
             element_type: Box::new(ast_types::DataType::Xfe),
@@ -151,16 +151,16 @@ impl RecufyLib {
         })
     }
 
-    fn graft_base_row(arguments: &PathArguments, graft: &mut Graft) -> ast_types::DataType {
+    fn graft_main_row(arguments: &PathArguments, graft: &mut Graft) -> ast_types::DataType {
         match arguments {
             syn::PathArguments::AngleBracketed(ab) => {
-                assert_eq!(1, ab.args.len(), "Must be BaseRow<T> for *one* generic T.");
+                assert_eq!(1, ab.args.len(), "Must be MainRow<T> for *one* generic T.");
                 match &ab.args[0] {
                     syn::GenericArgument::Type(element_type) => {
                         let inner = graft.syn_type_to_ast_type(element_type);
                         assert!(
                             matches!(inner, DataType::Bfe | DataType::Xfe),
-                            "T in BaseRow<T> must be XFE or BFE"
+                            "T in MainRow<T> must be XFE or BFE"
                         );
                         ast_types::DataType::Array(ast_types::ArrayType {
                             element_type: Box::new(inner),

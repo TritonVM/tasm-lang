@@ -27,9 +27,9 @@ use tasm_lib::twenty_first::math::x_field_element::EXTENSION_DEGREE;
 use tasm_lib::twenty_first::util_types::algebraic_hasher::AlgebraicHasher;
 use tasm_lib::twenty_first::util_types::algebraic_hasher::Sponge;
 use tasm_lib::twenty_first::util_types::merkle_tree::MerkleTreeInclusionProof;
-use tasm_lib::verifier::master_ext_table::air_constraint_evaluation;
-use tasm_lib::verifier::master_ext_table::air_constraint_evaluation::AirConstraintEvaluation;
-use tasm_lib::verifier::master_ext_table::air_constraint_evaluation::AirConstraintSnippetInputs;
+use tasm_lib::verifier::master_aux_table::air_constraint_evaluation;
+use tasm_lib::verifier::master_aux_table::air_constraint_evaluation::AirConstraintEvaluation;
+use tasm_lib::verifier::master_aux_table::air_constraint_evaluation::AirConstraintSnippetInputs;
 
 use crate::tests_and_benchmarks::ozk::programs::recufier::challenges::Challenges as TasmLangChallenges;
 use crate::tests_and_benchmarks::ozk::programs::recufier::stark_parameters::FriVerify;
@@ -379,7 +379,7 @@ pub(super) fn tasmlib_array_horner_evaluation_with_4_coefficients(
     running_evaluation
 }
 
-pub(super) fn tasmlib_verifier_master_ext_table_air_constraint_evaluation(
+pub(super) fn tasmlib_verifier_master_aux_table_air_constraint_evaluation(
     curr_main: &MainRow<XFieldElement>,
     curr_aux: &AuxiliaryRow,
     next_main: &MainRow<XFieldElement>,
@@ -397,10 +397,10 @@ pub(super) fn tasmlib_verifier_master_ext_table_air_constraint_evaluation(
     });
 
     let input_values = AirConstraintSnippetInputs {
-        current_base_row: curr_main.to_vec(),
-        current_ext_row: curr_aux.to_vec(),
-        next_base_row: next_main.to_vec(),
-        next_ext_row: next_aux.to_vec(),
+        current_main_row: curr_main.to_vec(),
+        current_aux_row: curr_aux.to_vec(),
+        next_main_row: next_main.to_vec(),
+        next_aux_row: next_aux.to_vec(),
         challenges: Challenges {
             challenges: *challenges,
         },
@@ -411,7 +411,7 @@ pub(super) fn tasmlib_verifier_master_ext_table_air_constraint_evaluation(
         .unwrap()
 }
 
-pub(super) fn tasmlib_verifier_master_ext_table_divide_out_zerofiers(
+pub(super) fn tasmlib_verifier_master_aux_table_divide_out_zerofiers(
     mut air_evaluation_result: [XFieldElement; MasterAuxTable::NUM_CONSTRAINTS],
     out_of_domain_point_curr_row: XFieldElement,
     padded_height: u32,
@@ -456,19 +456,19 @@ pub(super) fn tasmlib_verifier_master_ext_table_divide_out_zerofiers(
 }
 
 #[allow(non_snake_case)] // Name must agree with `tasm-lib`
-pub(super) fn tasmlib_verifier_master_ext_table_verify_Base_table_rows(
+pub(super) fn tasmlib_verifier_master_aux_table_verify_Main_table_rows(
     num_combination_codeword_checks: usize,
     merkle_tree_height: u32,
     merkle_tree_root: &Digest,
     revealed_fri_indices_and_elements: &[(u32, XFieldElement)],
-    base_rows: &[MainRow<BFieldElement>],
+    main_rows: &[MainRow<BFieldElement>],
 ) {
-    assert_eq!(base_rows.len(), num_combination_codeword_checks);
-    let leaf_digests_base: Vec<_> = base_rows
+    assert_eq!(main_rows.len(), num_combination_codeword_checks);
+    let leaf_digests_main: Vec<_> = main_rows
         .iter()
-        .map(|revealed_base_elem| Tip5::hash_varlen(revealed_base_elem))
+        .map(|revealed_main_elem| Tip5::hash_varlen(revealed_main_elem))
         .collect();
-    for (i, leaf) in leaf_digests_base.into_iter().enumerate() {
+    for (i, leaf) in leaf_digests_main.into_iter().enumerate() {
         tasmlib_hashing_merkle_verify(
             *merkle_tree_root,
             merkle_tree_height,
@@ -479,22 +479,22 @@ pub(super) fn tasmlib_verifier_master_ext_table_verify_Base_table_rows(
 }
 
 #[allow(non_snake_case)] // Name must agree with `tasm-lib`
-pub(super) fn tasmlib_verifier_master_ext_table_verify_Extension_table_rows(
+pub(super) fn tasmlib_verifier_master_aux_table_verify_Aux_table_rows(
     num_combination_codeword_checks: usize,
     merkle_tree_height: u32,
     merkle_tree_root: &Digest,
     revealed_fri_indices_and_elements: &[(u32, XFieldElement)],
-    ext_rows: &[AuxiliaryRow],
+    aux_rows: &[AuxiliaryRow],
 ) {
-    assert_eq!(ext_rows.len(), num_combination_codeword_checks);
-    let leaf_digests_ext = ext_rows
+    assert_eq!(aux_rows.len(), num_combination_codeword_checks);
+    let leaf_digests_aux = aux_rows
         .iter()
         .map(|xvalues| {
             let b_values = xvalues.iter().flat_map(|xfe| xfe.coefficients.to_vec());
             Tip5::hash_varlen(&b_values.collect_vec())
         })
         .collect::<Vec<_>>();
-    for (i, leaf) in leaf_digests_ext.into_iter().enumerate() {
+    for (i, leaf) in leaf_digests_aux.into_iter().enumerate() {
         tasmlib_hashing_merkle_verify(
             *merkle_tree_root,
             merkle_tree_height,
@@ -505,7 +505,7 @@ pub(super) fn tasmlib_verifier_master_ext_table_verify_Extension_table_rows(
 }
 
 #[allow(non_snake_case)] // Name must agree with `tasm-lib`
-pub(super) fn tasmlib_verifier_master_ext_table_verify_Quotient_table_rows(
+pub(super) fn tasmlib_verifier_master_aux_table_verify_Quotient_table_rows(
     num_combination_codeword_checks: usize,
     merkle_tree_height: u32,
     merkle_tree_root: &Digest,
@@ -535,7 +535,7 @@ pub(super) fn tasmlib_verifier_fri_verify(
     fri_parameters: &FriVerify,
 ) -> Vec<(u32, XFieldElement)> {
     let fri = fri_parameters._to_fri();
-    let tasm_lib_fri: tasm_lib::verifier::fri::verify::FriVerify = fri.clone().into();
+    let tasm_lib_fri: tasm_lib::verifier::fri::verify::FriVerify = fri.into();
     let (advance_nd_digests_by, ret) = SPONGE_STATE.with_borrow_mut(|maybe_sponge_state| {
         let sponge_state = maybe_sponge_state.as_mut().unwrap();
         let proof_stream_before_fri = proof_iter
@@ -692,17 +692,17 @@ macro_rules! vm_proof_iter_impl {
 vm_proof_iter_impl!(
     MerkleRoot(Digest) defines next_as_merkleroot
         uses try_into_merkle_root,
-    OutOfDomainMainRow(Box<MainRow<XFieldElement>>) defines next_as_outofdomainbaserow
+    OutOfDomainMainRow(Box<MainRow<XFieldElement>>) defines next_as_outofdomainmainrow
         uses try_into_out_of_domain_main_row,
-    OutOfDomainAuxRow(Box<AuxiliaryRow>) defines next_as_outofdomainextrow
+    OutOfDomainAuxRow(Box<AuxiliaryRow>) defines next_as_outofdomainauxrow
         uses try_into_out_of_domain_aux_row,
     OutOfDomainQuotientSegments(QuotientSegments) defines next_as_outofdomainquotientsegments
         uses try_into_out_of_domain_quot_segments,
     AuthenticationStructure(AuthenticationStructure) defines next_as_authenticationstructure
         uses try_into_authentication_structure,
-    MasterMainTableRows(Vec<MainRow<BFieldElement>>) defines next_as_masterbasetablerows
+    MasterMainTableRows(Vec<MainRow<BFieldElement>>) defines next_as_mastermaintablerows
         uses try_into_master_main_table_rows,
-    MasterAuxTableRows(Vec<AuxiliaryRow>) defines next_as_masterexttablerows
+    MasterAuxTableRows(Vec<AuxiliaryRow>) defines next_as_masterauxtablerows
         uses try_into_master_aux_table_rows,
     Log2PaddedHeight(u32) defines next_as_log2paddedheight
         uses try_into_log2_padded_height,
@@ -716,7 +716,7 @@ vm_proof_iter_impl!(
 );
 
 #[allow(non_snake_case)] // Name must agree with `tasm-lib`
-pub fn tasmlib_array_inner_product_of_three_rows_with_weights_Bfe_baserowelem<const N: usize>(
+pub fn tasmlib_array_inner_product_of_three_rows_with_weights_Bfe_mainrowelem<const N: usize>(
     ext_row: AuxiliaryRow,
     base_row: MainRow<BFieldElement>,
     weights: [XFieldElement; N],

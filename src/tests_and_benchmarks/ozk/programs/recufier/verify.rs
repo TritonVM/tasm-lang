@@ -35,7 +35,7 @@ impl Recufier {
 
         let fri: Box<FriVerify> = Box::<FriVerify>::new(parameters.derive_fri(padded_height));
 
-        let base_merkle_tree_root: Box<Digest> = proof_iter.next_as_merkleroot();
+        let main_merkle_tree_root: Box<Digest> = proof_iter.next_as_merkleroot();
 
         // The next function returns a pointer, but the value of this pointer is known statically. So
         // whenever the challenges are needed (which is for constraint evaluation), we can assume their
@@ -61,27 +61,27 @@ impl Recufier {
         let out_of_domain_point_curr_row_pow_num_segments: XFieldElement =
             tasm::tasmlib_arithmetic_xfe_to_the_fourth(out_of_domain_point_curr_row);
 
-        let out_of_domain_curr_base_row: Box<Box<MainRow<XFieldElement>>> =
-            proof_iter.next_as_outofdomainbaserow();
-        let out_of_domain_curr_ext_row: Box<Box<AuxiliaryRow>> =
-            proof_iter.next_as_outofdomainextrow();
-        let out_of_domain_next_base_row: Box<Box<MainRow<XFieldElement>>> =
-            proof_iter.next_as_outofdomainbaserow();
-        let out_of_domain_next_ext_row: Box<Box<AuxiliaryRow>> =
-            proof_iter.next_as_outofdomainextrow();
+        let out_of_domain_curr_main_row: Box<Box<MainRow<XFieldElement>>> =
+            proof_iter.next_as_outofdomainmainrow();
+        let out_of_domain_curr_aux_row: Box<Box<AuxiliaryRow>> =
+            proof_iter.next_as_outofdomainauxrow();
+        let out_of_domain_next_main_row: Box<Box<MainRow<XFieldElement>>> =
+            proof_iter.next_as_outofdomainmainrow();
+        let out_of_domain_next_aux_row: Box<Box<AuxiliaryRow>> =
+            proof_iter.next_as_outofdomainauxrow();
         let out_of_domain_curr_row_quot_segments: Box<[XFieldElement; 4]> =
             proof_iter.next_as_outofdomainquotientsegments();
 
         let air_evaluation_result: [XFieldElement; 592] =
-            tasm::tasmlib_verifier_master_ext_table_air_constraint_evaluation(
-                &out_of_domain_curr_base_row,
-                &out_of_domain_curr_ext_row,
-                &out_of_domain_next_base_row,
-                &out_of_domain_next_ext_row,
+            tasm::tasmlib_verifier_master_aux_table_air_constraint_evaluation(
+                &out_of_domain_curr_main_row,
+                &out_of_domain_curr_aux_row,
+                &out_of_domain_next_main_row,
+                &out_of_domain_next_aux_row,
             );
 
         let quotient_summands: [XFieldElement; 592] =
-            tasm::tasmlib_verifier_master_ext_table_divide_out_zerofiers(
+            tasm::tasmlib_verifier_master_aux_table_divide_out_zerofiers(
                 air_evaluation_result,
                 out_of_domain_point_curr_row,
                 padded_height,
@@ -100,33 +100,33 @@ impl Recufier {
         assert!(sum_of_evaluated_out_of_domain_quotient_segments == out_of_domain_quotient_value);
 
         // Fiat-shamir 2
-        let mut base_and_ext_codeword_weights: Vec<XFieldElement> =
-            Tip5WithState::sample_scalars(Recufier::num_base_ext_quotient_deep_weights());
+        let mut main_and_aux_codeword_weights: Vec<XFieldElement> =
+            Tip5WithState::sample_scalars(Recufier::num_main_aux_quotient_deep_weights());
 
         // Split off deep weights
         let deep_codeword_weights: [XFieldElement; 3] = <[XFieldElement; 3]>::try_from(
-            base_and_ext_codeword_weights.split_off(Recufier::num_columns_plus_quotient_segments()),
+            main_and_aux_codeword_weights.split_off(Recufier::num_columns_plus_quotient_segments()),
         )
         .unwrap();
 
         // Split off the weights for the quotients
         let quotient_segment_codeword_weights: [XFieldElement; 4] = <[XFieldElement; 4]>::try_from(
-            base_and_ext_codeword_weights.split_off(Recufier::num_columns()),
+            main_and_aux_codeword_weights.split_off(Recufier::num_columns()),
         )
         .unwrap();
 
         // sum out-of-domain values
-        let out_of_domain_curr_row_base_and_ext_value: XFieldElement =
-            Recufier::linearly_sum_xfe_base_and_ext_row(
-                out_of_domain_curr_base_row,
-                out_of_domain_curr_ext_row,
-                &base_and_ext_codeword_weights,
+        let out_of_domain_curr_row_main_and_aux_value: XFieldElement =
+            Recufier::linearly_sum_xfe_main_and_aux_row(
+                out_of_domain_curr_main_row,
+                out_of_domain_curr_aux_row,
+                &main_and_aux_codeword_weights,
             );
-        let out_of_domain_next_row_base_and_ext_value: XFieldElement =
-            Recufier::linearly_sum_xfe_base_and_ext_row(
-                out_of_domain_next_base_row,
-                out_of_domain_next_ext_row,
-                &base_and_ext_codeword_weights,
+        let out_of_domain_next_row_main_and_aux_value: XFieldElement =
+            Recufier::linearly_sum_xfe_main_and_aux_row(
+                out_of_domain_next_main_row,
+                out_of_domain_next_aux_row,
+                &main_and_aux_codeword_weights,
             );
         let out_of_domain_curr_row_quotient_segment_value: XFieldElement =
             tasm::tasmlib_array_inner_product_of_4_xfes(
@@ -142,8 +142,8 @@ impl Recufier {
         // Dequeue base elements
         // Could be read from secret-in, but it's much more efficient to get them from memory
         let num_combination_codeword_checks: usize = fri.num_collinearity_checks as usize;
-        let base_table_rows: Box<Vec<MainRow<BFieldElement>>> =
-            proof_iter.next_as_masterbasetablerows();
+        let main_table_rows: Box<Vec<MainRow<BFieldElement>>> =
+            proof_iter.next_as_mastermaintablerows();
 
         // Read base authentication structure but ignore its value, as we divine-in the digests instead
         {
@@ -152,22 +152,22 @@ impl Recufier {
 
         // hash base rows to get leafs
         let merkle_tree_height: u32 = fri.domain_length.ilog2();
-        tasm::tasmlib_verifier_master_ext_table_verify_Base_table_rows(
+        tasm::tasmlib_verifier_master_aux_table_verify_Main_table_rows(
             num_combination_codeword_checks,
             merkle_tree_height,
-            &base_merkle_tree_root,
+            &main_merkle_tree_root,
             &revealed_fri_indices_and_elements,
-            &base_table_rows,
+            &main_table_rows,
         );
 
         // dequeue extension elements
-        let ext_table_rows: Box<Vec<AuxiliaryRow>> = proof_iter.next_as_masterexttablerows();
+        let ext_table_rows: Box<Vec<AuxiliaryRow>> = proof_iter.next_as_masterauxtablerows();
         // dequeue extension rows' authentication structure but ignore it (divination instead)
         {
             let _dummy: Box<Vec<Digest>> = proof_iter.next_as_authenticationstructure();
         }
 
-        tasm::tasmlib_verifier_master_ext_table_verify_Extension_table_rows(
+        tasm::tasmlib_verifier_master_aux_table_verify_Aux_table_rows(
             num_combination_codeword_checks,
             merkle_tree_height,
             &extension_tree_merkle_root,
@@ -184,7 +184,7 @@ impl Recufier {
             let _dummy: Box<Vec<Digest>> = proof_iter.next_as_authenticationstructure();
         }
 
-        tasm::tasmlib_verifier_master_ext_table_verify_Quotient_table_rows(
+        tasm::tasmlib_verifier_master_aux_table_verify_Quotient_table_rows(
             num_combination_codeword_checks,
             merkle_tree_height,
             &quotient_tree_merkle_root,
@@ -195,30 +195,30 @@ impl Recufier {
         // Linear combination
         // Some of these checks may be redundant, but this is what the verifier in TVM does
         assert!(num_combination_codeword_checks == revealed_fri_indices_and_elements.len());
-        assert!(num_combination_codeword_checks == base_table_rows.len());
+        assert!(num_combination_codeword_checks == main_table_rows.len());
         assert!(num_combination_codeword_checks == ext_table_rows.len());
         assert!(num_combination_codeword_checks == quotient_segment_elements.len());
 
         // Main loop
         let trace_weights: [XFieldElement; 463] =
-            <[XFieldElement; 463]>::try_from(base_and_ext_codeword_weights).unwrap();
+            <[XFieldElement; 463]>::try_from(main_and_aux_codeword_weights).unwrap();
         {
             let mut i: usize = 0;
             while i < num_combination_codeword_checks {
                 let row_idx: u32 = revealed_fri_indices_and_elements[i].0;
                 let fri_value: XFieldElement = revealed_fri_indices_and_elements[i].1;
-                let base_row: MainRow<BFieldElement> = base_table_rows[i];
-                let ext_row: AuxiliaryRow = ext_table_rows[i];
+                let main_row: MainRow<BFieldElement> = main_table_rows[i];
+                let aux_row: AuxiliaryRow = ext_table_rows[i];
                 // let randomizer_value: XFieldElement = ext_row[ext_row.len() - 1];
                 let randomizer_value: XFieldElement = XFieldElement::zero();
                 let quot_segment_elements: QuotientSegments = quotient_segment_elements[i];
                 let current_fri_domain_value: BFieldElement =
                     fri.domain_offset * fri.domain_generator.mod_pow_u32(row_idx);
 
-                let base_and_ext_opened_row_element: XFieldElement =
-                    tasm::tasmlib_array_inner_product_of_three_rows_with_weights_Bfe_baserowelem(
-                        ext_row,
-                        base_row,
+                let main_and_aux_opened_row_element: XFieldElement =
+                    tasm::tasmlib_array_inner_product_of_three_rows_with_weights_Bfe_mainrowelem(
+                        aux_row,
+                        main_row,
                         trace_weights,
                     );
 
@@ -228,12 +228,12 @@ impl Recufier {
                         quot_segment_elements,
                     );
 
-                let base_and_ext_curr_row_deep_value: XFieldElement =
-                    (out_of_domain_curr_row_base_and_ext_value - base_and_ext_opened_row_element)
+                let main_and_aux_curr_row_deep_value: XFieldElement =
+                    (out_of_domain_curr_row_main_and_aux_value - main_and_aux_opened_row_element)
                         / (out_of_domain_point_curr_row - current_fri_domain_value);
 
-                let base_and_ext_next_row_deep_value: XFieldElement =
-                    (out_of_domain_next_row_base_and_ext_value - base_and_ext_opened_row_element)
+                let main_and_aux_next_row_deep_value: XFieldElement =
+                    (out_of_domain_next_row_main_and_aux_value - main_and_aux_opened_row_element)
                         / (out_of_domain_point_next_row - current_fri_domain_value);
 
                 let quot_curr_row_deep_value: XFieldElement =
@@ -242,9 +242,9 @@ impl Recufier {
                         / (out_of_domain_point_curr_row_pow_num_segments
                             - current_fri_domain_value);
 
-                let deep_value: XFieldElement = base_and_ext_curr_row_deep_value
+                let deep_value: XFieldElement = main_and_aux_curr_row_deep_value
                     * deep_codeword_weights[0]
-                    + base_and_ext_next_row_deep_value * deep_codeword_weights[1]
+                    + main_and_aux_next_row_deep_value * deep_codeword_weights[1]
                     + quot_curr_row_deep_value * deep_codeword_weights[2];
 
                 assert!(fri_value == deep_value + randomizer_value);
@@ -260,7 +260,7 @@ impl Recufier {
         return 592;
     }
 
-    const fn num_base_ext_quotient_deep_weights() -> usize {
+    const fn num_main_aux_quotient_deep_weights() -> usize {
         return 470;
     }
 
@@ -275,21 +275,21 @@ impl Recufier {
     #[allow(clippy::boxed_local)]
     #[allow(clippy::redundant_allocation)]
     #[allow(clippy::ptr_arg)]
-    fn linearly_sum_xfe_base_and_ext_row(
-        base_row: Box<Box<MainRow<XFieldElement>>>,
+    fn linearly_sum_xfe_main_and_aux_row(
+        main_row: Box<Box<MainRow<XFieldElement>>>,
         ext_row: Box<Box<AuxiliaryRow>>,
-        base_and_ext_codeword_weights: &Vec<XFieldElement>,
+        main_and_aux_codeword_weights: &Vec<XFieldElement>,
     ) -> XFieldElement {
         let mut acc: XFieldElement = XFieldElement::zero();
         let mut i: usize = 0;
-        while i < base_row.len() {
-            acc += base_and_ext_codeword_weights[i] * base_row[i];
+        while i < main_row.len() {
+            acc += main_and_aux_codeword_weights[i] * main_row[i];
             i += 1;
         }
 
         i = 0;
         while i < ext_row.len() {
-            acc += ext_row[i] * base_and_ext_codeword_weights[i + base_row.len()];
+            acc += ext_row[i] * main_and_aux_codeword_weights[i + main_row.len()];
             i += 1;
         }
 
@@ -403,12 +403,12 @@ mod test {
         let nd_digests = [
             fri_proof_digests,
             proof_extraction
-                .base_tree_authentication_paths
+                .main_tree_authentication_paths
                 .into_iter()
                 .flatten()
                 .collect_vec(),
             proof_extraction
-                .ext_tree_authentication_paths
+                .aux_tree_authentication_paths
                 .into_iter()
                 .flatten()
                 .collect_vec(),
@@ -430,14 +430,14 @@ mod test {
     }
 
     #[test]
-    fn num_base_and_ext_and_quotient_segment_codeword_weights_agrees_with_tvm() {
+    fn num_main_and_aux_and_quotient_segment_codeword_weights_agrees_with_tvm() {
         const NUM_DEEP_CODEWORD_COMPONENTS: usize = 3; // TODO: Use from TVM when made public
         assert_eq!(
             MasterMainTable::NUM_COLUMNS
                 + MasterAuxTable::NUM_COLUMNS
                 + NUM_QUOTIENT_SEGMENTS
                 + NUM_DEEP_CODEWORD_COMPONENTS,
-            Recufier::num_base_ext_quotient_deep_weights()
+            Recufier::num_main_aux_quotient_deep_weights()
         )
     }
 

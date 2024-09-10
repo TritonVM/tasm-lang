@@ -116,15 +116,15 @@ impl DataType {
 
             "AuthenticationStructure" => Ok(DataType::List(Box::new(DataType::Digest))),
             "FriResponse" => Ok(DataType::Unresolved(type_str.to_owned())),
-            "BaseRow<XFieldElement>" => Ok(DataType::Array(ArrayType {
+            "MainRow<XFieldElement>" => Ok(DataType::Array(ArrayType {
                 element_type: Box::new(DataType::Xfe),
                 length: MasterMainTable::NUM_COLUMNS,
             })),
-            "BaseRow<BFieldElement>" => Ok(DataType::Array(ArrayType {
+            "MainRow<BFieldElement>" => Ok(DataType::Array(ArrayType {
                 element_type: Box::new(DataType::Bfe),
                 length: MasterMainTable::NUM_COLUMNS,
             })),
-            "ExtensionRow" => Ok(DataType::Array(ArrayType {
+            "AuxiliaryRow" => Ok(DataType::Array(ArrayType {
                 element_type: Box::new(DataType::Xfe),
                 length: MasterAuxTable::NUM_COLUMNS,
             })),
