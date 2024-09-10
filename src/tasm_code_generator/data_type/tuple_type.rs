@@ -1,5 +1,5 @@
+use tasm_lib::triton_vm::prelude::triton_asm;
 use tasm_lib::triton_vm::prelude::LabelledInstruction;
-use tasm_lib::triton_vm::triton_asm;
 
 use crate::ast_types::Tuple;
 use crate::tasm_code_generator::move_top_stack_value_to_memory;

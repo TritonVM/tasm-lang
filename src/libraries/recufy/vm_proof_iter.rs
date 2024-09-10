@@ -3,16 +3,15 @@ use syn::parse_quote;
 use tasm_lib::traits::basic_snippet::BasicSnippet;
 use tasm_lib::triton_vm::proof_item::ProofItemVariant;
 
+use crate::ast;
+use crate::ast::RoutineBody;
+use crate::ast_types::DataType;
 use crate::ast_types::StructType;
+use crate::composite_types::TypeContext;
+use crate::graft::Graft;
 use crate::libraries::polynomial::PolynomialLib;
 use crate::triton_vm::prelude::*;
-use crate::{
-    ast::{self, RoutineBody},
-    ast_types::DataType,
-    composite_types::TypeContext,
-    graft::Graft,
-    type_checker::Typing,
-};
+use crate::type_checker::Typing;
 
 use super::RecufyLib;
 

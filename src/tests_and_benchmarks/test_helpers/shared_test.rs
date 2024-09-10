@@ -10,7 +10,7 @@ use tasm_lib::empty_stack;
 use tasm_lib::memory::dyn_malloc::DYN_MALLOC_ADDRESS;
 use tasm_lib::rust_shadowing_helper_functions;
 use tasm_lib::snippet_bencher::BenchmarkResult;
-use tasm_lib::triton_vm::op_stack::NUM_OP_STACK_REGISTERS;
+use tasm_lib::triton_vm::isa::op_stack::NUM_OP_STACK_REGISTERS;
 use tasm_lib::triton_vm::prelude::*;
 
 use crate::ast;
@@ -152,7 +152,7 @@ impl TritonVMTestCase {
     pub(crate) fn benchmark(self) -> BenchmarkResult {
         let program = self.program();
         let vm_state = self.initial_vm_state();
-        let (aet, _end_state) = program.trace_execution_of_state(vm_state).unwrap();
+        let (aet, _end_state) = VM::trace_execution_of_state(&program, vm_state).unwrap();
 
         BenchmarkResult::new(&aet)
     }

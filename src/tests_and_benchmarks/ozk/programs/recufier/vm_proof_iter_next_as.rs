@@ -9,20 +9,20 @@ mod test {
 
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
-    use crate::tests_and_benchmarks::test_helpers::shared_test::*;
-    use crate::triton_vm::stark::NUM_QUOTIENT_SEGMENTS;
-    use crate::triton_vm::table::BaseRow;
-    use crate::triton_vm::table::ExtensionRow;
-    use crate::triton_vm::table::QuotientSegments;
-    use crate::triton_vm::table::NUM_BASE_COLUMNS;
-    use crate::triton_vm::table::NUM_EXT_COLUMNS;
-    use tasm_lib::triton_vm::prelude::*;
-    use tasm_lib::triton_vm::proof_item::ProofItem;
-    use tasm_lib::triton_vm::proof_stream::ProofStream;
-
     use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
     use crate::tests_and_benchmarks::ozk::rust_shadows::Tip5WithState;
     use crate::tests_and_benchmarks::ozk::rust_shadows::VmProofIter;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::*;
+    use crate::triton_vm::stark::NUM_QUOTIENT_SEGMENTS;
+    use crate::triton_vm::table::master_table::MasterMainTable;
+    use crate::triton_vm::table::master_table::MasterTable;
+    use crate::triton_vm::table::AuxiliaryRow;
+    use crate::triton_vm::table::MainRow;
+    use crate::triton_vm::table::QuotientSegments;
+    use tasm_lib::triton_vm::prelude::*;
+    use tasm_lib::triton_vm::proof_item::ProofItem;
+    use tasm_lib::triton_vm::proof_stream::ProofStream;
+    use tasm_lib::triton_vm::table::master_table::MasterAuxTable;
 
     /// The function being tested here. Dual-compiled by `rustc` and `tasm-lang`.
     fn call_all_next_methods() {
@@ -187,14 +187,14 @@ mod test {
         Digest::new(pseudo_digest(seed))
     }
 
-    fn arbitrary_out_of_domain_base_row(from: u64) -> BaseRow<XFieldElement> {
-        let to = from + NUM_BASE_COLUMNS as u64;
+    fn arbitrary_out_of_domain_base_row(from: u64) -> MainRow<XFieldElement> {
+        let to = from + MasterMainTable::NUM_COLUMNS as u64;
         let row = (from..to).map(into_xfe).collect_vec();
         row.try_into().unwrap()
     }
 
-    fn arbitrary_ext_row(from: u64) -> ExtensionRow {
-        let to = from + NUM_EXT_COLUMNS as u64;
+    fn arbitrary_ext_row(from: u64) -> AuxiliaryRow {
+        let to = from + MasterAuxTable::NUM_COLUMNS as u64;
         let row = (from..to).map(into_xfe).collect_vec();
         row.try_into().unwrap()
     }
@@ -208,17 +208,17 @@ mod test {
         (400..403).map(arbitrary_digest).collect_vec()
     }
 
-    fn arbitrary_base_row(from: u64) -> BaseRow<BFieldElement> {
-        let to = from + NUM_BASE_COLUMNS as u64;
+    fn arbitrary_base_row(from: u64) -> MainRow<BFieldElement> {
+        let to = from + MasterMainTable::NUM_COLUMNS as u64;
         let row = (from..to).map(BFieldElement::new).collect_vec();
         row.try_into().unwrap()
     }
 
-    fn arbitrary_master_base_table_rows() -> Vec<BaseRow<BFieldElement>> {
+    fn arbitrary_master_base_table_rows() -> Vec<MainRow<BFieldElement>> {
         [420, 1420, 2420].map(arbitrary_base_row).to_vec()
     }
 
-    fn arbitrary_ext_base_table_rows() -> Vec<ExtensionRow> {
+    fn arbitrary_ext_base_table_rows() -> Vec<AuxiliaryRow> {
         [14u64, 1014u64, 2014u64].map(arbitrary_ext_row).to_vec()
     }
 
@@ -252,10 +252,10 @@ mod test {
         proof_stream.enqueue(ProofItem::MerkleRoot(arbitrary_digest(42)));
 
         let ood_base_row = Box::new(arbitrary_out_of_domain_base_row(1337));
-        proof_stream.enqueue(ProofItem::OutOfDomainBaseRow(ood_base_row));
+        proof_stream.enqueue(ProofItem::OutOfDomainMainRow(ood_base_row));
 
         let ood_ext_row = Box::new(arbitrary_ext_row(1001));
-        proof_stream.enqueue(ProofItem::OutOfDomainExtRow(ood_ext_row));
+        proof_stream.enqueue(ProofItem::OutOfDomainAuxRow(ood_ext_row));
 
         let quot_segments = arbitrary_quotient_segments(800);
         proof_stream.enqueue(ProofItem::OutOfDomainQuotientSegments(quot_segments));
@@ -264,10 +264,10 @@ mod test {
         proof_stream.enqueue(ProofItem::AuthenticationStructure(auth_structure));
 
         let base_rows = arbitrary_master_base_table_rows();
-        proof_stream.enqueue(ProofItem::MasterBaseTableRows(base_rows));
+        proof_stream.enqueue(ProofItem::MasterMainTableRows(base_rows));
 
         let ext_rows = arbitrary_ext_base_table_rows();
-        proof_stream.enqueue(ProofItem::MasterExtTableRows(ext_rows));
+        proof_stream.enqueue(ProofItem::MasterAuxTableRows(ext_rows));
 
         proof_stream.enqueue(ProofItem::Log2PaddedHeight(arbitrary_log2_padded_height()));
 

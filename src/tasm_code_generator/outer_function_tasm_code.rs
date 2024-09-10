@@ -4,8 +4,8 @@ use std::str::FromStr;
 use chrono::Local;
 use itertools::Itertools;
 use tasm_lib::library::Library as SnippetState;
-use tasm_lib::triton_vm::instruction;
-use tasm_lib::triton_vm::op_stack::NumberOfWords;
+use tasm_lib::triton_vm::isa::instruction;
+use tasm_lib::triton_vm::isa::op_stack::NumberOfWords;
 use tasm_lib::triton_vm::prelude::*;
 
 use crate::ast;
@@ -304,7 +304,7 @@ impl OuterFunctionTasmCode {
             "use crate::snippet::BasicSnippet;
              use crate::snippet::DataType;
              use crate::Library;
-             use crate::triton_vm::triton_asm;
+             use crate::triton_vm::prelude::triton_asm;
 
 
              pub(crate) struct {snippet_struct_name};

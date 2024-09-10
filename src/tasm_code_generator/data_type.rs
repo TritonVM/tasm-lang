@@ -1,6 +1,6 @@
 use tasm_lib::list::LIST_METADATA_SIZE;
 use tasm_lib::memory::memcpy::MemCpy;
-use tasm_lib::triton_vm::op_stack::OpStackElement;
+use tasm_lib::triton_vm::isa::op_stack::OpStackElement;
 use tasm_lib::triton_vm::prelude::*;
 
 use crate::ast_types;

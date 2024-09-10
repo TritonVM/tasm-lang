@@ -1,6 +1,6 @@
 use num::One;
 use syn::PathArguments;
-use tasm_lib::triton_vm::triton_asm;
+use tasm_lib::triton_vm::prelude::triton_asm;
 
 use crate::ast;
 use crate::ast::FnSignature;

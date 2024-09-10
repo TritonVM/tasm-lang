@@ -8,8 +8,8 @@ use crate::composite_types::CompositeTypes;
 use crate::libraries::core::result_type;
 use crate::subroutine::SubRoutine;
 use crate::tasm_code_generator::CompilerState;
+use crate::triton_vm::prelude::triton_asm;
 use crate::triton_vm::prelude::LabelledInstruction;
-use crate::triton_vm::triton_asm;
 
 pub(crate) fn len_method_signature(array_type: &ArrayType) -> FnSignature {
     let value_args = vec![("self", array_type.into())];

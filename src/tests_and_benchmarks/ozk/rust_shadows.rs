@@ -16,12 +16,10 @@ use num::One;
 use num::Zero;
 use tasm_lib::memory::encode_to_memory;
 use tasm_lib::structure::tasm_object::decode_from_memory_with_size;
-use tasm_lib::triton_vm;
 use tasm_lib::triton_vm::prelude::*;
 use tasm_lib::triton_vm::proof_item::ProofItem;
 use tasm_lib::triton_vm::proof_item::ProofItemVariant;
-use tasm_lib::triton_vm::table::extension_table::Quotientable;
-use tasm_lib::triton_vm::table::master_table::MasterExtTable;
+use tasm_lib::triton_vm::table::master_table::MasterAuxTable;
 use tasm_lib::twenty_first::math::tip5::Tip5;
 use tasm_lib::twenty_first::math::tip5::RATE;
 use tasm_lib::twenty_first::math::traits::ModPowU32;
@@ -36,13 +34,13 @@ use tasm_lib::verifier::master_ext_table::air_constraint_evaluation::AirConstrai
 use crate::tests_and_benchmarks::ozk::programs::recufier::challenges::Challenges as TasmLangChallenges;
 use crate::tests_and_benchmarks::ozk::programs::recufier::stark_parameters::FriVerify;
 use crate::triton_vm::arithmetic_domain::ArithmeticDomain;
+use crate::triton_vm::challenges::Challenges;
 use crate::triton_vm::fri::AuthenticationStructure;
 use crate::triton_vm::fri::Fri;
 use crate::triton_vm::proof_item::FriResponse;
 use crate::triton_vm::proof_stream::ProofStream;
-use crate::triton_vm::table::challenges::Challenges;
-use crate::triton_vm::table::BaseRow;
-use crate::triton_vm::table::ExtensionRow;
+use crate::triton_vm::table::AuxiliaryRow;
+use crate::triton_vm::table::MainRow;
 use crate::triton_vm::table::QuotientSegments;
 use crate::twenty_first::prelude::*;
 
@@ -382,11 +380,11 @@ pub(super) fn tasmlib_array_horner_evaluation_with_4_coefficients(
 }
 
 pub(super) fn tasmlib_verifier_master_ext_table_air_constraint_evaluation(
-    curr_main: &BaseRow<XFieldElement>,
-    curr_aux: &ExtensionRow,
-    next_main: &BaseRow<XFieldElement>,
-    next_aux: &ExtensionRow,
-) -> [XFieldElement; MasterExtTable::NUM_CONSTRAINTS] {
+    curr_main: &MainRow<XFieldElement>,
+    curr_aux: &AuxiliaryRow,
+    next_main: &MainRow<XFieldElement>,
+    next_aux: &AuxiliaryRow,
+) -> [XFieldElement; MasterAuxTable::NUM_CONSTRAINTS] {
     const CHALLENGES_LENGTH: usize = Challenges::COUNT;
     let mem_layout = air_constraint_evaluation::MemoryLayout::conventional_static();
     let challenges: Box<[XFieldElement; CHALLENGES_LENGTH]> = ND_MEMORY.with_borrow(|memory| {
@@ -414,11 +412,11 @@ pub(super) fn tasmlib_verifier_master_ext_table_air_constraint_evaluation(
 }
 
 pub(super) fn tasmlib_verifier_master_ext_table_divide_out_zerofiers(
-    mut air_evaluation_result: [XFieldElement; MasterExtTable::NUM_CONSTRAINTS],
+    mut air_evaluation_result: [XFieldElement; MasterAuxTable::NUM_CONSTRAINTS],
     out_of_domain_point_curr_row: XFieldElement,
     padded_height: u32,
     trace_domain_generator: BFieldElement,
-) -> [XFieldElement; MasterExtTable::NUM_CONSTRAINTS] {
+) -> [XFieldElement; MasterAuxTable::NUM_CONSTRAINTS] {
     let initial_zerofier_inv: XFieldElement =
         (out_of_domain_point_curr_row - BFieldElement::one()).inverse();
     let consistency_zerofier_inv: XFieldElement =
@@ -429,26 +427,26 @@ pub(super) fn tasmlib_verifier_master_ext_table_divide_out_zerofiers(
     let terminal_zerofier_inv: XFieldElement = except_last_row.inverse();
 
     let mut i: usize = 0;
-    while i < MasterExtTable::NUM_INITIAL_CONSTRAINTS {
+    while i < MasterAuxTable::NUM_INITIAL_CONSTRAINTS {
         air_evaluation_result[i] *= initial_zerofier_inv;
         i += 1;
     }
-    while i < MasterExtTable::NUM_INITIAL_CONSTRAINTS + MasterExtTable::NUM_CONSISTENCY_CONSTRAINTS
+    while i < MasterAuxTable::NUM_INITIAL_CONSTRAINTS + MasterAuxTable::NUM_CONSISTENCY_CONSTRAINTS
     {
         air_evaluation_result[i] *= consistency_zerofier_inv;
         i += 1;
     }
-    while i < MasterExtTable::NUM_INITIAL_CONSTRAINTS
-        + MasterExtTable::NUM_CONSISTENCY_CONSTRAINTS
-        + MasterExtTable::NUM_TRANSITION_CONSTRAINTS
+    while i < MasterAuxTable::NUM_INITIAL_CONSTRAINTS
+        + MasterAuxTable::NUM_CONSISTENCY_CONSTRAINTS
+        + MasterAuxTable::NUM_TRANSITION_CONSTRAINTS
     {
         air_evaluation_result[i] *= transition_zerofier_inv;
         i += 1;
     }
-    while i < MasterExtTable::NUM_INITIAL_CONSTRAINTS
-        + MasterExtTable::NUM_CONSISTENCY_CONSTRAINTS
-        + MasterExtTable::NUM_TRANSITION_CONSTRAINTS
-        + MasterExtTable::NUM_TERMINAL_CONSTRAINTS
+    while i < MasterAuxTable::NUM_INITIAL_CONSTRAINTS
+        + MasterAuxTable::NUM_CONSISTENCY_CONSTRAINTS
+        + MasterAuxTable::NUM_TRANSITION_CONSTRAINTS
+        + MasterAuxTable::NUM_TERMINAL_CONSTRAINTS
     {
         air_evaluation_result[i] *= terminal_zerofier_inv;
         i += 1;
@@ -463,7 +461,7 @@ pub(super) fn tasmlib_verifier_master_ext_table_verify_Base_table_rows(
     merkle_tree_height: u32,
     merkle_tree_root: &Digest,
     revealed_fri_indices_and_elements: &[(u32, XFieldElement)],
-    base_rows: &[BaseRow<BFieldElement>],
+    base_rows: &[MainRow<BFieldElement>],
 ) {
     assert_eq!(base_rows.len(), num_combination_codeword_checks);
     let leaf_digests_base: Vec<_> = base_rows
@@ -486,7 +484,7 @@ pub(super) fn tasmlib_verifier_master_ext_table_verify_Extension_table_rows(
     merkle_tree_height: u32,
     merkle_tree_root: &Digest,
     revealed_fri_indices_and_elements: &[(u32, XFieldElement)],
-    ext_rows: &[ExtensionRow],
+    ext_rows: &[AuxiliaryRow],
 ) {
     assert_eq!(ext_rows.len(), num_combination_codeword_checks);
     let leaf_digests_ext = ext_rows
@@ -536,7 +534,7 @@ pub(super) fn tasmlib_verifier_fri_verify(
     proof_iter: &mut VmProofIter,
     fri_parameters: &FriVerify,
 ) -> Vec<(u32, XFieldElement)> {
-    let fri: triton_vm::fri::Fri<Tip5> = fri_parameters._to_fri();
+    let fri = fri_parameters._to_fri();
     let tasm_lib_fri: tasm_lib::verifier::fri::verify::FriVerify = fri.clone().into();
     let (advance_nd_digests_by, ret) = SPONGE_STATE.with_borrow_mut(|maybe_sponge_state| {
         let sponge_state = maybe_sponge_state.as_mut().unwrap();
@@ -569,7 +567,7 @@ pub(super) fn tasmlib_verifier_fri_verify(
 }
 
 impl FriVerify {
-    fn _to_fri(&self) -> Fri<Tip5> {
+    fn _to_fri(&self) -> Fri {
         let fri_domain = ArithmeticDomain::of_length(self.domain_length as usize)
             .unwrap()
             .with_offset(self.domain_offset);
@@ -694,18 +692,18 @@ macro_rules! vm_proof_iter_impl {
 vm_proof_iter_impl!(
     MerkleRoot(Digest) defines next_as_merkleroot
         uses try_into_merkle_root,
-    OutOfDomainBaseRow(Box<BaseRow<XFieldElement>>) defines next_as_outofdomainbaserow
-        uses try_into_out_of_domain_base_row,
-    OutOfDomainExtRow(Box<ExtensionRow>) defines next_as_outofdomainextrow
-        uses try_into_out_of_domain_ext_row,
+    OutOfDomainMainRow(Box<MainRow<XFieldElement>>) defines next_as_outofdomainbaserow
+        uses try_into_out_of_domain_main_row,
+    OutOfDomainAuxRow(Box<AuxiliaryRow>) defines next_as_outofdomainextrow
+        uses try_into_out_of_domain_aux_row,
     OutOfDomainQuotientSegments(QuotientSegments) defines next_as_outofdomainquotientsegments
         uses try_into_out_of_domain_quot_segments,
     AuthenticationStructure(AuthenticationStructure) defines next_as_authenticationstructure
         uses try_into_authentication_structure,
-    MasterBaseTableRows(Vec<BaseRow<BFieldElement>>) defines next_as_masterbasetablerows
-        uses try_into_master_base_table_rows,
-    MasterExtTableRows(Vec<ExtensionRow>) defines next_as_masterexttablerows
-        uses try_into_master_ext_table_rows,
+    MasterMainTableRows(Vec<MainRow<BFieldElement>>) defines next_as_masterbasetablerows
+        uses try_into_master_main_table_rows,
+    MasterAuxTableRows(Vec<AuxiliaryRow>) defines next_as_masterexttablerows
+        uses try_into_master_aux_table_rows,
     Log2PaddedHeight(u32) defines next_as_log2paddedheight
         uses try_into_log2_padded_height,
     QuotientSegmentsElements(Vec<QuotientSegments>) defines next_as_quotientsegmentselements
@@ -719,8 +717,8 @@ vm_proof_iter_impl!(
 
 #[allow(non_snake_case)] // Name must agree with `tasm-lib`
 pub fn tasmlib_array_inner_product_of_three_rows_with_weights_Bfe_baserowelem<const N: usize>(
-    ext_row: ExtensionRow,
-    base_row: BaseRow<BFieldElement>,
+    ext_row: AuxiliaryRow,
+    base_row: MainRow<BFieldElement>,
     weights: [XFieldElement; N],
 ) -> XFieldElement {
     let mut acc: XFieldElement = XFieldElement::zero();

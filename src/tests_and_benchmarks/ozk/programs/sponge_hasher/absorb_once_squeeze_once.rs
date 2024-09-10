@@ -34,7 +34,7 @@ mod tests {
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows::wrap_main_with_io;
     use itertools::Itertools;
-    use tasm_lib::triton_vm::program::NonDeterminism;
+    use tasm_lib::triton_vm::prelude::NonDeterminism;
     use tasm_lib::twenty_first::math::other::random_elements;
 
     #[test]

@@ -8,14 +8,14 @@ anyhow = "1"
 chrono = "^0.4.38"
 clap = "4.5"
 inflections = "1.1"
-itertools = "0.12"
+itertools = "0.13"
 num = "0.4"
 quote = "1.0"
 rand = "0"
 regex = "1.10"
 strum = { version = "0.26", features = ["derive"] }
 syn = { version = "1.0", features = ["full", "extra-traits"] }
-tasm-lib = { git = "https://github.com/TritonVM/tasm-lib.git", rev = "4f58791ecab112971e38c3ad5042b21ec88a85af" }
+tasm-lib = { git = "https://github.com/TritonVM/tasm-lib.git", rev = "fc7a22d7" }
 
 [dev-dependencies]
 anyhow = "1"
@@ -24,11 +24,11 @@ field_count = "0.1.1"
 pretty_assertions = "1.4"
 proptest = "1.5"
 proptest-arbitrary-interop = "0.1"
-reqwest = { version = "0.11", features = ["blocking"] }
+reqwest = { version = "0.12", features = ["blocking"] }
 serde = { version = "1", features = ["derive"] }
 serde_derive = "1"
 serde_json = "1"
-test-strategy = "0.3"
+test-strategy = "0.4"
 
 [dev-dependencies.cargo-husky]
 version = "1"

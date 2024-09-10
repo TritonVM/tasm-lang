@@ -15,10 +15,10 @@ pub(crate) struct FriResponse {
 #[derive(BFieldCodec)]
 pub(crate) enum ProofItem {
     AuthenticationStructure(Vec<Digest>),
-    MasterBaseTableRows(Vec<Vec<BFieldElement>>),
-    MasterExtTableRows(Vec<Vec<XFieldElement>>),
-    OutOfDomainBaseRow(Vec<XFieldElement>),
-    OutOfDomainExtRow(Vec<XFieldElement>),
+    MasterMainTableRows(Vec<Vec<BFieldElement>>),
+    MasterAuxTableRows(Vec<Vec<XFieldElement>>),
+    OutOfDomainMainRow(Vec<XFieldElement>),
+    OutOfDomainAuxRow(Vec<XFieldElement>),
     OutOfDomainQuotientSegments([XFieldElement; 4]),
     MerkleRoot(Digest),
     Log2PaddedHeight(u32),
@@ -35,16 +35,16 @@ impl ProofItem {
             ProofItem::AuthenticationStructure(_) => {
                 discriminant = BFieldElement::new(0);
             }
-            ProofItem::MasterBaseTableRows(_) => {
+            ProofItem::MasterMainTableRows(_) => {
                 discriminant = BFieldElement::new(1);
             }
-            ProofItem::MasterExtTableRows(_) => {
+            ProofItem::MasterAuxTableRows(_) => {
                 discriminant = BFieldElement::new(2);
             }
-            ProofItem::OutOfDomainBaseRow(_) => {
+            ProofItem::OutOfDomainMainRow(_) => {
                 discriminant = BFieldElement::new(3);
             }
-            ProofItem::OutOfDomainExtRow(_) => {
+            ProofItem::OutOfDomainAuxRow(_) => {
                 discriminant = BFieldElement::new(4);
             }
             ProofItem::OutOfDomainQuotientSegments(_) => {
@@ -97,16 +97,16 @@ fn main() {
         ProofItem::AuthenticationStructure(_) => {
             panic!();
         }
-        ProofItem::MasterBaseTableRows(_) => {
+        ProofItem::MasterMainTableRows(_) => {
             panic!();
         }
-        ProofItem::MasterExtTableRows(_) => {
+        ProofItem::MasterAuxTableRows(_) => {
             panic!();
         }
-        ProofItem::OutOfDomainBaseRow(_) => {
+        ProofItem::OutOfDomainMainRow(_) => {
             panic!();
         }
-        ProofItem::OutOfDomainExtRow(_) => {
+        ProofItem::OutOfDomainAuxRow(_) => {
             panic!();
         }
         ProofItem::OutOfDomainQuotientSegments(_) => {

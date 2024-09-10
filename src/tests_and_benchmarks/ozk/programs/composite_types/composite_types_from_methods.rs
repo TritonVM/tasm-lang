@@ -40,7 +40,7 @@ impl Foo {
 
 #[cfg(test)]
 mod tests {
-    use tasm_lib::triton_vm::program::NonDeterminism;
+    use tasm_lib::triton_vm::prelude::NonDeterminism;
 
     use super::*;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;

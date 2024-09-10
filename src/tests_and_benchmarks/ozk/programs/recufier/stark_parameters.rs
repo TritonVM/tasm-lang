@@ -1,7 +1,9 @@
-use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
-use crate::{tests_and_benchmarks::ozk::rust_shadows::VmProofIter, triton_vm::prelude::*};
 use serde_derive::Serialize;
 use tasm_lib::twenty_first::math::traits::PrimitiveRootOfUnity;
+
+use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
+use crate::tests_and_benchmarks::ozk::rust_shadows::VmProofIter;
+use crate::triton_vm::prelude::*;
 
 /// See [StarkParameters][params].
 ///

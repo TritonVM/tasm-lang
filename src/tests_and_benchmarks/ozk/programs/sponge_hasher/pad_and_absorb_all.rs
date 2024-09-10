@@ -32,7 +32,7 @@ fn pad_and_absorb_all() {
 mod tests {
     use rand::thread_rng;
     use rand::Rng;
-    use tasm_lib::triton_vm::program::NonDeterminism;
+    use tasm_lib::triton_vm::prelude::NonDeterminism;
     use tasm_lib::twenty_first::math::other::random_elements;
 
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;

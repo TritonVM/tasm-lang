@@ -23,7 +23,7 @@ mod tests {
     #[test]
     fn local_challenges_count_agrees_with_tvm() {
         assert_eq!(
-            triton_vm::table::challenges::Challenges::COUNT,
+            triton_vm::challenges::Challenges::COUNT,
             Challenges::count()
         );
     }

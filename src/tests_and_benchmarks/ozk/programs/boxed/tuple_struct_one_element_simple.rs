@@ -17,7 +17,7 @@ fn main() {
 
 #[cfg(test)]
 mod test {
-    use tasm_lib::triton_vm::program::NonDeterminism;
+    use tasm_lib::triton_vm::prelude::NonDeterminism;
 
     use super::*;
 

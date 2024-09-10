@@ -128,7 +128,7 @@ mod tests {
     use std::collections::HashMap;
 
     use rand::random;
-    use tasm_lib::triton_vm::program::NonDeterminism;
+    use tasm_lib::triton_vm::prelude::NonDeterminism;
     use tasm_lib::twenty_first::bfe;
     use tasm_lib::twenty_first::math::other::random_elements;
 

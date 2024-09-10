@@ -5,9 +5,8 @@ use std::str::FromStr;
 use anyhow::bail;
 use itertools::Itertools;
 use regex::Regex;
-use tasm_lib::triton_vm::table::{NUM_BASE_COLUMNS, NUM_EXT_COLUMNS, NUM_QUOTIENT_SEGMENTS};
-
-use crate::ast::FnSignature;
+use tasm_lib::triton_vm::table::master_table::MasterMainTable;
+use tasm_lib::triton_vm::table::NUM_QUOTIENT_SEGMENTS;
 
 pub(crate) use self::abstract_argument::*;
 pub(crate) use self::array_type::ArrayType;
@@ -17,6 +16,9 @@ pub(crate) use self::field_id::FieldId;
 pub(crate) use self::function_type::FunctionType;
 pub(crate) use self::struct_type::*;
 pub(crate) use self::tuple::Tuple;
+use crate::ast::FnSignature;
+use crate::triton_vm::table::master_table::MasterAuxTable;
+use crate::triton_vm::table::master_table::MasterTable;
 
 pub(crate) mod abstract_argument;
 pub(crate) mod array_type;
@@ -116,15 +118,15 @@ impl DataType {
             "FriResponse" => Ok(DataType::Unresolved(type_str.to_owned())),
             "BaseRow<XFieldElement>" => Ok(DataType::Array(ArrayType {
                 element_type: Box::new(DataType::Xfe),
-                length: NUM_BASE_COLUMNS,
+                length: MasterMainTable::NUM_COLUMNS,
             })),
             "BaseRow<BFieldElement>" => Ok(DataType::Array(ArrayType {
                 element_type: Box::new(DataType::Bfe),
-                length: NUM_BASE_COLUMNS,
+                length: MasterMainTable::NUM_COLUMNS,
             })),
             "ExtensionRow" => Ok(DataType::Array(ArrayType {
                 element_type: Box::new(DataType::Xfe),
-                length: NUM_EXT_COLUMNS,
+                length: MasterAuxTable::NUM_COLUMNS,
             })),
             "QuotientSegments" => Ok(DataType::Array(ArrayType {
                 element_type: Box::new(DataType::Xfe),

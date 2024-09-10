@@ -118,7 +118,10 @@ mod tests {
             .execute()
             .unwrap_err();
         let err1 = err1.downcast::<InstructionError>().unwrap();
-        assert_eq!(InstructionError::FailedU32Conversion(negative_number), err1);
+        assert_eq!(
+            InstructionError::OpStackError(OpStackError::FailedU32Conversion(negative_number)),
+            err1
+        );
     }
 
     #[test]
@@ -163,6 +166,9 @@ mod tests {
             .execute()
             .unwrap_err();
         let err1 = err1.downcast::<InstructionError>().unwrap();
-        assert_eq!(InstructionError::FailedU32Conversion(negative_number), err1);
+        assert_eq!(
+            InstructionError::OpStackError(OpStackError::FailedU32Conversion(negative_number)),
+            err1
+        );
     }
 }

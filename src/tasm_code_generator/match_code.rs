@@ -2,8 +2,8 @@ use std::collections::HashSet;
 
 use itertools::Itertools;
 use num::One;
+use tasm_lib::triton_vm::prelude::triton_asm;
 use tasm_lib::triton_vm::prelude::LabelledInstruction;
-use tasm_lib::triton_vm::triton_asm;
 
 use crate::ast;
 use crate::ast::MatchCondition;

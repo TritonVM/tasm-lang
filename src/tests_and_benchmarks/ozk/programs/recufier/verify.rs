@@ -1,15 +1,13 @@
 use itertools::Itertools;
 use num::Zero;
 use tasm_lib::triton_vm::proof::Claim;
-use tasm_lib::triton_vm::table::extension_table::Quotientable;
-use tasm_lib::triton_vm::table::master_table::MasterExtTable;
-use tasm_lib::triton_vm::table::ExtensionRow;
+use tasm_lib::triton_vm::table::AuxiliaryRow;
+use tasm_lib::triton_vm::table::MainRow;
 use tasm_lib::triton_vm::table::QuotientSegments;
 
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 use crate::tests_and_benchmarks::ozk::rust_shadows::Tip5WithState;
 use crate::tests_and_benchmarks::ozk::rust_shadows::VmProofIter;
-use crate::triton_vm::table::BaseRow;
 use crate::twenty_first::prelude::*;
 
 use super::arithmetic_domain::*;
@@ -63,13 +61,13 @@ impl Recufier {
         let out_of_domain_point_curr_row_pow_num_segments: XFieldElement =
             tasm::tasmlib_arithmetic_xfe_to_the_fourth(out_of_domain_point_curr_row);
 
-        let out_of_domain_curr_base_row: Box<Box<BaseRow<XFieldElement>>> =
+        let out_of_domain_curr_base_row: Box<Box<MainRow<XFieldElement>>> =
             proof_iter.next_as_outofdomainbaserow();
-        let out_of_domain_curr_ext_row: Box<Box<ExtensionRow>> =
+        let out_of_domain_curr_ext_row: Box<Box<AuxiliaryRow>> =
             proof_iter.next_as_outofdomainextrow();
-        let out_of_domain_next_base_row: Box<Box<BaseRow<XFieldElement>>> =
+        let out_of_domain_next_base_row: Box<Box<MainRow<XFieldElement>>> =
             proof_iter.next_as_outofdomainbaserow();
-        let out_of_domain_next_ext_row: Box<Box<ExtensionRow>> =
+        let out_of_domain_next_ext_row: Box<Box<AuxiliaryRow>> =
             proof_iter.next_as_outofdomainextrow();
         let out_of_domain_curr_row_quot_segments: Box<[XFieldElement; 4]> =
             proof_iter.next_as_outofdomainquotientsegments();
@@ -144,7 +142,7 @@ impl Recufier {
         // Dequeue base elements
         // Could be read from secret-in, but it's much more efficient to get them from memory
         let num_combination_codeword_checks: usize = fri.num_collinearity_checks as usize;
-        let base_table_rows: Box<Vec<BaseRow<BFieldElement>>> =
+        let base_table_rows: Box<Vec<MainRow<BFieldElement>>> =
             proof_iter.next_as_masterbasetablerows();
 
         // Read base authentication structure but ignore its value, as we divine-in the digests instead
@@ -163,7 +161,7 @@ impl Recufier {
         );
 
         // dequeue extension elements
-        let ext_table_rows: Box<Vec<ExtensionRow>> = proof_iter.next_as_masterexttablerows();
+        let ext_table_rows: Box<Vec<AuxiliaryRow>> = proof_iter.next_as_masterexttablerows();
         // dequeue extension rows' authentication structure but ignore it (divination instead)
         {
             let _dummy: Box<Vec<Digest>> = proof_iter.next_as_authenticationstructure();
@@ -209,8 +207,8 @@ impl Recufier {
             while i < num_combination_codeword_checks {
                 let row_idx: u32 = revealed_fri_indices_and_elements[i].0;
                 let fri_value: XFieldElement = revealed_fri_indices_and_elements[i].1;
-                let base_row: BaseRow<BFieldElement> = base_table_rows[i];
-                let ext_row: ExtensionRow = ext_table_rows[i];
+                let base_row: MainRow<BFieldElement> = base_table_rows[i];
+                let ext_row: AuxiliaryRow = ext_table_rows[i];
                 // let randomizer_value: XFieldElement = ext_row[ext_row.len() - 1];
                 let randomizer_value: XFieldElement = XFieldElement::zero();
                 let quot_segment_elements: QuotientSegments = quotient_segment_elements[i];
@@ -278,8 +276,8 @@ impl Recufier {
     #[allow(clippy::redundant_allocation)]
     #[allow(clippy::ptr_arg)]
     fn linearly_sum_xfe_base_and_ext_row(
-        base_row: Box<Box<BaseRow<XFieldElement>>>,
-        ext_row: Box<Box<ExtensionRow>>,
+        base_row: Box<Box<MainRow<XFieldElement>>>,
+        ext_row: Box<Box<AuxiliaryRow>>,
         base_and_ext_codeword_weights: &Vec<XFieldElement>,
     ) -> XFieldElement {
         let mut acc: XFieldElement = XFieldElement::zero();
@@ -304,11 +302,10 @@ mod test {
     use std::collections::HashMap;
 
     use proptest::prelude::*;
-    use tasm_lib::triton_vm::program::Program;
+    use tasm_lib::triton_vm::prelude::triton_program;
+    use tasm_lib::triton_vm::prelude::Program;
     use tasm_lib::triton_vm::proof_stream::ProofStream;
-    use tasm_lib::triton_vm::table::NUM_EXT_COLUMNS;
     use tasm_lib::triton_vm::table::NUM_QUOTIENT_SEGMENTS;
-    use tasm_lib::triton_vm::triton_program;
     use test_strategy::proptest;
 
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
@@ -318,7 +315,9 @@ mod test {
     use crate::triton_vm::prelude::NonDeterminism;
     use crate::triton_vm::prelude::Proof;
     use crate::triton_vm::prelude::Stark;
-    use crate::triton_vm::table::NUM_BASE_COLUMNS;
+    use crate::triton_vm::table::master_table::MasterAuxTable;
+    use crate::triton_vm::table::master_table::MasterMainTable;
+    use crate::triton_vm::table::master_table::MasterTable;
 
     use super::*;
 
@@ -434,8 +433,8 @@ mod test {
     fn num_base_and_ext_and_quotient_segment_codeword_weights_agrees_with_tvm() {
         const NUM_DEEP_CODEWORD_COMPONENTS: usize = 3; // TODO: Use from TVM when made public
         assert_eq!(
-            NUM_BASE_COLUMNS
-                + NUM_EXT_COLUMNS
+            MasterMainTable::NUM_COLUMNS
+                + MasterAuxTable::NUM_COLUMNS
                 + NUM_QUOTIENT_SEGMENTS
                 + NUM_DEEP_CODEWORD_COMPONENTS,
             Recufier::num_base_ext_quotient_deep_weights()
@@ -444,14 +443,17 @@ mod test {
 
     #[test]
     fn num_columns_agrees_with_tvm() {
-        assert_eq!(Recufier::num_columns(), NUM_BASE_COLUMNS + NUM_EXT_COLUMNS)
+        assert_eq!(
+            Recufier::num_columns(),
+            MasterMainTable::NUM_COLUMNS + MasterAuxTable::NUM_COLUMNS
+        )
     }
 
     #[test]
     fn num_columns_plus_quotient_segments_agrees_with_tvm() {
         assert_eq!(
             Recufier::num_columns_plus_quotient_segments(),
-            NUM_BASE_COLUMNS + NUM_EXT_COLUMNS + NUM_QUOTIENT_SEGMENTS
+            MasterMainTable::NUM_COLUMNS + MasterAuxTable::NUM_COLUMNS + NUM_QUOTIENT_SEGMENTS
         )
     }
 
@@ -475,7 +477,7 @@ mod test {
 
     #[test]
     fn num_quotients_agree_with_tvm_num_quotients() {
-        assert_eq!(MasterExtTable::NUM_CONSTRAINTS, Recufier::num_quotients());
+        assert_eq!(MasterAuxTable::NUM_CONSTRAINTS, Recufier::num_quotients());
     }
 
     #[proptest]
@@ -673,7 +675,7 @@ mod test {
 mod benches {
     use tasm_lib::snippet_bencher::write_benchmarks;
     use tasm_lib::snippet_bencher::NamedBenchmarkResult;
-    use tasm_lib::triton_vm::program::NonDeterminism;
+    use tasm_lib::triton_vm::prelude::NonDeterminism;
 
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::programs::recufier::verify::test::claim_to_stdin_for_stark_verifier;
@@ -740,9 +742,9 @@ mod benches {
 
 #[cfg(test)]
 mod profilers {
-    use tasm_lib::triton_vm::program::NonDeterminism;
-    use tasm_lib::triton_vm::program::Program;
-    use tasm_lib::twenty_first::math::b_field_element::BFieldElement;
+    use tasm_lib::triton_vm::prelude::NonDeterminism;
+    use tasm_lib::triton_vm::prelude::Program;
+    use tasm_lib::twenty_first::prelude::BFieldElement;
 
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::programs::recufier::verify::test::claim_to_stdin_for_stark_verifier;

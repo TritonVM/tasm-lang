@@ -2,10 +2,11 @@ mod vm_proof_iter;
 
 use syn::parse_quote;
 use syn::PathArguments;
-use tasm_lib::triton_vm::table::NUM_BASE_COLUMNS;
-use tasm_lib::triton_vm::table::NUM_EXT_COLUMNS;
+use tasm_lib::triton_vm::table::master_table::MasterAuxTable;
 use tasm_lib::triton_vm::table::NUM_QUOTIENT_SEGMENTS;
 
+use self::vm_proof_iter::graft_vm_proof_iter;
+use self::vm_proof_iter::VM_PROOF_ITER_TYPE_NAME;
 use crate::ast;
 use crate::ast_types;
 use crate::ast_types::CustomTypeOil;
@@ -14,9 +15,8 @@ use crate::ast_types::StructType;
 use crate::composite_types::CompositeTypes;
 use crate::composite_types::TypeContext;
 use crate::graft::Graft;
-
-use self::vm_proof_iter::graft_vm_proof_iter;
-use self::vm_proof_iter::VM_PROOF_ITER_TYPE_NAME;
+use crate::triton_vm::table::master_table::MasterMainTable;
+use crate::triton_vm::table::master_table::MasterTable;
 
 use super::Library;
 
@@ -139,7 +139,7 @@ impl RecufyLib {
         assert!(matches!(arguments, PathArguments::None));
         ast_types::DataType::Array(ast_types::ArrayType {
             element_type: Box::new(ast_types::DataType::Xfe),
-            length: NUM_EXT_COLUMNS,
+            length: MasterAuxTable::NUM_COLUMNS,
         })
     }
 
@@ -164,7 +164,7 @@ impl RecufyLib {
                         );
                         ast_types::DataType::Array(ast_types::ArrayType {
                             element_type: Box::new(inner),
-                            length: NUM_BASE_COLUMNS,
+                            length: MasterMainTable::NUM_COLUMNS,
                         })
                     }
                     other => panic!("Unsupported type {other:#?}"),

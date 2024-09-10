@@ -601,7 +601,7 @@ impl<'a> CompilerState<'a> {
     }
 }
 
-pub(crate) const SIZE_OF_ACCESSIBLE_STACK: usize = triton_vm::op_stack::NUM_OP_STACK_REGISTERS;
+pub(crate) const SIZE_OF_ACCESSIBLE_STACK: usize = triton_vm::isa::op_stack::NUM_OP_STACK_REGISTERS;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub(crate) struct ValueIdentifier {
