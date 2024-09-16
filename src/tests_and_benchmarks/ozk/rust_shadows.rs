@@ -27,9 +27,9 @@ use tasm_lib::twenty_first::math::x_field_element::EXTENSION_DEGREE;
 use tasm_lib::twenty_first::util_types::algebraic_hasher::AlgebraicHasher;
 use tasm_lib::twenty_first::util_types::algebraic_hasher::Sponge;
 use tasm_lib::twenty_first::util_types::merkle_tree::MerkleTreeInclusionProof;
-use tasm_lib::verifier::master_aux_table::air_constraint_evaluation;
-use tasm_lib::verifier::master_aux_table::air_constraint_evaluation::AirConstraintEvaluation;
-use tasm_lib::verifier::master_aux_table::air_constraint_evaluation::AirConstraintSnippetInputs;
+use tasm_lib::verifier::master_table::air_constraint_evaluation;
+use tasm_lib::verifier::master_table::air_constraint_evaluation::AirConstraintEvaluation;
+use tasm_lib::verifier::master_table::air_constraint_evaluation::AirConstraintSnippetInputs;
 
 use crate::tests_and_benchmarks::ozk::programs::recufier::challenges::Challenges as TasmLangChallenges;
 use crate::tests_and_benchmarks::ozk::programs::recufier::stark_parameters::FriVerify;
@@ -358,9 +358,9 @@ pub(super) fn tasmlib_array_inner_product_of_4_xfes(
     inner_product(&a, &b)
 }
 
-pub(super) fn tasmlib_array_inner_product_of_592_xfes(
-    a: [XFieldElement; 592],
-    b: [XFieldElement; 592],
+pub(super) fn tasmlib_array_inner_product_of_596_xfes(
+    a: [XFieldElement; 596],
+    b: [XFieldElement; 596],
 ) -> XFieldElement {
     inner_product(&a, &b)
 }
@@ -379,7 +379,7 @@ pub(super) fn tasmlib_array_horner_evaluation_with_4_coefficients(
     running_evaluation
 }
 
-pub(super) fn tasmlib_verifier_master_aux_table_air_constraint_evaluation(
+pub(super) fn tasmlib_verifier_master_table_air_constraint_evaluation(
     curr_main: &MainRow<XFieldElement>,
     curr_aux: &AuxiliaryRow,
     next_main: &MainRow<XFieldElement>,
@@ -411,7 +411,7 @@ pub(super) fn tasmlib_verifier_master_aux_table_air_constraint_evaluation(
         .unwrap()
 }
 
-pub(super) fn tasmlib_verifier_master_aux_table_divide_out_zerofiers(
+pub(super) fn tasmlib_verifier_master_table_divide_out_zerofiers(
     mut air_evaluation_result: [XFieldElement; MasterAuxTable::NUM_CONSTRAINTS],
     out_of_domain_point_curr_row: XFieldElement,
     padded_height: u32,
@@ -456,7 +456,7 @@ pub(super) fn tasmlib_verifier_master_aux_table_divide_out_zerofiers(
 }
 
 #[allow(non_snake_case)] // Name must agree with `tasm-lib`
-pub(super) fn tasmlib_verifier_master_aux_table_verify_Main_table_rows(
+pub(super) fn tasmlib_verifier_master_table_verify_Main_table_rows(
     num_combination_codeword_checks: usize,
     merkle_tree_height: u32,
     merkle_tree_root: &Digest,
@@ -479,7 +479,7 @@ pub(super) fn tasmlib_verifier_master_aux_table_verify_Main_table_rows(
 }
 
 #[allow(non_snake_case)] // Name must agree with `tasm-lib`
-pub(super) fn tasmlib_verifier_master_aux_table_verify_Aux_table_rows(
+pub(super) fn tasmlib_verifier_master_table_verify_Aux_table_rows(
     num_combination_codeword_checks: usize,
     merkle_tree_height: u32,
     merkle_tree_root: &Digest,
@@ -505,7 +505,7 @@ pub(super) fn tasmlib_verifier_master_aux_table_verify_Aux_table_rows(
 }
 
 #[allow(non_snake_case)] // Name must agree with `tasm-lib`
-pub(super) fn tasmlib_verifier_master_aux_table_verify_Quotient_table_rows(
+pub(super) fn tasmlib_verifier_master_table_verify_Quotient_table_rows(
     num_combination_codeword_checks: usize,
     merkle_tree_height: u32,
     merkle_tree_root: &Digest,

@@ -45,7 +45,7 @@ impl Recufier {
 
         let extension_tree_merkle_root: Box<Digest> = proof_iter.next_as_merkleroot();
 
-        let quot_codeword_weights: [XFieldElement; 592] = <[XFieldElement; 592]>::try_from(
+        let quot_codeword_weights: [XFieldElement; 596] = <[XFieldElement; 596]>::try_from(
             Tip5WithState::sample_scalars(Recufier::num_quotients()),
         )
         .unwrap();
@@ -72,16 +72,16 @@ impl Recufier {
         let out_of_domain_curr_row_quot_segments: Box<[XFieldElement; 4]> =
             proof_iter.next_as_outofdomainquotientsegments();
 
-        let air_evaluation_result: [XFieldElement; 592] =
-            tasm::tasmlib_verifier_master_aux_table_air_constraint_evaluation(
+        let air_evaluation_result: [XFieldElement; 596] =
+            tasm::tasmlib_verifier_master_table_air_constraint_evaluation(
                 &out_of_domain_curr_main_row,
                 &out_of_domain_curr_aux_row,
                 &out_of_domain_next_main_row,
                 &out_of_domain_next_aux_row,
             );
 
-        let quotient_summands: [XFieldElement; 592] =
-            tasm::tasmlib_verifier_master_aux_table_divide_out_zerofiers(
+        let quotient_summands: [XFieldElement; 596] =
+            tasm::tasmlib_verifier_master_table_divide_out_zerofiers(
                 air_evaluation_result,
                 out_of_domain_point_curr_row,
                 padded_height,
@@ -89,7 +89,7 @@ impl Recufier {
             );
 
         let out_of_domain_quotient_value: XFieldElement =
-            tasm::tasmlib_array_inner_product_of_592_xfes(quot_codeword_weights, quotient_summands);
+            tasm::tasmlib_array_inner_product_of_596_xfes(quot_codeword_weights, quotient_summands);
 
         let sum_of_evaluated_out_of_domain_quotient_segments: XFieldElement =
             tasm::tasmlib_array_horner_evaluation_with_4_coefficients(
@@ -152,7 +152,7 @@ impl Recufier {
 
         // hash base rows to get leafs
         let merkle_tree_height: u32 = fri.domain_length.ilog2();
-        tasm::tasmlib_verifier_master_aux_table_verify_Main_table_rows(
+        tasm::tasmlib_verifier_master_table_verify_Main_table_rows(
             num_combination_codeword_checks,
             merkle_tree_height,
             &main_merkle_tree_root,
@@ -167,7 +167,7 @@ impl Recufier {
             let _dummy: Box<Vec<Digest>> = proof_iter.next_as_authenticationstructure();
         }
 
-        tasm::tasmlib_verifier_master_aux_table_verify_Aux_table_rows(
+        tasm::tasmlib_verifier_master_table_verify_Aux_table_rows(
             num_combination_codeword_checks,
             merkle_tree_height,
             &extension_tree_merkle_root,
@@ -184,7 +184,7 @@ impl Recufier {
             let _dummy: Box<Vec<Digest>> = proof_iter.next_as_authenticationstructure();
         }
 
-        tasm::tasmlib_verifier_master_aux_table_verify_Quotient_table_rows(
+        tasm::tasmlib_verifier_master_table_verify_Quotient_table_rows(
             num_combination_codeword_checks,
             merkle_tree_height,
             &quotient_tree_merkle_root,
@@ -200,8 +200,8 @@ impl Recufier {
         assert!(num_combination_codeword_checks == quotient_segment_elements.len());
 
         // Main loop
-        let trace_weights: [XFieldElement; 463] =
-            <[XFieldElement; 463]>::try_from(main_and_aux_codeword_weights).unwrap();
+        let trace_weights: [XFieldElement; 467] =
+            <[XFieldElement; 467]>::try_from(main_and_aux_codeword_weights).unwrap();
         {
             let mut i: usize = 0;
             while i < num_combination_codeword_checks {
@@ -257,19 +257,19 @@ impl Recufier {
     }
 
     const fn num_quotients() -> usize {
-        return 592;
+        return 596;
     }
 
     const fn num_main_aux_quotient_deep_weights() -> usize {
-        return 470;
+        return 474;
     }
 
     fn num_columns_plus_quotient_segments() -> usize {
-        return 467;
+        return 471;
     }
 
     fn num_columns() -> usize {
-        return 463;
+        return 467;
     }
 
     #[allow(clippy::boxed_local)]
@@ -445,7 +445,7 @@ mod test {
     fn num_columns_agrees_with_tvm() {
         assert_eq!(
             Recufier::num_columns(),
-            MasterMainTable::NUM_COLUMNS + MasterAuxTable::NUM_COLUMNS
+            MasterMainTable::NUM_COLUMNS + MasterAuxTable::NUM_COLUMNS,
         )
     }
 

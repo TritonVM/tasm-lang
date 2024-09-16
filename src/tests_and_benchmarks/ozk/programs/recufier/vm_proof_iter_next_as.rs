@@ -34,7 +34,7 @@ mod test {
         let a_merkle_root: Box<Digest> = vm_proof_iter.next_as_merkleroot();
         tasm::tasmlib_io_write_to_stdout___digest(*a_merkle_root);
 
-        let out_of_domain_main_row: Box<Box<[XFieldElement; 375]>> =
+        let out_of_domain_main_row: Box<Box<[XFieldElement; 379]>> =
             vm_proof_iter.next_as_outofdomainmainrow();
         tasm::tasmlib_io_write_to_stdout___xfe(out_of_domain_main_row[0]);
         tasm::tasmlib_io_write_to_stdout___xfe(out_of_domain_main_row[1]);
@@ -57,7 +57,7 @@ mod test {
         tasm::tasmlib_io_write_to_stdout___digest(authentication_structure[1]);
         tasm::tasmlib_io_write_to_stdout___digest(authentication_structure[2]);
 
-        let mbtw: Box<Vec<[BFieldElement; 375]>> = vm_proof_iter.next_as_mastermaintablerows();
+        let mbtw: Box<Vec<[BFieldElement; 379]>> = vm_proof_iter.next_as_mastermaintablerows();
         {
             let mut j: usize = 0;
             while j < mbtw.len() {
