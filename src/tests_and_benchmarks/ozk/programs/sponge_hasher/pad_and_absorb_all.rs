@@ -30,7 +30,6 @@ fn pad_and_absorb_all() {
 
 #[cfg(test)]
 mod tests {
-    use rand::thread_rng;
     use rand::Rng;
     use tasm_lib::triton_vm::prelude::NonDeterminism;
     use tasm_lib::twenty_first::math::other::random_elements;
@@ -42,7 +41,7 @@ mod tests {
 
     #[test]
     fn pad_and_absorb_all_test() {
-        let random_length: u32 = thread_rng().gen_range(0..200);
+        let random_length: u32 = rand::rng().random_range(0..200);
         let std_in = [
             vec![BFieldElement::new(random_length as u64)],
             random_elements(random_length as usize),

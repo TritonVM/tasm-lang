@@ -2,10 +2,10 @@
   {
     "name": "dazefield_element_mul",
     "benchmark_result": {
-      "clock_cycle_count": 2466,
-      "hash_table_height": 588,
-      "u32_table_height": 568,
-      "op_stack_table_height": 1746,
+      "clock_cycle_count": 1875,
+      "hash_table_height": 492,
+      "u32_table_height": 403,
+      "op_stack_table_height": 1386,
       "ram_table_height": 20
     },
     "case": "CommonCase"
@@ -13,10 +13,10 @@
   {
     "name": "dazefield_element_mul",
     "benchmark_result": {
-      "clock_cycle_count": 2466,
-      "hash_table_height": 588,
-      "u32_table_height": 948,
-      "op_stack_table_height": 1746,
+      "clock_cycle_count": 1875,
+      "hash_table_height": 492,
+      "u32_table_height": 769,
+      "op_stack_table_height": 1386,
       "ram_table_height": 20
     },
     "case": "WorstCase"

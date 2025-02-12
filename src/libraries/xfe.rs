@@ -54,7 +54,7 @@ fn call_method_inner(method_name: &str, state: &mut CompilerState) -> Vec<Labell
         UNLIFT_NAME => xfe_unlift_method().body,
         METHOD_NAME_MOD_POW_U32 => {
             let xfe_mod_pow_u32_generic_label = state.import_snippet(Box::new(
-                tasm_lib::arithmetic::xfe::mod_pow_u32_generic::XfeModPowU32Generic,
+                tasm_lib::arithmetic::xfe::mod_pow_u32::XfeModPowU32,
             ));
 
             triton_asm!(

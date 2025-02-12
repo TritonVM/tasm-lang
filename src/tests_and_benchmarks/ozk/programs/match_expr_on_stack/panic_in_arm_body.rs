@@ -6,7 +6,6 @@ use tasm_lib::triton_vm::prelude::*;
 use proptest::collection::vec;
 use proptest::prelude::*;
 use proptest_arbitrary_interop::arb;
-use tasm_lib::Digest;
 use test_strategy::proptest;
 
 use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
@@ -167,7 +166,9 @@ fn assert_panic_in_arm_body_a() {
     );
     let err = TritonVMTestCase::new(entrypoint).execute().unwrap_err();
     let err = err.downcast::<InstructionError>().unwrap();
-    assert_eq!(InstructionError::AssertionFailed, err);
+    let InstructionError::AssertionFailed(_) = err else {
+        panic!()
+    };
 }
 
 fn choose_variant_b_and_panic_on_variant_b() {
@@ -205,5 +206,7 @@ fn assert_panic_in_arm_body_b() {
     );
     let err = TritonVMTestCase::new(entrypoint).execute().unwrap_err();
     let err = err.downcast::<InstructionError>().unwrap();
-    assert_eq!(InstructionError::AssertionFailed, err);
+    let InstructionError::AssertionFailed(_) = err else {
+        panic!()
+    };
 }

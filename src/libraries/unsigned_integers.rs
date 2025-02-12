@@ -178,25 +178,25 @@ fn name_to_tasm_lib_snippet(
 ) -> Option<Box<dyn BasicSnippet>> {
     match (public_name, receiver_type) {
         (LEADING_ZEROS_METHOD, ast_types::DataType::U32) => Some(Box::new(
-            tasm_lib::arithmetic::u32::leadingzeros::Leadingzeros,
+            tasm_lib::arithmetic::u32::leading_zeros::LeadingZeros,
         )),
         (LEADING_ZEROS_METHOD, ast_types::DataType::U64) => Some(Box::new(
-            tasm_lib::arithmetic::u64::leading_zeros_u64::LeadingZerosU64,
+            tasm_lib::arithmetic::u64::leading_zeros::LeadingZeros,
         )),
-        (COUNT_ONES_METHOD, ast_types::DataType::U64) => Some(Box::new(
-            tasm_lib::arithmetic::u64::popcount_u64::PopCountU64,
-        )),
+        (COUNT_ONES_METHOD, ast_types::DataType::U64) => {
+            Some(Box::new(tasm_lib::arithmetic::u64::popcount::PopCount))
+        }
         (POW_METHOD, ast_types::DataType::U32) => {
-            Some(Box::new(tasm_lib::arithmetic::u32::safepow::Safepow))
+            Some(Box::new(tasm_lib::arithmetic::u32::safe_pow::SafePow))
         }
         (OVERFLOWING_ADD_METHOD, ast_types::DataType::U64) => Some(Box::new(
-            tasm_lib::arithmetic::u64::overflowing_add_u64::OverflowingAdd,
+            tasm_lib::arithmetic::u64::overflowing_add::OverflowingAdd,
         )),
         (OVERFLOWING_SUB_METHOD, ast_types::DataType::U64) => Some(Box::new(
-            tasm_lib::arithmetic::u64::overflowing_sub_u64::OverflowingSub,
+            tasm_lib::arithmetic::u64::overflowing_sub::OverflowingSub,
         )),
         (WRAPPING_SUB_METHOD, ast_types::DataType::U64) => Some(Box::new(
-            tasm_lib::arithmetic::u64::wrapping_sub_u64::WrappingSub,
+            tasm_lib::arithmetic::u64::wrapping_sub::WrappingSub,
         )),
         (NEXT_POWER_OF_TWO_METHOD, ast_types::DataType::U32) => Some(Box::new(
             tasm_lib::arithmetic::u32::next_power_of_two::NextPowerOfTwo,

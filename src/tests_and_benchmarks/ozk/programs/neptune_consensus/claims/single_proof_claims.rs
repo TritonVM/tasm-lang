@@ -5,6 +5,7 @@ use tasm_lib::triton_vm::prelude::BFieldElement;
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 use crate::triton_vm::proof::Claim;
 use crate::triton_vm::proof::Proof;
+use crate::triton_vm::proof::CURRENT_VERSION;
 use crate::twenty_first::prelude::Digest;
 
 #[derive(Clone, Debug, PartialEq, Eq, BFieldCodec, TasmObject)]
@@ -33,6 +34,7 @@ impl ProofCollection {
                 BFieldElement::new(57),
                 BFieldElement::new(58),
             ]),
+            version: CURRENT_VERSION,
             input: self.kernel_mast_hash.reversed().encode(),
             output: self.salted_inputs_hash.encode(),
         };
@@ -47,6 +49,7 @@ impl ProofCollection {
                 BFieldElement::new(157),
                 BFieldElement::new(158),
             ]),
+            version: CURRENT_VERSION,
             input: self.kernel_mast_hash.reversed().encode(),
             output: self.salted_outputs_hash.encode(),
         };
@@ -75,6 +78,7 @@ impl ProofCollection {
                 BFieldElement::new(257),
                 BFieldElement::new(258),
             ]),
+            version: CURRENT_VERSION,
             input: self.salted_inputs_hash.reversed().encode(),
             output: lock_script_hashes_as_output,
         };

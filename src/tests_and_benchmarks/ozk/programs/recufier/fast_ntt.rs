@@ -151,7 +151,7 @@ mod test {
 
             // Test function on host machine
             let mut expected_output = xfes.clone();
-            ntt::ntt(&mut expected_output, omega, input_length.ilog2());
+            ntt::ntt(&mut expected_output);
             let expected_output = expected_output
                 .iter()
                 .flat_map(|x| x.coefficients.to_vec())
@@ -224,7 +224,6 @@ mod benches {
             code.clone(),
             common_case_input.clone(),
             worst_case_input,
-            0,
         );
         profile(name, code, common_case_input);
     }

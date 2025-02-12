@@ -352,6 +352,7 @@ impl TryFrom<tasm_lib::data_type::DataType> for DataType {
             tasm_lib::data_type::DataType::U32 => U32,
             tasm_lib::data_type::DataType::U64 => U64,
             tasm_lib::data_type::DataType::U128 => U128,
+            tasm_lib::data_type::DataType::I128 => todo!(),
             tasm_lib::data_type::DataType::Bfe => Bfe,
             tasm_lib::data_type::DataType::Xfe => Xfe,
             tasm_lib::data_type::DataType::Digest => Digest,

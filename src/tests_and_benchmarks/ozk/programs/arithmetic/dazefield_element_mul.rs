@@ -124,7 +124,6 @@ mod benches {
             code.clone(),
             common_case.clone(),
             worst_case_input,
-            0,
         );
         profile(name, code, common_case);
     }

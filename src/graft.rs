@@ -373,7 +373,7 @@ impl<'a> Graft<'a> {
         if rust_type_as_string
             .chars()
             .next()
-            .map_or(false, |c| c.is_uppercase())
+            .is_some_and(|c| c.is_uppercase())
         {
             ast_types::DataType::Unresolved(rust_type_as_string)
         } else {

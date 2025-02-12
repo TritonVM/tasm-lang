@@ -101,6 +101,6 @@ mod benches {
         let entrypoint_location = EntrypointLocation::disk("other", &module_name, "main");
         let parsed_code = entrypoint_location.extract_entrypoint();
         let (code, _fn_name) = compile_for_run_test(&parsed_code);
-        execute_and_write_benchmark(module_name, code, common_case, worst_case, 0)
+        execute_and_write_benchmark(module_name, code, common_case, worst_case)
     }
 }

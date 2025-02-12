@@ -66,7 +66,7 @@ fn main() {
 #[cfg(test)]
 mod test {
     use itertools::Itertools;
-    use rand::distributions::Standard;
+    use rand::distr::StandardUniform;
     use rand::prelude::Distribution;
     use rand::random;
     use rand::Rng;
@@ -80,9 +80,9 @@ mod test {
 
     use super::*;
 
-    impl Distribution<TestStruct> for Standard {
+    impl Distribution<TestStruct> for StandardUniform {
         fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> TestStruct {
-            let a_length = rng.gen_range(2..20);
+            let a_length = rng.random_range(2..20);
             TestStruct {
                 a: random_elements(a_length),
                 b: random(),

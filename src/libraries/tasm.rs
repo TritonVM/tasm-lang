@@ -56,7 +56,7 @@ impl Library for TasmLibrary {
         _composite_types: &mut CompositeTypes,
     ) -> ast::FnSignature {
         let stripped_name = &full_name[TASM_LIB_INDICATOR.len()..full_name.len()];
-        let snippet = tasm_lib::exported_snippets::name_to_snippet(stripped_name);
+        let snippet = tasm_lib::exported_snippets::name_to_snippet(stripped_name).unwrap();
 
         ast::FnSignature::from_basic_snippet(snippet)
     }
@@ -80,7 +80,7 @@ impl Library for TasmLibrary {
         _qualified_self_type: &Option<DataType>,
     ) -> Vec<LabelledInstruction> {
         let stripped_name = &full_name[TASM_LIB_INDICATOR.len()..full_name.len()];
-        let snippet = tasm_lib::exported_snippets::name_to_snippet(stripped_name);
+        let snippet = tasm_lib::exported_snippets::name_to_snippet(stripped_name).unwrap();
         let entrypoint = snippet.entrypoint();
         state.import_snippet(snippet);
 

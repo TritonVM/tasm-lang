@@ -2,10 +2,10 @@
   {
     "name": "fast_ntt",
     "benchmark_result": {
-      "clock_cycle_count": 64961,
+      "clock_cycle_count": 64639,
       "hash_table_height": 642,
-      "u32_table_height": 2735,
-      "op_stack_table_height": 57878,
+      "u32_table_height": 2575,
+      "op_stack_table_height": 57234,
       "ram_table_height": 4069
     },
     "case": "CommonCase"
@@ -13,10 +13,10 @@
   {
     "name": "fast_ntt",
     "benchmark_result": {
-      "clock_cycle_count": 150285,
+      "clock_cycle_count": 149515,
       "hash_table_height": 642,
-      "u32_table_height": 5742,
-      "op_stack_table_height": 134150,
+      "u32_table_height": 5358,
+      "op_stack_table_height": 132610,
       "ram_table_height": 9451
     },
     "case": "WorstCase"

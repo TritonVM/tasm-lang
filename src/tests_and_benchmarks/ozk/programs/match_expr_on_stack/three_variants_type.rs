@@ -1,5 +1,5 @@
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
-use tasm_lib::Digest;
+use crate::triton_vm::prelude::Digest;
 
 pub(super) enum ThreeVariants {
     A,

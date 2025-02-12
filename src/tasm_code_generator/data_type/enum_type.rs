@@ -31,11 +31,11 @@ impl EnumType {
         let discriminant_pointer_internal = state.global_compiler_state.snippet_state.kmalloc(1);
         let data_begin_pointer_pointer_internal =
             state.global_compiler_state.snippet_state.kmalloc(1);
-        let pop_padding = self.pop_padding(state, discriminant_pointer_internal);
+        let pop_padding = self.pop_padding(state, discriminant_pointer_internal.read_address());
         let store_variant_data = self.store_variant_data(
             state,
-            discriminant_pointer_internal,
-            data_begin_pointer_pointer_internal,
+            discriminant_pointer_internal.read_address(),
+            data_begin_pointer_pointer_internal.read_address(),
         );
 
         let subroutine = triton_asm!(
@@ -46,7 +46,7 @@ impl EnumType {
             hint padding_top: BFieldElement = stack[2]
 
             dup 1
-            push {discriminant_pointer_internal}
+            push {discriminant_pointer_internal.write_address()}
             write_mem 1
             pop 1
             // _ [data] [padding] discriminant *pointer
@@ -56,7 +56,7 @@ impl EnumType {
             // _ [data] [padding] *data_begin
             hint data_begin_pointer: BFieldElement = stack[0]
 
-            push {data_begin_pointer_pointer_internal}
+            push {data_begin_pointer_pointer_internal.write_address()}
             write_mem 1
             pop 1
             // _ [data] [padding]
@@ -107,13 +107,13 @@ impl EnumType {
 
                 // Initialize word-counter to zero
                 push 0
-                push {pointer_for_words_loaded_acc}
+                push {pointer_for_words_loaded_acc.write_address()}
                 write_mem 1
                 pop 1
                 // _ *discriminant
 
                 // Store discriminant pointer
-                push {pointer_for_discriminant_pointer}
+                push {pointer_for_discriminant_pointer.write_address()}
                 // _ *discriminant **discriminant
 
                 write_mem 1
@@ -131,7 +131,7 @@ impl EnumType {
             load_subroutine.append(&mut triton_asm!(
                 // _ [data]
 
-                push {pointer_for_discriminant_pointer}
+                push {pointer_for_discriminant_pointer.read_address()}
                 // _ [data] **discriminant
 
                 read_mem 1 pop 1
@@ -173,7 +173,7 @@ impl EnumType {
                     push {field_stack_size}
                     // _ [data'] field_stack_size
 
-                    push {pointer_for_words_loaded_acc}
+                    push {pointer_for_words_loaded_acc.read_address()}
                     // _ [data'] field_stack_size *word_acc
 
                     read_mem 1
@@ -183,7 +183,7 @@ impl EnumType {
                     add
                     // _ [data'] word_acc'
 
-                    push {pointer_for_words_loaded_acc}
+                    push {pointer_for_words_loaded_acc.write_address()}
                     write_mem 1
                     pop 1
                     // _ [data']
@@ -208,7 +208,7 @@ impl EnumType {
 
         load_subroutine.append(&mut triton_asm!(
             // _ [data]
-            push {pointer_for_words_loaded_acc}
+            push {pointer_for_words_loaded_acc.read_address()}
             read_mem 1
             pop 1
 
@@ -226,7 +226,7 @@ impl EnumType {
             pop 1
             // _ [data] [padding]
 
-            push {pointer_for_discriminant_pointer}
+            push {pointer_for_discriminant_pointer.read_address()}
             // _ [data] [padding] **discriminant
 
             read_mem 1 pop 1
@@ -383,6 +383,7 @@ impl EnumType {
             .global_compiler_state
             .snippet_state
             .kmalloc(2 * max_field_count as u32)
+            .write_address()
             .value();
 
         let mut subroutines: Vec<SubRoutine> = vec![];

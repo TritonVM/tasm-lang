@@ -87,9 +87,9 @@ impl Library for VectorLib {
             PUSH_METHOD_NAME => self.push_method_signature(element_type),
             LEN_METHOD_NAME => self.len_method_signature(element_type),
             SPLIT_OFF_METHOD_NAME => ast::FnSignature::from_basic_snippet(Box::new(
-                tasm_lib::list::split_off::SplitOff {
-                    element_type: (*element_type.to_owned()).try_into().unwrap(),
-                },
+                tasm_lib::list::split_off::SplitOff::new(
+                    (*element_type.to_owned()).try_into().unwrap(),
+                ),
             )),
             POP_METHOD_NAME => {
                 let snippet = Self::pop_snippet(element_type);
@@ -497,9 +497,8 @@ impl VectorLib {
         triton_asm!(call { entrypoint })
     }
 
-    fn new_list_snippet(element_type: &ast_types::DataType) -> Box<dyn BasicSnippet> {
-        let tasm_type: tasm_lib::data_type::DataType = element_type.to_owned().try_into().unwrap();
-        Box::new(tasm_lib::list::new::New::new(tasm_type))
+    fn new_list_snippet() -> Box<dyn BasicSnippet> {
+        Box::new(tasm_lib::list::new::New)
     }
 
     fn push_snippet(element_type: &ast_types::DataType) -> Box<dyn BasicSnippet> {
@@ -545,18 +544,15 @@ impl VectorLib {
         args: &[ast::Expr<super::Annotation>],
     ) -> Option<Box<dyn BasicSnippet>> {
         match public_name {
-            SPLIT_OFF_METHOD_NAME => Some(Box::new(tasm_lib::list::split_off::SplitOff {
-                element_type: type_parameter
+            SPLIT_OFF_METHOD_NAME => Some(Box::new(tasm_lib::list::split_off::SplitOff::new(
+                type_parameter
                     .as_ref()
                     .unwrap()
                     .to_owned()
                     .try_into()
                     .unwrap(),
-            })),
-            NEW_FUNCTION_NAME | DEFAULT_FUNCTION_NAME => {
-                let type_parameter = type_parameter.as_ref().unwrap_or_else(|| panic!("Type parameter must be set when initializing a new vector.\nUse `Vec::<T>::{public_name}()` instead of Vec::{public_name}()"));
-                Some(Self::new_list_snippet(type_parameter))
-            }
+            ))),
+            NEW_FUNCTION_NAME | DEFAULT_FUNCTION_NAME => Some(Self::new_list_snippet()),
             POP_METHOD_NAME => Some(Self::pop_snippet(type_parameter.as_ref().unwrap())),
             MAP_METHOD_NAME => {
                 let ast_types::DataType::Function(inner_function_type) = args[1].get_type() else {
@@ -571,11 +567,11 @@ impl VectorLib {
                     input_type: inner_function_type.input_argument.try_into().unwrap(),
                     output_type: inner_function_type.output.try_into().unwrap(),
                 };
-                Some(Box::new(tasm_lib::list::higher_order::map::Map {
-                    f: tasm_lib::list::higher_order::inner_function::InnerFunction::NoFunctionBody(
+                Some(Box::new(tasm_lib::list::higher_order::map::Map::new(
+                    tasm_lib::list::higher_order::inner_function::InnerFunction::NoFunctionBody(
                         lnat,
                     ),
-                }))
+                )))
             }
             _ => None,
         }

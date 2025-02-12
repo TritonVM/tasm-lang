@@ -112,7 +112,6 @@ mod compile_and_typecheck_tests {
 
 #[cfg(test)]
 mod run_tests {
-    use rand::thread_rng;
     use rand::Rng;
 
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
@@ -302,9 +301,9 @@ mod run_tests {
             compare_prop_with_stack_safe_lists(&code_block(), inputs, outputs);
         }
 
-        let mut rng = thread_rng();
+        let mut rng = rand::rng();
         for _ in 0..10 {
-            prop_code_block(rng.gen_range(0..(1u64 << 30)));
+            prop_code_block(rng.random_range(0..(1u64 << 30)));
         }
 
         fn code_block() -> syn::ItemFn {

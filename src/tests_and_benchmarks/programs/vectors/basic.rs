@@ -10,7 +10,6 @@ pub(crate) mod run_tests {
 
     use crate::ast_types;
     use crate::ast_types::DataType;
-
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 
     #[test]
@@ -151,28 +150,13 @@ pub(crate) mod run_tests {
         list_new(expected_list_pointer, &mut expected_final_memory);
 
         let elem_0 = vec![BFieldElement::new(2000), BFieldElement::new(0)];
-        list_push(
-            expected_list_pointer,
-            elem_0.clone(),
-            &mut expected_final_memory,
-            elem_0.len(),
-        );
+        list_push(expected_list_pointer, elem_0, &mut expected_final_memory);
 
         let elem_1 = vec![BFieldElement::new(5000), BFieldElement::new(0)];
-        list_push(
-            expected_list_pointer,
-            elem_1.clone(),
-            &mut expected_final_memory,
-            elem_1.len(),
-        );
+        list_push(expected_list_pointer, elem_1, &mut expected_final_memory);
 
         let elem_2 = vec![BFieldElement::new(4000), BFieldElement::new(0)];
-        list_push(
-            expected_list_pointer,
-            elem_2.clone(),
-            &mut expected_final_memory,
-            elem_2.len(),
-        );
+        list_push(expected_list_pointer, elem_2, &mut expected_final_memory);
 
         list_pop(
             expected_list_pointer,
@@ -193,17 +177,12 @@ pub(crate) mod run_tests {
         list_new(list_pointer, &mut memory);
 
         let elem_1 = vec![BFieldElement::new(2000), BFieldElement::new(0)];
-        list_push(list_pointer, elem_1.clone(), &mut memory, elem_1.len());
+        list_push(list_pointer, elem_1, &mut memory);
 
         let mut expected_final_memory = memory.clone();
         for i in 0..10 {
             let elem_i = vec![BFieldElement::new(i), BFieldElement::new(0)];
-            list_push(
-                list_pointer,
-                elem_i.clone(),
-                &mut expected_final_memory,
-                elem_i.len(),
-            );
+            list_push(list_pointer, elem_i, &mut expected_final_memory);
         }
 
         let item_fn = &item_fn(parse_quote! {
@@ -379,28 +358,13 @@ pub(crate) mod run_tests {
         list_new(expected_list_pointer_b, &mut expected_output_memory);
 
         let elem_1 = vec![BFieldElement::new(1000)];
-        list_push(
-            expected_list_pointer_a,
-            elem_1.clone(),
-            &mut expected_output_memory,
-            elem_1.len(),
-        );
+        list_push(expected_list_pointer_a, elem_1, &mut expected_output_memory);
 
         let elem_2 = vec![BFieldElement::new(2000)];
-        list_push(
-            expected_list_pointer_a,
-            elem_2.clone(),
-            &mut expected_output_memory,
-            elem_2.len(),
-        );
+        list_push(expected_list_pointer_a, elem_2, &mut expected_output_memory);
 
         let elem_3 = vec![BFieldElement::new(3000), BFieldElement::new(0)];
-        list_push(
-            expected_list_pointer_b,
-            elem_3.clone(),
-            &mut expected_output_memory,
-            elem_3.len(),
-        );
+        list_push(expected_list_pointer_b, elem_3, &mut expected_output_memory);
 
         compare_prop_with_stack_safe_lists(&rust_ast, inputs, expected_outputs);
     }

@@ -4,6 +4,7 @@ use std::io::Write;
 use std::path::Path;
 use std::path::PathBuf;
 
+use tasm_lib::empty_stack;
 use tasm_lib::snippet_bencher::write_benchmarks;
 use tasm_lib::snippet_bencher::BenchmarkCase;
 use tasm_lib::snippet_bencher::NamedBenchmarkResult;
@@ -11,8 +12,6 @@ use tasm_lib::triton_vm::prelude::*;
 
 use crate::ast;
 use crate::type_checker::Typing;
-
-use super::test_helpers::shared_test::execute_compiled_with_stack_and_ins_for_bench;
 
 pub(crate) mod mmr;
 
@@ -28,17 +27,22 @@ fn benchmark_code(
     function_name: String,
     code: Vec<LabelledInstruction>,
     benchmark_input: BenchmarkInput,
-    expected_stack_diff: isize,
     case: BenchmarkCase,
 ) -> NamedBenchmarkResult {
-    let benchmark_result = execute_compiled_with_stack_and_ins_for_bench(
+    let mut stack = empty_stack();
+    for input_arg in benchmark_input.input_args {
+        stack.extend(input_arg.encode().into_iter().rev());
+    }
+
+    // Run the tasm-lib's execute function without requesting initialization of the dynamic
+    // memory allocator, as this is the compiler's responsibility.
+    let benchmark_result = tasm_lib::linker::execute_bench(
         &code,
-        benchmark_input.input_args,
+        &stack,
         benchmark_input.std_in,
         benchmark_input.non_determinism,
-        expected_stack_diff,
-    )
-    .expect("Execution for benchmarking must succeed");
+        None,
+    );
 
     NamedBenchmarkResult {
         name: function_name,
@@ -77,20 +81,17 @@ pub(crate) fn execute_and_write_benchmark(
     code: Vec<LabelledInstruction>,
     common_case: BenchmarkInput,
     worst_case: BenchmarkInput,
-    expected_stack_diff: isize,
 ) {
     let benchmark_result_common = benchmark_code(
         function_name.clone(),
         code.clone(),
         common_case.clone(),
-        expected_stack_diff,
         BenchmarkCase::CommonCase,
     );
     let benchmark_result_worst = benchmark_code(
         function_name.clone(),
         code.clone(),
         worst_case,
-        expected_stack_diff,
         BenchmarkCase::WorstCase,
     );
 

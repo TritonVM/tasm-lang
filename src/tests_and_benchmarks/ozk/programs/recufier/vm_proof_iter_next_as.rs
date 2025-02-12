@@ -111,8 +111,8 @@ mod test {
         let fri_polynomial: Box<Polynomial<XFieldElement>> = vm_proof_iter.next_as_fripolynomial();
         {
             let mut j: usize = 0;
-            while j < fri_polynomial.coefficients.len() {
-                tasm::tasmlib_io_write_to_stdout___xfe(fri_polynomial.coefficients[j]);
+            while j < fri_polynomial.coefficients().len() {
+                tasm::tasmlib_io_write_to_stdout___xfe(fri_polynomial.coefficients()[j]);
                 j += 1;
             }
         }
@@ -236,7 +236,7 @@ mod test {
         (14u64..=170).map(into_xfe).collect_vec()
     }
 
-    fn arbitrary_fri_polynomial() -> Polynomial<XFieldElement> {
+    fn arbitrary_fri_polynomial() -> Polynomial<'static, XFieldElement> {
         Polynomial::new(arbitrary_fri_codeword())
     }
 

@@ -24,7 +24,7 @@ mod test {
             let non_determinism =
                 init_memory_from(&xfes, BFieldElement::new(0x1000_0000_0000_0000u64));
             let mut expected_output = xfes.clone();
-            ntt::ntt(&mut expected_output, omega, input_length.ilog2());
+            ntt::ntt(&mut expected_output);
             let expected_output = expected_output
                 .iter()
                 .flat_map(|x| x.coefficients.to_vec())

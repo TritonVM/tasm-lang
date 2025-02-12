@@ -1,8 +1,3 @@
-use tasm_lib::triton_vm::prelude::*;
-use twenty_first::prelude::AlgebraicHasher;
-
-use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
-
 #[cfg(test)]
 mod test {
     use tasm::wrap_main_with_io;
@@ -10,9 +5,8 @@ mod test {
     use twenty_first::math::other::random_elements;
 
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
+    use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
     use crate::tests_and_benchmarks::test_helpers::shared_test::TritonVMTestCase;
-
-    use super::*;
 
     fn hash_atomic_values() {
         let digest: Digest = tasm::tasmlib_io_read_stdin___digest();

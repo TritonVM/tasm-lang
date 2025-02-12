@@ -1,4 +1,4 @@
-use rand::distributions::Standard;
+use rand::distr::StandardUniform;
 use rand::prelude::Distribution;
 use rand::Rng;
 use tasm_lib::prelude::TasmObject;
@@ -99,7 +99,7 @@ mod test {
 
     use super::*;
 
-    impl Distribution<InnerInnerInnerInnerStruct> for Standard {
+    impl Distribution<InnerInnerInnerInnerStruct> for StandardUniform {
         fn sample<R: Rng + ?Sized>(&self, _rng: &mut R) -> InnerInnerInnerInnerStruct {
             // Don't set this value to more than 2, as it
             // will cause the program to take too long to run
@@ -120,10 +120,10 @@ mod test {
         }
     }
 
-    impl Distribution<InnerInnerInnerStruct> for Standard {
+    impl Distribution<InnerInnerInnerStruct> for StandardUniform {
         fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> InnerInnerInnerStruct {
-            let b_length = rng.gen_range(6..=16);
-            let e_length = rng.gen_range(5..=20);
+            let b_length = rng.random_range(6..=16);
+            let e_length = rng.random_range(5..=20);
             InnerInnerInnerStruct {
                 a: random(),
                 b: random_elements(b_length),
@@ -135,10 +135,10 @@ mod test {
         }
     }
 
-    impl Distribution<InnerInnerStruct> for Standard {
+    impl Distribution<InnerInnerStruct> for StandardUniform {
         fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> InnerInnerStruct {
-            let b_length = rng.gen_range(0..=10);
-            let f_length = rng.gen_range(4..=10);
+            let b_length = rng.random_range(0..=10);
+            let f_length = rng.random_range(4..=10);
             InnerInnerStruct {
                 a: random(),
                 b: random_elements(b_length),
@@ -150,9 +150,9 @@ mod test {
         }
     }
 
-    impl Distribution<InnerStruct> for Standard {
+    impl Distribution<InnerStruct> for StandardUniform {
         fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> InnerStruct {
-            let c_length = rng.gen_range(3..=14);
+            let c_length = rng.random_range(3..=14);
             InnerStruct {
                 a: random(),
                 b: random(),
@@ -161,12 +161,12 @@ mod test {
         }
     }
 
-    impl Distribution<TestStuctNested> for Standard {
+    impl Distribution<TestStuctNested> for StandardUniform {
         fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> TestStuctNested {
-            let b_length = rng.gen_range(3..=10);
-            let d_length = rng.gen_range(3..=10);
-            let f_length_cubed = rng.gen_range(3..=5);
-            let g_length_quartic = rng.gen_range(4..=5);
+            let b_length = rng.random_range(3..=10);
+            let d_length = rng.random_range(3..=10);
+            let f_length_cubed = rng.random_range(3..=5);
+            let g_length_quartic = rng.random_range(4..=5);
 
             let inner_most_vec = vec![random_elements(g_length_quartic); g_length_quartic];
             let second_inner_vec = vec![inner_most_vec; g_length_quartic];

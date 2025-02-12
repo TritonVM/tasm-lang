@@ -54,7 +54,6 @@ fn divmoddi4_u64_rast() -> syn::ItemFn {
 mod run_tests {
     use itertools::Itertools;
     use rand::random;
-    use rand::thread_rng;
     use rand::Rng;
     use rand::RngCore;
     use tasm_lib::twenty_first::math::other::random_elements;
@@ -93,8 +92,8 @@ mod run_tests {
             vec![u64_lit((1 << 34) + (1 << 17))],
         );
         for _ in 0..10 {
-            let lhs = thread_rng().gen_range(0..u64::MAX / 2);
-            let rhs = thread_rng().gen_range(0..u64::MAX / 2);
+            let lhs = rand::rng().random_range(0..u64::MAX / 2);
+            let rhs = rand::rng().random_range(0..u64::MAX / 2);
             compare_prop_with_stack_safe_lists(
                 &add_u64_rast(),
                 vec![u64_lit(lhs), u64_lit(rhs)],
@@ -128,8 +127,8 @@ mod run_tests {
         let expected_outputs_3 = vec![u64_lit(u32::MAX as u64)];
         compare_prop_with_stack_safe_lists(&sub_u64_rast_2(), input_args_3, expected_outputs_3);
 
-        let lhs = thread_rng().gen_range(0..u64::MAX);
-        let rhs = thread_rng().gen_range(0..=lhs);
+        let lhs = rand::rng().random_range(0..u64::MAX);
+        let rhs = rand::rng().random_range(0..=lhs);
         let input_args_4 = vec![u64_lit(rhs), u64_lit(lhs)];
         let expected_outputs_4 = vec![u64_lit(lhs - rhs)];
         compare_prop_with_stack_safe_lists(&sub_u64_rast_2(), input_args_4, expected_outputs_4);
@@ -202,10 +201,10 @@ mod run_tests {
         ];
 
         // Test with small divisors
-        let mut rng = thread_rng();
+        let mut rng = rand::rng();
         for _ in 0..10 {
             let numerator: u64 = rng.next_u64();
-            let divisor: u64 = rng.gen_range(1..(1 << 12));
+            let divisor: u64 = rng.random_range(1..(1 << 12));
             test_cases.push(InputOutputTestCase::new(
                 vec![u64_lit(numerator), u64_lit(divisor)],
                 vec![u64_lit(numerator / divisor)],
@@ -246,10 +245,10 @@ mod run_tests {
         ];
 
         // Test with small divisors
-        let mut rng = thread_rng();
+        let mut rng = rand::rng();
         for _ in 0..10 {
             let numerator: u64 = rng.next_u64();
-            let divisor: u64 = rng.gen_range(1..(1 << 12));
+            let divisor: u64 = rng.random_range(1..(1 << 12));
             test_cases.push(InputOutputTestCase::new(
                 vec![u64_lit(numerator), u64_lit(divisor)],
                 vec![u64_lit(numerator % divisor)],
@@ -326,10 +325,10 @@ mod run_tests {
         );
 
         // Test with small divisors
-        let mut rng = thread_rng();
+        let mut rng = rand::rng();
         for _ in 0..4 {
             let numerator: u64 = rng.next_u64();
-            let divisor: u64 = rng.gen_range(1..(1 << 12));
+            let divisor: u64 = rng.random_range(1..(1 << 12));
             add_test(
                 (numerator / divisor, numerator % divisor),
                 (numerator, divisor),
@@ -355,7 +354,7 @@ mod run_tests {
 
     #[test]
     fn lt_u64_dynamic_test() {
-        let mut rng = thread_rng();
+        let mut rng = rand::rng();
         for _ in 0..10 {
             let lhs = rng.next_u64();
             let rhs = rng.next_u64();

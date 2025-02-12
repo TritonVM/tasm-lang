@@ -24,9 +24,8 @@ use tasm_lib::twenty_first::math::tip5::Tip5;
 use tasm_lib::twenty_first::math::tip5::RATE;
 use tasm_lib::twenty_first::math::traits::ModPowU32;
 use tasm_lib::twenty_first::math::x_field_element::EXTENSION_DEGREE;
-use tasm_lib::twenty_first::util_types::algebraic_hasher::AlgebraicHasher;
-use tasm_lib::twenty_first::util_types::algebraic_hasher::Sponge;
 use tasm_lib::twenty_first::util_types::merkle_tree::MerkleTreeInclusionProof;
+use tasm_lib::twenty_first::util_types::sponge::Sponge;
 use tasm_lib::verifier::master_table::air_constraint_evaluation;
 use tasm_lib::verifier::master_table::air_constraint_evaluation::AirConstraintEvaluation;
 use tasm_lib::verifier::master_table::air_constraint_evaluation::AirConstraintSnippetInputs;
@@ -330,6 +329,7 @@ pub(super) fn tasmlib_verifier_challenges_new_generic_dyn_claim_59_4(
     });
     let claim = Claim {
         program_digest: claim.program_digest,
+        version: claim.version,
         input: claim.input.clone(),
         output: claim.output.clone(),
     };

@@ -4,7 +4,6 @@ use syn::parse_quote;
 mod run_tests {
     use itertools::Itertools;
     use rand::random;
-    use rand::thread_rng;
     use rand::RngCore;
     use tasm_lib::twenty_first::math::other::random_elements;
 
@@ -152,7 +151,7 @@ mod run_tests {
 
     #[test]
     fn div_rem_u32_run_test() {
-        let mut rng = thread_rng();
+        let mut rng = rand::rng();
         for _ in 0..100 {
             let numerator = rng.next_u32();
             let divisor = rng.next_u32();
@@ -264,7 +263,7 @@ mod run_tests {
 
     #[test]
     fn cmp_u32_dynamic_test() {
-        let mut rng = thread_rng();
+        let mut rng = rand::rng();
         let mut lt_test_cases = vec![];
         let mut lte_test_cases = vec![];
         let mut gt_test_cases = vec![];

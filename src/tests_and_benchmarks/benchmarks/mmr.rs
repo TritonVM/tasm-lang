@@ -8,7 +8,6 @@ mod benchmark {
     use tasm_lib::twenty_first::math::other::random_elements;
     use tasm_lib::twenty_first::util_types::mmr::mmr_accumulator::MmrAccumulator;
     use tasm_lib::twenty_first::util_types::mmr::mmr_trait::Mmr;
-    use tasm_lib::Digest;
 
     use crate::tests_and_benchmarks::benchmarks::execute_and_write_benchmark;
     use crate::tests_and_benchmarks::benchmarks::BenchmarkInput;
@@ -57,6 +56,6 @@ mod benchmark {
         let common_case = prepare_benchmark_case(31);
         let worst_case = prepare_benchmark_case(50);
 
-        execute_and_write_benchmark(fn_name, code, common_case, worst_case, -10)
+        execute_and_write_benchmark(fn_name, code, common_case, worst_case)
     }
 }

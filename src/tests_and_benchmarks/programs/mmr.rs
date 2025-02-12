@@ -63,7 +63,6 @@ mod run_tests {
     use proptest::collection::vec;
     use proptest_arbitrary_interop::arb;
     use rand::random;
-    use rand::thread_rng;
     use rand::RngCore;
     use tasm_lib::rust_shadowing_helper_functions::list::list_insert;
     use tasm_lib::triton_vm::prelude::*;
@@ -96,7 +95,7 @@ mod run_tests {
             vec![u64_lit(120)],
             vec![u64_lit(119)],
         );
-        let mut rng = thread_rng();
+        let mut rng = rand::rng();
         let rand = rng.next_u64();
         compare_prop_with_stack_safe_lists(
             &right_child_rast(),

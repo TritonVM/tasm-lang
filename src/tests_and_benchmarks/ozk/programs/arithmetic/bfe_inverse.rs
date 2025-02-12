@@ -1,6 +1,5 @@
 use num::One;
 use tasm_lib::triton_vm::prelude::*;
-use tasm_lib::twenty_first::math::traits::Inverse;
 
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 

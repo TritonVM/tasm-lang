@@ -130,7 +130,10 @@ impl GlobalCodeGeneratorState {
         value_identifier: &ValueIdentifier,
         data_type: &ast_types::DataType,
     ) -> BFieldElement {
-        let new_address = self.snippet_state.kmalloc(data_type.stack_size() as u32);
+        let new_address = self
+            .snippet_state
+            .kmalloc(data_type.stack_size() as u32)
+            .read_address();
         self.static_allocations.insert(
             value_identifier.to_owned(),
             (new_address, data_type.to_owned()),
@@ -165,6 +168,7 @@ impl<'a> CompilerState<'a> {
         self.global_compiler_state
             .snippet_state
             .kmalloc(num_words as u32)
+            .read_address()
     }
 
     /// Import a dependency in an idempotent manner, ensuring it's only ever imported once
@@ -620,7 +624,7 @@ impl std::fmt::Display for ValueIdentifier {
     }
 }
 
-impl<'a> CompilerState<'a> {
+impl CompilerState<'_> {
     /// Change the compiler's view of a value, without changing anything on the stack. E.g.:
     /// `(XFE, BField)` -> `XFE, BFE`. `new_types` must be provided such that its last
     /// element will be closest to the top of the stack. New value IDs are returned in the same
@@ -879,12 +883,7 @@ impl<'a> CompilerState<'a> {
             let mut code = vec![triton_asm!(swap {words_to_remove} pop 1); top_value_size].concat();
 
             // Generate code to remove any remaining values from the requested stack range
-            let remaining_pops = if words_to_remove > top_value_size {
-                words_to_remove - top_value_size
-            } else {
-                0
-            };
-
+            let remaining_pops = words_to_remove.saturating_sub(top_value_size);
             code.extend(pop_n(remaining_pops));
 
             code
@@ -998,7 +997,7 @@ fn compile_function_inner(
             for dependency in dependencies {
                 global_compiler_state
                     .snippet_state
-                    .import(exported_snippets::name_to_snippet(dependency));
+                    .import(exported_snippets::name_to_snippet(dependency).unwrap());
             }
             let body_with_label_and_return = triton_asm!(
                 {fn_name}:
@@ -1843,20 +1842,19 @@ fn compile_expr(
                     let add_code = match (&lhs_type, &rhs_type) {
                         (U32, U32) => {
                             let safe_add_u32 = state.import_snippet(Box::new(
-                                tasm_lib::arithmetic::u32::safeadd::Safeadd,
+                                tasm_lib::arithmetic::u32::safe_add::SafeAdd,
                             ));
                             triton_asm!(call { safe_add_u32 })
                         }
                         (U64, U64) => {
-                            let add_u64 = state.import_snippet(Box::new(
-                                tasm_lib::arithmetic::u64::add_u64::AddU64,
-                            ));
+                            let add_u64 =
+                                state.import_snippet(Box::new(tasm_lib::arithmetic::u64::add::Add));
 
                             triton_asm!(call { add_u64 })
                         }
                         (U128, U128) => {
                             let add_u128 = state.import_snippet(Box::new(
-                                tasm_lib::arithmetic::u128::safe_add::SafeAddU128,
+                                tasm_lib::arithmetic::u128::safe_add::SafeAdd,
                             ));
 
                             triton_asm!(call { add_u128 })
@@ -1897,9 +1895,8 @@ fn compile_expr(
                     let bitwise_and_code = match result_type {
                         ast_types::DataType::U32 => triton_asm!(and),
                         ast_types::DataType::U64 => {
-                            let and_u64 = state.import_snippet(Box::new(
-                                tasm_lib::arithmetic::u64::and_u64::AndU64,
-                            ));
+                            let and_u64 =
+                                state.import_snippet(Box::new(tasm_lib::arithmetic::u64::and::And));
                             triton_asm!(call { and_u64 })
                         }
                         _ => panic!("Logical AND operator is not supported for {result_type}"),
@@ -1951,8 +1948,8 @@ fn compile_expr(
                             triton_asm!(call { or_u32 })
                         }
                         U64 => {
-                            let or_u64 = state
-                                .import_snippet(Box::new(tasm_lib::arithmetic::u64::or_u64::OrU64));
+                            let or_u64 =
+                                state.import_snippet(Box::new(tasm_lib::arithmetic::u64::or::Or));
                             triton_asm!(call { or_u64 })
                         }
                         _ => panic!("bitwise `or` on {result_type} is not supported"),
@@ -1995,7 +1992,7 @@ fn compile_expr(
                                 let (_lhs_expr_addr, lhs_expr_code) =
                                     compile_expr(lhs_expr, "_binop_lhs", state);
                                 let div2 = state.import_snippet(Box::new(
-                                    tasm_lib::arithmetic::u64::div2_u64::Div2U64,
+                                    tasm_lib::arithmetic::u64::div2::Div2,
                                 ));
 
                                 // Pop the numerator that was divided by two
@@ -2012,7 +2009,7 @@ fn compile_expr(
                                     compile_expr(rhs_expr, "_binop_rhs", state);
 
                                 let div_mod_u64 = state.import_snippet(Box::new(
-                                    tasm_lib::arithmetic::u64::div_mod_u64::DivModU64,
+                                    tasm_lib::arithmetic::u64::div_mod::DivMod,
                                 ));
 
                                 state.function_state.vstack.pop();
@@ -2096,7 +2093,7 @@ fn compile_expr(
                                 compile_expr(rhs_expr, "_binop_rhs", state);
 
                             let div_mod_u64 = state.import_snippet(Box::new(
-                                tasm_lib::arithmetic::u64::div_mod_u64::DivModU64,
+                                tasm_lib::arithmetic::u64::div_mod::DivMod,
                             ));
 
                             state.function_state.vstack.pop();
@@ -2124,7 +2121,7 @@ fn compile_expr(
                     let (_rhs_expr_addr, rhs_expr_code) =
                         compile_expr(rhs_expr, "_binop_rhs", state);
 
-                    let eq_code = lhs_type.compile_eq_code(state);
+                    let eq_code = lhs_type.compile_eq_code();
 
                     state.function_state.vstack.pop();
                     state.function_state.vstack.pop();
@@ -2153,9 +2150,8 @@ fn compile_expr(
                         ),
 
                         U64 => {
-                            let lt_u64 = state.import_snippet(Box::new(
-                                tasm_lib::arithmetic::u64::lt_u64::LtU64ConsumeArgs,
-                            ));
+                            let lt_u64 =
+                                state.import_snippet(Box::new(tasm_lib::arithmetic::u64::lt::Lt));
                             triton_asm!(
                                 {&lhs_expr_code}
                                 {&rhs_expr_code}
@@ -2189,9 +2185,8 @@ fn compile_expr(
                             lt
                         ),
                         U64 => {
-                            let lt_u64 = state.import_snippet(Box::new(
-                                tasm_lib::arithmetic::u64::lt_u64::LtU64ConsumeArgs,
-                            ));
+                            let lt_u64 =
+                                state.import_snippet(Box::new(tasm_lib::arithmetic::u64::lt::Lt));
 
                             triton_asm!(
                                 {&lhs_expr_code}
@@ -2219,7 +2214,7 @@ fn compile_expr(
                     match (&lhs_type, &rhs_type) {
                         (U32, U32) => {
                             let fn_name = state.import_snippet(Box::new(
-                                tasm_lib::arithmetic::u32::safemul::Safemul,
+                                tasm_lib::arithmetic::u32::safe_mul::SafeMul,
                             ));
 
                             triton_asm!(
@@ -2230,7 +2225,7 @@ fn compile_expr(
                         }
                         (U64, U64) => {
                             let fn_name = state.import_snippet(Box::new(
-                                tasm_lib::arithmetic::u64::safe_mul_u64::SafeMulU64,
+                                tasm_lib::arithmetic::u64::safe_mul::SafeMul,
                             ));
 
                             triton_asm!(
@@ -2241,7 +2236,7 @@ fn compile_expr(
                         }
                         (U128, U128) => {
                             let fn_name = state.import_snippet(Box::new(
-                                tasm_lib::arithmetic::u128::safe_mul_u128::SafeMulU128,
+                                tasm_lib::arithmetic::u128::safe_mul::SafeMul,
                             ));
 
                             triton_asm!(
@@ -2275,7 +2270,7 @@ fn compile_expr(
                     let (_rhs_expr_addr, rhs_expr_code) =
                         compile_expr(rhs_expr, "_binop_rhs", state);
 
-                    let eq_code = lhs_type.compile_eq_code(state);
+                    let eq_code = lhs_type.compile_eq_code();
 
                     state.function_state.vstack.pop();
                     state.function_state.vstack.pop();
@@ -2319,12 +2314,14 @@ fn compile_expr(
 
                     let lhs_type = lhs_expr.get_type();
                     let shl = match lhs_type {
-                        ast_types::DataType::U32 => state.import_snippet(Box::new(tasm_lib::arithmetic::u32::shiftleft::Shiftleft)),
+                        ast_types::DataType::U32 => state.import_snippet(Box::new(
+                            tasm_lib::arithmetic::u32::shift_left::ShiftLeft
+                        )),
                         ast_types::DataType::U64 => state.import_snippet(Box::new(
-                            tasm_lib::arithmetic::u64::shift_left_u64::ShiftLeftU64,
+                            tasm_lib::arithmetic::u64::shift_left::ShiftLeft,
                         )),
                         ast_types::DataType::U128 => state.import_snippet(Box::new(
-                            tasm_lib::arithmetic::u128::shift_left_u128::ShiftLeftU128,
+                            tasm_lib::arithmetic::u128::shift_left::ShiftLeft,
                         )),
                         _ => panic!("Unsupported SHL of type {lhs_type}. Expression was `{lhs_expr}: >> {rhs_expr}`; types: `{lhs_type}`, {}.", rhs_expr.get_type()),
                     };
@@ -2350,12 +2347,12 @@ fn compile_expr(
                     // TODO: add optimization where RHS is a literal. Also applies for `Binop::Shl`. We have code snippets
                     // for left/right shifting u128s with statically known bits.
                     let shr = match lhs_type {
-                        ast_types::DataType::U32 => state.import_snippet(Box::new(tasm_lib::arithmetic::u32::shiftright::Shiftright)),
+                        ast_types::DataType::U32 => state.import_snippet(Box::new(tasm_lib::arithmetic::u32::shift_right::ShiftRight)),
                         ast_types::DataType::U64 => state.import_snippet(Box::new(
-                            tasm_lib::arithmetic::u64::shift_right_u64::ShiftRightU64,
+                            tasm_lib::arithmetic::u64::shift_right::ShiftRight,
                         )),
                         ast_types::DataType::U128 => state.import_snippet(Box::new(
-                            tasm_lib::arithmetic::u128::shift_right_u128::ShiftRightU128,
+                            tasm_lib::arithmetic::u128::shift_right::ShiftRight,
                         )),
                         _ => panic!("Unsupported SHR of type {lhs_type}. Expression was `{lhs_expr}: >> {rhs_expr}`; types: `{lhs_type}`, {}.", rhs_expr.get_type()),
                     };
@@ -2385,7 +2382,7 @@ fn compile_expr(
                     let sub_code = match (&lhs_type, &rhs_type) {
                         (U32, U32) => {
                             let safe_sub_u32 = state.import_snippet(Box::new(
-                                tasm_lib::arithmetic::u32::safesub::Safesub,
+                                tasm_lib::arithmetic::u32::safe_sub::SafeSub,
                             ));
                             triton_asm!(
                                 swap 1
@@ -2393,46 +2390,14 @@ fn compile_expr(
                             )
                         }
                         (U64, U64) => {
-                            let sub_u64 = state.import_snippet(Box::new(
-                                tasm_lib::arithmetic::u64::sub_u64::SubU64,
-                            ));
-                            triton_asm!(
-                                //     // _ lhs_hi lhs_lo rhs_hi rhs_lo
-                                swap 3
-                                swap 1
-                                swap 3
-                                swap 2
-                                call {sub_u64}
-                            )
+                            let sub_u64 =
+                                state.import_snippet(Box::new(tasm_lib::arithmetic::u64::sub::Sub));
+                            triton_asm!( pick 3 pick 3 call {sub_u64} )
                         }
                         (U128, U128) => {
-                            let sub_u128 = state.import_snippet(Box::new(
-                                tasm_lib::arithmetic::u128::sub_u128::SubU128,
-                            ));
-                            triton_asm!(
-                                // _ lhs_3 lhs_2 lhs_1 lhs_0 rhs_3 rhs_2 rhs_1 rhs_0
-                                swap 7
-                                // _ rhs_0 lhs_2 lhs_1 lhs_0 rhs_3 rhs_2 rhs_1 lhs_3
-                                swap 6
-                                // _ rhs_0 lhs_3 lhs_1 lhs_0 rhs_3 rhs_2 rhs_1 lhs_2
-                                swap 2
-                                // _ rhs_0 lhs_3 lhs_1 lhs_0 rhs_3 lhs_2 rhs_1 rhs_2
-                                swap 6
-                                // _ rhs_0 rhs_2 lhs_1 lhs_0 rhs_3 lhs_2 rhs_1 lhs_3
-                                swap 3
-                                // _ rhs_0 rhs_2 lhs_1 lhs_0 lhs_3 lhs_2 rhs_1 rhs_3
-                                swap 7
-                                // _ rhs_3 rhs_2 lhs_1 lhs_0 lhs_3 lhs_2 rhs_1 rhs_0
-                                swap 1
-                                // _ rhs_3 rhs_2 lhs_1 lhs_0 lhs_3 lhs_2 rhs_0 rhs_1
-                                swap 5
-                                // _ rhs_3 rhs_2 rhs_1 lhs_0 lhs_3 lhs_2 rhs_0 lhs_1
-                                swap 1
-                                // _ rhs_3 rhs_2 rhs_1 lhs_0 lhs_3 lhs_2 lhs_1 rhs_0
-                                swap 4
-                                // _ rhs_3 rhs_2 rhs_1 rhs_0 lhs_3 lhs_2 lhs_1 lhs_0
-                                call {sub_u128}
-                            )
+                            let sub_u128 = state
+                                .import_snippet(Box::new(tasm_lib::arithmetic::u128::sub::Sub));
+                            triton_asm!( pick 7 pick 7 pick 7 pick 7 call {sub_u128} )
                         }
                         (Bfe, Bfe) => {
                             triton_asm!(

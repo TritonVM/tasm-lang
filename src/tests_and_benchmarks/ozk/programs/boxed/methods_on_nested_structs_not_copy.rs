@@ -1,5 +1,4 @@
 use tasm_lib::triton_vm::prelude::*;
-use tasm_lib::Digest;
 
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
