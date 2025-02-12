@@ -542,7 +542,7 @@ pub(super) fn compile_match_expr_boxed_value(
 
     let get_discriminant = triton_asm!(
       // _
-      push {match_expression_pointer_pointer}
+      push {match_expression_pointer_pointer.read_address()}
       read_mem 1
       pop 1
       // _ *discriminant
@@ -556,7 +556,7 @@ pub(super) fn compile_match_expr_boxed_value(
     let mut match_code = triton_asm!(
         // _ *match_expression
 
-        push {match_expression_pointer_pointer}
+        push {match_expression_pointer_pointer.write_address()}
         // _ *match_expression **match_expression
 
         write_mem 1
@@ -630,7 +630,7 @@ pub(super) fn compile_match_expr_boxed_value(
             {arm_subroutine_label}:
                 // _
 
-                push {match_expression_pointer_pointer}
+                push {match_expression_pointer_pointer.read_address()}
                 read_mem 1
                 pop 1
                 // _ *match_expression

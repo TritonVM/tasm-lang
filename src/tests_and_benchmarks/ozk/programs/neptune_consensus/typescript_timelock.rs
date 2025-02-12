@@ -1,6 +1,5 @@
 use tasm_lib::prelude::TasmObject;
 use tasm_lib::triton_vm::prelude::*;
-use tasm_lib::twenty_first::util_types::algebraic_hasher::AlgebraicHasher;
 
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
@@ -97,9 +96,7 @@ mod test {
     use itertools::Itertools;
     use tasm_lib::memory::encode_to_memory;
     use tasm_lib::twenty_first::math::other::random_elements;
-    use tasm_lib::twenty_first::util_types::merkle_tree::CpuParallel;
     use tasm_lib::twenty_first::util_types::merkle_tree::MerkleTree;
-    use twenty_first::prelude::MerkleTreeMaker;
 
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
@@ -120,7 +117,7 @@ mod test {
     ) -> (MerkleTree, Vec<Digest>) {
         let mut eight_digests = random_elements(8);
         eight_digests[leaf_index] = leaf;
-        let mt = CpuParallel::from_digests(&eight_digests).unwrap();
+        let mt = MerkleTree::par_new(&eight_digests).unwrap();
         let ap = mt.authentication_structure(&[leaf_index]).unwrap();
 
         (mt, ap)

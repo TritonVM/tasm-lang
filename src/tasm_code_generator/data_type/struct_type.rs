@@ -197,6 +197,7 @@ impl ast_types::StructType {
             .global_compiler_state
             .snippet_state
             .kmalloc(self.field_count() as u32)
+            .write_address()
             .value();
 
         let number_of_fields = self.field_count();

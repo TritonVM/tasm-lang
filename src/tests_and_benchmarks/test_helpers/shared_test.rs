@@ -7,6 +7,7 @@ use itertools::Itertools;
 use num::traits::ConstOne;
 use num::traits::ConstZero;
 use tasm_lib::empty_stack;
+use tasm_lib::maybe_write_debuggable_vm_state_to_disk;
 use tasm_lib::memory::dyn_malloc::DYN_MALLOC_ADDRESS;
 use tasm_lib::rust_shadowing_helper_functions;
 use tasm_lib::snippet_bencher::BenchmarkResult;
@@ -90,30 +91,6 @@ pub(crate) fn graft_check_compile_prop(item_fn: &syn::ItemFn) -> Vec<LabelledIns
     tasm.compose()
 }
 
-pub(crate) fn execute_compiled_with_stack_and_ins_for_bench(
-    code: &[LabelledInstruction],
-    input_args: Vec<ast::ExprLit<Typing>>,
-    std_in: Vec<BFieldElement>,
-    non_determinism: NonDeterminism,
-    expected_stack_diff: isize,
-) -> Result<BenchmarkResult> {
-    let mut stack = empty_stack();
-    for input_arg in input_args {
-        let input_arg_seq = input_arg.encode();
-        stack.append(&mut input_arg_seq.into_iter().rev().collect());
-    }
-
-    // Run the tasm-lib's execute function without requesting initialization of the dynamic
-    // memory allocator, as this is the compiler's responsibility.
-    tasm_lib::execute_bench_deprecated(
-        code,
-        &mut stack,
-        expected_stack_diff,
-        std_in,
-        non_determinism,
-    )
-}
-
 #[derive(Debug, Clone)]
 pub(crate) struct TritonVMTestCase {
     entrypoint: EntrypointLocation,
@@ -142,6 +119,8 @@ impl TritonVMTestCase {
 
     pub(crate) fn execute(self) -> Result<VMState> {
         let mut vm_state = self.initial_vm_state();
+        maybe_write_debuggable_vm_state_to_disk(&vm_state);
+
         vm_state.run()?;
 
         Self::verify_stack_len_unchanged(&vm_state)?;
@@ -150,9 +129,8 @@ impl TritonVMTestCase {
     }
 
     pub(crate) fn benchmark(self) -> BenchmarkResult {
-        let program = self.program();
         let vm_state = self.initial_vm_state();
-        let (aet, _end_state) = VM::trace_execution_of_state(&program, vm_state).unwrap();
+        let (aet, _end_state) = VM::trace_execution_of_state(vm_state).unwrap();
 
         BenchmarkResult::new(&aet)
     }
@@ -160,9 +138,9 @@ impl TritonVMTestCase {
     fn initial_vm_state(self) -> VMState {
         let program = Program::new(&self.compile());
         let public_input = PublicInput::new(self.std_in);
-        let vm_state = VMState::new(&program, public_input, self.non_determinism);
+        let vm_state = VMState::new(program, public_input, self.non_determinism);
 
-        tasm_lib::maybe_write_debuggable_program_to_disk(&program, &vm_state);
+        tasm_lib::maybe_write_debuggable_vm_state_to_disk(&vm_state);
 
         vm_state
     }
@@ -201,7 +179,7 @@ pub(crate) fn execute_compiled_with_stack_and_ins_for_test(
     let initial_stack_len = initial_stack.len() as isize;
 
     let program = Program::new(code);
-    let mut vm_state = VMState::new(&program, PublicInput::new(std_in), non_determinism);
+    let mut vm_state = VMState::new(program, PublicInput::new(std_in), non_determinism);
     vm_state.op_stack.stack = initial_stack;
     vm_state.run()?;
 

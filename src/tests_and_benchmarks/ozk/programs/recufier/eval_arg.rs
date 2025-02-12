@@ -40,7 +40,6 @@ mod test {
     use super::*;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::test_helpers::shared_test::TritonVMTestCase;
-    use rand::thread_rng;
     use rand::Rng;
     use tasm_lib::twenty_first::math::other::random_elements;
     use tasm_lib::twenty_first::math::x_field_element::EXTENSION_DEGREE;
@@ -68,7 +67,7 @@ mod test {
 
     #[test]
     fn test_eval_arg_compute_terminal() {
-        let symbols_length: u32 = thread_rng().gen_range(0..200);
+        let symbols_length: u32 = rand::rng().random_range(0..200);
         let std_in = [
             vec![BFieldElement::new(symbols_length as u64)],
             random_elements(symbols_length as usize),

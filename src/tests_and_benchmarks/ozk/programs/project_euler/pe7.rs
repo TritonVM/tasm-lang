@@ -98,13 +98,7 @@ mod benches {
         };
 
         let name = "project_euler_7_i101".to_owned();
-        execute_and_write_benchmark(
-            name.clone(),
-            code.clone(),
-            common_case.clone(),
-            worst_case,
-            0,
-        );
+        execute_and_write_benchmark(name.clone(), code.clone(), common_case.clone(), worst_case);
         profile(name, code, common_case);
     }
 }

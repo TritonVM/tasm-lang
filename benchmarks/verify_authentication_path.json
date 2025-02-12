@@ -2,10 +2,10 @@
   {
     "name": "verify_authentication_path",
     "benchmark_result": {
-      "clock_cycle_count": 10775,
-      "hash_table_height": 1050,
-      "u32_table_height": 4158,
-      "op_stack_table_height": 8460,
+      "clock_cycle_count": 10648,
+      "hash_table_height": 1032,
+      "u32_table_height": 4133,
+      "op_stack_table_height": 8338,
       "ram_table_height": 568
     },
     "case": "CommonCase"
@@ -13,10 +13,10 @@
   {
     "name": "verify_authentication_path",
     "benchmark_result": {
-      "clock_cycle_count": 231122,
-      "hash_table_height": 1164,
-      "u32_table_height": 39597,
-      "op_stack_table_height": 160060,
+      "clock_cycle_count": 203741,
+      "hash_table_height": 1146,
+      "u32_table_height": 29182,
+      "op_stack_table_height": 138944,
       "ram_table_height": 4064
     },
     "case": "WorstCase"

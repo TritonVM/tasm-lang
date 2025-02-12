@@ -2,7 +2,6 @@ use itertools::Itertools;
 use num::One;
 use num::Zero;
 use tasm_lib::triton_vm::prelude::*;
-use tasm_lib::twenty_first::math::traits::Inverse;
 use tasm_lib::twenty_first::math::traits::PrimitiveRootOfUnity;
 
 use crate::ast;
@@ -248,7 +247,7 @@ impl Library for BfeLibrary {
 
 fn bfe_inverse_method_signature() -> ast::FnSignature {
     let bf: BFieldElement = BFieldElement::one();
-    bf.inverse();
+    let _ = bf.inverse();
     ast::FnSignature::value_function_immutable_args(
         "bfe_inverse",
         vec![("x", DataType::Bfe)],

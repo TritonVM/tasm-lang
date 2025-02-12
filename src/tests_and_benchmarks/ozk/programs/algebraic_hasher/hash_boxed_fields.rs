@@ -1,6 +1,5 @@
 use tasm_lib::prelude::TasmObject;
 use tasm_lib::triton_vm::prelude::*;
-use twenty_first::prelude::AlgebraicHasher;
 
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 

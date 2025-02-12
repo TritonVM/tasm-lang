@@ -1,13 +1,12 @@
 use tasm_lib::triton_vm::prelude::*;
 
+use super::Library;
 use crate::ast;
 use crate::ast_types;
 use crate::ast_types::DataType;
 use crate::composite_types::CompositeTypes;
 use crate::graft::Graft;
 use crate::tasm_code_generator::CompilerState;
-
-use super::Library;
 
 const TASM_LIB_INDICATOR: &str = "tasm::";
 
@@ -56,7 +55,10 @@ impl Library for TasmLibrary {
         _composite_types: &mut CompositeTypes,
     ) -> ast::FnSignature {
         let stripped_name = &full_name[TASM_LIB_INDICATOR.len()..full_name.len()];
-        let snippet = tasm_lib::exported_snippets::name_to_snippet(stripped_name);
+        let snippet =
+            tasm_lib::exported_snippets::name_to_snippet(stripped_name).unwrap_or_else(|| {
+                panic!("Couldn't find {stripped_name} in list of exported snippets in tasm-lib.")
+            });
 
         ast::FnSignature::from_basic_snippet(snippet)
     }
@@ -80,7 +82,7 @@ impl Library for TasmLibrary {
         _qualified_self_type: &Option<DataType>,
     ) -> Vec<LabelledInstruction> {
         let stripped_name = &full_name[TASM_LIB_INDICATOR.len()..full_name.len()];
-        let snippet = tasm_lib::exported_snippets::name_to_snippet(stripped_name);
+        let snippet = tasm_lib::exported_snippets::name_to_snippet(stripped_name).unwrap();
         let entrypoint = snippet.entrypoint();
         state.import_snippet(snippet);
 

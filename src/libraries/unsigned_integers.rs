@@ -1,6 +1,8 @@
 use tasm_lib::traits::basic_snippet::BasicSnippet;
 use tasm_lib::triton_vm::prelude::*;
 
+use super::Library;
+use super::LibraryFunction;
 use crate::ast;
 use crate::ast_types;
 use crate::ast_types::DataType;
@@ -8,9 +10,6 @@ use crate::composite_types::CompositeTypes;
 use crate::graft::Graft;
 use crate::tasm_code_generator::CompilerState;
 use crate::type_checker::is_u32_based_type;
-
-use super::Library;
-use super::LibraryFunction;
 
 #[derive(Clone, Debug)]
 pub(crate) struct UnsignedIntegersLib;
@@ -113,7 +112,28 @@ impl Library for UnsignedIntegersLib {
         let entrypoint = snippet.entrypoint();
         state.import_snippet(snippet);
 
-        triton_asm!(call { entrypoint })
+        let flip_input_arguments = match receiver_type {
+            DataType::U32 => triton_asm!(pick 1),
+            DataType::U64 => triton_asm!(
+                pick 3
+                pick 3
+            ),
+            DataType::U128 => triton_asm!(
+                pick 7
+                pick 7
+                pick 7
+                pick 7
+            ),
+            _ => unreachable!(),
+        };
+        let fix_input_arguments_order =
+            if method_name == WRAPPING_SUB_METHOD || method_name == OVERFLOWING_SUB_METHOD {
+                flip_input_arguments
+            } else {
+                triton_asm!()
+            };
+
+        triton_asm!({&fix_input_arguments_order} call { entrypoint })
     }
 
     fn call_function(
@@ -178,25 +198,25 @@ fn name_to_tasm_lib_snippet(
 ) -> Option<Box<dyn BasicSnippet>> {
     match (public_name, receiver_type) {
         (LEADING_ZEROS_METHOD, ast_types::DataType::U32) => Some(Box::new(
-            tasm_lib::arithmetic::u32::leadingzeros::Leadingzeros,
+            tasm_lib::arithmetic::u32::leading_zeros::LeadingZeros,
         )),
         (LEADING_ZEROS_METHOD, ast_types::DataType::U64) => Some(Box::new(
-            tasm_lib::arithmetic::u64::leading_zeros_u64::LeadingZerosU64,
+            tasm_lib::arithmetic::u64::leading_zeros::LeadingZeros,
         )),
-        (COUNT_ONES_METHOD, ast_types::DataType::U64) => Some(Box::new(
-            tasm_lib::arithmetic::u64::popcount_u64::PopCountU64,
-        )),
+        (COUNT_ONES_METHOD, ast_types::DataType::U64) => {
+            Some(Box::new(tasm_lib::arithmetic::u64::popcount::PopCount))
+        }
         (POW_METHOD, ast_types::DataType::U32) => {
-            Some(Box::new(tasm_lib::arithmetic::u32::safepow::Safepow))
+            Some(Box::new(tasm_lib::arithmetic::u32::safe_pow::SafePow))
         }
         (OVERFLOWING_ADD_METHOD, ast_types::DataType::U64) => Some(Box::new(
-            tasm_lib::arithmetic::u64::overflowing_add_u64::OverflowingAdd,
+            tasm_lib::arithmetic::u64::overflowing_add::OverflowingAdd,
         )),
         (OVERFLOWING_SUB_METHOD, ast_types::DataType::U64) => Some(Box::new(
-            tasm_lib::arithmetic::u64::overflowing_sub_u64::OverflowingSub,
+            tasm_lib::arithmetic::u64::overflowing_sub::OverflowingSub,
         )),
         (WRAPPING_SUB_METHOD, ast_types::DataType::U64) => Some(Box::new(
-            tasm_lib::arithmetic::u64::wrapping_sub_u64::WrappingSub,
+            tasm_lib::arithmetic::u64::wrapping_sub::WrappingSub,
         )),
         (NEXT_POWER_OF_TWO_METHOD, ast_types::DataType::U32) => Some(Box::new(
             tasm_lib::arithmetic::u32::next_power_of_two::NextPowerOfTwo,

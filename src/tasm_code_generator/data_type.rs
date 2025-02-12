@@ -255,7 +255,7 @@ impl ast_types::DataType {
     }
 
     /// Return the code for evaluating equality expression
-    pub(super) fn compile_eq_code(&self, state: &mut CompilerState) -> Vec<LabelledInstruction> {
+    pub(super) fn compile_eq_code(&self) -> Vec<LabelledInstruction> {
         use ast_types::DataType::*;
         match self {
             Bool | U32 | Bfe | VoidPointer => triton_asm!(eq),
@@ -298,11 +298,7 @@ impl ast_types::DataType {
                 mul    // _ (b_1 == a_1) ((b_2 == a_2)·(a_0 == b_0))
                 mul    // _ ((b_1 == a_1)·(b_2 == a_2)·(a_0 == b_0))
             ),
-            Digest => {
-                let eq_digest =
-                    state.import_snippet(Box::new(tasm_lib::hashing::eq_digest::EqDigest));
-                triton_asm!(call { eq_digest })
-            }
+            Digest => triton_asm!({ &tasm_lib::prelude::DataType::Digest.compare() }),
             List(_) => todo!(),
             Tuple(_) => todo!(),
             Array(_) => todo!("Equality for arrays not yet implemented"),

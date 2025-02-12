@@ -5,14 +5,13 @@ use tasm_lib::triton_vm::table::AuxiliaryRow;
 use tasm_lib::triton_vm::table::MainRow;
 use tasm_lib::triton_vm::table::QuotientSegments;
 
+use super::arithmetic_domain::*;
+use super::challenges::*;
+use super::stark_parameters::*;
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 use crate::tests_and_benchmarks::ozk::rust_shadows::Tip5WithState;
 use crate::tests_and_benchmarks::ozk::rust_shadows::VmProofIter;
 use crate::twenty_first::prelude::*;
-
-use super::arithmetic_domain::*;
-use super::challenges::*;
-use super::stark_parameters::*;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 struct Recufier;
@@ -59,7 +58,10 @@ impl Recufier {
         let out_of_domain_point_next_row: XFieldElement =
             out_of_domain_point_curr_row * trace_domain_generator;
         let out_of_domain_point_curr_row_pow_num_segments: XFieldElement =
-            tasm::tasmlib_arithmetic_xfe_to_the_fourth(out_of_domain_point_curr_row);
+            out_of_domain_point_curr_row
+                * out_of_domain_point_curr_row
+                * out_of_domain_point_curr_row
+                * out_of_domain_point_curr_row;
 
         let out_of_domain_curr_main_row: Box<Box<MainRow<XFieldElement>>> =
             proof_iter.next_as_outofdomainmainrow();
@@ -308,6 +310,7 @@ mod test {
     use tasm_lib::triton_vm::table::NUM_QUOTIENT_SEGMENTS;
     use test_strategy::proptest;
 
+    use super::*;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::TritonVMTestCase;
@@ -318,8 +321,6 @@ mod test {
     use crate::triton_vm::table::master_table::MasterAuxTable;
     use crate::triton_vm::table::master_table::MasterMainTable;
     use crate::triton_vm::table::master_table::MasterTable;
-
-    use super::*;
 
     fn verify_stark_proof() {
         // Notice that this function is dual-compiled: By rustc and by this compiler.
@@ -347,7 +348,8 @@ mod test {
 
         #[allow(clippy::redundant_field_names)]
         let claim: Box<Claim> = Box::<Claim>::new(Claim {
-            program_digest,
+            program_digest: program_digest,
+            version: 0,
             input: input,
             output: output,
         });
@@ -370,7 +372,7 @@ mod test {
     /// Return `NonDeterminism` required for the `verify` function as well as the claim and the
     // padded-height for the associated proof, the proof that is to be verified.
     pub(super) fn non_determinism_for_verify_and_claim_and_padded_height(
-        program: &Program,
+        program: Program,
         public_input: &[BFieldElement],
         non_determinism: NonDeterminism,
     ) -> (NonDeterminism, triton_vm::proof::Claim, usize) {
@@ -384,7 +386,7 @@ mod test {
             "Proof from TVM must verify through TVM"
         );
 
-        let fri = stark.derive_fri(proof.padded_height().unwrap()).unwrap();
+        let fri = stark.fri(proof.padded_height().unwrap()).unwrap();
 
         let proof_stream = ProofStream::try_from(&proof).unwrap();
         let proof_extraction =
@@ -487,7 +489,7 @@ mod test {
         let padded_height = 1 << log_2_padded_height;
 
         let stark = Stark::default();
-        let vm_fri = stark.derive_fri(padded_height).unwrap();
+        let vm_fri = stark.fri(padded_height).unwrap();
 
         let params = StarkParameters::default();
         let fri = params.derive_fri(padded_height as u32);
@@ -511,7 +513,7 @@ mod test {
         let test_case = TritonVMTestCase::new(entrypoint_location);
         let (non_determinism, claim_for_proof, inner_padded_height) =
             non_determinism_for_verify_and_claim_and_padded_height(
-                &factorial_program,
+                factorial_program,
                 &[],
                 NonDeterminism::default(),
             );
@@ -539,14 +541,7 @@ mod test {
         );
 
         if std::env::var("DYING_TO_PROVE").is_ok() {
-            let verifier_std_out = [];
-            tasm_lib::prove_and_verify(
-                &verifier_program,
-                &verifier_std_in,
-                &non_determinism,
-                &verifier_std_out,
-                None,
-            );
+            tasm_lib::prove_and_verify(verifier_program, &verifier_std_in, &non_determinism, None);
         }
     }
 
@@ -563,14 +558,14 @@ mod test {
         let factorial_program = factorial_program_with_io();
 
         verify_tvm_proof_prop(
-            &factorial_program,
+            factorial_program,
             &format!("factorial({factorial_argument})"),
             &[BFieldElement::new(factorial_argument)],
         )
     }
 
     fn verify_tvm_proof_prop(
-        inner_program: &Program,
+        inner_program: Program,
         inner_program_name: &str,
         input: &[BFieldElement],
     ) -> (usize, u32) {
@@ -608,14 +603,7 @@ mod test {
         );
 
         if std::env::var("DYING_TO_PROVE").is_ok() {
-            let verifier_std_out = [];
-            tasm_lib::prove_and_verify(
-                &verifier_program,
-                &verifier_std_in,
-                &non_determinism,
-                &verifier_std_out,
-                None,
-            );
+            tasm_lib::prove_and_verify(verifier_program, &verifier_std_in, &non_determinism, None);
         }
 
         (inner_padded_height, final_vm_state.cycle_count)
@@ -677,12 +665,11 @@ mod benches {
     use tasm_lib::snippet_bencher::NamedBenchmarkResult;
     use tasm_lib::triton_vm::prelude::NonDeterminism;
 
+    use super::test::non_determinism_for_verify_and_claim_and_padded_height;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::programs::recufier::verify::test::claim_to_stdin_for_stark_verifier;
     use crate::tests_and_benchmarks::ozk::programs::recufier::verify::test::factorial_program_no_io;
     use crate::tests_and_benchmarks::test_helpers::shared_test::TritonVMTestCase;
-
-    use super::test::non_determinism_for_verify_and_claim_and_padded_height;
 
     #[ignore = "Takes up to a minute to run"]
     #[test]
@@ -720,7 +707,7 @@ mod benches {
             EntrypointLocation::disk("recufier", "verify", "test::verify_stark_proof");
         let (non_determinism, claim_for_proof, inner_padded_height) =
             non_determinism_for_verify_and_claim_and_padded_height(
-                &factorial_program,
+                factorial_program,
                 &[],
                 NonDeterminism::default(),
             );
@@ -746,13 +733,12 @@ mod profilers {
     use tasm_lib::triton_vm::prelude::Program;
     use tasm_lib::twenty_first::prelude::BFieldElement;
 
+    use super::test::factorial_program_with_io;
+    use super::test::non_determinism_for_verify_and_claim_and_padded_height;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::programs::recufier::verify::test::claim_to_stdin_for_stark_verifier;
     use crate::tests_and_benchmarks::ozk::programs::recufier::verify::test::factorial_program_no_io;
     use crate::tests_and_benchmarks::test_helpers::shared_test::TritonVMTestCase;
-
-    use super::test::factorial_program_with_io;
-    use super::test::non_determinism_for_verify_and_claim_and_padded_height;
 
     #[test]
     fn profile_verify_factorial_program_inner_padded_height_256() {
@@ -809,7 +795,7 @@ mod profilers {
         println!("\nGenerating 1st proof");
         let (inner_nd, inner_inner_claim, inner_inner_padded_height) =
             non_determinism_for_verify_and_claim_and_padded_height(
-                &inner_inner_program,
+                inner_inner_program,
                 &inner_inner_stdin,
                 NonDeterminism::default(),
             );
@@ -823,7 +809,7 @@ mod profilers {
             EntrypointLocation::disk("recufier", "verify", &format!("test::{main_function_name}"));
         let inner_program = TritonVMTestCase::new(entrypoint_location).program();
 
-        generate_profile_of_verifier(&inner_program, &inner_stdin, inner_nd, None)
+        generate_profile_of_verifier(inner_program, &inner_stdin, inner_nd, None)
     }
 
     fn generate_profile_for_verifier_execution_for_factorial_execution_proof(
@@ -832,7 +818,7 @@ mod profilers {
     ) {
         let factorial_program = factorial_program_no_io(factorial_arg);
         generate_profile_of_verifier(
-            &factorial_program,
+            factorial_program,
             &[],
             NonDeterminism::default(),
             Some(expected_factorial_execution_padded_height),
@@ -840,7 +826,7 @@ mod profilers {
     }
 
     fn generate_profile_of_verifier(
-        inner_program: &Program,
+        inner_program: Program,
         inner_input: &[BFieldElement],
         inner_nd: NonDeterminism,
         expected_inner_padded_height: Option<usize>,
@@ -887,14 +873,7 @@ mod profilers {
         write!(file, "{profile}").unwrap();
 
         if std::env::var("DYING_TO_PROVE").is_ok() {
-            let verifier_std_out = [];
-            tasm_lib::prove_and_verify(
-                &verifier_program,
-                &verifier_std_in,
-                &non_determinism,
-                &verifier_std_out,
-                None,
-            );
+            tasm_lib::prove_and_verify(verifier_program, &verifier_std_in, &non_determinism, None);
         }
     }
 }

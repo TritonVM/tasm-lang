@@ -3,7 +3,11 @@ mod test {
     use std::collections::HashMap;
 
     use itertools::Itertools;
+    use tasm_lib::triton_vm::prelude::*;
     use tasm_lib::triton_vm::proof_item::FriResponse;
+    use tasm_lib::triton_vm::proof_item::ProofItem;
+    use tasm_lib::triton_vm::proof_stream::ProofStream;
+    use tasm_lib::triton_vm::table::master_table::MasterAuxTable;
     use tasm_lib::twenty_first::math::b_field_element::BFieldElement;
     use tasm_lib::twenty_first::math::polynomial::Polynomial;
 
@@ -19,17 +23,11 @@ mod test {
     use crate::triton_vm::table::AuxiliaryRow;
     use crate::triton_vm::table::MainRow;
     use crate::triton_vm::table::QuotientSegments;
-    use tasm_lib::triton_vm::prelude::*;
-    use tasm_lib::triton_vm::proof_item::ProofItem;
-    use tasm_lib::triton_vm::proof_stream::ProofStream;
-    use tasm_lib::triton_vm::table::master_table::MasterAuxTable;
 
     /// The function being tested here. Dual-compiled by `rustc` and `tasm-lang`.
     fn call_all_next_methods() {
         Tip5WithState::init();
-        let vm_proof_iter_stack: VmProofIter = VmProofIter {
-            current_item_pointer: BFieldElement::new(2),
-        };
+        let vm_proof_iter_stack: VmProofIter = VmProofIter::new();
         let mut vm_proof_iter: Box<VmProofIter> = Box::<VmProofIter>::new(vm_proof_iter_stack);
         let a_merkle_root: Box<Digest> = vm_proof_iter.next_as_merkleroot();
         tasm::tasmlib_io_write_to_stdout___digest(*a_merkle_root);
@@ -111,8 +109,9 @@ mod test {
         let fri_polynomial: Box<Polynomial<XFieldElement>> = vm_proof_iter.next_as_fripolynomial();
         {
             let mut j: usize = 0;
-            while j < fri_polynomial.coefficients.len() {
-                tasm::tasmlib_io_write_to_stdout___xfe(fri_polynomial.coefficients[j]);
+            let coefficients: Vec<XFieldElement> = fri_polynomial.into_coefficients();
+            while j < coefficients.len() {
+                tasm::tasmlib_io_write_to_stdout___xfe(coefficients[j]);
                 j += 1;
             }
         }
@@ -236,7 +235,7 @@ mod test {
         (14u64..=170).map(into_xfe).collect_vec()
     }
 
-    fn arbitrary_fri_polynomial() -> Polynomial<XFieldElement> {
+    fn arbitrary_fri_polynomial() -> Polynomial<'static, XFieldElement> {
         Polynomial::new(arbitrary_fri_codeword())
     }
 

@@ -3,8 +3,6 @@ mod test {
     use crate::tests_and_benchmarks::ozk::ozk_parsing::compile_to_basic_snippet;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::twenty_first::prelude::*;
-    use tasm_lib::twenty_first::prelude::AlgebraicHasher;
-    use tasm_lib::Digest;
 
     /// Output the `Merkle root` implementation as a `BasicSnippet` implementation.
     #[test]

@@ -2,22 +2,22 @@
   {
     "name": "project_euler_7_i101",
     "benchmark_result": {
-      "clock_cycle_count": 69254,
+      "clock_cycle_count": 69253,
       "hash_table_height": 198,
-      "u32_table_height": 34004,
-      "op_stack_table_height": 55968,
-      "ram_table_height": 3527
+      "u32_table_height": 34007,
+      "op_stack_table_height": 54754,
+      "ram_table_height": 2921
     },
     "case": "CommonCase"
   },
   {
     "name": "project_euler_7_i101",
     "benchmark_result": {
-      "clock_cycle_count": 1141430,
+      "clock_cycle_count": 1141429,
       "hash_table_height": 198,
-      "u32_table_height": 578640,
-      "op_stack_table_height": 929844,
-      "ram_table_height": 56159
+      "u32_table_height": 578643,
+      "op_stack_table_height": 911824,
+      "ram_table_height": 47150
     },
     "case": "WorstCase"
   }

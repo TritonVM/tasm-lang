@@ -2,11 +2,10 @@ use std::fmt::Display;
 
 use itertools::Itertools;
 
-use crate::libraries::LibraryFunction;
-
 use super::DataType;
 use super::FieldId;
 use super::Tuple;
+use crate::libraries::LibraryFunction;
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub(crate) struct NamedFieldsStruct {
@@ -110,7 +109,15 @@ impl StructType {
 
         match res {
             Some(dtype) => dtype,
-            None => panic!("Struct {self} has no field '{field_id}'"),
+            None => {
+                let field_names = match &self.variant {
+                    StructVariant::TupleStruct(tuple) => format!("0..{}", tuple.element_count()),
+                    StructVariant::NamedFields(named_fields_struct) => {
+                        format!("{named_fields_struct}")
+                    }
+                };
+                panic!("Struct {self} has no field '{field_id}'. Known fields: {field_names}");
+            }
         }
     }
 

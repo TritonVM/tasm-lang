@@ -7,6 +7,7 @@ use tasm_lib::triton_vm::table::NUM_QUOTIENT_SEGMENTS;
 
 use self::vm_proof_iter::graft_vm_proof_iter;
 use self::vm_proof_iter::VM_PROOF_ITER_TYPE_NAME;
+use super::Library;
 use crate::ast;
 use crate::ast_types;
 use crate::ast_types::CustomTypeOil;
@@ -17,8 +18,6 @@ use crate::composite_types::TypeContext;
 use crate::graft::Graft;
 use crate::triton_vm::table::master_table::MasterMainTable;
 use crate::triton_vm::table::master_table::MasterTable;
-
-use super::Library;
 
 const BASE_ROW_TYPE_NAME: &str = "MainRow";
 const EXT_ROW_TYPE_NAME: &str = "AuxiliaryRow";
@@ -196,6 +195,7 @@ impl RecufyLib {
         let claim_type: syn::ItemStruct = parse_quote! {
             struct Claim {
                 pub program_digest: Digest,
+                pub version: u32,
                 pub input: Vec<BFieldElement>,
                 pub output: Vec<BFieldElement>,
             }

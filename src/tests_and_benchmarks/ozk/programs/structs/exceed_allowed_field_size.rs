@@ -1,7 +1,6 @@
 use arbitrary::Arbitrary;
 use tasm_lib::prelude::TasmObject;
 use tasm_lib::triton_vm::prelude::*;
-use twenty_first::prelude::AlgebraicHasher;
 
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
@@ -105,7 +104,9 @@ mod tests {
             .execute()
             .unwrap_err();
         let err0 = err0.downcast::<InstructionError>().unwrap();
-        assert_eq!(InstructionError::AssertionFailed, err0);
+        let InstructionError::AssertionFailed(_) = err0 else {
+            panic!()
+        };
 
         // Negative test: size indicator is negative
         let mut malicious_nd_ram_1 = benign_nd.clone();
@@ -153,7 +154,9 @@ mod tests {
             .execute()
             .unwrap_err();
         let err0 = err0.downcast::<InstructionError>().unwrap();
-        assert_eq!(InstructionError::AssertionFailed, err0);
+        let InstructionError::AssertionFailed(_) = err0 else {
+            panic!()
+        };
 
         // Negative test: size indicator is negative
         let mut malicious_nd_ram_1 = benign_nd.clone();

@@ -102,7 +102,7 @@ mod test {
 
         let padded_height = 1 << 20;
         let derived_fri_local = default_local.derive_fri(padded_height);
-        let derived_fri_tvm = default_tvm.derive_fri(padded_height as usize).unwrap();
+        let derived_fri_tvm = default_tvm.fri(padded_height as usize).unwrap();
 
         assert_eq!(
             derived_fri_local.expansion_factor as usize,

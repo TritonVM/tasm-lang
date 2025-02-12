@@ -33,6 +33,7 @@ impl ProofCollection {
                 BFieldElement::new(57),
                 BFieldElement::new(58),
             ]),
+            version: 0,
             input: self.kernel_mast_hash.reversed().encode(),
             output: self.salted_inputs_hash.encode(),
         };
@@ -47,6 +48,7 @@ impl ProofCollection {
                 BFieldElement::new(157),
                 BFieldElement::new(158),
             ]),
+            version: 0,
             input: self.kernel_mast_hash.reversed().encode(),
             output: self.salted_outputs_hash.encode(),
         };
@@ -75,6 +77,7 @@ impl ProofCollection {
                 BFieldElement::new(257),
                 BFieldElement::new(258),
             ]),
+            version: 0,
             input: self.salted_inputs_hash.reversed().encode(),
             output: lock_script_hashes_as_output,
         };
@@ -132,11 +135,10 @@ mod tests {
     use tasm_lib::twenty_first::bfe;
     use tasm_lib::twenty_first::math::other::random_elements;
 
+    use super::*;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
-
-    use super::*;
 
     #[test]
     fn construct_single_proof_claims() {
