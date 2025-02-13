@@ -112,7 +112,16 @@ impl Library for VectorLib {
             .name_to_tasm_lib_snippet(stripped_name, &type_parameter, args)
             .unwrap_or_else(|| panic!("Unknown function name {stripped_name}"));
 
-        FnSignature::from_basic_snippet(snippet)
+        let mut signature = FnSignature::from_basic_snippet(snippet);
+        if (stripped_name == DEFAULT_FUNCTION_NAME || stripped_name == NEW_FUNCTION_NAME)
+            && signature.output == DataType::VoidPointer
+        {
+            if let Some(type_parameter) = type_parameter {
+                signature.output = DataType::List(Box::new(type_parameter));
+            }
+        }
+
+        signature
     }
 
     fn call_method(
