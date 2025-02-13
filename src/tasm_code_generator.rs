@@ -133,7 +133,7 @@ impl GlobalCodeGeneratorState {
         let new_address = self
             .snippet_state
             .kmalloc(data_type.stack_size() as u32)
-            .read_address();
+            .write_address();
         self.static_allocations.insert(
             value_identifier.to_owned(),
             (new_address, data_type.to_owned()),
