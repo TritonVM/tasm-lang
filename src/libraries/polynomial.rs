@@ -3,11 +3,19 @@ use std::fmt::Display;
 use anyhow::bail;
 use regex::Regex;
 
+use crate::ast;
+use crate::ast::ArgEvaluationOrder;
+use crate::ast::AsmDefinedBody;
+use crate::ast::FnSignature;
+use crate::ast::RoutineBody;
+use crate::ast_types::AbstractArgument;
+use crate::ast_types::AbstractValueArg;
 use crate::ast_types::CustomTypeOil;
 use crate::ast_types::DataType;
 use crate::ast_types::StructType;
 use crate::ast_types::StructVariant;
 use crate::composite_types::TypeContext;
+use crate::triton_vm::isa::triton_asm;
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub(crate) enum PolynomialCoefficientType {
@@ -46,15 +54,33 @@ impl Display for PolynomialCoefficientType {
 }
 
 pub(super) fn polynomial_type(coefficient_type: PolynomialCoefficientType) -> TypeContext {
-    let composite_type = CustomTypeOil::Struct(StructType {
+    let coefficient_list_type = DataType::List(Box::new(coefficient_type.into()));
+    let self_type = StructType {
         name: "Polynomial".to_owned(),
         is_copy: false,
         variant: StructVariant::named_fields(vec![(
             "coefficients".to_owned(),
-            DataType::List(Box::new(coefficient_type.into())),
+            coefficient_list_type.clone(),
         )]),
-    });
-    let methods = vec![];
+    };
+
+    let composite_type = CustomTypeOil::Struct(self_type.clone());
+    let methods = vec![ast::Method {
+        signature: FnSignature {
+            name: "coefficients".to_string(),
+            args: vec![AbstractArgument::ValueArgument(AbstractValueArg {
+                name: "self".to_string(),
+                data_type: DataType::Struct(self_type),
+                mutable: false,
+            })],
+            output: coefficient_list_type,
+            arg_evaluation_order: ArgEvaluationOrder::default(),
+        },
+        body: RoutineBody::Instructions(AsmDefinedBody {
+            dependencies: vec![],
+            instructions: triton_asm!(addi 1), // hacky as hell… but how to do it properly?
+        }),
+    }];
     let associated_functions = vec![];
 
     TypeContext {

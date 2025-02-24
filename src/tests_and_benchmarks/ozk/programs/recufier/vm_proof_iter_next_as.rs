@@ -110,9 +110,10 @@ mod test {
 
         let fri_polynomial: Box<Polynomial<XFieldElement>> = vm_proof_iter.next_as_fripolynomial();
         {
+            let coefficients: Vec<XFieldElement> = fri_polynomial.coefficients().to_vec();
             let mut j: usize = 0;
-            while j < fri_polynomial.coefficients().len() {
-                tasm::tasmlib_io_write_to_stdout___xfe(fri_polynomial.coefficients()[j]);
+            while j < coefficients.len() {
+                tasm::tasmlib_io_write_to_stdout___xfe(coefficients[j]);
                 j += 1;
             }
         }

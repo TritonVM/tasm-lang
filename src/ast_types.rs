@@ -114,6 +114,11 @@ impl DataType {
             "XFieldElement" => Ok(DataType::Xfe),
             "Digest" => Ok(DataType::Digest),
 
+            // ugly hack: `XFieldElement` appears as a generic parameter alongside the
+            // lifetime annotation `'static`. Since `XFieldElement` is `Copy`, there are
+            // no borrowing issues here.
+            "'static, XFieldElement" => Ok(DataType::Xfe),
+
             "AuthenticationStructure" => Ok(DataType::List(Box::new(DataType::Digest))),
             "FriResponse" => Ok(DataType::Unresolved(type_str.to_owned())),
             "MainRow<XFieldElement>" => Ok(DataType::Array(ArrayType {
