@@ -11,7 +11,7 @@ mod test {
             EntrypointLocation::disk("recufier", "merkle_root_autogen", "test::merkle_root");
         let rust_ast = entrypoint_location.extract_entrypoint();
         let as_bs = compile_to_basic_snippet(rust_ast, std::collections::HashMap::default());
-        println!("{}", as_bs);
+        println!("{as_bs}");
     }
 
     #[allow(clippy::ptr_arg)]

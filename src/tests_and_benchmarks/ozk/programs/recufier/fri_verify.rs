@@ -36,12 +36,11 @@ impl FriVerify {
 pub(crate) mod test {
     use rand::random;
 
+    use super::*;
     use crate::tests_and_benchmarks::ozk::ozk_parsing;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::execute_compiled_with_stack_and_ins_for_test;
-
-    use super::*;
 
     fn main() {
         let _a: FriVerify = FriVerify::new(BFieldElement::new(7), 32, 4, 3);

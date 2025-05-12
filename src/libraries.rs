@@ -1,5 +1,7 @@
 use std::fmt::Debug;
 
+use tasm_lib::triton_vm::prelude::*;
+
 use crate::ast;
 use crate::ast::FnSignature;
 use crate::ast_types::DataType;
@@ -7,7 +9,6 @@ use crate::composite_types::CompositeTypes;
 use crate::graft::Graft;
 use crate::tasm_code_generator::CompilerState;
 use crate::type_checker;
-use tasm_lib::triton_vm::prelude::*;
 
 pub(crate) mod bfe;
 pub(crate) mod bfield_codec;

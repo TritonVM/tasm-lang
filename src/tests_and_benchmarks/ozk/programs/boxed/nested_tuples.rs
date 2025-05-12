@@ -78,14 +78,14 @@ fn main() {
 
 #[cfg(test)]
 mod test {
+    use itertools::Itertools;
+    use rand::random;
+    use tasm_lib::twenty_first::prelude::BFieldCodec;
+
     use super::*;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
-    use tasm_lib::twenty_first::prelude::BFieldCodec;
-
-    use itertools::Itertools;
-    use rand::random;
 
     #[test]
     fn nested_tuples_test() {

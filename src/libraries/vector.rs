@@ -5,6 +5,8 @@ use tasm_lib::traits::basic_snippet::BasicSnippet;
 use tasm_lib::triton_vm::prelude::triton_asm;
 use tasm_lib::triton_vm::prelude::LabelledInstruction;
 
+use super::Library;
+use super::LibraryFunction;
 use crate::ast;
 use crate::ast::FnSignature;
 use crate::ast_types;
@@ -13,9 +15,6 @@ use crate::composite_types::CompositeTypes;
 use crate::graft::Graft;
 use crate::tasm_code_generator::CompilerState;
 use crate::type_checker::GetType;
-
-use super::Library;
-use super::LibraryFunction;
 
 const VEC_DATA_TYPE_NAME: &str = "Vec";
 const VECTOR_LIB_INDICATOR: &str = "Vec::";

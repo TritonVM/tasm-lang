@@ -72,13 +72,12 @@ mod test {
     use rand::Rng;
     use tasm_lib::twenty_first::math::other::random_elements;
 
+    use super::*;
     use crate::tests_and_benchmarks::ozk::ozk_parsing;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::execute_compiled_with_stack_and_ins_for_test;
     use crate::tests_and_benchmarks::test_helpers::shared_test::init_memory_from;
-
-    use super::*;
 
     impl Distribution<TestStruct> for StandardUniform {
         fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> TestStruct {

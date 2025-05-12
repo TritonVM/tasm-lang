@@ -10,9 +10,8 @@ mod run_tests {
     use tasm_lib::twenty_first::math::other::random_elements;
     use tasm_lib::twenty_first::math::x_field_element::EXTENSION_DEGREE;
 
-    use crate::tests_and_benchmarks::test_helpers::shared_test::*;
-
     use super::*;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 
     #[test]
     fn instantiate_xfe_with_num_test() {

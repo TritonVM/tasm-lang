@@ -20,11 +20,13 @@ fn _crash_on_try() {
 }
 
 mod test {
+    use std::default::Default;
+
+    use tasm_lib::triton_vm::prelude::*;
+
     use crate::tests_and_benchmarks::ozk::ozk_parsing::compile_for_test;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
-    use std::default::Default;
-    use tasm_lib::triton_vm::prelude::*;
 
     #[test]
     fn unwrap_crash_test() {

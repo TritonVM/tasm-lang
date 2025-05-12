@@ -399,7 +399,7 @@ pub(crate) fn show_memory(memory: &HashMap<BFieldElement, BFieldElement>) {
     memory.sort_unstable_by(|&a, &b| a.0.value().partial_cmp(&b.0.value()).unwrap());
 
     for (k, v) in memory {
-        println!("{} => {}", k, v);
+        println!("{k} => {v}");
     }
 }
 
@@ -440,8 +440,8 @@ pub(crate) fn assert_list_equal(
             .join(",");
 
         panic!(
-            "Length of list must match. \nActual: {actual_length}\n expected: {expected_length}\n\n\n Memory was: {}",
-            actual_mem_as_str
+            "Length of list must match. \nActual: {actual_length}\n expected: \
+            {expected_length}\n\n\n Memory was: {actual_mem_as_str}",
         );
     }
 

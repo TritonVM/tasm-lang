@@ -3,14 +3,13 @@ use tasm_lib::memory::dyn_malloc::DynMalloc;
 use tasm_lib::triton_vm::prelude::triton_asm;
 use tasm_lib::triton_vm::prelude::LabelledInstruction;
 
+use super::Library;
 use crate::ast;
 use crate::ast_types;
 use crate::ast_types::DataType;
 use crate::composite_types::CompositeTypes;
 use crate::graft::Graft;
 use crate::subroutine::SubRoutine;
-
-use super::Library;
 
 #[derive(Debug)]
 pub(crate) struct Boxed;

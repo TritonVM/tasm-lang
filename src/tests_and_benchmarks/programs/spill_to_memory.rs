@@ -1,6 +1,7 @@
-use crate::tests_and_benchmarks::test_helpers::shared_test::item_fn;
 use syn::parse_quote;
 use tasm_lib::triton_vm::prelude::*;
+
+use crate::tests_and_benchmarks::test_helpers::shared_test::item_fn;
 
 fn spill_u64_values_to_memory_rast() -> syn::ItemFn {
     item_fn(parse_quote! {
@@ -472,10 +473,9 @@ mod run_tests {
     use itertools::Itertools;
     use tasm_lib::twenty_first::math::other::random_elements;
 
+    use super::*;
     use crate::ast_types::DataType;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
-
-    use super::*;
 
     #[test]
     fn spill_u64_values_to_memory_test() {

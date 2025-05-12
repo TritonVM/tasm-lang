@@ -70,12 +70,11 @@ fn main() {
 mod test {
     use tasm_lib::triton_vm::prelude::*;
 
+    use super::*;
     use crate::tests_and_benchmarks::ozk::ozk_parsing;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::execute_compiled_with_stack_and_ins_for_test;
-
-    use super::*;
 
     #[test]
     fn simple_declaration_on_stack_spilled_test() {

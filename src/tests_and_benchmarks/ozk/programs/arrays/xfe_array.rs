@@ -54,18 +54,15 @@ fn main() {
 
 #[cfg(test)]
 mod test {
-    use tasm_lib::triton_vm::prelude::*;
-
     use itertools::Itertools;
-
-    use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
-    use crate::tests_and_benchmarks::ozk::rust_shadows;
-    use crate::tests_and_benchmarks::test_helpers::shared_test::TritonVMTestCase;
-
     use proptest_arbitrary_interop::arb;
+    use tasm_lib::triton_vm::prelude::*;
     use test_strategy::proptest;
 
     use super::*;
+    use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
+    use crate::tests_and_benchmarks::ozk::rust_shadows;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::TritonVMTestCase;
 
     #[proptest(cases = 20)]
     fn xfe_array_test(#[strategy(arb())] xfes: [XFieldElement; 4]) {

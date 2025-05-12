@@ -194,7 +194,7 @@ impl DataType {
             Function(fn_type) => {
                 let input = fn_type.input_argument.label_friendly_name();
                 let output = fn_type.output.label_friendly_name();
-                format!("function_from_L{}R__to_L{}R", input, output)
+                format!("function_from_L{input}R__to_L{output}R",)
             }
             Struct(struct_type) => struct_type.label_friendly_name(),
             Enum(enum_type) => enum_type.label_friendly_name(),

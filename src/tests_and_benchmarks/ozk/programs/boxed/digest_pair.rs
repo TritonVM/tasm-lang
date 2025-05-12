@@ -1,5 +1,6 @@
-use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 use tasm_lib::triton_vm::prelude::*;
+
+use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
 fn main() {
     let a: Digest = tasm::tasmlib_io_read_stdin___digest();
@@ -37,17 +38,15 @@ fn main() {
 
 #[cfg(test)]
 mod test {
+    use itertools::Itertools;
     use tasm_lib::twenty_first::math::other::random_elements;
     use tasm_lib::twenty_first::prelude::BFieldCodec;
 
-    use itertools::Itertools;
-
+    use super::*;
     use crate::tests_and_benchmarks::ozk::ozk_parsing;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
-
-    use super::*;
 
     #[test]
     fn boxed_digest_pair_test() {

@@ -1,8 +1,5 @@
 #[cfg(test)]
 mod test {
-    use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
-    use crate::tests_and_benchmarks::ozk::rust_shadows;
-    use crate::tests_and_benchmarks::test_helpers::shared_test::*;
     use itertools::Itertools;
     use num::One;
     use tasm_lib::triton_vm::prelude::*;
@@ -11,7 +8,10 @@ mod test {
     use tasm_lib::twenty_first::math::traits::PrimitiveRootOfUnity;
     use tasm_lib::twenty_first::prelude::ModPowU32;
 
+    use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
+    use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 
     #[allow(clippy::ptr_arg)]
     #[allow(clippy::manual_swap)]
@@ -186,15 +186,16 @@ mod test {
 }
 
 mod benches {
+    use tasm_lib::triton_vm::prelude::*;
+    use tasm_lib::twenty_first::math::other::random_elements;
+    use tasm_lib::twenty_first::math::traits::PrimitiveRootOfUnity;
+
     use crate::tests_and_benchmarks::benchmarks::execute_and_write_benchmark;
     use crate::tests_and_benchmarks::benchmarks::profile;
     use crate::tests_and_benchmarks::benchmarks::BenchmarkInput;
     use crate::tests_and_benchmarks::ozk::ozk_parsing;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
-    use tasm_lib::triton_vm::prelude::*;
-    use tasm_lib::twenty_first::math::other::random_elements;
-    use tasm_lib::twenty_first::math::traits::PrimitiveRootOfUnity;
 
     #[test]
     fn fast_ntt_bench() {

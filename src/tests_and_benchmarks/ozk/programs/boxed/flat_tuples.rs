@@ -1,5 +1,6 @@
-use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 use tasm_lib::triton_vm::prelude::*;
+
+use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
 #[derive(Clone, Copy)]
 struct TupleStructA(u128, u64, Digest);
@@ -185,17 +186,15 @@ fn main() {
 
 #[cfg(test)]
 mod tests {
-    use tasm_lib::twenty_first::prelude::BFieldCodec;
-
     use itertools::Itertools;
     use rand::random;
+    use tasm_lib::twenty_first::prelude::BFieldCodec;
 
+    use super::*;
     use crate::tests_and_benchmarks::ozk::ozk_parsing;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
-
-    use super::*;
 
     #[test]
     fn flat_tuples_test() {

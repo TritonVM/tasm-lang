@@ -1,8 +1,7 @@
 use tasm_lib::triton_vm::prelude::*;
 
-use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
-
 use super::simple_enum_type::*;
+use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
 fn main() {
     let boxed_enum_type: Box<SimpleEnum> =
@@ -26,12 +25,11 @@ fn main() {
 
 #[cfg(test)]
 mod test {
+    use super::*;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::init_memory_from;
     use crate::tests_and_benchmarks::test_helpers::shared_test::TritonVMTestCase;
-
-    use super::*;
 
     #[test]
     fn variant_a_test() {

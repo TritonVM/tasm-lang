@@ -1,6 +1,7 @@
+use tasm_lib::triton_vm::prelude::*;
+
 use super::simple_struct::*;
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
-use tasm_lib::triton_vm::prelude::*;
 
 fn main() {
     let ts: Box<SimpleStruct> =
@@ -17,16 +18,17 @@ fn main() {
 
 #[cfg(test)]
 mod test {
+    use arbitrary::Arbitrary;
+    use arbitrary::Unstructured;
+    use itertools::Itertools;
+    use rand::random;
+
     use super::*;
     use crate::tests_and_benchmarks::ozk::ozk_parsing;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::execute_compiled_with_stack_and_ins_for_test;
     use crate::tests_and_benchmarks::test_helpers::shared_test::init_memory_from;
-    use arbitrary::Arbitrary;
-    use arbitrary::Unstructured;
-    use itertools::Itertools;
-    use rand::random;
 
     #[test]
     fn import_type_declaration_test() {

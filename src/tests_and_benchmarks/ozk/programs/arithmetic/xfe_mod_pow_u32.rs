@@ -40,13 +40,13 @@ fn verify_no_name_clash_xfe_bfe_mod_pow_u32() {
 
 #[cfg(test)]
 mod test {
-    use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
-    use crate::tests_and_benchmarks::ozk::rust_shadows::wrap_main_with_io;
-    use crate::tests_and_benchmarks::test_helpers::shared_test::*;
     use rand::random;
     use tasm_lib::twenty_first::math::other::random_elements;
 
     use super::*;
+    use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
+    use crate::tests_and_benchmarks::ozk::rust_shadows::wrap_main_with_io;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 
     #[test]
     fn xfe_to_the_power_of_zero_test() {

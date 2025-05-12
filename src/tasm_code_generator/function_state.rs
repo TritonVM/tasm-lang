@@ -1,9 +1,10 @@
+use std::collections::HashMap;
+use std::collections::HashSet;
+
 use super::ValueIdentifier;
 use crate::tasm_code_generator::InnerFunctionTasmCode;
 use crate::tasm_code_generator::SubRoutine;
 use crate::tasm_code_generator::VStack;
-use std::collections::HashMap;
-use std::collections::HashSet;
 
 pub(crate) type VarAddr = HashMap<String, ValueIdentifier>;
 

@@ -18,13 +18,13 @@ fn main() {
 
 #[cfg(test)]
 mod test {
-    use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
-    use crate::tests_and_benchmarks::ozk::rust_shadows;
-    use crate::tests_and_benchmarks::test_helpers::shared_test::*;
     use tasm_lib::twenty_first::math::other::random_elements;
     use tasm_lib::twenty_first::math::x_field_element::EXTENSION_DEGREE;
 
     use super::*;
+    use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
+    use crate::tests_and_benchmarks::ozk::rust_shadows;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 
     #[test]
     fn array_to_vec() {

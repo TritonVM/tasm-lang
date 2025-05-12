@@ -449,8 +449,7 @@ impl CompositeTypes {
         let ty_ctx = if let Some(indices) = self.by_name.get(type_name) {
             assert!(
                 indices.len().is_one(),
-                "Multiple composite types with name {} found",
-                type_name
+                "Multiple composite types with name {type_name} found",
             );
             &self.composite_types[indices[0]]
         } else {

@@ -1,6 +1,7 @@
-use itertools::Itertools;
 use std::fmt::Debug;
 use std::fmt::Display;
+
+use itertools::Itertools;
 use tasm_lib::traits::basic_snippet::BasicSnippet;
 use tasm_lib::triton_vm::prelude::*;
 
@@ -651,7 +652,7 @@ impl<T> Display for Expr<T> {
             }
             Expr::Match(match_expr) => format!("match expression: {}", match_expr.match_expression),
             Expr::Panic(_, _) => "panic".to_owned(),
-            Expr::MemoryLocation(val) => format!("*{}", val),
+            Expr::MemoryLocation(val) => format!("*{val}",),
         };
 
         write!(f, "{str}")

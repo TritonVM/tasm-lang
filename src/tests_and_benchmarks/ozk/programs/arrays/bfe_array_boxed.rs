@@ -44,16 +44,14 @@ fn main() {
 #[cfg(test)]
 mod test {
 
-    use tasm_lib::triton_vm::prelude::*;
-
     use itertools::Itertools;
     use rand::random;
+    use tasm_lib::triton_vm::prelude::*;
 
+    use super::*;
     use crate::tests_and_benchmarks::ozk::ozk_parsing;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::TritonVMTestCase;
-
-    use super::*;
 
     #[ignore = "Doesn't work yet, as we can't move pointer types to memory"]
     #[test]

@@ -113,11 +113,10 @@ mod test {
 
     use itertools::Itertools;
 
+    use super::*;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
-
-    use super::*;
 
     #[test]
     fn enum_to_memory_simple_test() {

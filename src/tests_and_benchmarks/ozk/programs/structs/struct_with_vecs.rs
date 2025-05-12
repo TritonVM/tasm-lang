@@ -76,13 +76,12 @@ mod test {
     use tasm_lib::triton_vm::prelude::*;
     use tasm_lib::twenty_first::math::other::random_elements;
 
+    use super::*;
     use crate::tests_and_benchmarks::ozk::ozk_parsing;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::execute_compiled_with_stack_and_ins_for_test;
     use crate::tests_and_benchmarks::test_helpers::shared_test::init_memory_from;
-
-    use super::*;
 
     #[test]
     fn struct_with_vecs_test() {

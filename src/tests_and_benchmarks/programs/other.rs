@@ -2,9 +2,8 @@ use syn::parse_quote;
 
 #[cfg(test)]
 mod compile_and_typecheck_tests {
-    use crate::tests_and_benchmarks::test_helpers::shared_test::*;
-
     use super::*;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 
     #[test]
     fn inferred_literals_test() {
@@ -114,9 +113,8 @@ mod compile_and_typecheck_tests {
 mod run_tests {
     use rand::Rng;
 
-    use crate::tests_and_benchmarks::test_helpers::shared_test::*;
-
     use super::*;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 
     #[test]
     fn tasm_argument_evaluation_order_test() {

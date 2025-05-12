@@ -42,12 +42,11 @@ fn call_panic_on_a() {
 mod test {
     use itertools::Itertools;
 
+    use super::*;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::init_memory_from;
     use crate::tests_and_benchmarks::test_helpers::shared_test::TritonVMTestCase;
-
-    use super::*;
 
     #[test]
     fn call_panic_on_a_variant_b() {

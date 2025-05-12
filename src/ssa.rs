@@ -1,8 +1,9 @@
 #[cfg(test)]
 mod tests {
-    use crate::ast_types::DataType;
     use std::collections::HashMap;
     use std::collections::HashSet;
+
+    use crate::ast_types::DataType;
 
     #[derive(Debug, Default)]
     pub(crate) struct ControlFlowGraph {

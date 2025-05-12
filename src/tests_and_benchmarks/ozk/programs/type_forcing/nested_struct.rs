@@ -29,12 +29,11 @@ fn access_boxed_nested_struct_list_len() {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::TritonVMTestCase;
     use crate::triton_vm::prelude::*;
-
-    use super::*;
 
     #[test]
     fn accessing_list_element_on_a_nested_struct_produces_expected_value() {

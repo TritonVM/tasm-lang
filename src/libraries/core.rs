@@ -2,6 +2,10 @@ use syn::punctuated::Punctuated;
 use syn::token::Comma;
 use tasm_lib::triton_vm::prelude::LabelledInstruction;
 
+use self::option_type::rust_option_type_to_data_type;
+use self::option_type::OPTION_TYPE_NAME;
+use self::result_type::rust_result_type_to_data_type;
+use self::result_type::RESULT_TYPE_NAME;
 use crate::ast::Expr;
 use crate::ast::FnSignature;
 use crate::ast_types::DataType;
@@ -12,11 +16,6 @@ use crate::libraries::Library;
 use crate::tasm_code_generator::CompilerState;
 use crate::type_checker::CheckState;
 use crate::type_checker::GetType;
-
-use self::option_type::rust_option_type_to_data_type;
-use self::option_type::OPTION_TYPE_NAME;
-use self::result_type::rust_result_type_to_data_type;
-use self::result_type::RESULT_TYPE_NAME;
 
 pub(crate) mod array;
 pub(crate) mod option_type;

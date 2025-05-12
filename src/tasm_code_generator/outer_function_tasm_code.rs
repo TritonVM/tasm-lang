@@ -8,12 +8,11 @@ use tasm_lib::triton_vm::isa::instruction;
 use tasm_lib::triton_vm::isa::op_stack::NumberOfWords;
 use tasm_lib::triton_vm::prelude::*;
 
+use super::ValueIdentifier;
 use crate::ast;
 use crate::ast_types;
 use crate::tasm_code_generator::inner_function_tasm_code::InnerFunctionTasmCode;
 use crate::tasm_code_generator::SubRoutine;
-
-use super::ValueIdentifier;
 
 pub(crate) struct OuterFunctionTasmCode {
     // TODO: Remove these attributes once we have a sane `main` function that uses these fields
@@ -446,7 +445,7 @@ impl OuterFunctionTasmCode {
             let import = split_at_type[0];
             let type_parameter =
                 type_parameter.map(|x| tasm_lib::data_type::DataType::from_str(x).unwrap());
-            let snippet_struct_name = import.split('_').last().unwrap();
+            let snippet_struct_name = import.split('_').next_back().unwrap();
             let snippet_struct_name = inflections::case::to_pascal_case(snippet_struct_name);
             let module_full_import_path = import.replace('_', "::");
             let module_full_import_path = module_full_import_path.replace("tasm::", "crate::");

@@ -37,12 +37,11 @@ mod test {
     use rand::random;
     use tasm_lib::triton_vm::prelude::*;
 
+    use super::*;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::init_memory_from;
     use crate::tests_and_benchmarks::test_helpers::shared_test::TritonVMTestCase;
-
-    use super::*;
 
     #[test]
     fn basic_struct_method_test() {

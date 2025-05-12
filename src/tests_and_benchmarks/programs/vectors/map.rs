@@ -25,9 +25,8 @@ mod tests {
         use tasm_lib::triton_vm::prelude::*;
         use tasm_lib::twenty_first::math::other::random_elements;
 
-        use crate::tests_and_benchmarks::test_helpers::shared_test::*;
-
         use super::*;
+        use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 
         #[test]
         fn simple_map_mul_by_2_test() {

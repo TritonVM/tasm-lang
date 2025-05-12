@@ -1,19 +1,17 @@
 use std::panic::catch_unwind;
 
-use tasm_lib::triton_vm::error::InstructionError;
-use tasm_lib::triton_vm::prelude::*;
-
 use proptest::collection::vec;
 use proptest::prelude::*;
 use proptest_arbitrary_interop::arb;
+use tasm_lib::triton_vm::error::InstructionError;
+use tasm_lib::triton_vm::prelude::*;
 use test_strategy::proptest;
 
+use super::three_variants_type::*;
 use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 use crate::tests_and_benchmarks::ozk::rust_shadows::wrap_main_with_io;
 use crate::tests_and_benchmarks::test_helpers::shared_test::*;
-
-use super::three_variants_type::*;
 
 fn choose_variant_a_and_panic_on_variant_b_and_c() {
     let input: u32 = tasm::tasmlib_io_read_stdin___u32();

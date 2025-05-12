@@ -1,6 +1,7 @@
-use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 use num::One;
 use tasm_lib::triton_vm::prelude::*;
+
+use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 struct EvalArg;
@@ -36,13 +37,14 @@ impl EvalArg {
 
 #[cfg(test)]
 mod test {
+    use rand::Rng;
+    use tasm_lib::twenty_first::math::other::random_elements;
+    use tasm_lib::twenty_first::math::x_field_element::EXTENSION_DEGREE;
+
     use self::tasm::wrap_main_with_io;
     use super::*;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::test_helpers::shared_test::TritonVMTestCase;
-    use rand::Rng;
-    use tasm_lib::twenty_first::math::other::random_elements;
-    use tasm_lib::twenty_first::math::x_field_element::EXTENSION_DEGREE;
 
     fn call_compute_terminal() {
         let symbols_length: usize = tasm::tasmlib_io_read_stdin___u32() as usize;

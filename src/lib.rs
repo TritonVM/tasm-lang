@@ -7,6 +7,7 @@ use std::process;
 use clap::Arg;
 use clap::ArgAction;
 use clap::Command;
+use graft::CustomTypeRust;
 use itertools::Itertools;
 use syn::ImplItemMethod;
 use syn::Item;
@@ -20,8 +21,6 @@ use tasm_lib::triton_vm::prelude::LabelledInstruction;
 pub use tasm_lib::twenty_first;
 #[allow(unused_imports)]
 use tasm_lib::twenty_first::prelude::BFieldElement;
-
-use graft::CustomTypeRust;
 
 use crate::custom_type_resolver::resolve_custom_types;
 use crate::graft::Graft;

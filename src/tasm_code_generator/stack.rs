@@ -1,10 +1,9 @@
 use itertools::Itertools;
 use tasm_lib::triton_vm::prelude::*;
 
-use crate::ast_types;
-
 use super::copy_value_to_memory;
 use super::ValueIdentifier;
+use crate::ast_types;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct Stack<T: Eq> {

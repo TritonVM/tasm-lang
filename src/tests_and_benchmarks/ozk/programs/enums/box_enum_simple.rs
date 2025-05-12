@@ -39,12 +39,10 @@ mod test {
     use rand::random;
     use tasm_lib::triton_vm::prelude::*;
 
+    use self::tasm::wrap_main_with_io;
+    use super::*;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::test_helpers::shared_test::TritonVMTestCase;
-
-    use super::*;
-
-    use self::tasm::wrap_main_with_io;
 
     #[test]
     fn box_enum_simple_test() {

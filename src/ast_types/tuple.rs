@@ -1,13 +1,12 @@
 use itertools::Itertools;
 use tasm_lib::triton_vm::prelude::triton_asm;
 
-use crate::ast::FnSignature;
-use crate::libraries::LibraryFunction;
-
 use super::AbstractArgument;
 use super::AbstractValueArg;
 use super::DataType;
 use super::FieldId;
+use crate::ast::FnSignature;
+use crate::libraries::LibraryFunction;
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub(crate) struct Tuple {

@@ -2,6 +2,8 @@ use tasm_lib::list::LIST_METADATA_SIZE;
 use tasm_lib::traits::basic_snippet::BasicSnippet;
 use tasm_lib::triton_vm::prelude::*;
 
+use super::bfe::BfeLibrary;
+use super::LibraryFunction;
 use crate::ast;
 use crate::ast::FnSignature;
 use crate::ast_types;
@@ -14,9 +16,6 @@ use crate::subroutine::SubRoutine;
 use crate::tasm_code_generator::CompilerState;
 use crate::type_checker::CheckState;
 use crate::type_checker::GetType;
-
-use super::bfe::BfeLibrary;
-use super::LibraryFunction;
 
 const HASHER_LIB_INDICATOR: &str = "Tip5::";
 const STATEFUL_HASHER_LIB_INDICATOR: &str = "Tip5WithState::";

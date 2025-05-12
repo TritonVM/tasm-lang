@@ -27,14 +27,16 @@ fn no_name_clash_on_bfe_and_xfe_inverse() {
 
 #[cfg(test)]
 mod test {
+    use std::panic::catch_unwind;
+
+    use num::Zero;
+    use tasm_lib::twenty_first::math::other::random_elements;
+    use tasm_lib::twenty_first::math::x_field_element::EXTENSION_DEGREE;
+
     use super::*;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows::wrap_main_with_io;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
-    use num::Zero;
-    use std::panic::catch_unwind;
-    use tasm_lib::twenty_first::math::other::random_elements;
-    use tasm_lib::twenty_first::math::x_field_element::EXTENSION_DEGREE;
 
     #[test]
     fn xfe_inverse_test() {

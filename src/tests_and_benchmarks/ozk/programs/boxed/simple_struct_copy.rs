@@ -29,11 +29,10 @@ mod test {
     use tasm_lib::triton_vm::prelude::*;
     use tasm_lib::twenty_first::math::other::random_elements;
 
+    use super::*;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::TritonVMTestCase;
-
-    use super::*;
 
     #[test]
     fn boxed_simple_copy_struct() {

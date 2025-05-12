@@ -54,11 +54,10 @@ mod tests {
     use tasm::wrap_main_with_io;
     use tasm_lib::memory::encode_to_memory;
 
+    use super::*;
     use crate::ast_types::DataType;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::test_helpers::shared_test::TritonVMTestCase;
-
-    use super::*;
 
     const OBJ_POINTER: BFieldElement = BFieldElement::new(300);
 

@@ -21,12 +21,12 @@ fn main() {
 
 #[cfg(test)]
 mod test {
+    use rand::random;
+
     use super::*;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
-
-    use rand::random;
 
     #[test]
     fn boxed_bfe_pair_test() {

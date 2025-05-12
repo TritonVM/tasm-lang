@@ -76,9 +76,8 @@ mod run_tests {
     use tasm_lib::twenty_first::util_types::mmr::shared_basic::calculate_new_peaks_from_leaf_mutation;
     use test_strategy::proptest;
 
-    use crate::tests_and_benchmarks::test_helpers::shared_test::*;
-
     use super::*;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 
     #[test]
     fn right_child_run_test() {

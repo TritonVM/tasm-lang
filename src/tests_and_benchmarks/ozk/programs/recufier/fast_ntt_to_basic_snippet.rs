@@ -1,13 +1,15 @@
 #[cfg(test)]
 mod test {
-    use crate::tests_and_benchmarks::ozk::ozk_parsing::*;
-    use crate::tests_and_benchmarks::test_helpers::shared_test::bfe_lit;
-    use crate::tests_and_benchmarks::test_helpers::shared_test::compare_compiled_prop_with_stack_and_ins;
-    use num::One;
     use std::collections::HashMap;
+
+    use num::One;
     use tasm_lib::triton_vm::prelude::*;
     use tasm_lib::twenty_first::prelude::ModPowU32;
     use tasm_lib::twenty_first::prelude::XFieldElement;
+
+    use crate::tests_and_benchmarks::ozk::ozk_parsing::*;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::bfe_lit;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::compare_compiled_prop_with_stack_and_ins;
 
     #[allow(clippy::manual_swap)]
     #[allow(clippy::ptr_arg)]
@@ -112,6 +114,6 @@ mod test {
             EntrypointLocation::disk("recufier", "fast_ntt_to_basic_snippet", "test::xfe_ntt");
         let rust_ast = entrypoint_location.extract_entrypoint();
         let as_bs = compile_to_basic_snippet(rust_ast, HashMap::default());
-        println!("{}", as_bs);
+        println!("{as_bs}");
     }
 }

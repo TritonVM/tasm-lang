@@ -23,11 +23,10 @@ mod test {
 
     use tasm_lib::twenty_first::math::other::random_elements;
 
+    use super::*;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
-
-    use super::*;
 
     #[test]
     fn simple_encode_test() {

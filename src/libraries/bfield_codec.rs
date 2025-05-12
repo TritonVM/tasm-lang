@@ -3,6 +3,7 @@ use tasm_lib::list::LIST_METADATA_SIZE;
 use tasm_lib::memory::dyn_malloc;
 use tasm_lib::triton_vm::prelude::*;
 
+use super::Library;
 use crate::ast;
 use crate::ast_types;
 use crate::ast_types::DataType;
@@ -10,8 +11,6 @@ use crate::composite_types::CompositeTypes;
 use crate::graft::Graft;
 use crate::tasm_code_generator::write_n_words_to_memory_leaving_address;
 use crate::tasm_code_generator::CompilerState;
-
-use super::Library;
 
 const ENCODE_METHOD_NAME: &str = "encode";
 const LOAD_FROM_MEMORY_FN_NAME: &str = "tasm::load_from_memory";

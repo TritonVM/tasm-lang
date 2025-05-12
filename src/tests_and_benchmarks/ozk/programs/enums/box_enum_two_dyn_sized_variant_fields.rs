@@ -120,12 +120,12 @@ fn main_c() {
 
 #[cfg(test)]
 mod test {
+    use tasm_lib::twenty_first::math::other::random_elements;
+
     use self::tasm::wrap_main_with_io;
     use super::*;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::test_helpers::shared_test::TritonVMTestCase;
-
-    use tasm_lib::twenty_first::math::other::random_elements;
 
     #[test]
     fn a_box_enum_two_dyn_sized_variant_fields_test() {

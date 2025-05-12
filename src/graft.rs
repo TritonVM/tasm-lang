@@ -1,9 +1,10 @@
+use std::collections::HashMap;
+use std::str::FromStr;
+
 use itertools::Itertools;
 use num::One;
 use num::Zero;
 use quote::quote;
-use std::collections::HashMap;
-use std::str::FromStr;
 use syn::parse_quote;
 use syn::ExprMacro;
 use syn::PathArguments;
@@ -1400,11 +1401,11 @@ fn graft_match_condition(pat: &syn::Pat) -> ast::MatchCondition {
 
 #[cfg(test)]
 mod tests {
-    use crate::libraries::all_libraries;
     use syn::parse_quote;
     use syn::Item;
 
     use super::*;
+    use crate::libraries::all_libraries;
 
     fn assert_grafting_fn_decl_succeeds(tokens: &Item) {
         let syn::Item::Fn(item_fn) = tokens else {

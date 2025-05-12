@@ -1,8 +1,9 @@
+use num::Zero;
+
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 use crate::tests_and_benchmarks::ozk::rust_shadows::Tip5WithState;
 use crate::tests_and_benchmarks::test_helpers::shared_test::TritonVMTestCase;
 use crate::triton_vm::prelude::*;
-use num::Zero;
 
 fn absorb_and_squeeze() {
     Tip5WithState::init();
@@ -30,12 +31,13 @@ fn absorb_and_squeeze() {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
-    use crate::tests_and_benchmarks::ozk::rust_shadows::wrap_main_with_io;
     use itertools::Itertools;
     use tasm_lib::triton_vm::prelude::NonDeterminism;
     use tasm_lib::twenty_first::math::other::random_elements;
+
+    use super::*;
+    use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
+    use crate::tests_and_benchmarks::ozk::rust_shadows::wrap_main_with_io;
 
     #[test]
     fn absorb_and_squeeze_test() {

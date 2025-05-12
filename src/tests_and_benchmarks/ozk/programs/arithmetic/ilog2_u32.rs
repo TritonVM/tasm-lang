@@ -12,13 +12,12 @@ fn output_ilog2() {
 #[cfg(test)]
 mod test {
     use num::Zero;
-
-    use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
-    use crate::tests_and_benchmarks::ozk::rust_shadows;
-    use crate::tests_and_benchmarks::test_helpers::shared_test::*;
     use test_strategy::proptest;
 
     use super::*;
+    use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
+    use crate::tests_and_benchmarks::ozk::rust_shadows;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 
     #[proptest(cases = 10)]
     fn ilog2_proptest(value: u32) {

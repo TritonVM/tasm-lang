@@ -45,13 +45,12 @@ mod test {
     use itertools::Itertools;
     use rand::random;
 
+    use super::*;
     use crate::tests_and_benchmarks::ozk::ozk_parsing;
     use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::execute_compiled_with_stack_and_ins_for_test;
     use crate::tests_and_benchmarks::test_helpers::shared_test::init_memory_from;
-
-    use super::*;
 
     #[test]
     fn struct_with_xfe_and_xfes_to_stack_test() {

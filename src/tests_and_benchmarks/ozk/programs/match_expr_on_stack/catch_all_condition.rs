@@ -1,14 +1,14 @@
+use proptest::collection::vec;
+use proptest::prop_assert_eq;
+use proptest_arbitrary_interop::arb;
+use tasm_lib::triton_vm::prelude::*;
+use test_strategy::proptest;
+
 use super::three_variants_type::*;
 use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
 use crate::tests_and_benchmarks::ozk::rust_shadows as tasm;
 use crate::tests_and_benchmarks::ozk::rust_shadows;
 use crate::tests_and_benchmarks::test_helpers::shared_test::*;
-use tasm_lib::triton_vm::prelude::*;
-
-use proptest::collection::vec;
-use proptest::prop_assert_eq;
-use proptest_arbitrary_interop::arb;
-use test_strategy::proptest;
 
 fn catch_all_covers_a() {
     let val: ThreeVariants = ThreeVariants::random_from_std_in();

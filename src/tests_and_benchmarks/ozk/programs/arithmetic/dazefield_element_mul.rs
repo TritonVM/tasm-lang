@@ -56,18 +56,16 @@ fn main() {
 
 #[cfg(test)]
 mod test {
-    use tasm_lib::triton_vm::prelude::*;
-
     use proptest::collection::vec;
     use proptest::prelude::*;
     use proptest_arbitrary_interop::arb;
+    use tasm_lib::triton_vm::prelude::*;
     use test_strategy::proptest;
 
+    use super::*;
     use crate::tests_and_benchmarks::ozk::ozk_parsing;
     use crate::tests_and_benchmarks::ozk::rust_shadows;
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
-
-    use super::*;
 
     #[proptest(cases = 20)]
     fn dazefield_element_test(#[strategy(vec(arb(), 2))] std_in: Vec<BFieldElement>) {

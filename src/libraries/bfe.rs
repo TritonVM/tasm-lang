@@ -4,6 +4,8 @@ use num::Zero;
 use tasm_lib::triton_vm::prelude::*;
 use tasm_lib::twenty_first::math::traits::PrimitiveRootOfUnity;
 
+use super::Library;
+use super::LibraryFunction;
 use crate::ast;
 use crate::ast::FnSignature;
 use crate::ast_types;
@@ -11,9 +13,6 @@ use crate::ast_types::DataType;
 use crate::composite_types::CompositeTypes;
 use crate::graft::Graft;
 use crate::subroutine::SubRoutine;
-
-use super::Library;
-use super::LibraryFunction;
 
 const BFE_STRUCT_NAME: &str = "BFieldElement";
 const FUNCTION_NAME_NEW_BFE: &str = "BFieldElement::new";

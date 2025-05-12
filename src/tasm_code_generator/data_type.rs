@@ -3,13 +3,12 @@ use tasm_lib::memory::memcpy::MemCpy;
 use tasm_lib::triton_vm::isa::op_stack::OpStackElement;
 use tasm_lib::triton_vm::prelude::*;
 
+use super::move_top_stack_value_to_memory;
+use super::write_n_words_to_memory_leaving_address;
 use crate::ast_types;
 use crate::libraries::vector::VectorLib;
 use crate::tasm_code_generator::read_n_words_from_memory;
 use crate::tasm_code_generator::CompilerState;
-
-use super::move_top_stack_value_to_memory;
-use super::write_n_words_to_memory_leaving_address;
 
 pub(crate) mod array_type;
 pub(crate) mod enum_type;
@@ -239,6 +238,11 @@ impl ast_types::DataType {
     }
 
     /// Copy a value at a position on the stack to the top
+    ///
+    /// ```text
+    /// BEFORE: _ [value] (...)
+    /// AFTER: _ [value] (...) [value]
+    /// ```
     pub(super) fn dup_value_from_stack_code(
         &self,
         position: OpStackElement,
@@ -248,7 +252,7 @@ impl ast_types::DataType {
         // the position of the deepest element of the value.
         let n: usize = Into::<usize>::into(position) + elem_size - 1;
 
-        let instrs_as_str = format!("dup {}\n", n);
+        let instrs_as_str = format!("dup {n}\n",);
         let instrs_as_str = instrs_as_str.repeat(elem_size);
 
         triton_asm!({ instrs_as_str })

@@ -1,5 +1,6 @@
-use crate::tests_and_benchmarks::test_helpers::shared_test::item_fn;
 use syn::parse_quote;
+
+use crate::tests_and_benchmarks::test_helpers::shared_test::item_fn;
 
 fn divmoddi4_u64_rast() -> syn::ItemFn {
     // This code shows how to do u64 div-mod using only u32 div-mod primitives.
@@ -58,9 +59,8 @@ mod run_tests {
     use rand::RngCore;
     use tasm_lib::twenty_first::math::other::random_elements;
 
-    use crate::tests_and_benchmarks::test_helpers::shared_test::*;
-
     use super::*;
+    use crate::tests_and_benchmarks::test_helpers::shared_test::*;
 
     #[test]
     fn declare_u64_max_and_bits_test() {

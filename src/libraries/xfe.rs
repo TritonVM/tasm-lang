@@ -4,6 +4,8 @@ use num::Zero;
 use tasm_lib::triton_vm::prelude::*;
 use tasm_lib::twenty_first::prelude::x_field_element::EXTENSION_DEGREE;
 
+use super::bfe::BfeLibrary;
+use super::LibraryFunction;
 use crate::ast;
 use crate::ast_types;
 use crate::ast_types::DataType;
@@ -11,9 +13,6 @@ use crate::composite_types::CompositeTypes;
 use crate::graft::Graft;
 use crate::libraries::Library;
 use crate::tasm_code_generator::CompilerState;
-
-use super::bfe::BfeLibrary;
-use super::LibraryFunction;
 
 const XFIELDELEMENT_LIB_INDICATOR: &str = "XFieldElement::";
 const ZERO_CONST_NAME: &str = "XFieldElement::zero";
