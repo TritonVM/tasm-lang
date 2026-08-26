@@ -446,15 +446,12 @@ impl CompositeTypes {
         let type_name = split_name[0];
         let fname = split_name[1];
 
-        let ty_ctx = if let Some(indices) = self.by_name.get(type_name) {
-            assert!(
-                indices.len().is_one(),
-                "Multiple composite types with name {type_name} found",
-            );
-            &self.composite_types[indices[0]]
-        } else {
-            return None;
-        };
+        let indices = self.by_name.get(type_name)?;
+        assert!(
+            indices.len().is_one(),
+            "Multiple composite types with name {type_name} found",
+        );
+        let ty_ctx = &self.composite_types[indices[0]];
 
         ty_ctx.get_associated_function(fname).map(|x| x.to_owned())
     }

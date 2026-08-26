@@ -327,22 +327,11 @@ fn graft_bfe_new(
         // TODO: To handle more advanced expressions here (like BFieldElement::MAX - 1),
         // we might have to implement constant folding on ast::Expr?
         // Unsure how to handle that.
-        ast::Expr::Var(ast::Identifier::String(constant, _)) => {
-            if constant == "BFieldElement::MAX" {
-                // `const` declaration of `BFieldElement::new(BFieldElement::MAX)`
-                ast::Expr::Lit(ast::ExprLit::Bfe(BFieldElement::new(BFieldElement::MAX)))
-            } else {
-                // non-const declaration of `BFieldElement::new(<expr>)`
-                let bfe_new_function = bfe_new_function();
-                ast::Expr::FnCall(ast::FnCall {
-                    name: "BFieldElement::new".to_string(),
-                    args: vec![init_arg.to_owned()],
-                    type_parameter: None,
-                    arg_evaluation_order: bfe_new_function.signature.arg_evaluation_order,
-                    annot: Default::default(),
-                    qualified_self_type: Some(DataType::Bfe),
-                })
-            }
+        ast::Expr::Var(ast::Identifier::String(constant, _))
+            if constant == "BFieldElement::MAX" =>
+        {
+            // `const` declaration of `BFieldElement::new(BFieldElement::MAX)`
+            ast::Expr::Lit(ast::ExprLit::Bfe(BFieldElement::new(BFieldElement::MAX)))
         }
         _ => {
             // non-const declaration of `BFieldElement::new(<expr>)`

@@ -1,0 +1,7 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc da0c538a97c3f809416b89dab13255f8b533106a702e28c6188f4720d5b88e7f # shrinks to input = _FriParameterDerivationUsingDefaultStarkParametersCorrespondsToTritonVmsDerivationArgs { log_2_padded_height: 0 }

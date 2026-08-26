@@ -55,7 +55,6 @@ fn main() {
 
 #[cfg(test)]
 mod test {
-    use tasm_lib::triton_vm::prelude::*;
 
     use super::*;
     use crate::tests_and_benchmarks::ozk::ozk_parsing;

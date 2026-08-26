@@ -56,7 +56,6 @@ fn main() {
 mod test {
     use itertools::Itertools;
     use proptest_arbitrary_interop::arb;
-    use tasm_lib::triton_vm::prelude::*;
     use test_strategy::proptest;
 
     use super::*;

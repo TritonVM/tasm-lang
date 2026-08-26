@@ -145,7 +145,7 @@ impl FnSignature {
     pub(crate) fn from_basic_snippet(snippet: Box<dyn BasicSnippet>) -> Self {
         let name = snippet.entrypoint();
         let mut args: Vec<ast_types::AbstractArgument> = vec![];
-        for (ty, name) in snippet.inputs().into_iter() {
+        for (ty, name) in snippet.parameters().into_iter() {
             let fn_arg = ast_types::AbstractValueArg {
                 name,
                 data_type: ty.try_into().unwrap(),
@@ -155,7 +155,7 @@ impl FnSignature {
         }
 
         let mut output_types: Vec<ast_types::DataType> = vec![];
-        for (ty, _name) in snippet.outputs() {
+        for (ty, _name) in snippet.return_values() {
             output_types.push(ty.try_into().unwrap());
         }
 

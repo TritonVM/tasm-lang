@@ -17,7 +17,6 @@ use tasm_lib::library::Library as SnippetState;
 use tasm_lib::list::LIST_METADATA_SIZE;
 use tasm_lib::prelude::*;
 use tasm_lib::triton_vm::prelude::*;
-use tasm_lib::twenty_first::prelude::*;
 
 use self::function_state::FunctionState;
 use self::function_state::VarAddr;
@@ -773,7 +772,7 @@ impl CompilerState<'_> {
 
         // Sanity check that all bindings at the start of the code block still exists.
         // I think that should be the case.
-        for (var_name_start, _) in bindings_start.iter() {
+        for var_name_start in bindings_start.keys() {
             assert!(
                 bindings_end.contains_key(var_name_start),
                 "Bindings at end of block must contain all at start of block"
@@ -1627,7 +1626,10 @@ fn compile_expr(
             ast::ExprLit::Bfe(value) => triton_asm!(push {*value }),
 
             ast::ExprLit::U64(value) => {
-                let as_u32s = U32s::<2>::try_from(*value).unwrap().encode();
+                let as_u32s = [
+                    BFieldElement::new(*value & u32::MAX as u64),
+                    BFieldElement::new(*value >> 32),
+                ];
                 let stack_serialized: Vec<_> = as_u32s.iter().rev().collect();
 
                 let code = stack_serialized

@@ -4,6 +4,7 @@ use syn::parse_quote;
 use syn::PathArguments;
 use tasm_lib::triton_vm::table::master_table::MasterAuxTable;
 use tasm_lib::triton_vm::table::NUM_QUOTIENT_SEGMENTS;
+use tasm_lib::triton_vm::table::NUM_RANDOMIZED_QUOTIENT_SEGMENTS;
 
 use self::vm_proof_iter::graft_vm_proof_iter;
 use self::vm_proof_iter::VM_PROOF_ITER_TYPE_NAME;
@@ -17,11 +18,12 @@ use crate::composite_types::CompositeTypes;
 use crate::composite_types::TypeContext;
 use crate::graft::Graft;
 use crate::triton_vm::table::master_table::MasterMainTable;
-use crate::triton_vm::table::master_table::MasterTable;
 
 const BASE_ROW_TYPE_NAME: &str = "MainRow";
 const EXT_ROW_TYPE_NAME: &str = "AuxiliaryRow";
 const QUOT_SEGMENTS_TYPE_NAME: &str = "QuotientSegments";
+const OOD_QUOT_SEGMENTS_TYPE_NAME: &str = "OodQuotientSegments";
+const RAND_QUOT_SEGMENTS_TYPE_NAME: &str = "RandQuotientSegments";
 const PROOF_TYPE_NAME: &str = "Proof";
 const CLAIM_TYPE_NAME: &str = "Claim";
 
@@ -39,7 +41,10 @@ impl Library for RecufyLib {
             VM_PROOF_ITER_TYPE_NAME => Some(graft_vm_proof_iter(graft)),
             BASE_ROW_TYPE_NAME => Some(Self::graft_main_row(path_args, graft)),
             EXT_ROW_TYPE_NAME => Some(Self::graft_aux_row(path_args)),
-            QUOT_SEGMENTS_TYPE_NAME => Some(Self::graft_quot_segments(path_args)),
+            QUOT_SEGMENTS_TYPE_NAME | OOD_QUOT_SEGMENTS_TYPE_NAME => {
+                Some(Self::graft_quot_segments(path_args))
+            }
+            RAND_QUOT_SEGMENTS_TYPE_NAME => Some(Self::graft_rand_quot_segments(path_args)),
             PROOF_TYPE_NAME => Some(Self::graft_proof(graft, path_args)),
             CLAIM_TYPE_NAME => Some(Self::graft_claim(graft, path_args)),
             _ => None,
@@ -147,6 +152,14 @@ impl RecufyLib {
         ast_types::DataType::Array(ast_types::ArrayType {
             element_type: Box::new(ast_types::DataType::Xfe),
             length: NUM_QUOTIENT_SEGMENTS,
+        })
+    }
+
+    fn graft_rand_quot_segments(arguments: &PathArguments) -> ast_types::DataType {
+        assert!(matches!(arguments, PathArguments::None));
+        ast_types::DataType::Array(ast_types::ArrayType {
+            element_type: Box::new(ast_types::DataType::Xfe),
+            length: NUM_RANDOMIZED_QUOTIENT_SEGMENTS,
         })
     }
 

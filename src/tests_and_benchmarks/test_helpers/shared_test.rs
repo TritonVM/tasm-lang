@@ -428,7 +428,7 @@ pub(crate) fn assert_list_equal(
     }
 
     let actual_length =
-        rust_shadowing_helper_functions::list::list_get_length(list_pointer, memory);
+        rust_shadowing_helper_functions::list::list_get_length(list_pointer, memory).unwrap();
     let expected_length = expected_list.len();
     if expected_length != actual_length {
         let mut actual_memory = memory.iter().collect_vec();
@@ -454,6 +454,7 @@ pub(crate) fn assert_list_equal(
                 memory,
                 element_type.as_ref().unwrap().stack_size(),
             )
+            .unwrap()
         {
             let mut actual_memory = memory.iter().collect_vec();
             actual_memory.sort_unstable_by(|&a, &b| a.0.value().partial_cmp(&b.0.value()).unwrap());
