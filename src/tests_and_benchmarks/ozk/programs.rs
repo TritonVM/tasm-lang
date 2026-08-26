@@ -5,6 +5,7 @@ mod boxed;
 mod composite_types;
 mod destructuring;
 mod enums;
+mod general_rust;
 mod match_expr_boxed;
 mod match_expr_on_stack;
 mod match_stmt_boxed;
