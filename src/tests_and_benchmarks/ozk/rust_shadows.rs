@@ -455,13 +455,13 @@ pub(super) fn tasmlib_verifier_master_table_divide_out_zerofiers(
 
 #[allow(non_snake_case)] // Name must agree with `tasm-lib`
 pub(super) fn tasmlib_verifier_master_table_verify_Main_table_rows(
-    num_combination_codeword_checks: usize,
+    num_combination_codeword_checks: u32,
     merkle_tree_height: u32,
     merkle_tree_root: &Digest,
     revealed_fri_indices_and_elements: &[(u32, XFieldElement)],
     main_rows: &[MainRow<BFieldElement>],
 ) {
-    assert_eq!(main_rows.len(), num_combination_codeword_checks);
+    assert_eq!(main_rows.len(), num_combination_codeword_checks as usize);
     let leaf_digests_main: Vec<_> = main_rows
         .iter()
         .map(|revealed_main_elem| Tip5::hash_varlen(revealed_main_elem))
@@ -478,13 +478,13 @@ pub(super) fn tasmlib_verifier_master_table_verify_Main_table_rows(
 
 #[allow(non_snake_case)] // Name must agree with `tasm-lib`
 pub(super) fn tasmlib_verifier_master_table_verify_Aux_table_rows(
-    num_combination_codeword_checks: usize,
+    num_combination_codeword_checks: u32,
     merkle_tree_height: u32,
     merkle_tree_root: &Digest,
     revealed_fri_indices_and_elements: &[(u32, XFieldElement)],
     aux_rows: &[AuxiliaryRow],
 ) {
-    assert_eq!(aux_rows.len(), num_combination_codeword_checks);
+    assert_eq!(aux_rows.len(), num_combination_codeword_checks as usize);
     let leaf_digests_aux = aux_rows
         .iter()
         .map(|xvalues| {
@@ -504,13 +504,16 @@ pub(super) fn tasmlib_verifier_master_table_verify_Aux_table_rows(
 
 #[allow(non_snake_case)] // Name must agree with `tasm-lib`
 pub(super) fn tasmlib_verifier_master_table_verify_Quotient_table_rows(
-    num_combination_codeword_checks: usize,
+    num_combination_codeword_checks: u32,
     merkle_tree_height: u32,
     merkle_tree_root: &Digest,
     revealed_fri_indices_and_elements: &[(u32, XFieldElement)],
     quotient_segment_rows: &[RandQuotientSegments],
 ) {
-    assert_eq!(quotient_segment_rows.len(), num_combination_codeword_checks);
+    assert_eq!(
+        quotient_segment_rows.len(),
+        num_combination_codeword_checks as usize
+    );
     let interpret_xfe_as_bfes = |xfe: XFieldElement| xfe.coefficients.to_vec();
     let collect_row_as_bfes = |row: &RandQuotientSegments| row.map(interpret_xfe_as_bfes).concat();
     let leaf_digests_quot: Vec<_> = quotient_segment_rows

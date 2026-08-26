@@ -183,7 +183,7 @@ impl Recufier {
         // Check leafs
         // Dequeue base elements
         // Could be read from secret-in, but it's much more efficient to get them from memory
-        let num_combination_codeword_checks: usize = fri.num_collinearity_checks as usize;
+        let num_combination_codeword_checks: u32 = fri.num_collinearity_checks;
         let main_table_rows: Box<Vec<MainRow<BFieldElement>>> =
             proof_iter.next_as_mastermaintablerows();
 
@@ -236,17 +236,19 @@ impl Recufier {
 
         // Linear combination
         // Some of these checks may be redundant, but this is what the verifier in TVM does
-        assert!(num_combination_codeword_checks == revealed_fri_indices_and_elements.len());
-        assert!(num_combination_codeword_checks == main_table_rows.len());
-        assert!(num_combination_codeword_checks == ext_table_rows.len());
-        assert!(num_combination_codeword_checks == quotient_segment_elements.len());
+        assert!(
+            num_combination_codeword_checks as usize == revealed_fri_indices_and_elements.len()
+        );
+        assert!(num_combination_codeword_checks as usize == main_table_rows.len());
+        assert!(num_combination_codeword_checks as usize == ext_table_rows.len());
+        assert!(num_combination_codeword_checks as usize == quotient_segment_elements.len());
 
         // Main loop
         let trace_weights: [XFieldElement; 470] =
             <[XFieldElement; 470]>::try_from(main_and_aux_codeword_weights).unwrap();
         {
             let mut i: usize = 0;
-            while i < num_combination_codeword_checks {
+            while i < num_combination_codeword_checks as usize {
                 let row_idx: u32 = revealed_fri_indices_and_elements[i].0;
                 let fri_value: XFieldElement = revealed_fri_indices_and_elements[i].1;
                 let main_row: MainRow<BFieldElement> = main_table_rows[i];

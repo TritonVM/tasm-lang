@@ -1,16 +1,9 @@
-use syn::punctuated::Punctuated;
-use syn::token::Comma;
 use tasm_lib::triton_vm::prelude::LabelledInstruction;
 
-use self::option_type::rust_option_type_to_data_type;
-use self::option_type::OPTION_TYPE_NAME;
-use self::result_type::rust_result_type_to_data_type;
-use self::result_type::RESULT_TYPE_NAME;
 use crate::ast::Expr;
 use crate::ast::FnSignature;
 use crate::ast_types::DataType;
 use crate::composite_types::CompositeTypes;
-use crate::graft::Graft;
 use crate::libraries::Annotation;
 use crate::libraries::Library;
 use crate::tasm_code_generator::CompilerState;
@@ -28,19 +21,6 @@ const TRY_FROM_FUNCTION_NAME: &str = "try_from";
 pub(crate) struct Core;
 
 impl Library for Core {
-    fn graft_type(
-        &self,
-        graft: &mut Graft,
-        rust_type_as_string: &str,
-        path_args: &syn::PathArguments,
-    ) -> Option<DataType> {
-        match rust_type_as_string {
-            OPTION_TYPE_NAME => Some(rust_option_type_to_data_type(graft, path_args)),
-            RESULT_TYPE_NAME => Some(rust_result_type_to_data_type(graft, path_args)),
-            _ => None,
-        }
-    }
-
     fn handle_function_call(
         &self,
         full_name: &str,
@@ -131,27 +111,5 @@ impl Library for Core {
             }
             _ => panic!(),
         }
-    }
-
-    fn get_graft_function_name(&self, _full_name: &str) -> Option<String> {
-        None
-    }
-
-    fn graft_function(
-        &self,
-        _graft_config: &mut Graft,
-        _fn_name: &str,
-        _args: &Punctuated<syn::Expr, Comma>,
-        _type_parameter: Option<DataType>,
-    ) -> Option<Expr<Annotation>> {
-        panic!()
-    }
-
-    fn graft_method_call(
-        &self,
-        _graft_config: &mut Graft,
-        _rust_method_call: &syn::ExprMethodCall,
-    ) -> Option<Expr<super::Annotation>> {
-        None
     }
 }

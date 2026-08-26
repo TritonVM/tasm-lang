@@ -1,8 +1,5 @@
-use itertools::Itertools;
 use num::One;
-use num::Zero;
 use tasm_lib::triton_vm::prelude::*;
-use tasm_lib::twenty_first::math::traits::PrimitiveRootOfUnity;
 
 use super::Library;
 use super::LibraryFunction;
@@ -11,20 +8,14 @@ use crate::ast::FnSignature;
 use crate::ast_types;
 use crate::ast_types::DataType;
 use crate::composite_types::CompositeTypes;
-use crate::graft::Graft;
 use crate::subroutine::SubRoutine;
 
-const BFE_STRUCT_NAME: &str = "BFieldElement";
 const FUNCTION_NAME_NEW_BFE: &str = "BFieldElement::new";
-const FUNCTION_NAME_ZERO: &str = "BFieldElement::zero";
-const FUNCTION_NAME_ONE: &str = "BFieldElement::one";
 const FUNCTION_ROOT_FULL_NAME: &str = "BFieldElement::primitive_root_of_unity";
-const FUNCTION_ROOT_STRIPPED_NAME: &str = "primitive_root_of_unity";
 const FUNCTION_GENERATOR_NAME: &str = "BFieldElement::generator";
 const METHOD_NAME_MOD_POW_U32: &str = "mod_pow_u32";
 const METHOD_NAME_LIFT: &str = "lift";
 const METHOD_NAME_VALUE: &str = "value";
-const UNWRAP_METHOD_NAME: &str = "unwrap";
 const INVERSE_METHOD_NAME: &str = "inverse";
 
 #[derive(Clone, Debug)]
@@ -40,15 +31,6 @@ impl BfeLibrary {
 }
 
 impl Library for BfeLibrary {
-    fn graft_type(
-        &self,
-        _graft: &mut Graft,
-        _rust_type_as_string: &str,
-        _path_args: &syn::PathArguments,
-    ) -> Option<DataType> {
-        None
-    }
-
     fn handle_function_call(
         &self,
         full_name: &str,
@@ -171,77 +153,6 @@ impl Library for BfeLibrary {
 
         panic!("No function name {fn_name} implemented for BFE library.");
     }
-
-    fn get_graft_function_name(&self, full_name: &str) -> Option<String> {
-        if full_name == FUNCTION_NAME_NEW_BFE
-            || full_name == FUNCTION_NAME_ZERO
-            || full_name == FUNCTION_NAME_ONE
-            || full_name == FUNCTION_ROOT_FULL_NAME
-        {
-            return Some(full_name.to_owned());
-        }
-
-        None
-    }
-
-    fn graft_function(
-        &self,
-        graft_config: &mut Graft,
-        full_name: &str,
-        args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
-        _function_type_parameter: Option<ast_types::DataType>,
-    ) -> Option<ast::Expr<super::Annotation>> {
-        if full_name == FUNCTION_NAME_ZERO {
-            return Some(ast::Expr::Lit(ast::ExprLit::Bfe(BFieldElement::zero())));
-        }
-
-        if full_name == FUNCTION_NAME_ONE {
-            return Some(ast::Expr::Lit(ast::ExprLit::Bfe(BFieldElement::one())));
-        }
-
-        if full_name == FUNCTION_NAME_NEW_BFE {
-            return Some(graft_bfe_new(graft_config, args));
-        }
-
-        if full_name == FUNCTION_ROOT_FULL_NAME {
-            return Some(graft_bfe_primitive_root(graft_config, args));
-        }
-
-        None
-    }
-
-    fn graft_method_call(
-        &self,
-        graft_config: &mut Graft,
-        rust_method_call: &syn::ExprMethodCall,
-    ) -> Option<ast::Expr<super::Annotation>> {
-        // Handle the `unwrap()` when using `BFieldElement::primitive_root_of_unity(order).unwrap()`
-        let last_method_name = rust_method_call.method.to_string();
-        if last_method_name != UNWRAP_METHOD_NAME {
-            return None;
-        }
-
-        match rust_method_call.receiver.as_ref() {
-            syn::Expr::Call(fn_call) => {
-                if let syn::Expr::Path(expr_path) = *fn_call.func.to_owned() {
-                    if expr_path.path.segments[0].ident == BFE_STRUCT_NAME
-                        && expr_path.path.segments[1].ident == FUNCTION_ROOT_STRIPPED_NAME
-                    {
-                        return self.graft_function(
-                            graft_config,
-                            FUNCTION_ROOT_FULL_NAME,
-                            &fn_call.args,
-                            None,
-                        );
-                    }
-                    None
-                } else {
-                    None
-                }
-            }
-            _ => None,
-        }
-    }
 }
 
 fn bfe_inverse_method_signature() -> ast::FnSignature {
@@ -252,100 +163,6 @@ fn bfe_inverse_method_signature() -> ast::FnSignature {
         vec![("x", DataType::Bfe)],
         DataType::Bfe,
     )
-}
-
-/// Graft `BFieldElement::primitive_root_of_unity` to allow for compile-time resolution,
-/// if possible. Also gets rid of `unwrap` method call if needed.
-fn graft_bfe_primitive_root(
-    graft_config: &mut Graft,
-    args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
-) -> ast::Expr<super::Annotation> {
-    let args = args
-        .iter()
-        .map(|x| graft_config.graft_expr(x))
-        .collect_vec();
-
-    if args.len() != 1 {
-        panic!("BFE must be initialized with only one argument. Got: {args:#?}");
-    }
-
-    let init_arg = &args[0];
-    match init_arg {
-        ast::Expr::Lit(lit) => match lit {
-            ast::ExprLit::U64(value) => ast::Expr::Lit(ast::ExprLit::Bfe(
-                BFieldElement::primitive_root_of_unity(*value)
-                    .expect("Primitive root must be known. Got order: {value}"),
-            )),
-            ast::ExprLit::GenericNum(value, _) => ast::Expr::Lit(ast::ExprLit::Bfe(
-                BFieldElement::primitive_root_of_unity(TryInto::<u64>::try_into(*value).unwrap())
-                    .expect("Primitive root must be known. Got order: {value}"),
-            )),
-            _ => {
-                panic!("Cannot initialize BFieldElement with {lit:?} from {init_arg:#?}")
-            }
-        },
-        _ => {
-            // non-const declaration of `BFieldElement::primitive_root_of_unity(<expr>)`
-            ast::Expr::FnCall(ast::FnCall {
-                name: FUNCTION_ROOT_FULL_NAME.to_string(),
-                args: vec![init_arg.to_owned()],
-                type_parameter: None,
-                arg_evaluation_order: Default::default(),
-                annot: Default::default(),
-                qualified_self_type: Some(DataType::Bfe),
-            })
-        }
-    }
-}
-
-fn graft_bfe_new(
-    graft_config: &mut Graft,
-    args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
-) -> ast::Expr<super::Annotation> {
-    let args = args
-        .iter()
-        .map(|x| graft_config.graft_expr(x))
-        .collect_vec();
-
-    if args.len() != 1 {
-        panic!("BFE must be initialized with only one argument. Got: {args:#?}");
-    }
-
-    let init_arg = &args[0];
-    match init_arg {
-        ast::Expr::Lit(lit) => match lit {
-            ast::ExprLit::U64(value) => {
-                ast::Expr::Lit(ast::ExprLit::Bfe(BFieldElement::new(*value)))
-            }
-            ast::ExprLit::GenericNum(value, _) => ast::Expr::Lit(ast::ExprLit::Bfe(
-                BFieldElement::new(TryInto::<u64>::try_into(*value).unwrap()),
-            )),
-            _ => {
-                panic!("Cannot initialize BFieldElement with {lit:?} from {init_arg:#?}")
-            }
-        },
-        // TODO: To handle more advanced expressions here (like BFieldElement::MAX - 1),
-        // we might have to implement constant folding on ast::Expr?
-        // Unsure how to handle that.
-        ast::Expr::Var(ast::Identifier::String(constant, _))
-            if constant == "BFieldElement::MAX" =>
-        {
-            // `const` declaration of `BFieldElement::new(BFieldElement::MAX)`
-            ast::Expr::Lit(ast::ExprLit::Bfe(BFieldElement::new(BFieldElement::MAX)))
-        }
-        _ => {
-            // non-const declaration of `BFieldElement::new(<expr>)`
-            let bfe_new_function = bfe_new_function();
-            ast::Expr::FnCall(ast::FnCall {
-                name: "BFieldElement::new".to_string(),
-                args: vec![init_arg.to_owned()],
-                type_parameter: None,
-                arg_evaluation_order: bfe_new_function.signature.arg_evaluation_order,
-                annot: Default::default(),
-                qualified_self_type: Some(DataType::Bfe),
-            })
-        }
-    }
 }
 
 fn bfe_mod_pow_method() -> LibraryFunction {

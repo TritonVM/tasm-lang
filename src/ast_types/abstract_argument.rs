@@ -11,14 +11,7 @@ pub(crate) enum AbstractArgument {
     ValueArgument(AbstractValueArg),
 }
 
-impl AbstractArgument {
-    pub(crate) fn stack_size(&self) -> usize {
-        match self {
-            Self::FunctionArgument(_) => 0,
-            Self::ValueArgument(arg) => arg.data_type.stack_size(),
-        }
-    }
-}
+impl AbstractArgument {}
 
 impl Display for AbstractArgument {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {

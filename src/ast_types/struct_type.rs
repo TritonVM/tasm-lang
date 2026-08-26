@@ -137,17 +137,6 @@ impl StructType {
         }
     }
 
-    pub(crate) fn field_types_mut<'a>(
-        &'a mut self,
-    ) -> Box<dyn Iterator<Item = &'a mut DataType> + 'a> {
-        match &mut self.variant {
-            StructVariant::TupleStruct(ts) => Box::new(ts.fields.iter_mut()),
-            StructVariant::NamedFields(nfs) => {
-                Box::new(nfs.fields.iter_mut().map(|(_name, dtype)| dtype))
-            }
-        }
-    }
-
     pub(crate) fn field_ids_and_types<'a>(
         &'a self,
     ) -> Box<dyn Iterator<Item = (FieldId, &'a DataType)> + 'a> {

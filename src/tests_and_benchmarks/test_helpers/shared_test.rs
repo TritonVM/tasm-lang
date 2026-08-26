@@ -16,14 +16,10 @@ use tasm_lib::triton_vm::prelude::*;
 
 use crate::ast;
 use crate::ast_types;
-use crate::composite_types::CompositeTypes;
-use crate::graft::Graft;
-use crate::libraries::all_libraries;
-use crate::tasm_code_generator::compile_function;
+use crate::rustc_frontend;
 use crate::tests_and_benchmarks::ozk::ozk_parsing::compile_for_test;
 use crate::tests_and_benchmarks::ozk::ozk_parsing::EntrypointLocation;
 use crate::type_checker;
-use crate::type_checker::annotate_fn_outer;
 use crate::type_checker::GetType;
 use crate::type_checker::Typing;
 
@@ -74,21 +70,16 @@ pub(crate) fn compile_for_run_test(item_fn: &syn::ItemFn) -> (Vec<LabelledInstru
 }
 
 pub(crate) fn graft_check_compile_prop(item_fn: &syn::ItemFn) -> Vec<LabelledInstruction> {
-    let libraries = all_libraries();
-    let mut graft_config = Graft::new(&libraries);
-    let mut intermediate_language_ast = graft_config.graft_fn_decl(item_fn);
+    let entrypoint = item_fn.sig.ident.to_string();
+    let file = syn::File {
+        shebang: None,
+        attrs: vec![],
+        items: vec![syn::Item::Fn(item_fn.clone())],
+    };
+    let no_dependencies = |name: &str| -> syn::File { panic!("Unknown dependency {name}") };
+    let program = rustc_frontend::compile_program(file, &entrypoint, &no_dependencies);
 
-    // type-check and annotate. Doesn't handle structs and methods yet.
-    let mut composite_types = CompositeTypes::default();
-    annotate_fn_outer(
-        &mut intermediate_language_ast,
-        &mut composite_types,
-        &libraries,
-    );
-
-    // compile
-    let tasm = compile_function(&intermediate_language_ast, &libraries, &composite_types);
-    tasm.compose()
+    program.compose()
 }
 
 #[derive(Debug, Clone)]
@@ -419,10 +410,10 @@ pub(crate) fn assert_list_equal(
     // assert elements agree on type
     if let Some(element_type) = element_type.clone() {
         for elem in expected_list.iter() {
-            type_checker::assert_type_equals(
-                &elem.get_type(),
-                &element_type,
-                "assert_list_equal test helper function",
+            assert_eq!(
+                elem.get_type(),
+                element_type,
+                "assert_list_equal test helper function: element types must agree"
             );
         }
     }

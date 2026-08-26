@@ -40,7 +40,7 @@ recufier_merkle_root:
 | Ram       |     81 |        no |
 | JumpStack |   2332 |        no |
 | Hash      |    228 |        no |
-| Cascade   |   2674 |       yes |
+| Cascade   |   2662 |       yes |
 | Lookup    |    256 |        no |
 | U32       |    603 |        no |
 

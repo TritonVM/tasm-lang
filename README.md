@@ -5,12 +5,30 @@
 
 A compiler from a subset of Rust to [Triton VM assembly](https://github.com/TritonVM/triton-vm).
 
+## How it works
+The compiler uses `rustc` itself as its front-end: a program is parsed, name-resolved, type-checked
+and borrow-checked by `rustc`, and `rustc`'s typed intermediate representation of the program (THIR)
+is then lowered to the compiler's own abstract syntax tree, from which Triton assembly is generated.
+This means that all of Rust's type checking comes for free, and that types like `u32` vs `usize`,
+literal types, method resolution, auto-referencing, etc. behave exactly like in Rust.
+
+The types and functions that are native to Triton VM or provided by [`tasm-lib`](https://github.com/TritonVM/tasm-lib)
+-- `BFieldElement`, `XFieldElement`, `Digest`, `Tip5`, `tasm::tasmlib_*`, ... -- are declared to
+`rustc` through a stub prelude. The native types are opaque there, and occupy 1, 3 and 5 words on
+Triton VM's stack respectively; their host-machine representation plays no role.
+
+Because the front-end links against `rustc`'s internals, building this crate requires a nightly
+toolchain with the `rustc-dev` component. The `rust-toolchain.toml` file in this repository takes
+care of that when using `rustup`.
+
 ## Restrictions
-This compiler only handles a small part of the Rust language.
+This compiler only handles a part of the Rust language. Everything that is compiled must be
+valid Rust, but not all valid Rust can be compiled.
 - There are no `for` loops, use `while` instead.
-- All functions must end with the `return` keyword and functions may only contain *one* `return`
-  statement, i.e. early returns are not possible.
-- All declarations must use explicit types.
+- There is no `loop`, `break`, or `continue`.
+- Closures, traits, generics, and references beyond `&`/`&mut` in argument position are not supported.
+- Functions must end with a `return` statement.
+- `usize` is a 32-bit type.
 
 And more ...
 

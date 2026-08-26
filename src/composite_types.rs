@@ -9,8 +9,6 @@ use crate::ast_types;
 use crate::ast_types::CustomTypeOil;
 use crate::ast_types::DataType;
 use crate::ast_types::EnumType;
-use crate::custom_type_resolver::CustomTypeResolution;
-use crate::libraries;
 use crate::type_checker;
 use crate::type_checker::GetType;
 use crate::type_checker::Typing;
@@ -111,95 +109,6 @@ impl IntoIterator for CompositeTypes {
 }
 
 impl CompositeTypes {
-    /// Return the number of composite types
-    pub(crate) fn count(&self) -> usize {
-        self.by_type.len()
-    }
-
-    /// Merge two composite type collections. Panics if intersection is non-empty.
-    pub(crate) fn checked_merge(&mut self, other: Self) {
-        for (type_name, dtype_indices) in other.by_name.into_iter() {
-            for dtype_index in dtype_indices {
-                self.unique_add(
-                    type_name.clone(),
-                    other.composite_types[dtype_index].clone(),
-                )
-            }
-        }
-    }
-
-    /// Resolve all types. Handles nested type definitions and type resolution on methods and
-    /// associated functions. Notice that this is not type annotation but rather type-resolution
-    /// where the data type variant of `Unresolved` gets transformed.
-    pub(crate) fn resolve_nested(&mut self) {
-        let mut custom_types_copy = self.clone();
-        while custom_types_copy
-            .clone()
-            .into_iter()
-            .any(|tctx| tctx.composite_type.is_unresolved())
-        {
-            self.composite_types.iter_mut().for_each(|x| {
-                x.composite_type
-                    .field_or_variant_types_mut()
-                    .for_each(|y| y.resolve_custom_types(&custom_types_copy))
-            });
-            self.clone_into(&mut custom_types_copy);
-        }
-
-        self.composite_types.iter_mut().for_each(|tyctx| {
-            tyctx
-                .methods
-                .iter_mut()
-                .for_each(|method| method.resolve_custom_types(&custom_types_copy));
-
-            tyctx
-                .associated_functions
-                .iter_mut()
-                .for_each(|method| method.resolve_custom_types(&custom_types_copy))
-        });
-
-        // Ensure that all types in the (type => index) mapping are also resolved,
-        // otherwise nested types would still be unresolved here.
-        self.by_type = Default::default();
-        for (mut k, v) in custom_types_copy.clone().by_type.drain() {
-            k.resolve_custom_types(&custom_types_copy);
-            self.by_type.insert(k, v);
-        }
-    }
-
-    /// Type-annotate methods and associated functions for all non-atomic types
-    pub(crate) fn type_annotate(&mut self, libraries: &[Box<dyn libraries::Library>]) {
-        let mut annotate_again = true;
-        while annotate_again {
-            let mut custom_types_copy = self.clone();
-            let ftable = custom_types_copy.get_all_constructor_signatures();
-            self.methods_mut().for_each(|method| {
-                type_checker::annotate_method(
-                    method,
-                    &mut custom_types_copy,
-                    libraries,
-                    ftable.clone(),
-                );
-            });
-            self.associated_functions_mut().for_each(|func| {
-                type_checker::annotate_fn_inner(
-                    func,
-                    &mut custom_types_copy,
-                    libraries,
-                    ftable.clone(),
-                );
-            });
-
-            // Add all types collected in `custom_types_copy` to `self`.
-            // If any new declared types are added here, we need to annotate *their* methods and
-            // associated function, i.e. run this loop again.
-            annotate_again = custom_types_copy.count() != self.count();
-            for custom_type in custom_types_copy.composite_types {
-                self.add_type_context_if_new(custom_type);
-            }
-        }
-    }
-
     /// Add a composite type to the collection. Does nothing if it's already included.
     pub(crate) fn add_type_context_if_new(&mut self, tyctx: TypeContext) {
         self.idempotent_add(tyctx.composite_type.name().to_owned(), tyctx);
@@ -281,25 +190,19 @@ impl CompositeTypes {
         self.composite_types[indices[0]].clone()
     }
 
-    /// Return a mutable pointer to a type context that must be uniquely identified
-    /// by its name. Otherwise this function panics.
-    pub(crate) fn get_mut_unique_by_name(&mut self, type_name: &str) -> &mut TypeContext {
-        match self.by_name.get_mut(type_name) {
-            None => panic!("Did not find composite type with name {type_name}"),
-            Some(indices) => {
-                assert!(
-                    indices.len().is_one(),
-                    "Type with name {type_name} was defined more than once."
-                );
-                &mut self.composite_types[indices[0]]
-            }
-        }
-    }
-
     /// Return a type context that is uniquely identified by its data type.
     pub(crate) fn get_by_type(&self, composite_type: &ast_types::DataType) -> Option<&TypeContext> {
         let index = self.by_type.get(composite_type);
         index.map(|index| &self.composite_types[*index])
+    }
+
+    /// Return a mutable type context that is uniquely identified by its data type.
+    pub(crate) fn get_mut_by_type(
+        &mut self,
+        composite_type: &ast_types::DataType,
+    ) -> Option<&mut TypeContext> {
+        let index = *self.by_type.get(composite_type)?;
+        Some(&mut self.composite_types[index])
     }
 
     pub(crate) fn get_method(
@@ -309,86 +212,6 @@ impl CompositeTypes {
         self.get_by_type(method_call.associated_type.as_ref().unwrap())
             .map(|tyctx| tyctx.get_method(&method_call.method_name).unwrap())
             .cloned()
-    }
-
-    /********** Type Checking **********/
-    pub(crate) fn prelude_variant_match(
-        &self,
-        variant_name: &str,
-        expected_type: &ast_types::DataType,
-    ) -> Option<EnumType> {
-        let expected_type = expected_type.as_enum_type();
-        let preludes = self.preludes();
-        let mut ret = None;
-        for prelude in preludes {
-            if prelude.has_variant_of_name(variant_name) && prelude == expected_type {
-                ret = Some(prelude);
-            }
-        }
-
-        ret
-    }
-
-    pub(crate) fn methods_mut(&mut self) -> std::vec::IntoIter<&mut ast::Method<Typing>> {
-        self.composite_types
-            .iter_mut()
-            .flat_map(|x| x.methods.iter_mut())
-            .collect_vec()
-            .into_iter()
-    }
-
-    pub(crate) fn associated_functions_mut(&mut self) -> std::vec::IntoIter<&mut ast::Fn<Typing>> {
-        self.composite_types
-            .iter_mut()
-            .flat_map(|x| x.associated_functions.iter_mut())
-            .collect_vec()
-            .into_iter()
-    }
-
-    pub(crate) fn associated_function_signature(&self, name: &str) -> Option<ast::FnSignature> {
-        self.get_associated_function(name).map(|x| x.signature)
-    }
-
-    pub(crate) fn get_all_constructor_signatures(&self) -> HashMap<String, Vec<ast::FnSignature>> {
-        let mut ftable: HashMap<String, Vec<ast::FnSignature>> = HashMap::default();
-        for (type_name, custom_types) in self.by_name.iter() {
-            for type_context in custom_types {
-                match &self.composite_types[*type_context].composite_type {
-                    ast_types::CustomTypeOil::Struct(struct_type) => {
-                        if let ast_types::StructVariant::TupleStruct(_) = &struct_type.variant {
-                            let constructor_signature = struct_type.constructor().signature;
-                            ftable
-                                .entry(type_name.to_owned())
-                                .and_modify(|signatures| {
-                                    signatures.push(constructor_signature.clone())
-                                })
-                                .or_insert(vec![constructor_signature]);
-                        }
-                    }
-                    ast_types::CustomTypeOil::Enum(enum_type) => {
-                        for (variant_name, variant_type) in enum_type.variants.iter() {
-                            if !variant_type.is_unit() {
-                                let constructor_name = if enum_type.is_prelude {
-                                    variant_name.to_owned()
-                                } else {
-                                    format!("{}::{variant_name}", enum_type.name)
-                                };
-                                let constructor_signature =
-                                    enum_type.variant_tuple_constructor(variant_name).signature;
-                                ftable
-                                    .entry(constructor_name)
-                                    .and_modify(|signatures| {
-                                        signatures.push(constructor_signature.clone())
-                                    })
-                                    .or_insert(vec![constructor_signature]);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        ftable
     }
 
     /********** Code Generation **********/
@@ -408,30 +231,6 @@ impl CompositeTypes {
             (CustomTypeOil::Enum(_), None) => unreachable!(),
             (CustomTypeOil::Struct(_), Some(_)) => unreachable!(),
         }
-    }
-
-    /* Debugging */
-    pub(crate) fn all_method_names(&self) -> String {
-        self.composite_types
-            .iter()
-            .map(|tyctx| {
-                let method_names_of_type = tyctx.methods.iter().join(", ");
-                format!(
-                    "{}:\n    {method_names_of_type}",
-                    tyctx.composite_type.name()
-                )
-            })
-            .join("\n\n")
-    }
-
-    pub(crate) fn all_composite_type_names(&self) -> String {
-        self.composite_types
-            .iter()
-            .map(|tyctx| {
-                let as_dt: ast_types::DataType = tyctx.composite_type.clone().into();
-                format!("{as_dt}")
-            })
-            .join("\n\n")
     }
 
     /********** Shared Methods **********/

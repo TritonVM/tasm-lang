@@ -53,7 +53,7 @@ impl Display for PolynomialCoefficientType {
     }
 }
 
-pub(super) fn polynomial_type(coefficient_type: PolynomialCoefficientType) -> TypeContext {
+pub(crate) fn polynomial_type(coefficient_type: PolynomialCoefficientType) -> TypeContext {
     let coefficient_list_type = DataType::List(Box::new(coefficient_type.into()));
     let self_type = StructType {
         name: "Polynomial".to_owned(),

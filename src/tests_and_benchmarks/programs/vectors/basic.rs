@@ -249,7 +249,7 @@ pub(crate) mod run_tests {
 
                     let mut i: usize = 0;
                     while i < 16usize {
-                        list_a.push(i);
+                        list_a.push(i as u32);
                         i = i + 1;
                     }
 
@@ -268,7 +268,8 @@ pub(crate) mod run_tests {
                         i += 1;
                     }
 
-                    return (list_a, list_b, list_b[10]);
+                    let b_10: u32 = list_b[10];
+                    return (list_a, list_b, b_10);
                 }
             })
         }
@@ -283,7 +284,7 @@ pub(crate) mod run_tests {
 
                     let mut i: usize = 0;
                     while i < 16usize {
-                        a.push(i);
+                        a.push(i as u32);
                         i = i + 1;
                     }
 

@@ -2,13 +2,7 @@ use std::fs;
 
 use tasm_lib::triton_vm::prelude::*;
 
-use crate::custom_type_resolver::resolve_custom_types;
-use crate::extract_types_and_function;
-use crate::graft::Graft;
-use crate::libraries::all_libraries;
-use crate::tasm_code_generator::compile_function;
-use crate::type_checker::annotate_fn_outer;
-use crate::StructsAndMethodsRustAst;
+use crate::rustc_frontend;
 
 const MANIFEST_DIR: &str = env!("CARGO_MANIFEST_DIR");
 const PROGRAMS_DIR: &str = "src/tests_and_benchmarks/ozk/programs";
@@ -152,63 +146,33 @@ impl SourceFileLocation {
     }
 }
 
-fn parse_functions_and_types_inner(location: &SourceFileLocation) -> StructsAndMethodsRustAst {
-    let file = location.parse_file();
-    let (mut custom_types, dependencies) = extract_types_and_function(&file);
-
-    for dependency in dependencies {
-        let new_location = SourceFileLocation {
-            module_name: dependency,
-            ..location.to_owned()
-        };
-        let imported_custom_types = parse_functions_and_types_inner(&new_location);
-        custom_types.extend(imported_custom_types)
-    }
-
-    custom_types
-}
-
+/// Compile the program at the given location, using the given entrypoint.
 pub(crate) fn compile_for_test(location: &EntrypointLocation) -> Vec<LabelledInstruction> {
-    let libraries = all_libraries();
-    let mut graft_config = Graft::new(&libraries);
+    let file = location.source_file_location.parse_file();
+    let directory = format!(
+        "{MANIFEST_DIR}/{PROGRAMS_DIR}/{}",
+        location.source_file_location.directory
+    );
+    let load_dependency = rustc_frontend::dependency_loader_for_directory(&directory);
+    let program = rustc_frontend::compile_program(file, &location.entrypoint, &load_dependency);
 
-    let entrypoint_fn = location.extract_entrypoint();
-    let rust_struct_asts = parse_functions_and_types_inner(&location.source_file_location);
-    let mut oil_ast = graft_config.graft_fn_decl(&entrypoint_fn);
-    let mut composite_types =
-        graft_config.graft_custom_types_methods_and_associated_functions(rust_struct_asts);
-    composite_types.checked_merge(graft_config.imported_custom_types);
-
-    resolve_custom_types(&mut oil_ast, &mut composite_types);
-
-    // type-check and annotate
-    annotate_fn_outer(&mut oil_ast, &mut composite_types, &libraries);
-
-    let tasm = compile_function(&oil_ast, &libraries, &composite_types);
-
-    tasm.compose()
+    program.compose()
 }
 
 /// Produce a [`BasicSnippet`][basic_snippet] through compilation and string interpolation.
 ///
 /// [basic_snippet]: tasm_lib::traits::basic_snippet::BasicSnippet
-pub(crate) fn compile_to_basic_snippet(
-    rust_ast: syn::ItemFn,
-    structs_and_methods: StructsAndMethodsRustAst,
-) -> String {
-    let libraries = all_libraries();
-    let mut graft_config = Graft::new(&libraries);
-    let mut oil_ast = graft_config.graft_fn_decl(&rust_ast);
-    let mut composite_types =
-        graft_config.graft_custom_types_methods_and_associated_functions(structs_and_methods);
+pub(crate) fn compile_to_basic_snippet(rust_ast: syn::ItemFn) -> String {
+    let entrypoint = rust_ast.sig.ident.to_string();
+    let file = syn::File {
+        shebang: None,
+        attrs: vec![],
+        items: vec![syn::Item::Fn(rust_ast)],
+    };
+    let no_dependencies = |name: &str| -> syn::File { panic!("Unknown dependency {name}") };
+    let program = rustc_frontend::compile_program(file, &entrypoint, &no_dependencies);
 
-    resolve_custom_types(&mut oil_ast, &mut composite_types);
-
-    // type-check and annotate
-    annotate_fn_outer(&mut oil_ast, &mut composite_types, &libraries);
-    let tasm = compile_function(&oil_ast, &libraries, &composite_types);
-
-    tasm.generate_basic_snippet_implementation()
+    program.generate_basic_snippet_implementation()
 }
 
 #[cfg(test)]

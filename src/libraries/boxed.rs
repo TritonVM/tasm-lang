@@ -8,30 +8,16 @@ use crate::ast;
 use crate::ast_types;
 use crate::ast_types::DataType;
 use crate::composite_types::CompositeTypes;
-use crate::graft::Graft;
 use crate::subroutine::SubRoutine;
 
 #[derive(Debug)]
 pub(crate) struct Boxed;
 
-const BOX_DATA_TYPE: &str = "Box";
 const FUNCTION_NAME_NEW_BOX: &str = "Box::new";
 const AS_REF_METHOD_NAME: &str = "as_ref";
 const TO_OWNED_METHOD_NAME: &str = "to_owned";
 
 impl Library for Boxed {
-    fn graft_type(
-        &self,
-        graft: &mut Graft,
-        rust_type_as_string: &str,
-        path_args: &syn::PathArguments,
-    ) -> Option<ast_types::DataType> {
-        match rust_type_as_string {
-            BOX_DATA_TYPE => Some(Self::rust_box_to_data_type(graft, path_args)),
-            _ => None,
-        }
-    }
-
     fn handle_function_call(
         &self,
         full_name: &str,
@@ -115,49 +101,9 @@ impl Library for Boxed {
 
         panic!("AllocBoxed does not known function with name {full_name}")
     }
-
-    fn get_graft_function_name(&self, _full_name: &str) -> Option<String> {
-        None
-    }
-
-    fn graft_function(
-        &self,
-        _graft_config: &mut Graft,
-        _fn_name: &str,
-        _args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
-        _type_parameter: Option<crate::ast_types::DataType>,
-    ) -> Option<crate::ast::Expr<super::Annotation>> {
-        panic!("AllocBoxed cannot graft functions")
-    }
-
-    fn graft_method_call(
-        &self,
-        _graft_config: &mut Graft,
-        _rust_method_call: &syn::ExprMethodCall,
-    ) -> Option<ast::Expr<super::Annotation>> {
-        None
-    }
 }
 
 impl Boxed {
-    fn rust_box_to_data_type(
-        graft: &mut Graft,
-        path_args: &syn::PathArguments,
-    ) -> ast_types::DataType {
-        let inner_type = if let syn::PathArguments::AngleBracketed(ab) = &path_args {
-            assert_eq!(1, ab.args.len(), "Must be Box<T> for *one* generic T.");
-            if let syn::GenericArgument::Type(inner) = &ab.args[0] {
-                graft.syn_type_to_ast_type(inner)
-            } else {
-                panic!("Unsupported type parameter for Box<T> {:#?}", ab.args[0])
-            }
-        } else {
-            panic!("Box must be followed by its type parameter `<T>`");
-        };
-
-        ast_types::DataType::Boxed(Box::new(inner_type))
-    }
-
     fn as_ref_method_signature(receiver_type: &ast_types::DataType) -> ast::FnSignature {
         assert!(matches!(receiver_type, ast_types::DataType::Boxed(_inner)));
 

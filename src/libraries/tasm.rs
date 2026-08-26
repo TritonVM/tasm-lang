@@ -5,7 +5,6 @@ use crate::ast;
 use crate::ast_types;
 use crate::ast_types::DataType;
 use crate::composite_types::CompositeTypes;
-use crate::graft::Graft;
 use crate::tasm_code_generator::CompilerState;
 
 const TASM_LIB_INDICATOR: &str = "tasm::";
@@ -14,15 +13,6 @@ const TASM_LIB_INDICATOR: &str = "tasm::";
 pub(crate) struct TasmLibrary;
 
 impl Library for TasmLibrary {
-    fn graft_type(
-        &self,
-        _graft: &mut Graft,
-        _rust_type_as_string: &str,
-        _path_args: &syn::PathArguments,
-    ) -> Option<DataType> {
-        None
-    }
-
     fn handle_function_call(
         &self,
         full_name: &str,
@@ -87,27 +77,5 @@ impl Library for TasmLibrary {
         state.import_snippet(snippet);
 
         triton_asm!(call { entrypoint })
-    }
-
-    fn get_graft_function_name(&self, _full_name: &str) -> Option<String> {
-        None
-    }
-
-    fn graft_function(
-        &self,
-        _graft_config: &mut Graft,
-        _fn_name: &str,
-        _args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
-        _function_type_parameter: Option<ast_types::DataType>,
-    ) -> Option<ast::Expr<super::Annotation>> {
-        panic!("No grafting is handled by TASM lib")
-    }
-
-    fn graft_method_call(
-        &self,
-        _graft_config: &mut Graft,
-        _rust_method_call: &syn::ExprMethodCall,
-    ) -> Option<ast::Expr<super::Annotation>> {
-        None
     }
 }

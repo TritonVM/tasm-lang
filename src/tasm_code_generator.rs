@@ -2,7 +2,7 @@ pub(crate) mod data_type;
 mod function_state;
 mod inner_function_tasm_code;
 mod match_code;
-mod outer_function_tasm_code;
+pub(crate) mod outer_function_tasm_code;
 mod stack;
 
 use std::collections::HashMap;

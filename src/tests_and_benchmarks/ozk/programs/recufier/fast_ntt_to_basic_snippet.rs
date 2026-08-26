@@ -113,7 +113,7 @@ mod test {
         let entrypoint_location =
             EntrypointLocation::disk("recufier", "fast_ntt_to_basic_snippet", "test::xfe_ntt");
         let rust_ast = entrypoint_location.extract_entrypoint();
-        let as_bs = compile_to_basic_snippet(rust_ast, HashMap::default());
+        let as_bs = compile_to_basic_snippet(rust_ast);
         println!("{as_bs}");
     }
 }

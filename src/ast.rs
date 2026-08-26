@@ -136,11 +136,6 @@ impl FnSignature {
         }
     }
 
-    /// Return the number of words that the function's input arguments take up on the stack
-    pub(crate) fn input_arguments_stack_size(&self) -> usize {
-        self.args.iter().map(|arg| arg.stack_size()).sum()
-    }
-
     /// Convert snippet implementing `BasicSnippet` from `tasm-lib` into a function signature.
     pub(crate) fn from_basic_snippet(snippet: Box<dyn BasicSnippet>) -> Self {
         let name = snippet.entrypoint();
@@ -171,33 +166,6 @@ impl FnSignature {
             output,
             arg_evaluation_order: Default::default(),
         }
-    }
-
-    /// Returns a boolean indicating if the function signature matches a list of input types
-    pub(crate) fn matches(&self, types: &[DataType]) -> bool {
-        if self.args.len() != types.len() {
-            return false;
-        }
-
-        for (arg, dtype) in self.args.iter().zip_eq(types.iter()) {
-            match arg {
-                AbstractArgument::FunctionArgument(fun_arg) => {
-                    let DataType::Function(fun) = dtype else {
-                        return false;
-                    };
-                    if fun_arg.function_type != **fun {
-                        return false;
-                    }
-                }
-                AbstractArgument::ValueArgument(val_arg) => {
-                    if val_arg.data_type != *dtype {
-                        return false;
-                    }
-                }
-            }
-        }
-
-        true
     }
 }
 
@@ -404,6 +372,9 @@ pub(crate) enum ExprLit<T> {
     Bfe(BFieldElement),
     Xfe(XFieldElement),
     Digest(Digest),
+    /// A number literal whose type is not (yet) known. Type inference is
+    /// performed by `rustc`, so the front-end never produces this variant.
+    #[allow(dead_code)]
     GenericNum(u128, T),
 }
 
@@ -662,7 +633,7 @@ impl<T> Display for Expr<T> {
 /// Represents an enum variant without data. `let a = Foo::Bar;`
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub(crate) struct EnumDeclaration {
-    // Needs to be `DataType` since we populate it with `Unresolved` in grafter
+    // The (resolved) enum type of the declared variant
     pub(crate) enum_type: ast_types::DataType,
     pub(crate) variant_name: String,
 }
@@ -752,23 +723,10 @@ impl<T> Display for Identifier<T> {
 impl Identifier<Typing> {
     pub(crate) fn force_type(&mut self, forced_type: &DataType) {
         let forced_type = forced_type.to_owned();
-        eprintln!("Forcing {self} to {forced_type}");
         match self {
             Identifier::String(_, t) => *t = crate::type_checker::Typing::KnownType(forced_type),
             Identifier::Index(_, _, t) => *t = crate::type_checker::Typing::KnownType(forced_type),
             Identifier::Field(_, _, t) => *t = crate::type_checker::Typing::KnownType(forced_type),
-        }
-    }
-
-    pub(crate) fn resolved(&self) -> Option<DataType> {
-        let t = match self {
-            Identifier::String(_, t) => t,
-            Identifier::Index(_, _, t) => t,
-            Identifier::Field(_, _, t) => t,
-        };
-        match t {
-            Typing::UnknownType => None,
-            Typing::KnownType(resolved_type) => Some(resolved_type.to_owned()),
         }
     }
 }

@@ -7,7 +7,6 @@ use crate::ast;
 use crate::ast_types;
 use crate::ast_types::DataType;
 use crate::composite_types::CompositeTypes;
-use crate::graft::Graft;
 use crate::tasm_code_generator::CompilerState;
 use crate::type_checker::is_u32_based_type;
 
@@ -24,15 +23,6 @@ const ILOG2_METHOD: &str = "ilog2";
 const NEXT_POWER_OF_TWO_METHOD: &str = "next_power_of_two";
 
 impl Library for UnsignedIntegersLib {
-    fn graft_type(
-        &self,
-        _graft: &mut Graft,
-        _rust_type_as_string: &str,
-        _path_args: &syn::PathArguments,
-    ) -> Option<DataType> {
-        None
-    }
-
     fn handle_function_call(
         &self,
         _full_name: &str,
@@ -145,28 +135,6 @@ impl Library for UnsignedIntegersLib {
         _qualified_self_type: &Option<DataType>,
     ) -> Vec<LabelledInstruction> {
         panic!("unsigned_integers lib does not contain any functions");
-    }
-
-    fn get_graft_function_name(&self, _full_name: &str) -> Option<String> {
-        None
-    }
-
-    fn graft_function(
-        &self,
-        _graft_config: &mut Graft,
-        _fn_name: &str,
-        _args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
-        _function_type_parameter: Option<ast_types::DataType>,
-    ) -> Option<ast::Expr<super::Annotation>> {
-        panic!("unsigned_integers lib cannot graft");
-    }
-
-    fn graft_method_call(
-        &self,
-        _graft_config: &mut Graft,
-        _rust_method_call: &syn::ExprMethodCall,
-    ) -> Option<ast::Expr<super::Annotation>> {
-        None
     }
 }
 
