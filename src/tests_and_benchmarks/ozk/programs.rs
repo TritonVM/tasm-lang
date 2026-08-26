@@ -17,4 +17,5 @@ mod result_types;
 mod sponge_hasher;
 mod structs;
 mod type_forcing;
+mod type_inference;
 mod vectors;
