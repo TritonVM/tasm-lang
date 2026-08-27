@@ -6,7 +6,6 @@ use crate::ast;
 use crate::ast::FnSignature;
 use crate::ast_types::DataType;
 use crate::composite_types::CompositeTypes;
-use crate::graft::Graft;
 use crate::tasm_code_generator::CompilerState;
 use crate::type_checker;
 
@@ -47,14 +46,7 @@ pub(crate) fn all_libraries() -> Box<[Box<dyn Library>]> {
     ])
 }
 
-pub(crate) trait Library: Debug {
-    fn graft_type(
-        &self,
-        graft: &mut Graft,
-        rust_type_as_string: &str,
-        path_args: &syn::PathArguments,
-    ) -> Option<DataType>;
-
+pub(crate) trait Library: Debug + Send + Sync {
     /// Return `true` iff library handles this function call
     fn handle_function_call(&self, full_name: &str, qualified_self_type: &Option<DataType>)
         -> bool;
@@ -99,22 +91,4 @@ pub(crate) trait Library: Debug {
         state: &mut CompilerState,
         qualified_self_type: &Option<DataType>,
     ) -> Vec<LabelledInstruction>;
-
-    /// Return full function name iff grafting should be handled by
-    /// library and not the generic grafter.
-    fn get_graft_function_name(&self, full_name: &str) -> Option<String>;
-
-    fn graft_function(
-        &self,
-        graft_config: &mut Graft,
-        fn_name: &str,
-        args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
-        type_parameter: Option<DataType>,
-    ) -> Option<ast::Expr<Annotation>>;
-
-    fn graft_method_call(
-        &self,
-        graft_config: &mut Graft,
-        rust_method_call: &syn::ExprMethodCall,
-    ) -> Option<ast::Expr<Annotation>>;
 }

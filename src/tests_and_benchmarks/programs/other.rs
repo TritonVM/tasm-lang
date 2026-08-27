@@ -69,8 +69,8 @@ mod compile_and_typecheck_tests {
 
                     let mut arr: Vec<u64> = Vec::<u64>::default();
                     arr[0] = b;
-                    arr[a] = b + 1;
-                    arr[2 * a + 3] = 1 << (4 / a + 5);
+                    arr[a as usize] = b + 1;
+                    arr[(2 * a + 3) as usize] = 1 << (4 / a + 5);
 
                     arr.push(4);
 

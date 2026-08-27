@@ -29,17 +29,6 @@ impl From<EnumType> for DataType {
 }
 
 impl EnumType {
-    /// Return an iterator over mutable references to the type's nested datatypes
-    pub(crate) fn variant_types_mut<'a>(
-        &'a mut self,
-    ) -> Box<dyn Iterator<Item = &'a mut DataType> + 'a> {
-        Box::new(self.variants.iter_mut().map(|x| &mut x.1))
-    }
-
-    pub(crate) fn variant_types<'a>(&'a self) -> Box<dyn Iterator<Item = &'a DataType> + 'a> {
-        Box::new(self.variants.iter().map(|x| &x.1))
-    }
-
     pub(crate) fn has_variant_of_name(&self, variant_name: &str) -> bool {
         self.variants.iter().any(|x| x.0 == variant_name)
     }

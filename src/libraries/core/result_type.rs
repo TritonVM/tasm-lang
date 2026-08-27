@@ -1,4 +1,3 @@
-use syn::PathArguments;
 use tasm_lib::triton_vm::prelude::triton_asm;
 
 use crate::ast;
@@ -8,27 +7,9 @@ use crate::ast_types::AbstractArgument;
 use crate::ast_types::AbstractValueArg;
 use crate::ast_types::DataType;
 use crate::composite_types::CompositeTypes;
-use crate::graft::Graft;
 use crate::type_checker::Typing;
 
 pub(super) const RESULT_TYPE_NAME: &str = "Result";
-
-pub(super) fn rust_result_type_to_data_type(
-    graft: &mut Graft,
-    path_args: &PathArguments,
-) -> DataType {
-    let PathArguments::AngleBracketed(generics) = path_args else {
-        panic!("Unsupported path argument {path_args:#?}");
-    };
-    assert_eq!(2, generics.args.len(), "`Result` must have two generics");
-
-    let ok_type_arg = &generics.args[0];
-    let syn::GenericArgument::Type(ok_type) = ok_type_arg else {
-        panic!("Unsupported type {ok_type_arg:#?}");
-    };
-    let ok_type = graft.syn_type_to_ast_type(ok_type);
-    wrap_and_import_result_type(ok_type, &mut graft.imported_custom_types)
-}
 
 pub(crate) fn wrap_and_import_result_type(
     ok_type: DataType,

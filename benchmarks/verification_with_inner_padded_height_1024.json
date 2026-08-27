@@ -1,0 +1,13 @@
+[
+  {
+    "name": "verification_with_inner_padded_height_1024",
+    "benchmark_result": {
+      "clock_cycle_count": 299989,
+      "hash_table_height": 154909,
+      "u32_table_height": 86043,
+      "op_stack_table_height": 280010,
+      "ram_table_height": 300194
+    },
+    "case": "CommonCase"
+  }
+]

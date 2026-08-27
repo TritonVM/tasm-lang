@@ -73,7 +73,6 @@ fn main() {
 mod test {
     use itertools::Itertools;
     use rand::random;
-    use tasm_lib::triton_vm::prelude::*;
     use tasm_lib::twenty_first::math::other::random_elements;
 
     use super::*;

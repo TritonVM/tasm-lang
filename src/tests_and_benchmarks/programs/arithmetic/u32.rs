@@ -502,9 +502,9 @@ mod run_tests {
 
         fn usize_as_alias_for_u32_rast() -> syn::ItemFn {
             item_fn(parse_quote! {
-                fn usize_as_alias_for_u32(lhs: usize, rhs: u32) -> usize {
-                    let c: u32 = lhs + rhs;
-                    return c;
+                fn usize_as_alias_for_u32(lhs: usize, rhs: u32) -> u32 {
+                    let c: usize = lhs + rhs as usize;
+                    return c as u32;
                 }
             })
         }

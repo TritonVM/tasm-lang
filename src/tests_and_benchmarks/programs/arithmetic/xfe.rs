@@ -292,7 +292,7 @@ mod run_tests {
             // Verify that all coefficients in the XFE are tested
             for j in 0..EXTENSION_DEGREE {
                 let mut new_lhs = lhs[i];
-                new_lhs.increment(j);
+                new_lhs.coefficients[j].increment();
                 compare_prop_with_stack_safe_lists(
                     &eq_xfe_rast(),
                     vec![xfe_lit(new_lhs), xfe_lit(lhs[i])],

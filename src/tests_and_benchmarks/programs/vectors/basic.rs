@@ -150,19 +150,20 @@ pub(crate) mod run_tests {
         list_new(expected_list_pointer, &mut expected_final_memory);
 
         let elem_0 = vec![BFieldElement::new(2000), BFieldElement::new(0)];
-        list_push(expected_list_pointer, elem_0, &mut expected_final_memory);
+        list_push(expected_list_pointer, elem_0, &mut expected_final_memory).unwrap();
 
         let elem_1 = vec![BFieldElement::new(5000), BFieldElement::new(0)];
-        list_push(expected_list_pointer, elem_1, &mut expected_final_memory);
+        list_push(expected_list_pointer, elem_1, &mut expected_final_memory).unwrap();
 
         let elem_2 = vec![BFieldElement::new(4000), BFieldElement::new(0)];
-        list_push(expected_list_pointer, elem_2, &mut expected_final_memory);
+        list_push(expected_list_pointer, elem_2, &mut expected_final_memory).unwrap();
 
         list_pop(
             expected_list_pointer,
             &mut expected_final_memory,
             ast_types::DataType::U64.stack_size(),
-        );
+        )
+        .unwrap();
 
         compare_prop_with_stack_safe_lists(&rust_ast, inputs, expected_outputs);
     }
@@ -177,12 +178,12 @@ pub(crate) mod run_tests {
         list_new(list_pointer, &mut memory);
 
         let elem_1 = vec![BFieldElement::new(2000), BFieldElement::new(0)];
-        list_push(list_pointer, elem_1, &mut memory);
+        list_push(list_pointer, elem_1, &mut memory).unwrap();
 
         let mut expected_final_memory = memory.clone();
         for i in 0..10 {
             let elem_i = vec![BFieldElement::new(i), BFieldElement::new(0)];
-            list_push(list_pointer, elem_i, &mut expected_final_memory);
+            list_push(list_pointer, elem_i, &mut expected_final_memory).unwrap();
         }
 
         let item_fn = &item_fn(parse_quote! {
@@ -248,7 +249,7 @@ pub(crate) mod run_tests {
 
                     let mut i: usize = 0;
                     while i < 16usize {
-                        list_a.push(i);
+                        list_a.push(i as u32);
                         i = i + 1;
                     }
 
@@ -267,7 +268,8 @@ pub(crate) mod run_tests {
                         i += 1;
                     }
 
-                    return (list_a, list_b, list_b[10]);
+                    let b_10: u32 = list_b[10];
+                    return (list_a, list_b, b_10);
                 }
             })
         }
@@ -282,7 +284,7 @@ pub(crate) mod run_tests {
 
                     let mut i: usize = 0;
                     while i < 16usize {
-                        a.push(i);
+                        a.push(i as u32);
                         i = i + 1;
                     }
 
@@ -358,13 +360,13 @@ pub(crate) mod run_tests {
         list_new(expected_list_pointer_b, &mut expected_output_memory);
 
         let elem_1 = vec![BFieldElement::new(1000)];
-        list_push(expected_list_pointer_a, elem_1, &mut expected_output_memory);
+        list_push(expected_list_pointer_a, elem_1, &mut expected_output_memory).unwrap();
 
         let elem_2 = vec![BFieldElement::new(2000)];
-        list_push(expected_list_pointer_a, elem_2, &mut expected_output_memory);
+        list_push(expected_list_pointer_a, elem_2, &mut expected_output_memory).unwrap();
 
         let elem_3 = vec![BFieldElement::new(3000), BFieldElement::new(0)];
-        list_push(expected_list_pointer_b, elem_3, &mut expected_output_memory);
+        list_push(expected_list_pointer_b, elem_3, &mut expected_output_memory).unwrap();
 
         compare_prop_with_stack_safe_lists(&rust_ast, inputs, expected_outputs);
     }

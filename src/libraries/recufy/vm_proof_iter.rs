@@ -7,32 +7,22 @@ use super::RecufyLib;
 use crate::ast;
 use crate::ast::RoutineBody;
 use crate::ast_types::DataType;
+use crate::composite_types::CompositeTypes;
 use crate::composite_types::TypeContext;
-use crate::graft::Graft;
 use crate::libraries::polynomial::PolynomialLib;
 use crate::triton_vm::prelude::*;
 use crate::type_checker::Typing;
 
 pub(super) const NEXT_AS_METHOD_NAMES_PREFIX: &str = "next_as_";
-pub(super) const VM_PROOF_ITER_TYPE_NAME: &str = "VmProofIter";
 
-pub(super) fn graft_vm_proof_iter(graft: &mut Graft) -> DataType {
-    let vm_proof_iter = vm_proof_iter_type_context(graft);
-    graft
-        .imported_custom_types
-        .add_type_context_if_new(vm_proof_iter.clone());
-    let fri_response = RecufyLib::fri_response_type(graft);
-    graft
-        .imported_custom_types
-        .add_type_context_if_new(fri_response);
-    vm_proof_iter.into()
-}
-
-fn vm_proof_iter_type_context(graft: &mut Graft) -> TypeContext {
+/// The `VmProofIter` type with its `new` constructor and all `next_as_*`
+/// methods. Registers the types of the proof items with `composite_types`.
+pub(crate) fn vm_proof_iter_type_context(composite_types: &mut CompositeTypes) -> TypeContext {
     let struct_type = vm_proof_iter_lang_struct();
+    composite_types.add_type_context_if_new(RecufyLib::fri_response_type_context());
 
     // List all methods
-    let all_dequeue_methods = all_next_as_methods(graft);
+    let all_dequeue_methods = all_next_as_methods(composite_types);
     let new_function_constructor = vm_proof_iter_new_constructor();
     TypeContext {
         composite_type: struct_type.try_into().unwrap(),
@@ -84,7 +74,7 @@ fn method_name_for_next_as(variant: &ProofItemVariant) -> String {
     )
 }
 
-fn all_next_as_methods(graft_config: &mut Graft) -> Vec<ast::Method<Typing>> {
+fn all_next_as_methods(composite_types: &mut CompositeTypes) -> Vec<ast::Method<Typing>> {
     let mut methods = vec![];
     let receiver_type = vm_proof_iter_lang_struct();
     let receiver_type = DataType::Boxed(Box::new(receiver_type));
@@ -95,17 +85,16 @@ fn all_next_as_methods(graft_config: &mut Graft) -> Vec<ast::Method<Typing>> {
         };
         let method_output = variant.payload_type();
 
-        // TODO: Handle Polyonomial<T> through polynomial library here, and add it to custom
-        // types in `graft_config`.
-        println!("{method_output}");
-
         let method_output = if let Ok(poly_type) = PolynomialLib::try_from_string(method_output) {
-            graft_config
-                .imported_custom_types
-                .add_type_context_if_new(poly_type.clone());
+            composite_types.add_type_context_if_new(poly_type.clone());
             poly_type.into()
         } else {
-            DataType::try_from_string(method_output).unwrap()
+            match DataType::try_from_string(method_output).unwrap() {
+                DataType::Unresolved(type_name) => {
+                    composite_types.get_unique_by_name(&type_name).into()
+                }
+                resolved => resolved,
+            }
         };
 
         let method_output = DataType::Boxed(Box::new(method_output));

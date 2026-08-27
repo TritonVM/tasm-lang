@@ -87,22 +87,4 @@ impl CustomTypeOil {
             CustomTypeOil::Enum(e) => e.is_prelude,
         }
     }
-
-    pub(crate) fn field_or_variant_types_mut<'a>(
-        &'a mut self,
-    ) -> Box<dyn Iterator<Item = &'a mut DataType> + 'a> {
-        match self {
-            CustomTypeOil::Struct(struct_type) => struct_type.field_types_mut(),
-            CustomTypeOil::Enum(enum_type) => enum_type.variant_types_mut(),
-        }
-    }
-
-    pub(crate) fn field_or_variant_types<'a>(
-        &'a self,
-    ) -> Box<dyn Iterator<Item = &'a DataType> + 'a> {
-        match self {
-            CustomTypeOil::Struct(struct_type) => struct_type.field_types(),
-            CustomTypeOil::Enum(enum_type) => enum_type.variant_types(),
-        }
-    }
 }

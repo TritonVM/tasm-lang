@@ -7,6 +7,7 @@ use itertools::Itertools;
 use regex::Regex;
 use tasm_lib::triton_vm::table::master_table::MasterMainTable;
 use tasm_lib::triton_vm::table::NUM_QUOTIENT_SEGMENTS;
+use tasm_lib::triton_vm::table::NUM_RANDOMIZED_QUOTIENT_SEGMENTS;
 
 pub(crate) use self::abstract_argument::*;
 pub(crate) use self::array_type::ArrayType;
@@ -18,7 +19,6 @@ pub(crate) use self::struct_type::*;
 pub(crate) use self::tuple::Tuple;
 use crate::ast::FnSignature;
 use crate::triton_vm::table::master_table::MasterAuxTable;
-use crate::triton_vm::table::master_table::MasterTable;
 
 pub(crate) mod abstract_argument;
 pub(crate) mod array_type;
@@ -85,8 +85,15 @@ impl DataType {
 
         let array_regex = Regex::new(r"\[(?<inner>.+); (?<array_size>.+)\]").unwrap();
         if let Some(caps) = array_regex.captures(type_str) {
-            let known_constants: HashMap<&str, usize> =
-                [("NUM_QUOTIENT_SEGMENTS", 4)].into_iter().collect();
+            let known_constants: HashMap<&str, usize> = [
+                ("NUM_QUOTIENT_SEGMENTS", NUM_QUOTIENT_SEGMENTS),
+                (
+                    "NUM_RANDOMIZED_QUOTIENT_SEGMENTS",
+                    NUM_RANDOMIZED_QUOTIENT_SEGMENTS,
+                ),
+            ]
+            .into_iter()
+            .collect();
             let inner_parsed = Self::try_from_string(&caps["inner"])?;
             let array_size_indication = &caps["array_size"];
             let parsed_size = if known_constants.contains_key(&array_size_indication) {
@@ -133,9 +140,13 @@ impl DataType {
                 element_type: Box::new(DataType::Xfe),
                 length: MasterAuxTable::NUM_COLUMNS,
             })),
-            "QuotientSegments" => Ok(DataType::Array(ArrayType {
+            "QuotientSegments" | "OodQuotientSegments" => Ok(DataType::Array(ArrayType {
                 element_type: Box::new(DataType::Xfe),
                 length: NUM_QUOTIENT_SEGMENTS,
+            })),
+            "RandQuotientSegments" => Ok(DataType::Array(ArrayType {
+                element_type: Box::new(DataType::Xfe),
+                length: NUM_RANDOMIZED_QUOTIENT_SEGMENTS,
             })),
             _ => todo!("{type_str}"),
         }
@@ -162,14 +173,6 @@ impl DataType {
             DataType::Unresolved(_) => false,
             DataType::Boxed(_) => false,
         }
-    }
-
-    /// Return true if this type only has a pointer into memory on the stack
-    pub(crate) fn is_pointer(&self) -> bool {
-        matches!(
-            self,
-            DataType::List(_) | DataType::Array(_) | DataType::VoidPointer | DataType::Boxed(_)
-        )
     }
 
     /// Use this if the type is used to make labels in the TASM code
@@ -359,7 +362,9 @@ impl TryFrom<tasm_lib::data_type::DataType> for DataType {
             tasm_lib::data_type::DataType::U32 => U32,
             tasm_lib::data_type::DataType::U64 => U64,
             tasm_lib::data_type::DataType::U128 => U128,
-            tasm_lib::data_type::DataType::I128 => todo!(),
+            tasm_lib::data_type::DataType::I128
+            | tasm_lib::data_type::DataType::U160
+            | tasm_lib::data_type::DataType::U192 => todo!(),
             tasm_lib::data_type::DataType::Bfe => Bfe,
             tasm_lib::data_type::DataType::Xfe => Xfe,
             tasm_lib::data_type::DataType::Digest => Digest,

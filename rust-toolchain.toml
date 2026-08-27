@@ -1,0 +1,5 @@
+# The compiler front-end links against rustc's internal crates (`rustc_private`),
+# which requires a nightly toolchain with the `rustc-dev` component.
+[toolchain]
+channel = "nightly"
+components = ["rustc-dev", "llvm-tools", "rust-src", "rustfmt", "clippy"]

@@ -2,14 +2,12 @@ use tasm_lib::list::LIST_METADATA_SIZE;
 use tasm_lib::traits::basic_snippet::BasicSnippet;
 use tasm_lib::triton_vm::prelude::*;
 
-use super::bfe::BfeLibrary;
 use super::LibraryFunction;
 use crate::ast;
 use crate::ast::FnSignature;
 use crate::ast_types;
 use crate::ast_types::DataType;
 use crate::composite_types::CompositeTypes;
-use crate::graft::Graft;
 use crate::libraries::bfield_codec::BFieldCodecLib;
 use crate::libraries::Library;
 use crate::subroutine::SubRoutine;
@@ -19,8 +17,6 @@ use crate::type_checker::GetType;
 
 const HASHER_LIB_INDICATOR: &str = "Tip5::";
 const STATEFUL_HASHER_LIB_INDICATOR: &str = "Tip5WithState::";
-const DEFAULT_DIGEST_FUNCTION: &str = "Digest::default";
-const NEW_DIGEST_FUNCTION: &str = "Digest::new";
 const SPONGE_HASHER_INIT_NAME: &str = "Tip5WithState::init";
 const SPONGE_HASHER_ABSORB_NAME: &str = "Tip5WithState::absorb";
 const SPONGE_HASHER_SQUEEZE_NAME: &str = "Tip5WithState::squeeze";
@@ -35,15 +31,6 @@ const HASH_FUNCTION_NAME: &str = "Tip5::hash";
 pub(crate) struct HasherLib;
 
 impl Library for HasherLib {
-    fn graft_type(
-        &self,
-        _graft: &mut Graft,
-        _rust_type_as_string: &str,
-        _path_args: &syn::PathArguments,
-    ) -> Option<DataType> {
-        None
-    }
-
     fn handle_function_call(
         &self,
         full_name: &str,
@@ -168,44 +155,6 @@ impl Library for HasherLib {
                 _ => panic!("Unknown function {fn_name}"),
             },
         }
-    }
-
-    fn get_graft_function_name(&self, full_name: &str) -> Option<String> {
-        const GRAFTED_FUNCTIONS: [&str; 2] = [DEFAULT_DIGEST_FUNCTION, NEW_DIGEST_FUNCTION];
-        if GRAFTED_FUNCTIONS.contains(&full_name) {
-            return Some(full_name.to_owned());
-        }
-
-        None
-    }
-
-    fn graft_function(
-        &self,
-        graft_config: &mut Graft,
-        full_name: &str,
-        args: &syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
-        _function_type_parameter: Option<DataType>,
-    ) -> Option<ast::Expr<super::Annotation>> {
-        match full_name {
-            DEFAULT_DIGEST_FUNCTION => {
-                assert!(
-                    args.is_empty(),
-                    "Digest::default() should not have any arguments"
-                );
-
-                Some(ast::Expr::Lit(ast::ExprLit::Digest(Digest::default())))
-            }
-            NEW_DIGEST_FUNCTION => Some(graft_digest_new(&args[0], graft_config)),
-            _ => panic!("HasherLib cannot graft function {full_name}"),
-        }
-    }
-
-    fn graft_method_call(
-        &self,
-        _graft_config: &mut Graft,
-        _rust_method_call: &syn::ExprMethodCall,
-    ) -> Option<ast::Expr<super::Annotation>> {
-        None
     }
 }
 
@@ -348,64 +297,6 @@ fn name_to_tasm_lib_snippet(public_name: &str) -> Option<Box<dyn BasicSnippet>> 
             tasm_lib::hashing::algebraic_hasher::sample_scalars::SampleScalars,
         )),
         _ => None,
-    }
-}
-
-/// Handle initialization of digests through `Digest::new([BFieldElement::new(4), ...])`
-fn graft_digest_new(arg_0: &syn::Expr, graft_config: &mut Graft) -> ast::Expr<super::Annotation> {
-    match arg_0 {
-        syn::Expr::Array(syn::ExprArray { elems, .. }) => {
-            let mut initializer_exprs = vec![];
-            for elem in elems {
-                match elem {
-                    syn::Expr::Call(syn::ExprCall { func, args, .. }) => {
-                        let (name, _type_parameter) = match func.as_ref() {
-                            syn::Expr::Path(path) => (
-                                Graft::path_to_ident(&path.path),
-                                graft_config.path_to_type_parameter(&path.path),
-                            ),
-                            other => panic!("unsupported: {other:?}"),
-                        };
-
-                        let bfe_library = BfeLibrary;
-                        if let Some(bfe_fn_name) = bfe_library.get_graft_function_name(&name) {
-                            initializer_exprs.push(
-                                bfe_library
-                                    .graft_function(graft_config, &bfe_fn_name, args, None)
-                                    .unwrap(),
-                            );
-                        } else {
-                            panic!();
-                        }
-                    }
-                    _ => panic!("unsupported: {elem:?}"),
-                }
-            }
-
-            let mut bfe_literals = vec![];
-            for expr in initializer_exprs {
-                match expr {
-                    ast::Expr::Lit(ast::ExprLit::Bfe(bfe)) => {
-                        bfe_literals.push(bfe);
-                    }
-                    _ => {
-                        unreachable!("BFE grafting must return BFE literals. Got: {:#?}", expr)
-                    }
-                }
-            }
-
-            let bfe_literals: [BFieldElement; Digest::LEN] =
-                bfe_literals.clone().try_into().unwrap_or_else(|_| {
-                    panic!(
-                        "Digest initialization must happen with {} BFEs. Got {}",
-                        Digest::LEN,
-                        bfe_literals.len(),
-                    )
-                });
-
-            ast::Expr::Lit(ast::ExprLit::Digest(Digest::new(bfe_literals)))
-        }
-        _ => panic!("Digest instantiation must happen with an array"),
     }
 }
 

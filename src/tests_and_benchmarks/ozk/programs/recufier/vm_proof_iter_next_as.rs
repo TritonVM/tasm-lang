@@ -19,10 +19,11 @@ mod test {
     use crate::tests_and_benchmarks::test_helpers::shared_test::*;
     use crate::triton_vm::stark::NUM_QUOTIENT_SEGMENTS;
     use crate::triton_vm::table::master_table::MasterMainTable;
-    use crate::triton_vm::table::master_table::MasterTable;
     use crate::triton_vm::table::AuxiliaryRow;
     use crate::triton_vm::table::MainRow;
-    use crate::triton_vm::table::QuotientSegments;
+    use crate::triton_vm::table::OodQuotientSegments;
+    use crate::triton_vm::table::RandQuotientSegments;
+    use crate::triton_vm::table::NUM_RANDOMIZED_QUOTIENT_SEGMENTS;
 
     /// The function being tested here. Dual-compiled by `rustc` and `tasm-lang`.
     fn call_all_next_methods() {
@@ -37,7 +38,7 @@ mod test {
         tasm::tasmlib_io_write_to_stdout___xfe(out_of_domain_main_row[0]);
         tasm::tasmlib_io_write_to_stdout___xfe(out_of_domain_main_row[1]);
 
-        let out_of_domain_aux_row: Box<Box<[XFieldElement; 88]>> =
+        let out_of_domain_aux_row: Box<Box<[XFieldElement; 91]>> =
             vm_proof_iter.next_as_outofdomainauxrow();
         tasm::tasmlib_io_write_to_stdout___xfe(out_of_domain_aux_row[0]);
         tasm::tasmlib_io_write_to_stdout___xfe(out_of_domain_aux_row[1]);
@@ -68,7 +69,7 @@ mod test {
             }
         }
 
-        let metr: Box<Vec<[XFieldElement; 88]>> = vm_proof_iter.next_as_masterauxtablerows();
+        let metr: Box<Vec<[XFieldElement; 91]>> = vm_proof_iter.next_as_masterauxtablerows();
         {
             let mut j: usize = 0;
             while j < metr.len() {
@@ -84,7 +85,7 @@ mod test {
         let log2paddedheight: Box<u32> = vm_proof_iter.next_as_log2paddedheight();
         tasm::tasmlib_io_write_to_stdout___u32(*log2paddedheight);
 
-        let quotient_segments_elements: Box<Vec<[XFieldElement; 4]>> =
+        let quotient_segments_elements: Box<Vec<[XFieldElement; 5]>> =
             vm_proof_iter.next_as_quotientsegmentselements();
         {
             let mut j: usize = 0;
@@ -93,6 +94,7 @@ mod test {
                 tasm::tasmlib_io_write_to_stdout___xfe(quotient_segments_elements[j][1]);
                 tasm::tasmlib_io_write_to_stdout___xfe(quotient_segments_elements[j][2]);
                 tasm::tasmlib_io_write_to_stdout___xfe(quotient_segments_elements[j][3]);
+                tasm::tasmlib_io_write_to_stdout___xfe(quotient_segments_elements[j][4]);
                 j += 1;
             }
         }
@@ -198,8 +200,13 @@ mod test {
         row.try_into().unwrap()
     }
 
-    fn arbitrary_quotient_segments(from: u64) -> QuotientSegments {
+    fn arbitrary_ood_quotient_segments(from: u64) -> OodQuotientSegments {
         let to = from + NUM_QUOTIENT_SEGMENTS as u64;
+        (from..to).map(into_xfe).collect_vec().try_into().unwrap()
+    }
+
+    fn arbitrary_rand_quotient_segments(from: u64) -> RandQuotientSegments {
+        let to = from + NUM_RANDOMIZED_QUOTIENT_SEGMENTS as u64;
         (from..to).map(into_xfe).collect_vec().try_into().unwrap()
     }
 
@@ -225,9 +232,9 @@ mod test {
         22
     }
 
-    fn arbitrary_quotient_segments_elements() -> Vec<QuotientSegments> {
+    fn arbitrary_quotient_segments_elements() -> Vec<RandQuotientSegments> {
         [14, 2214, 3314, 4414]
-            .map(arbitrary_quotient_segments)
+            .map(arbitrary_rand_quotient_segments)
             .to_vec()
     }
 
@@ -256,7 +263,7 @@ mod test {
         let ood_aux_row = Box::new(arbitrary_aux_row(1001));
         proof_stream.enqueue(ProofItem::OutOfDomainAuxRow(ood_aux_row));
 
-        let quot_segments = arbitrary_quotient_segments(800);
+        let quot_segments = arbitrary_ood_quotient_segments(800);
         proof_stream.enqueue(ProofItem::OutOfDomainQuotientSegments(quot_segments));
 
         let auth_structure = arbitrary_auth_structure();

@@ -37,7 +37,6 @@ fn one_statically_sized_field() {
 mod test {
     use rand::random;
     use tasm::wrap_main_with_io;
-    use tasm_lib::triton_vm::prelude::*;
     use twenty_first::math::other::random_elements;
 
     use super::*;

@@ -1,3 +1,7 @@
+// The `%`-based checks are intentional: this program is dual-compiled by `tasm-lang`,
+// which does not support `is_multiple_of`.
+#![allow(clippy::manual_is_multiple_of)]
+
 #[cfg(test)]
 mod test {
     use itertools::Itertools;

@@ -15,7 +15,7 @@ rand = "0.9.0"
 regex = "1.10"
 strum = { version = "0.27", features = ["derive"] }
 syn = { version = "1.0", features = ["full", "extra-traits"] }
-tasm-lib = "0.48.0"
+tasm-lib = "8.0.0"
 
 [dev-dependencies]
 anyhow = "1"

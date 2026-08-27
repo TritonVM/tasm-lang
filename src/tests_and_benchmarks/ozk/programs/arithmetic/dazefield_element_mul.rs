@@ -59,7 +59,6 @@ mod test {
     use proptest::collection::vec;
     use proptest::prelude::*;
     use proptest_arbitrary_interop::arb;
-    use tasm_lib::triton_vm::prelude::*;
     use test_strategy::proptest;
 
     use super::*;

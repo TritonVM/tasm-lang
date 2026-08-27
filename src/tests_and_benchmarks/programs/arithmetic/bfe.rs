@@ -170,7 +170,7 @@ mod run_tests {
         fn cast_from_bool_rast() -> syn::ItemFn {
             item_fn(parse_quote! {
                 fn cast_from_bool(input: bool) -> BFieldElement {
-                    return input as BFieldElement;
+                    return BFieldElement::new(input as u64);
                 }
             })
         }
@@ -227,7 +227,7 @@ mod run_tests {
                     + BFieldElement::new(2u64) * input_1
                     + BFieldElement::new(2u64) * input_1
                     + BFieldElement::new(2u64) * input_1
-                    + (true || false) as BFieldElement;
+                    + BFieldElement::new((true || false) as u64);
                 let res1: BFieldElement = res0;
                 let val3: BFieldElement = BFieldElement::new(0u64);
                 let val4: BFieldElement = BFieldElement::new(0u64);
@@ -254,7 +254,7 @@ mod run_tests {
                     + input_0
                     + input_1
                     + input_2;
-                let res2: BFieldElement = res0 * res0 + 2;
+                let res2: BFieldElement = res0 * res0 + BFieldElement::new(2u64);
 
                 return (res0, res1, res2);
 

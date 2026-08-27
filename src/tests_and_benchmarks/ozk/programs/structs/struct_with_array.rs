@@ -42,7 +42,6 @@ mod test {
     use arbitrary::Unstructured;
     use itertools::Itertools;
     use rand::random;
-    use tasm_lib::triton_vm::prelude::*;
 
     use super::*;
     use crate::tests_and_benchmarks::ozk::ozk_parsing;

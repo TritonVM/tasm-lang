@@ -20,10 +20,10 @@ use tasm_lib::triton_vm::prelude::*;
 use tasm_lib::triton_vm::proof_item::ProofItem;
 use tasm_lib::triton_vm::proof_item::ProofItemVariant;
 use tasm_lib::triton_vm::table::master_table::MasterAuxTable;
-use tasm_lib::twenty_first::math::tip5::Tip5;
-use tasm_lib::twenty_first::math::tip5::RATE;
 use tasm_lib::twenty_first::math::traits::ModPowU32;
 use tasm_lib::twenty_first::math::x_field_element::EXTENSION_DEGREE;
+use tasm_lib::twenty_first::tip5::Tip5;
+use tasm_lib::twenty_first::tip5::RATE;
 use tasm_lib::twenty_first::util_types::merkle_tree::MerkleTreeInclusionProof;
 use tasm_lib::twenty_first::util_types::sponge::Sponge;
 use tasm_lib::verifier::master_table::air_constraint_evaluation;
@@ -40,7 +40,8 @@ use crate::triton_vm::proof_item::FriResponse;
 use crate::triton_vm::proof_stream::ProofStream;
 use crate::triton_vm::table::AuxiliaryRow;
 use crate::triton_vm::table::MainRow;
-use crate::triton_vm::table::QuotientSegments;
+use crate::triton_vm::table::OodQuotientSegments;
+use crate::triton_vm::table::RandQuotientSegments;
 use crate::twenty_first::prelude::*;
 
 thread_local! {
@@ -298,7 +299,7 @@ pub(super) fn tasmlib_hashing_merkle_verify(
     });
 
     let mt_inclusion_proof = MerkleTreeInclusionProof {
-        tree_height: tree_height as usize,
+        tree_height,
         indexed_leafs: vec![(leaf_index as usize, leaf)],
         authentication_structure: path,
     };
@@ -354,9 +355,9 @@ pub(super) fn tasmlib_array_inner_product_of_4_xfes(
     inner_product(&a, &b)
 }
 
-pub(super) fn tasmlib_array_inner_product_of_596_xfes(
-    a: [XFieldElement; 596],
-    b: [XFieldElement; 596],
+pub(super) fn tasmlib_array_inner_product_of_611_xfes(
+    a: [XFieldElement; 611],
+    b: [XFieldElement; 611],
 ) -> XFieldElement {
     inner_product(&a, &b)
 }
@@ -410,13 +411,14 @@ pub(super) fn tasmlib_verifier_master_table_air_constraint_evaluation(
 pub(super) fn tasmlib_verifier_master_table_divide_out_zerofiers(
     mut air_evaluation_result: [XFieldElement; MasterAuxTable::NUM_CONSTRAINTS],
     out_of_domain_point_curr_row: XFieldElement,
-    padded_height: u32,
+    trace_domain_len: u32,
     trace_domain_generator: BFieldElement,
 ) -> [XFieldElement; MasterAuxTable::NUM_CONSTRAINTS] {
     let initial_zerofier_inv: XFieldElement =
         (out_of_domain_point_curr_row - BFieldElement::one()).inverse();
     let consistency_zerofier_inv: XFieldElement =
-        (out_of_domain_point_curr_row.mod_pow_u32(padded_height) - BFieldElement::one()).inverse();
+        (out_of_domain_point_curr_row.mod_pow_u32(trace_domain_len) - BFieldElement::one())
+            .inverse();
     let except_last_row: XFieldElement =
         out_of_domain_point_curr_row - trace_domain_generator.inverse();
     let transition_zerofier_inv: XFieldElement = except_last_row * consistency_zerofier_inv;
@@ -453,13 +455,13 @@ pub(super) fn tasmlib_verifier_master_table_divide_out_zerofiers(
 
 #[allow(non_snake_case)] // Name must agree with `tasm-lib`
 pub(super) fn tasmlib_verifier_master_table_verify_Main_table_rows(
-    num_combination_codeword_checks: usize,
+    num_combination_codeword_checks: u32,
     merkle_tree_height: u32,
     merkle_tree_root: &Digest,
     revealed_fri_indices_and_elements: &[(u32, XFieldElement)],
     main_rows: &[MainRow<BFieldElement>],
 ) {
-    assert_eq!(main_rows.len(), num_combination_codeword_checks);
+    assert_eq!(main_rows.len(), num_combination_codeword_checks as usize);
     let leaf_digests_main: Vec<_> = main_rows
         .iter()
         .map(|revealed_main_elem| Tip5::hash_varlen(revealed_main_elem))
@@ -476,13 +478,13 @@ pub(super) fn tasmlib_verifier_master_table_verify_Main_table_rows(
 
 #[allow(non_snake_case)] // Name must agree with `tasm-lib`
 pub(super) fn tasmlib_verifier_master_table_verify_Aux_table_rows(
-    num_combination_codeword_checks: usize,
+    num_combination_codeword_checks: u32,
     merkle_tree_height: u32,
     merkle_tree_root: &Digest,
     revealed_fri_indices_and_elements: &[(u32, XFieldElement)],
     aux_rows: &[AuxiliaryRow],
 ) {
-    assert_eq!(aux_rows.len(), num_combination_codeword_checks);
+    assert_eq!(aux_rows.len(), num_combination_codeword_checks as usize);
     let leaf_digests_aux = aux_rows
         .iter()
         .map(|xvalues| {
@@ -502,15 +504,18 @@ pub(super) fn tasmlib_verifier_master_table_verify_Aux_table_rows(
 
 #[allow(non_snake_case)] // Name must agree with `tasm-lib`
 pub(super) fn tasmlib_verifier_master_table_verify_Quotient_table_rows(
-    num_combination_codeword_checks: usize,
+    num_combination_codeword_checks: u32,
     merkle_tree_height: u32,
     merkle_tree_root: &Digest,
     revealed_fri_indices_and_elements: &[(u32, XFieldElement)],
-    quotient_segment_rows: &[QuotientSegments],
+    quotient_segment_rows: &[RandQuotientSegments],
 ) {
-    assert_eq!(quotient_segment_rows.len(), num_combination_codeword_checks);
+    assert_eq!(
+        quotient_segment_rows.len(),
+        num_combination_codeword_checks as usize
+    );
     let interpret_xfe_as_bfes = |xfe: XFieldElement| xfe.coefficients.to_vec();
-    let collect_row_as_bfes = |row: &QuotientSegments| row.map(interpret_xfe_as_bfes).concat();
+    let collect_row_as_bfes = |row: &RandQuotientSegments| row.map(interpret_xfe_as_bfes).concat();
     let leaf_digests_quot: Vec<_> = quotient_segment_rows
         .iter()
         .map(collect_row_as_bfes)
@@ -692,7 +697,7 @@ vm_proof_iter_impl!(
         uses try_into_out_of_domain_main_row,
     OutOfDomainAuxRow(Box<AuxiliaryRow>) defines next_as_outofdomainauxrow
         uses try_into_out_of_domain_aux_row,
-    OutOfDomainQuotientSegments(QuotientSegments) defines next_as_outofdomainquotientsegments
+    OutOfDomainQuotientSegments(OodQuotientSegments) defines next_as_outofdomainquotientsegments
         uses try_into_out_of_domain_quot_segments,
     AuthenticationStructure(AuthenticationStructure) defines next_as_authenticationstructure
         uses try_into_authentication_structure,
@@ -702,11 +707,11 @@ vm_proof_iter_impl!(
         uses try_into_master_aux_table_rows,
     Log2PaddedHeight(u32) defines next_as_log2paddedheight
         uses try_into_log2_padded_height,
-    QuotientSegmentsElements(Vec<QuotientSegments>) defines next_as_quotientsegmentselements
+    QuotientSegmentsElements(Vec<RandQuotientSegments>) defines next_as_quotientsegmentselements
         uses try_into_quot_segments_elements,
     FriCodeword(Vec<XFieldElement>) defines next_as_fricodeword
         uses try_into_fri_codeword,
-    FriPolynomial(Polynomial<XFieldElement>) defines next_as_fripolynomial uses try_into_fri_polynomial,
+    FriPolynomial(Polynomial<'static, XFieldElement>) defines next_as_fripolynomial uses try_into_fri_polynomial,
     FriResponse(FriResponse) defines next_as_friresponse
         uses try_into_fri_response,
 );
