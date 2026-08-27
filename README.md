@@ -9,8 +9,9 @@ A compiler from a subset of Rust to [Triton VM assembly](https://github.com/Trit
 The compiler uses `rustc` itself as its front-end: a program is parsed, name-resolved, type-checked
 and borrow-checked by `rustc`, and `rustc`'s typed intermediate representation of the program (THIR)
 is then lowered to the compiler's own abstract syntax tree, from which Triton assembly is generated.
-This means that all of Rust's type checking comes for free, and that types like `u32` vs `usize`,
-literal types, method resolution, auto-referencing, etc. behave exactly like in Rust.
+This means that all of Rust's type checking and type inference comes for free, and that types like
+`u32` vs `usize`, literal types, method resolution, auto-referencing, etc. behave exactly like in
+Rust.
 
 The types and functions that are native to Triton VM or provided by [`tasm-lib`](https://github.com/TritonVM/tasm-lib)
 -- `BFieldElement`, `XFieldElement`, `Digest`, `Tip5`, `tasm::tasmlib_*`, ... -- are declared to
