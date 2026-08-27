@@ -581,8 +581,7 @@ mod tests {
     #[inline]
     fn assert_unique_variable_names(cfg: &ControlFlowGraph) {
         let mut variable_names = vec![];
-        for node_index in 0..cfg.nodes.len() {
-            let basic_block = &cfg.nodes[node_index];
+        for basic_block in cfg.nodes.iter() {
             for param in basic_block.params.iter() {
                 assert!(!variable_names.contains(&param.name));
                 variable_names.push(param.name.clone());
@@ -605,8 +604,7 @@ mod tests {
 
     #[inline]
     fn assert_no_reassignments(cfg: &ControlFlowGraph) {
-        for node_index in 0..cfg.nodes.len() {
-            let basic_block = &cfg.nodes[node_index];
+        for basic_block in cfg.nodes.iter() {
             for statement in basic_block.statements.iter() {
                 assert!(!matches!(statement, Statement::Re(_)));
             }

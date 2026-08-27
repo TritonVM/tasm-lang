@@ -18,30 +18,27 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout sources
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Install stable toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
-          components: rustfmt, clippy
+      # The compiler's front-end links against `rustc`'s internal crates, so it
+      # needs the nightly toolchain and the `rustc-dev` component declared in
+      # `rust-toolchain.toml`. Installing the toolchain that file names is all
+      # that is needed -- do *not* install a different one and `override` it.
+      - name: Install toolchain from rust-toolchain.toml
+        run: rustup toolchain install
+
+      # `rustc`'s shared libraries live in the toolchain's sysroot. On Unix,
+      # `build.rs` puts that directory into the built binaries' rpath. Windows
+      # has no rpath, so the DLLs must be found through `PATH` instead.
+      - name: Make rustc's DLLs findable (Windows)
+        if: runner.os == 'Windows'
+        run: echo "$(rustc --print sysroot)\bin" >> $env:GITHUB_PATH
 
       - name: Run cargo fmt
-        uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: --all -- --check
+        run: cargo fmt --all -- --check
 
       - name: Run cargo clippy
-        uses: actions-rs/cargo@v1
-        with:
-          command: clippy
-          args: -- -D warnings
+        run: cargo clippy --all-targets -- -D warnings
 
       - name: Run cargo test without benches
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: -- --skip benches
+        run: cargo test -- --skip benches

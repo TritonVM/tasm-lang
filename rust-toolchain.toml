@@ -1,5 +1,14 @@
-# The compiler front-end links against rustc's internal crates (`rustc_private`),
-# which requires a nightly toolchain with the `rustc-dev` component.
+# The compiler's front-end links against `rustc`'s internal crates
+# (`rustc_private`), which requires a nightly toolchain with the `rustc-dev`
+# component.
+#
+# The nightly is pinned to an exact date because `rustc`'s internal APIs change
+# frequently; with an unpinned `nightly`, the build would break without any
+# change to this repository. To move to a newer compiler, bump the date below
+# and fix whatever `src/rustc_frontend/` no longer compiles against.
 [toolchain]
-channel = "nightly"
-components = ["rustc-dev", "llvm-tools", "rust-src", "rustfmt", "clippy"]
+channel = "nightly-2026-08-27"
+# `rustc-dev` provides `rustc`'s internal crates, `llvm-tools` the `libLLVM`
+# shared library they link against.
+components = ["rustc-dev", "llvm-tools", "rustfmt", "clippy"]
+profile = "minimal"

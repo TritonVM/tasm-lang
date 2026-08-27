@@ -19,8 +19,10 @@ The types and functions that are native to Triton VM or provided by [`tasm-lib`]
 Triton VM's stack respectively; their host-machine representation plays no role.
 
 Because the front-end links against `rustc`'s internals, building this crate requires a nightly
-toolchain with the `rustc-dev` component. The `rust-toolchain.toml` file in this repository takes
-care of that when using `rustup`.
+toolchain with the `rustc-dev` and `llvm-tools` components. The `rust-toolchain.toml` file in this
+repository takes care of that when using `rustup`. It pins an exact nightly, since `rustc`'s
+internal APIs change frequently; to move to a newer compiler, bump the date in that file and fix
+whatever `src/rustc_frontend/` no longer compiles against.
 
 ## Restrictions
 This compiler only handles a part of the Rust language. Everything that is compiled must be
