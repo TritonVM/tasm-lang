@@ -7,7 +7,7 @@ fn div_rem(dividend: u32, divisor: u32) -> (u32, u32) {
 }
 
 fn main() {
-    let dividend = tasm::tasmlib_io_read_stdin___u32();
+    let dividend = tasm::tasmlib_io_read_stdin___u32() % 1_000_000;
     let divisor = tasm::tasmlib_io_read_stdin___u32() % 100 + 1;
 
     let (quotient, remainder) = div_rem(dividend, divisor);

@@ -13,9 +13,11 @@ fn main() {
     let steps = tasm::tasmlib_io_read_stdin___u32() % 50;
     let weight = tasm::tasmlib_io_read_stdin___bfe();
 
+    // `total` starts out large enough for the subtraction below to never
+    // underflow, whatever the number of steps.
     let mut counter = Counter {
         count: 0,
-        total: 0,
+        total: 1000,
         weight: BFieldElement::new(1),
     };
     let mut values = Vec::new();
